@@ -1,0 +1,4 @@
+* crashes
+** server receives choice
+   gets n=-9744, for some reason still enters push loop. Test run with
+   &&res in loop condition. Check if n is wrong from start.
