@@ -34,6 +34,7 @@ void st3::server::game_handler(com c, game_data g){
     }
 
     // pre, expects: only query
+    cout << "preload size: " << g.ships.size() << endl;
     packet.clear();
     packet << protocol::confirm;
     packet << g;
@@ -55,9 +56,12 @@ void st3::server::game_handler(com c, game_data g){
     cout << "starting simulation ... " << endl;
     frame_count = 0;
     thread t(&com::distribute_frames, c, ref(frames), ref(frame_count));
-    
+
+    cout << "frames size: " << g.ships.size() << endl;
     for (frame_count = 0; frame_count < g.settings.frames_per_round; frame_count++){
       g.increment();
+      frames[frame_count].clear();
+      frames[frame_count] << protocol::confirm;
       if (!(frames[frame_count] << g)){
 	cout << "failed to serialize frame" << endl;
 	exit(-1);
@@ -70,6 +74,7 @@ void st3::server::game_handler(com c, game_data g){
     cout << "cleaning up game_data..." << endl;
     // cleanup
     g.cleanup();
+    cout << "post cleanup size: " << g.ships.size() << endl;
   }
 }
 

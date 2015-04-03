@@ -1,4 +1,13 @@
-* crashes
+* fixed 
+** client game_data g0 should update after simulation
+   replaced socket_t by socket_t* in query function
+
+   apparently, passing ref(socket_t) (probably its the
+   ref(sf::Packet?) to thread causes ~thread() which in turn causes
+   abort
 ** server receives choice
+   related to copying packets - fixed by using client_t* instead of
+   client_t in queue.  
+
    gets n=-9744, for some reason still enters push loop. Test run with
    &&res in loop condition. Check if n is wrong from start.

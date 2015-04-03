@@ -2,6 +2,7 @@
 
 #include "game_handler.h"
 #include "com.h"
+#include "protocol.h"
 
 using namespace std;
 using namespace st3;
@@ -19,28 +20,50 @@ int main(){
 
   cout << "done." << endl;
 
-  cout << "listening...";
+  vector<sf::TcpSocket*> clients;
+
   // accept a new connection
-  sf::TcpSocket client;
-  if (listener.accept(client) != sf::Socket::Done) {
-    cout << "error." << endl;
-    return -1;
+  while (clients.size() < 2){
+    sf::TcpSocket *c = new sf::TcpSocket();
+    cout << "listening...";
+    if (listener.accept(*c) != sf::Socket::Done) {
+      cout << "error." << endl;
+      return -1;
+    }
+    c -> setBlocking(false);
+    cout << "client connected!" << endl;
+    clients.push_back(c);
   }
 
   listener.close();
 
-  client.setBlocking(false);
-  cout << "client connected!" << endl;
-
-  vector<sf::TcpSocket*> clients;
-  clients.push_back(&client);
-
   com c(clients);
   game_data g;
+
+  // formalities
+  vector<sf::Packet> packets(clients.size());
+  for (sint i = 0; i < c.clients.size(); i++){
+    packets[i] << protocol::confirm << i;
+    c.clients[i].id = i;
+  }
+
+  c.check_protocol(protocol::connect, packets);
+
+  for (auto x = c.clients.begin(); x != c.clients.end(); x++){
+    if (!(x -> data >> x -> name)){
+      cout << "client " << x -> id << " failed to provide name." << endl;
+      exit(-1);
+    }
+  }
   
   g.build();
 
   game_handler(c, g);
+
+  for (auto x : clients) {
+    x -> disconnect();
+    delete x;
+  }
 
   return 0;
 }

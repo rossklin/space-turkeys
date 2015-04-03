@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cmath>
+
 #include "game_data.h"
 
 using namespace std;
@@ -10,6 +12,12 @@ void st3::game_data::apply_choice(choice c, sint id){
 
 void st3::game_data::increment(){
   cout << "game_data: running dummy increment" << endl;
+  for (auto i = ships.begin(); i != ships.end(); i++){
+    i -> second.position.x += i -> second.speed * cos(i -> second.angle);
+    i -> second.position.y += i -> second.speed * sin(i -> second.angle);
+    i -> second.angle += (rand() % 100) / (sfloat)1000;
+    i -> second.was_killed |= !(rand() % 100);
+  }
 }
 
 void st3::game_data::build(){
@@ -22,6 +30,7 @@ void st3::game_data::build(){
     s.position.y = rand() % 600;
     s.speed = rand() % 10;
     s.angle = 2 * M_PI * (rand() % 1000) / (sfloat)1000;
+    s.was_killed = false;
     ships[i] = s;
   }
 
@@ -33,14 +42,16 @@ void st3::game_data::build(){
     solars[i] = s;
   }
 
-  settings.frames_per_round = 100;
+  settings.frames_per_round = 10;
 }
 
 // find all dead ships and remove them
 void st3::game_data::cleanup(){
-  for (auto i = ships.begin(); i != ships.end(); i++){
-    if (i -> second.was_killed){
-      ships.erase(i);
-    }
+  hm_t<idtype, ship> buf;
+  cout << "cleanup: start: " << ships.size() << " ships." << endl;
+  for (auto x : ships){
+    if (!x.second.was_killed) buf[x.first] = x.second;
   }
+  ships.swap(buf);
+  cout << "cleanup: end: " << ships.size() << " ships." << endl;
 }

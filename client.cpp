@@ -21,16 +21,16 @@ using namespace st3;
 
 // blocking function: send package pq to socket, receive package pr
 // from socket, then set the value of done to true (for threading)
-void query(socket_t socket, 
+void query(socket_t *socket, 
 	   sf::Packet &pq,
 	   sf::Packet &pr,
 	   bool &done){
   protocol_t message;
 
   cout << "query: starting to send..." << endl;
-  while (!socket.send(pq)) sf::sleep(sf::milliseconds(100));
+  while (!socket -> send(pq)) sf::sleep(sf::milliseconds(100));
   cout << "query: starting to receive..." << endl;
-  while (!socket.receive(pr)) sf::sleep(sf::milliseconds(100));
+  while (!socket -> receive(pr)) sf::sleep(sf::milliseconds(100));
 
   if (pr >> message){
     if (message == protocol::confirm){
@@ -55,16 +55,16 @@ void query(socket_t socket,
   }
 }
 
-bool pre_step(socket_t socket, window_t &window, game_data &g){
+bool pre_step(socket_t &socket, window_t &window, game_data &g){
   bool done = false;
   sf::Packet packet, pq;
   pq << protocol::game_round;
 
-  cout << "pre_step: start" << endl;
+  cout << "pre_step: start: game data has " << g.ships.size() << " ships" << endl;
   
   // todo: handle response: complete
   thread t(query, 
-	   socket, 
+	   &socket, 
 	   ref(pq),
 	   ref(packet), 
 	   ref(done));
@@ -93,10 +93,12 @@ bool pre_step(socket_t socket, window_t &window, game_data &g){
     exit(-1);
   }
 
+  cout << "pre_step: end: game data has " << g.ships.size() << " ships" << endl;
+
   return true;
 }
 
-void choice_step(socket_t socket, window_t &window, game_data g){
+void choice_step(socket_t &socket, window_t &window, game_data g){
   bool done = false;
   choice c;
   sf::Packet pq, pr;
@@ -104,9 +106,9 @@ void choice_step(socket_t socket, window_t &window, game_data g){
 
   // CREATE THE CHOICE (USER INTERFACE)
 
-  cout << "choice step: start" << endl;
+  cout << "choice step: start: game data has " << g.ships.size() << " ships" << endl;
 
-  while (count++ < 100){
+  while (count++ < 20){
     sf::Event event;
     while (window.pollEvent(event)){
       if (event.type == sf::Event::Closed) exit(-1);
@@ -128,7 +130,7 @@ void choice_step(socket_t socket, window_t &window, game_data g){
   pq << c;
 
   thread t(query, 
-	   socket, 
+	   &socket, 
 	   ref(pq),
 	   ref(pr), 
 	   ref(done));
@@ -155,7 +157,7 @@ void choice_step(socket_t socket, window_t &window, game_data g){
   cout << "choice step: complete" << endl;
 }
 
-void load_frames(socket_t socket, vector<game_data> &g, int &loaded){
+void load_frames(socket_t &socket, vector<game_data> &g, int &loaded){
   sf::Packet pq, pr;
   bool done;
 
@@ -164,7 +166,7 @@ void load_frames(socket_t socket, vector<game_data> &g, int &loaded){
   while (i < g.size() - 1){
     pq.clear();
     pq << protocol::frame << i;
-    query(socket, pq, pr, done);
+    query(&socket, pq, pr, done);
     if (pr >> g[i + 1]){
       i++;
       loaded = i + 1;
@@ -174,7 +176,7 @@ void load_frames(socket_t socket, vector<game_data> &g, int &loaded){
   }
 }
 
-void simulation_step(socket_t socket, window_t &window, game_data g0){
+void simulation_step(socket_t &socket, window_t &window, game_data g0){
   bool done = false;
   bool playing = true;
   int idx = 0;
@@ -182,10 +184,12 @@ void simulation_step(socket_t socket, window_t &window, game_data g0){
   vector<game_data> g(g0.settings.frames_per_round + 1);
   g[0] = g0;
 
-  thread t(load_frames, socket, ref(g), ref(loaded));
+  thread t(load_frames, ref(socket), ref(g), ref(loaded));
+  cout << "simulation start: game data has " << g0.ships.size() << " ships" << endl;
 
   while (!done){
     done |= !window.isOpen();
+    done |= idx == g0.settings.frames_per_round;
 
     cout << "simulation loop: frame " << idx << " of " << loaded << " loaded frames, play = " << playing << endl;
 
@@ -208,7 +212,7 @@ void simulation_step(socket_t socket, window_t &window, game_data g0){
   t.join();
 }
 
-void game_handler(socket_t socket, window_t &window){
+void game_handler(socket_t &socket, window_t &window){
   game_data g;
 
   while (pre_step(socket, window, g)){
@@ -222,6 +226,8 @@ int main(){
   int width = 800;
   int height = 600;
 
+  srand(time(NULL));
+
   // connect
   cout << "connecting...";
   if (socket.connect("127.0.0.1", 53000) != sf::Socket::Done){
@@ -234,6 +240,23 @@ int main(){
   // create graphics
   window_t window(sf::VideoMode(width, height), "SFML Turkeys!");
   socket_t s(&socket);
+  sf::Packet pq, pr;
+  bool done;
+  string mes = "Name_blabla";
+  mes[rand()%mes.length()] = rand() % 256;
+  mes[rand()%mes.length()] = rand() % 256;
+  mes[rand()%mes.length()] = rand() % 256;
+
+  cout << "sending name...";
+  pq << protocol::connect << mes;
+
+  query(&s, pq, pr, done);
+
+  if (!(pr >> s.id)){
+    cout << "server failed to provide id" << endl;
+    exit(-1);
+  }
+
   game_handler(s, window);
 
   socket.disconnect();

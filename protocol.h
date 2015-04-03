@@ -9,12 +9,13 @@ namespace st3{
     const sint game_round = 0; 
     const sint choice = 1;
     const sint frame = 2;
+    const sint connect = 3;
 
     // responses
-    const sint confirm = 3;
-    const sint standby = 4;
-    const sint complete = 5;
-    const sint invalid = 6;
+    const sint confirm = 1004;
+    const sint standby = 1005;
+    const sint complete = 1006;
+    const sint invalid = 1007;
   };
 };
 #endif

@@ -1,3 +1,4 @@
+#include <iostream>
 #include "serialization.h"
 
 using namespace std;
@@ -24,7 +25,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, T> &g){
   sint n;
   bool res = true;
   res &= (bool)(packet >> n);
-  for (unsigned int i = 0; i < n && res; i++){
+  g.clear();
+  for (sint i = 0; i < n && res; i++){
     idtype k;
     T v;
     res &= (bool)(packet >> k >> v);
@@ -38,7 +40,9 @@ sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, T> &g){
 template<typename T>
 sf::Packet& st3::operator <<(sf::Packet& packet, const list<T> &container){
   bool res = true;
-  res &= (bool)(packet << (sint)container.size());
+  sint n = container.size();
+  cout << "packet << list: n = " << n << endl;
+  res &= (bool)(packet << n);
   for (auto i = container.begin(); i != container.end() && res; i++){
     res &= (bool)(packet << *i);
   }
@@ -53,7 +57,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, list<T> &container){
 
   container.clear();
   res &= (bool)(packet >> n);
-  for (unsigned int i = 0; i < n && res; i++){
+  cout << "packte >> list: n = " << n << endl;
+  for (sint i = 0; i < n && res; i++){
     T v;
     res &= (bool)(packet >> v);
     container.push_back(v);

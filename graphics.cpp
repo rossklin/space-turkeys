@@ -14,6 +14,7 @@ const sf::Vertex ship_pts[] = {
 };
 
 void draw_ship(window_t &w, const ship &s){
+  if (s.was_killed) return;
   sf::Transform t;
   t.translate(s.position.x, s.position.y);
   t.rotate(s.angle / (2 * M_PI) * 360);
