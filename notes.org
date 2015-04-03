@@ -22,6 +22,10 @@
 * remember
 ** when updating a struct/class, also update serialization
 * fixed
+** client view dimensions set to match game_data.settings
+** client simulation play/pause with space key
+** fixed rudementary game_data build routine
+** added game settings attributes
 ** fixed operator <<(packet, solar)
 ** added solar to drawing
 ** removed id attributes (stored in has map pair)

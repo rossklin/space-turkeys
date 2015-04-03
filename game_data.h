@@ -12,6 +12,14 @@
 namespace st3{
   struct game_settings{
     sint frames_per_round;
+    sint width;
+    sint height;
+    sfloat ship_speed;
+    sfloat solar_minrad;
+    sfloat solar_maxrad;
+    sint num_solars;
+
+    game_settings();
   };
 
   struct game_data{
@@ -24,6 +32,8 @@ namespace st3{
     void increment();
     void build();
     void cleanup();
+    hm_t<idtype, solar> random_solars();
+    float heuristic_homes(hm_t<idtype, solar> solar_buf, hm_t<idtype, idtype> &start_solars);
   };
 };
 #endif

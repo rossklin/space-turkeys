@@ -82,11 +82,25 @@ sf::Packet& st3::operator >>(sf::Packet& packet, game_data &g){
 
 // game_settings
 sf::Packet& st3::operator <<(sf::Packet& packet, const game_settings &g){
-  return packet << g.frames_per_round;
+  return packet 
+    << g.frames_per_round
+    << g.width
+    << g.height
+    << g.ship_speed
+    << g.solar_minrad
+    << g.solar_maxrad
+    << g.num_solars;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, game_settings &g){
-  return packet >> g.frames_per_round;
+  return packet
+     >> g.frames_per_round
+     >> g.width
+     >> g.height
+     >> g.ship_speed
+     >> g.solar_minrad
+     >> g.solar_maxrad
+     >> g.num_solars;
 }
 
 // ship

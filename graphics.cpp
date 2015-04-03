@@ -38,15 +38,12 @@ void st3::draw_universe(window_t &w, game_data &g){
   for (auto x : g.solars){
     solar s = x.second;
     sf::CircleShape sol(s.radius);
-    sol.setFillColor(sf::Color(255,255,255));
-    sol.setOutlineThickness(3);
-    sol.setOutlineColor(col = sfcolor(g.players[s.owner].color));
+    sol.setFillColor(sf::Color(10,20,30,40));
+    sol.setOutlineThickness(s.radius / 3);
+    col = s.owner > -1 ? sfcolor(g.players[s.owner].color) : sf::Color(150,150,150);
+    sol.setOutlineColor(col);
     sol.setPosition(s.position.x, s.position.y);
     w.draw(sol);
-    // cout << "graphics: draw solar at " << s.position.x << "x" << s.position.y << endl;
-    // cout << " -- owner: " << s.owner << endl;
-    // cout << " -- color: " << g.players[s.owner].color << " = " << (int)col.r << ", " << (int)col.g << ", " << (int)col.b << endl;
-    // cout << " -- radius: " << s.radius << endl;
   }
 }
 

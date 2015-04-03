@@ -72,7 +72,7 @@ bool pre_step(socket_t &socket, window_t &window, game_data &g){
   text.setCharacterSize(24);
   text.setColor(sf::Color(200,200,200));
   // text.setStyle(sf::Text::Underlined);
-  sf::Vector2u dims = window.getSize();
+  sf::Vector2f dims = window.getView().getSize();
   sf::FloatRect rect = text.getLocalBounds();
   text.setPosition(dims.x/2 - rect.width/2, dims.y/2 - rect.height/2);
 
@@ -114,6 +114,8 @@ bool pre_step(socket_t &socket, window_t &window, game_data &g){
 
   cout << "pre_step: end: game data has " << g.ships.size() << " ships" << endl;
 
+  window.setView(sf::View(sf::FloatRect(0, 0, g.settings.width, g.settings.height)));
+
   return true;
 }
 
@@ -136,7 +138,7 @@ void choice_step(socket_t &socket, window_t &window, game_data g){
   text.setCharacterSize(24);
   text.setColor(sf::Color(200,200,200));
   // text.setStyle(sf::Text::Underlined);
-  sf::Vector2u dims = window.getSize();
+  sf::Vector2f dims = window.getView().getSize();
   sf::FloatRect rect = text.getLocalBounds();
   text.setPosition(dims.x/2 - rect.width/2, dims.y/2 - rect.height/2);
 
@@ -232,14 +234,25 @@ void simulation_step(socket_t &socket, window_t &window, game_data &g0){
 
     sf::Event event;
     while (window.pollEvent(event)){
-      if (event.type == sf::Event::Closed) window.close();
+      switch (event.type){
+      case sf::Event::Closed:
+	window.close();
+	break;
+      case sf::Event::KeyPressed:
+	if (event.key.code == sf::Keyboard::Space){
+	  playing = !playing;
+	}
+	break;
+      }
     }
 
     window.clear();
     draw_universe(window, g[idx]);
     window.display();
 
-    if (playing && idx < loaded - 1){
+    playing &= idx < loaded - 1;
+
+    if (playing){
       idx++;
     }
 

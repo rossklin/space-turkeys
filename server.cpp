@@ -61,9 +61,11 @@ int main(int argc, char **argv){
   for (auto x : c.clients){
     player p;
     p.name = x.name;
-    p.color = (sint)rand();
+    p.color = (sint)rand() | 0xff000000;
     g.players[x.id] = p;
   }
+
+  g.settings.frames_per_round = 10;
   
   g.build();
 
