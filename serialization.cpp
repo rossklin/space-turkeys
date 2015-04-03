@@ -73,11 +73,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, list<T> &container){
 
 // game_data
 sf::Packet& st3::operator <<(sf::Packet& packet, const game_data &g){
-  return packet << g.ships << g.solars << g.settings;
+  return packet << g.players << g.ships << g.solars << g.settings;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, game_data &g){
-  return packet >> g.ships >> g.solars >> g.settings;
+  return packet >> g.players >> g.ships >> g.solars >> g.settings;
 }
 
 // game_settings
@@ -92,7 +92,6 @@ sf::Packet& st3::operator >>(sf::Packet& packet, game_settings &g){
 // ship
 sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
   return packet 
-    << g.id
     << g.position
     << g.angle
     << g.speed
@@ -103,7 +102,6 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
 
 sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
   return packet 
-    >> g.id
     >> g.position
     >> g.angle
     >> g.speed
@@ -114,11 +112,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
 
 // solar
 sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
-  return packet << g.position;
+  return packet << g.owner << g.position << g.radius;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
-  return packet >> g.position;
+  return packet >> g.owner >> g.position >> g.radius;
 }
 
 // choice
@@ -155,6 +153,15 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const point &c){
 
 sf::Packet& st3::operator >>(sf::Packet& packet, point &c){
   return packet >> c.x >> c.y;
+}
+
+// player
+sf::Packet& st3::operator <<(sf::Packet& packet, const player &c){
+  return packet << c.name << c.color;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, player &c){
+  return packet >> c.name >> c.color;
 }
 
 

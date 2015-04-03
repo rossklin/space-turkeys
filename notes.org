@@ -1,4 +1,31 @@
-* fixed 
+* to do
+** server game
+*** universe construction
+**** game settings object
+**** solar distribution
+*** game_data::apply_choice
+**** ?upgrade choice?
+**** planet command
+**** fleet command
+*** universe increment
+**** ship interactions
+**** solar evolution
+** client game
+*** build choice interface
+**** ?upgrade_choice?
+**** clicked_fleet, clicked_solar
+**** area_select
+**** make_command
+**** translate, zoom
+*** draw solar [, fleet, command, ..?]
+** before game interface
+* remember
+** when updating a struct/class, also update serialization
+* fixed
+** fixed operator <<(packet, solar)
+** added solar to drawing
+** removed id attributes (stored in has map pair)
+** added player to game_data 
 ** client game_data g0 should update after simulation
    replaced socket_t by socket_t* in query function
 

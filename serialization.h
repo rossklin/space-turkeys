@@ -41,8 +41,12 @@ namespace st3{
   sf::Packet& operator <<(sf::Packet& packet, const solar &g);
   sf::Packet& operator >>(sf::Packet& packet, solar &g);
 
-  // solar
+  // point
   sf::Packet& operator <<(sf::Packet& packet, const point &g);
   sf::Packet& operator >>(sf::Packet& packet, point &g);
+
+  // player
+  sf::Packet& operator <<(sf::Packet& packet, const player &g);
+  sf::Packet& operator >>(sf::Packet& packet, player &g);
 };
 #endif

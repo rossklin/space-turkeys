@@ -9,7 +9,8 @@ namespace st3{
   class data_grid;
 
   struct ship{
-    sint id;
+    static idtype id_counter;
+
     point position;
     sfloat angle;
     sfloat speed;

@@ -8,8 +8,11 @@ using namespace std;
 using namespace st3;
 using namespace st3::server;
 
-int main(){
+int main(int argc, char **argv){
   sf::TcpListener listener;
+  int num_clients = argc == 2 ? atoi(argv[1]) : 2;
+
+  srand(time(NULL));
 
   cout << "binding listener ...";
   // bind the listener to a port
@@ -23,7 +26,7 @@ int main(){
   vector<sf::TcpSocket*> clients;
 
   // accept a new connection
-  while (clients.size() < 2){
+  while (clients.size() < num_clients){
     sf::TcpSocket *c = new sf::TcpSocket();
     cout << "listening...";
     if (listener.accept(*c) != sf::Socket::Done) {
@@ -44,7 +47,6 @@ int main(){
   vector<sf::Packet> packets(clients.size());
   for (sint i = 0; i < c.clients.size(); i++){
     packets[i] << protocol::confirm << i;
-    c.clients[i].id = i;
   }
 
   c.check_protocol(protocol::connect, packets);
@@ -54,6 +56,13 @@ int main(){
       cout << "client " << x -> id << " failed to provide name." << endl;
       exit(-1);
     }
+  }
+
+  for (auto x : c.clients){
+    player p;
+    p.name = x.name;
+    p.color = (sint)rand();
+    g.players[x.id] = p;
   }
   
   g.build();

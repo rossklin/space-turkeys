@@ -58,6 +58,24 @@ void query(socket_t *socket,
 bool pre_step(socket_t &socket, window_t &window, game_data &g){
   bool done = false;
   sf::Packet packet, pq;
+  sf::Font font;
+  sf::Text text;
+
+  // setup load text
+  if (!font.loadFromFile(st3::font_dir + "arial.ttf")){
+    cout << "error loading font" << endl;
+    exit(-1);
+  }
+
+  text.setFont(font); 
+  text.setString("(loading game data...)");
+  text.setCharacterSize(24);
+  text.setColor(sf::Color(200,200,200));
+  // text.setStyle(sf::Text::Underlined);
+  sf::Vector2u dims = window.getSize();
+  sf::FloatRect rect = text.getLocalBounds();
+  text.setPosition(dims.x/2 - rect.width/2, dims.y/2 - rect.height/2);
+
   pq << protocol::game_round;
 
   cout << "pre_step: start: game data has " << g.ships.size() << " ships" << endl;
@@ -78,7 +96,8 @@ bool pre_step(socket_t &socket, window_t &window, game_data &g){
     }
 
     window.clear();
-    // display "loading data" and some progress
+    draw_universe(window, g);
+    window.draw(text);
     window.display();
 
     cout << "pre_step: loading data..." << endl;
@@ -103,12 +122,29 @@ void choice_step(socket_t &socket, window_t &window, game_data g){
   choice c;
   sf::Packet pq, pr;
   int count = 0;
+  sf::Font font;
+  sf::Text text;
+
+  // setup load text
+  if (!font.loadFromFile(st3::font_dir + "arial.ttf")){
+    cout << "error loading font" << endl;
+    exit(-1);
+  }
+
+  text.setFont(font); 
+  text.setString("(sending choice to server...)");
+  text.setCharacterSize(24);
+  text.setColor(sf::Color(200,200,200));
+  // text.setStyle(sf::Text::Underlined);
+  sf::Vector2u dims = window.getSize();
+  sf::FloatRect rect = text.getLocalBounds();
+  text.setPosition(dims.x/2 - rect.width/2, dims.y/2 - rect.height/2);
 
   // CREATE THE CHOICE (USER INTERFACE)
 
   cout << "choice step: start: game data has " << g.ships.size() << " ships" << endl;
 
-  while (count++ < 20){
+  while (count++ < 40){
     sf::Event event;
     while (window.pollEvent(event)){
       if (event.type == sf::Event::Closed) exit(-1);
@@ -146,7 +182,8 @@ void choice_step(socket_t &socket, window_t &window, game_data g){
     }
 
     window.clear();
-    // display: sending choice...
+    draw_universe(window, g);
+    window.draw(text);
     window.display();
 
     sf::sleep(sf::milliseconds(100));
@@ -157,7 +194,7 @@ void choice_step(socket_t &socket, window_t &window, game_data g){
   cout << "choice step: complete" << endl;
 }
 
-void load_frames(socket_t &socket, vector<game_data> &g, int &loaded){
+void load_frames(socket_t *socket, vector<game_data> &g, int &loaded){
   sf::Packet pq, pr;
   bool done;
 
@@ -166,17 +203,17 @@ void load_frames(socket_t &socket, vector<game_data> &g, int &loaded){
   while (i < g.size() - 1){
     pq.clear();
     pq << protocol::frame << i;
-    query(&socket, pq, pr, done);
+    query(socket, pq, pr, done);
     if (pr >> g[i + 1]){
       i++;
       loaded = i + 1;
     }else{
-      sf::sleep(sf::milliseconds(100));
+      sf::sleep(sf::milliseconds(10));
     }
   }
 }
 
-void simulation_step(socket_t &socket, window_t &window, game_data g0){
+void simulation_step(socket_t &socket, window_t &window, game_data &g0){
   bool done = false;
   bool playing = true;
   int idx = 0;
@@ -184,7 +221,7 @@ void simulation_step(socket_t &socket, window_t &window, game_data g0){
   vector<game_data> g(g0.settings.frames_per_round + 1);
   g[0] = g0;
 
-  thread t(load_frames, ref(socket), ref(g), ref(loaded));
+  thread t(load_frames, &socket, ref(g), ref(loaded));
   cout << "simulation start: game data has " << g0.ships.size() << " ships" << endl;
 
   while (!done){
@@ -208,6 +245,8 @@ void simulation_step(socket_t &socket, window_t &window, game_data g0){
 
     sf::sleep(sf::milliseconds(100));    
   }
+
+  g0 = g.back();
 
   t.join();
 }
@@ -238,7 +277,6 @@ int main(){
   cout << "done." << endl;
 
   // create graphics
-  window_t window(sf::VideoMode(width, height), "SFML Turkeys!");
   socket_t s(&socket);
   sf::Packet pq, pr;
   bool done;
@@ -257,6 +295,7 @@ int main(){
     exit(-1);
   }
 
+  window_t window(sf::VideoMode(width, height), "SFML Turkeys!");
   game_handler(s, window);
 
   socket.disconnect();

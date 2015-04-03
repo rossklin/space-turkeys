@@ -93,8 +93,9 @@ bool st3::server::client_t::receive_query(protocol_t query){
 
 st3::server::com::com(vector<sf::TcpSocket*> c){
   clients.resize(c.size());
-  for (unsigned int i = 0; i < clients.size(); i++){
+  for (sint i = 0; i < clients.size(); i++){
     clients[i].socket = c[i];
+    clients[i].id = i;
   }
 }
 
@@ -217,6 +218,7 @@ void st3::server::com::distribute_frames(vector<sf::Packet> &g, int &frame_count
 
       if (c.second >= 0 && c.second < frame_count){
 	if (c.first -> send(g[c.second])){
+	  cout << "com: sent frame " << c.second << " to client " << c.first -> name << endl;
 	  if (c.second < frame_count - 1){
 	    q_in.push(c.first);
 	  }
