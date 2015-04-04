@@ -4,33 +4,37 @@
 #include <list>
 #include <vector>
 
+#include "types.h"
 
 namespace st3{
-  struct upgrade_choice{
-
-  };
-
   struct command{
+    // game data
+    target_t target;
+    sint quantity;
 
+    // interface control variables
+    sbool locked;
+    sint lock_qtty;
+    sbool selected;
   };
 
-  struct upgrade{
+  struct alter_command{
+    bool delete_c;
+    bool lock;
+    bool unlock;
+    int increment;
 
+    alter_command();
   };
 
   struct choice{
-    std::list<upgrade_choice> upgrades;
-    std::list<command> fleet_commands;
-    std::list<command> solar_commands;
+    // data
+    hm_t<idtype, command> fleet_commands;
+    hm_t<idtype, command> solar_commands;
 
-    void delete_selected();
-    void increment_selected(int i);
-    void lock_selected();
-    void unlock_selected();
-    std::list<command*> selected_solar_commands();
-    std::list<command*> selected_fleet_commands();
+    // interface routines
+    void alter_selected(alter_command c);
     void clear_selection();
-    upgrade total_upgrade();
   };
 };
 #endif

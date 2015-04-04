@@ -1,68 +1,15 @@
 #include <iostream>
 #include <queue>
 
-#include "com.h"
+#include "com_server.h"
 #include "protocol.h"
+#include "serialization.h"
 
 using namespace std;
 using namespace st3;
 using namespace st3::server;
 
 typedef pair<client_t*, int> cfi;
-
-st3::socket_t::socket_t(){
-  socket = 0;
-  id = -1;
-}
-
-st3::socket_t::socket_t(sf::TcpSocket *s){
-  socket = s;
-  id = -1;
-}
-
-bool st3::socket_t::send(sf::Packet &packet){
-  switch(status = socket -> send(packet)){
-  case sf::Socket::Disconnected:
-    cout << "socket_t::send: disconnected." << endl;
-    exit(-1);
-  case sf::Socket::Error:
-    cout << "socket_t::send: error sending!" << endl;
-    exit(-1);
-  case sf::Socket::Done:
-    // cout << "socket_t::send: done" << endl;
-    return true;
-  case sf::Socket::NotReady:
-    // cout << "socket_t::send: not ready" << endl;
-    return false;
-  default:
-    cout << "socket_t::send: unknown status: " << status << endl;
-    exit(-1);
-  }
-}
-
-bool st3::socket_t::receive(){
-  receive(data);
-}
-
-bool st3::socket_t::receive(sf::Packet &packet){
-  switch(status = socket -> receive(packet)){
-  case sf::Socket::Disconnected:
-    cout << "socket_t::receive: disconnected." << endl;
-    exit(-1);
-  case sf::Socket::Error:
-    cout << "socket_t::receive: error sending!" << endl;
-    exit(-1);
-  case sf::Socket::Done:
-    // cout << "socket_t::receive: done" << endl;
-    return true;
-  case sf::Socket::NotReady:
-    // cout << "socket_t::receive: not ready" << endl;
-    return false;
-  default:
-    cout << "socket_t::send: unknown status: " << status << endl;
-    exit(-1);
-  }
-}
 
 void st3::server::client_t::send_invalid(){
   sf::Packet p;
@@ -76,7 +23,7 @@ bool st3::server::client_t::receive_query(protocol_t query){
   protocol_t input;
 
   if (receive()){
-    if (data >> input){
+    if (*data >> input){
       if (input == query){
 	return true;
       }else{
@@ -200,7 +147,7 @@ void st3::server::com::distribute_frames(vector<sf::Packet> &g, int &frame_count
 
       if (c -> receive_query(protocol::frame)){
 	int idx;
-	if (c -> data >> idx){
+	if (*(c -> data) >> idx){
 	  q_out.push(cfi(c, idx));
 	}else{
 	  cout << "distribute_frames: failed to unpack idx" << endl;

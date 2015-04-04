@@ -1,5 +1,5 @@
-#ifndef _STK_COM
-#define _STK_COM
+#ifndef _STK_COMSERVER
+#define _STK_COMSERVER
 
 #include <string>
 #include <vector>
@@ -7,21 +7,9 @@
 #include <SFML/Network.hpp>
 
 #include "types.h"
+#include "socket_t.h"
 
 namespace st3{
-  struct socket_t{
-    sint id;
-    sf::Socket::Status status;
-    sf::TcpSocket *socket;
-    sf::Packet data;
-
-    socket_t();
-    socket_t(sf::TcpSocket *s);
-    bool send(sf::Packet &packet);
-    bool receive();
-    bool receive(sf::Packet &packet);
-  };
-
   namespace server{
     struct client_t : public socket_t{
       std::string name;

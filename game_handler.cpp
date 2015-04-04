@@ -7,7 +7,7 @@
 
 #include "protocol.h"
 #include "game_data.h"
-#include "com.h"
+#include "com_server.h"
 #include "serialization.h"
 #include "game_handler.h"
 
@@ -45,7 +45,7 @@ void st3::server::game_handler(com c, game_data g){
 
     for (i = 0; i < c.clients.size(); i++){
       choice ch;
-      if (c.clients[i].data >> ch){
+      if (*c.clients[i].data >> ch){
 	g.apply_choice(ch, c.clients[i].id);
       }else{
 	cout << "choice for player " << c.clients[i].id << " failed to unpack!" << endl;

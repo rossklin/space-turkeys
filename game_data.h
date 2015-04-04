@@ -27,11 +27,14 @@ namespace st3{
     hm_t<idtype, solar> solars;
     hm_t<idtype, player> players;
     game_settings settings;
-  
+
+    // server mechanics
     void apply_choice(choice c, sint id);
     void increment();
+    void cleanup(); // remove dead ships
+
+    // build stuff
     void build();
-    void cleanup();
     hm_t<idtype, solar> random_solars();
     float heuristic_homes(hm_t<idtype, solar> solar_buf, hm_t<idtype, idtype> &start_solars);
   };

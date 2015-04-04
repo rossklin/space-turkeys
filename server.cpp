@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "game_handler.h"
-#include "com.h"
+#include "com_server.h"
 #include "protocol.h"
 
 using namespace std;
@@ -52,7 +52,7 @@ int main(int argc, char **argv){
   c.check_protocol(protocol::connect, packets);
 
   for (auto x = c.clients.begin(); x != c.clients.end(); x++){
-    if (!(x -> data >> x -> name)){
+    if (!(*x -> data >> x -> name)){
       cout << "client " << x -> id << " failed to provide name." << endl;
       exit(-1);
     }

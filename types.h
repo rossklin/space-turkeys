@@ -20,9 +20,6 @@ namespace st3{
     sint type;
   };
 
-  struct point{
-    sfloat x;
-    sfloat y;
-  };
+  typedef sf::Vector2f point;
 };
 #endif

@@ -10,11 +10,11 @@ namespace st3{
   template<typename T>
     sf::Packet& operator >>(sf::Packet& packet, hm_t<idtype, T> &g);
 
-  // stream ops for lists
-  template<typename T>
-    sf::Packet& operator <<(sf::Packet& packet, const std::list<T> &container);
-  template<typename T>
-    sf::Packet& operator >>(sf::Packet& packet, std::list<T> &container);
+  /* // stream ops for lists */
+  /* template<typename T> */
+  /*   sf::Packet& operator <<(sf::Packet& packet, const std::list<T> &container); */
+  /* template<typename T> */
+  /*   sf::Packet& operator >>(sf::Packet& packet, std::list<T> &container); */
 
   // game data structs
   sf::Packet& operator <<(sf::Packet& packet, const game_data &g);
@@ -27,11 +27,11 @@ namespace st3{
   sf::Packet& operator <<(sf::Packet& packet, const choice &c);
   sf::Packet& operator >>(sf::Packet& packet, choice &c);
 
-  sf::Packet& operator <<(sf::Packet& packet, const upgrade_choice &c);
-  sf::Packet& operator >>(sf::Packet& packet, upgrade_choice &c);
-
   sf::Packet& operator <<(sf::Packet& packet, const command &c);
   sf::Packet& operator >>(sf::Packet& packet, command &c);
+
+  sf::Packet& operator <<(sf::Packet& packet, const target_t &c);
+  sf::Packet& operator >>(sf::Packet& packet, target_t &c);
 
   // ship
   sf::Packet& operator <<(sf::Packet& packet, const ship &g);
