@@ -144,11 +144,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, choice &c){
 
 // command
 sf::Packet& st3::operator <<(sf::Packet& packet, const command &c){
-  return packet << c.target << c.quantity;
+  return packet << c.source << c.target << c.quantity;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, command &c){
-  return packet << c.target << c.quantity;
+  return packet << c.source << c.target << c.quantity;
 }
 
 // target_t

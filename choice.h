@@ -9,6 +9,7 @@
 namespace st3{
   struct command{
     // game data
+    idtype source;
     target_t target;
     sint quantity;
 
@@ -16,6 +17,8 @@ namespace st3{
     sbool locked;
     sint lock_qtty;
     sbool selected;
+
+    command();
   };
 
   struct alter_command{
@@ -28,10 +31,11 @@ namespace st3{
   };
 
   struct choice{
+    static int comid;
     // data
-    hm_t<idtype, command> fleet_commands;
     hm_t<idtype, command> solar_commands;
-
+    hm_t<idtype, command> fleet_commands;
+      
     // interface routines
     void alter_selected(alter_command c);
     void clear_selection();

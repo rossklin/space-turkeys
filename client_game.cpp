@@ -12,8 +12,12 @@ using namespace st3;
 using namespace st3::client;
 
 sf::FloatRect fixrect(sf::FloatRect r);
+bool add2selection();
+bool ctrlsel();
 
 void st3::client::game::run(){
+  selectors.clear();
+
   // game loop
   while (pre_step()){
     choice_step();
@@ -66,7 +70,7 @@ bool st3::client::game::pre_step(){
     }
 
     window.clear();
-    draw_universe(window, data);
+    draw_universe();
     window.draw(text);
     window.display();
 
@@ -93,53 +97,132 @@ bool st3::client::game::pre_step(){
 // CHOICE STEP
 // ****************************************
 
-sf::FloatRect fixrect(sf::FloatRect r){
-  // fix reverse selection
-  if (r.width < 0){
-    r.left += r.width;
-    r.width *= -1;
-  }
-
-  if (r.height < 0){
-    r.top += r.height;
-    r.height *= -1;
-  }
-
-  return r;
-}
-
 void st3::client::game::area_select(sf::FloatRect r){
   sf::FloatRect rect = fixrect(r);
 
-  selected_solars.clear();
+  if (!add2selection()) selectors.clear();
   
   for (auto i = data.solars.begin(); i != data.solars.end(); i++){
     if (rect.contains(i -> second.position)){
-      selected_solars.insert(i -> first);
+      selector_t s = {i -> first, SELECT_SOLAR, i -> second.owner == socket.id};
+      selectors.insert(s);
     }
   }
 }
 
-void st3::client::game::click_at(point p){
-  idtype id = -1;
-  bool addsel = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
-  bool ctrl = sf::Keyboard::isKeyPressed(sf::Keyboard::LCtrl);
+void st3::client::game::click_at(point p, sf::Mouse::Button button){
+  float max_click_dist = 20;
+  float dmin = max_click_dist;
+  bool found = false;
 
-  // find id of solar at p
-  for (auto i = data.solars.begin(); i != data.solars.end() && id < 0; i++){
-    if (l2norm(p - i -> second.position) < i -> second.radius){
-      id = i -> first;
+  selector_t sel = {-1, SELECT_NONE, false};
+
+  // consider merging solar and fleet selection to a common interface?
+  // find closest solar to p
+  for (auto i = data.solars.begin(); i != data.solars.end(); i++){
+    float d = l2norm(p - i -> second.position);
+    if (d < i -> second.radius && d < dmin){
+      dmin = d;
+      found = true;
+      sel.id = i -> first;
+      sel.type = SELECT_SOLAR;
+      sel.owned = i -> second.owner == socket.id;
     }
   }
 
-  if (ctrl){
-  }else{
-    if (addsel){
-      // add to selection
-      if (id > -1) selected_solars.insert(id);
-    }else{
-      // select/target
-      // todo: write me
+  // find closest fleet to p
+  for (auto i = data.fleets.begin(); i != data.fleets.end(); i++){
+    float d = l2norm(p - i -> second.position());
+    if (d < i -> second.radius() && d < dmin){
+      dmin = d;
+      found = true;
+      sel.id = i -> first;
+      sel.type = SELECT_FLEET;
+      sel.owned = i -> second.owner == socket.id;
+    }
+  }
+
+  // find closest solar command to p
+  // template these in a function? how to update sel correctly?
+  for (auto i : genchoice.solar_commands){
+    command c = i.second;
+
+    // source point
+    point from = data.solars[c.source].position;
+
+    // find destination point
+    point to = target_position(c.target);
+
+    // check distance
+    float d = dpoint2line(p, from, to);
+    if (d < dmin){
+      dmin = d;
+      found = true;
+      sel.id = i.first;
+      sel.type = SELECT_SOLAR_COMMAND;
+      sel.owned = true;
+    }
+  }
+
+  // find closest fleet command to p
+  for (auto i : genchoice.fleet_commands){
+    command c = i.second;
+
+    // source point
+    point from = data.fleets[c.source].position;
+
+    // find destination point
+    point to = target_position(c.target);
+
+    // check distance
+    float d = dpoint2line(p, from, to);
+    if (d < dmin){
+      dmin = d;
+      found = true;
+      sel.id = i.first;
+      sel.type = SELECT_SOLAR_COMMAND;
+      sel.owned = true;
+    }
+  }
+
+  if (button == sf::Mouse::Right){
+    // clear selection and display info
+    if (!add2selection()) selectors.clear();
+
+    if (found){
+      // todo: some info popup?
+    }
+  }else if(button == sf::Mouse::Left){
+    // handle the selection
+    if (found){
+      if (add2selection()){
+	if ((auto i = selectors.find(sel)) != selectors.end()){
+	  selectors.erase(i);
+	}else{
+	  selectors.insert(sel);
+	}
+      }else{
+	if (sel.owned){
+	  // my solar
+	  selectors.clear();
+	  selectors.insert(sel);
+	}else{// if (sel.type & (SELECT_FLEET | SELECT_SOLAR)){
+	  // other player's solar or fleet
+	  // setup commands for each selected solar and fleet
+	  command c;
+	  c.target.id = sel.id;
+	  c.target.type = sel.type;
+
+	  for (auto i : selectors){
+	    c.source = i.id;
+	    if (i.type == SELECT_SOLAR_COMMANDS){
+	      genchoice.solar_commands[choice::comid++] = c;
+	    }else if (i.type == SELECT_FLEET_COMMANDS){
+	      genchoice.fleet_commands[choice::comid++] = c;
+	    }
+	  }
+	}
+      }
     }
   }
 }
@@ -330,4 +413,31 @@ void st3::client::game::draw_universe(){
     sol.setPosition(s.position.x, s.position.y);
     window.draw(sol);
   }
+}
+
+// ****************************************
+// UTILITY FUNCTIONS
+// ****************************************
+
+bool add2selection(){
+  sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
+}
+
+bool ctrlsel(){
+  sf::Keyboard::isKeyPressed(sf::Keyboard::LCtrl);
+}
+
+sf::FloatRect fixrect(sf::FloatRect r){
+  // fix reverse selection
+  if (r.width < 0){
+    r.left += r.width;
+    r.width *= -1;
+  }
+
+  if (r.height < 0){
+    r.top += r.height;
+    r.height *= -1;
+  }
+
+  return r;
 }

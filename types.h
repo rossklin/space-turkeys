@@ -16,8 +16,13 @@ namespace st3{
     using hm_t = std::unordered_map<key,value>;
   
   struct target_t{
+    static const sint SOLAR = 0;
+    static const sint FLEET = 1;
+    static const sint POSITION = 2;
+
     sint id;
     sint type;
+    point position;
   };
 
   typedef sf::Vector2f point;

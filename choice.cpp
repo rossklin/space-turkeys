@@ -3,6 +3,8 @@
 using namespace std;
 using namespace st3;
 
+int st3::choice::comid = 0;
+
 st3::alter_command::alter_command(){
   delete_c = false;
   lock = false;

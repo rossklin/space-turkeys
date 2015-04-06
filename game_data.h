@@ -24,6 +24,7 @@ namespace st3{
 
   struct game_data{
     hm_t<idtype, ship> ships;
+    hm_t<idtype, fleet> fleets;
     hm_t<idtype, solar> solars;
     hm_t<idtype, player> players;
     game_settings settings;

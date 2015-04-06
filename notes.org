@@ -9,23 +9,30 @@
 **** solar evolution
 ** client game
 *** build choice interface
-**** ?upgrade_choice?
 **** clicked_at
-     consider moving command::selected property to a set in
-     client::game. Also, fix so that each entity can have multiple
-     associated commands.
+     make a "selectable" class with meta info: id, type etc.
+     
+     make commands from and to selectables? or just from? just track
+     selection?
 **** make_command
-**** translate, zoom
+*** translate, zoom
 *** draw solar [, fleet, command, ..?]
+    now part of client::game
+** mechanics
+*** fleets
+*** research/development
+*** resources
+*** different planet types
+*** different ship types
 ** before game interface
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+* fixed
 ** split com into socket_t, com_client, com_server
 ** replaced client's game_handler with struct client_game
 ** implemented command serialization
 ** started writing choice_event handler
-* fixed
 ** client game
 *** area_select
 ** server game
