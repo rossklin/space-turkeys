@@ -16,6 +16,8 @@ namespace st3{
 
     command();
   };
+
+  bool operator == (const command &a, const command &b);
 };
 
 #endif
