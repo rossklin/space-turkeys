@@ -21,8 +21,8 @@ namespace st3{
       idtype comid;
       sf::FloatRect srect;
       hm_t<idtype, command_selector*> command_selectors;
-      hm_t<source_t, std::set<idtype>, source_t::hash, source_t::pred> entity_commands;
-      hm_t<source_t, entity_selector*, source_t::hash, source_t::pred> entity_selectors;
+      hm_t<source_t, std::set<idtype>> entity_commands;
+      hm_t<source_t, entity_selector*> entity_selectors;
 
       void run();
       bool pre_step();

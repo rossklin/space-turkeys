@@ -148,26 +148,26 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const command &c){
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, command &c){
-  return packet << c.source << c.target << c.quantity;
+  return packet >> c.source >> c.target >> c.quantity;
 }
 
-// source_t
-sf::Packet& st3::operator <<(sf::Packet& packet, const source_t &c){
-  return packet << c.id << c.type;
-}
+// // source_t
+// sf::Packet& st3::operator <<(sf::Packet& packet, const source_t &c){
+//   return packet << c;
+// }
 
-sf::Packet& st3::operator >>(sf::Packet& packet, source_t &c){
-  return packet >> c.id >> c.type;
-}
+// sf::Packet& st3::operator >>(sf::Packet& packet, source_t &c){
+//   return packet >> c;
+// }
 
-// target_t
-sf::Packet& st3::operator <<(sf::Packet& packet, const target_t &c){
-  return packet << c.id << c.type << c.position;
-}
+// // target_t
+// sf::Packet& st3::operator <<(sf::Packet& packet, const target_t &c){
+//   return packet << c.id << c.type << c.position;
+// }
 
-sf::Packet& st3::operator >>(sf::Packet& packet, target_t &c){
-  return packet >> c.id >> c.type >> c.position;
-}
+// sf::Packet& st3::operator >>(sf::Packet& packet, target_t &c){
+//   return packet >> c.id >> c.type >> c.position;
+// }
 
 // point
 sf::Packet& st3::operator <<(sf::Packet& packet, const point &c){

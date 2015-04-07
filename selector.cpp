@@ -32,10 +32,7 @@ bool solar_selector::contains_point(point p, float &d){
 }
 
 source_t solar_selector::command_source(){
-  source_t s;
-  s.id = id;
-  s.type = source_t::SOLAR;
-  return s;
+  return identifier::make(identifier::solar, id);
 }
 
 // ****************************************
@@ -53,10 +50,7 @@ bool fleet_selector::contains_point(point p, float &d){
 
 
 source_t fleet_selector::command_source(){
-  source_t s;
-  s.id = id;
-  s.type = source_t::FLEET;
-  return s;
+  return identifier::make(identifier::fleet, id);
 }
 
 // ****************************************

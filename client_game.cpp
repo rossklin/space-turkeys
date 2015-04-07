@@ -16,34 +16,29 @@ bool add2selection();
 bool ctrlsel();
 
 void st3::client::game::command_points(command c, point &from, point &to){
- switch (c.source.type){
-  case source_t::SOLAR:
-    from = data.solars[c.source.id].position;
-    break;
-  case source_t::FLEET:
-    from = data.fleets[c.source.id].position;
-    break;
-  default:
-    cout << "invalid source type: " << c.source.type << endl;
+  string id = identifier::get_type(c.source);
+  if (!id.compare(identifier::solar)){
+    from = data.solars[identifier::get_id(c.source)].position;
+  }else if(!id.compare(identifier::fleet)){
+    from = data.fleets[identifier::get_id(c.source)].position;
+  }else{
+    cout << "invalid source type: " << id << endl;
     exit(-1);
   }
 
- switch (c.target.type){
-  case target_t::SOLAR:
-    to = data.solars[c.target.id].position;
-    break;
-  case target_t::FLEET:
-    to = data.fleets[c.target.id].position;
-    break;
- case target_t::POINT:
-   to = c.target.position;
-   break;
- default:
-   cout << "invalid target type: " << c.target.type << endl;
-   exit(-1);
- }
+  id = identifier::get_type(c.target);
+  if (!id.compare(identifier::solar)){
+    to = data.solars[identifier::get_id(c.target)].position;
+  }else if (!id.compare(identifier::fleet)){
+    to = data.fleets[identifier::get_id(c.target)].position;
+  }else if (!id.compare(identifier::point)){
+    to = identifier::get_point(c.target);
+  }else{
+    cout << "invalid target type: " << id << endl;
+    exit(-1);
+  }
 
- return;
+  return;
 }
 
 void st3::client::game::add_command(command c){
@@ -84,15 +79,13 @@ void st3::client::game::initialize_selectors(){
   clear_selectors();
 
   for (auto x : data.solars){
-    s.id = x.first;
-    s.type = source_t::SOLAR;
-    entity_selectors[s] = new solar_selector(&x.second, s.id, x.second.owner == socket.id);
+    s = identifier::make(identifier::solar, x.first);
+    entity_selectors[s] = new solar_selector(&x.second, x.first, x.second.owner == socket.id);
   }
 
   for (auto x : data.fleets){
-    s.id = x.first;
-    s.type = source_t::FLEET;
-    entity_selectors[s] = new fleet_selector(&x.second, s.id, x.second.owner == socket.id);
+    s = identifier::make(identifier::fleet, x.first);
+    entity_selectors[s] = new fleet_selector(&x.second, x.first, x.second.owner == socket.id);
   }
 }
 
@@ -188,9 +181,7 @@ void st3::client::game::area_select(){
 
 void st3::client::game::command2point(point p){
   command c;
-  c.target.id = -1;
-  c.target.type = target_t::POINT;
-  c.target.position = p;
+  c.target = identifier::make(identifier::point, p);
 
   for (auto x : entity_selectors){
     if (x.second -> selected){
@@ -202,9 +193,7 @@ void st3::client::game::command2point(point p){
 
 void st3::client::game::command2entity(entity_selector *s){
   command c;
-  source_t x = s -> command_source();
-  c.target.id = x.id;
-  c.target.type = x.type;
+  c.target = s -> command_source();
 
   for (auto x : entity_selectors){
     if (x.second != s && x.second -> selected){

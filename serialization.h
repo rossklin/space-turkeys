@@ -30,11 +30,11 @@ namespace st3{
   sf::Packet& operator <<(sf::Packet& packet, const command &c);
   sf::Packet& operator >>(sf::Packet& packet, command &c);
 
-  sf::Packet& operator <<(sf::Packet& packet, const target_t &c);
-  sf::Packet& operator >>(sf::Packet& packet, target_t &c);
+  /* sf::Packet& operator <<(sf::Packet& packet, const target_t &c); */
+  /* sf::Packet& operator >>(sf::Packet& packet, target_t &c); */
 
-  sf::Packet& operator <<(sf::Packet& packet, const source_t &c);
-  sf::Packet& operator >>(sf::Packet& packet, source_t &c);
+  /* sf::Packet& operator <<(sf::Packet& packet, const source_t &c); */
+  /* sf::Packet& operator >>(sf::Packet& packet, source_t &c); */
 
   // ship
   sf::Packet& operator <<(sf::Packet& packet, const ship &g);

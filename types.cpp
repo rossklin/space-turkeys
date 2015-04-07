@@ -1,12 +1,29 @@
+#include <sstream>
 #include "types.h"
 
 using namespace std;
 using namespace st3;
 
-size_t st3::source_t::hash::operator()(const source_t &a) const{
-  return a.id * (1 - 2 * a.type);
+string identifier::make(string t, idtype i){
+  stringstream s;
+  s << t << ":" << i;
+  return s.str();
 }
 
-bool st3::source_t::pred::operator()(const source_t &a,const  source_t &b) const{
-  return a.type == b.type && a.id == b.id;
+string identifier::make(string t, st3::point p){
+  stringstream s;
+  s << t << ":" << p.x << "," << p.y;
+  return s.str();
 }
+
+// string identifier::get_type(string s){
+
+// }
+
+// idtype identifier::get_id(string s){
+
+// }
+
+// point identifier::get_point(string s){
+
+// }
