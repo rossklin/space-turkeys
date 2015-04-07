@@ -13,22 +13,24 @@ float dpoint2line(point p, point from, point to);
 // ENTITY SELECTOR
 // ****************************************
 
-entity_selector::entity_selector(idtype i, bool o){
+entity_selector::entity_selector(idtype i, bool o, point p){
   id = i;
   owned = o;
+  position = p;
+  area_selectable = true;
 }
 
 // ****************************************
 // SOLAR SELECTOR
 // ****************************************
 
-solar_selector::solar_selector( solar *s, idtype i, bool o) : entity_selector(i, o){
-  data = s;
+solar_selector::solar_selector(idtype i, bool o, point p, float r) : entity_selector(i, o, p){
+  radius = r;
 }
 
 bool solar_selector::contains_point(point p, float &d){
-  d = l2norm(p - data -> position);
-  return d < data -> radius;
+  d = l2norm(p - position);
+  return d < radius;
 }
 
 source_t solar_selector::command_source(){
@@ -39,13 +41,13 @@ source_t solar_selector::command_source(){
 // FLEET SELECTOR
 // ****************************************
 
-fleet_selector::fleet_selector( fleet *s, idtype i, bool o) : entity_selector(i, o){
-  data = s;
+fleet_selector::fleet_selector(idtype i, bool o, point p, float r) : entity_selector(i, o, p){
+  radius = r;
 }
 
 bool fleet_selector::contains_point(point p, float &d){
-  d = l2norm(p - data -> position);
-  return d < data -> radius;
+  d = l2norm(p - position);
+  return d < radius;
 }
 
 
@@ -57,14 +59,18 @@ source_t fleet_selector::command_source(){
 // COMMAND SELECTOR
 // ****************************************
 
-command_selector::command_selector(command com, point s, point d){
-  c = com;
+command_selector::command_selector(idtype i, point s, point d) : entity_selector(i, true, d){
   from = s;
-  to = d;
+  area_selectable = false;
 }
 
 bool command_selector::contains_point(point p, float &d){
-  d = dpoint2line(p, from, to);
+  d = dpoint2line(p, from, position);
+
   // todo: command size?
   return true;
+}
+
+source_t command_selector::command_source(){
+  return identifier::make(identifier::command, id);
 }

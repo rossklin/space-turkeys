@@ -11,31 +11,28 @@ namespace st3{
   struct fleet;
 
   namespace client{
-    class selector{
+
+    class entity_selector{
       static const int max_click_distance = 20;
     public:
       bool selected;
-
-      virtual bool contains_point(point p, float &d) = 0;
-    };
-
-    class entity_selector : public selector{
-    public:
       bool owned;
+      bool area_selectable;
       idtype id;
+      point position;
       
-      entity_selector(idtype i, bool o);
-
+      entity_selector(idtype i, bool o, point p);
+      virtual bool contains_point(point p, float &d) = 0;
       virtual source_t command_source() = 0;
       virtual bool inside_rect(sf::FloatRect r) = 0;
     };
 
     class solar_selector : public entity_selector{
     private:
-      solar *data;
+      float radius;
 
     public:
-      solar_selector( solar *s, idtype i, bool o);
+      solar_selector(idtype i, bool o, point p, float r);
       bool contains_point(point p, float &d);
       source_t command_source();
       bool inside_rect(sf::FloatRect r);
@@ -43,25 +40,25 @@ namespace st3{
 
     class fleet_selector : public entity_selector{
     private:
-      fleet *data;
+      float radius;
 
     public:
-      fleet_selector( fleet *s, idtype i, bool o);
+      fleet_selector(idtype i, bool o, point p, float r);
       bool contains_point(point p, float &d);
       source_t command_source();
       bool inside_rect(sf::FloatRect r);
     };
 
-    class command_selector : public selector{
+    class command_selector : public entity_selector{
     private:
       point from;
-      point to;
 
     public:
-      command c;
 
-      command_selector(command c, point s, point d);
+      command_selector(idtype i, point s, point d);
       bool contains_point(point p, float &d);
+      bool inside_rect(sf::FloatRect r);
+      source_t command_source();
     };
   };
 };

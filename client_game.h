@@ -20,29 +20,36 @@ namespace st3{
 
       idtype comid;
       sf::FloatRect srect;
-      hm_t<idtype, command_selector*> command_selectors;
-      hm_t<source_t, std::set<idtype>> entity_commands;
+      hm_t<idtype, command> commands;
+      hm_t<source_t, std::set<source_t> > entity_commands;
       hm_t<source_t, entity_selector*> entity_selectors;
 
+      // round sections
       void run();
       bool pre_step();
       void choice_step();
       void simulation_step();
 
+      // data handling
       choice build_choice();
       void initialize_selectors();
 
+      // event handling
       bool choice_event(sf::Event e);
       void area_select();
-      void click_at(point p, sf::Mouse::Button button);
+      source_t entity_at(point p);
+      void target_at(point p);
+      void select_at(point p);
 
+      // command handling
       bool command_exists(command c);
       void command_points(command c, point &from, point &to);
-      void add_command(command c);
-      void remove_command(idtype id);
+      void add_command(command c, point from, point to);
+      void remove_command(source_t key);
       void command2point(point p);
-      void command2entity(entity_selector *s);
+      void command2entity(source_t key);
 
+      // selection handling
       void clear_selectors();
       void deselect_all();
 

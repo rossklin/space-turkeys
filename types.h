@@ -23,6 +23,8 @@ namespace st3{
     const std::string solar = "solar";
     const std::string fleet = "fleet";
     const std::string point = "point";
+    const std::string command = "command";
+    const std::string none = "";
 
     std::string make(std::string t, idtype i);
     std::string make(std::string t, st3::point p);
