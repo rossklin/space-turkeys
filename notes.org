@@ -13,7 +13,7 @@
      make a "selectable" class with meta info: id, type etc.
      
      make commands from and to selectables? or just from? just track
-     selection?
+     selection? go back to having a "selected" attribute?
 **** make_command
 *** translate, zoom
 *** draw solar [, fleet, command, ..?]

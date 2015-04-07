@@ -10,6 +10,7 @@ namespace st3{
     std::set<idtype> ships;
     target_t target;
     point position;
+    sfloat radius;
     sint owner;
   };
 };

@@ -5,6 +5,7 @@
 
 #include "types.h"
 #include "ship.h"
+#include "fleet.h"
 #include "solar.h"
 #include "choice.h"
 #include "player.h"

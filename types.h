@@ -12,19 +12,30 @@ namespace st3{
   typedef sint idtype;
   typedef sint protocol_t;
 
-  template <typename key, typename value> 
-    using hm_t = std::unordered_map<key,value>;
+  template <typename key, typename value, typename... params> 
+    using hm_t = std::unordered_map<key,value,params...>;
+
+  typedef sf::Vector2f point;
   
-  struct target_t{
+  struct source_t{
     static const sint SOLAR = 0;
     static const sint FLEET = 1;
-    static const sint POSITION = 2;
+
+    struct hash{
+      size_t operator()(const source_t &a) const;
+    };
+
+    struct pred{
+      bool operator()(const source_t &a, const source_t &b) const;
+    };
 
     sint id;
     sint type;
-    point position;
   };
 
-  typedef sf::Vector2f point;
+  struct target_t : public source_t{
+    static const sint POINT = 2;
+    point position;
+  };
 };
 #endif

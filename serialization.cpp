@@ -135,11 +135,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
 
 // choice
 sf::Packet& st3::operator <<(sf::Packet& packet, const choice &c){
-  return packet << c.fleet_commands << c.solar_commands;
+  return packet << c.commands;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, choice &c){
-  return packet >> c.fleet_commands >> c.solar_commands;
+  return packet >> c.commands;
 }
 
 // command
@@ -151,13 +151,22 @@ sf::Packet& st3::operator >>(sf::Packet& packet, command &c){
   return packet << c.source << c.target << c.quantity;
 }
 
-// target_t
-sf::Packet& st3::operator <<(sf::Packet& packet, const target_t &c){
+// source_t
+sf::Packet& st3::operator <<(sf::Packet& packet, const source_t &c){
   return packet << c.id << c.type;
 }
 
-sf::Packet& st3::operator >>(sf::Packet& packet, target_t &c){
+sf::Packet& st3::operator >>(sf::Packet& packet, source_t &c){
   return packet >> c.id >> c.type;
+}
+
+// target_t
+sf::Packet& st3::operator <<(sf::Packet& packet, const target_t &c){
+  return packet << c.id << c.type << c.position;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, target_t &c){
+  return packet >> c.id >> c.type >> c.position;
 }
 
 // point
@@ -190,9 +199,9 @@ template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, ship> &g)
 template sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<idtype, solar> &g);
 template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, solar> &g);
 
-// // instantiate templates for list<command> and list<upgrade_choice>
-// template sf::Packet& st3::operator <<(sf::Packet& packet, const list<command> &c);
-// template sf::Packet& st3::operator >>(sf::Packet& packet, list<command> &c);
+// instantiate templates for list<command> and list<upgrade_choice>
+template sf::Packet& st3::operator <<(sf::Packet& packet, const list<command> &c);
+template sf::Packet& st3::operator >>(sf::Packet& packet, list<command> &c);
 
 // template sf::Packet& st3::operator <<(sf::Packet& packet, const list<upgrade_choice> &c);
 // template sf::Packet& st3::operator >>(sf::Packet& packet, list<upgrade_choice> &c);

@@ -9,6 +9,7 @@
 #include "game_data.h"
 #include "choice.h"
 #include "types.h"
+#include "selector.h"
 
 namespace st3{
   namespace client{
@@ -16,37 +17,38 @@ namespace st3{
       socket_t socket;
       window_t window;
       game_data data;
-      choice genchoice;
 
-      // choice interface data
-
-      struct selector_t{
-	idtype id;
-	sint type;
-	bool owned;
-
-	selector_t(idtype i, sint t, bool o);
-	bool operator < (selector_t b);
-      };
-
-      std::set<selector_t> selectors;
-
-      const sint SELECT_NONE = 0; 
-      const sint SELECT_SOLAR = 1;
-      const sint SELECT_FLEET = 2;
-      const sint SELECT_SOLAR_COMMAND = 4;
-      const sint SELECT_FLEET_COMMAND = 8;
+      idtype comid;
+      sf::FloatRect srect;
+      hm_t<idtype, command_selector*> command_selectors;
+      hm_t<source_t, std::set<idtype>, source_t::hash, source_t::pred> entity_commands;
+      hm_t<source_t, entity_selector*, source_t::hash, source_t::pred> entity_selectors;
 
       void run();
       bool pre_step();
       void choice_step();
       void simulation_step();
-      void choice_event(sf::Event e);
-      void area_select(sf::FloatRect r);
+
+      choice build_choice();
+      void initialize_selectors();
+
+      bool choice_event(sf::Event e);
+      void area_select();
       void click_at(point p, sf::Mouse::Button button);
 
+      bool command_exists(command c);
+      void command_points(command c, point &from, point &to);
+      void add_command(command c);
+      void remove_command(idtype id);
+      void command2point(point p);
+      void command2entity(entity_selector *s);
+
+      void clear_selectors();
+      void deselect_all();
+
       // graphics
-      void draw_universe();
+      void draw_universe(game_data &g);
+      void draw_universe_ui();
     };
   };
 };
