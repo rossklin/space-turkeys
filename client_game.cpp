@@ -1,11 +1,14 @@
 #include <iostream>
 #include <thread>
 
+#include <SFML/Graphics.hpp>
+
 #include "client_game.h"
 #include "graphics.h"
 #include "com_client.h"
 #include "protocol.h"
 #include "serialization.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -258,8 +261,14 @@ void st3::client::game::add_command(command c, point from, point to){
   if (command_exists(c)) return;
   idtype id = comid++;
   source_t key = identifier::make(identifier::command, id);
+
+  // add command selector to entity selectors
   entity_selectors[key] = new command_selector(id, from, to);
+
+  // add command selector key to list of the source entity's children
   entity_commands[c.source].insert(key);
+
+  // add command to list of commands
   commands[id] = c;
 }
 
@@ -419,7 +428,9 @@ void st3::client::game::select_at(point p){
   }
 }
 
+// return true to signal choice step done
 bool st3::client::game::choice_event(sf::Event e){
+  point p;
 
   switch (e.type){
   case sf::Event::MouseButtonPressed:
@@ -430,7 +441,7 @@ bool st3::client::game::choice_event(sf::Event e){
     }
     break;
   case sf::Event::MouseButtonReleased:
-    point p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
+    p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
     if (e.mouseButton.button == sf::Mouse::Left){
       if (srect.width || srect.height){
 	area_select();
@@ -441,7 +452,15 @@ bool st3::client::game::choice_event(sf::Event e){
       target_at(p);
     }
     break;
+  case sf::Event::KeyPressed:
+    switch (e.key.code){
+    case sf::Keyboard::Space:
+      return true;
+    }
+    break;
   };
+  
+  return false;
 }
 
 // ****************************************
@@ -474,7 +493,7 @@ void st3::client::game::draw_universe(game_data &g){
     solar s = x.second;
     sf::CircleShape sol(s.radius);
     sol.setFillColor(sf::Color(10,20,30,40));
-    sol.setOutlineThickness(s.radius / 3);
+    sol.setOutlineThickness(-s.radius / 3);
     col = s.owner > -1 ? sfcolor(g.players[s.owner].color) : sf::Color(150,150,150);
     sol.setOutlineColor(col);
     sol.setPosition(s.position.x, s.position.y);
@@ -486,39 +505,88 @@ void st3::client::game::draw_universe(game_data &g){
 void st3::client::game::draw_universe_ui(){
   sf::Color col;
   sf::Vertex svert[4];
+  sf::CircleShape fleet_circle;
 
-  // todo: check selected
+  fleet_circle.setFillColor(sf::Color(200,200,200,50));
+  fleet_circle.setOutlineColor(sf::Color(40,60,180,200));
+  fleet_circle.setOutlineThickness(2);
 
-  // draw ships
-  for (auto x : data.ships) {
-    ship s = x.second;
-    if (!s.was_killed){
-      col = sfcolor(data.players[s.owner].color);
-      svert[0] = sf::Vertex(point(10, 0), col);
-      svert[1] = sf::Vertex(point(-10, -5), col);
-      svert[2] = sf::Vertex(point(-10, 5), col);
-      svert[3] = sf::Vertex(point(10, 0), col);
-      
-      sf::Transform t;
-      t.translate(s.position.x, s.position.y);
-      t.rotate(s.angle / (2 * M_PI) * 360);
-      window.draw(svert, 4, sf::LinesStrip, t);
+  draw_universe(data);
+  
+  // draw fleet selections
+  for (auto x : data.fleets){
+    source_t key = identifier::make(identifier::fleet, x.first);
+    if (entity_selectors.count(key)){
+      if (entity_selectors[key] -> selected){
+	fleet_circle.setRadius(x.second.radius);
+	fleet_circle.setPosition(x.second.position);
+	window.draw(fleet_circle);
+      }
+    }else{
+      cout << "fleet without selector: " << key << endl;
+      exit(-1);
     }
   }
 
-  // draw solars
+  // draw solar selections
   for (auto x : data.solars){
-    solar s = x.second;
-    sf::CircleShape sol(s.radius);
-    sol.setFillColor(sf::Color(10,20,30,40));
-    sol.setOutlineThickness(s.radius / 3);
-    col = s.owner > -1 ? sfcolor(data.players[s.owner].color) : sf::Color(150,150,150);
-    sol.setOutlineColor(col);
-    sol.setPosition(s.position.x, s.position.y);
-    window.draw(sol);
+    source_t key = identifier::make(identifier::solar, x.first);
+    if (entity_selectors.count(key)){
+      solar s = x.second;
+      sf::CircleShape sol(s.radius);
+      sol.setFillColor(sf::Color::Transparent);
+      sol.setOutlineThickness(s.radius / 5);
+      sol.setOutlineColor(sf::Color(255,255,255,180));
+      sol.setPosition(s.position);
+      window.draw(sol);
+    }else{
+      cout << "solar without selector: " << key << endl;
+      exit(-1);
+    }
   }
 
+  sf::Vertex c_head[3] = {
+    sf::Vertex(sf::Vector2f(1, 0)),
+    sf::Vertex(sf::Vector2f(0.9, -0.03)),
+    sf::Vertex(sf::Vector2f(0.9, 0.03))
+  };
+
+  sf::Vertex c_body[4] = {
+    sf::Vertex(sf::Vector2f(0.9, 0.02)),
+    sf::Vertex(sf::Vector2f(0.9, -0.02)),
+    sf::Vertex(sf::Vector2f(0, -0.02)),
+    sf::Vertex(sf::Vector2f(0, 0.02))
+  };
+
   // draw commands
+  for (auto x : commands){
+    source_t key = identifier::make(identifier::command, x.first);
+    if (entity_selectors.count(key)){
+      command_selector *s = (command_selector*)entity_selectors[key];
+      sf::Color cbcol = s -> selected ? sf::Color(150,200,150,200) : sf::Color(100,200,100,200);
+
+      c_head[0].color = sf::Color::White;
+      c_head[1].color = cbcol;
+      c_head[2].color = cbcol;
+      for (int i = 0; i < 4; i++) c_body[i].color = cbcol;
+
+      sf::Transform t;
+      point delta = s -> get_to() - s -> get_from();
+      float scale = utility::l2norm(delta);
+      t.scale(scale, scale);
+      t.rotate(utility::point_angle(delta) / (2 * M_PI) * 360);
+      t.translate(s -> get_from());
+
+      window.draw(c_head, 3, sf::Triangles, t);
+      window.draw(c_body, 4, sf::Quads, t);
+    }else{
+      cout << "command without selector: " << key << endl;
+      exit(-1);
+    }
+  }
+
+  // draw selection rect
+  sf::RectangleShape r();
 }
 
 // ****************************************

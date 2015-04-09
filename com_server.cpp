@@ -39,10 +39,19 @@ bool st3::server::client_t::receive_query(protocol_t query){
 }
 
 st3::server::com::com(vector<sf::TcpSocket*> c){
+  cout << "com: allocating " << c.size() << " clients" << endl;
   clients.resize(c.size());
   for (sint i = 0; i < clients.size(); i++){
     clients[i].socket = c[i];
     clients[i].id = i;
+    clients[i].allocate_packet();
+  }
+}
+
+void st3::server::com::deallocate(){
+  cout << "com::~com: dealocating " << clients.size() << " clients" << endl;
+  for (auto x : clients) {
+    x.deallocate_packet();
   }
 }
 

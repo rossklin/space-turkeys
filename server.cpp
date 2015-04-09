@@ -40,13 +40,18 @@ int main(int argc, char **argv){
 
   listener.close();
 
+  cout << "starting with " << clients.size() << " clients" << endl;
+
   com c(clients);
   game_data g;
 
   // formalities
-  vector<sf::Packet> packets(clients.size());
+  vector<sf::Packet> packets;
+  packets.resize(c.clients.size());
+
   for (sint i = 0; i < c.clients.size(); i++){
-    packets[i] << protocol::confirm << i;
+    packets[i] << protocol::confirm << c.clients[i].id;
+    cout << "loading packet " << i << " with id " << c.clients[i].id << endl;
   }
 
   c.check_protocol(protocol::connect, packets);
@@ -71,6 +76,7 @@ int main(int argc, char **argv){
 
   game_handler(c, g);
 
+  c.deallocate();
   for (auto x : clients) {
     x -> disconnect();
     delete x;

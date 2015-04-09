@@ -24,7 +24,7 @@ namespace st3{
       entity_selector(idtype i, bool o, point p);
       virtual bool contains_point(point p, float &d) = 0;
       virtual source_t command_source() = 0;
-      virtual bool inside_rect(sf::FloatRect r) = 0;
+      virtual bool inside_rect(sf::FloatRect r);
     };
 
     class solar_selector : public entity_selector{
@@ -35,7 +35,6 @@ namespace st3{
       solar_selector(idtype i, bool o, point p, float r);
       bool contains_point(point p, float &d);
       source_t command_source();
-      bool inside_rect(sf::FloatRect r);
     };
 
     class fleet_selector : public entity_selector{
@@ -46,7 +45,6 @@ namespace st3{
       fleet_selector(idtype i, bool o, point p, float r);
       bool contains_point(point p, float &d);
       source_t command_source();
-      bool inside_rect(sf::FloatRect r);
     };
 
     class command_selector : public entity_selector{
@@ -57,8 +55,9 @@ namespace st3{
 
       command_selector(idtype i, point s, point d);
       bool contains_point(point p, float &d);
-      bool inside_rect(sf::FloatRect r);
       source_t command_source();
+      point get_to();
+      point get_from();
     };
   };
 };

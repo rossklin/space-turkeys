@@ -14,11 +14,13 @@ st3::socket_t::socket_t(sf::TcpSocket *s){
   id = -1;
 }
 
-void st3::socket_t::allocate(){
+void st3::socket_t::allocate_packet(){
+  cout << "socket " << id << ": allocating" << endl;
   data = new sf::Packet();
 }
 
-void st3::socket_t::deallocate(){
+void st3::socket_t::deallocate_packet(){
+  cout << "socket " << id << ": deallocating" << endl;
   delete data;
 }
 

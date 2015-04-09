@@ -3,7 +3,7 @@ lflags = -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -lpthread
 
 server_objects = server.o game_handler.o com_server.o
 client_objects = client.o graphics.o client_game.o com_client.o selector.o types.o
-common_objects = game_data.o serialization.o socket_t.o command.o
+common_objects = game_data.o serialization.o socket_t.o command.o utility.o
 all_objects = $(server_objects) $(client_objects) $(common_objects)
 
 all: server client

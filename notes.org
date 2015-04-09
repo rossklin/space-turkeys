@@ -1,3 +1,65 @@
+* long term goals
+** strategy
+*** development: focus on infrastructure, research or industry
+*** different solars have different resources
+    specific research projects
+    specific production
+*** research directions
+**** vision
+**** stealth
+**** espionage
+**** propulsion & navigation
+**** weapons
+**** shields
+**** infrastructure
+**** democracy
+*** diplomatic agreements
+**** cease fire
+**** peace
+**** military alliance
+**** trade agreement
+*** population
+    Population can be distributed between production goals
+
+    A political system makes the population happy but limits
+    population distribution choices
+
+    A happy population grows
+
+    A large population without infrastructure becomes unhappy
+
+    An unhappy population does not produce well
+
+    Each solar's population has trends of opinion concerning
+    development focus and diplomacy
+** tactics
+*** different ship types
+**** bombers
+     good at bombing solars
+     bad at fighting any other ship
+**** fighters
+     good at fighting battleships
+     bad at bombing solars
+**** battleships
+     good at destroying bombers
+     bad at fighting fighters
+**** transport
+     automatically deployed ship for trade agreements
+*** terrain types
+**** nebula
+     damaging area with low sight
+     find rare resources
+**** high temperospatial curvature
+     chance of worm-holes
+     low navigation: risk going off course
+     small ships risk falling in worm hole
+**** asteroids
+     slow travel speed
+     find resources
+     [low shields] risk damage
+*** moving solars
+*** fog of war
+*** barbarians
 * to do
 ** server game
 *** game_data::apply_choice
@@ -8,6 +70,24 @@
 **** ship interactions
 **** solar evolution
 ** client game
+*** selectors
+    consider making selector extend data and handle drawing?
+*** translate, zoom
+*** events board
+    messages such as "your fleet was destroyed" or "your solar X
+    merged with Bla's solar Y; your population won the ensuing battle"
+** mechanics
+*** fleets
+** before game interface
+* remember
+** when updating a struct/class, also update serialization
+* git pending
+* fixed
+** added utility
+** client game: choice event return value
+** server com: allocate/deallocate packet
+** client game: draw command
+** client game
 *** build choice interface
 **** clicked_at
      make a "selectable" class with meta info: id, type etc.
@@ -15,20 +95,6 @@
      make commands from and to selectables? or just from? just track
      selection? go back to having a "selected" attribute?
 **** make_command
-*** translate, zoom
-*** draw solar [, fleet, command, ..?]
-    now part of client::game
-** mechanics
-*** fleets
-*** research/development
-*** resources
-*** different planet types
-*** different ship types
-** before game interface
-* remember
-** when updating a struct/class, also update serialization
-* git pending
-* fixed
 ** split com into socket_t, com_client, com_server
 ** replaced client's game_handler with struct client_game
 ** implemented command serialization
@@ -59,3 +125,4 @@
 
    gets n=-9744, for some reason still enters push loop. Test run with
    &&res in loop condition. Check if n is wrong from start.
+   

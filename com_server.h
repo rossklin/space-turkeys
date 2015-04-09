@@ -22,6 +22,7 @@ namespace st3{
       std::vector<client_t> clients;
 
       com(std::vector<sf::TcpSocket*> c);
+      void deallocate();
       void check_protocol(protocol_t query, sf::Packet &packet);
       void check_protocol(protocol_t query, std::vector<sf::Packet> &packets);
       void distribute_frames(std::vector<sf::Packet> &g, int &frame_count);

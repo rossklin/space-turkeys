@@ -43,7 +43,7 @@ int main(){
   string mes = "Name_blabla";
 
   g.socket.socket = &tcp_socket;
-  g.socket.allocate();
+  g.socket.allocate_packet();
 
   mes[rand()%mes.length()] = rand() % 256;
   mes[rand()%mes.length()] = rand() % 256;
@@ -61,10 +61,12 @@ int main(){
 
   cout << "received player id: " << g.socket.id << endl;
 
-  g.window.create(sf::VideoMode(width, height), "SFML Turkeys!");
+  sf::ContextSettings settings;
+  settings.antialiasingLevel = 8;
+  g.window.create(sf::VideoMode(width, height), "SFML Turkeys!", sf::Style::Default, settings);
   g.run();
 
-  g.socket.deallocate();
+  g.socket.deallocate_packet();
   tcp_socket.disconnect();
 
   return 0;

@@ -13,8 +13,8 @@ namespace st3{
 
     socket_t();
     socket_t(sf::TcpSocket *s);
-    void allocate();
-    void deallocate();
+    void allocate_packet();
+    void deallocate_packet();
     bool send(sf::Packet &packet);
     bool receive();
     bool receive(sf::Packet &packet);
