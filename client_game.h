@@ -17,6 +17,7 @@ namespace st3{
       socket_t socket;
       window_t window;
       game_data data;
+      bool area_select_active;
 
       idtype comid;
       sf::FloatRect srect;

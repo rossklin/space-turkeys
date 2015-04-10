@@ -70,6 +70,11 @@
 **** ship interactions
 **** solar evolution
 ** client game
+*** test event handling
+    why don't commands show? - translate before rotate!
+    why does selection rect draw at odd places? - use e.mouseMove.[x|y]
+    why area select when click? - just tiny area select?
+    find how to scale command arrow only lengthwise
 *** selectors
     consider making selector extend data and handle drawing?
 *** translate, zoom

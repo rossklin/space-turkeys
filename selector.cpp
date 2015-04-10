@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "selector.h"
 #include "solar.h"
 #include "fleet.h"
@@ -16,6 +18,7 @@ entity_selector::entity_selector(idtype i, bool o, point p){
   owned = o;
   position = p;
   area_selectable = true;
+  selected = false;
 }
 
 bool entity_selector::inside_rect(sf::FloatRect r){
@@ -70,7 +73,7 @@ bool command_selector::contains_point(point p, float &d){
   d = utility::dpoint2line(p, from, position);
 
   // todo: command size?
-  return true;
+  return d < 5;
 }
 
 source_t command_selector::command_source(){

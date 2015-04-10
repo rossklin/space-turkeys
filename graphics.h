@@ -13,9 +13,5 @@ namespace st3{
   const std::string font_dir = "/usr/share/fonts/truetype/msttcorefonts/";
 
   sf::Color sfcolor(sint);
-  
-  // maths
-  point operator -(const point &a, const point &b);
-  float l2norm(point a);
 };
 #endif

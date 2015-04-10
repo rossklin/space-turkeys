@@ -23,6 +23,8 @@ bool ctrlsel();
 // ****************************************
 
 void st3::client::game::run(){
+  area_select_active = false;
+
   // game loop
   while (pre_step()){
     choice_step();
@@ -348,10 +350,13 @@ void st3::client::game::area_select(){
   sf::FloatRect rect = fixrect(srect);
 
   if (!add2selection()) deselect_all();
+
+  cout << "area select" << endl;
   
   for (auto x : entity_selectors){
     x.second -> selected = x.second -> owned && x.second -> area_selectable && x.second -> inside_rect(rect);
   }
+
 }
 
 void st3::client::game::command2point(point p){
@@ -360,8 +365,10 @@ void st3::client::game::command2point(point p){
   c.target = identifier::make(identifier::point, p);
   to = p;
 
+  cout << "command to point: " << p.x << "," << p.y << endl;
   for (auto x : entity_selectors){
     if (x.second -> selected){
+      cout << "command2point: adding " << x.first << endl;
       c.source = x.second -> command_source();
       from = x.second -> position;
       add_command(c, from, to);
@@ -381,8 +388,11 @@ void st3::client::game::command2entity(source_t key){
   c.target = s -> command_source();
   to = s -> position;
 
+  cout << "command2entity: " << key << endl;
+
   for (auto x : entity_selectors){
     if (x.second != s && x.second -> selected){
+      cout << "command2entity: adding " << x.first << endl;
       c.source = x.second -> command_source();
       from = x.second -> position;
       add_command(c, from, to);
@@ -391,7 +401,7 @@ void st3::client::game::command2entity(source_t key){
 }
 
 source_t st3::client::game::entity_at(point p){
-  float max_click_dist = 20;
+  float max_click_dist = 50;
   float dmin = max_click_dist;
   float d;
   source_t key = "";
@@ -404,6 +414,8 @@ source_t st3::client::game::entity_at(point p){
     }
   }
 
+  cout << "entity at: " << p.x << "," << p.y << ": " << key << endl;
+
   return key;
 }
 
@@ -411,20 +423,24 @@ void st3::client::game::target_at(point p){
   source_t key = entity_at(p);
 
   if (entity_selectors.count(key)){
+    cout << "target at: " << key << endl;
     command2entity(key);
   }else{
+    cout << "target at: point " << p.x << "," << p.y << endl;
     command2point(p);
   }
 }
 
 void st3::client::game::select_at(point p){
+  cout << "select at: " << p.x << "," << p.y << endl;
   source_t key = entity_at(p);
   auto it = entity_selectors.find(key);
  
   if (!add2selection()) deselect_all();
 
-  if (it != entity_selectors.end()){
+  if (it != entity_selectors.end() && it -> second -> owned){
     it -> second -> selected = !(it -> second -> selected);
+    cout << "selector found: " << it -> first << " -> " << it -> second -> selected << endl;
   }
 }
 
@@ -436,14 +452,15 @@ bool st3::client::game::choice_event(sf::Event e){
   case sf::Event::MouseButtonPressed:
     if (e.mouseButton.button == sf::Mouse::Left){
       point p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
-      srect.left = p.x;
-      srect.top = p.y;
+      area_select_active = true;
+      srect = sf::FloatRect(p.x, p.y, 0, 0);
+      cout << "set area UL to: " << srect.left << "x" << srect.top << endl;
     }
     break;
   case sf::Event::MouseButtonReleased:
     p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
     if (e.mouseButton.button == sf::Mouse::Left){
-      if (srect.width || srect.height){
+      if (srect.width > 5 || srect.height > 5){
 	area_select();
       } else {
 	select_at(p);
@@ -451,13 +468,36 @@ bool st3::client::game::choice_event(sf::Event e){
     }else if (e.mouseButton.button == sf::Mouse::Right){
       target_at(p);
     }
+
+    // clear selection rect
+    area_select_active = false;
+    srect = sf::FloatRect(0, 0, 0, 0);
+    break;
+  case sf::Event::MouseMoved:
+    if (area_select_active){
+      p = window.mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
+      srect.width = p.x - srect.left;
+      srect.height = p.y - srect.top;
+      cout << "update srect size at " << p.x << "x" << p.y << " to " << srect.width << "x" << srect.height << endl;
+    }
     break;
   case sf::Event::KeyPressed:
     switch (e.key.code){
     case sf::Keyboard::Space:
       return true;
+    case sf::Keyboard::Delete:
+      auto i = entity_selectors.begin();
+      while (i != entity_selectors.end()){
+	if ((!identifier::get_type(i -> first).compare(identifier::command)) && i -> second -> selected){
+	  source_t key = i -> first;
+	  i++;
+	  remove_command(key);
+	}else{
+	  i++;
+	}
+      }
+      break;
     }
-    break;
   };
   
   return false;
@@ -496,7 +536,7 @@ void st3::client::game::draw_universe(game_data &g){
     sol.setOutlineThickness(-s.radius / 3);
     col = s.owner > -1 ? sfcolor(g.players[s.owner].color) : sf::Color(150,150,150);
     sol.setOutlineColor(col);
-    sol.setPosition(s.position.x, s.position.y);
+    sol.setPosition(s.position.x - s.radius, s.position.y - s.radius);
     window.draw(sol);
   }
 }
@@ -532,13 +572,15 @@ void st3::client::game::draw_universe_ui(){
   for (auto x : data.solars){
     source_t key = identifier::make(identifier::solar, x.first);
     if (entity_selectors.count(key)){
-      solar s = x.second;
-      sf::CircleShape sol(s.radius);
-      sol.setFillColor(sf::Color::Transparent);
-      sol.setOutlineThickness(s.radius / 5);
-      sol.setOutlineColor(sf::Color(255,255,255,180));
-      sol.setPosition(s.position);
-      window.draw(sol);
+      if (entity_selectors[key] -> selected){
+	solar s = x.second;
+	sf::CircleShape sol(s.radius);
+	sol.setFillColor(sf::Color::Transparent);
+	sol.setOutlineThickness(s.radius / 5);
+	sol.setOutlineColor(sf::Color(255,255,255,180));
+	sol.setPosition(s.position.x - s.radius, s.position.y - s.radius);
+	window.draw(sol);
+      }
     }else{
       cout << "solar without selector: " << key << endl;
       exit(-1);
@@ -547,15 +589,14 @@ void st3::client::game::draw_universe_ui(){
 
   sf::Vertex c_head[3] = {
     sf::Vertex(sf::Vector2f(1, 0)),
-    sf::Vertex(sf::Vector2f(0.9, -0.03)),
-    sf::Vertex(sf::Vector2f(0.9, 0.03))
+    sf::Vertex(sf::Vector2f(0.9, -3)),
+    sf::Vertex(sf::Vector2f(0.9, 3))
   };
 
-  sf::Vertex c_body[4] = {
-    sf::Vertex(sf::Vector2f(0.9, 0.02)),
-    sf::Vertex(sf::Vector2f(0.9, -0.02)),
-    sf::Vertex(sf::Vector2f(0, -0.02)),
-    sf::Vertex(sf::Vector2f(0, 0.02))
+  sf::Vertex c_body[3] = {
+    sf::Vertex(sf::Vector2f(0.9, 2)),
+    sf::Vertex(sf::Vector2f(0.9, -2)),
+    sf::Vertex(sf::Vector2f(0, 0))
   };
 
   // draw commands
@@ -563,7 +604,7 @@ void st3::client::game::draw_universe_ui(){
     source_t key = identifier::make(identifier::command, x.first);
     if (entity_selectors.count(key)){
       command_selector *s = (command_selector*)entity_selectors[key];
-      sf::Color cbcol = s -> selected ? sf::Color(150,200,150,200) : sf::Color(100,200,100,200);
+      sf::Color cbcol = s -> selected ? sf::Color(180,240,180,230) : sf::Color(100,200,100,200);
 
       c_head[0].color = sf::Color::White;
       c_head[1].color = cbcol;
@@ -573,20 +614,30 @@ void st3::client::game::draw_universe_ui(){
       sf::Transform t;
       point delta = s -> get_to() - s -> get_from();
       float scale = utility::l2norm(delta);
-      t.scale(scale, scale);
-      t.rotate(utility::point_angle(delta) / (2 * M_PI) * 360);
       t.translate(s -> get_from());
+      t.rotate(utility::point_angle(delta) / (2 * M_PI) * 360);
+      t.scale(scale, 1);
+
+      cout << "drawing command " << x.first << " at " << s -> get_from().x << "x" << s -> get_from().y << " at scale " << scale << endl;
 
       window.draw(c_head, 3, sf::Triangles, t);
-      window.draw(c_body, 4, sf::Quads, t);
+      window.draw(c_body, 3, sf::Triangles, t);
     }else{
       cout << "command without selector: " << key << endl;
       exit(-1);
     }
   }
 
-  // draw selection rect
-  sf::RectangleShape r();
+  if (area_select_active && srect.width && srect.height){
+    // draw selection rect
+    sf::RectangleShape r;
+    r.setSize(sf::Vector2f(srect.width, srect.height));
+    r.setPosition(sf::Vector2f(srect.left, srect.top));
+    r.setFillColor(sf::Color(250,250,250,50));
+    r.setOutlineColor(sf::Color(80, 120, 240, 200));
+    r.setOutlineThickness(1);
+    window.draw(r);
+  }
 }
 
 // ****************************************
