@@ -10,6 +10,7 @@
 #include "choice.h"
 #include "types.h"
 #include "selector.h"
+#include "utility.h"
 
 namespace st3{
   namespace client{
@@ -41,6 +42,7 @@ namespace st3{
       source_t entity_at(point p);
       void target_at(point p);
       void select_at(point p);
+      void controls();
 
       // command handling
       bool command_exists(command c);

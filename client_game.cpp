@@ -139,6 +139,8 @@ void st3::client::game::choice_step(){
       done |= choice_event(event);
     }
 
+    controls();
+
     window.clear();
     draw_universe_ui();
     window.display();
@@ -218,6 +220,8 @@ void st3::client::game::simulation_step(){
 	break;
       }
     }
+
+    controls();
 
     window.clear();
     draw_universe(g[idx]);
@@ -447,6 +451,8 @@ void st3::client::game::select_at(point p){
 // return true to signal choice step done
 bool st3::client::game::choice_event(sf::Event e){
   point p;
+  auto i = entity_selectors.begin();
+  sf::View view = window.getView();
 
   switch (e.type){
   case sf::Event::MouseButtonPressed:
@@ -486,7 +492,7 @@ bool st3::client::game::choice_event(sf::Event e){
     case sf::Keyboard::Space:
       return true;
     case sf::Keyboard::Delete:
-      auto i = entity_selectors.begin();
+      i = entity_selectors.begin();
       while (i != entity_selectors.end()){
 	if ((!identifier::get_type(i -> first).compare(identifier::command)) && i -> second -> selected){
 	  source_t key = i -> first;
@@ -497,10 +503,45 @@ bool st3::client::game::choice_event(sf::Event e){
 	}
       }
       break;
+    case sf::Keyboard::O:
+      view.zoom(1.2);
+      break;
+    case sf::Keyboard::I:
+      view.zoom(1 / 1.2);
+      break;
     }
+    break;
   };
+
+  window.setView(view);
   
   return false;
+}
+
+void st3::client::game::controls(){
+  // if (!window.hasFocus()) {
+  //   vel = point(0,0);
+  //   return;
+  // }
+
+  static point vel(0,0);
+  sf::View view = window.getView();
+  float s = view.getSize().x / data.settings.width;
+
+  if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
+    vel.x -= 5 * s;
+  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
+    vel.x += 5 * s;
+  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)){
+    vel.y -= 5 * s;
+  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)){
+    vel.y += 5 * s;
+  }
+
+  vel = utility::scale_point(vel, 0.8);
+  
+  view.move(vel);
+  window.setView(view);
 }
 
 // ****************************************

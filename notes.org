@@ -70,14 +70,7 @@
 **** ship interactions
 **** solar evolution
 ** client game
-*** test event handling
-    why don't commands show? - translate before rotate!
-    why does selection rect draw at odd places? - use e.mouseMove.[x|y]
-    why area select when click? - just tiny area select?
-    find how to scale command arrow only lengthwise
-*** selectors
-    consider making selector extend data and handle drawing?
-*** translate, zoom
+*** translate: upgrade to sfml2.2 to get window::hasFocus()
 *** events board
     messages such as "your fleet was destroyed" or "your solar X
     merged with Bla's solar Y; your population won the ensuing battle"
@@ -87,7 +80,13 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** translate, zoom
 * fixed
+** test event handling
+    why don't commands show? - translate before rotate!
+    why does selection rect draw at odd places? - use e.mouseMove.[x|y]
+    why area select when click? - just tiny area select?
+    find how to scale command arrow only lengthwise - transform order
 ** added utility
 ** client game: choice event return value
 ** server com: allocate/deallocate packet
