@@ -15,6 +15,7 @@ namespace st3{
     float dpoint2line(point p, point a, point b);
   };
   point operator -(const point &a, const point &b);
+  point operator +(const point &a, const point &b);
 };
 
 #endif

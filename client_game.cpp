@@ -487,6 +487,16 @@ bool st3::client::game::choice_event(sf::Event e){
       cout << "update srect size at " << p.x << "x" << p.y << " to " << srect.width << "x" << srect.height << endl;
     }
     break;
+  case sf::Event::MouseWheelMoved:
+    // increment selected commands
+    for (auto x : entity_selectors){
+      if (x.second -> selected && !identifier::get_type(x.first).compare(identifier::command)){
+	cout << "incrementing command " << identifier::get_id(x.first) << " by " << e.mouseWheel.delta << endl;
+	commands[identifier::get_id(x.first)].quantity += e.mouseWheel.delta;
+      }
+    }
+    
+    break;
   case sf::Event::KeyPressed:
     switch (e.key.code){
     case sf::Keyboard::Space:
@@ -587,6 +597,13 @@ void st3::client::game::draw_universe_ui(){
   sf::Color col;
   sf::Vertex svert[4];
   sf::CircleShape fleet_circle;
+  sf::Font font;
+
+  // setup load text
+  if (!font.loadFromFile(st3::font_dir + "arial.ttf")){
+    cout << "error loading font" << endl;
+    exit(-1);
+  }
 
   fleet_circle.setFillColor(sf::Color(200,200,200,50));
   fleet_circle.setOutlineColor(sf::Color(40,60,180,200));
@@ -646,14 +663,28 @@ void st3::client::game::draw_universe_ui(){
     if (entity_selectors.count(key)){
       command_selector *s = (command_selector*)entity_selectors[key];
       sf::Color cbcol = s -> selected ? sf::Color(180,240,180,230) : sf::Color(100,200,100,200);
+      point to = s -> get_to();
+      point from = s -> get_from();
 
+      // setup text
+      sf::Text text;
+      text.setFont(font); 
+      text.setString(to_string(x.second.quantity));
+      text.setCharacterSize(18);
+      text.setColor(sf::Color(200,200,200));
+      // text.setStyle(sf::Text::Underlined);
+      sf::FloatRect text_dims = text.getLocalBounds();
+      text.setPosition(utility::scale_point(to + from, 0.5) - point(text_dims.width/2, text_dims.height + 10));
+
+      // setup arrow colors
       c_head[0].color = sf::Color::White;
       c_head[1].color = cbcol;
       c_head[2].color = cbcol;
       for (int i = 0; i < 4; i++) c_body[i].color = cbcol;
 
+      // setup arrow transform
       sf::Transform t;
-      point delta = s -> get_to() - s -> get_from();
+      point delta = to - from;
       float scale = utility::l2norm(delta);
       t.translate(s -> get_from());
       t.rotate(utility::point_angle(delta) / (2 * M_PI) * 360);
@@ -663,6 +694,7 @@ void st3::client::game::draw_universe_ui(){
 
       window.draw(c_head, 3, sf::Triangles, t);
       window.draw(c_body, 3, sf::Triangles, t);
+      window.draw(text);
     }else{
       cout << "command without selector: " << key << endl;
       exit(-1);

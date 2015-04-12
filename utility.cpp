@@ -61,3 +61,7 @@ float utility::dpoint2line(point p, point a, point b){
 point st3::operator -(const point &a, const point &b){
   return point(a.x - b.x, a.y - b.y);
 }
+
+point st3::operator +(const point &a, const point &b){
+  return point(a.x + b.x, a.y + b.y);
+}
