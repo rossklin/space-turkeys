@@ -70,6 +70,13 @@
 **** ship interactions
 **** solar evolution
 ** client game
+*** change to selector : public data_thingy
+*** incrementing command
+    consider what happens when multiple commands with same source are
+    incremented at limit. Currently, the first feasible commands in
+    the list will be incremented.
+
+    write x_selector::get_quantity();
 *** translate: upgrade to sfml2.2 to get window::hasFocus()
 *** events board
     messages such as "your fleet was destroyed" or "your solar X
@@ -80,8 +87,9 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-** translate, zoom
+** merged draw and data responsibility in selector in client::game
 * fixed
+** translate, zoom
 ** test event handling
     why don't commands show? - translate before rotate!
     why does selection rect draw at odd places? - use e.mouseMove.[x|y]
@@ -129,4 +137,5 @@
 
    gets n=-9744, for some reason still enters push loop. Test run with
    &&res in loop condition. Check if n is wrong from start.
+   
    

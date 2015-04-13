@@ -41,9 +41,10 @@ bool st3::client::game::pre_step(){
   sf::Packet packet, pq;
   sf::Font font;
   sf::Text text;
+  game_data data;
 
   // setup load text
-  if (!font.loadFromFile(st3::font_dir + "arial.ttf")){
+  if (!font.loadFromFile(graphics::font_dir + "arial.ttf")){
     cout << "error loading font" << endl;
     exit(-1);
   }
@@ -77,7 +78,7 @@ bool st3::client::game::pre_step(){
     }
 
     window.clear();
-    draw_universe(data);
+    draw_universe();
     window.draw(text);
     window.display();
 
@@ -93,9 +94,11 @@ bool st3::client::game::pre_step(){
     exit(-1);
   }
 
+  reload_data(data);
+
   cout << "pre_step: end: game data has " << data.ships.size() << " ships" << endl;
 
-  window.setView(sf::View(sf::FloatRect(0, 0, data.settings.width, data.settings.height)));
+  window.setView(sf::View(sf::FloatRect(0, 0, settings.width, settings.height)));
 
   return true;
 }
@@ -111,10 +114,8 @@ void st3::client::game::choice_step(){
   sf::Font font;
   sf::Text text;
 
-  initialize_selectors();
-
   // setup load text
-  if (!font.loadFromFile(st3::font_dir + "arial.ttf")){
+  if (!font.loadFromFile(graphics::font_dir + "arial.ttf")){
     cout << "error loading font" << endl;
     exit(-1);
   }
@@ -130,8 +131,6 @@ void st3::client::game::choice_step(){
 
   // CREATE THE CHOICE (USER INTERFACE)
 
-  cout << "choice step: start: game data has " << data.ships.size() << " ships" << endl;
-
   while (!done){
     sf::Event event;
     while (window.pollEvent(event)){
@@ -142,7 +141,7 @@ void st3::client::game::choice_step(){
     controls();
 
     window.clear();
-    draw_universe_ui();
+    draw_universe();
     window.display();
 
     sf::sleep(sf::milliseconds(100));
@@ -172,7 +171,7 @@ void st3::client::game::choice_step(){
     }
 
     window.clear();
-    draw_universe(data);
+    draw_universe();
     window.draw(text);
     window.display();
 
@@ -193,17 +192,15 @@ void st3::client::game::choice_step(){
 void st3::client::game::simulation_step(){
   bool done = false;
   bool playing = true;
-  int idx = 0;
-  int loaded = 1;
-  vector<game_data> g(data.settings.frames_per_round + 1);
-  g[0] = data;
+  int idx = -1;
+  int loaded = 0;
+  vector<game_data> g(settings.frames_per_round);
 
   thread t(load_frames, socket, ref(g), ref(loaded));
-  cout << "simulation start: game data has " << data.ships.size() << " ships" << endl;
 
   while (!done){
     done |= !window.isOpen();
-    done |= idx == data.settings.frames_per_round;
+    done |= idx == settings.frames_per_round - 1;
 
     cout << "simulation loop: frame " << idx << " of " << loaded << " loaded frames, play = " << playing << endl;
 
@@ -224,19 +221,18 @@ void st3::client::game::simulation_step(){
     controls();
 
     window.clear();
-    draw_universe(g[idx]);
+    draw_universe();
     window.display();
 
     playing &= idx < loaded - 1;
 
     if (playing){
       idx++;
+      reload_data(g[idx]);
     }
 
     sf::sleep(sf::milliseconds(100));    
   }
-
-  data = g.back();
 
   t.join();
 }
@@ -247,8 +243,31 @@ void st3::client::game::simulation_step(){
 
 choice st3::client::game::build_choice(){
   choice c;
-  for (auto x : commands) c.commands.push_back(x.second);
+  for (auto x : command_selectors){
+    c.commands.push_back(*x.second);
+  }
+
   return c;
+}
+
+void st3::client::game::reload_data(const game_data &g){
+  clear_selectors();
+  
+  ships = g.ships;
+  players = g.players;
+  settings = g.settings;
+  
+  for (auto x : g.fleets){
+    source_t key = identifier::make(identifier::fleet, x.first);
+    sf::Color col = graphics::sfcolor(players[x.second.owner].color);
+    entity_selectors[key] = new fleet_selector(x.second, col, x.second.owner == socket.id);
+  }
+
+  for (auto x : g.solars){
+    source_t key = identifier::make(identifier::solar, x.first);
+    sf::Color col = x.second.owner > -1 ? graphics::sfcolor(players[x.second.owner].color) : graphics::solar_neutral;
+    entity_selectors[key] = new solar_selector(x.second, col, x.second.owner == socket.id);
+  }
 }
 
 // ****************************************
@@ -256,8 +275,8 @@ choice st3::client::game::build_choice(){
 // ****************************************
 
 bool st3::client::game::command_exists(command c){
-  for (auto x : commands){
-    if (x.second == c) return true;
+  for (auto x : command_selectors){
+    if (c == (command)*x.second) return true;
   }
   
   return false;
@@ -267,15 +286,16 @@ void st3::client::game::add_command(command c, point from, point to){
   if (command_exists(c)) return;
   idtype id = comid++;
   source_t key = identifier::make(identifier::command, id);
+  command_selector *cs = new command_selector(c, from, to);
 
   // add command selector to entity selectors
-  entity_selectors[key] = new command_selector(id, from, to);
+  entity_selectors[key] = cs;
+  
+  // add command to command selectors
+  command_selectors[key] = cs;
 
   // add command selector key to list of the source entity's children
   entity_commands[c.source].insert(key);
-
-  // add command to list of commands
-  commands[id] = c;
 }
 
 // remove command selector and associated command
@@ -285,29 +305,59 @@ void st3::client::game::remove_command(source_t key){
     exit(-1);
   }
 
-  if (entity_selectors.count(key)){
-    command_selector *s = (command_selector*)entity_selectors[key];
-    
-    if (!commands.count(s -> id)){
-      cout << "remove_command: no command with id " << s -> id << endl;
-      exit(-1);
-    }
-
-    source_t source_key = commands[s -> id].source;
+  if (entity_selectors.count(key) && command_selectors.count(key)){
+    command_selector *s = command_selectors[key];
 
     // remove this command from it's parent's list
-    if (!entity_commands.count(source_key)){
-      cout << "remove_command: no entity_commands with source key " << source_key << endl;
+    if (!entity_commands.count(s -> source)){
+      cout << "remove_command: no entity_commands with source key " << s -> source << endl;
       exit(-1);
     }
-    entity_commands[source_key].erase(key);
+    entity_commands[s -> source].erase(key);
 
-    // remove this command's list of child commands
+    // remove this command's child commands and list thereof
+    for (auto x : entity_commands[key]) remove_command(x);
     entity_commands.erase(key);
 
     // remove this command's selector
     entity_selectors.erase(key);
+    command_selectors.erase(key);
     delete s;
+  }else{
+    cout << "remove command: " << key << ": not found!" << endl;
+    exit(-1);
+  }
+}
+
+// key must reference a command selector
+void st3::client::game::increment_command(source_t key, int delta){
+  command_selector *s = command_selectors[key];
+
+  if (!s) return;
+
+  // compute allocated quantity of parent entity
+  if (!entity_commands.count(s -> source)){
+    cout << "game::increment_command: " << s -> source << ": no entity commands" << endl;
+    exit(-1);
+  }
+
+  int sum = 0;
+  for (auto x : entity_commands[s -> source]){
+    command_selector *c = command_selectors[x];
+    if (!c){
+      cout << "increment_command: " << key << ": missing sibling command: " << x << endl;
+      exit(-1);
+    }
+    sum += c -> quantity;
+  }
+
+  entity_selector *source = entity_selectors[s -> source];
+  if (!source){
+    cout << "increment_command: " << key << ": missing source: " << s -> source << endl;
+    exit(-1);
+  }
+  if (sum + delta <= source -> get_quantity()){
+    s -> quantity += delta;
   }
 }
 
@@ -324,22 +374,6 @@ void st3::client::game::clear_selectors(){
 
   entity_selectors.clear();
   entity_commands.clear();
-  commands.clear();
-}
-
-void st3::client::game::initialize_selectors(){
-  source_t s;
-  clear_selectors();
-
-  for (auto x : data.solars){
-    s = identifier::make(identifier::solar, x.first);
-    entity_selectors[s] = new solar_selector(x.first, x.second.owner == socket.id, x.second.position, x.second.radius);
-  }
-
-  for (auto x : data.fleets){
-    s = identifier::make(identifier::fleet, x.first);
-    entity_selectors[s] = new solar_selector(x.first, x.second.owner == socket.id, x.second.position, x.second.radius);
-  }
 }
 
 void st3::client::game::deselect_all(){
@@ -373,8 +407,8 @@ void st3::client::game::command2point(point p){
   for (auto x : entity_selectors){
     if (x.second -> selected){
       cout << "command2point: adding " << x.first << endl;
-      c.source = x.second -> command_source();
-      from = x.second -> position;
+      c.source = x.first;
+      from = x.second -> get_position();
       add_command(c, from, to);
     }
   }
@@ -389,16 +423,16 @@ void st3::client::game::command2entity(source_t key){
   command c;
   point from, to;
   entity_selector *s = entity_selectors[key];
-  c.target = s -> command_source();
-  to = s -> position;
+  c.target = key;
+  to = s -> get_position();
 
   cout << "command2entity: " << key << endl;
 
   for (auto x : entity_selectors){
     if (x.second != s && x.second -> selected){
       cout << "command2entity: adding " << x.first << endl;
-      c.source = x.second -> command_source();
-      from = x.second -> position;
+      c.source = x.first;
+      from = x.second -> get_position();
       add_command(c, from, to);
     }
   }
@@ -490,9 +524,9 @@ bool st3::client::game::choice_event(sf::Event e){
   case sf::Event::MouseWheelMoved:
     // increment selected commands
     for (auto x : entity_selectors){
-      if (x.second -> selected && !identifier::get_type(x.first).compare(identifier::command)){
+      if (x.second -> selected && x.second -> isa(identifier::command)){
 	cout << "incrementing command " << identifier::get_id(x.first) << " by " << e.mouseWheel.delta << endl;
-	commands[identifier::get_id(x.first)].quantity += e.mouseWheel.delta;
+	increment_command(x.first, e.mouseWheel.delta);
       }
     }
     
@@ -504,7 +538,7 @@ bool st3::client::game::choice_event(sf::Event e){
     case sf::Keyboard::Delete:
       i = entity_selectors.begin();
       while (i != entity_selectors.end()){
-	if ((!identifier::get_type(i -> first).compare(identifier::command)) && i -> second -> selected){
+	if ((i -> second -> isa(identifier::command)) && i -> second -> selected){
 	  source_t key = i -> first;
 	  i++;
 	  remove_command(key);
@@ -536,7 +570,7 @@ void st3::client::game::controls(){
 
   static point vel(0,0);
   sf::View view = window.getView();
-  float s = view.getSize().x / data.settings.width;
+  float s = view.getSize().x / settings.width;
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
     vel.x -= 5 * s;
@@ -558,15 +592,15 @@ void st3::client::game::controls(){
 // GRAPHICS
 // ****************************************
 
-void st3::client::game::draw_universe(game_data &g){
+void st3::client::game::draw_universe(){
   sf::Color col;
   sf::Vertex svert[4];
 
   // draw ships
-  for (auto x : g.ships) {
+  for (auto x : ships) {
     ship s = x.second;
     if (!s.was_killed){
-      col = sfcolor(g.players[s.owner].color);
+      col = graphics::sfcolor(players[s.owner].color);
       svert[0] = sf::Vertex(point(10, 0), col);
       svert[1] = sf::Vertex(point(-10, -5), col);
       svert[2] = sf::Vertex(point(-10, 5), col);
@@ -579,126 +613,9 @@ void st3::client::game::draw_universe(game_data &g){
     }
   }
 
-  // draw solars
-  for (auto x : g.solars){
-    solar s = x.second;
-    sf::CircleShape sol(s.radius);
-    sol.setFillColor(sf::Color(10,20,30,40));
-    sol.setOutlineThickness(-s.radius / 3);
-    col = s.owner > -1 ? sfcolor(g.players[s.owner].color) : sf::Color(150,150,150);
-    sol.setOutlineColor(col);
-    sol.setPosition(s.position.x - s.radius, s.position.y - s.radius);
-    window.draw(sol);
-  }
-}
-
-
-void st3::client::game::draw_universe_ui(){
-  sf::Color col;
-  sf::Vertex svert[4];
-  sf::CircleShape fleet_circle;
-  sf::Font font;
-
-  // setup load text
-  if (!font.loadFromFile(st3::font_dir + "arial.ttf")){
-    cout << "error loading font" << endl;
-    exit(-1);
-  }
-
-  fleet_circle.setFillColor(sf::Color(200,200,200,50));
-  fleet_circle.setOutlineColor(sf::Color(40,60,180,200));
-  fleet_circle.setOutlineThickness(2);
-
-  draw_universe(data);
-  
-  // draw fleet selections
-  for (auto x : data.fleets){
-    source_t key = identifier::make(identifier::fleet, x.first);
-    if (entity_selectors.count(key)){
-      if (entity_selectors[key] -> selected){
-	fleet_circle.setRadius(x.second.radius);
-	fleet_circle.setPosition(x.second.position);
-	window.draw(fleet_circle);
-      }
-    }else{
-      cout << "fleet without selector: " << key << endl;
-      exit(-1);
-    }
-  }
-
-  // draw solar selections
-  for (auto x : data.solars){
-    source_t key = identifier::make(identifier::solar, x.first);
-    if (entity_selectors.count(key)){
-      if (entity_selectors[key] -> selected){
-	solar s = x.second;
-	sf::CircleShape sol(s.radius);
-	sol.setFillColor(sf::Color::Transparent);
-	sol.setOutlineThickness(s.radius / 5);
-	sol.setOutlineColor(sf::Color(255,255,255,180));
-	sol.setPosition(s.position.x - s.radius, s.position.y - s.radius);
-	window.draw(sol);
-      }
-    }else{
-      cout << "solar without selector: " << key << endl;
-      exit(-1);
-    }
-  }
-
-  sf::Vertex c_head[3] = {
-    sf::Vertex(sf::Vector2f(1, 0)),
-    sf::Vertex(sf::Vector2f(0.9, -3)),
-    sf::Vertex(sf::Vector2f(0.9, 3))
-  };
-
-  sf::Vertex c_body[3] = {
-    sf::Vertex(sf::Vector2f(0.9, 2)),
-    sf::Vertex(sf::Vector2f(0.9, -2)),
-    sf::Vertex(sf::Vector2f(0, 0))
-  };
-
-  // draw commands
-  for (auto x : commands){
-    source_t key = identifier::make(identifier::command, x.first);
-    if (entity_selectors.count(key)){
-      command_selector *s = (command_selector*)entity_selectors[key];
-      sf::Color cbcol = s -> selected ? sf::Color(180,240,180,230) : sf::Color(100,200,100,200);
-      point to = s -> get_to();
-      point from = s -> get_from();
-
-      // setup text
-      sf::Text text;
-      text.setFont(font); 
-      text.setString(to_string(x.second.quantity));
-      text.setCharacterSize(18);
-      text.setColor(sf::Color(200,200,200));
-      // text.setStyle(sf::Text::Underlined);
-      sf::FloatRect text_dims = text.getLocalBounds();
-      text.setPosition(utility::scale_point(to + from, 0.5) - point(text_dims.width/2, text_dims.height + 10));
-
-      // setup arrow colors
-      c_head[0].color = sf::Color::White;
-      c_head[1].color = cbcol;
-      c_head[2].color = cbcol;
-      for (int i = 0; i < 4; i++) c_body[i].color = cbcol;
-
-      // setup arrow transform
-      sf::Transform t;
-      point delta = to - from;
-      float scale = utility::l2norm(delta);
-      t.translate(s -> get_from());
-      t.rotate(utility::point_angle(delta) / (2 * M_PI) * 360);
-      t.scale(scale, 1);
-
-      cout << "drawing command " << x.first << " at " << s -> get_from().x << "x" << s -> get_from().y << " at scale " << scale << endl;
-
-      window.draw(c_head, 3, sf::Triangles, t);
-      window.draw(c_body, 3, sf::Triangles, t);
-      window.draw(text);
-    }else{
-      cout << "command without selector: " << key << endl;
-      exit(-1);
-    }
+  // draw other entities
+  for (auto x : entity_selectors){
+    x.second -> draw(window);
   }
 
   if (area_select_active && srect.width && srect.height){

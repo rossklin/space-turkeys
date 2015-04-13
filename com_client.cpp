@@ -13,15 +13,14 @@ void st3::client::load_frames(socket_t socket, vector<game_data> &g, int &loaded
   sf::Packet pq, pr;
   bool done;
 
-  // shifted indexing since g[0] is already loaded, so frame 0 goes in g[1]
   sint i = 0;
-  while (i < g.size() - 1){
+  while (i < g.size()){
     pq.clear();
     pq << protocol::frame << i;
     query(socket, pq, pr, done);
-    if (pr >> g[i + 1]){
+    if (pr >> g[i]){
       i++;
-      loaded = i + 1;
+      loaded = i;
     }else{
       sf::sleep(sf::milliseconds(10));
     }

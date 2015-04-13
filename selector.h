@@ -2,9 +2,13 @@
 #define _STK_SELECTOR
 
 #include <SFML/Graphics.hpp>
+#include <string>
 
+#include "graphics.h"
 #include "types.h"
 #include "command.h"
+#include "solar.h"
+#include "fleet.h"
 
 namespace st3{
   struct solar;
@@ -18,46 +22,54 @@ namespace st3{
       bool selected;
       bool owned;
       bool area_selectable;
-      idtype id;
-      point position;
+      sf::Color color;
       
-      entity_selector(idtype i, bool o, point p);
+      entity_selector(sf::Color c, bool o);
       virtual bool contains_point(point p, float &d) = 0;
-      virtual source_t command_source() = 0;
       virtual bool inside_rect(sf::FloatRect r);
+      virtual void draw(window_t &w) = 0;
+      virtual point get_position() = 0;
+      virtual bool isa(std::string t) = 0;
+      virtual int get_quantity() = 0;
     };
 
-    class solar_selector : public entity_selector{
+    class solar_selector : public entity_selector, public solar{
     private:
       float radius;
 
     public:
-      solar_selector(idtype i, bool o, point p, float r);
+      solar_selector(solar &s, sf::Color c, bool o);
       bool contains_point(point p, float &d);
-      source_t command_source();
+      void draw(window_t &w);
+      point get_position();
+      bool isa(std::string t);
+      int get_quantity();
     };
 
-    class fleet_selector : public entity_selector{
+    class fleet_selector : public entity_selector, public fleet{
     private:
       float radius;
 
     public:
-      fleet_selector(idtype i, bool o, point p, float r);
+      fleet_selector(fleet &f, sf::Color c, bool o);
       bool contains_point(point p, float &d);
-      source_t command_source();
+      void draw(window_t &w);
+      point get_position();
+      bool isa(std::string t);
+      int get_quantity();
     };
 
-    class command_selector : public entity_selector{
-    private:
+    class command_selector : public entity_selector, public command{
+    public:
       point from;
+      point to;
 
-    public:
-
-      command_selector(idtype i, point s, point d);
+      command_selector(command &c, point s, point d);
       bool contains_point(point p, float &d);
-      source_t command_source();
-      point get_to();
-      point get_from();
+      void draw(window_t &w);
+      point get_position();
+      bool isa(std::string t);
+      int get_quantity();
     };
   };
 };

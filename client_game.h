@@ -17,14 +17,16 @@ namespace st3{
     struct game{
       socket_t socket;
       window_t window;
-      game_data data;
       bool area_select_active;
-
-      idtype comid;
       sf::FloatRect srect;
-      hm_t<idtype, command> commands;
+      idtype comid;
+      game_settings settings;
+
+      hm_t<idtype, player> players;
+      hm_t<idtype, ship> ships;
       hm_t<source_t, std::set<source_t> > entity_commands;
       hm_t<source_t, entity_selector*> entity_selectors;
+      hm_t<source_t, command_selector*> command_selectors;
 
       // round sections
       void run();
@@ -35,6 +37,7 @@ namespace st3{
       // data handling
       choice build_choice();
       void initialize_selectors();
+      void reload_data(const game_data &g);
 
       // event handling
       bool choice_event(sf::Event e);
@@ -51,14 +54,14 @@ namespace st3{
       void remove_command(source_t key);
       void command2point(point p);
       void command2entity(source_t key);
+      void increment_command(source_t key, int delta);
 
       // selection handling
       void clear_selectors();
       void deselect_all();
 
       // graphics
-      void draw_universe(game_data &g);
-      void draw_universe_ui();
+      void draw_universe();
     };
   };
 };

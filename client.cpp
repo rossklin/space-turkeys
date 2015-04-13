@@ -64,6 +64,7 @@ int main(){
   sf::ContextSettings settings;
   settings.antialiasingLevel = 8;
   g.window.create(sf::VideoMode(width, height), "SFML Turkeys!", sf::Style::Default, settings);
+  graphics::initialize();
   g.run();
 
   g.socket.deallocate_packet();
