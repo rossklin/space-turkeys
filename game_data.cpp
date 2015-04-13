@@ -2,6 +2,7 @@
 #include <cmath>
 
 #include "game_data.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -37,17 +38,35 @@ void st3::game_data::increment(){
 // settings
 hm_t<idtype, solar> st3::game_data::random_solars(){
   hm_t<idtype, solar> buf;
+  int q_start = 20;
 
   for (int i = 0; i < settings.num_solars; i++){
     solar s;
-    s.position.x = rand() % settings.width;
-    s.position.y = rand() % settings.height;
     s.radius = settings.solar_minrad + rand() % (int)(settings.solar_maxrad - settings.solar_minrad);
+    s.position.x = s.radius + rand() % (int)(settings.width - 2 * s.radius);
+    s.position.y = s.radius + rand() % (int)(settings.height - 2 * s.radius);
     s.owner = -1;
+    s.quantity = rand() % q_start;
     buf[i] = s;
   }
 
   // shake the solars around till they don't overlap
+  bool overlap = true;
+  int margin = 10;
+
+  cout << "game_data: shaking solars..." << endl;
+  for (int n = 0; overlap && n < 100; n++){
+    overlap = false;
+    for (int i = 0; i < settings.num_solars; i++){
+      for (int j = i + 1; j < settings.num_solars; j++){
+	point delta = buf[i].position - buf[j].position;
+	if (utility::l2norm(delta) < buf[i].radius + buf[j].radius + margin){
+	  overlap = true;
+	  buf[i].position = buf[i].position + utility::scale_point(delta, 0.1) + point(rand() % 4 - 2, rand() % 4 - 2);
+	}
+      }
+    }
+  }
 
   return buf;
 }
@@ -121,6 +140,7 @@ void st3::game_data::build(){
   int ntest = 100;
   float unfairness = INFINITY;
   hm_t<idtype, idtype> test_homes;
+  int q_start = 20;
 
   for (int i = 0; i < ntest && unfairness > 0; i++){
     hm_t<idtype, solar> solar_buf = random_solars();
@@ -131,8 +151,15 @@ void st3::game_data::build(){
       solars = solar_buf;
       for (auto x : test_homes){
 	solars[x.second].owner = x.first;
+	solars[x.second].quantity = q_start;
       }
     }
+  }
+
+  cout << "resulting solars:" << endl;
+  for (auto x : solars){
+    solar s = x.second;
+    cout << "solar " << x.first << ": p = " << s.position.x << "," << s.position.y << ": r = " << s.radius << ", quantity = " << s.quantity << endl;
   }
 }
 

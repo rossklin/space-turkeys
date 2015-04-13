@@ -29,7 +29,11 @@ bool entity_selector::inside_rect(sf::FloatRect r){
 // SOLAR SELECTOR
 // ****************************************
 
-solar_selector::solar_selector(solar &s, sf::Color c, bool o) : entity_selector(c,o), solar(s){}
+solar_selector::solar_selector(solar &s, sf::Color c, bool o) : entity_selector(c,o), solar(s){
+  cout << "solar data: (" << position.x << "," << position.y << "), r = " << radius << ", col = " << (int)color.r << "," << (int)color.g << "," << (int)color.b << ", sel = " << (int)selected << ", quantity = " << quantity << endl;
+
+  cout << "compare: " << s.position.x << "," << s.position.y << ": " << s.radius << ", quantity = " << s.quantity << endl;
+}
 
 bool solar_selector::contains_point(point p, float &d){
   d = utility::l2norm(p - position);
@@ -47,7 +51,7 @@ void solar_selector::draw(window_t &w){
   sol.setOutlineColor(color);
   sol.setPosition(position.x - radius, position.y - radius);
   w.draw(sol);
-
+  
   if (selected){
     sol.setFillColor(sf::Color::Transparent);
     sol.setOutlineThickness(radius / 5);
@@ -58,6 +62,10 @@ void solar_selector::draw(window_t &w){
 
 bool solar_selector::isa(string t){
   return !t.compare(identifier::solar);
+}
+
+int solar_selector::get_quantity(){
+  return quantity;
 }
 
 // ****************************************
@@ -88,6 +96,10 @@ void fleet_selector::draw(window_t &w){
 
 bool fleet_selector::isa(string t){
   return !t.compare(identifier::fleet);
+}
+
+int fleet_selector::get_quantity(){
+  return ships.size();
 }
 
 // ****************************************
@@ -161,8 +173,6 @@ void command_selector::draw(window_t &w){
   t.rotate(utility::point_angle(delta) / (2 * M_PI) * 360);
   t.scale(scale, 1);
 
-  cout << "drawing command at " << from.x << "x" << from.y << " at scale " << scale << endl;
-
   w.draw(c_head, 3, sf::Triangles, t);
   w.draw(c_body, 3, sf::Triangles, t);
   w.draw(text);
@@ -171,4 +181,8 @@ void command_selector::draw(window_t &w){
 
 bool command_selector::isa(string t){
   return !t.compare(identifier::command);
+}
+
+int command_selector::get_quantity(){
+  return quantity;
 }

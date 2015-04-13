@@ -72,11 +72,6 @@
 ** client game
 *** change to selector : public data_thingy
 *** incrementing command
-    consider what happens when multiple commands with same source are
-    incremented at limit. Currently, the first feasible commands in
-    the list will be incremented.
-
-    write x_selector::get_quantity();
 *** translate: upgrade to sfml2.2 to get window::hasFocus()
 *** events board
     messages such as "your fleet was destroyed" or "your solar X
@@ -87,8 +82,10 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-** merged draw and data responsibility in selector in client::game
 * fixed
+** fixed command incrementation interface, added fleet serialization
+** merged draw and data responsibility in selector in client::game
+
 ** translate, zoom
 ** test event handling
     why don't commands show? - translate before rotate!

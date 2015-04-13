@@ -12,9 +12,9 @@ namespace st3{
 
   // stream ops for lists
   template<typename T>
-    sf::Packet& operator <<(sf::Packet& packet, const std::list<T> &container);
+    sf::Packet& operator <<(sf::Packet& packet, const T &container);
   template<typename T>
-    sf::Packet& operator >>(sf::Packet& packet, std::list<T> &container);
+    sf::Packet& operator >>(sf::Packet& packet, T &container);
 
   // game data structs
   sf::Packet& operator <<(sf::Packet& packet, const game_data &g);
@@ -43,6 +43,10 @@ namespace st3{
   // solar
   sf::Packet& operator <<(sf::Packet& packet, const solar &g);
   sf::Packet& operator >>(sf::Packet& packet, solar &g);
+
+  // fleet
+  sf::Packet& operator <<(sf::Packet& packet, const fleet &g);
+  sf::Packet& operator >>(sf::Packet& packet, fleet &g);
 
   // point
   sf::Packet& operator <<(sf::Packet& packet, const point &g);

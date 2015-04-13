@@ -10,6 +10,7 @@ namespace st3{
     point position;
     sint owner;
     sfloat radius;
+    sfloat quantity;
   };
 };
 #endif

@@ -38,7 +38,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, T> &g){
 
 // packet stream ops for list-like container
 template<typename T>
-sf::Packet& st3::operator <<(sf::Packet& packet, const list<T> &container){
+sf::Packet& st3::operator <<(sf::Packet& packet, const T &container){
   bool res = true;
   sint n = container.size();
   cout << "packet << list: n = " << n << endl;
@@ -51,7 +51,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const list<T> &container){
 }
 
 template<typename T>
-sf::Packet& st3::operator >>(sf::Packet& packet, list<T> &container){
+sf::Packet& st3::operator >>(sf::Packet& packet, T &container){
   sint n;
   bool res = true;
 
@@ -59,9 +59,9 @@ sf::Packet& st3::operator >>(sf::Packet& packet, list<T> &container){
   res &= (bool)(packet >> n);
   cout << "packte >> list: n = " << n << endl;
   for (sint i = 0; i < n && res; i++){
-    T v;
+    typename T::value_type v;
     res &= (bool)(packet >> v);
-    container.push_back(v);
+    container.insert(container.end(), v);
   }
 
   return packet;
@@ -126,11 +126,20 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
 
 // solar
 sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
-  return packet << g.owner << g.position << g.radius;
+  return packet << g.owner << g.position << g.radius << g.quantity;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
-  return packet >> g.owner >> g.position >> g.radius;
+  return packet >> g.owner >> g.position >> g.radius >> g.quantity;
+}
+
+// fleet
+sf::Packet& st3::operator <<(sf::Packet& packet, const fleet &g){
+  return packet << g.target << g.position << g.radius << g.owner << g.ships;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
+  return packet >> g.target >> g.position >> g.radius >> g.owner >> g.ships;
 }
 
 // choice
@@ -199,9 +208,12 @@ template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, ship> &g)
 template sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<idtype, solar> &g);
 template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, solar> &g);
 
-// instantiate templates for list<command> and list<upgrade_choice>
+// instantiate templates for list and set
 template sf::Packet& st3::operator <<(sf::Packet& packet, const list<command> &c);
 template sf::Packet& st3::operator >>(sf::Packet& packet, list<command> &c);
+
+template sf::Packet& st3::operator <<(sf::Packet& packet, const set<idtype> &c);
+template sf::Packet& st3::operator >>(sf::Packet& packet, set<idtype> &c);
 
 // template sf::Packet& st3::operator <<(sf::Packet& packet, const list<upgrade_choice> &c);
 // template sf::Packet& st3::operator >>(sf::Packet& packet, list<upgrade_choice> &c);

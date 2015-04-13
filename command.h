@@ -10,10 +10,6 @@ namespace st3{
     target_t target;
     sint quantity;
 
-    // interface control variables
-    sbool locked;
-    sint lock_qtty;
-
     command();
   };
 

@@ -111,16 +111,11 @@ void st3::client::game::choice_step(){
   bool done = false;
   sf::Packet pq, pr;
   int count = 0;
-  sf::Font font;
   sf::Text text;
 
-  // setup load text
-  if (!font.loadFromFile(graphics::font_dir + "arial.ttf")){
-    cout << "error loading font" << endl;
-    exit(-1);
-  }
+  cout << "choice_step: start" << endl;
 
-  text.setFont(font); 
+  text.setFont(graphics::default_font); 
   text.setString("(sending choice to server...)");
   text.setCharacterSize(24);
   text.setColor(sf::Color(200,200,200));
@@ -178,7 +173,7 @@ void st3::client::game::choice_step(){
     sf::sleep(sf::milliseconds(100));
   }
 
-  clear_selectors();
+  deselect_all();
 
   cout << "choice step: waiting for query thread" << endl;
   t.join();
@@ -256,14 +251,18 @@ void st3::client::game::reload_data(const game_data &g){
   ships = g.ships;
   players = g.players;
   settings = g.settings;
+
+  cout << "game::reload_data" << endl;
   
   for (auto x : g.fleets){
+    cout << "adding fleet " << x.first << endl;
     source_t key = identifier::make(identifier::fleet, x.first);
     sf::Color col = graphics::sfcolor(players[x.second.owner].color);
     entity_selectors[key] = new fleet_selector(x.second, col, x.second.owner == socket.id);
   }
 
   for (auto x : g.solars){
+    cout << "adding solar " << x.first << endl;
     source_t key = identifier::make(identifier::solar, x.first);
     sf::Color col = x.second.owner > -1 ? graphics::sfcolor(players[x.second.owner].color) : graphics::solar_neutral;
     entity_selectors[key] = new solar_selector(x.second, col, x.second.owner == socket.id);
@@ -333,7 +332,12 @@ void st3::client::game::remove_command(source_t key){
 void st3::client::game::increment_command(source_t key, int delta){
   command_selector *s = command_selectors[key];
 
-  if (!s) return;
+  if (!s){
+    cout << "increment command: not found: " << key << endl;
+    exit(-1);
+  }
+
+  cout << "increment command: " << key << endl;
 
   // compute allocated quantity of parent entity
   if (!entity_commands.count(s -> source)){
@@ -356,8 +360,11 @@ void st3::client::game::increment_command(source_t key, int delta){
     cout << "increment_command: " << key << ": missing source: " << s -> source << endl;
     exit(-1);
   }
+
   if (sum + delta <= source -> get_quantity()){
     s -> quantity += delta;
+  }else{
+    cout << "increment command: sum = " << sum << ", source " << s -> source << " has " << source -> get_quantity() << endl;
   }
 }
 

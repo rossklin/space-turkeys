@@ -3,9 +3,7 @@
 st3::command::command(){
   source = "";
   target = "";
-  quantity = -1;
-  locked = false;
-  lock_qtty = -1;
+  quantity = 0;
 }
 
 bool st3::operator ==(const command &a, const command &b){

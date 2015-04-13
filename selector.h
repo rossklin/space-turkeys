@@ -34,8 +34,6 @@ namespace st3{
     };
 
     class solar_selector : public entity_selector, public solar{
-    private:
-      float radius;
 
     public:
       solar_selector(solar &s, sf::Color c, bool o);
@@ -47,8 +45,6 @@ namespace st3{
     };
 
     class fleet_selector : public entity_selector, public fleet{
-    private:
-      float radius;
 
     public:
       fleet_selector(fleet &f, sf::Color c, bool o);
