@@ -1,7 +1,7 @@
 cflags = -ggdb --std=c++11
 lflags = -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -lpthread
 
-server_objects = server.o game_handler.o com_server.o
+server_objects = server.o game_handler.o com_server.o grid_tree.o
 client_objects = client.o graphics.o client_game.o com_client.o selector.o
 common_objects = game_data.o serialization.o socket_t.o command.o utility.o types.o
 all_objects = $(server_objects) $(client_objects) $(common_objects)
