@@ -236,10 +236,32 @@ void st3::client::game::simulation_step(){
 // DATA HANDLING
 // ****************************************
 
+command st3::client::game::build_command(source_t key){
+  if (!command_selectors.count(key)){
+    cout << "build_command: not found: " << key << endl;
+    exit(-1);
+  }
+
+  command_selector *s = command_selectors[key];
+  command c = (command)*s;
+  for (auto x : s -> commands) {
+    c.child_commands.push_back(build_command(x));
+  }
+  return c;
+}
+
 choice st3::client::game::build_choice(){
   choice c;
-  for (auto x : command_selectors){
-    c.commands.push_back(*x.second);
+  for (auto x : entity_selectors){
+    if (x.second -> isa(identifier::solar) || x.second -> isa(identifier::fleet)){
+      for (auto y : x.second -> commands){
+	if (!command_selectors.count(y)){
+	  cout << "build choice: missing command selector: " << y << endl;
+	  exit(-1);
+	}
+	c.commands[x.first].push_back(build_command(y));
+      }
+    }
   }
 
   return c;
@@ -294,7 +316,7 @@ void st3::client::game::add_command(command c, point from, point to){
   command_selectors[key] = cs;
 
   // add command selector key to list of the source entity's children
-  entity_commands[c.source].insert(key);
+  entity_selectors[c.source] -> commands.insert(key);
 }
 
 // remove command selector and associated command
@@ -308,15 +330,11 @@ void st3::client::game::remove_command(source_t key){
     command_selector *s = command_selectors[key];
 
     // remove this command from it's parent's list
-    if (!entity_commands.count(s -> source)){
-      cout << "remove_command: no entity_commands with source key " << s -> source << endl;
+    if (!entity_selectors.count(s -> source)){
+      cout << "remove_command: no parent with source key " << s -> source << endl;
       exit(-1);
     }
-    entity_commands[s -> source].erase(key);
-
-    // remove this command's child commands and list thereof
-    for (auto x : entity_commands[key]) remove_command(x);
-    entity_commands.erase(key);
+    entity_selectors[s -> source] -> commands.erase(key);
 
     // remove this command's selector
     entity_selectors.erase(key);
@@ -339,14 +357,8 @@ void st3::client::game::increment_command(source_t key, int delta){
 
   cout << "increment command: " << key << endl;
 
-  // compute allocated quantity of parent entity
-  if (!entity_commands.count(s -> source)){
-    cout << "game::increment_command: " << s -> source << ": no entity commands" << endl;
-    exit(-1);
-  }
-
   int sum = 0;
-  for (auto x : entity_commands[s -> source]){
+  for (auto x : s -> commands){
     command_selector *c = command_selectors[x];
     if (!c){
       cout << "increment_command: " << key << ": missing sibling command: " << x << endl;
@@ -380,7 +392,6 @@ void st3::client::game::clear_selectors(){
   }
 
   entity_selectors.clear();
-  entity_commands.clear();
 }
 
 void st3::client::game::deselect_all(){

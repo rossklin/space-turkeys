@@ -24,7 +24,6 @@ namespace st3{
 
       hm_t<idtype, player> players;
       hm_t<idtype, ship> ships;
-      hm_t<source_t, std::set<source_t> > entity_commands;
       hm_t<source_t, entity_selector*> entity_selectors;
       hm_t<source_t, command_selector*> command_selectors;
 
@@ -35,6 +34,7 @@ namespace st3{
       void simulation_step();
 
       // data handling
+      command build_command(source_t key);
       choice build_choice();
       void initialize_selectors();
       void reload_data(const game_data &g);

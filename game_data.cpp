@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 
+#include "types.h"
 #include "game_data.h"
 #include "utility.h"
 
@@ -19,9 +20,95 @@ st3::game_settings::game_settings(){
   solar_maxrad = 20;
   num_solars = 20;
 }
+
+void st3::game_data::generate_fleet(point p, idtype owner, command c){
+  
+}
+
+void st3::game_data::set_fleet_commands(idtype id, list<command> commands){
+  fleet &s = fleets[id];
+
+  // check quantity sum
+  int sum = 0;
+  for (auto &x : commands) sum += x.quantity;
+  if (sum > s.ships.size()){
+    cout << "fleet " << id << " command quantity sum exceeds limit!" << endl;
+    exit(-1);
+  }
+
+  // split fleets
+  for (auto &x : commands){
+    fleet f;
+    f.com = x;
+    f.position = s.position;
+    f.radius = s.radius;
+    f.owner = s.owner;
+    for (int i = 0; i < x.quantity; i++){
+      int sid = s.ships.front();
+      s.ships.pop_front();
+      f.ships.push_back(sid);
+    }
+
+    fleets[fleet::id_counter++] = f;
+  }
+
+  // check remove
+  if (s.ships.empty()){
+    fleets.erase(id);
+  }
+}
+
+void st3::game_data::set_solar_commands(idtype id, list<command> commands){
+  solar &s = solars[id];
+
+  // check quantity sum
+  int sum = 0;
+  for (auto x : commands) sum += x.quantity;
+  if (sum > (int)s.quantity){
+    cout << "solar " << id << " command quantity sum exceeds limit!" << endl;
+    exit(-1);
+  }
+
+  // create fleets
+  for (auto x : commands){
+    s.quantity -= x.quantity;
+    generate_fleet(s.position, s.owner, x);
+  }
+}
  
-void st3::game_data::apply_choice(choice c, sint id){
+void st3::game_data::apply_choice(choice c, idtype id){
   cout << "game_data: running dummy apply choice" << endl;
+
+  for (auto x : c.commands){
+    if (!identifier::get_type(x.first).compare(identifier::solar)){
+      // commands for solar
+      idtype sid = identifier::get_id(x.first);
+
+      // check ownership
+      if (solars[sid].owner != id){
+	cout << "apply_choice: invalid owner: " << solars[sid].owner << ", should be " << id << endl;
+	exit(-1);
+      }
+
+      // apply the commands
+      set_solar_commands(sid, x.second);
+    }else if (!identifier::get_type(x.first).compare(identifier::fleet)){
+      // command for fleet
+      idtype fid = identifier::get_id(x.first);
+      
+      // check ownerships
+      if (fleets[fid].owner != id){
+	cout << "apply_choice: invalid owner: " << fleets[fid].owner << ", should be " << id << endl;
+	exit(-1);
+      }
+
+      // apply the commands
+      set_fleet_commands(fid, x.second);
+    }else{
+      cout << "apply_choice: invalid source: " << x.first << endl;
+      exit(-1);
+    }
+  }
 }
 
 void st3::game_data::increment(){

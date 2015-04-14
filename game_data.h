@@ -31,7 +31,7 @@ namespace st3{
     game_settings settings;
 
     // server mechanics
-    void apply_choice(choice c, sint id);
+    void apply_choice(choice c, idtype id);
     void increment();
     void cleanup(); // remove dead ships
 

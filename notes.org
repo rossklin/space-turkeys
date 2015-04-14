@@ -70,14 +70,11 @@
 **** ship interactions
 **** solar evolution
 ** client game
-*** change to selector : public data_thingy
-*** incrementing command
+*** replace entity_commands with entity_selector::command_ids?
 *** translate: upgrade to sfml2.2 to get window::hasFocus()
 *** events board
     messages such as "your fleet was destroyed" or "your solar X
     merged with Bla's solar Y; your population won the ensuing battle"
-** mechanics
-*** fleets
 ** before game interface
 * remember
 ** when updating a struct/class, also update serialization

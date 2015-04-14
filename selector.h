@@ -23,6 +23,7 @@ namespace st3{
       bool owned;
       bool area_selectable;
       sf::Color color;
+      std::set<source_t> commands;
       
       entity_selector(sf::Color c, bool o);
       virtual bool contains_point(point p, float &d) = 0;

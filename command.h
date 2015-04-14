@@ -1,6 +1,8 @@
 #ifndef _STK_COMMAND
 #define _STK_COMMAND
 
+#include <list>
+
 #include "types.h"
 
 namespace st3{
@@ -10,6 +12,7 @@ namespace st3{
     target_t target;
     sint quantity;
 
+    std::list<command> child_commands;
     command();
   };
 

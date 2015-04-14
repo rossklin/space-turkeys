@@ -1,14 +1,15 @@
 #ifndef _STK_FLEET
 #define _STK_FLEET
 
-#include <set>
+#include <list>
 #include "types.h"
+#include "command.h"
 
 namespace st3{
   struct fleet{
     static idtype id_counter;
-    std::set<idtype> ships;
-    target_t target;
+    std::list<idtype> ships;
+    command com;
     point position;
     sfloat radius;
     sint owner;
