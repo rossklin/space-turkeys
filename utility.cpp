@@ -1,7 +1,17 @@
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_01.hpp>
+
 #include "utility.h"
 
 using namespace st3;
 using namespace st3::utility;
+
+boost::random::mt19937 rng;
+boost::random::uniform_01<float> unidist;
+
+// ****************************************
+// POINT ARITHMETICS
+// ****************************************
 
 float utility::l2norm(point p){
   return sqrt(pow(p.x, 2) + pow(p.y, 2));
@@ -64,4 +74,14 @@ point st3::operator -(const point &a, const point &b){
 
 point st3::operator +(const point &a, const point &b){
   return point(a.x + b.x, a.y + b.y);
+}
+
+float utility::random_uniform(){
+  return unidist(rng);
+}
+
+point utility::random_point_polar(point p, float r){
+  float angle = 2 * M_PI * random_uniform();
+  float radius = random_uniform();
+  return p + point(radius * cos(angle), radius * sin(angle));
 }

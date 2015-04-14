@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <string>
+#include <set>
 
 #include "graphics.h"
 #include "types.h"

@@ -13,6 +13,8 @@ namespace st3{
     float sproject(point a, point r);
     float angle_distance(float a, float b);
     float dpoint2line(point p, point a, point b);
+    float random_uniform();
+    point random_point_polar(point p, float r);
   };
   point operator -(const point &a, const point &b);
   point operator +(const point &a, const point &b);

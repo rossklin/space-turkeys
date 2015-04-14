@@ -4,17 +4,18 @@
 #include "game_data.h"
 
 namespace st3{
-  // stream ops for hm_t
-  template<typename T>
-    sf::Packet& operator <<(sf::Packet& packet, const hm_t<idtype, T> &g);
-  template<typename T>
-    sf::Packet& operator >>(sf::Packet& packet, hm_t<idtype, T> &g);
 
   // stream ops for lists
   template<typename T>
     sf::Packet& operator <<(sf::Packet& packet, const T &container);
   template<typename T>
     sf::Packet& operator >>(sf::Packet& packet, T &container);
+
+  // stream ops for hm_t
+  template<typename ID, typename T>
+    sf::Packet& operator <<(sf::Packet& packet, const hm_t<ID, T> &g);
+  template<typename ID, typename T>
+    sf::Packet& operator >>(sf::Packet& packet, hm_t<ID, T> &g);
 
   // game data structs
   sf::Packet& operator <<(sf::Packet& packet, const game_data &g);

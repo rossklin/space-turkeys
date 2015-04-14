@@ -19,6 +19,7 @@ namespace st3{
     sfloat solar_minrad;
     sfloat solar_maxrad;
     sint num_solars;
+    sfloat fleet_default_radius;
 
     game_settings();
   };
@@ -30,8 +31,14 @@ namespace st3{
     hm_t<idtype, player> players;
     game_settings settings;
 
-    // server mechanics
+    // apply_choice
     void apply_choice(choice c, idtype id);
+    point target_position(target_t t);
+    void generate_fleet(point p, idtype i, command c);
+    void set_solar_commands(idtype id, std::list<command> coms);
+    void set_fleet_commands(idtype id, std::list<command> coms);
+
+    // iteration
     void increment();
     void cleanup(); // remove dead ships
 

@@ -10,6 +10,7 @@ using namespace st3;
 
 idtype st3::ship::id_counter = 0;
 idtype st3::solar::id_counter = 0;
+idtype st3::fleet::id_counter = 0;
 
 st3::game_settings::game_settings(){
   frames_per_round = 100;
@@ -19,9 +20,44 @@ st3::game_settings::game_settings(){
   solar_minrad = 5;
   solar_maxrad = 20;
   num_solars = 20;
+  fleet_default_radius = 10;
+}
+
+point st3::game_data::target_position(target_t t){
+  string type = identifier::get_type(t);
+  if (!type.compare(identifier::solar)){
+    return solars[identifier::get_id(t)].position;
+  }else if (!type.compare(identifier::fleet)){
+    return fleets[identifier::get_id(t)].position;
+  }else if (!type.compare(identifier::point)){
+    return identifier::get_point(t);
+  }else{
+    cout << "target_position: " << t << ": unknown type!" << endl;
+    exit(-1);
+  }
 }
 
 void st3::game_data::generate_fleet(point p, idtype owner, command c){
+  fleet f;
+  f.com = c;
+  f.position = p;
+  f.radius = settings.fleet_default_radius;
+  f.owner = owner;
+
+  for (int i = 0; i < c.quantity; i++){
+    ship s;
+    idtype sid = ship::id_counter++;
+    s.position = p + utility::random_point_polar(p, f.radius);
+    s.angle = utility::point_angle(target_position(c.target) - p);
+    s.speed = settings.ship_speed;
+    s.owner = owner;
+    s.hp = 1;
+    s.was_killed = false;
+    ships[sid] = s;
+    f.ships.push_back(sid);
+  }
+
+  fleets[fleet::id_counter++] = f;
   
 }
 

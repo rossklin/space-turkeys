@@ -1,4 +1,5 @@
 #include <iostream>
+#include <set>
 #include "serialization.h"
 
 using namespace std;
@@ -9,8 +10,8 @@ using namespace st3;
 // ****************************************
 
 // packet stream ops for hm_t
-template<typename T>
-sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<idtype, T> &g){
+template<typename ID, typename T>
+sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<ID, T> &g){
   bool res = true;
   res &= (bool)(packet << (sint)g.size());
   for (auto i = g.begin(); i != g.end() && res; i++){
@@ -20,14 +21,14 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<idtype, T> &g){
   return packet;
 }
 
-template<typename T>
-sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, T> &g){
+template<typename ID, typename T>
+sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<ID, T> &g){
   sint n;
   bool res = true;
   res &= (bool)(packet >> n);
   g.clear();
   for (sint i = 0; i < n && res; i++){
-    idtype k;
+    ID k;
     T v;
     res &= (bool)(packet >> k >> v);
     g[k] = v;
@@ -135,11 +136,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
 
 // fleet
 sf::Packet& st3::operator <<(sf::Packet& packet, const fleet &g){
-  return packet << g.target << g.position << g.radius << g.owner << g.ships;
+  return packet << g.com << g.position << g.radius << g.owner << g.ships;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
-  return packet >> g.target >> g.position >> g.radius >> g.owner >> g.ships;
+  return packet >> g.com >> g.position >> g.radius >> g.owner >> g.ships;
 }
 
 // choice
@@ -153,11 +154,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, choice &c){
 
 // command
 sf::Packet& st3::operator <<(sf::Packet& packet, const command &c){
-  return packet << c.source << c.target << c.quantity;
+  return packet << c.source << c.target << c.quantity << c.child_commands;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, command &c){
-  return packet >> c.source >> c.target >> c.quantity;
+  return packet >> c.source >> c.target >> c.quantity >> c.child_commands;
 }
 
 // // source_t
@@ -208,7 +209,11 @@ template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, ship> &g)
 template sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<idtype, solar> &g);
 template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, solar> &g);
 
-// instantiate templates for list and set
+// instantiate templates for choice
+
+template sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<source_t, list<command> > &g);
+template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<source_t, list<command> > &g);
+
 template sf::Packet& st3::operator <<(sf::Packet& packet, const list<command> &c);
 template sf::Packet& st3::operator >>(sf::Packet& packet, list<command> &c);
 
