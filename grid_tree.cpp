@@ -1,31 +1,53 @@
+#include <iostream>
+#include <cmath>
+
+#include "utility.h"
 #include "grid_tree.h"
 
 using namespace std;
 using namespace st3;
+using namespace grid;
 
-grid::grid(){
+tree::tree(){
   max_leaves = 10;
-  root = new node(&index, 0);
+  root = new node(this, 0);
 }
 
-grid::~grid(){
+tree::~tree(){
   delete root;
 }
 
-grid::node::node(grid::grid *i, grid::node *p){
+void tree::insert(key_type k, value_type v){
+  root -> insert(k, v);
+}
+
+list<iterator_type> tree::search(point p, float r){
+  return root -> search(p, r);
+}
+
+void tree::move(key_type k, value_type v){
+  index[k] -> move(k, v);
+}
+
+void tree::remove(key_type k){
+  index[k] -> remove(k);
+  index.erase(k);
+}
+
+node::node(tree *i, node *p){
   g = i;
   parent = p;
   is_leaf = true;
-  bounds = bound_type(point(-Infinity, -Infinity), point(Infinity, Infinity));
+  bounds = bound_type(point(-INFINITY, -INFINITY), point(INFINITY, INFINITY));
 }
 
-grid::node::~node(){
+node::~node(){
   if (!is_leaf){
     for (int i = 0; i < 4; i++) if (children[i]) delete children[i];
   }
 }
 
-void grid::node::make_split(){
+void node::make_split(){
   // compute mid point
   split.x = split.y = 0;
 
@@ -50,7 +72,7 @@ void grid::node::make_split(){
   is_leaf = false;
 }
 
-void grid::node::insert(grid::key_type k, grid::value_type v){
+void node::insert(key_type k, value_type v){
   if (is_leaf){
     leaves[k] = v;
     g -> index[k] = this;
@@ -64,7 +86,7 @@ void grid::node::insert(grid::key_type k, grid::value_type v){
   }
 }
 
-void grid::node::move(grid::key_type k, grid::value_type v){
+void node::move(key_type k, value_type v){
   if (!leaves.count(k)){
     cout << "node: missing leaf: " << k << endl;
     exit(-1);
@@ -78,8 +100,12 @@ void grid::node::move(grid::key_type k, grid::value_type v){
   }
 }
 
-list<grid::iterator_type> grid::node::search(grid::value_type p, float r){
-  list<grid::iterator_type> res;
+list<iterator_type> node::search(value_type p, float r){
+  list<iterator_type> res;
+
+  if (!(utility::point_above(p + point(r,r), bounds.first) && utility::point_below(p - point(r,r), bounds.second))){
+    return res;
+  }
 
   if (is_leaf){
     // collect leaves
@@ -92,7 +118,7 @@ list<grid::iterator_type> grid::node::search(grid::value_type p, float r){
       }
     }
   }else{
-    list<grid::iterator_type> q;
+    list<iterator_type> q;
     for (int i = 0; i < 4; i++){
       q = children[i] -> search(p, r);
       res.insert(res.end(), q.begin(), q.end());
@@ -100,4 +126,13 @@ list<grid::iterator_type> grid::node::search(grid::value_type p, float r){
   }
 
   return res;
+}
+
+void node::remove(key_type k){
+  if (!is_leaf){
+    cout << "node: remove called on non-leaf" << endl;
+    exit(-1);
+  }
+
+  leaves.erase(k);
 }

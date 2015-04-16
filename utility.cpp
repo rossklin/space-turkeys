@@ -1,5 +1,6 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_01.hpp>
+#include <boost/random/normal_distribution.hpp>
 
 #include "utility.h"
 
@@ -13,8 +14,16 @@ boost::random::uniform_01<float> unidist;
 // POINT ARITHMETICS
 // ****************************************
 
+float utility::scalar_mult(point a, point b){
+  return a.x * b.x + a.y * b.y;
+}
+
+float utility::l2d2(point p){
+  return scalar_mult(p, p);
+}
+
 float utility::l2norm(point p){
-  return sqrt(pow(p.x, 2) + pow(p.y, 2));
+  return sqrt(l2d2(p));
 }
 
 float utility::point_angle(point p){
@@ -81,7 +90,22 @@ float utility::random_uniform(){
 }
 
 point utility::random_point_polar(point p, float r){
-  float angle = 2 * M_PI * random_uniform();
-  float radius = random_uniform();
-  return p + point(radius * cos(angle), radius * sin(angle));
+  boost::random::normal_distribution<float> n(0, r);
+  return point(p.x + n(rng), p.y + n(rng));
+}
+
+bool utility::point_above(point p, point q){
+  return p.x >= q.x && p.y >= q.y;
+}
+
+bool utility::point_below(point p, point q){
+  return p.x < q.x && p.y < q.y;
+}
+
+bool utility::point_between(point a, point p, point q){
+  return point_above(a, p) && point_below(a, q);
+}
+
+point utility::normv(float a){
+  return point(cos(a), sin(a));
 }

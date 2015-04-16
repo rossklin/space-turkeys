@@ -62,15 +62,12 @@
 *** barbarians
 * to do
 ** server game
-*** game_data::apply_choice
-**** ?upgrade choice?
-**** planet command
-**** fleet command
+*** add fleet id tracker to ship, implement in apply choice
 *** universe increment
 **** ship interactions
 **** solar evolution
 ** client game
-*** replace entity_commands with entity_selector::command_ids?
+*** simulation: interpolate using ship velocity
 *** translate: upgrade to sfml2.2 to get window::hasFocus()
 *** events board
     messages such as "your fleet was destroyed" or "your solar X
@@ -80,6 +77,9 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** game_data::apply_choice
+*** planet command
+*** fleet command
 ** fixed command incrementation interface, added fleet serialization
 ** merged draw and data responsibility in selector in client::game
 

@@ -39,17 +39,10 @@ void st3::client::game::run(){
 bool st3::client::game::pre_step(){
   bool done = false;
   sf::Packet packet, pq;
-  sf::Font font;
   sf::Text text;
   game_data data;
 
-  // setup load text
-  if (!font.loadFromFile(graphics::font_dir + "arial.ttf")){
-    cout << "error loading font" << endl;
-    exit(-1);
-  }
-
-  text.setFont(font); 
+  text.setFont(graphics::default_font); 
   text.setString("(loading game data...)");
   text.setCharacterSize(24);
   text.setColor(sf::Color(200,200,200));
@@ -355,22 +348,23 @@ void st3::client::game::increment_command(source_t key, int delta){
     exit(-1);
   }
 
+  entity_selector *source = entity_selectors[s -> source];
+
+  if (!source){
+    cout << "increment_command: " << key << ": missing source: " << s -> source << endl;
+    exit(-1);
+  }
+
   cout << "increment command: " << key << endl;
 
   int sum = 0;
-  for (auto x : s -> commands){
+  for (auto x : source -> commands){
     command_selector *c = command_selectors[x];
     if (!c){
       cout << "increment_command: " << key << ": missing sibling command: " << x << endl;
       exit(-1);
     }
     sum += c -> quantity;
-  }
-
-  entity_selector *source = entity_selectors[s -> source];
-  if (!source){
-    cout << "increment_command: " << key << ": missing source: " << s -> source << endl;
-    exit(-1);
   }
 
   if (sum + delta <= source -> get_quantity()){

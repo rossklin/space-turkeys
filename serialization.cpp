@@ -107,22 +107,26 @@ sf::Packet& st3::operator >>(sf::Packet& packet, game_settings &g){
 // ship
 sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
   return packet 
+    << g.fleet_id
     << g.position
     << g.angle
     << g.speed
     << g.owner
     << g.hp
-    << g.was_killed;
+    << g.was_killed
+    << g.interaction_radius;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
   return packet 
+    >> g.fleet_id
     >> g.position
     >> g.angle
     >> g.speed
     >> g.owner
     >> g.hp
-    >> g.was_killed;
+    >> g.was_killed
+    >> g.interaction_radius;
 }
 
 // solar
@@ -136,11 +140,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
 
 // fleet
 sf::Packet& st3::operator <<(sf::Packet& packet, const fleet &g){
-  return packet << g.com << g.position << g.radius << g.owner << g.ships;
+  return packet << g.com << g.position << g.radius << g.owner << g.ships << g.converge;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
-  return packet >> g.com >> g.position >> g.radius >> g.owner >> g.ships;
+  return packet >> g.com >> g.position >> g.radius >> g.owner >> g.ships >> g.converge;
 }
 
 // choice

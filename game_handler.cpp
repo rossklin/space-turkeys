@@ -54,6 +54,7 @@ void st3::server::game_handler(com c, game_data g){
 
     // simulation
     cout << "starting simulation ... " << endl;
+    g.allocate_grid();
     frame_count = 0;
     thread t(&com::distribute_frames, c, ref(frames), ref(frame_count));
 
@@ -74,6 +75,7 @@ void st3::server::game_handler(com c, game_data g){
     cout << "cleaning up game_data..." << endl;
     // cleanup
     g.cleanup();
+    g.deallocate_grid();
     cout << "post cleanup size: " << g.ships.size() << endl;
   }
 }

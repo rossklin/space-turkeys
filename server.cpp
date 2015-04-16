@@ -70,7 +70,7 @@ int main(int argc, char **argv){
     g.players[x.id] = p;
   }
 
-  g.settings.frames_per_round = 10;
+  // g.settings.frames_per_round = 10;
   
   g.build();
 

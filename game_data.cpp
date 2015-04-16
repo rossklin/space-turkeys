@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <cmath>
 
@@ -8,22 +9,11 @@
 using namespace std;
 using namespace st3;
 
-idtype st3::ship::id_counter = 0;
-idtype st3::solar::id_counter = 0;
-idtype st3::fleet::id_counter = 0;
+idtype ship::id_counter = 0;
+idtype solar::id_counter = 0;
+idtype fleet::id_counter = 0;
 
-st3::game_settings::game_settings(){
-  frames_per_round = 100;
-  width = 400;
-  height = 400;
-  ship_speed = 3;
-  solar_minrad = 5;
-  solar_maxrad = 20;
-  num_solars = 20;
-  fleet_default_radius = 10;
-}
-
-point st3::game_data::target_position(target_t t){
+point game_data::target_position(target_t t){
   string type = identifier::get_type(t);
   if (!type.compare(identifier::solar)){
     return solars[identifier::get_id(t)].position;
@@ -37,8 +27,17 @@ point st3::game_data::target_position(target_t t){
   }
 }
 
-void st3::game_data::generate_fleet(point p, idtype owner, command c){
+idtype game_data::solar_at(point p){
+  for (auto &x : solars){
+    if (utility::l2d2(p - x.second.position) < pow(x.second.radius, 2)){
+      return x.first;
+    }
+  }
+}
+
+void game_data::generate_fleet(point p, idtype owner, command c){
   fleet f;
+  idtype fid = fleet::id_counter++;
   f.com = c;
   f.position = p;
   f.radius = settings.fleet_default_radius;
@@ -47,45 +46,56 @@ void st3::game_data::generate_fleet(point p, idtype owner, command c){
   for (int i = 0; i < c.quantity; i++){
     ship s;
     idtype sid = ship::id_counter++;
-    s.position = p + utility::random_point_polar(p, f.radius);
+    s.fleet_id = fid;
+    s.position = utility::random_point_polar(p, f.radius);
     s.angle = utility::point_angle(target_position(c.target) - p);
     s.speed = settings.ship_speed;
     s.owner = owner;
     s.hp = 1;
     s.was_killed = false;
+    cout << "generated ship " << sid << " at " << s.position.x << "x" << s.position.y << endl;
     ships[sid] = s;
     f.ships.push_back(sid);
   }
 
-  fleets[fleet::id_counter++] = f;
-  
+  fleets[fid] = f;
 }
 
-void st3::game_data::set_fleet_commands(idtype id, list<command> commands){
+void game_data::set_fleet_commands(idtype id, list<command> commands){
   fleet &s = fleets[id];
+  idtype fid;
+
+  // special case: single filling command
+  if (commands.size() == 1 && commands.front().quantity >= s.ships.size()){
+    s.com = commands.front();
+    return;
+  }
 
   // check quantity sum
+  // if to few ships, divide proportionally
   int sum = 0;
+  float scale = 1;
   for (auto &x : commands) sum += x.quantity;
   if (sum > s.ships.size()){
-    cout << "fleet " << id << " command quantity sum exceeds limit!" << endl;
-    exit(-1);
+    scale = s.ships.size() / (float)sum;
   }
 
   // split fleets
   for (auto &x : commands){
+    fid = fleet::id_counter++;
     fleet f;
     f.com = x;
     f.position = s.position;
     f.radius = s.radius;
     f.owner = s.owner;
-    for (int i = 0; i < x.quantity; i++){
+    for (int i = scale * x.quantity; i > 0; i--){
       int sid = s.ships.front();
+      ships[sid].fleet_id = fid;
       s.ships.pop_front();
       f.ships.push_back(sid);
     }
 
-    fleets[fleet::id_counter++] = f;
+    fleets[fid] = f;
   }
 
   // check remove
@@ -94,7 +104,7 @@ void st3::game_data::set_fleet_commands(idtype id, list<command> commands){
   }
 }
 
-void st3::game_data::set_solar_commands(idtype id, list<command> commands){
+void game_data::set_solar_commands(idtype id, list<command> commands){
   solar &s = solars[id];
 
   // check quantity sum
@@ -112,7 +122,7 @@ void st3::game_data::set_solar_commands(idtype id, list<command> commands){
   }
 }
  
-void st3::game_data::apply_choice(choice c, idtype id){
+void game_data::apply_choice(choice c, idtype id){
   cout << "game_data: running dummy apply choice" << endl;
 
   for (auto x : c.commands){
@@ -147,19 +157,148 @@ void st3::game_data::apply_choice(choice c, idtype id){
   }
 }
 
-void st3::game_data::increment(){
-  cout << "game_data: running dummy increment" << endl;
-  for (auto i = ships.begin(); i != ships.end(); i++){
-    i -> second.position.x += i -> second.speed * cos(i -> second.angle);
-    i -> second.position.y += i -> second.speed * sin(i -> second.angle);
-    i -> second.angle += (rand() % 100) / (sfloat)1000;
-    i -> second.was_killed |= !(rand() % 100);
+void game_data::allocate_grid(){
+  ship_grid = new grid::tree();
+
+  for (auto x : ships){
+    ship_grid -> insert(x.first, x.second.position);
   }
+}
+
+void game_data::deallocate_grid(){
+  delete ship_grid;
+}
+
+void game_data::increment(){
+  list<idtype> fids;
+  cout << "game_data: running dummy increment" << endl;
+
+  // update solar data
+
+  // buffer fleet ids as fleets may be removed in loop
+  for (auto &x : fleets){
+    fids.push_back(x.first);
+  }
+
+  for (auto fid : fids){
+    fleet &f = fleets[fid];
+    point to = target_position(f.com.target);
+
+    // ship arithmetics
+    list<idtype> sids(f.ships); // need to copy explicitly?
+    for (auto i : sids){
+      ship &s = ships[i];
+      point delta;
+      if (f.converge){
+	delta = to - s.position;
+      }else{
+	delta = to - f.position;
+      }
+      s.angle = utility::point_angle(delta);
+      s.position = s.position + utility::scale_point(utility::normv(s.angle), s.speed);
+      ship_grid -> move(i, s.position);
+
+      // check if ship s has reached a destination solar
+      if (!identifier::get_type(f.com.target).compare(identifier::solar)){
+	idtype sid = solar_at(s.position);
+	if (sid == identifier::get_id(f.com.target)){
+	  solar &sol = solars[sid];
+	  if (utility::l2d2(sol.position - s.position) < sol.radius * sol.radius){
+	    if (sol.owner == s.owner){
+	      ship_land(i, sid);
+	    }else{
+	      ship_bombard(i, sid);
+	    }
+	  }
+	}
+      }
+
+      // ship interactions
+      list<grid::iterator_type> buf = ship_grid -> search(s.position, s.interaction_radius);
+      vector<grid::iterator_type> res(buf.begin(), buf.end());
+      random_shuffle(res.begin(), res.end());
+      for (auto k : res){
+	if (ships[k.first].owner != s.owner){
+	  if (ship_fire(i, k.first)) break;
+	}
+      }
+    }
+
+    // update fleet data
+    if (!((f.update_counter++) % fleet::update_period)){
+      int count;
+
+      // position
+      point p(0,0);
+      count = 0;
+      for (auto k : f.ships){
+	ship &s = ships[k];
+	p = p + s.position;
+	if (++count > 20) break;
+      }
+      f.position = utility::scale_point(p, 1 / (float)count);
+
+      // radius
+      float r2 = 0;
+      count = 0;
+      for (auto k : f.ships){
+	ship &s = ships[k];
+	r2 = fmax(r2, utility::l2d2(s.position - f.position));
+	if (++count > 20) break;
+      }
+      f.radius = sqrt(r2);
+
+      // have arrived?
+      point target = target_position(f.com.target);
+      f.converge = utility::l2d2(target - f.position) < fleet::interact_d2;
+      if (f.com.child_commands.size() && f.converge){
+	// apply child commands - may destroy fleet f
+	set_fleet_commands(fid, f.com.child_commands);
+      }
+    }
+  }
+}
+
+// ****************************************
+// SHIP INTERACTION
+// ****************************************
+
+void game_data::ship_land(idtype ship_id, idtype solar_id){
+  solars[solar_id].quantity++;
+  remove_ship(ship_id);
+}
+
+void game_data::ship_bombard(idtype ship_id, idtype solar_id){
+  solars[solar_id].quantity -= ships[ship_id].hp;
+  remove_ship(ship_id);
+}
+
+bool game_data::ship_fire(idtype s, idtype t){
+  if (--ships[t].hp < 1){
+    remove_ship(t);
+  }
+
+  return true; // indicate ship initiative is over
+}
+
+void game_data::remove_ship(idtype i){
+  ship &s = ships[i];
+
+  // remove from fleet
+  fleets[s.fleet_id].ships.remove(i);
+
+  // remove from grid
+  ship_grid -> remove(i);
+
+  // remove from ships
+  ships.erase(i);
+
+  cout << "removed ship " << i << endl;
 }
 
 // produce a number of random solars with no owner according to
 // settings
-hm_t<idtype, solar> st3::game_data::random_solars(){
+hm_t<idtype, solar> game_data::random_solars(){
   hm_t<idtype, solar> buf;
   int q_start = 20;
 
@@ -196,7 +335,7 @@ hm_t<idtype, solar> st3::game_data::random_solars(){
 
 // find the fairest selection of (player.id, start_solar.id) and store
 // in start_solars, return unfairness estimate
-float st3::game_data::heuristic_homes(hm_t<idtype, solar> solar_buf, hm_t<idtype, idtype> &start_solars){
+float game_data::heuristic_homes(hm_t<idtype, solar> solar_buf, hm_t<idtype, idtype> &start_solars){
   int ntest = 100;
   float umin = INFINITY;
   hm_t<idtype, idtype> test_solars;
@@ -251,7 +390,7 @@ float st3::game_data::heuristic_homes(hm_t<idtype, solar> solar_buf, hm_t<idtype
 }
 
 // players and settings should be set before build is called
-void st3::game_data::build(){
+void game_data::build(){
   if (players.empty()){
     cout << "game_data: build: no players!" << endl;
     exit(-1);
@@ -287,7 +426,7 @@ void st3::game_data::build(){
 }
 
 // find all dead ships and remove them
-void st3::game_data::cleanup(){
+void game_data::cleanup(){
   hm_t<idtype, ship> buf;
   cout << "cleanup: start: " << ships.size() << " ships." << endl;
   for (auto x : ships){
