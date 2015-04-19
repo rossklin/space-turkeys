@@ -266,15 +266,29 @@ void game_data::increment(){
 void game_data::ship_land(idtype ship_id, idtype solar_id){
   solars[solar_id].quantity++;
   remove_ship(ship_id);
+  cout << "landed ship " << ship_id << " on solar " << solar_id << endl;
 }
 
 void game_data::ship_bombard(idtype ship_id, idtype solar_id){
-  solars[solar_id].quantity -= ships[ship_id].hp;
+  solar &sol = solars[solar_id];
+  ship &s = ships[ship_id];
+
+  sol.quantity -= s.hp;
+
+  cout << "ship " << ship_id << " bombards solar " << solar_id << ", resulting quantity: " << sol.quantity << endl;
+
+  if (sol.quantity <= 0){
+    sol.owner = s.owner;
+    cout << "player " << sol.owner << " conquers solar " << solar_id << endl;
+  }
+
   remove_ship(ship_id);
 }
 
 bool game_data::ship_fire(idtype s, idtype t){
+  cout << "ship " << s << " fires on ship " << t << endl;
   if (--ships[t].hp < 1){
+    cout << " -> ship " << t << " dies" << endl;
     remove_ship(t);
   }
 

@@ -13,10 +13,14 @@ namespace st3{
   struct game_data;
 
   namespace client{
+    const int query_ask = 0;
+    const int query_proceed = 1;
+    const int query_finished = 2;
+
     void query(socket_t socket, 
 	       sf::Packet &pq,
 	       sf::Packet &pr,
-	       bool &done);
+	       int &done);
     void load_frames(socket_t socket, std::vector<game_data> &g, int &loaded);
   };
 };

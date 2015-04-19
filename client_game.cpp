@@ -37,19 +37,17 @@ void st3::client::game::run(){
 // ****************************************
 
 bool st3::client::game::pre_step(){
-  bool done = false;
+  int done = client::query_ask;
   sf::Packet packet, pq;
   sf::Text text;
   game_data data;
 
   text.setFont(graphics::default_font); 
-  text.setString("(loading game data...)");
+  text.setString("loading game data...");
   text.setCharacterSize(24);
   text.setColor(sf::Color(200,200,200));
   // text.setStyle(sf::Text::Underlined);
-  point dims = window.getView().getSize();
-  sf::FloatRect rect = text.getLocalBounds();
-  text.setPosition(dims.x/2 - rect.width/2, dims.y/2 - rect.height/2);
+  text.setPosition(10, 10);
 
   pq << protocol::game_round;
 
@@ -63,7 +61,7 @@ bool st3::client::game::pre_step(){
 	   ref(done));
 
   while (!done){
-    done |= !window.isOpen();
+    if (!window.isOpen()) done |= client::query_finished;
 
     sf::Event event;
     while (window.pollEvent(event)){
@@ -81,6 +79,11 @@ bool st3::client::game::pre_step(){
 
   cout << "pre_step: waiting for com thread to finish..." << endl;
   t.join();
+
+  if (done & query_finished){
+    cout << "pre_step: finished" << endl;
+    exit(0);
+  }
 
   if (!(packet >> data)){
     cout << "pre_step: failed to deserialize game_data" << endl;
@@ -101,7 +104,7 @@ bool st3::client::game::pre_step(){
 // ****************************************
 
 void st3::client::game::choice_step(){
-  bool done = false;
+  int done = client::query_ask;
   sf::Packet pq, pr;
   int count = 0;
   sf::Text text;
@@ -109,36 +112,43 @@ void st3::client::game::choice_step(){
   cout << "choice_step: start" << endl;
 
   text.setFont(graphics::default_font); 
-  text.setString("(sending choice to server...)");
+  text.setString("make your choice");
   text.setCharacterSize(24);
   text.setColor(sf::Color(200,200,200));
-  // text.setStyle(sf::Text::Underlined);
-  point dims = window.getView().getSize();
-  sf::FloatRect rect = text.getLocalBounds();
-  text.setPosition(dims.x/2 - rect.width/2, dims.y/2 - rect.height/2);
+  text.setPosition(10, 10);
 
   // CREATE THE CHOICE (USER INTERFACE)
 
   while (!done){
     sf::Event event;
     while (window.pollEvent(event)){
-      if (event.type == sf::Event::Closed) exit(-1);
-      done |= choice_event(event);
+      if (event.type == sf::Event::Closed){
+	done |= client::query_finished;
+      }else{
+	done |= choice_event(event);
+      }
     }
 
     controls();
 
     window.clear();
     draw_universe();
+    window.draw(text);
     window.display();
 
     sf::sleep(sf::milliseconds(100));
   }
 
+  if (done & client::query_finished){
+    cout << "choice_step: finishded" << endl;
+    exit(0);
+  }
+
   // SEND THE CHOICE TO SERVER
-  
+
+  text.setString("sending choice to server...");
   choice c = build_choice();
-  done = false;
+  done = client::query_ask;
   pq << protocol::choice;
   pq << c;
 
@@ -151,7 +161,7 @@ void st3::client::game::choice_step(){
   cout << "choice step: sending" << endl;
 
   while (!done){
-    done |= !window.isOpen();
+    if (!window.isOpen()) done |= client::query_finished;
 
     sf::Event event;
     while (window.pollEvent(event)){
@@ -166,6 +176,11 @@ void st3::client::game::choice_step(){
     sf::sleep(sf::milliseconds(100));
   }
 
+  if (done & client::query_finished){
+    cout << "choice send: finished" << endl;
+    exit(0);
+  }
+
   deselect_all();
 
   cout << "choice step: waiting for query thread" << endl;
@@ -178,17 +193,24 @@ void st3::client::game::choice_step(){
 // ****************************************
 
 void st3::client::game::simulation_step(){
-  bool done = false;
+  int done = client::query_ask;
   bool playing = true;
   int idx = -1;
   int loaded = 0;
   vector<game_data> g(settings.frames_per_round);
+  sf::Text text;
+
+  text.setFont(graphics::default_font); 
+  text.setString("evolution: playing");
+  text.setCharacterSize(24);
+  text.setColor(sf::Color(200,200,200));
+  text.setPosition(10, 10);
 
   thread t(load_frames, socket, ref(g), ref(loaded));
 
   while (!done){
-    done |= !window.isOpen();
-    done |= idx == settings.frames_per_round - 1;
+    if (!window.isOpen()) done |= client::query_finished;
+    if (idx == settings.frames_per_round - 1) done |= client::query_proceed;
 
     cout << "simulation loop: frame " << idx << " of " << loaded << " loaded frames, play = " << playing << endl;
 
@@ -207,9 +229,11 @@ void st3::client::game::simulation_step(){
     }
 
     controls();
+    text.setString(playing ? "evolution: playing" : "evolution: paused");
 
     window.clear();
     draw_universe();
+    window.draw(text);
     window.display();
 
     playing &= idx < loaded - 1;
@@ -223,6 +247,11 @@ void st3::client::game::simulation_step(){
   }
 
   t.join();
+
+  if (done & client::query_finished){
+    cout << "simulation step: finished" << endl;
+    exit(0);
+  }
 }
 
 // ****************************************
@@ -270,14 +299,12 @@ void st3::client::game::reload_data(const game_data &g){
   cout << "game::reload_data" << endl;
   
   for (auto x : g.fleets){
-    cout << "adding fleet " << x.first << endl;
     source_t key = identifier::make(identifier::fleet, x.first);
     sf::Color col = graphics::sfcolor(players[x.second.owner].color);
     entity_selectors[key] = new fleet_selector(x.second, col, x.second.owner == socket.id);
   }
 
   for (auto x : g.solars){
-    cout << "adding solar " << x.first << endl;
     source_t key = identifier::make(identifier::solar, x.first);
     sf::Color col = x.second.owner > -1 ? graphics::sfcolor(players[x.second.owner].color) : graphics::solar_neutral;
     entity_selectors[key] = new solar_selector(x.second, col, x.second.owner == socket.id);
@@ -289,7 +316,9 @@ void st3::client::game::reload_data(const game_data &g){
 // ****************************************
 
 bool st3::client::game::command_exists(command c){
+  cout << "command_exists: start" << endl;
   for (auto x : command_selectors){
+    cout << " -> checking: " << x.first << endl;
     if (c == (command)*x.second) return true;
   }
   
@@ -310,6 +339,8 @@ void st3::client::game::add_command(command c, point from, point to){
 
   // add command selector key to list of the source entity's children
   entity_selectors[c.source] -> commands.insert(key);
+
+  cout << "added command: " << key << endl;
 }
 
 // remove command selector and associated command
@@ -333,6 +364,8 @@ void st3::client::game::remove_command(source_t key){
     entity_selectors.erase(key);
     command_selectors.erase(key);
     delete s;
+
+    cout << "removed command: " << key << endl;
   }else{
     cout << "remove command: " << key << ": not found!" << endl;
     exit(-1);
@@ -386,6 +419,7 @@ void st3::client::game::clear_selectors(){
   }
 
   entity_selectors.clear();
+  command_selectors.clear();
 }
 
 void st3::client::game::deselect_all(){
@@ -495,7 +529,7 @@ void st3::client::game::select_at(point p){
 }
 
 // return true to signal choice step done
-bool st3::client::game::choice_event(sf::Event e){
+int st3::client::game::choice_event(sf::Event e){
   point p;
   auto i = entity_selectors.begin();
   sf::View view = window.getView();
@@ -546,7 +580,8 @@ bool st3::client::game::choice_event(sf::Event e){
   case sf::Event::KeyPressed:
     switch (e.key.code){
     case sf::Keyboard::Space:
-      return true;
+      cout << "choice_event: proceed" << endl;
+      return client::query_proceed;
     case sf::Keyboard::Delete:
       i = entity_selectors.begin();
       while (i != entity_selectors.end()){
@@ -571,7 +606,7 @@ bool st3::client::game::choice_event(sf::Event e){
 
   window.setView(view);
   
-  return false;
+  return client::query_ask;
 }
 
 void st3::client::game::controls(){

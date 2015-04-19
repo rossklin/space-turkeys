@@ -60,13 +60,17 @@
 *** moving solars
 *** fog of war
 *** barbarians
-* to do
+* basic goals
 ** server game
-*** add fleet id tracker to ship, implement in apply choice
 *** universe increment
-**** ship interactions
 **** solar evolution
+**** ship interaction radius
 ** client game
+*** solar quantity indicator
+*** rectangle upwards select does not work
+*** command default: all ships
+*** command quantity alternative: all
+*** why is client receiving sig abort on disconnect? thread-related?
 *** simulation: interpolate using ship velocity
 *** translate: upgrade to sfml2.2 to get window::hasFocus()
 *** events board
@@ -77,6 +81,8 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** game_data::increment (ship update)
+** add fleet id tracker to ship, implement in apply choice
 ** game_data::apply_choice
 *** planet command
 *** fleet command

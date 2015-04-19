@@ -30,9 +30,9 @@ bool entity_selector::inside_rect(sf::FloatRect r){
 // ****************************************
 
 solar_selector::solar_selector(solar &s, sf::Color c, bool o) : entity_selector(c,o), solar(s){
-  cout << "solar data: (" << position.x << "," << position.y << "), r = " << radius << ", col = " << (int)color.r << "," << (int)color.g << "," << (int)color.b << ", sel = " << (int)selected << ", quantity = " << quantity << endl;
+  // cout << "solar data: (" << position.x << "," << position.y << "), r = " << radius << ", col = " << (int)color.r << "," << (int)color.g << "," << (int)color.b << ", sel = " << (int)selected << ", quantity = " << quantity << endl;
 
-  cout << "compare: " << s.position.x << "," << s.position.y << ": " << s.radius << ", quantity = " << s.quantity << endl;
+  // cout << "compare: " << s.position.x << "," << s.position.y << ": " << s.radius << ", quantity = " << s.quantity << endl;
 }
 
 bool solar_selector::contains_point(point p, float &d){

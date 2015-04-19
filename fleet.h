@@ -9,7 +9,7 @@ namespace st3{
   struct fleet{
     static idtype id_counter;
     static const int update_period = 10;
-    static const int interact_d2 = 10;
+    static const int interact_d2 = 100;
 
     // serialized components
     std::list<idtype> ships;

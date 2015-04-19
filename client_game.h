@@ -40,7 +40,7 @@ namespace st3{
       void reload_data(const game_data &g);
 
       // event handling
-      bool choice_event(sf::Event e);
+      int choice_event(sf::Event e);
       void area_select();
       source_t entity_at(point p);
       void target_at(point p);

@@ -39,7 +39,7 @@ int main(){
   // create graphics
   game g;
   sf::Packet pq, pr;
-  bool done;
+  int done;
   string mes = "Name_blabla";
 
   g.socket.socket = &tcp_socket;
