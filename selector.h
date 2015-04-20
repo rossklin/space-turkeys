@@ -36,8 +36,8 @@ namespace st3{
     };
 
     class solar_selector : public entity_selector, public solar{
-
     public:
+
       solar_selector(solar &s, sf::Color c, bool o);
       bool contains_point(point p, float &d);
       void draw(window_t &w);

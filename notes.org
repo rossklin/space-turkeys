@@ -64,7 +64,9 @@
 ** server game
 *** universe increment
 **** solar evolution
+     building solar system, remember to add serialization
 **** ship interaction radius
+     ships don't seem to interact, check grid functions
 ** client game
 *** solar quantity indicator
 *** rectangle upwards select does not work

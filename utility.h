@@ -21,6 +21,9 @@ namespace st3{
     bool point_below(point p, point q);
     bool point_between(point a, point p, point q);
     point normv(float angle);
+
+    // vector maths
+    void normalize_vector(std::vector<float> &x);
   };
   point operator -(const point &a, const point &b);
   point operator +(const point &a, const point &b);

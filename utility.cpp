@@ -109,3 +109,20 @@ bool utility::point_between(point a, point p, point q){
 point utility::normv(float a){
   return point(cos(a), sin(a));
 }
+
+// vector maths
+
+void utility::normalize_vector(vector<float> &x){
+  if (x.empty()) return;
+
+  float sum = 0;
+
+  for (auto y : x) sum += y;
+
+  if (sum){
+    sum = abs(sum);
+    for (auto &y : x) y /= sum;
+  }else{
+    for (auto &y : x) y = 0;
+  }
+}
