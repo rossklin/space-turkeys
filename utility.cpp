@@ -4,6 +4,7 @@
 
 #include "utility.h"
 
+using namespace std;
 using namespace st3;
 using namespace st3::utility;
 

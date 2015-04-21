@@ -1,6 +1,7 @@
 #ifndef _STK_UTILITY
 #define _STK_UTILITY
 
+#include <vector>
 #include "types.h"
 
 namespace st3{

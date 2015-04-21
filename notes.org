@@ -68,11 +68,12 @@
 **** ship interaction radius
      ships don't seem to interact, check grid functions
 ** client game
-*** solar quantity indicator
+*** command generator ship selection
+*** write selector::get_ships, remove selector::get_quantity
+*** add [solar|fleet]_selector::allocated_ships
 *** rectangle upwards select does not work
 *** command default: all ships
 *** command quantity alternative: all
-*** why is client receiving sig abort on disconnect? thread-related?
 *** simulation: interpolate using ship velocity
 *** translate: upgrade to sfml2.2 to get window::hasFocus()
 *** events board
@@ -82,7 +83,11 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** added ship.cpp
+** added research.h
 * fixed
+** why is client receiving sig abort on disconnect? thread-related?
+   exit was called in query thread
 ** game_data::increment (ship update)
 ** add fleet id tracker to ship, implement in apply choice
 ** game_data::apply_choice

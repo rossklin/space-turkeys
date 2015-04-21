@@ -10,7 +10,7 @@ namespace st3{
     // game data
     source_t source;
     target_t target;
-    sint quantity;
+    std::list<idtype> ships;
 
     std::list<command> child_commands;
     command();

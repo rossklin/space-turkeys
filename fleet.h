@@ -1,7 +1,7 @@
 #ifndef _STK_FLEET
 #define _STK_FLEET
 
-#include <list>
+#include <set>
 #include "types.h"
 #include "command.h"
 
@@ -12,7 +12,7 @@ namespace st3{
     static const int interact_d2 = 100;
 
     // serialized components
-    std::list<idtype> ships;
+    std::set<idtype> ships;
     command com;
     point position;
     sfloat radius;

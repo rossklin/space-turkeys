@@ -3,7 +3,6 @@
 st3::command::command(){
   source = "";
   target = "";
-  quantity = 0;
 }
 
 bool st3::operator ==(const command &a, const command &b){

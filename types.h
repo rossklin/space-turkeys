@@ -18,15 +18,12 @@ namespace st3{
   typedef sf::Vector2f point;
   typedef std::string source_t;
   typedef std::string target_t;
-  typedef std::string shipclass_t;
 
   namespace identifier{
     const std::string solar = "solar";
     const std::string fleet = "fleet";
     const std::string point = "point";
     const std::string command = "command";
-    const std::string shipc_scout = "shipc_scout";
-    const std::string shipc_fighter = "shipc_fighter";
     const std::string none = "";
 
     std::string make(std::string t, idtype i);

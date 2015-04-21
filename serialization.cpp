@@ -58,7 +58,6 @@ sf::Packet& st3::operator >>(sf::Packet& packet, T &container){
 
   container.clear();
   res &= (bool)(packet >> n);
-  cout << "packte >> list: n = " << n << endl;
   for (sint i = 0; i < n && res; i++){
     typename T::value_type v;
     res &= (bool)(packet >> v);
@@ -107,6 +106,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, game_settings &g){
 // ship
 sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
   return packet 
+    << g.ship_class
     << g.fleet_id
     << g.position
     << g.angle
@@ -119,6 +119,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
 
 sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
   return packet 
+    >> g.ship_class
     >> g.fleet_id
     >> g.position
     >> g.angle
@@ -131,11 +132,54 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
 
 // solar
 sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
-  return packet << g.owner << g.position << g.radius << g.quantity;
+  return packet
+    << g.ships
+    << g.new_research
+    << g.population_number
+    << g.population_happy
+    << g.industry
+    << g.resource
+    << g.resource_storage
+    << g.position
+    << g.owner
+    << g.radius
+    << g.defense_current
+    << g.defense_capacity;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
-  return packet >> g.owner >> g.position >> g.radius >> g.quantity;
+  return packet
+    >> g.ships
+    >> g.new_research
+    >> g.population_number
+    >> g.population_happy
+    >> g.industry
+    >> g.resource
+    >> g.resource_storage
+    >> g.position
+    >> g.owner
+    >> g.radius
+    >> g.defense_current
+    >> g.defense_capacity;
+}
+
+// solar choice
+sf::Packet& st3::operator <<(sf::Packet& packet, const solar_choice &g){
+  return packet
+    << g.p
+    << g.do_research
+    << g.industry
+    << g.resource
+    << g.industry_fleet;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, solar_choice &g){
+  return packet
+    >> g.p
+    >> g.do_research
+    >> g.industry
+    >> g.resource
+    >> g.industry_fleet;
 }
 
 // fleet
@@ -149,39 +193,21 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
 
 // choice
 sf::Packet& st3::operator <<(sf::Packet& packet, const choice &c){
-  return packet << c.commands;
+  return packet << c.commands << c.solar_choices;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, choice &c){
-  return packet >> c.commands;
+  return packet >> c.commands >> c.solar_choices;
 }
 
 // command
 sf::Packet& st3::operator <<(sf::Packet& packet, const command &c){
-  return packet << c.source << c.target << c.quantity << c.child_commands;
+  return packet << c.source << c.target << c.ships << c.child_commands;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, command &c){
-  return packet >> c.source >> c.target >> c.quantity >> c.child_commands;
+  return packet >> c.source >> c.target >> c.ships >> c.child_commands;
 }
-
-// // source_t
-// sf::Packet& st3::operator <<(sf::Packet& packet, const source_t &c){
-//   return packet << c;
-// }
-
-// sf::Packet& st3::operator >>(sf::Packet& packet, source_t &c){
-//   return packet >> c;
-// }
-
-// // target_t
-// sf::Packet& st3::operator <<(sf::Packet& packet, const target_t &c){
-//   return packet << c.id << c.type << c.position;
-// }
-
-// sf::Packet& st3::operator >>(sf::Packet& packet, target_t &c){
-//   return packet >> c.id >> c.type >> c.position;
-// }
 
 // point
 sf::Packet& st3::operator <<(sf::Packet& packet, const point &c){

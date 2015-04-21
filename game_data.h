@@ -18,13 +18,17 @@ namespace st3{
     hm_t<idtype, fleet> fleets;
     hm_t<idtype, solar> solars;
     hm_t<idtype, player> players;
+    hm_t<idtype, solar_choice> solar_choices;
     game_settings settings;
     grid::tree *ship_grid;
+    float dt;
+    
+    game_data();
 
     // apply_choice
     void apply_choice(choice c, idtype id);
     point target_position(target_t t);
-    void generate_fleet(point p, idtype i, command c);
+    void generate_fleet(point p, idtype i, command &c, std::set<idtype> &sh);
     void set_solar_commands(idtype id, std::list<command> coms);
     void set_fleet_commands(idtype id, std::list<command> coms);
 
@@ -38,6 +42,7 @@ namespace st3{
     void ship_bombard(idtype ship_id, idtype solar_id);
     bool ship_fire(idtype s, idtype t);
     void remove_ship(idtype id);
+    void solar_tick(idtype id);
 
     // build stuff
     void build();

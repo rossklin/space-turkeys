@@ -32,7 +32,7 @@ namespace st3{
       virtual void draw(window_t &w) = 0;
       virtual point get_position() = 0;
       virtual bool isa(std::string t) = 0;
-      virtual int get_quantity() = 0;
+      virtual std::set<idtype> get_ships() = 0;
     };
 
     class solar_selector : public entity_selector, public solar{
@@ -43,18 +43,17 @@ namespace st3{
       void draw(window_t &w);
       point get_position();
       bool isa(std::string t);
-      int get_quantity();
+      std::set<idtype> get_ships();
     };
 
     class fleet_selector : public entity_selector, public fleet{
-
     public:
       fleet_selector(fleet &f, sf::Color c, bool o);
       bool contains_point(point p, float &d);
       void draw(window_t &w);
       point get_position();
       bool isa(std::string t);
-      int get_quantity();
+      std::set<idtype> get_ships();
     };
 
     class command_selector : public entity_selector, public command{
@@ -67,7 +66,7 @@ namespace st3{
       void draw(window_t &w);
       point get_position();
       bool isa(std::string t);
-      int get_quantity();
+      std::set<idtype> get_ships();
     };
   };
 };

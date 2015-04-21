@@ -372,40 +372,40 @@ void st3::client::game::remove_command(source_t key){
   }
 }
 
-// key must reference a command selector
-void st3::client::game::increment_command(source_t key, int delta){
-  command_selector *s = command_selectors[key];
+// // key must reference a command selector
+// void st3::client::game::increment_command(source_t key, int delta){
+//   command_selector *s = command_selectors[key];
 
-  if (!s){
-    cout << "increment command: not found: " << key << endl;
-    exit(-1);
-  }
+//   if (!s){
+//     cout << "increment command: not found: " << key << endl;
+//     exit(-1);
+//   }
 
-  entity_selector *source = entity_selectors[s -> source];
+//   entity_selector *source = entity_selectors[s -> source];
 
-  if (!source){
-    cout << "increment_command: " << key << ": missing source: " << s -> source << endl;
-    exit(-1);
-  }
+//   if (!source){
+//     cout << "increment_command: " << key << ": missing source: " << s -> source << endl;
+//     exit(-1);
+//   }
 
-  cout << "increment command: " << key << endl;
+//   cout << "increment command: " << key << endl;
 
-  int sum = 0;
-  for (auto x : source -> commands){
-    command_selector *c = command_selectors[x];
-    if (!c){
-      cout << "increment_command: " << key << ": missing sibling command: " << x << endl;
-      exit(-1);
-    }
-    sum += c -> quantity;
-  }
+//   int sum = 0;
+//   for (auto x : source -> commands){
+//     command_selector *c = command_selectors[x];
+//     if (!c){
+//       cout << "increment_command: " << key << ": missing sibling command: " << x << endl;
+//       exit(-1);
+//     }
+//     sum += c -> quantity;
+//   }
 
-  if (sum + delta <= source -> get_quantity()){
-    s -> quantity += delta;
-  }else{
-    cout << "increment command: sum = " << sum << ", source " << s -> source << " has " << source -> get_quantity() << endl;
-  }
-}
+//   if (sum + delta <= source -> get_quantity()){
+//     s -> quantity += delta;
+//   }else{
+//     cout << "increment command: sum = " << sum << ", source " << s -> source << " has " << source -> get_quantity() << endl;
+//   }
+// }
 
 // ****************************************
 // SELECTOR MANIPULATION
