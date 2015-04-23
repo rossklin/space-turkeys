@@ -64,8 +64,8 @@ bool solar_selector::isa(string t){
   return !t.compare(identifier::solar);
 }
 
-int solar_selector::get_quantity(){
-  return quantity;
+set<idtype> solar_selector::get_ships(){
+  return ships;
 }
 
 // ****************************************
@@ -98,8 +98,8 @@ bool fleet_selector::isa(string t){
   return !t.compare(identifier::fleet);
 }
 
-int fleet_selector::get_quantity(){
-  return ships.size();
+set<idtype> fleet_selector::get_ships(){
+  return ships;
 }
 
 // ****************************************
@@ -140,7 +140,7 @@ void command_selector::draw(window_t &w){
   // setup text
   sf::Text text;
   text.setFont(graphics::default_font); 
-  text.setString(to_string(quantity));
+  text.setString(to_string(ships.size()));
   text.setCharacterSize(14);
   // text.setStyle(sf::Text::Underlined);
   sf::FloatRect text_dims = text.getLocalBounds();
@@ -184,6 +184,6 @@ bool command_selector::isa(string t){
   return !t.compare(identifier::command);
 }
 
-int command_selector::get_quantity(){
-  return quantity;
+set<idtype> command_selector::get_ships(){
+  return ships;
 }

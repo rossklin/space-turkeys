@@ -1,10 +1,16 @@
 #include "ship.h"
+#include "research.h"
 
 using namespace st3;
+using namespace std;
 
-ship::class_t ship::class_scout = "scout";
-ship::class_t ship::class_fighter = "fighter";
+// vector<vector<float> > ship::resource_cost({
+//     {how to keep up to date with resource types ..?
 
-std::vector<ship::class_t> ship::classes({
-    ship::class_scout,
-      ship::class_fighter});
+ship::ship(){
+
+}
+
+ship::ship(ship::class_t c, research &r){
+
+}

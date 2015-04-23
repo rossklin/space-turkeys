@@ -8,6 +8,7 @@ namespace st3{
     enum fields{
       r_population = 0,
       r_industry,
+      r_ship,
       r_num
     };
     

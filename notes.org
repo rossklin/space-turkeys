@@ -68,14 +68,13 @@
 **** ship interaction radius
      ships don't seem to interact, check grid functions
 ** client game
-*** command generator ship selection
+*** command generator ship selection widget
 *** write selector::get_ships, remove selector::get_quantity
 *** add [solar|fleet]_selector::allocated_ships
 *** rectangle upwards select does not work
 *** command default: all ships
 *** command quantity alternative: all
 *** simulation: interpolate using ship velocity
-*** translate: upgrade to sfml2.2 to get window::hasFocus()
 *** events board
     messages such as "your fleet was destroyed" or "your solar X
     merged with Bla's solar Y; your population won the ensuing battle"
@@ -83,9 +82,13 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-** added ship.cpp
-** added research.h
 * fixed
+** upgrade to sfml2.2 
+   to get window::hasFocus()
+   to enable building ~/code/include/TGUI-0.6.7
+   (note that tgui 0.6.6 should work with sfml2.0)
+   https://tgui.eu/
+** build and test ~/code/include/TGUI-0.6.7
 ** why is client receiving sig abort on disconnect? thread-related?
    exit was called in query thread
 ** game_data::increment (ship update)

@@ -169,7 +169,7 @@ void game_data::deallocate_grid(){
 
 void game_data::increment(){
   list<idtype> fids;
-  cout << "game_data: running dummy increment" << endl;
+  cout << "game_data: running increment" << endl;
 
   // update solar data
   for (auto &x : solars){
@@ -273,7 +273,7 @@ void game_data::ship_land(idtype ship_id, idtype solar_id){
   // remove from fleet
   fleets[fid].ships.erase(ship_id);
 
-  // clear fleet if empty
+  // remove fleet if empty
   if (fleets[fid].ships.empty()) fleets.erase(fid);
 
   // debug output
@@ -498,14 +498,14 @@ void st3::game_data::solar_tick(idtype id){
 
   // fleet 
   // pre-check resource constraints?
-  for (auto x : ship::classes){
-    vector<float> r = ship::resource_cost[x];
+  for (i = 0; i < ship::class_num; i++){
+    vector<float> r = ship::resource_cost[i];
     for (auto &y : r) y /= dt;
-    float allocated = P[solar_choice::p_industry] * c.industry[solar_choice::i_ship] * c.industry_fleet[x];
+    float allocated = P[solar_choice::p_industry] * c.industry[solar_choice::i_ship] * c.industry_fleet[i];
     float build = fmin(allocated, fmin(r_base.field[research::r_industry] * s.industry[solar_choice::i_ship], s.resource_constraint(r)));
-    buf.fleet_growth[x] += build * dt;
-    for (i = 0; i < solar_choice::o_num; i++){
-      buf.resource_storage[i] -= r[i] * dt;
+    buf.fleet_growth[i] += build * dt;
+    for (int j = 0; j < solar_choice::o_num; j++){
+      buf.resource_storage[j] -= r[j] * dt;
     }
   }
 
@@ -532,13 +532,13 @@ void st3::game_data::solar_tick(idtype id){
   s.population_happy = buf.population_happy;
 
   // new ships
-  for (auto &x : s.fleet_growth){
-    while (x.second >= 1){
-      ship sh(x.first, r_base);
+  for (i = 0; i < ship::class_num; i++){
+    while (s.fleet_growth[i] >= 1){
+      ship sh(i, r_base);
       idtype id = ship::id_counter++;
       ships[id] = sh;
       s.ships.insert(id);
-      x.second--;
+      s.fleet_growth[i]--;
     }
   }
 }

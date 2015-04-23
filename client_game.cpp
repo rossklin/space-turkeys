@@ -610,12 +610,12 @@ int st3::client::game::choice_event(sf::Event e){
 }
 
 void st3::client::game::controls(){
-  // if (!window.hasFocus()) {
-  //   vel = point(0,0);
-  //   return;
-  // }
-
   static point vel(0,0);
+  if (!window.hasFocus()) {
+    vel = point(0,0);
+    return;
+  }
+
   sf::View view = window.getView();
   float s = view.getSize().x / settings.width;
 

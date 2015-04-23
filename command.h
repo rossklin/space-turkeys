@@ -1,6 +1,7 @@
 #ifndef _STK_COMMAND
 #define _STK_COMMAND
 
+#include <set>
 #include <list>
 
 #include "types.h"
@@ -10,7 +11,7 @@ namespace st3{
     // game data
     source_t source;
     target_t target;
-    std::list<idtype> ships;
+    std::set<idtype> ships;
 
     std::list<command> child_commands;
     command();

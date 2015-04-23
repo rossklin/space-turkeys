@@ -1,7 +1,7 @@
 #ifndef _STK_SOLAR
 #define _STK_SOLAR
 
-#include <list>
+#include <set>
 #include <vector>
 #include "types.h"
 #include "ship.h"
@@ -36,7 +36,7 @@ namespace st3{
     std::vector<float> do_research;
     std::vector<float> industry;
     std::vector<float> resource;
-    hm_t<ship::class_t, float> industry_fleet;
+    std::vector<float> industry_fleet;
 
     solar_choice();
     void normalize();
@@ -46,7 +46,7 @@ namespace st3{
     static idtype id_counter;
 
     // evolution data
-    hm_t<ship::class_t, float> fleet_growth;
+    std::vector<float> fleet_growth;
     std::set<idtype> ships;
     std::vector<float> new_research;
     float population_number;
