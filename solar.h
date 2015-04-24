@@ -64,6 +64,8 @@ namespace st3{
 
     float resource_constraint(std::vector<float> r); // how many r can be used before resource runs out?
     void add_ship(ship s);
+
+    solar();
   };
 };
 #endif

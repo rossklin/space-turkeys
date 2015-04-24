@@ -572,7 +572,7 @@ int st3::client::game::choice_event(sf::Event e){
     for (auto x : entity_selectors){
       if (x.second -> selected && x.second -> isa(identifier::command)){
 	cout << "incrementing command " << identifier::get_id(x.first) << " by " << e.mouseWheel.delta << endl;
-	increment_command(x.first, e.mouseWheel.delta);
+	//increment_command(x.first, e.mouseWheel.delta);
       }
     }
     

@@ -14,10 +14,6 @@ idtype ship::id_counter = 0;
 idtype solar::id_counter = 0;
 idtype fleet::id_counter = 0;
 
-game_data::game_data(){
-  dt = 1;
-}
-
 point game_data::target_position(target_t t){
   string type = identifier::get_type(t);
   if (!type.compare(identifier::solar)){

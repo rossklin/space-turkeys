@@ -23,8 +23,6 @@ namespace st3{
     grid::tree *ship_grid;
     float dt;
     
-    game_data();
-
     // apply_choice
     void apply_choice(choice c, idtype id);
     point target_position(target_t t);

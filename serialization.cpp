@@ -29,9 +29,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<ID, T> &g){
   g.clear();
   for (sint i = 0; i < n && res; i++){
     ID k;
-    T v;
-    res &= (bool)(packet >> k >> v);
-    g[k] = v;
+    res &= (bool)(packet >> k >> g[k]);
   }
 
   return packet;
