@@ -127,3 +127,7 @@ void utility::normalize_vector(vector<float> &x){
     for (auto &y : x) y = 0;
   }
 }
+
+float utility::sigmoid(float x){
+  return atan(x) / (M_PI / 2);
+}

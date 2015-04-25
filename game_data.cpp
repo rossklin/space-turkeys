@@ -535,7 +535,7 @@ void st3::game_data::solar_tick(idtype id){
 
   // population
   buf.population_number += 0.0001 * s.population_number * (0.1 * (r_base.field[research::r_population] + s.dev.industry[solar::i_agriculture]) - 0.00001 * s.population_number) * dt;
-  buf.population_happy = (1000 * r_base.field[research::r_population] - P[solar::p_industry]);
+  buf.population_happy = 0.1 + utility::sigmoid(r_base.field[research::r_population] - c.population[solar::p_industry]);
 
   cout << "population: " << buf.population_number << "(" << buf.population_happy << ")" << endl;
 
@@ -556,7 +556,7 @@ void st3::game_data::solar_tick(idtype id){
       ships[sid] = sh;
       s.ships.insert(sid);
       s.dev.fleet_growth[i]--;
-      cout << "ship " << sid << " was created for player " << s.owner << " at solar " << id << endl;
+      // cout << "ship " << sid << " was created for player " << s.owner << " at solar " << id << endl;
     }
   }
 }
