@@ -684,11 +684,11 @@ void st3::client::game::draw_universe(){
 // ****************************************
 
 bool add2selection(){
-  sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
+  return sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
 }
 
 bool ctrlsel(){
-  sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
+  return sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
 }
 
 sf::FloatRect fixrect(sf::FloatRect r){
