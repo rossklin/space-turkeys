@@ -26,11 +26,11 @@ choice_t::choice_t(){
   dev.resource = vector<float>(o_num, 1);
 }
 
-float solar::solar::resource_constraint(std::vector<float> r){
+float st3::solar::solar::resource_constraint(std::vector<float> r){
   return 100;
 }
 
-solar::solar::solar(){
+st3::solar::solar::solar(){
   population_number = 1000;
   population_happy = 1;
   resource = vector<float>(o_num, 100);

@@ -45,7 +45,7 @@ bool st3::socket_t::send(sf::Packet &packet){
 }
 
 bool st3::socket_t::receive(){
-  receive(*data);
+  return receive(*data);
 }
 
 bool st3::socket_t::receive(sf::Packet &packet){

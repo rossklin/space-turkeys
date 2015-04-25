@@ -17,7 +17,7 @@ sf::Color st3::graphics::sfcolor(sint c){
 void st3::graphics::initialize(){
   
   // setup load text
-  if (!graphics::default_font.loadFromFile(graphics::font_dir + "arial.ttf")){
+  if (!graphics::default_font.loadFromFile("fonts/AjarSans-Regular.ttf")){
     cout << "error loading font" << endl;
     exit(-1);
   }

@@ -11,7 +11,6 @@
 namespace st3{
   typedef sf::RenderWindow window_t;
   namespace graphics{
-    const std::string font_dir = "/usr/share/fonts/truetype/msttcorefonts/";
 
     extern sf::Font default_font;
 
