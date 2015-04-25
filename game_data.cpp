@@ -465,7 +465,7 @@ void st3::game_data::solar_tick(idtype id){
   solar::choice_t &c = solar_choices[id];
   research &r_base = players[s.owner].research_level;
 
-  if (s.population_number <= 0){
+  if (s.owner < 0 || s.population_number <= 0){
     s.population_number = 0;
     return;
   }
@@ -534,8 +534,8 @@ void st3::game_data::solar_tick(idtype id){
   cout << endl;
 
   // population
-  buf.population_number += s.population_number * (r_base.field[research::r_population] + s.dev.industry[solar::i_agriculture] - s.population_number) * dt;
-  buf.population_happy += (r_base.field[research::r_population] - P[solar::p_industry]) * dt;
+  buf.population_number += 0.0001 * s.population_number * (0.1 * (r_base.field[research::r_population] + s.dev.industry[solar::i_agriculture]) - 0.00001 * s.population_number) * dt;
+  buf.population_happy = (1000 * r_base.field[research::r_population] - P[solar::p_industry]);
 
   cout << "population: " << buf.population_number << "(" << buf.population_happy << ")" << endl;
 
