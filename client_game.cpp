@@ -340,6 +340,9 @@ void st3::client::game::add_command(command c, point from, point to){
   // add command selector key to list of the source entity's children
   entity_selectors[c.source] -> commands.insert(key);
 
+  // add ships to command
+  cs -> ships = entity_selectors[c.source] -> get_ships();
+
   cout << "added command: " << key << endl;
 }
 

@@ -12,9 +12,6 @@
 #include "fleet.h"
 
 namespace st3{
-  struct solar;
-  struct fleet;
-
   namespace client{
 
     class entity_selector{
@@ -35,10 +32,10 @@ namespace st3{
       virtual std::set<idtype> get_ships() = 0;
     };
 
-    class solar_selector : public entity_selector, public solar{
+    class solar_selector : public entity_selector, public solar::solar{
     public:
 
-      solar_selector(solar &s, sf::Color c, bool o);
+      solar_selector(st3::solar::solar &s, sf::Color c, bool o);
       bool contains_point(point p, float &d);
       void draw(window_t &w);
       point get_position();

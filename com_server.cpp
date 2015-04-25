@@ -192,7 +192,7 @@ void st3::server::com::distribute_frames(vector<sf::Packet> &g, int &frame_count
       }
     }
 
-    sf::sleep(sf::milliseconds(100));
+    sf::sleep(sf::milliseconds(10));
   }
   cout << "com::distribute_frames: end" << endl;
 }

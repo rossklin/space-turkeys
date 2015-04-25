@@ -45,6 +45,16 @@ point solar_selector::get_position(){
 }
 
 void solar_selector::draw(window_t &w){
+  // setup text
+  sf::Text text;
+  text.setFont(graphics::default_font); 
+  text.setString(to_string(ships.size()));
+  text.setCharacterSize(14);
+  // text.setStyle(sf::Text::Underlined);
+  sf::FloatRect text_dims = text.getLocalBounds();
+  text.setPosition(position - point(text_dims.width/2, text_dims.height));
+  text.setColor(sf::Color(200,200,200));
+
   sf::CircleShape sol(radius);
   sol.setFillColor(graphics::solar_fill);
   sol.setOutlineThickness(-radius / 3);
@@ -58,6 +68,8 @@ void solar_selector::draw(window_t &w){
     sol.setOutlineColor(graphics::solar_selected);
     w.draw(sol);
   }
+
+  w.draw(text);
 }
 
 bool solar_selector::isa(string t){

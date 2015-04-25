@@ -10,7 +10,7 @@
 namespace st3{
   struct choice{
     hm_t<source_t, std::list<command> > commands;
-    hm_t<idtype, solar_choice> solar_choices;
+    hm_t<idtype, solar::choice_t> solar_choices;
   };
 };
 #endif

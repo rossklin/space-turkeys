@@ -40,7 +40,6 @@ template<typename T>
 sf::Packet& st3::operator <<(sf::Packet& packet, const T &container){
   bool res = true;
   sint n = container.size();
-  cout << "packet << list: n = " << n << endl;
   res &= (bool)(packet << n);
   for (auto i = container.begin(); i != container.end() && res; i++){
     res &= (bool)(packet << *i);
@@ -129,15 +128,15 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
 }
 
 // solar
-sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
+sf::Packet& st3::operator <<(sf::Packet& packet, const solar::solar &g){
   return packet
-    << g.ships
-    << g.new_research
     << g.population_number
     << g.population_happy
-    << g.industry
     << g.resource
-    << g.resource_storage
+    << g.dev.industry
+    << g.dev.resource
+    << g.dev.new_research
+    << g.ships
     << g.position
     << g.owner
     << g.radius
@@ -145,15 +144,15 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
     << g.defense_capacity;
 }
 
-sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
+sf::Packet& st3::operator >>(sf::Packet& packet, solar::solar &g){
   return packet
-    >> g.ships
-    >> g.new_research
     >> g.population_number
     >> g.population_happy
-    >> g.industry
     >> g.resource
-    >> g.resource_storage
+    >> g.dev.industry
+    >> g.dev.resource
+    >> g.dev.new_research
+    >> g.ships
     >> g.position
     >> g.owner
     >> g.radius
@@ -162,22 +161,22 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
 }
 
 // solar choice
-sf::Packet& st3::operator <<(sf::Packet& packet, const solar_choice &g){
+sf::Packet& st3::operator <<(sf::Packet& packet, const solar::choice_t &g){
   return packet
-    << g.p
-    << g.do_research
-    << g.industry
-    << g.resource
-    << g.industry_fleet;
+    << g.population
+    << g.dev.new_research
+    << g.dev.industry
+    << g.dev.resource
+    << g.dev.fleet_growth;
 }
 
-sf::Packet& st3::operator >>(sf::Packet& packet, solar_choice &g){
+sf::Packet& st3::operator >>(sf::Packet& packet, solar::choice_t &g){
   return packet
-    >> g.p
-    >> g.do_research
-    >> g.industry
-    >> g.resource
-    >> g.industry_fleet;
+    >> g.population
+    >> g.dev.new_research
+    >> g.dev.industry
+    >> g.dev.resource
+    >> g.dev.fleet_growth;
 }
 
 // fleet
@@ -234,8 +233,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, player &c){
 template sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<idtype, ship> &g);
 template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, ship> &g);
 
-template sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<idtype, solar> &g);
-template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, solar> &g);
+template sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<idtype, solar::solar> &g);
+template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, solar::solar> &g);
 
 // instantiate templates for choice
 

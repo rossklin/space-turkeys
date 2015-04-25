@@ -16,9 +16,9 @@ namespace st3{
   struct game_data{
     hm_t<idtype, ship> ships;
     hm_t<idtype, fleet> fleets;
-    hm_t<idtype, solar> solars;
+    hm_t<idtype, solar::solar> solars;
     hm_t<idtype, player> players;
-    hm_t<idtype, solar_choice> solar_choices;
+    hm_t<idtype, solar::choice_t> solar_choices;
     game_settings settings;
     grid::tree *ship_grid;
     float dt;
@@ -44,8 +44,8 @@ namespace st3{
 
     // build stuff
     void build();
-    hm_t<idtype, solar> random_solars();
-    float heuristic_homes(hm_t<idtype, solar> solar_buf, hm_t<idtype, idtype> &start_solars);
+    hm_t<idtype, solar::solar> random_solars();
+    float heuristic_homes(hm_t<idtype, solar::solar> solar_buf, hm_t<idtype, idtype> &start_solars);
   };
 };
 #endif

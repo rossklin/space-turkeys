@@ -12,10 +12,6 @@ namespace st3{
   struct ship{
     static idtype id_counter;
     typedef sint class_t;
-    static const class_t class_scout = 0;
-    static const class_t class_fighter = 1;
-    static const class_t class_num = 2;
-    static std::vector<std::vector<float> > resource_cost;
     
     idtype fleet_id;
     class_t ship_class;

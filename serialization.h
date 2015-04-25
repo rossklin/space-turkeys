@@ -36,12 +36,12 @@ namespace st3{
   sf::Packet& operator >>(sf::Packet& packet, ship &g);
 
   // solar
-  sf::Packet& operator <<(sf::Packet& packet, const solar &g);
-  sf::Packet& operator >>(sf::Packet& packet, solar &g);
+  sf::Packet& operator <<(sf::Packet& packet, const solar::solar &g);
+  sf::Packet& operator >>(sf::Packet& packet, solar::solar &g);
 
   // solar choice
-  sf::Packet& operator <<(sf::Packet& packet, const solar_choice &g);
-  sf::Packet& operator >>(sf::Packet& packet, solar_choice &g);
+  sf::Packet& operator <<(sf::Packet& packet, const solar::choice_t &g);
+  sf::Packet& operator >>(sf::Packet& packet, solar::choice_t &g);
 
   // fleet
   sf::Packet& operator <<(sf::Packet& packet, const fleet &g);
