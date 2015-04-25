@@ -70,8 +70,6 @@ void st3::server::com::check_protocol(protocol_t query, vector<sf::Packet> &pack
 
   cout << "com::check_protocol(multi): start" << endl;
   while (q_in.size() || q_out.size()){
-    bool passage = false;
-
     // wait for these clients to send query
     if (q_in.size()){
       cfi c = q_in.front();
@@ -101,7 +99,6 @@ void st3::server::com::check_protocol(protocol_t query, vector<sf::Packet> &pack
 }
 
 void st3::server::com::check_protocol(protocol_t query, sf::Packet &packet){
-  bool run = true;
   queue<client_t*> q_in, q_out;
 
   for (unsigned int i = 0; i < clients.size(); i++){

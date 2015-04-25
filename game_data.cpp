@@ -34,6 +34,8 @@ idtype game_data::solar_at(point p){
       return x.first;
     }
   }
+
+  return -1;
 }
 
 void game_data::generate_fleet(point p, idtype owner, command &c, set<idtype> &sh){
@@ -427,7 +429,6 @@ void game_data::build(){
   int ntest = 100;
   float unfairness = INFINITY;
   hm_t<idtype, idtype> test_homes;
-  int q_start = 20;
   int d_start = 40;
 
   for (int i = 0; i < ntest && unfairness > 0; i++){

@@ -1,4 +1,4 @@
-cflags = -ggdb --std=c++11 -I/home/rsk/code/libraries/include
+cflags = -ggdb --std=c++11 -Wall -I/home/rsk/code/libraries/include
 lflags = -L/home/rsk/code/libraries/lib -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -lpthread
 
 server_objects = game_data.o server.o game_handler.o com_server.o grid_tree.o fleet.o solar.o research.o 

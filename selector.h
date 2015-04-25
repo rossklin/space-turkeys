@@ -24,6 +24,7 @@ namespace st3{
       std::set<source_t> commands;
       
       entity_selector(sf::Color c, bool o);
+      virtual ~entity_selector();
       virtual bool contains_point(point p, float &d) = 0;
       virtual bool inside_rect(sf::FloatRect r);
       virtual void draw(window_t &w) = 0;
@@ -36,6 +37,7 @@ namespace st3{
     public:
 
       solar_selector(st3::solar::solar &s, sf::Color c, bool o);
+      ~solar_selector();
       bool contains_point(point p, float &d);
       void draw(window_t &w);
       point get_position();
@@ -46,6 +48,7 @@ namespace st3{
     class fleet_selector : public entity_selector, public fleet{
     public:
       fleet_selector(fleet &f, sf::Color c, bool o);
+      ~fleet_selector();
       bool contains_point(point p, float &d);
       void draw(window_t &w);
       point get_position();
@@ -59,6 +62,7 @@ namespace st3{
       point to;
 
       command_selector(command &c, point s, point d);
+      ~command_selector();
       bool contains_point(point p, float &d);
       void draw(window_t &w);
       point get_position();

@@ -21,6 +21,8 @@ entity_selector::entity_selector(sf::Color c, bool o){
   selected = false;
 }
 
+entity_selector::~entity_selector(){}
+
 bool entity_selector::inside_rect(sf::FloatRect r){
   return r.contains(get_position());
 }
@@ -29,11 +31,9 @@ bool entity_selector::inside_rect(sf::FloatRect r){
 // SOLAR SELECTOR
 // ****************************************
 
-solar_selector::solar_selector(solar &s, sf::Color c, bool o) : entity_selector(c,o), solar(s){
-  // cout << "solar data: (" << position.x << "," << position.y << "), r = " << radius << ", col = " << (int)color.r << "," << (int)color.g << "," << (int)color.b << ", sel = " << (int)selected << ", quantity = " << quantity << endl;
+solar_selector::solar_selector(solar &s, sf::Color c, bool o) : entity_selector(c,o), solar(s){}
 
-  // cout << "compare: " << s.position.x << "," << s.position.y << ": " << s.radius << ", quantity = " << s.quantity << endl;
-}
+solar_selector::~solar_selector() {}
 
 bool solar_selector::contains_point(point p, float &d){
   d = utility::l2norm(p - position);
@@ -86,6 +86,8 @@ set<idtype> solar_selector::get_ships(){
 
 fleet_selector::fleet_selector(fleet &f, sf::Color c, bool o) : entity_selector(c, o), fleet(f){}
 
+fleet_selector::~fleet_selector(){}
+
 bool fleet_selector::contains_point(point p, float &d){
   d = utility::l2norm(p - position);
   return d < radius;
@@ -123,6 +125,8 @@ command_selector::command_selector(command &c, point s, point d) : entity_select
   to = d;
   area_selectable = false;
 }
+
+command_selector::~command_selector(){}
 
 bool command_selector::contains_point(point p, float &d){
   d = utility::dpoint2line(p, from, get_position());

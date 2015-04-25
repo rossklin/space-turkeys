@@ -106,7 +106,6 @@ bool st3::client::game::pre_step(){
 void st3::client::game::choice_step(){
   int done = client::query_ask;
   sf::Packet pq, pr;
-  int count = 0;
   sf::Text text;
 
   cout << "choice_step: start" << endl;
