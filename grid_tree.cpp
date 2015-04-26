@@ -54,6 +54,19 @@ void node::make_split(){
   for (auto x : leaves) split = split + x.second;
   split = utility::scale_point(split, 1 / (float)leaves.size());
 
+  float ul_norm = utility::l2norm(bounds.first - split);
+  float ur_norm = utility::l2norm(point(bounds.second.x, bounds.first.y) -
+				  split);
+  float ll_norm = utility::l2norm(point(bounds.first.x, bounds.second.y) -
+				  split);
+  float lr_norm = utility::l2norm(bounds.second - split);
+
+  float min_norm = fmin(ul_norm, fmin(ur_norm, fmin(ll_norm, lr_norm)));
+
+  if (min_norm < 10) return; // Leaves are to close to boundrary
+			     // corners, splitting is not useful.
+                             // TODO: replace magic number
+
   // make child nodes
   for (int i = 0; i < 4; i++) children[i] = new node(g, this);
   children[0] -> bounds = {bounds.first, split};
