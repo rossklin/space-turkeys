@@ -80,7 +80,7 @@
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
 * remember
-** server should not insert solar ships in grid!
+** check fleet split
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed

@@ -439,7 +439,7 @@ void game_data::build(){
   int ntest = 100;
   float unfairness = INFINITY;
   hm_t<idtype, idtype> test_homes;
-  int q_start = 60;
+  int q_start = 10;
   int d_start = 20;
 
   for (int i = 0; i < ntest && unfairness > 0; i++){
@@ -566,6 +566,9 @@ void st3::game_data::solar_tick(idtype id){
   buf.population_happy = 0.1 + utility::sigmoid(r_base.field[research::r_population] - c.population[solar::p_industry]);
 
   // cout << "population: " << buf.population_number << "(" << buf.population_happy << ")" << endl;
+
+  // defense
+  s.defense_current = fmax(s.defense_current + 0.01, s.defense_capacity);
 
   // assignment
   s.dev.new_research.swap(buf.dev.new_research);
