@@ -45,10 +45,11 @@ point solar_selector::get_position(){
 }
 
 void solar_selector::draw(window_t &w){
+
   // setup text
   sf::Text text;
-  text.setFont(graphics::default_font); 
   text.setString(to_string(ships.size()));
+  text.setFont(graphics::default_font); 
   text.setCharacterSize(14);
   // text.setStyle(sf::Text::Underlined);
   sf::FloatRect text_dims = text.getLocalBounds();

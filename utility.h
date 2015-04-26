@@ -1,6 +1,7 @@
 #ifndef _STK_UTILITY
 #define _STK_UTILITY
 
+#include <sstream>
 #include <vector>
 #include "types.h"
 
@@ -30,6 +31,7 @@ namespace st3{
   };
   point operator -(const point &a, const point &b);
   point operator +(const point &a, const point &b);
+  std::ostream & operator << (std::ostream &ss, std::vector<float> const &x);
 };
 
 #endif

@@ -131,3 +131,8 @@ void utility::normalize_vector(vector<float> &x){
 float utility::sigmoid(float x){
   return atan(x) / (M_PI / 2);
 }
+
+ostream & st3::operator << (ostream &ss, vector<float> const &x){
+  for (auto y : x) ss << y << ", ";
+  return ss;
+}

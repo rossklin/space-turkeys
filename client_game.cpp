@@ -664,7 +664,38 @@ void st3::client::game::draw_universe(){
   // draw other entities
   for (auto x : entity_selectors){
     x.second -> draw(window);
+
+    if (x.second -> isa(identifier::solar)){
+      solar_selector *s = (solar_selector*)x.second;
+      point mp = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+      
+
+      if (utility::l2norm(mp - s -> position) < s -> radius){
+	//draw solar info
+	stringstream ss;
+	// build info text
+	ss << "fleet_growth: " << s -> dev.fleet_growth << endl;
+	ss << "new_research: " << s -> dev.new_research << endl;
+	ss << "industry: " << s -> dev.industry << endl;
+	ss << "resource: " << s -> dev.resource << endl;
+	ss << "pop: " << s -> population_number << "(" << s -> population_happy << ")" << endl;
+	ss << "resource: " << s -> resource << endl;
+	ss << "ships: " << s -> ships.size() << endl;
+
+	// setup text
+	sf::Text text;
+	text.setFont(graphics::default_font); 
+	text.setString(ss.str());
+	text.setCharacterSize(14);
+	sf::FloatRect text_dims = text.getLocalBounds();
+	text.setPosition(x.second -> get_position());
+	window.draw(text);
+      }
+    }
   }
+
+
+
 
   if (area_select_active && srect.width && srect.height){
     // draw selection rect
