@@ -12,13 +12,13 @@ vector<vector<float> > development::ship_cost({{1,2,3}, {1,2,3}, {1,2,3}});
 
 vector<float> development::ship_buildtime({10,20});
 
-const float solar::research_per_person = 0.0001;
-const float solar::industry_per_person = 0.0001;
-const float solar::fleet_per_person = 0.01;
-const float solar::resource_per_person = 0.0001;
-const float solar::births_per_person = 0.0001;
-const float solar::deaths_per_person = 0.0001;
-const float solar::industry_growth_cap = 10;
+const float st3::solar::research_per_person = 0.0001;
+const float st3::solar::industry_per_person = 0.0001;
+const float st3::solar::fleet_per_person = 0.01;
+const float st3::solar::resource_per_person = 0.0001;
+const float st3::solar::births_per_person = 0.0002;
+const float st3::solar::deaths_per_person = 0.0001;
+const float st3::solar::industry_growth_cap = 10;
 
 void choice_t::normalize(){
   utility::normalize_vector(population);
