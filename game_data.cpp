@@ -568,7 +568,7 @@ void st3::game_data::solar_tick(idtype id){
   // cout << "population: " << buf.population_number << "(" << buf.population_happy << ")" << endl;
 
   // defense
-  s.defense_current = fmax(s.defense_current + 0.01, s.defense_capacity);
+  s.defense_current = fmin(s.defense_current + 0.01, s.defense_capacity);
 
   // assignment
   s.dev.new_research.swap(buf.dev.new_research);
