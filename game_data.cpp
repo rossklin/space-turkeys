@@ -55,6 +55,7 @@ void game_data::generate_fleet(point p, idtype owner, command &c, set<idtype> &s
     // s.was_killed = false;
     cout << "generated ship " << i << " at " << s.position.x << "x" << s.position.y << endl;
     f.ships.insert(i);
+    ship_grid -> insert(i, s.position);
   }
 
   fleets[fid] = f;
@@ -158,8 +159,10 @@ void game_data::apply_choice(choice c, idtype id){
 void game_data::allocate_grid(){
   ship_grid = new grid::tree();
 
-  for (auto x : ships){
-    ship_grid -> insert(x.first, x.second.position);
+  for (auto f : fleets){
+    for (auto i : f.second.ships){
+      ship_grid -> insert(i, ships[i].position);
+    }
   }
 }
 
@@ -214,47 +217,51 @@ void game_data::increment(){
 	}
       }
 
-      // ship interactions
-      list<grid::iterator_type> buf = ship_grid -> search(s.position, s.interaction_radius);
-      vector<grid::iterator_type> res(buf.begin(), buf.end());
-      random_shuffle(res.begin(), res.end());
-      for (auto k : res){
-	if (ships[k.first].owner != s.owner){
-	  if (ship_fire(i, k.first)) break;
+      if (ships.count(i)){
+	// ship interactions
+	list<grid::iterator_type> buf = ship_grid -> search(s.position, s.interaction_radius);
+	vector<grid::iterator_type> res(buf.begin(), buf.end());
+	random_shuffle(res.begin(), res.end());
+	for (auto k : res){
+	  if (ships[k.first].owner != s.owner){
+	    if (ship_fire(i, k.first)) break;
+	  }
 	}
       }
     }
 
-    // update fleet data
-    if (!((f.update_counter++) % fleet::update_period)){
-      int count;
+    if (fleets.count(fid)){
+      // update fleet data
+      if (!((f.update_counter++) % fleet::update_period)){
+	int count;
 
-      // position
-      point p(0,0);
-      count = 0;
-      for (auto k : f.ships){
-	ship &s = ships[k];
-	p = p + s.position;
-	if (++count > 20) break;
-      }
-      f.position = utility::scale_point(p, 1 / (float)count);
+	// position
+	point p(0,0);
+	count = 0;
+	for (auto k : f.ships){
+	  ship &s = ships[k];
+	  p = p + s.position;
+	  if (++count > 20) break;
+	}
+	f.position = utility::scale_point(p, 1 / (float)count);
 
-      // radius
-      float r2 = 0;
-      count = 0;
-      for (auto k : f.ships){
-	ship &s = ships[k];
-	r2 = fmax(r2, utility::l2d2(s.position - f.position));
-	if (++count > 20) break;
-      }
-      f.radius = sqrt(r2);
+	// radius
+	float r2 = 0;
+	count = 0;
+	for (auto k : f.ships){
+	  ship &s = ships[k];
+	  r2 = fmax(r2, utility::l2d2(s.position - f.position));
+	  if (++count > 20) break;
+	}
+	f.radius = sqrt(r2);
 
-      // have arrived?
-      point target = target_position(f.com.target);
-      f.converge = utility::l2d2(target - f.position) < fleet::interact_d2;
-      if (f.com.child_commands.size() && f.converge){
-	// apply child commands - may destroy fleet f
-	set_fleet_commands(fid, f.com.child_commands);
+	// have arrived?
+	point target = target_position(f.com.target);
+	f.converge = utility::l2d2(target - f.position) < fleet::interact_d2;
+	if (f.com.child_commands.size() && f.converge){
+	  // apply child commands - may destroy fleet f
+	  set_fleet_commands(fid, f.com.child_commands);
+	}
       }
     }
   }
@@ -292,6 +299,7 @@ void game_data::ship_bombard(idtype ship_id, idtype solar_id){
 
   if (sol.defense_current <= 0){
     sol.owner = s.owner;
+    sol.population_number = 100; // todo: temporary fix
     cout << "player " << sol.owner << " conquers solar " << solar_id << endl;
   }
 
@@ -327,7 +335,7 @@ void game_data::remove_ship(idtype i){
 // settings
 hm_t<idtype, solar::solar> game_data::random_solars(){
   hm_t<idtype, solar::solar> buf;
-  int q_start = 20;
+  int q_start = 10;
 
   for (int i = 0; i < settings.num_solars; i++){
     solar::solar s;
@@ -431,7 +439,8 @@ void game_data::build(){
   int ntest = 100;
   float unfairness = INFINITY;
   hm_t<idtype, idtype> test_homes;
-  int d_start = 40;
+  int q_start = 60;
+  int d_start = 20;
 
   for (int i = 0; i < ntest && unfairness > 0; i++){
     hm_t<idtype, solar::solar> solar_buf = random_solars();
@@ -440,16 +449,19 @@ void game_data::build(){
       cout << "game_data::initialize: new best homes, u = " << u << endl;
       unfairness = u;
       solars = solar_buf;
+      ships.clear();
       for (auto x : test_homes){
 	solar::solar &s = solars[x.second];
 	s.owner = x.first;
 	s.defense_current = s.defense_capacity = d_start;
-	// for (int j = 0; j < q_start; j++){
-	//   ship::class_t key = utility::random_uniform() < 0.5 ? ship::class_scout : ship::class_fighter;
-	//   research rbase;
-	//   ship sh(key, rbase);
-	//   s.add_ship(sh);
-	// }
+	for (int j = 0; j < q_start; j++){
+	  ship::class_t key = utility::random_uniform() < 0.5 ? solar::s_scout : solar::s_fighter;
+	  research rbase;
+	  ship sh(key, rbase);
+	  idtype id = ship::id_counter++;
+	  ships[id] = sh;
+	  s.ships.insert(id);
+	}
       }
     }
   }
@@ -505,11 +517,17 @@ void st3::game_data::solar_tick(idtype id){
   float i_cap = 1000;
   for (i = 0; i < solar::i_num; i++){
     float allocated = P[solar::p_industry] * c.dev.industry[solar::i_infrastructure];
-    buf.dev.industry[i] += solar::industry_per_person * fmin(allocated, solar::industry_growth_cap * utility::sigmoid(s.dev.industry[solar::i_infrastructure])) * dt;
+    float working_people = fmin(allocated, s.dev.industry[solar::i_infrastructure]);
+    float build = solar::industry_per_person * working_people * r_base.field[research::r_industry];
+
+    buf.dev.industry[i] += build * dt;
     i_sum += buf.dev.industry[i];
     // cout << s.dev.industry[i] << ", ";
   }
-  for (auto &x : buf.dev.industry) x *= i_cap / i_sum;
+
+  if (i_sum > i_cap){
+    for (auto &x : buf.dev.industry) x *= i_cap / i_sum;
+  }
   // cout << endl;
 
   // fleet 
@@ -517,12 +535,15 @@ void st3::game_data::solar_tick(idtype id){
   // cout << "fleet: ";
   for (i = 0; i < solar::s_num; i++){
     vector<float> r = solar::development::ship_cost[i];
-    for (auto &y : r) y /= dt;
     float allocated = P[solar::p_industry] * c.dev.industry[solar::i_ship] * c.dev.fleet_growth[i];
-    float build = solar::fleet_per_person * fmin(allocated, fmin(r_base.field[research::r_industry] * s.dev.industry[solar::i_ship], s.resource_constraint(r))) / solar::development::ship_buildtime[i];
+    float working_people = fmin(allocated, s.dev.industry[solar::i_ship]);
+    float build = solar::fleet_per_person * r_base.field[research::r_industry] * working_people / solar::development::ship_buildtime[i];
+
+    build = fmin(build, s.resource_constraint(r));
+
     buf.dev.fleet_growth[i] += build * dt;
     for (int j = 0; j < solar::o_num; j++){
-      buf.dev.resource[j] -= r[j] * dt;
+      buf.dev.resource[j] -= r[j] * build * dt;
     }
     // cout << s.dev.fleet_growth[i] << ", ";
   }
@@ -532,7 +553,7 @@ void st3::game_data::solar_tick(idtype id){
   // cout << "resource: ";
   for (i = 0; i < solar::o_num; i++){
     float allocated = P[solar::p_resource] * c.dev.resource[i];
-    float delta = solar::resource_per_person * fmin(allocated, s.dev.industry[solar::i_resource]) * dt;
+    float delta = solar::resource_per_person * fmin(allocated, s.dev.industry[solar::i_resource]);
     float r = fmin(delta, s.resource[i]);
     buf.resource[i] -= r * dt; // resources on solar
     buf.dev.resource[i] += r * dt; // resources in storage

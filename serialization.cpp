@@ -72,11 +72,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, T &container){
 
 // game_data
 sf::Packet& st3::operator <<(sf::Packet& packet, const game_data &g){
-  return packet << g.players << g.ships << g.solars << g.settings;
+  return packet << g.players << g.fleets << g.ships << g.solars << g.settings;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, game_data &g){
-  return packet >> g.players >> g.ships >> g.solars >> g.settings;
+  return packet >> g.players >> g.fleets >> g.ships >> g.solars >> g.settings;
 }
 
 // game_settings

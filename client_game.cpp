@@ -646,24 +646,27 @@ void st3::client::game::draw_universe(){
   sf::Color col;
   sf::Vertex svert[4];
 
-  // draw ships
-  for (auto x : ships) {
-    ship s = x.second;
-    col = graphics::sfcolor(players[s.owner].color);
-    svert[0] = sf::Vertex(point(10, 0), col);
-    svert[1] = sf::Vertex(point(-10, -5), col);
-    svert[2] = sf::Vertex(point(-10, 5), col);
-    svert[3] = sf::Vertex(point(10, 0), col);
-      
-    sf::Transform t;
-    t.translate(s.position.x, s.position.y);
-    t.rotate(s.angle / (2 * M_PI) * 360);
-    window.draw(svert, 4, sf::LinesStrip, t);
-  }
-
   // draw other entities
   for (auto x : entity_selectors){
     x.second -> draw(window);
+
+    if (x.second -> isa(identifier::fleet)){
+      cout << "draw fleet: has " << x.second -> get_ships().size() << " ships" << endl;
+      for (auto i : x.second -> get_ships()){
+	ship s = ships[i];
+	col = graphics::sfcolor(players[s.owner].color);
+	svert[0] = sf::Vertex(point(10, 0), col);
+	svert[1] = sf::Vertex(point(-10, -5), col);
+	svert[2] = sf::Vertex(point(-10, 5), col);
+	svert[3] = sf::Vertex(point(10, 0), col);
+      
+	sf::Transform t;
+	t.translate(s.position.x, s.position.y);
+	t.rotate(s.angle / (2 * M_PI) * 360);
+	window.draw(svert, 4, sf::LinesStrip, t);
+      }
+    }
+
 
     if (x.second -> isa(identifier::solar)){
       solar_selector *s = (solar_selector*)x.second;
@@ -677,10 +680,11 @@ void st3::client::game::draw_universe(){
 	ss << "fleet_growth: " << s -> dev.fleet_growth << endl;
 	ss << "new_research: " << s -> dev.new_research << endl;
 	ss << "industry: " << s -> dev.industry << endl;
-	ss << "resource: " << s -> dev.resource << endl;
+	ss << "resource storage: " << s -> dev.resource << endl;
 	ss << "pop: " << s -> population_number << "(" << s -> population_happy << ")" << endl;
 	ss << "resource: " << s -> resource << endl;
 	ss << "ships: " << s -> ships.size() << endl;
+	ss << "defence: " << s -> defense_current << "(" << s -> defense_capacity << ")" << endl;
 
 	// setup text
 	sf::Text text;

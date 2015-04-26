@@ -25,6 +25,8 @@ void st3::server::game_handler(com c, game_data g){
   p_confirm << protocol::confirm;
 
   while (true){
+    g.allocate_grid();
+
     // check end
     int pid = -1;
     int psum = 0;
@@ -33,6 +35,15 @@ void st3::server::game_handler(com c, game_data g){
 	pid = x.second.owner;
 	psum++;
       }
+    }
+
+    if (psum < 2){
+      cout << "game complete" << endl;
+      packet.clear();
+      packet << protocol::complete;
+      packet << g;
+      c.check_protocol(protocol::game_round, packet);
+      return;
     }
 
     // pre, expects: only query
@@ -56,7 +67,6 @@ void st3::server::game_handler(com c, game_data g){
 
     // simulation
     cout << "starting simulation ... " << endl;
-    g.allocate_grid();
     frame_count = 0;
     thread t(&com::distribute_frames, c, ref(frames), ref(frame_count));
 
