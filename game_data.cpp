@@ -514,7 +514,7 @@ void st3::game_data::solar_tick(idtype id){
   // industry
   // cout << "industry: ";
   float i_sum = 0;
-  float i_cap = 1000;
+  float i_cap = 10000;
   for (i = 0; i < solar::i_num; i++){
     float allocated = P[solar::p_industry] * c.dev.industry[solar::i_infrastructure];
     float working_people = fmin(allocated, s.dev.industry[solar::i_infrastructure]);

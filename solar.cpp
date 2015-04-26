@@ -52,6 +52,6 @@ st3::solar::solar::solar(){
   resource = vector<float>(o_num, 1000);
   dev.fleet_growth = vector<float>(s_num, 0);
   dev.new_research = vector<float>(research::r_num, 0);
-  dev.industry = vector<float>(i_num, 1);
+  dev.industry = vector<float>(i_num, 200);
   dev.resource = vector<float>(o_num, 0);
 }

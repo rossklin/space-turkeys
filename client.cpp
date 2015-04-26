@@ -20,16 +20,21 @@ using namespace std;
 using namespace st3;
 using namespace st3::client;
 
-int main(){
+int main(int argc, char **argv){
   sf::TcpSocket tcp_socket;
   int width = 800;
   int height = 600;
+
+  if (argc != 2){
+    cout << "usage: " << argv[0] << " ip_number" << endl;
+    exit(-1);
+  }
 
   srand(time(NULL));
 
   // connect
   cout << "connecting...";
-  if (tcp_socket.connect("127.0.0.1", 53000) != sf::Socket::Done){
+  if (tcp_socket.connect(argv[1], 53000) != sf::Socket::Done){
     cout << "client: connection failed." << endl;
     return -1;
   }

@@ -138,6 +138,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const solar::solar &g){
     << g.dev.industry
     << g.dev.resource
     << g.dev.new_research
+    << g.dev.fleet_growth
     << g.ships
     << g.position
     << g.owner
@@ -154,6 +155,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar::solar &g){
     >> g.dev.industry
     >> g.dev.resource
     >> g.dev.new_research
+    >> g.dev.fleet_growth
     >> g.ships
     >> g.position
     >> g.owner
