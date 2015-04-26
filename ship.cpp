@@ -9,5 +9,6 @@ ship::ship(){
 }
 
 ship::ship(ship::class_t c, research &r){
-
+  speed = 1;
+  hp = 1;
 }

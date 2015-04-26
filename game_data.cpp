@@ -52,7 +52,7 @@ void game_data::generate_fleet(point p, idtype owner, command &c, set<idtype> &s
     s.position = utility::random_point_polar(p, f.radius);
     s.angle = utility::point_angle(target_position(c.target) - p);
     s.owner = owner;
-    s.was_killed = false;
+    // s.was_killed = false;
     cout << "generated ship " << i << " at " << s.position.x << "x" << s.position.y << endl;
     f.ships.insert(i);
   }
@@ -122,6 +122,8 @@ void game_data::apply_choice(choice c, idtype id){
   }
 
   for (auto x : c.commands){
+    cout << "apply_choice: checking command key " << x.first << endl;
+
     if (!identifier::get_type(x.first).compare(identifier::solar)){
       // commands for solar
       idtype sid = identifier::get_id(x.first);
@@ -147,7 +149,7 @@ void game_data::apply_choice(choice c, idtype id){
       // apply the commands
       set_fleet_commands(fid, x.second);
     }else{
-      cout << "apply_choice: invalid source: " << x.first << endl;
+      cout << "apply_choice: invalid source: '" << x.first << "'" << endl;
       exit(-1);
     }
   }
@@ -477,68 +479,72 @@ void st3::game_data::solar_tick(idtype id){
   float Ph = s.population_number * s.population_happy;
   vector<float> P;
 
-  cout << "solar " << id << " tick: " << endl;
+  // cout << "solar " << id << " tick: " << endl;
 
-  cout << "Population: ";
+  // cout << "Population: ";
   // population assignments
   P.resize(solar::p_num);
   for (i = 0; i < solar::p_num; i++){
     P[i] = Ph * c.population[i];
-    cout << P[i] << ", ";
+    // cout << P[i] << ", ";
   }
-  cout << endl;
+  // cout << endl;
 
-  cout << "Research: ";
+  // cout << "Research: ";
   // research
   for (i = 0; i < research::r_num; i++){
     float allocated = P[solar::p_research] * c.dev.new_research[i];
-    buf.dev.new_research[i] += fmin(allocated, s.dev.industry[solar::i_research]) * dt;
-    cout << s.dev.new_research[i] << ", ";
+    buf.dev.new_research[i] += solar::research_per_person * fmin(allocated, s.dev.industry[solar::i_research]) * dt;
+    // cout << s.dev.new_research[i] << ", ";
   }
-  cout << endl;
+  // cout << endl;
 
   // industry
-  cout << "industry: ";
+  // cout << "industry: ";
+  float i_sum = 0;
+  float i_cap = 1000;
   for (i = 0; i < solar::i_num; i++){
     float allocated = P[solar::p_industry] * c.dev.industry[solar::i_infrastructure];
-    buf.dev.industry[i] += fmin(allocated, s.dev.industry[solar::i_infrastructure]) * dt;
-    cout << s.dev.industry[i] << ", ";
+    buf.dev.industry[i] += solar::industry_per_person * fmin(allocated, solar::industry_growth_cap * utility::sigmoid(s.dev.industry[solar::i_infrastructure])) * dt;
+    i_sum += buf.dev.industry[i];
+    // cout << s.dev.industry[i] << ", ";
   }
-  cout << endl;
+  for (auto &x : buf.dev.industry) x *= i_cap / i_sum;
+  // cout << endl;
 
   // fleet 
   // pre-check resource constraints?
-  cout << "fleet: ";
+  // cout << "fleet: ";
   for (i = 0; i < solar::s_num; i++){
     vector<float> r = solar::development::ship_cost[i];
     for (auto &y : r) y /= dt;
     float allocated = P[solar::p_industry] * c.dev.industry[solar::i_ship] * c.dev.fleet_growth[i];
-    float build = fmin(allocated, fmin(r_base.field[research::r_industry] * s.dev.industry[solar::i_ship], s.resource_constraint(r)));
+    float build = solar::fleet_per_person * fmin(allocated, fmin(r_base.field[research::r_industry] * s.dev.industry[solar::i_ship], s.resource_constraint(r))) / solar::development::ship_buildtime[i];
     buf.dev.fleet_growth[i] += build * dt;
     for (int j = 0; j < solar::o_num; j++){
       buf.dev.resource[j] -= r[j] * dt;
     }
-    cout << s.dev.fleet_growth[i] << ", ";
+    // cout << s.dev.fleet_growth[i] << ", ";
   }
-  cout << endl;
+  // cout << endl;
 
   // resource
-  cout << "resource: ";
+  // cout << "resource: ";
   for (i = 0; i < solar::o_num; i++){
     float allocated = P[solar::p_resource] * c.dev.resource[i];
-    float delta = fmin(allocated, s.dev.industry[solar::i_resource]) * dt;
+    float delta = solar::resource_per_person * fmin(allocated, s.dev.industry[solar::i_resource]) * dt;
     float r = fmin(delta, s.resource[i]);
     buf.resource[i] -= r * dt; // resources on solar
     buf.dev.resource[i] += r * dt; // resources in storage
-    cout << s.dev.resource[i] << ", ";
+    // cout << s.dev.resource[i] << ", ";
   }
-  cout << endl;
+  // cout << endl;
 
   // population
-  buf.population_number += 0.0001 * s.population_number * (0.1 * (r_base.field[research::r_population] + s.dev.industry[solar::i_agriculture]) - 0.00001 * s.population_number) * dt;
+  buf.population_number += solar::births_per_person * s.population_number * (0.1 * (r_base.field[research::r_population] + s.dev.industry[solar::i_agriculture]) - solar::deaths_per_person * s.population_number) * dt;
   buf.population_happy = 0.1 + utility::sigmoid(r_base.field[research::r_population] - c.population[solar::p_industry]);
 
-  cout << "population: " << buf.population_number << "(" << buf.population_happy << ")" << endl;
+  // cout << "population: " << buf.population_number << "(" << buf.population_happy << ")" << endl;
 
   // assignment
   s.dev.new_research.swap(buf.dev.new_research);
@@ -565,11 +571,11 @@ void st3::game_data::solar_tick(idtype id){
 
 // find all dead ships and remove them
 void game_data::cleanup(){
-  hm_t<idtype, ship> buf;
-  cout << "cleanup: start: " << ships.size() << " ships." << endl;
-  for (auto x : ships){
-    if (!x.second.was_killed) buf[x.first] = x.second;
-  }
-  ships.swap(buf);
+  // hm_t<idtype, ship> buf;
+  // cout << "cleanup: start: " << ships.size() << " ships." << endl;
+  // for (auto x : ships){
+  //   if (!x.second.was_killed) buf[x.first] = x.second;
+  // }
+  // ships.swap(buf);
   cout << "cleanup: end: " << ships.size() << " ships." << endl;
 }

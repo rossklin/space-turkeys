@@ -141,11 +141,12 @@ void st3::server::com::distribute_frames(vector<sf::Packet> &g, int &frame_count
   queue<client_t*> q_in;
   queue<cfi> q_out;
 
+  cout << "com::distribute_frames: " << clients.size() << " clients:" << endl;
   for (unsigned int i = 0; i < clients.size(); i++){
     q_in.push(&clients[i]);
+    cout << clients[i].name << endl;
   }
 
-  cout << "com::distribute_frames: start" << endl;
   while (q_in.size() || q_out.size()){
     if (q_in.size()){
       client_t* c = q_in.front();
@@ -154,13 +155,15 @@ void st3::server::com::distribute_frames(vector<sf::Packet> &g, int &frame_count
       if (c -> receive_query(protocol::frame)){
 	int idx;
 	if (*(c -> data) >> idx){
+	  // cout << "distribute_frames: client " << c -> name << " requests frame " << idx << endl;
 	  q_out.push(cfi(c, idx));
 	}else{
-	  cout << "distribute_frames: failed to unpack idx" << endl;
+	  // cout << "distribute_frames: failed to unpack idx" << endl;
 	  c -> send_invalid();
 	  q_in.push(c);
 	}
       }else{
+	// cout << "distribute_frames: client " << c -> name << " does not query" << endl;
 	q_in.push(c);
       }
     }
@@ -171,23 +174,28 @@ void st3::server::com::distribute_frames(vector<sf::Packet> &g, int &frame_count
 
       if (c.second >= 0 && c.second < frame_count){
 	if (c.first -> send(g[c.second])){
-	  cout << "com: sent frame " << c.second << " to client " << c.first -> name << endl;
-	  if (c.second < frame_count - 1){
+	  // cout << "com: sent frame " << c.second << " to client " << c.first -> name << endl;
+	  if (c.second < g.size() - 1){
+	    // cout << "distribute_frames: moving client " << c.first -> name << " back to q_in" << endl;
 	    q_in.push(c.first);
+	  }else{
+	    // cout << "distribute_frames: client " << c.first -> name << " finished" << endl;
 	  }
 	}else{
-	  cout << "failed to send frame, retrying" << endl;
+	  // cout << "distribute_frames: failed to send frame to client " << c.first -> name << ", retrying" << endl;
 	  q_out.push(c);
 	}
       }else if (c.second >= 0 && c.second < g.size()){
-	cout << "distribute_frames: index " << c.second << " not created, waiting" << endl;
+	// cout << "distribute_frames: client " << c.first -> name << ": index " << c.second << " not created, waiting" << endl;
 	q_out.push(c);
       }else{
-	cout << "invalid index: " << c.second << " (cmp " << g.size() << ")" <<endl;
+	// cout << "distribute_frames: client " << c.first -> name << ": invalid index: " << c.second << " (cmp " << g.size() << ")" <<endl;
 	c.first -> send_invalid();
 	q_in.push(c.first);
       }
     }
+
+    // cout << "distribute_frames: resulting q_in.size() = " << q_in.size() << ", q_out.size() = " << q_out.size() << endl;
 
     sf::sleep(sf::milliseconds(1));
   }

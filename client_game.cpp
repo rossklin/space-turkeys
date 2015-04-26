@@ -281,6 +281,7 @@ choice st3::client::game::build_choice(){
 	  exit(-1);
 	}
 	c.commands[x.first].push_back(build_command(y));
+	cout << "adding command " << y << " with key " << x.first << ", source " << c.commands[x.first].back().source << " and target " << c.commands[x.first].back().target << endl;
       }
     }
   }
@@ -648,18 +649,16 @@ void st3::client::game::draw_universe(){
   // draw ships
   for (auto x : ships) {
     ship s = x.second;
-    if (!s.was_killed){
-      col = graphics::sfcolor(players[s.owner].color);
-      svert[0] = sf::Vertex(point(10, 0), col);
-      svert[1] = sf::Vertex(point(-10, -5), col);
-      svert[2] = sf::Vertex(point(-10, 5), col);
-      svert[3] = sf::Vertex(point(10, 0), col);
+    col = graphics::sfcolor(players[s.owner].color);
+    svert[0] = sf::Vertex(point(10, 0), col);
+    svert[1] = sf::Vertex(point(-10, -5), col);
+    svert[2] = sf::Vertex(point(-10, 5), col);
+    svert[3] = sf::Vertex(point(10, 0), col);
       
-      sf::Transform t;
-      t.translate(s.position.x, s.position.y);
-      t.rotate(s.angle / (2 * M_PI) * 360);
-      window.draw(svert, 4, sf::LinesStrip, t);
-    }
+    sf::Transform t;
+    t.translate(s.position.x, s.position.y);
+    t.rotate(s.angle / (2 * M_PI) * 360);
+    window.draw(svert, 4, sf::LinesStrip, t);
   }
 
   // draw other entities

@@ -29,7 +29,9 @@ sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<ID, T> &g){
   g.clear();
   for (sint i = 0; i < n && res; i++){
     ID k;
-    res &= (bool)(packet >> k >> g[k]);
+    T v;
+    res &= (bool)(packet >> k >> v);
+    g[k] = v;
   }
 
   return packet;
@@ -110,7 +112,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
     << g.speed
     << g.owner
     << g.hp
-    << g.was_killed
+    // << g.was_killed
     << g.interaction_radius;
 }
 
@@ -123,7 +125,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
     >> g.speed
     >> g.owner
     >> g.hp
-    >> g.was_killed
+    // >> g.was_killed
     >> g.interaction_radius;
 }
 
@@ -199,10 +201,12 @@ sf::Packet& st3::operator >>(sf::Packet& packet, choice &c){
 
 // command
 sf::Packet& st3::operator <<(sf::Packet& packet, const command &c){
+  cout << "serialization: receive command: " << endl << c.source << endl << c.target << endl;
   return packet << c.source << c.target << c.ships << c.child_commands;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, command &c){
+  cout << "serialization: send command: " << endl << c.source << endl << c.target << endl;
   return packet >> c.source >> c.target >> c.ships >> c.child_commands;
 }
 

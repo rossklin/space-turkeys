@@ -10,6 +10,16 @@ using namespace solar;
 
 vector<vector<float> > development::ship_cost({{1,2,3}, {1,2,3}, {1,2,3}});
 
+vector<float> development::ship_buildtime({10,20});
+
+const float solar::research_per_person = 0.0001;
+const float solar::industry_per_person = 0.0001;
+const float solar::fleet_per_person = 0.01;
+const float solar::resource_per_person = 0.0001;
+const float solar::births_per_person = 0.0001;
+const float solar::deaths_per_person = 0.0001;
+const float solar::industry_growth_cap = 10;
+
 void choice_t::normalize(){
   utility::normalize_vector(population);
   utility::normalize_vector(dev.fleet_growth);
@@ -27,7 +37,13 @@ choice_t::choice_t(){
 }
 
 float st3::solar::solar::resource_constraint(std::vector<float> r){
-  return 100;
+  float max = INFINITY;
+
+  for (int i = 0; i < dev.resource.size(); i++){
+    max = fmin(max, dev.resource[i] / r[i]);
+  }
+
+  return max;
 }
 
 st3::solar::solar::solar(){

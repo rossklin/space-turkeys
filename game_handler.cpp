@@ -26,11 +26,13 @@ void st3::server::game_handler(com c, game_data g){
 
   while (true){
     // check end
-    if (count++ > 2){
-      packet.clear();
-      packet << protocol::complete;
-      c.check_protocol(protocol::game_round, packet);
-      return;
+    int pid = -1;
+    int psum = 0;
+    for (auto &x : g.solars){
+      if (x.second.owner > -1 && x.second.owner != pid){
+	pid = x.second.owner;
+	psum++;
+      }
     }
 
     // pre, expects: only query

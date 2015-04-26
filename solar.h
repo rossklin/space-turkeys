@@ -41,8 +41,17 @@ namespace st3{
       s_num
     };
 
+    extern const float research_per_person;
+    extern const float industry_per_person;
+    extern const float fleet_per_person;
+    extern const float resource_per_person;
+    extern const float births_per_person;
+    extern const float deaths_per_person;
+    extern const float industry_growth_cap;
+
     struct development{
       static std::vector<std::vector<float> > ship_cost;
+      static std::vector<float> ship_buildtime;
 
       std::vector<float> fleet_growth; // accumulated ships per type
       std::vector<float> new_research; // accumulated research per field

@@ -20,7 +20,6 @@ namespace st3{
     sfloat speed;
     sint owner;
     sint hp;
-    sbool was_killed;
     sfloat interaction_radius;
 
     ship();
