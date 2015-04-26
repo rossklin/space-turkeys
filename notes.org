@@ -62,28 +62,32 @@
 *** barbarians
 * basic goals
 ** server game
-*** universe increment
-**** solar evolution
-     building solar system, remember to add serialization
-**** ship interaction radius
-     ships don't seem to interact, check grid functions
 ** client game
 *** command generator ship selection widget
-*** write selector::get_ships, remove selector::get_quantity
 *** add [solar|fleet]_selector::allocated_ships
 *** rectangle upwards select does not work
-*** command default: all ships
 *** command quantity alternative: all
 *** simulation: interpolate using ship velocity
 *** events board
     messages such as "your fleet was destroyed" or "your solar X
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
+* bugs
+** server: fleets targeting waypoints never converge
+** client: waypoints are not drawn in simulation
+** when giving multiple fleet commands, all ships are assigned
 * remember
-** check fleet split
 ** when updating a struct/class, also update serialization
 * git pending
+** add waypoint objects
+    so that: 
+    o commands don't need child commands
+    o multiple fleets can meet at a waypoint
+    o commands aren't source/target entities
 * fixed
+** commands should not be targets
+** solar system
+** write selector::get_ships, remove selector::get_quantity
 ** upgrade to sfml2.2 
    to get window::hasFocus()
    to enable building ~/code/include/TGUI-0.6.7

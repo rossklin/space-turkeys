@@ -22,15 +22,15 @@ namespace st3{
   namespace identifier{
     const std::string solar = "solar";
     const std::string fleet = "fleet";
-    const std::string point = "point";
+    const std::string waypoint = "waypoint";
     const std::string command = "command";
     const std::string none = "";
 
     std::string make(std::string t, idtype i);
-    std::string make(std::string t, st3::point p);
+    std::string make(std::string t, std::string k);
     std::string get_type(std::string s);
     st3::idtype get_id(std::string s);
-    st3::point get_point(std::string s);
+    source_t get_source_t(std::string s);
   };
 };
 #endif

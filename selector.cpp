@@ -71,6 +71,29 @@ void solar_selector::draw(window_t &w){
   }
 
   w.draw(text);
+
+  // draw debug info
+
+  point mp = w.mapPixelToCoords(sf::Mouse::getPosition(w));
+
+  if (utility::l2norm(mp - position) < radius){
+    //draw solar info
+    stringstream ss;
+    // build info text
+    ss << "fleet_growth: " << dev.fleet_growth << endl;
+    ss << "new_research: " << dev.new_research << endl;
+    ss << "industry: " << dev.industry << endl;
+    ss << "resource storage: " << dev.resource << endl;
+    ss << "pop: " << population_number << "(" << population_happy << ")" << endl;
+    ss << "resource: " << resource << endl;
+    ss << "ships: " << ships.size() << endl;
+    ss << "defence: " << defense_current << "(" << defense_capacity << ")" << endl;
+
+    // setup text
+    text.setString(ss.str());
+    text.setPosition(position + point(20, 0));
+    w.draw(text);
+  }
 }
 
 bool solar_selector::isa(string t){
@@ -118,26 +141,56 @@ set<idtype> fleet_selector::get_ships(){
 }
 
 // ****************************************
+// WAYPOINT SELECTOR
+// ****************************************
+
+waypoint_selector::waypoint_selector(waypoint &f, sf::Color c, bool o) : entity_selector(c, o), waypoint(f){}
+
+waypoint_selector::~waypoint_selector(){}
+
+bool waypoint_selector::contains_point(point p, float &d){
+  d = utility::l2norm(p - position);
+  return d < radius;
+}
+
+point waypoint_selector::get_position(){
+  return position;
+}
+
+void waypoint_selector::draw(window_t &w){
+  sf::CircleShape s(radius);
+  s.setFillColor(selected ? sf::Color(255,255,255,0.2) : sf::Color(0,0,0,0));
+  s.setOutlineColor(color);
+  s.setOutlineThickness(2);
+  s.setPosition(position - point(radius, radius));
+  w.draw(s);
+}
+
+bool waypoint_selector::isa(string t){
+  return !t.compare(identifier::waypoint);
+}
+
+set<idtype> waypoint_selector::get_ships(){
+  return ships;
+}
+
+// ****************************************
 // COMMAND SELECTOR
 // ****************************************
 
-command_selector::command_selector(command &c, point s, point d) : entity_selector(graphics::command_normal_body, true), command(c){
+command_selector::command_selector(command &c, point s, point d) : command(c){
   from = s;
   to = d;
-  area_selectable = false;
+  selected = false;
 }
 
 command_selector::~command_selector(){}
 
 bool command_selector::contains_point(point p, float &d){
-  d = utility::dpoint2line(p, from, get_position());
+  d = utility::dpoint2line(p, from, to);
 
   // todo: command size?
   return d < 5;
-}
-
-point command_selector::get_position(){
-  return to;
 }
 
 void command_selector::draw(window_t &w){
@@ -152,7 +205,6 @@ void command_selector::draw(window_t &w){
     sf::Vertex(sf::Vector2f(0.9, -2)),
     sf::Vertex(sf::Vector2f(0, 0))
   };
-
   
   // setup text
   sf::Text text;
@@ -182,7 +234,6 @@ void command_selector::draw(window_t &w){
     c_body[2].color = graphics::command_normal_tail;
   }
 
-
   // setup arrow transform
   sf::Transform t;
   point delta = to - from;
@@ -195,12 +246,4 @@ void command_selector::draw(window_t &w){
   w.draw(c_body, 3, sf::Triangles, t);
   w.draw(text);
 
-}
-
-bool command_selector::isa(string t){
-  return !t.compare(identifier::command);
-}
-
-set<idtype> command_selector::get_ships(){
-  return ships;
 }

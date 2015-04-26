@@ -28,6 +28,9 @@ namespace st3{
   sf::Packet& operator <<(sf::Packet& packet, const choice &c);
   sf::Packet& operator >>(sf::Packet& packet, choice &c);
 
+  sf::Packet& operator <<(sf::Packet& packet, const waypoint &c);
+  sf::Packet& operator >>(sf::Packet& packet, waypoint &c);
+
   sf::Packet& operator <<(sf::Packet& packet, const command &c);
   sf::Packet& operator >>(sf::Packet& packet, command &c);
 

@@ -21,7 +21,7 @@ namespace st3{
       bool owned;
       bool area_selectable;
       sf::Color color;
-      std::set<source_t> commands;
+      std::set<idtype> commands;
       
       entity_selector(sf::Color c, bool o);
       virtual ~entity_selector();
@@ -56,18 +56,30 @@ namespace st3{
       std::set<idtype> get_ships();
     };
 
-    class command_selector : public entity_selector, public command{
+    class waypoint_selector : public entity_selector, public waypoint{
     public:
-      point from;
-      point to;
-
-      command_selector(command &c, point s, point d);
-      ~command_selector();
+      static constexpr float radius = 10;
+      std::set<idtype> ships;
+      
+      waypoint_selector(waypoint &f, sf::Color c, bool o);
+      ~waypoint_selector();
       bool contains_point(point p, float &d);
       void draw(window_t &w);
       point get_position();
       bool isa(std::string t);
       std::set<idtype> get_ships();
+    };
+
+    class command_selector : public command{
+    public:
+      bool selected;
+      point from;
+      point to;
+
+      command_selector(command &c, point s, point d);
+      ~command_selector();
+      void draw(window_t &w);
+      bool contains_point(point p, float &d);
     };
   };
 };

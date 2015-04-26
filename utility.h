@@ -26,7 +26,7 @@ namespace st3{
 
     // vector maths
     void normalize_vector(std::vector<float> &x);
-
+    
     float sigmoid(float x);
   };
   point operator -(const point &a, const point &b);

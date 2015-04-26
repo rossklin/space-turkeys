@@ -56,7 +56,6 @@ void st3::server::com::deallocate(){
 }
 
 void st3::server::com::check_protocol(protocol_t query, vector<sf::Packet> &packets){
-  bool run = true;
   queue<cfi> q_in, q_out;
 
   if (packets.size() < clients.size()){
@@ -107,7 +106,6 @@ void st3::server::com::check_protocol(protocol_t query, sf::Packet &packet){
 
   cout << "com::check_protocol: start" << endl;
   while (q_in.size() || q_out.size()){
-    bool passage = false;
 
     // wait for these clients to send query
     if (q_in.size()){

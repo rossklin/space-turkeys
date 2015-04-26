@@ -20,7 +20,6 @@ void st3::server::game_handler(com c, game_data g){
   vector<sf::Packet> frames(g.settings.frames_per_round);
   int frame_count;
   unsigned int i;
-  int count = 0;
   
   p_confirm << protocol::confirm;
 
@@ -86,7 +85,7 @@ void st3::server::game_handler(com c, game_data g){
 
     cout << "cleaning up game_data..." << endl;
     // cleanup
-    g.cleanup();
+    g.end_step();
     g.deallocate_grid();
     cout << "post cleanup size: " << g.ships.size() << endl;
   }

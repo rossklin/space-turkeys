@@ -11,15 +11,21 @@ source_t identifier::make(string t, idtype i){
   return s.str();
 }
 
-source_t identifier::make(string t, st3::point p){
+source_t identifier::make(string t, source_t k){
   stringstream s;
-  s << t << ":" << p.x << "," << p.y;
+  s << t << ":" << k << endl;
   return s.str();
 }
 
 string identifier::get_type(source_t s){
   size_t split = s.find(':');
   return s.substr(0, split);
+}
+
+source_t identifier::get_source_t(source_t s){
+  size_t split = s.find(':');
+  string v = s.substr(split + 1, s.length() - split - 1);
+  return (source_t)v;
 }
 
 idtype identifier::get_id(source_t s){
@@ -33,21 +39,3 @@ idtype identifier::get_id(source_t s){
   }
 }
 
-point identifier::get_point(source_t s){
-  size_t split = s.find(':');
-  string v = s.substr(split + 1, s.length() - split - 1);
-  size_t s2 = v.find(',');
-  string vx = v.substr(0, s2);
-  string vy = v.substr(s2 + 1, v.length() - s2 - 1);
-  st3::point p;
-
-  try{
-    p.x = stoi(vx);
-    p.y = stoi(vy);
-  }catch(...){
-    cout << "invalid source point: " << vx << ", " << vy << endl;
-    exit(-1);
-  }
-
-  return p;
-}

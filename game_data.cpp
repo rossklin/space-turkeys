@@ -20,8 +20,8 @@ point game_data::target_position(target_t t){
     return solars[identifier::get_id(t)].position;
   }else if (!type.compare(identifier::fleet)){
     return fleets[identifier::get_id(t)].position;
-  }else if (!type.compare(identifier::point)){
-    return identifier::get_point(t);
+  }else if (!type.compare(identifier::waypoint)){
+    return waypoints[identifier::get_source_t(t)].position;
   }else{
     cout << "target_position: " << t << ": unknown type!" << endl;
     exit(-1);
@@ -36,6 +36,25 @@ idtype game_data::solar_at(point p){
   }
 
   return -1;
+}
+
+void game_data::relocate_ships(command &c, set<idtype> &sh){
+  fleet f;
+  idtype fid = fleet::id_counter++;
+  f.com = c;
+
+  // clear parent fleets
+  for (auto i : sh){
+    idtype sf = ships[i].fleet_id;
+    fleets[sf].ships.erase(i);
+    if (fleets[sf].ships.empty()){
+      fleets.erase(sf);
+    }
+  }
+
+  f.ships.insert(sh.begin(), sh.end());
+  fleets[fid] = f;
+  update_fleet_data(fid);
 }
 
 void game_data::generate_fleet(point p, idtype owner, command &c, set<idtype> &sh){
@@ -114,7 +133,10 @@ void game_data::set_solar_commands(idtype id, list<command> commands){
 void game_data::apply_choice(choice c, idtype id){
   cout << "game_data: running dummy apply choice" << endl;
 
-  for (auto x : c.solar_choices){
+  // todo: security checks
+  waypoints.insert(c.waypoints.begin(), c.waypoints.end());
+
+  for (auto &x : c.solar_choices){
     if (solars[x.first].owner != id){
       cout << "apply_choice: error: solar choice by player " << id << " for solar " << x.first << " owned by " << solars[x.first].owner << endl;
       exit(-1);
@@ -159,7 +181,7 @@ void game_data::apply_choice(choice c, idtype id){
 void game_data::allocate_grid(){
   ship_grid = new grid::tree();
 
-  for (auto f : fleets){
+  for (auto &f : fleets){
     for (auto i : f.second.ships){
       ship_grid -> insert(i, ships[i].position);
     }
@@ -168,6 +190,39 @@ void game_data::allocate_grid(){
 
 void game_data::deallocate_grid(){
   delete ship_grid;
+}
+
+void game_data::update_fleet_data(idtype fid){
+  fleet &f = fleets[fid];
+    
+  // update fleet data
+  if (!((f.update_counter++) % fleet::update_period)){
+    int count;
+
+    // position
+    point p(0,0);
+    count = 0;
+    for (auto k : f.ships){
+      ship &s = ships[k];
+      p = p + s.position;
+      if (++count > 20) break;
+    }
+    f.position = utility::scale_point(p, 1 / (float)count);
+
+    // radius
+    float r2 = 0;
+    count = 0;
+    for (auto k : f.ships){
+      ship &s = ships[k];
+      r2 = fmax(r2, utility::l2d2(s.position - f.position));
+      if (++count > 20) break;
+    }
+    f.radius = sqrt(r2);
+
+    // have arrived?
+    point target = target_position(f.com.target);
+    f.converge = utility::l2d2(target - f.position) < fleet::interact_d2;
+  }
 }
 
 void game_data::increment(){
@@ -230,38 +285,42 @@ void game_data::increment(){
       }
     }
 
-    if (fleets.count(fid)){
-      // update fleet data
-      if (!((f.update_counter++) % fleet::update_period)){
-	int count;
+    if (fleets.count(fid)) update_fleet_data(fid);
+  }
 
-	// position
-	point p(0,0);
-	count = 0;
-	for (auto k : f.ships){
-	  ship &s = ships[k];
-	  p = p + s.position;
-	  if (++count > 20) break;
-	}
-	f.position = utility::scale_point(p, 1 / (float)count);
+  // waypoint triggers
+  for (auto &x : waypoints){
+    waypoint &w = x.second;
 
-	// radius
-	float r2 = 0;
-	count = 0;
-	for (auto k : f.ships){
-	  ship &s = ships[k];
-	  r2 = fmax(r2, utility::l2d2(s.position - f.position));
-	  if (++count > 20) break;
-	}
-	f.radius = sqrt(r2);
+    // identify landed ships
+    set<idtype> landed_ships;
+    for (auto &y : fleets){
+      fleet &f = y.second;
+      // add ships from arrived fleets
+      if (f.converge && !f.com.target.compare(x.first)){
+	landed_ships.insert(f.ships.begin(), f.ships.end());
+      }
+    }
 
-	// have arrived?
-	point target = target_position(f.com.target);
-	f.converge = utility::l2d2(target - f.position) < fleet::interact_d2;
-	if (f.com.child_commands.size() && f.converge){
-	  // apply child commands - may destroy fleet f
-	  set_fleet_commands(fid, f.com.child_commands);
+    // trigger commands
+    bool check;
+    set<idtype> ready_ships;
+    for (auto &y : w.pending_commands){
+      // check if all ships in command y are either landed or dead
+      check = true;
+      ready_ships.clear();
+      for (auto i : y.ships){
+	if (ships.count(i)){
+	  if (landed_ships.count(i)){
+	    ready_ships.insert(i);
+	  }else{
+	    check = false;
+	  }
 	}
+      }
+
+      if (check){
+	relocate_ships(y, ready_ships);
       }
     }
   }
@@ -593,13 +652,21 @@ void st3::game_data::solar_tick(idtype id){
 }
 
 
-// find all dead ships and remove them
-void game_data::cleanup(){
-  // hm_t<idtype, ship> buf;
-  // cout << "cleanup: start: " << ships.size() << " ships." << endl;
-  // for (auto x : ships){
-  //   if (!x.second.was_killed) buf[x.first] = x.second;
-  // }
-  // ships.swap(buf);
-  cout << "cleanup: end: " << ships.size() << " ships." << endl;
+// remove waypoints with no incoming fleets
+void game_data::end_step(){
+  bool check;
+  list<source_t> remove;
+
+  for (auto & i : waypoints){
+    check = false;
+    for (auto &j : fleets){
+      check |= (!j.second.com.target.compare(i.first));
+    }
+    if (!check) remove.push_back(i.first);
+  }
+
+  for (auto & i : remove) {
+    waypoints.erase(i);
+    cout << "end_step: removed waypoint " << i << endl;
+  }
 }

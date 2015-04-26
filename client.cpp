@@ -24,17 +24,20 @@ int main(int argc, char **argv){
   sf::TcpSocket tcp_socket;
   int width = 800;
   int height = 600;
+  string ip = "127.0.0.1";
 
-  if (argc != 2){
-    cout << "usage: " << argv[0] << " ip_number" << endl;
+  if (argc > 2){
+    cout << "usage: " << argv[0] << " [ip_number]" << endl;
     exit(-1);
+  }else if (argc == 2){
+    ip = argv[1];
   }
 
   srand(time(NULL));
 
   // connect
   cout << "connecting...";
-  if (tcp_socket.connect(argv[1], 53000) != sf::Socket::Done){
+  if (tcp_socket.connect(ip, 53000) != sf::Socket::Done){
     cout << "client: connection failed." << endl;
     return -1;
   }

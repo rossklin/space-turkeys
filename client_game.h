@@ -25,7 +25,7 @@ namespace st3{
       hm_t<idtype, player> players;
       hm_t<idtype, ship> ships;
       hm_t<source_t, entity_selector*> entity_selectors;
-      hm_t<source_t, command_selector*> command_selectors;
+      hm_t<idtype, command_selector*> command_selectors;
 
       // round sections
       void run();
@@ -34,7 +34,7 @@ namespace st3{
       void simulation_step();
 
       // data handling
-      command build_command(source_t key);
+      command build_command(idtype key);
       choice build_choice();
       void initialize_selectors();
       void reload_data(const game_data &g);
@@ -43,18 +43,19 @@ namespace st3{
       int choice_event(sf::Event e);
       void area_select();
       source_t entity_at(point p);
+      idtype command_at(point p);
       void target_at(point p);
-      void select_at(point p);
+      bool select_at(point p);
+      bool select_command_at(point p);
       void controls();
 
       // command handling
       bool command_exists(command c);
       void command_points(command c, point &from, point &to);
       void add_command(command c, point from, point to);
-      void remove_command(source_t key);
-      void command2point(point p);
+      void remove_command(idtype key);
       void command2entity(source_t key);
-      void increment_command(source_t key, int delta);
+      source_t add_waypoint(point p);
 
       // selection handling
       void clear_selectors();
