@@ -30,7 +30,7 @@ namespace st3{
     std::string make(std::string t, std::string k);
     std::string get_type(std::string s);
     st3::idtype get_id(std::string s);
-    source_t get_source_t(std::string s);
+    source_t get_string_id(std::string s);
   };
 };
 #endif

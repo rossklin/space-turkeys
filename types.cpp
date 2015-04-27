@@ -22,7 +22,7 @@ string identifier::get_type(source_t s){
   return s.substr(0, split);
 }
 
-source_t identifier::get_source_t(source_t s){
+source_t identifier::get_string_id(source_t s){
   size_t split = s.find(':');
   string v = s.substr(split + 1, s.length() - split - 1);
   return (source_t)v;

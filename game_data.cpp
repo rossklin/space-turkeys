@@ -21,7 +21,19 @@ point game_data::target_position(target_t t){
   }else if (!type.compare(identifier::fleet)){
     return fleets[identifier::get_id(t)].position;
   }else if (!type.compare(identifier::waypoint)){
-    return waypoints[identifier::get_source_t(t)].position;
+    cout << "identifying position for waypoint " << identifier::get_string_id(t) << endl;
+
+    if (!waypoints.count(identifier::get_string_id(t))){
+      cout << "waypoint not fount! Available:" << endl;
+      for (auto &x : waypoints) cout << x.first << endl;
+      exit(-1);
+    }
+
+    point p = waypoints[identifier::get_string_id(t)].position;
+
+    cout << " -> " << p.x << "x" << p.y << endl;
+
+    return waypoints[identifier::get_string_id(t)].position;
   }else{
     cout << "target_position: " << t << ": unknown type!" << endl;
     exit(-1);
@@ -49,12 +61,18 @@ void game_data::relocate_ships(command &c, set<idtype> &sh){
     fleets[sf].ships.erase(i);
     if (fleets[sf].ships.empty()){
       fleets.erase(sf);
+      cout << "relocate ships: erase fleet " << sf << ", total " << fleets.size() << " fleets." << endl;
     }
+
+    // set new fleet id
+    ships[i].fleet_id = fid;
   }
 
   f.ships.insert(sh.begin(), sh.end());
   fleets[fid] = f;
   update_fleet_data(fid);
+
+  cout << "relocate ships: added fleet " << fid << endl;
 }
 
 void game_data::generate_fleet(point p, idtype owner, command &c, set<idtype> &sh){
@@ -135,6 +153,10 @@ void game_data::apply_choice(choice c, idtype id){
 
   // todo: security checks
   waypoints.insert(c.waypoints.begin(), c.waypoints.end());
+  cout << "apply_choice for player " << id << ": inserted " << c.waypoints.size() << " waypoints:" << endl;
+  for (auto &x : waypoints){
+    cout << x.first << endl;
+  }
 
   for (auto &x : c.solar_choices){
     if (solars[x.first].owner != id){
@@ -290,6 +312,7 @@ void game_data::increment(){
 
   // waypoint triggers
   for (auto &x : waypoints){
+    cout << "waypoint trigger: checking " << x.first << endl;
     waypoint &w = x.second;
 
     // identify landed ships
@@ -297,7 +320,8 @@ void game_data::increment(){
     for (auto &y : fleets){
       fleet &f = y.second;
       // add ships from arrived fleets
-      if (f.converge && !f.com.target.compare(x.first)){
+      if (f.converge && !identifier::get_string_id(f.com.target).compare(x.first)){
+	cout << "waypoint trigger: detected arrived fleet: " << y.first << endl;
 	landed_ships.insert(f.ships.begin(), f.ships.end());
       }
     }
@@ -320,6 +344,7 @@ void game_data::increment(){
       }
 
       if (check){
+	cout << "waypoint trigger: command targeting " << y.target << "ready with " << ready_ships.size() << " ships!" << endl;
 	relocate_ships(y, ready_ships);
       }
     }
@@ -660,7 +685,7 @@ void game_data::end_step(){
   for (auto & i : waypoints){
     check = false;
     for (auto &j : fleets){
-      check |= (!j.second.com.target.compare(i.first));
+      check |= (!identifier::get_string_id(j.second.com.target).compare(i.first));
     }
     if (!check) remove.push_back(i.first);
   }

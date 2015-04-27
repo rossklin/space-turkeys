@@ -72,11 +72,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, T &container){
 
 // game_data
 sf::Packet& st3::operator <<(sf::Packet& packet, const game_data &g){
-  return packet << g.players << g.fleets << g.ships << g.solars << g.settings;
+  return packet << g.players << g.fleets << g.waypoints << g.ships << g.solars << g.settings;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, game_data &g){
-  return packet >> g.players >> g.fleets >> g.ships >> g.solars >> g.settings;
+  return packet >> g.players >> g.fleets >> g.waypoints >> g.ships >> g.solars >> g.settings;
 }
 
 // game_settings
@@ -212,12 +212,12 @@ sf::Packet& st3::operator >>(sf::Packet& packet, waypoint &c){
 
 // command
 sf::Packet& st3::operator <<(sf::Packet& packet, const command &c){
-  cout << "serialization: receive command: " << endl << c.source << endl << c.target << endl;
+  cout << "serialization: send command: " << endl << c.source << endl << c.target << endl;
   return packet << c.source << c.target << c.ships << c.child_commands;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, command &c){
-  cout << "serialization: send command: " << endl << c.source << endl << c.target << endl;
+  cout << "serialization: receive command: " << endl << c.source << endl << c.target << endl;
   return packet >> c.source >> c.target >> c.ships >> c.child_commands;
 }
 
@@ -239,29 +239,4 @@ sf::Packet& st3::operator >>(sf::Packet& packet, player &c){
   return packet >> c.name >> c.color;
 }
 
-
-// ****************************************
-// TEMPLATE INSTANTIATION
-// ****************************************
-
-// instantiate templates for ship and solar
-template sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<idtype, ship> &g);
-template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, ship> &g);
-
-template sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<idtype, solar::solar> &g);
-template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<idtype, solar::solar> &g);
-
-// instantiate templates for choice
-
-template sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<source_t, list<command> > &g);
-template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<source_t, list<command> > &g);
-
-template sf::Packet& st3::operator <<(sf::Packet& packet, const list<command> &c);
-template sf::Packet& st3::operator >>(sf::Packet& packet, list<command> &c);
-
-template sf::Packet& st3::operator <<(sf::Packet& packet, const set<idtype> &c);
-template sf::Packet& st3::operator >>(sf::Packet& packet, set<idtype> &c);
-
-// template sf::Packet& st3::operator <<(sf::Packet& packet, const list<upgrade_choice> &c);
-// template sf::Packet& st3::operator >>(sf::Packet& packet, list<upgrade_choice> &c);
 

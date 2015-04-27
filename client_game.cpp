@@ -291,7 +291,7 @@ choice st3::client::game::build_choice(){
 	}
 	w.pending_commands.push_back((command)*command_selectors[k]);
       }
-      c.waypoints[x.first] = w;
+      c.waypoints[identifier::get_string_id(x.first)] = w;
     }else{
       for (auto y : x.second -> commands){
 	c.commands[x.first].push_back(build_command(y));

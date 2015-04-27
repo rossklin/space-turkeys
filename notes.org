@@ -62,7 +62,9 @@
 *** barbarians
 * basic goals
 ** server game
+*** research pooling
 ** client game
+*** window transforms should remain to next round
 *** command generator ship selection widget
 *** add [solar|fleet]_selector::allocated_ships
 *** rectangle upwards select does not work
@@ -73,18 +75,19 @@
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
 * bugs
-** server: fleets targeting waypoints never converge
-** client: waypoints are not drawn in simulation
 ** when giving multiple fleet commands, all ships are assigned
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** add waypoint to game_data serialization
+** fix waypoint id check in game_data::target_position
+** fixed relocate ships setting new ship fleet id
+* fixed
 ** add waypoint objects
     so that: 
     o commands don't need child commands
     o multiple fleets can meet at a waypoint
     o commands aren't source/target entities
-* fixed
 ** commands should not be targets
 ** solar system
 ** write selector::get_ships, remove selector::get_quantity

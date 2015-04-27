@@ -159,7 +159,7 @@ point waypoint_selector::get_position(){
 
 void waypoint_selector::draw(window_t &w){
   sf::CircleShape s(radius);
-  s.setFillColor(selected ? sf::Color(255,255,255,0.2) : sf::Color(0,0,0,0));
+  s.setFillColor(selected ? sf::Color(255,255,255,100) : sf::Color(0,0,0,0));
   s.setOutlineColor(color);
   s.setOutlineThickness(2);
   s.setPosition(position - point(radius, radius));
@@ -190,7 +190,7 @@ bool command_selector::contains_point(point p, float &d){
   d = utility::dpoint2line(p, from, to);
 
   // todo: command size?
-  return d < 5;
+  return d < 3;
 }
 
 void command_selector::draw(window_t &w){
