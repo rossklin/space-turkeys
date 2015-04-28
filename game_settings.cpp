@@ -5,7 +5,7 @@ st3::game_settings::game_settings(){
   width = 400;
   height = 400;
   ship_speed = 3;
-  solar_minrad = 5;
+  solar_minrad = 10;
   solar_maxrad = 20;
   num_solars = 20;
   fleet_default_radius = 10;

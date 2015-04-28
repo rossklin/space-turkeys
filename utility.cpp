@@ -55,10 +55,7 @@ float utility::sproject(point a, point r){
 float utility::angle_distance(float a, float b){
   float r;
 
-  a = fmod(a, 2 * M_PI);
-  b = fmod(a, 2 * M_PI);
-
-  r = fabs(b - a);
+  r = modulus(b - a, 2 * M_PI);
 
   if (r > M_PI){
     r = 2 * M_PI - r;
@@ -69,12 +66,14 @@ float utility::angle_distance(float a, float b){
 
 // shortest distance between p and line from a to b
 float utility::dpoint2line(point p, point a, point b){
+
   if (angle_distance(point_angle(p - a), point_angle(b - a)) > M_PI/2){
     return l2norm(p - a);
   }else if (angle_distance(point_angle(p - b), point_angle(a - b)) > M_PI/2){
     return l2norm(p - b);
   }else{
-    return l2norm(p - scale_point(b - a, sproject(p-a,b-a)) - a);
+    float s = sproject(p-a,b-a) / sproject(b-a, b-a);
+    return l2norm(p - scale_point(b - a, s) - a);
   }
 }
 
@@ -138,6 +137,12 @@ void utility::normalize_vector(vector<float> &x){
 
 float utility::sigmoid(float x){
   return atan(x) / (M_PI / 2);
+}
+
+// p > 0
+float utility::modulus(float x, float p){
+  int num = floor(x / p);
+  return x - num * p;
 }
 
 ostream & st3::operator << (ostream &ss, vector<float> const &x){

@@ -34,6 +34,7 @@ namespace st3{
     sf::RectangleShape build_rect(sf::FloatRect r);
     
     float sigmoid(float x);
+    float modulus(float x, float p);
   };
   point operator -(const point &a, const point &b);
   point operator +(const point &a, const point &b);

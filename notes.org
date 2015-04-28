@@ -61,28 +61,37 @@
 *** fog of war
 *** barbarians
 * basic goals
-** best way to add external dependencies
-   added sub directories to make
-   consider linking to their git repos?
 ** server game
 *** research pooling
 ** client game
-*** command generator ship selection widget
-*** add [solar|fleet]_selector::allocated_ships
-*** rectangle upwards select does not work
-*** command quantity alternative: all
+*** graphics::draw_ship different types and param scale
+*** command_gui sort ships by type
+*** waypoint command quantity alternative: all
 *** simulation: interpolate using ship velocity
 *** events board
     messages such as "your fleet was destroyed" or "your solar X
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
 * bugs
-** when giving multiple fleet commands, all ships are assigned
+** segfault when deleting command to waypoint
+** undefined when deleting command with active comgui
+** fleet position seems to be off
+** client rectangle upwards select does not work
+** comgui effects handler doesn't recursively reset waypoint ships
+** socket_t exits on disconnect in thread, causes segfault
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-** simplified ship drawing selection in game::draw_universe
+** command distance checker sees past end points
 * fixed
+** best way to add external dependencies
+   added sub directories to make
+   consider linking to their git repos?
+** when giving multiple fleet commands, all ships are assigned
+** added command_gui
+** added SFML and TGUI as submodules in external/src
+   make will build them in external
+** simplified ship drawing selection in game::draw_universe
 ** window transforms should remain to next round
 ** add waypoint to game_data serialization
 ** fix waypoint id check in game_data::target_position
