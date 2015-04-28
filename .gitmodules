@@ -1,0 +1,6 @@
+[submodule "external/src/SFML"]
+	path = external/src/SFML
+	url = https://github.com/LaurentGomila/SFML
+[submodule "external/src/TGUI"]
+	path = external/src/TGUI
+	url = https://github.com/texus/TGUI.git

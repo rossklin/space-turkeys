@@ -26,6 +26,7 @@ bool ctrlsel();
 
 void st3::client::game::run(){
   area_select_active = false;
+  window.setView(sf::View(sf::FloatRect(0, 0, settings.width, settings.height)));
 
   // game loop
   while (pre_step()){
@@ -95,8 +96,6 @@ bool st3::client::game::pre_step(){
   reload_data(data);
 
   cout << "pre_step: end: game data has " << data.ships.size() << " ships" << endl;
-
-  window.setView(sf::View(sf::FloatRect(0, 0, settings.width, settings.height)));
 
   return true;
 }
@@ -406,41 +405,6 @@ void st3::client::game::remove_command(idtype key){
   }
 }
 
-// // key must reference a command selector
-// void st3::client::game::increment_command(source_t key, int delta){
-//   command_selector *s = command_selectors[key];
-
-//   if (!s){
-//     cout << "increment command: not found: " << key << endl;
-//     exit(-1);
-//   }
-
-//   entity_selector *source = entity_selectors[s -> source];
-
-//   if (!source){
-//     cout << "increment_command: " << key << ": missing source: " << s -> source << endl;
-//     exit(-1);
-//   }
-
-//   cout << "increment command: " << key << endl;
-
-//   int sum = 0;
-//   for (auto x : source -> commands){
-//     command_selector *c = command_selectors[x];
-//     if (!c){
-//       cout << "increment_command: " << key << ": missing sibling command: " << x << endl;
-//       exit(-1);
-//     }
-//     sum += c -> quantity;
-//   }
-
-//   if (sum + delta <= source -> get_quantity()){
-//     s -> quantity += delta;
-//   }else{
-//     cout << "increment command: sum = " << sum << ", source " << s -> source << " has " << source -> get_quantity() << endl;
-//   }
-// }
-
 // ****************************************
 // SELECTOR MANIPULATION
 // ****************************************
@@ -480,23 +444,6 @@ void st3::client::game::area_select(){
     x.second -> selected = x.second -> owned && x.second -> area_selectable && x.second -> inside_rect(rect);
   }
 }
-
-// void st3::client::game::command2point(point p){
-//   command c;
-//   point from, to;
-//   c.target = identifier::make(identifier::waypoint);
-//   to = p;
-
-//   cout << "command to point: " << p.x << "," << p.y << endl;
-//   for (auto x : entity_selectors){
-//     if (x.second -> selected){
-//       cout << "command2point: adding " << x.first << endl;
-//       c.source = x.first;
-//       from = x.second -> get_position();
-//       add_command(c, from, to);
-//     }
-//   }
-// }
 
 void st3::client::game::command2entity(source_t key){
   if (!entity_selectors.count(key)){

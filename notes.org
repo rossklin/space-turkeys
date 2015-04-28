@@ -61,10 +61,12 @@
 *** fog of war
 *** barbarians
 * basic goals
+** best way to add external dependencies
+   added sub directories to make
+   consider linking to their git repos?
 ** server game
 *** research pooling
 ** client game
-*** window transforms should remain to next round
 *** command generator ship selection widget
 *** add [solar|fleet]_selector::allocated_ships
 *** rectangle upwards select does not work
@@ -79,10 +81,11 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** window transforms should remain to next round
+* fixed
 ** add waypoint to game_data serialization
 ** fix waypoint id check in game_data::target_position
 ** fixed relocate ships setting new ship fleet id
-* fixed
 ** add waypoint objects
     so that: 
     o commands don't need child commands
