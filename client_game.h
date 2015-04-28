@@ -54,6 +54,7 @@ namespace st3{
       bool select_command_at(point p);
       void controls();
       void clear_guis();
+      void recursive_waypoint_deallocate(source_t wid, std::set<idtype> a);
 
       // command handling
       bool command_exists(command c);

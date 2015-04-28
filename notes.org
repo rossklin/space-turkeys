@@ -73,15 +73,14 @@
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
 * bugs
-** segfault when deleting command to waypoint
-** undefined when deleting command with active comgui
 ** fleet position seems to be off
 ** client rectangle upwards select does not work
-** comgui effects handler doesn't recursively reset waypoint ships
 ** socket_t exits on disconnect in thread, causes segfault
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** fixed recursive ship increment/decrement through waypoints
+** fixed a bug where remove command deleted the wrong entity
 ** command distance checker sees past end points
 * fixed
 ** best way to add external dependencies

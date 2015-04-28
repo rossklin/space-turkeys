@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <vector>
+#include <set>
 
 #include <SFML/Graphics.hpp>
 
@@ -35,10 +36,30 @@ namespace st3{
     
     float sigmoid(float x);
     float modulus(float x, float p);
+    
   };
-  point operator -(const point &a, const point &b);
-  point operator +(const point &a, const point &b);
+  point operator - (const point &a, const point &b);
+  point operator + (const point &a, const point &b);
   std::ostream & operator << (std::ostream &ss, std::vector<float> const &x);
+
+  // set operations
+  template<typename T>
+    std::set<T> operator - (const std::set<T> &a, const std::set<T> &b);
+
+  template<typename T>
+    std::set<T> operator -= (std::set<T> &a, const std::set<T> &b);
+
+  template<typename T>
+    std::set<T> operator + (const std::set<T> &a, const std::set<T> &b);
+
+  template<typename T>
+    std::set<T> operator += (std::set<T> &a, const std::set<T> &b);
+
+  template<typename T>
+    std::set<T> operator & (const std::set<T> &a, const std::set<T> &b);
+
+  template<typename T>
+    std::set<T> operator | (const std::set<T> &a, const std::set<T> &b);
 };
 
 #endif

@@ -373,49 +373,91 @@ void st3::client::game::add_command(command c, point from, point to){
   // add ships to command
   set<idtype> ready_ships = s -> get_ready_ships();
   cs -> ships = ready_ships;
-  s -> allocated_ships.insert(ready_ships.begin(), ready_ships.end());
+  s -> allocated_ships += ready_ships;
 
   // add ships to waypoint
   entity_selector *t = entity_selectors[c.target];
   if (t -> isa(identifier::waypoint)){
     waypoint_selector *ws = (waypoint_selector*)t;
-    set<idtype> ss = s -> get_ships();
-    ws -> ships.insert(ss.begin(), ss.end());
+    ws -> ships += s -> get_ships();
   }
 
   cout << "added command: " << id << endl;
 }
 
+void game::recursive_waypoint_deallocate(source_t wid, set<idtype> a){
+  entity_selector *es = entity_selectors[wid];
+  if (!es -> isa(identifier::waypoint)) return;
+  waypoint_selector *s = (waypoint_selector*)es;
+
+  cout << "RWD start" << endl;
+  // check if there are still incoming commands
+  bool check = false;
+  for (auto x : command_selectors) check |= !x.second -> target.compare(wid);
+
+  if (!check){
+    cout << "removing waypoint " << wid << endl;
+    // remove waypoint
+    auto buf = s -> commands;
+    for (auto c : buf){
+      cout << " .. remove command: " << c << endl;
+      remove_command(c);
+    }
+    entity_selectors.erase(wid);
+    delete s;
+    return;
+  }
+
+  if (a.empty()) return;
+
+  s -> ships -= a;
+  s -> allocated_ships -= a;
+
+  cout << "removing " << a.size() << " ships from waypoint " << wid << endl;
+  
+  for (auto c : s -> commands){
+    command_selector *cs = command_selectors[c];
+    
+    cout << " .. removing ships from command " << c << endl;
+    // ships to remove from this command
+    set<idtype> delta = cs -> ships & a;
+    cs -> ships -= delta;
+
+    cout << " .. recursive call RWD on " << cs -> target << endl;
+    recursive_waypoint_deallocate(cs -> target, delta);
+  }
+}
+
 // remove command selector and associated command
 void st3::client::game::remove_command(idtype key){
+  cout << "remove command: " << key << endl;
+
   if (command_selectors.count(key)){
     command_selector *cs = command_selectors[key];
+    entity_selector *s = entity_selectors[cs -> source];
+    set<idtype> cships = cs -> ships;
+    source_t target_key = cs -> target;
+
+    cout << " .. deleting; source = " << cs -> source << endl;
+    // remove this command's selector
+    command_selectors.erase(key);
+    delete cs;
 
     // remove this command from it's source's list
-    if (!entity_selectors.count(cs -> source)){
-      cout << "remove_command: no parent with source key " << cs -> source << endl;
-      exit(-1);
-    }
-
-    entity_selector *s = entity_selectors[cs -> source];
     s -> commands.erase(key);
 
     // deallocate ships from source
-    for (auto x : cs -> ships) s -> allocated_ships.erase(x);
+    s -> allocated_ships -= cships;
 
+    cout << " .. calling RWD" << endl;
     // remove ships from waypoint
-    entity_selector *t = entity_selectors[cs -> target];
-    if (t -> isa(identifier::waypoint)){
-      waypoint_selector *ws = (waypoint_selector*)t;
-      set<idtype> ss = s -> get_ships();
-      for (auto k : ss) ws -> ships.erase(k);
-    }
+    recursive_waypoint_deallocate(target_key, cships);
 
-    // remove this command's selector
-    command_selectors.erase(key);
-    delete s;
+    // remove comgui
+    if (comgui) delete comgui;
+    comgui = 0;
 
-    cout << "removed command: " << key << endl;
+    cout << "command removed: " << key << endl;
   }else{
     cout << "remove command: " << key << ": not found!" << endl;
     exit(-1);
@@ -584,9 +626,6 @@ bool st3::client::game::select_command_at(point p){
     return true;
   }
 
-  if (comgui) delete comgui;
-  comgui = 0;
-
   return false;
 }
 
@@ -600,19 +639,33 @@ int st3::client::game::choice_event(sf::Event e){
 
     command_selector *cs = command_selectors[comgui -> comid];
     entity_selector *s = entity_selectors[cs -> source];
+    entity_selector *t = entity_selectors[cs -> target];
+
+    // check if target is a waypoint
+    if (t -> isa(identifier::waypoint)){
+      waypoint_selector *ws = (waypoint_selector*)t;
+
+      // compute added or removed ships
+      set<idtype> removed = cs -> ships - comgui -> allocated;
+      set<idtype> added = comgui -> allocated - cs -> ships;
+
+      if (!added.empty()){
+	ws -> ships += added;
+      }
+
+      if (!removed.empty()){
+	recursive_waypoint_deallocate(cs -> target, removed);
+      }
+    }
 
     // set command selector's ships
     cs -> ships = comgui -> allocated;
     
     // set source entity's allocated ships
-    for (auto x : comgui -> allocated){
-      s -> allocated_ships.insert(x);
-    }
+    s -> allocated_ships += comgui -> allocated;
 
     // unset source entity's non-allocated ships
-    for (auto x : comgui -> cached){
-      s -> allocated_ships.erase(x);
-    }
+    s -> allocated_ships -= comgui -> cached;
 
     return client::query_ask;
   }
@@ -627,6 +680,8 @@ int st3::client::game::choice_event(sf::Event e){
     }
     break;
   case sf::Event::MouseButtonReleased:
+    clear_guis();
+
     p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
     if (e.mouseButton.button == sf::Mouse::Left){
       if (srect.width > 5 || srect.height > 5){
@@ -712,15 +767,13 @@ void st3::client::game::controls(){
 void st3::client::game::draw_universe(){
 
   // draw source/target entities
-  for (auto x : entity_selectors){
-    x.second -> draw(window);
-  }
+  for (auto x : entity_selectors) x.second -> draw(window);
 
   // draw commands
   for (auto x : command_selectors) x.second -> draw(window);
 
+  // draw ships in fleets
   for (auto x : ships){
-    // draw ships in fleets
     if (x.second.fleet_id > -1){
       sf::Color col = graphics::sfcolor(players[x.second.owner].color);
       graphics::draw_ship(window, x.second, col);

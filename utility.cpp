@@ -149,3 +149,57 @@ ostream & st3::operator << (ostream &ss, vector<float> const &x){
   for (auto y : x) ss << y << ", ";
   return ss;
 }
+
+// set operations
+template<typename T>
+set<T> st3::operator - (const set<T> &a, const set<T> &b){
+  set<T> res = a;
+  for (auto &x : b) res.erase(x);
+  return res;
+}
+
+template<typename T>
+set<T> st3::operator -= (set<T> &a, const set<T> &b){
+  for (auto &x : b) a.erase(x);
+  return a;
+}
+
+template<typename T>
+set<T> st3::operator + (const set<T> &a, const set<T> &b){
+  set<T> res = a;
+  for (auto &x : b) res.insert(x);
+  return res;
+}
+
+template<typename T>
+set<T> st3::operator += (set<T> &a, const set<T> &b){
+  for (auto &x : b) a.insert(x);
+  return a;
+}
+
+template<typename T>
+set<T> st3::operator & (const set<T> &a, const set<T> &b){
+  set<T> res;
+  for (auto &x : b) {
+    if (a.count(x)) res.insert(x);
+  }
+
+  return res;
+}
+
+
+template<typename T>
+set<T> st3::operator | (const set<T> &a, const set<T> &b){
+  set<T> res;
+  for (auto &x : b) res.insert(x);
+  for (auto &x : a) res.insert(x);
+  return res;
+}
+
+// set operations instantiation
+template set<idtype> st3::operator - (const set<idtype> &a, const set<idtype> &b);
+template set<idtype> st3::operator -= (set<idtype> &a, const set<idtype> &b);
+template set<idtype> st3::operator + (const set<idtype> &a, const set<idtype> &b);
+template set<idtype> st3::operator += (set<idtype> &a, const set<idtype> &b);
+template set<idtype> st3::operator & (const set<idtype> &a, const set<idtype> &b);
+template set<idtype> st3::operator | (const set<idtype> &a, const set<idtype> &b);
