@@ -1,0 +1,32 @@
+ABOUT ----------------------------------------
+
+Space Turkeys is aiming to be a simple yet complex strategy game in
+space setting. The game is built for simultaneous turns multiplayer
+mode.
+
+BUILD ---------------------------------------- 
+
+In order to build Space Turkeys, you must first install the
+dependencies. Space Turkeys uses SFML and TGUI, which are submodules
+to this repository. Thus, either clone with '--recursive' or run 
+'git submodule init' and 'git submodule update' to get the submodule
+contents. Then you will need the following libraries which SFML depend
+on:
+
+pthread
+opengl
+xlib
+xrandr
+udev
+freetype
+glew
+jpeg
+sndfile
+openal
+xcb-image
+
+After they are installed, a simple 'make' should be sufficient to
+build both dependencies and the Space Turkeys executables.
+
+CONTACT ----------------------------------------
+Ross: rossklin@gmail.com

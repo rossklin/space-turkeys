@@ -19,7 +19,7 @@ server : sfml $(server_objects) $(common_objects)
 client : sfml tgui $(client_objects) $(common_objects)
 	g++ $(cflags) -o client $(client_objects) $(common_objects) $(lflags) -ltgui
 
-command_gui.o : tgui
+$(tgui_objects) : tgui
 
 tgui : sfml
 	echo building $(tgui_dir)
