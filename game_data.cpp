@@ -262,46 +262,48 @@ void game_data::increment(){
   }
 
   for (auto fid : fids){
-    fleet &f = fleets[fid];
-    point to = target_position(f.com.target);
+    if (fleets.count(fid)){
+      fleet &f = fleets[fid];
+      point to = target_position(f.com.target);
 
-    // ship arithmetics
-    set<idtype> sids(f.ships); // need to copy explicitly?
-    for (auto i : sids){
-      ship &s = ships[i];
-      point delta;
-      if (f.converge){
-	delta = to - s.position;
-      }else{
-	delta = to - f.position;
-      }
-      s.angle = utility::point_angle(delta);
-      s.position = s.position + utility::scale_point(utility::normv(s.angle), s.speed);
-      ship_grid -> move(i, s.position);
+      // ship arithmetics
+      set<idtype> sids(f.ships); // need to copy explicitly?
+      for (auto i : sids){
+	ship &s = ships[i];
+	point delta;
+	if (f.converge){
+	  delta = to - s.position;
+	}else{
+	  delta = to - f.position;
+	}
+	s.angle = utility::point_angle(delta);
+	s.position = s.position + utility::scale_point(utility::normv(s.angle), s.speed);
+	ship_grid -> move(i, s.position);
 
-      // check if ship s has reached a destination solar
-      if (!identifier::get_type(f.com.target).compare(identifier::solar)){
-	idtype sid = solar_at(s.position);
-	if (sid == identifier::get_id(f.com.target)){
-	  solar::solar &sol = solars[sid];
-	  if (utility::l2d2(sol.position - s.position) < sol.radius * sol.radius){
-	    if (sol.owner == s.owner){
-	      ship_land(i, sid);
-	    }else{
-	      ship_bombard(i, sid);
+	// check if ship s has reached a destination solar
+	if (!identifier::get_type(f.com.target).compare(identifier::solar)){
+	  idtype sid = solar_at(s.position);
+	  if (sid == identifier::get_id(f.com.target)){
+	    solar::solar &sol = solars[sid];
+	    if (utility::l2d2(sol.position - s.position) < sol.radius * sol.radius){
+	      if (sol.owner == s.owner){
+		ship_land(i, sid);
+	      }else{
+		ship_bombard(i, sid);
+	      }
 	    }
 	  }
 	}
-      }
 
-      if (ships.count(i)){
-	// ship interactions
-	list<grid::iterator_type> buf = ship_grid -> search(s.position, s.interaction_radius);
-	vector<grid::iterator_type> res(buf.begin(), buf.end());
-	random_shuffle(res.begin(), res.end());
-	for (auto k : res){
-	  if (ships[k.first].owner != s.owner){
-	    if (ship_fire(i, k.first)) break;
+	if (ships.count(i)){
+	  // ship interactions
+	  list<grid::iterator_type> buf = ship_grid -> search(s.position, s.interaction_radius);
+	  vector<grid::iterator_type> res(buf.begin(), buf.end());
+	  random_shuffle(res.begin(), res.end());
+	  for (auto k : res){
+	    if (ships[k.first].owner != s.owner){
+	      if (ship_fire(i, k.first)) break;
+	    }
 	  }
 	}
       }
@@ -406,16 +408,22 @@ bool game_data::ship_fire(idtype s, idtype t){
 void game_data::remove_ship(idtype i){
   ship &s = ships[i];
 
+  cout << "removing ship " << i << endl;
+
   // remove from fleet
   fleets[s.fleet_id].ships.erase(i);
+  
+  // check if fleet is empty
+  if (fleets[s.fleet_id].ships.empty()){
+    fleets.erase(s.fleet_id);
+    cout << " --> fleet " << s.fleet_id << " is empty, removing" << endl;
+  }
 
   // remove from grid
   ship_grid -> remove(i);
 
   // remove from ships
   ships.erase(i);
-
-  cout << "removed ship " << i << endl;
 }
 
 // produce a number of random solars with no owner according to
