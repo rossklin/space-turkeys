@@ -22,3 +22,16 @@ void st3::graphics::initialize(){
     exit(-1);
   }
 }
+
+void st3::graphics::draw_ship(sf::RenderWindow &w, ship s, sf::Color col){
+  sf::Vertex svert[4];
+  svert[0] = sf::Vertex(point(10, 0), col);
+  svert[1] = sf::Vertex(point(-10, -5), col);
+  svert[2] = sf::Vertex(point(-10, 5), col);
+  svert[3] = sf::Vertex(point(10, 0), col);
+      
+  sf::Transform t;
+  t.translate(s.position.x, s.position.y);
+  t.rotate(s.angle / (2 * M_PI) * 360);
+  w.draw(svert, 4, sf::LinesStrip, t);
+}

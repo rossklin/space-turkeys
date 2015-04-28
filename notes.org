@@ -81,8 +81,9 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-** window transforms should remain to next round
+** simplified ship drawing selection in game::draw_universe
 * fixed
+** window transforms should remain to next round
 ** add waypoint to game_data serialization
 ** fix waypoint id check in game_data::target_position
 ** fixed relocate ships setting new ship fleet id

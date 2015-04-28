@@ -651,34 +651,22 @@ void st3::client::game::controls(){
 // ****************************************
 
 void st3::client::game::draw_universe(){
-  sf::Color col;
-  sf::Vertex svert[4];
 
   // draw source/target entities
   for (auto x : entity_selectors){
     x.second -> draw(window);
-
-    // draw ships in fleets
-    if (x.second -> isa(identifier::fleet)){
-      cout << "draw fleet: has " << x.second -> get_ships().size() << " ships" << endl;
-      for (auto i : x.second -> get_ships()){
-	ship s = ships[i];
-	col = graphics::sfcolor(players[s.owner].color);
-	svert[0] = sf::Vertex(point(10, 0), col);
-	svert[1] = sf::Vertex(point(-10, -5), col);
-	svert[2] = sf::Vertex(point(-10, 5), col);
-	svert[3] = sf::Vertex(point(10, 0), col);
-      
-	sf::Transform t;
-	t.translate(s.position.x, s.position.y);
-	t.rotate(s.angle / (2 * M_PI) * 360);
-	window.draw(svert, 4, sf::LinesStrip, t);
-      }
-    }
   }
 
   // draw commands
   for (auto x : command_selectors) x.second -> draw(window);
+
+  for (auto x : ships){
+    // draw ships in fleets
+    if (x.second.fleet_id > -1){
+      sf::Color col = graphics::sfcolor(players[x.second.owner].color);
+      graphics::draw_ship(window, x.second, col);
+    }
+  }
 
   if (area_select_active && srect.width && srect.height){
     // draw selection rect

@@ -7,6 +7,7 @@
 #include "game_data.h"
 #include "choice.h"
 #include "types.h"
+#include "ship.h"
 
 namespace st3{
   typedef sf::RenderWindow window_t;
@@ -32,6 +33,7 @@ namespace st3{
     sf::Color sfcolor(sint);
 
     void initialize();
+    void draw_ship(sf::RenderWindow &w, ship s, sf::Color c);
   };
 };
 #endif

@@ -358,6 +358,9 @@ void game_data::increment(){
 void game_data::ship_land(idtype ship_id, idtype solar_id){
   idtype fid = ships[ship_id].fleet_id;
 
+  // unset fleet id
+  ships[ship_id].fleet_id = -1;
+
   // add to solar
   solars[solar_id].ships.insert(ship_id);
 
