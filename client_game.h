@@ -11,6 +11,7 @@
 #include "types.h"
 #include "selector.h"
 #include "utility.h"
+#include "command_gui.h"
 
 namespace st3{
   namespace client{
@@ -26,6 +27,10 @@ namespace st3{
       hm_t<idtype, ship> ships;
       hm_t<source_t, entity_selector*> entity_selectors;
       hm_t<idtype, command_selector*> command_selectors;
+
+      command_gui *comgui;
+
+      game();
 
       // round sections
       void run();
@@ -48,6 +53,7 @@ namespace st3{
       bool select_at(point p);
       bool select_command_at(point p);
       void controls();
+      void clear_guis();
 
       // command handling
       bool command_exists(command c);

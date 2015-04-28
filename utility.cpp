@@ -111,6 +111,14 @@ point utility::normv(float a){
   return point(cos(a), sin(a));
 }
 
+// sfml stuff
+sf::RectangleShape utility::build_rect(sf::FloatRect bounds){
+  sf::RectangleShape r;
+  r.setSize(sf::Vector2f(bounds.width, bounds.height));
+  r.setPosition(sf::Vector2f(bounds.left, bounds.top));
+  return r;
+}
+
 // vector maths
 
 void utility::normalize_vector(vector<float> &x){

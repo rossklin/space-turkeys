@@ -22,6 +22,7 @@ namespace st3{
       bool area_selectable;
       sf::Color color;
       std::set<idtype> commands;
+      std::set<idtype> allocated_ships;
       
       entity_selector(sf::Color c, bool o);
       virtual ~entity_selector();
@@ -31,6 +32,7 @@ namespace st3{
       virtual point get_position() = 0;
       virtual bool isa(std::string t) = 0;
       virtual std::set<idtype> get_ships() = 0;
+      virtual std::set<idtype> get_ready_ships();
     };
 
     class solar_selector : public entity_selector, public solar::solar{

@@ -24,12 +24,24 @@ bool ctrlsel();
 // GAME STEPS
 // ****************************************
 
+game::game(){
+  comgui = 0;
+}
+
+void game::clear_guis(){
+  if (comgui) delete comgui;
+  comgui = 0;
+}
+
 void st3::client::game::run(){
+  bool proceed = true;
   area_select_active = false;
   window.setView(sf::View(sf::FloatRect(0, 0, settings.width, settings.height)));
 
   // game loop
-  while (pre_step()){
+  while (proceed){
+    clear_guis();
+    proceed &= pre_step();
     choice_step();
     simulation_step();
   }
@@ -359,7 +371,9 @@ void st3::client::game::add_command(command c, point from, point to){
   s -> commands.insert(id);
 
   // add ships to command
-  cs -> ships = entity_selectors[c.source] -> get_ships();
+  set<idtype> ready_ships = s -> get_ready_ships();
+  cs -> ships = ready_ships;
+  s -> allocated_ships.insert(ready_ships.begin(), ready_ships.end());
 
   // add ships to waypoint
   entity_selector *t = entity_selectors[c.target];
@@ -377,7 +391,7 @@ void st3::client::game::remove_command(idtype key){
   if (command_selectors.count(key)){
     command_selector *cs = command_selectors[key];
 
-    // remove this command from it's parent's list
+    // remove this command from it's source's list
     if (!entity_selectors.count(cs -> source)){
       cout << "remove_command: no parent with source key " << cs -> source << endl;
       exit(-1);
@@ -385,6 +399,9 @@ void st3::client::game::remove_command(idtype key){
 
     entity_selector *s = entity_selectors[cs -> source];
     s -> commands.erase(key);
+
+    // deallocate ships from source
+    for (auto x : cs -> ships) s -> allocated_ships.erase(x);
 
     // remove ships from waypoint
     entity_selector *t = entity_selectors[cs -> target];
@@ -465,7 +482,6 @@ void st3::client::game::command2entity(source_t key){
       c.source = x.first;
       from = x.second -> get_position();
       add_command(c, from, to);
-
     }
   }
 }
@@ -547,8 +563,29 @@ bool st3::client::game::select_command_at(point p){
   if (it != command_selectors.end()){
     it -> second -> selected = !(it -> second -> selected);
     cout << "command found: " << it -> first << " -> " << it -> second -> selected << endl;
+
+    // setup command gui
+    hm_t<idtype, ship> ready_ships;
+    
+    for (auto x : entity_selectors[it -> second -> source] -> get_ready_ships()){
+      ready_ships[x] = ships[x];
+    }
+    
+    for (auto x : it -> second -> ships){
+      ready_ships[x] = ships[x];
+    }
+
+    comgui = new command_gui(it -> first, window, 
+			     ready_ships,
+			     it -> second -> ships,
+			     utility::scale_point(it -> second -> from + it -> second -> to, 0.5), 
+			     graphics::sfcolor(players[socket.id].color));
+
     return true;
   }
+
+  if (comgui) delete comgui;
+  comgui = 0;
 
   return false;
 }
@@ -557,6 +594,28 @@ bool st3::client::game::select_command_at(point p){
 int st3::client::game::choice_event(sf::Event e){
   point p;
   sf::View view = window.getView();
+
+  if (comgui && comgui -> handle_event(e)){
+    // handle comgui effects
+
+    command_selector *cs = command_selectors[comgui -> comid];
+    entity_selector *s = entity_selectors[cs -> source];
+
+    // set command selector's ships
+    cs -> ships = comgui -> allocated;
+    
+    // set source entity's allocated ships
+    for (auto x : comgui -> allocated){
+      s -> allocated_ships.insert(x);
+    }
+
+    // unset source entity's non-allocated ships
+    for (auto x : comgui -> cached){
+      s -> allocated_ships.erase(x);
+    }
+
+    return client::query_ask;
+  }
 
   switch (e.type){
   case sf::Event::MouseButtonPressed:
@@ -670,14 +729,15 @@ void st3::client::game::draw_universe(){
 
   if (area_select_active && srect.width && srect.height){
     // draw selection rect
-    sf::RectangleShape r;
-    r.setSize(sf::Vector2f(srect.width, srect.height));
-    r.setPosition(sf::Vector2f(srect.left, srect.top));
+    sf::RectangleShape r = utility::build_rect(srect);
     r.setFillColor(sf::Color(250,250,250,50));
     r.setOutlineColor(sf::Color(80, 120, 240, 200));
     r.setOutlineThickness(1);
     window.draw(r);
   }
+
+  // draw command gui
+  if (comgui) comgui -> draw();
 }
 
 // ****************************************

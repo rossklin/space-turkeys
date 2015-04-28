@@ -3,6 +3,9 @@
 
 #include <sstream>
 #include <vector>
+
+#include <SFML/Graphics.hpp>
+
 #include "types.h"
 
 namespace st3{
@@ -26,6 +29,9 @@ namespace st3{
 
     // vector maths
     void normalize_vector(std::vector<float> &x);
+
+    // sfml stuff
+    sf::RectangleShape build_rect(sf::FloatRect r);
     
     float sigmoid(float x);
   };
