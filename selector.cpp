@@ -136,7 +136,7 @@ void fleet_selector::draw(window_t &w){
     s.setFillColor(graphics::fleet_fill);
     s.setOutlineColor(graphics::fleet_outline);
     s.setOutlineThickness(2);
-    s.setPosition(position);
+    s.setPosition(position - point(radius, radius));
     w.draw(s);
   }
 }
@@ -153,7 +153,7 @@ set<idtype> fleet_selector::get_ships(){
 // WAYPOINT SELECTOR
 // ****************************************
 
-waypoint_selector::waypoint_selector(waypoint &f, sf::Color c, bool o) : entity_selector(c, o), waypoint(f){}
+waypoint_selector::waypoint_selector(waypoint &f, sf::Color c) : entity_selector(c, true), waypoint(f){}
 
 waypoint_selector::~waypoint_selector(){}
 

@@ -33,7 +33,7 @@ namespace st3{
     sf::Color sfcolor(sint);
 
     void initialize();
-    void draw_ship(sf::RenderWindow &w, ship s, sf::Color c);
+    void draw_ship(sf::RenderWindow &w, ship s, sf::Color c, float sc = 1);
   };
 };
 #endif

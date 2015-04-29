@@ -1,5 +1,6 @@
 #include <iostream>
 #include <thread>
+#include <queue>
 
 #include <SFML/Graphics.hpp>
 
@@ -276,7 +277,9 @@ source_t game::add_waypoint(point p){
   waypoint w;
   w.position = p;
 
-  entity_selectors[k] = new waypoint_selector(w, graphics::sfcolor(players[socket.id].color), true);
+  entity_selectors[k] = new waypoint_selector(w, graphics::sfcolor(players[socket.id].color));
+
+  cout << "added waypoint " << k << endl;
 
   return k;
 }
@@ -292,15 +295,23 @@ command st3::client::game::build_command(idtype key){
 
 choice st3::client::game::build_choice(){
   choice c;
+  cout << "build choice:" << endl;
   for (auto x : entity_selectors){
     if (x.second -> isa(identifier::waypoint)){
       waypoint_selector *ws = (waypoint_selector*)x.second;
       waypoint w = (waypoint)*ws;
+      w.pending_commands.clear();
       for (auto k : x.second -> commands) {
 	if (!command_selectors.count(k)){
 	  cout << "build_choice: error: command_selector " << k << " is mising!" << endl;
 	}
 	w.pending_commands.push_back((command)*command_selectors[k]);
+	command com = w.pending_commands.back();
+	cout << x.first << ": command " << k << " from " << com.source << " to " << com.target << ": " << endl << "ships: ";
+	for (auto s : com.ships){
+	  cout << s << ", ";
+	}
+	cout << endl;
       }
       c.waypoints[identifier::get_string_id(x.first)] = w;
     }else{
@@ -314,7 +325,36 @@ choice st3::client::game::build_choice(){
   return c;
 }
 
-void st3::client::game::reload_data(const game_data &g){
+list<idtype> game::incident_commands(source_t key){
+  list<idtype> res;
+
+  for (auto x : command_selectors){
+    if (!x.second -> target.compare(key)){
+      res.push_back(x.first);
+    }
+  }
+
+  return res;
+}
+
+// set<idtype> game::sum_incoming_ships(source_t key){
+//   set<idtype> res;
+//   list<idtype> incoming = incident_commands(key);
+
+//   for (auto c : incoming){
+//     command_selector *cs = command_selectors[c];
+//     entity_selector *s = entity_selectors[cs -> source];
+//     if (s -> isa(identifier::waypoint)){
+//       res += sum_incoming_ships(cs -> source);
+//     }else{
+//       res += cs -> ships;
+//     }
+//   }
+
+//   return res;
+// }
+
+void st3::client::game::reload_data(game_data &g){
   clear_selectors();
   
   ships = g.ships;
@@ -322,7 +362,8 @@ void st3::client::game::reload_data(const game_data &g){
   settings = g.settings;
 
   cout << "game::reload_data" << endl;
-  
+
+  // create entities: fleets, solars and waypoints
   for (auto x : g.fleets){
     source_t key = identifier::make(identifier::fleet, x.first);
     sf::Color col = graphics::sfcolor(players[x.second.owner].color);
@@ -336,11 +377,64 @@ void st3::client::game::reload_data(const game_data &g){
   }
 
   for (auto x : g.waypoints){
-    source_t key = identifier::make(identifier::waypoint, x.first);
-    sf::Color col = graphics::sfcolor(players[socket.id].color);
-    // insert existing waypoint selectors as not owned since they
-    // can't be altered
-    entity_selectors[key] = new waypoint_selector(x.second, col, false);
+    // owned?
+    if (identifier::get_waypoint_owner(x.first) == socket.id){
+      source_t key = identifier::make(identifier::waypoint, x.first);
+      sf::Color col = graphics::sfcolor(players[socket.id].color);
+      entity_selectors[key] = new waypoint_selector(x.second, col);
+      cout << " -> added waypoint " << x.first << endl;
+    }
+  }
+
+  // propagate remaining ships through waypoints
+  // fleets are sources
+  set<waypoint_selector*> buf;
+  for (auto x : entity_selectors){
+    if (x.second -> owned && x.second -> isa(identifier::fleet)){
+      fleet_selector *fs = (fleet_selector*)x.second;
+      command c = fs -> com;
+      // assure we don't assign ships which have been killed
+      c.ships = c.ships & fs -> ships;
+      cout << " -> adding fleet fommand from " << c.source << " to " << c.target << " with " << c.ships.size() << " ships." << endl;
+      add_command(c, g.target_position(c.source), g.target_position(c.target), false);
+      if (entity_selectors[c.target] -> isa(identifier::waypoint)){
+	buf.insert((waypoint_selector*)entity_selectors[c.target]);
+      }
+    }
+  }
+
+  // move to queue for better propagation order
+  queue<waypoint_selector*> q;
+  for (auto x : buf) q.push(x);
+
+  while(!q.empty()){
+    waypoint_selector *s = q.front();
+    q.pop();
+    for (auto c : s -> pending_commands){
+      entity_selector *t = entity_selectors[c.target];
+      idtype cid = command_id(c);
+      if (cid > -1){
+	// command selector already added
+	command_selector *cs = command_selectors[cid];
+	
+	// add new ships to command selector
+	cs -> ships += c.ships & s -> ships;
+	cout << "filling cs " << cid << " with " << cs -> ships.size() << " ships" << endl;
+	
+	// add new ships to target waypoint
+	if (t -> isa(identifier::waypoint)){
+	  waypoint_selector *ws = (waypoint_selector*)t;
+	  ws -> ships += cs -> ships;
+	}
+      }else{
+	c.ships = c.ships & s -> ships;
+	add_command(c, g.target_position(c.source), g.target_position(c.target), false);
+      }
+
+      if (t -> isa(identifier::waypoint)){
+	q.push((waypoint_selector*)t);
+      }
+    }
   }
 }
 
@@ -350,36 +444,43 @@ void st3::client::game::reload_data(const game_data &g){
 
 bool st3::client::game::command_exists(command c){
   cout << "command_exists: start" << endl;
-  for (auto x : command_selectors){
-    cout << " -> checking: " << x.first << endl;
-    if (c == (command)*x.second) return true;
-  }
-  
-  return false;
+  return command_id(c) > -1;
 }
 
-void st3::client::game::add_command(command c, point from, point to){
+idtype game::command_id(command c){
+  for (auto x : command_selectors){
+    cout << " -> checking: " << x.first << endl;
+    if (c == (command)*x.second) return x.first;
+  }
+
+  return -1;
+}
+
+void st3::client::game::add_command(command c, point from, point to, bool fill_ships){
   if (command_exists(c)) return;
   idtype id = comid++;
   command_selector *cs = new command_selector(c, from, to);
+  entity_selector *s = entity_selectors[c.source];
+  entity_selector *t = entity_selectors[c.target];
+
+  cout << "add command: " << id << " from " << c.source << " to " << c.target << endl;
   
   // add command to command selectors
   command_selectors[id] = cs;
 
   // add command selector key to list of the source entity's children
-  entity_selector *s = entity_selectors[c.source];
   s -> commands.insert(id);
 
   // add ships to command
   set<idtype> ready_ships = s -> get_ready_ships();
-  cs -> ships = ready_ships;
-  s -> allocated_ships += ready_ships;
+  cout << "ready ships: " << ready_ships.size() << endl;
+  if (fill_ships) cs -> ships = ready_ships;
+  s -> allocated_ships += cs -> ships;
 
   // add ships to waypoint
-  entity_selector *t = entity_selectors[c.target];
   if (t -> isa(identifier::waypoint)){
     waypoint_selector *ws = (waypoint_selector*)t;
-    ws -> ships += s -> get_ships();
+    ws -> ships += cs -> ships;
   }
 
   cout << "added command: " << id << endl;
@@ -589,6 +690,14 @@ bool st3::client::game::select_at(point p){
   if (it != entity_selectors.end() && it -> second -> owned){
     it -> second -> selected = !(it -> second -> selected);
     cout << "selector found: " << it -> first << " -> " << it -> second -> selected << endl;
+
+    if (it -> second -> selected){
+      cout << "ships at " << it -> first << endl;
+      for (auto x : it -> second -> get_ships()){
+	cout << x << ", ";
+      }
+      cout << endl;
+    }
     return true;
   }
 
@@ -684,7 +793,7 @@ int st3::client::game::choice_event(sf::Event e){
 
     p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
     if (e.mouseButton.button == sf::Mouse::Left){
-      if (srect.width > 5 || srect.height > 5){
+      if (abs(srect.width) > 5 || abs(srect.height) > 5){
 	area_select();
       } else if (!select_command_at(p)){
 	select_at(p);

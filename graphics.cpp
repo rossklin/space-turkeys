@@ -23,15 +23,35 @@ void st3::graphics::initialize(){
   }
 }
 
-void st3::graphics::draw_ship(sf::RenderWindow &w, ship s, sf::Color col){
-  sf::Vertex svert[4];
-  svert[0] = sf::Vertex(point(10, 0), col);
-  svert[1] = sf::Vertex(point(-10, -5), col);
-  svert[2] = sf::Vertex(point(-10, 5), col);
-  svert[3] = sf::Vertex(point(10, 0), col);
-      
+void st3::graphics::draw_ship(sf::RenderWindow &w, ship s, sf::Color col, float sc){
+  vector<sf::Vertex> svert;
+
+  sf::Color cnose(255,200,180,200);
+
+  switch (s.ship_class){
+  case solar::s_scout:
+    svert.resize(4);
+    svert[0] = sf::Vertex(point(2, 0), col);
+    svert[1] = sf::Vertex(point(-2, -1), col);
+    svert[2] = sf::Vertex(point(-2, 1), col);
+    svert[3] = sf::Vertex(point(2, 0), col);
+    break;
+  case solar::s_fighter:
+    svert.resize(5);
+    svert[0] = sf::Vertex(point(2, 0), cnose);
+    svert[1] = sf::Vertex(point(-2, -1), col);
+    svert[2] = sf::Vertex(point(-3, 0), col);
+    svert[3] = sf::Vertex(point(-2, 1), col);
+    svert[4] = sf::Vertex(point(2, 0), cnose);
+    break;
+  default:
+    cout << "invalid ship type: " << s.ship_class << endl;
+    exit(-1);
+  }
+
   sf::Transform t;
   t.translate(s.position.x, s.position.y);
   t.rotate(s.angle / (2 * M_PI) * 360);
-  w.draw(svert, 4, sf::LinesStrip, t);
+  t.scale(sc, sc);
+  w.draw(&svert[0], svert.size(), sf::LinesStrip, t);
 }

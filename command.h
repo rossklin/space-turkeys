@@ -13,7 +13,6 @@ namespace st3{
     target_t target;
     std::set<idtype> ships;
 
-    std::list<command> child_commands;
     command();
   };
 

@@ -13,7 +13,7 @@ source_t identifier::make(string t, idtype i){
 
 source_t identifier::make(string t, source_t k){
   stringstream s;
-  s << t << ":" << k << endl;
+  s << t << ":" << k;
   return s.str();
 }
 
@@ -39,3 +39,13 @@ idtype identifier::get_id(source_t s){
   }
 }
 
+idtype identifier::get_waypoint_owner(source_t v){
+  size_t split = v.find('#');
+  string x = v.substr(0, split);
+  try{
+    return stoi(x);
+  }catch(...){
+    cout << "get wp onwer: invalid wp id: " << v << endl;
+    exit(-1);
+  }
+}

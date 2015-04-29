@@ -63,7 +63,7 @@ namespace st3{
       static constexpr float radius = 10;
       std::set<idtype> ships;
       
-      waypoint_selector(waypoint &f, sf::Color c, bool o);
+      waypoint_selector(waypoint &f, sf::Color c);
       ~waypoint_selector();
       bool contains_point(point p, float &d);
       void draw(window_t &w);

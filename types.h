@@ -31,6 +31,7 @@ namespace st3{
     std::string get_type(std::string s);
     st3::idtype get_id(std::string s);
     source_t get_string_id(std::string s);
+    st3::idtype get_waypoint_owner(source_t v);
   };
 };
 #endif

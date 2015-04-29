@@ -13,4 +13,5 @@ ship::ship(ship::class_t c, research &r){
   hp = 1;
   interaction_radius = 10;
   fleet_id = -1;
+  ship_class = c;
 }

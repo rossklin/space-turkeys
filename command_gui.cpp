@@ -64,8 +64,14 @@ void command_gui::draw(){
 
   // draw inner boxes
   r = utility::build_rect(cache_bounds);
+  r.setFillColor(sf::Color(40, 120, 80, 80));
+  r.setOutlineColor(sf::Color(80, 120, 240, 200));
+  r.setOutlineThickness(3);
   w.draw(r);
   r = utility::build_rect(alloc_bounds);
+  r.setFillColor(sf::Color(40, 120, 80, 80));
+  r.setOutlineColor(sf::Color(80, 120, 240, 200));
+  r.setOutlineThickness(3);
   w.draw(r);
 
   // draw ship symbols
@@ -75,10 +81,10 @@ void command_gui::draw(){
     row = count / grid_size.x;
     col = count % grid_size.x;
     ship s = ships[x];
-    s.position.x = cache_bounds.left + col * symbol_dims.x + 0.5 * s.interaction_radius;
-    s.position.y = cache_bounds.top + row * symbol_dims.y + 0.5 * s.interaction_radius;
+    s.position.x = cache_bounds.left + (col + 0.5) * symbol_dims.x;
+    s.position.y = cache_bounds.top + (row + 0.5) * symbol_dims.y;
     s.angle = 0;
-    graphics::draw_ship(w, s, color);
+    graphics::draw_ship(w, s, color, 7);
 
     cache_ids[count] = x;
     count++;
@@ -89,10 +95,10 @@ void command_gui::draw(){
     row = count / grid_size.x;
     col = count % grid_size.x;
     ship s = ships[x];
-    s.position.x = alloc_bounds.left + col * symbol_dims.x + 0.5 * s.interaction_radius;
-    s.position.y = alloc_bounds.top + row * symbol_dims.y + 0.5 * s.interaction_radius;
+    s.position.x = alloc_bounds.left + (col + 0.5) * symbol_dims.x;
+    s.position.y = alloc_bounds.top + (row + 0.5) * symbol_dims.y;
     s.angle = 0;
-    graphics::draw_ship(w, s, color);
+    graphics::draw_ship(w, s, color, 7);
 
     alloc_ids[count] = x;
     count++;

@@ -64,6 +64,8 @@
 ** server game
 *** research pooling
 ** client game
+*** solar choice interface
+*** give commands to remaining waypoints
 *** graphics::draw_ship different types and param scale
 *** command_gui sort ships by type
 *** waypoint command quantity alternative: all
@@ -73,16 +75,35 @@
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
 * bugs
-** fleet position seems to be off
-** client rectangle upwards select does not work
+** fleet radius can decrease indefinitely
+** fleets with deleted command continue on old command
+   should get "idle" command
+** waypoints created when no sources selected
+** undefined behaviour for circular waypoint graphs
 ** socket_t exits on disconnect in thread, causes segfault
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** discovered some new bugs, see notes.org
+** fixed: waypoint pending_commands not updated
+   for some odd reason fixed by looping over 
+   for(k,v in all_wp) waypoints[k] = v;
+   instead of assigning
+   waypoints.insert(all_wp.begin(), all_wp.end());
+** fixed: server seems to list waypoints multiple times
+   caused by multiple \n in id?
+   note that clients resend old waypoints!
+** fixed: commands on waypoints are not handled in choice phase
+** fixed: waypoints targeted by waypoints are deleted
+** fixed: fleet does not show radius after waypoint trigger
+   and can't be selected
+** fixed: client rectangle upwards select does not work
+** fixed: fleet position seems to be off
+** added ship scale to draw routine so ships are larger in command gui
+* fixed
 ** fixed recursive ship increment/decrement through waypoints
 ** fixed a bug where remove command deleted the wrong entity
 ** command distance checker sees past end points
-* fixed
 ** best way to add external dependencies
    added sub directories to make
    consider linking to their git repos?

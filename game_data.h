@@ -29,7 +29,7 @@ namespace st3{
     void apply_choice(choice c, idtype id);
     point target_position(target_t t);
     void generate_fleet(point p, idtype i, command &c, std::set<idtype> &sh);
-    void relocate_ships(command &c, std::set<idtype> &sh);
+    void relocate_ships(command &c, std::set<idtype> &sh, idtype owner);
     void set_solar_commands(idtype id, std::list<command> coms);
     void set_fleet_commands(idtype id, std::list<command> coms);
 

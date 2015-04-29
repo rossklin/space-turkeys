@@ -42,7 +42,7 @@ namespace st3{
       command build_command(idtype key);
       choice build_choice();
       void initialize_selectors();
-      void reload_data(const game_data &g);
+      void reload_data(game_data &g);
 
       // event handling
       int choice_event(sf::Event e);
@@ -58,8 +58,9 @@ namespace st3{
 
       // command handling
       bool command_exists(command c);
+      idtype command_id(command c);
       void command_points(command c, point &from, point &to);
-      void add_command(command c, point from, point to);
+      void add_command(command c, point from, point to, bool fill_ships = true);
       void remove_command(idtype key);
       void command2entity(source_t key);
       source_t add_waypoint(point p);
@@ -67,6 +68,8 @@ namespace st3{
       // selection handling
       void clear_selectors();
       void deselect_all();
+      std::list<idtype> incident_commands(source_t key);
+
 
       // graphics
       void draw_universe();
