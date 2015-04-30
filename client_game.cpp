@@ -337,23 +337,6 @@ list<idtype> game::incident_commands(source_t key){
   return res;
 }
 
-// set<idtype> game::sum_incoming_ships(source_t key){
-//   set<idtype> res;
-//   list<idtype> incoming = incident_commands(key);
-
-//   for (auto c : incoming){
-//     command_selector *cs = command_selectors[c];
-//     entity_selector *s = entity_selectors[cs -> source];
-//     if (s -> isa(identifier::waypoint)){
-//       res += sum_incoming_ships(cs -> source);
-//     }else{
-//       res += cs -> ships;
-//     }
-//   }
-
-//   return res;
-// }
-
 void st3::client::game::reload_data(game_data &g){
   clear_selectors();
   
@@ -381,7 +364,9 @@ void st3::client::game::reload_data(game_data &g){
     if (identifier::get_waypoint_owner(x.first) == socket.id){
       source_t key = identifier::make(identifier::waypoint, x.first);
       sf::Color col = graphics::sfcolor(players[socket.id].color);
-      entity_selectors[key] = new waypoint_selector(x.second, col);
+      waypoint_selector *ws = new waypoint_selector(x.second, col);
+      entity_selectors[key] = ws;
+      ws -> ships = ws -> landed_ships;
       cout << " -> added waypoint " << x.first << endl;
     }
   }
@@ -392,13 +377,22 @@ void st3::client::game::reload_data(game_data &g){
   for (auto x : entity_selectors){
     if (x.second -> owned && x.second -> isa(identifier::fleet)){
       fleet_selector *fs = (fleet_selector*)x.second;
-      command c = fs -> com;
-      // assure we don't assign ships which have been killed
-      c.ships = c.ships & fs -> ships;
-      cout << " -> adding fleet fommand from " << c.source << " to " << c.target << " with " << c.ships.size() << " ships." << endl;
-      add_command(c, g.target_position(c.source), g.target_position(c.target), false);
-      if (entity_selectors[c.target] -> isa(identifier::waypoint)){
-	buf.insert((waypoint_selector*)entity_selectors[c.target]);
+      if (!fs -> is_idle()){
+	command c = fs -> com;
+
+	point from, to;
+	if (g.target_position(c.source, from) && g.target_position(c.target, to)){
+	  // assure we don't assign ships which have been killed
+	  c.ships = c.ships & fs -> ships;
+	  cout << " -> adding fleet fommand from " << c.source << " to " << c.target << " with " << c.ships.size() << " ships." << endl;
+
+	  add_command(c, from, to, false);
+	  if (entity_selectors[c.target] -> isa(identifier::waypoint)){
+	    buf.insert((waypoint_selector*)entity_selectors[c.target]);
+	  }
+	}else{
+	  cout << "client side target position miss!" << endl;
+	}
       }
     }
   }
@@ -427,8 +421,13 @@ void st3::client::game::reload_data(game_data &g){
 	  ws -> ships += cs -> ships;
 	}
       }else{
-	c.ships = c.ships & s -> ships;
-	add_command(c, g.target_position(c.source), g.target_position(c.target), false);
+	point from, to;
+	if (g.target_position(c.source, from) && g.target_position(c.target, to)){
+	  c.ships = c.ships & s -> ships;
+	  add_command(c, from, to, false);
+	}else{
+	  cout << "client side target position miss!" << endl;
+	}
       }
 
       if (t -> isa(identifier::waypoint)){
@@ -493,10 +492,8 @@ void game::recursive_waypoint_deallocate(source_t wid, set<idtype> a){
 
   cout << "RWD start" << endl;
   // check if there are still incoming commands
-  bool check = false;
-  for (auto x : command_selectors) check |= !x.second -> target.compare(wid);
 
-  if (!check){
+  if (incident_commands(wid).empty()){
     cout << "removing waypoint " << wid << endl;
     // remove waypoint
     auto buf = s -> commands;
@@ -676,7 +673,9 @@ void st3::client::game::target_at(point p){
     command2entity(key);
   }else{
     cout << "target at: point " << p.x << "," << p.y << endl;
-    command2entity(add_waypoint(p));
+    if (count_selected()){
+      command2entity(add_waypoint(p));
+    }
   }
 }
 
@@ -736,6 +735,12 @@ bool st3::client::game::select_command_at(point p){
   }
 
   return false;
+}
+
+int game::count_selected(){
+  int sum = 0;
+  for (auto x : entity_selectors) sum += x.second -> selected;
+  return sum;
 }
 
 // return true to signal choice step done

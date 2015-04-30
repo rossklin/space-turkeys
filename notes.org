@@ -33,7 +33,17 @@
     Each solar's population has trends of opinion concerning
     development focus and diplomacy
 ** tactics
-*** different ship types
+*** ship components
+    construct on grid with structure components? 
+    each component has a type, size, energy usage, cost...
+**** engine
+**** energy
+**** shield
+**** weapons
+**** hull
+**** life support
+**** cargo hold
+*** ship types
 **** bombers
      good at bombing solars
      bad at fighting any other ship
@@ -63,11 +73,18 @@
 * basic goals
 ** server game
 *** research pooling
+*** emulate simultaneous evaluation of ship_bombard
 ** client game
+*** have an entity_selector -> queue_level
+    increment whenever an entity is selected, so that next time an
+    entity below it can be selected instead
+*** draw all ships in same size, have a ship.draw_scale
+    so that ships can be drawn in same size in command gui
+    but different sizes in universe
 *** solar choice interface
-*** give commands to remaining waypoints
-*** graphics::draw_ship different types and param scale
-*** command_gui sort ships by type
+*** command_gui should sort ships by type
+*** command_gui should have attributes to_allocate and to_cache
+    so they don't have to be post-computed outside the gui
 *** waypoint command quantity alternative: all
 *** simulation: interpolate using ship velocity
 *** events board
@@ -75,15 +92,32 @@
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
 * bugs
-** fleet radius can decrease indefinitely
-** fleets with deleted command continue on old command
-   should get "idle" command
-** waypoints created when no sources selected
 ** undefined behaviour for circular waypoint graphs
+   prevent creation of circular waypoint graphs
+* issues
+** ships bombard and land in order of fleet, unfair
+** server sends fleets with missing target to client
+   when the target is a fleet which has dissappeared after the source
+   was updated
+** ships in fleets can go at different speeds
 ** socket_t exits on disconnect in thread, causes segfault
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** fixed: when client deletes command + wp, server reinserts wp
+** fixed: server removes waypoints with landed ships
+** fixed: ships fire in order of fleet, unfair
+** fixed: when targeting a fleet, server crashes because id changes
+** fixed: fleet idle target
+   when arriving to waypoint or client unsets command
+   (waypoints now store landed ships)
+** fixed: waypoint graph reconstruction
+** fixed: command receive printout
+** fixed: waypoints created when no sources selected
+** fixed: fleet radius can decrease indefinitely
+   the radius must be large enough so the player can select the fleet
+* fixed
+** graphics::draw_ship different types and param scale
 ** discovered some new bugs, see notes.org
 ** fixed: waypoint pending_commands not updated
    for some odd reason fixed by looping over 
@@ -100,7 +134,6 @@
 ** fixed: client rectangle upwards select does not work
 ** fixed: fleet position seems to be off
 ** added ship scale to draw routine so ships are larger in command gui
-* fixed
 ** fixed recursive ship increment/decrement through waypoints
 ** fixed a bug where remove command deleted the wrong entity
 ** command distance checker sees past end points

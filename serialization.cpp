@@ -203,11 +203,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, choice &c){
 
 // waypoint
 sf::Packet& st3::operator <<(sf::Packet& packet, const waypoint &c){
-  return packet << c.pending_commands << c.position;
+  return packet << c.pending_commands << c.position << c.landed_ships;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, waypoint &c){
-  return packet >> c.pending_commands >> c.position;
+  return packet >> c.pending_commands >> c.position >> c.landed_ships;
 }
 
 // command
@@ -217,8 +217,9 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const command &c){
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, command &c){
+  sf::Packet& res = packet >> c.source >> c.target >> c.ships;
   cout << "serialization: receive command: " << endl << c.source << endl << c.target << endl;
-  return packet >> c.source >> c.target >> c.ships;
+  return res;
 }
 
 // point

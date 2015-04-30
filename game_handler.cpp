@@ -52,6 +52,9 @@ void st3::server::game_handler(com c, game_data g){
     packet << g;
     c.check_protocol(protocol::game_round, packet);
 
+    // idle the fleets
+    g.pre_step();
+
     // choices, expects: query + choice
     c.check_protocol(protocol::choice, p_confirm);
 
@@ -63,6 +66,9 @@ void st3::server::game_handler(com c, game_data g){
 	cout << "choice for player " << c.clients[i].id << " failed to unpack!" << endl;
       }
     }
+
+    // remove non-updated waypoints
+    g.post_choice_step();
 
     // simulation
     cout << "starting simulation ... " << endl;
@@ -84,6 +90,7 @@ void st3::server::game_handler(com c, game_data g){
     t.join();
 
     cout << "cleaning up game_data..." << endl;
+
     // cleanup
     g.end_step();
     g.deallocate_grid();

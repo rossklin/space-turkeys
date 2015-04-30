@@ -69,7 +69,7 @@ namespace st3{
       void clear_selectors();
       void deselect_all();
       std::list<idtype> incident_commands(source_t key);
-
+      int count_selected();
 
       // graphics
       void draw_universe();

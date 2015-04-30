@@ -10,6 +10,7 @@ namespace st3{
     static idtype id_counter;
     static const int update_period = 10;
     static const int interact_d2 = 100;
+    static constexpr float min_radius = 10;
 
     // serialized components
     std::set<idtype> ships;
@@ -21,8 +22,9 @@ namespace st3{
 
     // mechanical components
     int update_counter;
-
+    
     fleet();
+    bool is_idle();
   };
 };
 #endif

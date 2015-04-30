@@ -14,4 +14,5 @@ ship::ship(ship::class_t c, research &r){
   interaction_radius = 10;
   fleet_id = -1;
   ship_class = c;
+  was_killed = false;
 }

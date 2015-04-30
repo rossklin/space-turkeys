@@ -27,7 +27,7 @@ namespace st3{
     
     // apply_choice
     void apply_choice(choice c, idtype id);
-    point target_position(target_t t);
+    bool target_position(target_t t, point &p);
     void generate_fleet(point p, idtype i, command &c, std::set<idtype> &sh);
     void relocate_ships(command &c, std::set<idtype> &sh, idtype owner);
     void set_solar_commands(idtype id, std::list<command> coms);
@@ -37,7 +37,6 @@ namespace st3{
     void allocate_grid();
     void deallocate_grid();
     void increment();
-    void end_step(); // remove dead ships
     idtype solar_at(point p);
     void ship_land(idtype ship_id, idtype solar_id);
     void ship_bombard(idtype ship_id, idtype solar_id);
@@ -45,6 +44,9 @@ namespace st3{
     void remove_ship(idtype id);
     void solar_tick(idtype id);
     void update_fleet_data(idtype id);
+    void pre_step(); // idle fleets and clear waypoint keep_me
+    void post_choice_step(); // remove non-updated waypoints
+    void end_step(); // remove unused waypoints
 
     // build stuff
     void build();

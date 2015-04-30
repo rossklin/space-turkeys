@@ -13,13 +13,13 @@ all_objects = $(server_objects) $(client_objects) $(common_objects)
 
 all: server client
 
-server : sfml $(server_objects) $(common_objects)
+external: sfml tgui
+
+server : $(server_objects) $(common_objects)
 	g++ $(cflags) -o server $(server_objects) $(common_objects) $(lflags)
 
-client : sfml tgui $(client_objects) $(common_objects)
+client : $(client_objects) $(common_objects)
 	g++ $(cflags) -o client $(client_objects) $(common_objects) $(lflags) -ltgui
-
-$(tgui_objects) : tgui
 
 tgui : sfml
 	echo building $(tgui_dir)
