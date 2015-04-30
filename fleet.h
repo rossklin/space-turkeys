@@ -22,6 +22,7 @@ namespace st3{
 
     // mechanical components
     int update_counter;
+    float speed_limit;
     
     fleet();
     bool is_idle();

@@ -47,6 +47,7 @@ void game_data::relocate_ships(command &c, set<idtype> &sh, idtype owner){
   f.com = c;
   f.com.source = identifier::make(identifier::fleet, fid);
   f.owner = owner;
+  f.update_counter = 0;
 
   // clear parent fleets
   for (auto i : sh){
@@ -95,6 +96,8 @@ void game_data::generate_fleet(point p, idtype owner, command &c, set<idtype> &s
   }
 
   fleets[fid] = f;
+
+  update_fleet_data(fid);
 }
 
 void game_data::set_fleet_commands(idtype id, list<command> commands){
@@ -240,6 +243,7 @@ void game_data::update_fleet_data(idtype fid){
     
   // update fleet data
   if (!((f.update_counter++) % fleet::update_period)){
+    float speed = INFINITY;
     int count;
 
     // position
@@ -252,15 +256,17 @@ void game_data::update_fleet_data(idtype fid){
     }
     f.position = utility::scale_point(p, 1 / (float)count);
 
-    // radius
+    // radius and speed
     float r2 = 0;
     count = 0;
     for (auto k : f.ships){
       ship &s = ships[k];
+      speed = fmin(speed, s.speed);
       r2 = fmax(r2, utility::l2d2(s.position - f.position));
       if (++count > 20) break;
     }
     f.radius = fmax(sqrt(r2), fleet::min_radius);
+    f.speed_limit = speed;
 
     // have arrived?
     if (!f.is_idle()){
@@ -320,7 +326,7 @@ void game_data::increment(){
 	  }
 
 	  s.angle = utility::point_angle(delta);
-	  s.position = s.position + utility::scale_point(utility::normv(s.angle), s.speed);
+	  s.position = s.position + utility::scale_point(utility::normv(s.angle), f.speed_limit);
 	  ship_grid -> move(i, s.position);
 	}
 

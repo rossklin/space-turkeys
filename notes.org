@@ -93,16 +93,18 @@
 ** before game interface
 * bugs
 * issues
-** ships bombard and land in order of fleet, unfair
-** server sends fleets with missing target to client
+** [low priority] ship classes should not be in solar?
+   but then ship classes will be replaced with ship components...
+** [low priority] ships bombard and land in order of fleet, unfair
+** [low priority] server sends fleets with missing target to client
    when the target is a fleet which has dissappeared after the source
    was updated
-** ships in fleets can go at different speeds
 ** socket_t exits on disconnect in thread, causes segfault
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** fixed: fleet speed limit = min(ship.speed)
 ** fixed: prevented creation of circular graphs
 ** fixed: when client deletes command + wp, server reinserts wp
 ** fixed: server removes waypoints with landed ships

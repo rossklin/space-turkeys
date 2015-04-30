@@ -6,6 +6,7 @@ st3::fleet::fleet(){
   update_counter = 0;
   owner = -1;
   converge = false;
+  speed_limit = 0;
 }
 
 bool st3::fleet::is_idle(){
