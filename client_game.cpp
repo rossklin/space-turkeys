@@ -462,6 +462,12 @@ void st3::client::game::add_command(command c, point from, point to, bool fill_s
   entity_selector *s = entity_selectors[c.source];
   entity_selector *t = entity_selectors[c.target];
 
+  // check waypoint ancestors
+  if (waypoint_ancestor_of(c.target, c.source)){
+    cout << "add_command: circular waypoint graphs forbidden!" << endl;
+    return;
+  }
+
   cout << "add command: " << id << " from " << c.source << " to " << c.target << endl;
   
   // add command to command selectors
@@ -524,6 +530,23 @@ void game::recursive_waypoint_deallocate(source_t wid, set<idtype> a){
     cout << " .. recursive call RWD on " << cs -> target << endl;
     recursive_waypoint_deallocate(cs -> target, delta);
   }
+}
+
+bool game::waypoint_ancestor_of(source_t ancestor, source_t child){
+  // only waypoints can have this relationship
+  if (identifier::get_type(ancestor).compare(identifier::waypoint) || identifier::get_type(child).compare(identifier::waypoint)){
+    return false;
+  }
+
+  // if the child is the ancestor, it has been found!
+  if (!ancestor.compare(child)) return true;
+
+  // if the ancestor is ancestor to a parent, it is ancestor to the child
+  for (auto x : incident_commands(child)){
+    if (waypoint_ancestor_of(ancestor, command_selectors[x] -> source)) return true;
+  }
+
+  return false;
 }
 
 // remove command selector and associated command

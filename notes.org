@@ -92,8 +92,6 @@
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
 * bugs
-** undefined behaviour for circular waypoint graphs
-   prevent creation of circular waypoint graphs
 * issues
 ** ships bombard and land in order of fleet, unfair
 ** server sends fleets with missing target to client
@@ -104,6 +102,8 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+* fixed
+** fixed: prevented creation of circular graphs
 ** fixed: when client deletes command + wp, server reinserts wp
 ** fixed: server removes waypoints with landed ships
 ** fixed: ships fire in order of fleet, unfair
@@ -116,7 +116,6 @@
 ** fixed: waypoints created when no sources selected
 ** fixed: fleet radius can decrease indefinitely
    the radius must be large enough so the player can select the fleet
-* fixed
 ** graphics::draw_ship different types and param scale
 ** discovered some new bugs, see notes.org
 ** fixed: waypoint pending_commands not updated

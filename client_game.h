@@ -55,6 +55,7 @@ namespace st3{
       void controls();
       void clear_guis();
       void recursive_waypoint_deallocate(source_t wid, std::set<idtype> a);
+      bool waypoint_ancestor_of(source_t ancestor, source_t child);
 
       // command handling
       bool command_exists(command c);
