@@ -76,6 +76,7 @@ void command_gui::draw(){
 
   // draw ship symbols
   int count = 0;
+  float ship_scale = (fmin(symbol_dims.x, symbol_dims.y) - 4) / 6;
   int row, col;
   for (auto x : cached){
     row = count / grid_size.x;
@@ -84,7 +85,7 @@ void command_gui::draw(){
     s.position.x = cache_bounds.left + (col + 0.5) * symbol_dims.x;
     s.position.y = cache_bounds.top + (row + 0.5) * symbol_dims.y;
     s.angle = 0;
-    graphics::draw_ship(w, s, color, 7);
+    graphics::draw_ship(w, s, color, ship_scale);
 
     cache_ids[count] = x;
     count++;
@@ -98,7 +99,7 @@ void command_gui::draw(){
     s.position.x = alloc_bounds.left + (col + 0.5) * symbol_dims.x;
     s.position.y = alloc_bounds.top + (row + 0.5) * symbol_dims.y;
     s.angle = 0;
-    graphics::draw_ship(w, s, color, 7);
+    graphics::draw_ship(w, s, color, ship_scale);
 
     alloc_ids[count] = x;
     count++;

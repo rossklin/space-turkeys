@@ -39,6 +39,8 @@ void st3::client::game::run(){
   area_select_active = false;
   window.setView(sf::View(sf::FloatRect(0, 0, settings.width, settings.height)));
 
+  solar::development::initialize();
+
   // game loop
   while (proceed){
     clear_guis();
@@ -194,6 +196,7 @@ void st3::client::game::choice_step(){
     exit(0);
   }
 
+  clear_guis();
   deselect_all();
 
   cout << "choice step: waiting for query thread" << endl;
@@ -650,20 +653,31 @@ void st3::client::game::command2entity(source_t key){
 }
 
 source_t st3::client::game::entity_at(point p){
-  float max_click_dist = 50;
-  float dmin = max_click_dist;
+  // float max_click_dist = 50;
+  // float dmin = max_click_dist;
   float d;
   source_t key = "";
+  int q = entity_selector::queue_max;
+
+  cout << "entity_at:" << endl;
 
   // find closest entity to p
   for (auto x : entity_selectors){
-    if (x.second -> contains_point(p, d) && d < dmin){
-      dmin = d;
+    cout << "checking entity: " << x.first << endl;
+    if (x.second -> contains_point(p, d) && x.second -> queue_level < q){
+      q = x.second -> queue_level;
       key = x.first;
+      cout << "entity_at: k = " << key << ", q = " << x.second -> queue_level << endl;
+    }else if (x.second -> contains_point(p, d)){
+      cout << "entity_at: queued out: " << x.first << ", q = " << x.second -> queue_level << endl;
     }
   }
 
   cout << "entity at: " << p.x << "," << p.y << ": " << key << endl;
+  if (key.length() && key.compare(entity_selector::last_selected)){
+    entity_selectors[key] -> queue_level = (entity_selectors[key] -> queue_level + 1) % entity_selector::queue_max;
+    entity_selector::last_selected = key;
+  }
 
   return key;
 }

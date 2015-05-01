@@ -20,6 +20,8 @@ void st3::server::game_handler(com c, game_data g){
   vector<sf::Packet> frames(g.settings.frames_per_round);
   int frame_count;
   unsigned int i;
+
+  solar::development::initialize();
   
   p_confirm << protocol::confirm;
 

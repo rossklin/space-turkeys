@@ -75,14 +75,13 @@
 *** research pooling
 *** emulate simultaneous evaluation of ship_bombard
 ** client game
-*** have an entity_selector -> queue_level
-    increment whenever an entity is selected, so that next time an
-    entity below it can be selected instead
+*** test tactics with some basic ship types
 *** draw all ships in same size, have a ship.draw_scale
     so that ships can be drawn in same size in command gui
     but different sizes in universe
 *** solar choice interface
 *** command_gui should sort ships by type
+*** command_gui should have option to allocate X ships of type T
 *** command_gui should have attributes to_allocate and to_cache
     so they don't have to be post-computed outside the gui
 *** waypoint command quantity alternative: all
@@ -92,6 +91,10 @@
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
 * bugs
+** ships can remain as landed at waypoint after fleet has left
+   since setting a fleet command does not trigger waypoint relocate
+** ships that die remain as landed at waypoint
+** comgui does not close after choice step
 * issues
 ** [low priority] ship classes should not be in solar?
    but then ship classes will be replaced with ship components...
@@ -99,10 +102,14 @@
 ** [low priority] server sends fleets with missing target to client
    when the target is a fleet which has dissappeared after the source
    was updated
+
+   consider tracking fleet splits so a fleet can chose a new target.
 ** socket_t exits on disconnect in thread, causes segfault
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** fixed a bug where fleet evaluation order impacted battle result
+** added an entity_selector -> queue_level (select order queue)
 * fixed
 ** fixed: fleet speed limit = min(ship.speed)
 ** fixed: prevented creation of circular graphs

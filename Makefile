@@ -39,6 +39,8 @@ sfml : force_check
 
 clean: 
 	rm -f server client *.o *.d
+
+clean_external:
 	rm -f external/lib/*
 	cd $(tgui_dir); make clean
 	cd $(sfml_dir); make clean

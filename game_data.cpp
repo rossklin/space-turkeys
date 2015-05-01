@@ -302,34 +302,43 @@ void game_data::increment(){
     fids.push_back(x.first);
   }
 
+  // move ships
   for (auto fid : fids){
-    if (fleets.count(fid)){
-      cout << "running increment for fleet " << fid << endl;
-      fleet &f = fleets[fid];
-      point to;
-      if (!target_position(f.com.target, to)){
-	f.com.target = identifier::target_idle;
-      }
+    cout << "running increment for fleet " << fid << endl;
+    fleet &f = fleets[fid];
+    point to;
+    if (!target_position(f.com.target, to)){
+      f.com.target = identifier::target_idle;
+    }
 
-      // ship arithmetics
-      sids = f.ships; // need to copy explicitly?
-      for (auto i : sids){
-	ship &s = ships[i];
+    // ship arithmetics
+    sids = f.ships; // need to copy explicitly?
+    for (auto i : sids){
+      ship &s = ships[i];
 
-	// check fleet is not idle
-	if (!f.is_idle()){
-	  point delta;
-	  if (f.converge){
-	    delta = to - s.position;
-	  }else{
-	    delta = to - f.position;
-	  }
-
-	  s.angle = utility::point_angle(delta);
-	  s.position = s.position + utility::scale_point(utility::normv(s.angle), f.speed_limit);
-	  ship_grid -> move(i, s.position);
+      // check fleet is not idle
+      if (!f.is_idle()){
+	point delta;
+	if (f.converge){
+	  delta = to - s.position;
+	}else{
+	  delta = to - f.position;
 	}
 
+	s.angle = utility::point_angle(delta);
+	s.position = s.position + utility::scale_point(utility::normv(s.angle), f.speed_limit);
+	ship_grid -> move(i, s.position);
+      }
+    }
+  }
+
+
+  for (auto fid : fids){
+    if (fleets.count(fid)){
+      fleet &f = fleets[fid];
+      sids = f.ships;
+      for (auto i : sids){
+	ship &s = ships[i];
 	// check if ship s has reached a destination solar
 	if (!identifier::get_type(f.com.target).compare(identifier::solar)){
 	  idtype sid = solar_at(s.position);
@@ -348,7 +357,10 @@ void game_data::increment(){
 	if (ships.count(i)){
 	  cout << "ship " << i << " interactions..." << endl;
 	  // ship interactions
-	  for (auto k : ship_grid -> search(s.position, s.interaction_radius)){
+	  list<grid::iterator_type> res = ship_grid -> search(s.position, s.interaction_radius);
+	  vector<grid::iterator_type> targ(res.begin(), res.end());
+	  random_shuffle(targ.begin(), targ.end());
+	  for (auto k : targ){
 	    if (ships[k.first].owner != s.owner){
 	      if (ship_fire(i, k.first)) break;
 	    }
@@ -442,27 +454,65 @@ void game_data::ship_land(idtype ship_id, idtype solar_id){
 void game_data::ship_bombard(idtype ship_id, idtype solar_id){
   solar::solar &sol = solars[solar_id];
   ship &s = ships[ship_id];
+  float damage;
 
-  sol.defense_current -= s.hp;
+  switch(s.ship_class){
+  case solar::s_scout:
+  case solar::s_fighter:
+    damage = s.hp * utility::random_uniform();
+    break;
+  case solar::s_bomber:
+    damage = 1 + utility::random_uniform();
+    break;
+  }
 
   cout << "ship " << ship_id << " bombards solar " << solar_id << ", resulting defense: " << sol.defense_current << endl;
 
   // todo: add some random destruction to solar
+  sol.defense_current -= damage;
+  sol.population_number -= 10 * damage;
+  sol.population_happy *= 0.9;
 
   if (sol.defense_current <= 0){
     sol.owner = s.owner;
-    sol.population_number = 100; // todo: temporary fix
+    sol.population_number += 100; // todo: temporary fix
     cout << "player " << sol.owner << " conquers solar " << solar_id << endl;
   }
 
   remove_ship(ship_id);
 }
 
-bool game_data::ship_fire(idtype s, idtype t){
-  cout << "ship " << s << " fires on ship " << t << endl;
-  if (--ships[t].hp < 1){
-    cout << " -> ship " << t << " dies" << endl;
-    ships[t].was_killed = true;
+bool game_data::ship_fire(idtype sid, idtype tid){
+  float scout_accuracy = 0.3;
+  float fighter_accuracy = 0.7;
+  float fighter_rapidfire = 0.3;
+  ship &s = ships[sid];
+  ship &t = ships[tid];
+  cout << "ship " << sid << " fires on ship " << tid << endl;
+
+  switch(s.ship_class){
+  case solar::s_scout:
+    if (utility::random_uniform() < scout_accuracy){
+      t.hp -= utility::random_uniform();
+      cout << " -> hit!" << endl;
+      if (t.hp <= 0){
+	t.was_killed = true;
+	cout << " -> ship " << tid << " dies!" << endl;
+      }
+    }
+    return true;
+  case solar::s_fighter:
+    if (utility::random_uniform() < fighter_accuracy){
+      t.hp -= utility::random_uniform();
+      cout << " -> hit!" << endl;
+      if (t.hp <= 0){
+	t.was_killed = true;
+	cout << " -> ship " << tid << " dies!" << endl;
+      }
+    }
+    return utility::random_uniform() < fighter_rapidfire; // fighters may fire multiple times
+  case solar::s_bomber:
+    return true; // bombers dont fire at ships
   }
 
   return true; // indicate ship initiative is over

@@ -112,7 +112,6 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
     << g.speed
     << g.owner
     << g.hp
-    // << g.was_killed
     << g.interaction_radius;
 }
 
@@ -125,7 +124,6 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
     >> g.speed
     >> g.owner
     >> g.hp
-    // >> g.was_killed
     >> g.interaction_radius;
 }
 

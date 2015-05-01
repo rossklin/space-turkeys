@@ -17,6 +17,10 @@ namespace st3{
     class entity_selector{
       static const int max_click_distance = 20;
     public:
+      static constexpr int queue_max = 100000;
+      static source_t last_selected;
+
+      int queue_level;
       bool selected;
       bool owned;
       bool area_selectable;

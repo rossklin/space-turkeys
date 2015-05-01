@@ -44,6 +44,16 @@ void st3::graphics::draw_ship(sf::RenderWindow &w, ship s, sf::Color col, float 
     svert[3] = sf::Vertex(point(-2, 1), col);
     svert[4] = sf::Vertex(point(2, 0), cnose);
     break;
+  case solar::s_bomber:
+    svert.resize(7);
+    svert[0] = sf::Vertex(point(2, 0), col);
+    svert[1] = sf::Vertex(point(0, -3), cnose);
+    svert[2] = sf::Vertex(point(-2, -3), cnose);
+    svert[3] = sf::Vertex(point(-1, 0), col);
+    svert[4] = sf::Vertex(point(-2, 3), cnose);
+    svert[5] = sf::Vertex(point(0, 3), cnose);
+    svert[6] = sf::Vertex(point(2, 0), col);
+    break;
   default:
     cout << "invalid ship type: " << s.ship_class << endl;
     exit(-1);

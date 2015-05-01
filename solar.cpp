@@ -8,17 +8,37 @@ using namespace std;
 using namespace st3;
 using namespace solar;
 
-vector<vector<float> > development::ship_cost({{1,2,3}, {1,2,3}, {1,2,3}});
-
-vector<float> development::ship_buildtime({10,20});
+vector<vector<float> > development::ship_cost;
+vector<float> development::ship_buildtime;
 
 const float st3::solar::research_per_person = 0.0001;
 const float st3::solar::industry_per_person = 0.001;
 const float st3::solar::fleet_per_person = 0.05;
-const float st3::solar::resource_per_person = 0.0005;
+const float st3::solar::resource_per_person = 0.001;
 const float st3::solar::births_per_person = 0.0002;
 const float st3::solar::deaths_per_person = 0.0001;
 const float st3::solar::industry_growth_cap = 1;
+
+void development::initialize(){
+  ship_cost.resize(s_num);
+  ship_buildtime.resize(s_num);
+  for (auto &x : ship_cost) x.resize(o_num);
+
+  // scout
+  ship_cost[s_scout][o_metal] = 1;
+  ship_cost[s_scout][o_gas] = 1;
+  ship_buildtime[s_scout] = 10;
+
+  // fighter
+  ship_cost[s_fighter][o_metal] = 1;
+  ship_cost[s_fighter][o_gas] = 2;
+  ship_buildtime[s_fighter] = 20;
+
+  // bomber
+  ship_cost[s_bomber][o_metal] = 3;
+  ship_cost[s_bomber][o_gas] = 2;
+  ship_buildtime[s_bomber] = 30;
+}
 
 void choice_t::normalize(){
   utility::normalize_vector(population);

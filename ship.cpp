@@ -19,7 +19,5 @@ ship::ship(ship::class_t c, research &r){
 
   if (c == solar::s_scout){
     speed = 2;
-  }else if (c == solar::s_fighter){
-    hp = 2;
   }
 }

@@ -34,19 +34,25 @@ namespace st3{
     void set_fleet_commands(idtype id, std::list<command> coms);
 
     // iteration
-    void allocate_grid();
-    void deallocate_grid();
-    void increment();
-    idtype solar_at(point p);
+    void allocate_grid(); // initialise ship_grid
+    void deallocate_grid(); // delete ship_grid
+    void increment(); // take one step in game mechanics
+    idtype solar_at(point p); // id of solar at point p, or -1 if no solar
     void ship_land(idtype ship_id, idtype solar_id);
     void ship_bombard(idtype ship_id, idtype solar_id);
     bool ship_fire(idtype s, idtype t);
     void remove_ship(idtype id);
     void solar_tick(idtype id);
     void update_fleet_data(idtype id);
-    void pre_step(); // idle fleets and clear waypoint keep_me
-    void post_choice_step(); // remove non-updated waypoints
-    void end_step(); // remove unused waypoints
+
+    // game round steps
+
+    // before choice: idle fleets and clear waypoint keep_me
+    void pre_step(); 
+    // between choice and evolution: remove non-updated waypoints
+    void post_choice_step(); 
+    // after evolution: remove unused waypoints
+    void end_step(); 
 
     // build stuff
     void build();

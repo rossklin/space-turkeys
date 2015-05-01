@@ -38,6 +38,7 @@ namespace st3{
     enum d_ship{
       s_scout = 0,
       s_fighter,
+      s_bomber,
       s_num
     };
 
@@ -52,6 +53,7 @@ namespace st3{
     struct development{
       static std::vector<std::vector<float> > ship_cost;
       static std::vector<float> ship_buildtime;
+      static void initialize();
 
       std::vector<float> fleet_growth; // accumulated ships per type
       std::vector<float> new_research; // accumulated research per field

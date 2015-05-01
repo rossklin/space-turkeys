@@ -14,11 +14,14 @@ using namespace st3::client;
 // ENTITY SELECTOR
 // ****************************************
 
+source_t entity_selector::last_selected("");
+
 entity_selector::entity_selector(sf::Color c, bool o){
   color = c;
   owned = o;
   area_selectable = true;
   selected = false;
+  queue_level = 0;
 }
 
 entity_selector::~entity_selector(){}
