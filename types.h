@@ -24,6 +24,7 @@ namespace st3{
     const std::string fleet = "fleet";
     const std::string waypoint = "waypoint";
     const std::string command = "command";
+    const std::string idle = "idle";
     const std::string target_idle = "idle:0";
 
     std::string make(std::string t, idtype i);

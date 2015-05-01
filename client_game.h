@@ -61,7 +61,7 @@ namespace st3{
       bool command_exists(command c);
       idtype command_id(command c);
       void command_points(command c, point &from, point &to);
-      void add_command(command c, point from, point to, bool fill_ships = true);
+      void add_command(command c, point from, point to, bool fill_ships = false);
       void remove_command(idtype key);
       void command2entity(source_t key);
       source_t add_waypoint(point p);

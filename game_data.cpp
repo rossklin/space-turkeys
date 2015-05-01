@@ -278,7 +278,7 @@ void game_data::update_fleet_data(idtype fid){
 	if (f.converge && !identifier::get_type(f.com.target).compare(identifier::waypoint)){
 	  source_t wid = identifier::get_string_id(f.com.target);
 	  waypoints[wid].landed_ships += f.ships;
-	  f.com.target = identifier::target_idle;
+	  f.com.target = identifier::make(identifier::idle, wid);
 	}
       }else{
 	f.com.target = identifier::target_idle;
@@ -800,7 +800,7 @@ void st3::game_data::solar_tick(idtype id){
   }
 }
 
-// cleanup things that will be reloaded from client
+// clean up things that will be reloaded from client
 void game_data::pre_step(){
   // idle all fleets
   for (auto &i : fleets){
@@ -826,11 +826,24 @@ void game_data::post_choice_step(){
 }
 
 // remove waypoints with no incoming fleets
+// update waypoints' landed ships
 void game_data::end_step(){
   bool check;
   list<source_t> remove;
 
   for (auto & i : waypoints){
+    // check that all "landed" ships are still alive and in a fleet
+    // that is idle at this waypoint
+    auto j = i.second.landed_ships.begin();
+    while (j != i.second.landed_ships.end()){
+      fleet &f = fleets[ships[*j].fleet_id];
+      if (ships.count(*j) && f.is_idle() && !identifier::get_string_id(f.com.target).compare(i.first)){
+	j++;
+      }else{
+	i.second.landed_ships.erase(*(j++));
+      }
+    }
+
     check = !i.second.landed_ships.empty();
     
     // check for fleets targeting this waypoint
@@ -844,7 +857,7 @@ void game_data::end_step(){
 	check |= !identifier::get_string_id(k.target).compare(i.first);
       }
     }
-
+    
     if (!check) remove.push_back(i.first);
   }
 

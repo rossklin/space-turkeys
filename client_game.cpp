@@ -762,7 +762,7 @@ bool st3::client::game::select_command_at(point p){
       ready_ships[x] = ships[x];
     }
 
-    comgui = new command_gui(it -> first, window, 
+    comgui = new command_gui(it -> first, &window, 
 			     ready_ships,
 			     it -> second -> ships,
 			     utility::scale_point(it -> second -> from + it -> second -> to, 0.5), 
@@ -800,9 +800,7 @@ int st3::client::game::choice_event(sf::Event e){
       set<idtype> removed = cs -> ships - comgui -> allocated;
       set<idtype> added = comgui -> allocated - cs -> ships;
 
-      if (!added.empty()){
-	ws -> ships += added;
-      }
+      ws -> ships += added;
 
       if (!removed.empty()){
 	recursive_waypoint_deallocate(cs -> target, removed);

@@ -1,3 +1,6 @@
+* currently working on
+** command_gui should sort ships by type
+** command_gui should have option to allocate X ships of type T
 * long term goals
 ** strategy
 *** development: focus on infrastructure, research or industry
@@ -80,8 +83,6 @@
     so that ships can be drawn in same size in command gui
     but different sizes in universe
 *** solar choice interface
-*** command_gui should sort ships by type
-*** command_gui should have option to allocate X ships of type T
 *** command_gui should have attributes to_allocate and to_cache
     so they don't have to be post-computed outside the gui
 *** waypoint command quantity alternative: all
@@ -91,14 +92,13 @@
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
 * bugs
-** ships can remain as landed at waypoint after fleet has left
-   since setting a fleet command does not trigger waypoint relocate
-** ships that die remain as landed at waypoint
-** comgui does not close after choice step
+** waypoint removed though having landed ships?
 * issues
 ** [low priority] ship classes should not be in solar?
    but then ship classes will be replaced with ship components...
 ** [low priority] ships bombard and land in order of fleet, unfair
+   add a map<player, damage> to solar, evaluate conquering after
+   bombardment phase
 ** [low priority] server sends fleets with missing target to client
    when the target is a fleet which has dissappeared after the source
    was updated
@@ -108,9 +108,12 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-** fixed a bug where fleet evaluation order impacted battle result
-** added an entity_selector -> queue_level (select order queue)
+** added ship class sub tables in command_gui
+** fixed: ships that have left or died remain listed at waypoint
 * fixed
+** fixed: fleet evaluation order impacted battle result
+** added an entity_selector -> queue_level (select order queue)
+** fixed: comgui does not close after choice step
 ** fixed: fleet speed limit = min(ship.speed)
 ** fixed: prevented creation of circular graphs
 ** fixed: when client deletes command + wp, server reinserts wp
