@@ -2,6 +2,7 @@
 #define _STK_CLIENTGAME
 
 #include <set>
+#include <string>
 #include <SFML/Graphics.hpp>
 
 #include "socket_t.h"
@@ -18,6 +19,9 @@ namespace st3{
     struct game{
       socket_t socket;
       window_t window;
+      sf::View view_game;
+      sf::View view_minimap;
+      std::string message;
       bool area_select_active;
       sf::FloatRect srect;
       idtype comid;
@@ -73,7 +77,9 @@ namespace st3{
       int count_selected();
 
       // graphics
+      void draw_window();
       void draw_universe();
+      void draw_interface_components();
     };
   };
 };

@@ -70,6 +70,8 @@ void game_data::relocate_ships(command &c, set<idtype> &sh, idtype owner){
 }
 
 void game_data::generate_fleet(point p, idtype owner, command &c, set<idtype> &sh){
+  if (sh.empty()) return;
+
   fleet f;
   idtype fid = fleet::id_counter++;
   f.com = c;
@@ -279,8 +281,10 @@ void game_data::update_fleet_data(idtype fid){
 	  source_t wid = identifier::get_string_id(f.com.target);
 	  waypoints[wid].landed_ships += f.ships;
 	  f.com.target = identifier::make(identifier::idle, wid);
+	  cout << "set fleet " << fid << " idle target: " << f.com.target << endl;
 	}
       }else{
+	cout << "fleet " << fid << ": target " << f.com.target << " missing, setting idle:0" << endl;
 	f.com.target = identifier::target_idle;
       }
     }
@@ -307,7 +311,8 @@ void game_data::increment(){
     cout << "running increment for fleet " << fid << endl;
     fleet &f = fleets[fid];
     point to;
-    if (!target_position(f.com.target, to)){
+    if (!(target_position(f.com.target, to) || f.is_idle())){
+      cout << "fleet " << fid << ": target " << f.com.target << " missing and not idle, setting idle:0" << endl;
       f.com.target = identifier::target_idle;
     }
 
@@ -381,7 +386,6 @@ void game_data::increment(){
       it++;
     }
   }
-
 
   // waypoint triggers
   for (auto &x : waypoints){
@@ -756,6 +760,8 @@ void st3::game_data::solar_tick(idtype id){
     // cout << s.dev.fleet_growth[i] << ", ";
   }
   // cout << endl;
+  // temp fix: can't have negative resources
+  for (auto &x : buf.dev.resource) x = fmax(x, 0);
 
   // resource
   // cout << "resource: ";
@@ -804,6 +810,7 @@ void st3::game_data::solar_tick(idtype id){
 void game_data::pre_step(){
   // idle all fleets
   for (auto &i : fleets){
+    cout << "pre step: initialising fleet " << i.first << " to idle:0" << endl;
     fleets[i.first].com.target = identifier::target_idle;
   }
 
@@ -827,11 +834,15 @@ void game_data::post_choice_step(){
 
 // remove waypoints with no incoming fleets
 // update waypoints' landed ships
+// pool research
 void game_data::end_step(){
   bool check;
   list<source_t> remove;
 
+  cout << "end_step:" << endl;
+
   for (auto & i : waypoints){
+    cout << "checking waypoint " << i.first << endl;
     // check that all "landed" ships are still alive and in a fleet
     // that is idle at this waypoint
     auto j = i.second.landed_ships.begin();
@@ -840,21 +851,32 @@ void game_data::end_step(){
       if (ships.count(*j) && f.is_idle() && !identifier::get_string_id(f.com.target).compare(i.first)){
 	j++;
       }else{
+	cout << " -> removing landed ship " << *j << endl;
 	i.second.landed_ships.erase(*(j++));
       }
     }
 
     check = !i.second.landed_ships.empty();
+
+    cout << "landed ships: " << i.second.landed_ships.size() << endl;
     
     // check for fleets targeting this waypoint
     for (auto &j : fleets){
       check |= !identifier::get_string_id(j.second.com.target).compare(i.first);
+
+      if (!identifier::get_string_id(j.second.com.target).compare(i.first)){
+	cout << "targeted by: fleet " << j.first << endl;
+      }
     }
 
     // check for waypoints with commands targeting this waypoint
     for (auto &j : waypoints){
       for (auto &k : j.second.pending_commands){
 	check |= !identifier::get_string_id(k.target).compare(i.first);
+	
+	if (!identifier::get_string_id(k.target).compare(i.first)){
+	  cout << "targeted by: waypoint " << j.first << endl;
+	}
       }
     }
     
@@ -864,5 +886,15 @@ void game_data::end_step(){
   for (auto & i : remove) {
     waypoints.erase(i);
     cout << "end_step: removed waypoint " << i << endl;
+  }
+
+  // pool research
+  for (auto & i : solars){
+    if (i.second.owner > -1){
+      for (int j = 0; j < research::r_num; j++){
+	players[i.second.owner].research_level.field[j] += i.second.dev.new_research[j];
+	i.second.dev.new_research[j] = 0;
+      }
+    }
   }
 }

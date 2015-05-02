@@ -12,8 +12,8 @@ vector<vector<float> > development::ship_cost;
 vector<float> development::ship_buildtime;
 
 const float st3::solar::research_per_person = 0.0001;
-const float st3::solar::industry_per_person = 0.001;
-const float st3::solar::fleet_per_person = 0.05;
+const float st3::solar::industry_per_person = 0.002;
+const float st3::solar::fleet_per_person = 0.01;
 const float st3::solar::resource_per_person = 0.001;
 const float st3::solar::births_per_person = 0.0002;
 const float st3::solar::deaths_per_person = 0.0001;

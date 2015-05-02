@@ -118,6 +118,28 @@ sf::RectangleShape utility::build_rect(sf::FloatRect bounds){
   return r;
 }
 
+// point coordinates of view ul corner
+point utility::ul_corner(sf::RenderWindow &w){
+  sf::View v = w.getView();
+  return v.getCenter() - utility::scale_point(v.getSize(), 0.5);
+}
+
+// transform from pixels to points
+sf::Transform utility::view_inverse_transform(sf::RenderWindow &w){
+  sf::Transform t;
+  sf::View v = w.getView();
+
+  t.translate(ul_corner(w));
+  t.scale(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
+  return t;
+}
+
+// transform from pixels to points
+point utility::inverse_scale(sf::RenderWindow &w){
+  sf::View v = w.getView();
+  return point(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
+}
+
 // vector maths
 
 void utility::normalize_vector(vector<float> &x){
@@ -147,6 +169,11 @@ float utility::modulus(float x, float p){
 
 ostream & st3::operator << (ostream &ss, vector<float> const &x){
   for (auto y : x) ss << y << ", ";
+  return ss;
+}
+
+ostream & st3::operator << (ostream &ss, point const &x){
+  ss << "(" << x.x << ", " << x.y << ")" << endl;
   return ss;
 }
 

@@ -1,6 +1,4 @@
 * currently working on
-** command_gui should sort ships by type
-** command_gui should have option to allocate X ships of type T
 * long term goals
 ** strategy
 *** development: focus on infrastructure, research or industry
@@ -75,25 +73,22 @@
 *** barbarians
 * basic goals
 ** server game
-*** research pooling
 *** emulate simultaneous evaluation of ship_bombard
 ** client game
-*** test tactics with some basic ship types
+*** display victor
+*** command_gui should have option to allocate X ships of type T
+*** solar choice interface
+*** simulation: interpolate using ship velocity
 *** draw all ships in same size, have a ship.draw_scale
     so that ships can be drawn in same size in command gui
     but different sizes in universe
-*** solar choice interface
-*** command_gui should have attributes to_allocate and to_cache
-    so they don't have to be post-computed outside the gui
-*** waypoint command quantity alternative: all
-*** simulation: interpolate using ship velocity
 *** events board
     messages such as "your fleet was destroyed" or "your solar X
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
 * bugs
-** waypoint removed though having landed ships?
 * issues
+** [low priority] area select goes over command gui
 ** [low priority] ship classes should not be in solar?
    but then ship classes will be replaced with ship components...
 ** [low priority] ships bombard and land in order of fleet, unfair
@@ -108,9 +103,20 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+  Made command gui sort ships by type. Added a minimap and fixed text
+  scale and position. Implemented research pooling on server
+  side. Fixed a bug where fleets were incorrectly idled and waypoints
+  removed.
+* fixed
+** added minimap, fixed text scale and position
+** tempfix for: fleet growth goes negative
+** fixed: idle fleet sent to waypoint remained idle
+** fixed: waypoint removed though having landed ships
+** research pooling
+** better game round phase indicators
+** command_gui should sort ships by type
 ** added ship class sub tables in command_gui
 ** fixed: ships that have left or died remain listed at waypoint
-* fixed
 ** fixed: fleet evaluation order impacted battle result
 ** added an entity_selector -> queue_level (select order queue)
 ** fixed: comgui does not close after choice step

@@ -27,6 +27,7 @@ namespace st3{
     const sf::Color command_normal_text(200,200,200,100);
     const sf::Color solar_fill(10,20,30,40);
     const sf::Color solar_selected(255,255,255,180);
+    const sf::Color solar_selected_fill(200,225,255,80);
     const sf::Color fleet_fill(200,200,200,50);
     const sf::Color fleet_outline(40,60,180,200);
 

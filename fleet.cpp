@@ -10,5 +10,5 @@ st3::fleet::fleet(){
 }
 
 bool st3::fleet::is_idle(){
-  return !com.target.compare(identifier::target_idle);
+  return !identifier::get_type(com.target).compare(identifier::idle);
 }

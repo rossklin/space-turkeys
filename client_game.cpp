@@ -36,8 +36,11 @@ void game::clear_guis(){
 
 void st3::client::game::run(){
   bool proceed = true;
+  bool first = true;
   area_select_active = false;
-  window.setView(sf::View(sf::FloatRect(0, 0, settings.width, settings.height)));
+  view_game = sf::View(sf::FloatRect(0, 0, settings.width, settings.height));
+  view_minimap = view_game;
+  view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
 
   solar::development::initialize();
 
@@ -45,6 +48,15 @@ void st3::client::game::run(){
   while (proceed){
     clear_guis();
     proceed &= pre_step();
+    if (first){
+      first = false;
+      for (auto i : entity_selectors){
+	if (i.second -> isa(identifier::solar) && i.second -> owned){
+	  view_game.setCenter(i.second -> get_position());
+	  view_game.setSize(point(25 * settings.solar_maxrad, 25 * settings.solar_maxrad));
+	}
+      }
+    }
     choice_step();
     simulation_step();
   }
@@ -57,16 +69,9 @@ void st3::client::game::run(){
 bool st3::client::game::pre_step(){
   int done = client::query_ask;
   sf::Packet packet, pq;
-  sf::Text text;
   game_data data;
 
-  text.setFont(graphics::default_font); 
-  text.setString("loading game data...");
-  text.setCharacterSize(24);
-  text.setColor(sf::Color(200,200,200));
-  // text.setStyle(sf::Text::Underlined);
-  text.setPosition(10, 10);
-
+  message = "loading game data...";
   pq << protocol::game_round;
 
   cout << "pre_step: start: game data has " << data.ships.size() << " ships" << endl;
@@ -86,12 +91,7 @@ bool st3::client::game::pre_step(){
       if (event.type == sf::Event::Closed) window.close();
     }
 
-    window.clear();
-    draw_universe();
-    window.draw(text);
-    window.display();
-
-    cout << "pre_step: loading data..." << endl;
+    draw_window();
     sf::sleep(sf::milliseconds(100));
   }
 
@@ -122,19 +122,15 @@ bool st3::client::game::pre_step(){
 void st3::client::game::choice_step(){
   int done = client::query_ask;
   sf::Packet pq, pr;
-  sf::Text text;
 
   cout << "choice_step: start" << endl;
 
-  text.setFont(graphics::default_font); 
-  text.setString("make your choice");
-  text.setCharacterSize(24);
-  text.setColor(sf::Color(200,200,200));
-  text.setPosition(10, 10);
+  message = "make your choice";
 
   // CREATE THE CHOICE (USER INTERFACE)
 
   while (!done){
+
     sf::Event event;
     while (window.pollEvent(event)){
       if (event.type == sf::Event::Closed){
@@ -146,10 +142,7 @@ void st3::client::game::choice_step(){
 
     controls();
 
-    window.clear();
-    draw_universe();
-    window.draw(text);
-    window.display();
+    draw_window();
 
     sf::sleep(sf::milliseconds(100));
   }
@@ -161,7 +154,8 @@ void st3::client::game::choice_step(){
 
   // SEND THE CHOICE TO SERVER
 
-  text.setString("sending choice to server...");
+  message = "sending choice to server...";
+
   choice c = build_choice();
   done = client::query_ask;
   pq << protocol::choice;
@@ -183,11 +177,7 @@ void st3::client::game::choice_step(){
       if (event.type == sf::Event::Closed) window.close();
     }
 
-    window.clear();
-    draw_universe();
-    window.draw(text);
-    window.display();
-
+    draw_window();
     sf::sleep(sf::milliseconds(100));
   }
 
@@ -214,21 +204,11 @@ void st3::client::game::simulation_step(){
   int idx = -1;
   int loaded = 0;
   vector<game_data> g(settings.frames_per_round);
-  sf::Text text;
-
-  text.setFont(graphics::default_font); 
-  text.setString("evolution: playing");
-  text.setCharacterSize(24);
-  text.setColor(sf::Color(200,200,200));
-  text.setPosition(10, 10);
-
   thread t(load_frames, socket, ref(g), ref(loaded));
 
   while (!done){
     if (!window.isOpen()) done |= client::query_finished;
     if (idx == settings.frames_per_round - 1) done |= client::query_proceed;
-
-    cout << "simulation loop: frame " << idx << " of " << loaded << " loaded frames, play = " << playing << endl;
 
     sf::Event event;
     while (window.pollEvent(event)){
@@ -245,12 +225,9 @@ void st3::client::game::simulation_step(){
     }
 
     controls();
-    text.setString(playing ? "evolution: playing" : "evolution: paused");
+    message = "evolution: " + to_string((100 * idx) / settings.frames_per_round) + " %" + (playing ? "" : "(paused)");
 
-    window.clear();
-    draw_universe();
-    window.draw(text);
-    window.display();
+    draw_window();
 
     playing &= idx < loaded - 1;
 
@@ -346,8 +323,6 @@ void st3::client::game::reload_data(game_data &g){
   ships = g.ships;
   players = g.players;
   settings = g.settings;
-
-  cout << "game::reload_data" << endl;
 
   // create entities: fleets, solars and waypoints
   for (auto x : g.fleets){
@@ -783,7 +758,6 @@ int game::count_selected(){
 // return true to signal choice step done
 int st3::client::game::choice_event(sf::Event e){
   point p;
-  sf::View view = window.getView();
 
   if (comgui && comgui -> handle_event(e)){
     // handle comgui effects
@@ -869,17 +843,15 @@ int st3::client::game::choice_event(sf::Event e){
       }
       break;
     case sf::Keyboard::O:
-      view.zoom(1.2);
+      view_game.zoom(1.2);
       break;
     case sf::Keyboard::I:
-      view.zoom(1 / 1.2);
+      view_game.zoom(1 / 1.2);
       break;
     }
     break;
   };
 
-  window.setView(view);
-  
   return client::query_ask;
 }
 
@@ -890,28 +862,85 @@ void st3::client::game::controls(){
     return;
   }
 
-  sf::View view = window.getView();
-  float s = view.getSize().x / settings.width;
+  float s = view_game.getSize().x / settings.width;
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
-    vel.x -= 5 * s;
+    vel.x -= 15 * s;
   } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
-    vel.x += 5 * s;
+    vel.x += 15 * s;
   } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)){
-    vel.y -= 5 * s;
+    vel.y -= 15 * s;
   } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)){
-    vel.y += 5 * s;
+    vel.y += 15 * s;
   }
 
   vel = utility::scale_point(vel, 0.8);
   
-  view.move(vel);
-  window.setView(view);
+  view_game.move(vel);
 }
 
 // ****************************************
 // GRAPHICS
 // ****************************************
+
+void game::draw_window(){
+  window.clear();
+
+  // draw main interface
+  window.setView(view_game);
+  point ul = utility::ul_corner(window);
+  draw_universe();
+  draw_interface_components();
+
+  // draw text
+  sf::Text text;
+  text.setFont(graphics::default_font); 
+  text.setCharacterSize(24);
+  text.setColor(sf::Color(200,200,200));
+  text.setString(message);
+  text.setPosition(point(10,10));
+
+  // draw minimap bounds
+  sf::FloatRect fr = view_minimap.getViewport();
+  sf::RectangleShape r;
+  r.setPosition(fr.left * window.getSize().x, fr.top * window.getSize().y);
+  r.setSize(point(fr.width * window.getSize().x, fr.height * window.getSize().y));
+  r.setOutlineColor(sf::Color(255,255,255));
+  r.setFillColor(sf::Color(0,0,25,100));
+  r.setOutlineThickness(1);
+
+  window.setView(window.getDefaultView());
+  window.draw(text);
+  window.draw(r);
+
+  // draw minimap contents
+  window.setView(view_minimap);
+  draw_universe();
+  r.setOutlineColor(sf::Color(0, 255, 0));
+  r.setPosition(ul);
+  r.setSize(view_game.getSize());
+  window.draw(r);
+  window.display();
+
+  // reset game view
+  window.setView(view_game);
+}
+
+void game::draw_interface_components(){
+
+  if (area_select_active && srect.width && srect.height){
+    // draw selection rect
+    sf::RectangleShape r = utility::build_rect(srect);
+    r.setFillColor(sf::Color(250,250,250,50));
+    r.setOutlineColor(sf::Color(80, 120, 240, 200));
+    r.setOutlineThickness(1);
+    window.draw(r);
+  }
+
+  // draw command gui
+  if (comgui) comgui -> draw();
+
+}
 
 void st3::client::game::draw_universe(){
 
@@ -928,18 +957,6 @@ void st3::client::game::draw_universe(){
       graphics::draw_ship(window, x.second, col);
     }
   }
-
-  if (area_select_active && srect.width && srect.height){
-    // draw selection rect
-    sf::RectangleShape r = utility::build_rect(srect);
-    r.setFillColor(sf::Color(250,250,250,50));
-    r.setOutlineColor(sf::Color(80, 120, 240, 200));
-    r.setOutlineThickness(1);
-    window.draw(r);
-  }
-
-  // draw command gui
-  if (comgui) comgui -> draw();
 }
 
 // ****************************************

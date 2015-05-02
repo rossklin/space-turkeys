@@ -36,15 +36,12 @@ void st3::client::query(socket_t socket,
 	   int &done){
   protocol_t message;
 
-  cout << "query: starting to send..." << endl;
   while (!socket.send(pq)) sf::sleep(sf::milliseconds(100));
-  cout << "query: starting to receive..." << endl;
   while (!socket.receive(pr)) sf::sleep(sf::milliseconds(100));
 
   if (pr >> message){
     if (message == protocol::confirm){
       done = client::query_proceed;
-      cout << "query: confirmed" << endl;
     }else if (message == protocol::invalid){
       cout << "query: server says invalid" << endl;
       exit(-1);

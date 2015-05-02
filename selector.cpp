@@ -62,22 +62,24 @@ void solar_selector::draw(window_t &w){
   sf::Text text;
   text.setString(to_string(ships.size()));
   text.setFont(graphics::default_font); 
-  text.setCharacterSize(14);
+  text.setCharacterSize(24);
   // text.setStyle(sf::Text::Underlined);
   sf::FloatRect text_dims = text.getLocalBounds();
-  text.setPosition(position - point(text_dims.width/2, text_dims.height));
+  text.setOrigin(point(text_dims.left + text_dims.width/2, text_dims.top + text_dims.height / 2));
+  text.setPosition(position); 
   text.setColor(sf::Color(200,200,200));
+  text.setScale(utility::inverse_scale(w));
 
   sf::CircleShape sol(radius);
   sol.setFillColor(graphics::solar_fill);
-  sol.setOutlineThickness(-radius / 3);
+  sol.setOutlineThickness(-1);
   sol.setOutlineColor(color);
   sol.setPosition(position.x - radius, position.y - radius);
   w.draw(sol);
   
   if (selected){
-    sol.setFillColor(sf::Color::Transparent);
-    sol.setOutlineThickness(radius / 5);
+    sol.setFillColor(graphics::solar_selected_fill);
+    sol.setOutlineThickness(1);
     sol.setOutlineColor(graphics::solar_selected);
     w.draw(sol);
   }
@@ -104,6 +106,7 @@ void solar_selector::draw(window_t &w){
     // setup text
     text.setString(ss.str());
     text.setPosition(position + point(20, 0));
+    text.setScale(utility::inverse_scale(w));
     w.draw(text);
   }
 }
@@ -138,7 +141,7 @@ void fleet_selector::draw(window_t &w){
     sf::CircleShape s(radius);
     s.setFillColor(graphics::fleet_fill);
     s.setOutlineColor(graphics::fleet_outline);
-    s.setOutlineThickness(2);
+    s.setOutlineThickness(1);
     s.setPosition(position - point(radius, radius));
     w.draw(s);
   }
@@ -173,7 +176,7 @@ void waypoint_selector::draw(window_t &w){
   sf::CircleShape s(radius);
   s.setFillColor(selected ? sf::Color(255,255,255,100) : sf::Color(0,0,0,0));
   s.setOutlineColor(color);
-  s.setOutlineThickness(2);
+  s.setOutlineThickness(1);
   s.setPosition(position - point(radius, radius));
   w.draw(s);
 }
@@ -226,6 +229,7 @@ void command_selector::draw(window_t &w){
   // text.setStyle(sf::Text::Underlined);
   sf::FloatRect text_dims = text.getLocalBounds();
   text.setPosition(utility::scale_point(to + from, 0.5) - point(text_dims.width/2, text_dims.height + 10));
+  text.setScale(utility::inverse_scale(w));
 
   // setup arrow colors
   if (selected){

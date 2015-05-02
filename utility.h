@@ -33,7 +33,11 @@ namespace st3{
 
     // sfml stuff
     sf::RectangleShape build_rect(sf::FloatRect r);
+    point ul_corner(sf::RenderWindow &w);
+    sf::Transform view_inverse_transform(sf::RenderWindow &w);
+    point inverse_scale(sf::RenderWindow &w);
     
+    // maths
     float sigmoid(float x);
     float modulus(float x, float p);
     
@@ -41,6 +45,7 @@ namespace st3{
   point operator - (const point &a, const point &b);
   point operator + (const point &a, const point &b);
   std::ostream & operator << (std::ostream &ss, std::vector<float> const &x);
+  std::ostream & operator << (std::ostream &ss, point const &x);
 
   // set operations
   template<typename T>
