@@ -63,7 +63,6 @@ void solar_selector::draw(window_t &w){
   text.setString(to_string(ships.size()));
   text.setFont(graphics::default_font); 
   text.setCharacterSize(24);
-  // text.setStyle(sf::Text::Underlined);
   sf::FloatRect text_dims = text.getLocalBounds();
   text.setOrigin(point(text_dims.left + text_dims.width/2, text_dims.top + text_dims.height / 2));
   text.setPosition(position); 
@@ -86,11 +85,7 @@ void solar_selector::draw(window_t &w){
 
   w.draw(text);
 
-  // draw debug info
-
-  point mp = w.mapPixelToCoords(sf::Mouse::getPosition(w));
-
-  if (utility::l2norm(mp - position) < radius){
+  if (selected){
     //draw solar info
     stringstream ss;
     // build info text
@@ -104,10 +99,21 @@ void solar_selector::draw(window_t &w){
     ss << "defence: " << defense_current << "(" << defense_capacity << ")" << endl;
 
     // setup text
-    text.setString(ss.str());
-    text.setPosition(position + point(20, 0));
-    text.setScale(utility::inverse_scale(w));
-    w.draw(text);
+    sf::Text info_text;
+    info_text.setString(ss.str());
+    sf::FloatRect b = info_text.getLocalBounds();
+    // info_text.setOrigin(point(b.left, b.top));
+    info_text.setPosition(position + point(radius + 20, -b.height/2));
+    b = info_text.getLocalBounds();
+    info_text.setScale(utility::inverse_scale(w));
+    sf::RectangleShape frame;
+    frame.setPosition(point(b.left, b.top));
+    frame.setSize(point(b.width, b.height));
+    frame.setFillColor(sf::Color(10,20,30,40));
+    frame.setOutlineColor(sf::Color(80, 100, 120, 140));
+    frame.setOutlineThickness(1);
+    w.draw(frame);
+    w.draw(info_text);
   }
 }
 

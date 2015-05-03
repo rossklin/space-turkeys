@@ -1,4 +1,5 @@
 * currently working on
+** solar info text does not draw at correct position
 * long term goals
 ** strategy
 *** development: focus on infrastructure, research or industry
@@ -88,6 +89,11 @@
 ** before game interface
 * bugs
 * issues
+** socket_t exits on disconnect in thread, causes segfault
+** [low priority] minimap bounding box drawn incorrectly after window resize
+** [low priority] segfault after client side target missing, some turns after resume from suspend.
+** [low priority] player colors difficult to distinguish
+** [low priority] command_gui scales with zoom
 ** [low priority] area select goes over command gui
 ** [low priority] ship classes should not be in solar?
    but then ship classes will be replaced with ship components...
@@ -99,14 +105,10 @@
    was updated
 
    consider tracking fleet splits so a fleet can chose a new target.
-** socket_t exits on disconnect in thread, causes segfault
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-  Made command gui sort ships by type. Added a minimap and fixed text
-  scale and position. Implemented research pooling on server
-  side. Fixed a bug where fleets were incorrectly idled and waypoints
-  removed.
+** replaced waypoint.landed_ships with checking fleet idle target
 * fixed
 ** added minimap, fixed text scale and position
 ** tempfix for: fleet growth goes negative

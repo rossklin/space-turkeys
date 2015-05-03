@@ -160,28 +160,14 @@ void game_data::apply_choice(choice c, idtype id){
   cout << "apply_choice for player " << id << ": inserting " << c.waypoints.size() << " waypoints:" << endl;
 
   // keep those waypoints which client sends
+  waypoints.clear();
   for (auto &x : c.waypoints){
     if (identifier::get_waypoint_owner(x.first) != id){
       cout << "apply_choice: player " << id << " tried to insert waypoint owned by " << identifier::get_waypoint_owner(x.first) << endl;
       exit(-1);
     }
 
-    // load pending commands and position but not landed_ships
-    waypoint &w = waypoints[x.first];
-    w.pending_commands = x.second.pending_commands;
-    w.position = x.second.position;
-    w.keep_me = true;
-    cout << x.first << endl;
-
-    // debug printout
-    for (auto com : w.pending_commands){
-      cout << "command from " << com.source << " to " << com.target << endl;
-      cout << "ships: ";
-      for (auto sh : com.ships){
-	cout << sh << ",";
-      }
-      cout << endl;
-    }
+    waypoints[x.first] = x.second;
   }
 
   for (auto &x : c.solar_choices){
@@ -279,7 +265,6 @@ void game_data::update_fleet_data(idtype fid){
 	// set to idle and 'land' ships if converged to waypoint
 	if (f.converge && !identifier::get_type(f.com.target).compare(identifier::waypoint)){
 	  source_t wid = identifier::get_string_id(f.com.target);
-	  waypoints[wid].landed_ships += f.ships;
 	  f.com.target = identifier::make(identifier::idle, wid);
 	  cout << "set fleet " << fid << " idle target: " << f.com.target << endl;
 	}
@@ -394,8 +379,16 @@ void game_data::increment(){
 
     // trigger commands
     bool check;
-    set<idtype> ready_ships;
+    set<idtype> ready_ships, arrived_ships;
     list<command> remove;
+
+    // compute landed ships
+    arrived_ships.clear();
+    for (auto &y : fleets){
+      if (y.second.is_idle() && !identifier::get_string_id(y.second.com.target).compare(x.first)){
+	arrived_ships += y.second.ships;
+      }
+    }
     
     remove.clear();
     for (auto &y : w.pending_commands){
@@ -404,7 +397,7 @@ void game_data::increment(){
       ready_ships.clear();
       for (auto i : y.ships){
 	if (ships.count(i)){
-	  if (w.landed_ships.count(i)){
+	  if (arrived_ships.count(i)){
 	    ready_ships.insert(i);
 	  }else{
 	    check = false;
@@ -413,13 +406,12 @@ void game_data::increment(){
       }
 
       if (check){
-	w.landed_ships -= ready_ships;
 	cout << "waypoint trigger: command targeting " << y.target << "ready with " << ready_ships.size() << " ships!" << endl;
 	relocate_ships(y, ready_ships, identifier::get_waypoint_owner(x.first));
 	remove.push_back(y);
       }else {
 	cout << endl << "waypoint trigger: have ships: ";
-	for (auto z : w.landed_ships) cout << z << ",";
+	for (auto z : arrived_ships) cout << z << ",";
 	cout << "need ships: ";
 	for (auto z : y.ships) cout << z << ",";
 	cout << endl;
@@ -814,22 +806,22 @@ void game_data::pre_step(){
     fleets[i.first].com.target = identifier::target_idle;
   }
 
-  // schedule waypoints for deletion
-  for (auto &i : waypoints){
-    waypoints[i.first].keep_me = false;
-  }
+  // // schedule waypoints for deletion
+  // for (auto &i : waypoints){
+  //   waypoints[i.first].keep_me = false;
+  // }
 }
 
 // remove waypoints that the client removed
 void game_data::post_choice_step(){
-  auto i = waypoints.begin();
-  while (i != waypoints.end()){
-    if (!i -> second.keep_me){
-      waypoints.erase(i++);
-    }else{
-      i++;
-    }
-  }
+  // auto i = waypoints.begin();
+  // while (i != waypoints.end()){
+  //   if (!i -> second.keep_me){
+  //     waypoints.erase(i++);
+  //   }else{
+  //     i++;
+  //   }
+  // }
 }
 
 // remove waypoints with no incoming fleets
@@ -841,52 +833,52 @@ void game_data::end_step(){
 
   cout << "end_step:" << endl;
 
-  for (auto & i : waypoints){
-    cout << "checking waypoint " << i.first << endl;
-    // check that all "landed" ships are still alive and in a fleet
-    // that is idle at this waypoint
-    auto j = i.second.landed_ships.begin();
-    while (j != i.second.landed_ships.end()){
-      fleet &f = fleets[ships[*j].fleet_id];
-      if (ships.count(*j) && f.is_idle() && !identifier::get_string_id(f.com.target).compare(i.first)){
-	j++;
-      }else{
-	cout << " -> removing landed ship " << *j << endl;
-	i.second.landed_ships.erase(*(j++));
-      }
-    }
+  // for (auto & i : waypoints){
+  //   cout << "checking waypoint " << i.first << endl;
+  //   // check that all "landed" ships are still alive and in a fleet
+  //   // that is idle at this waypoint
+  //   auto j = i.second.landed_ships.begin();
+  //   while (j != i.second.landed_ships.end()){
+  //     fleet &f = fleets[ships[*j].fleet_id];
+  //     if (ships.count(*j) && f.is_idle() && !identifier::get_string_id(f.com.target).compare(i.first)){
+  // 	j++;
+  //     }else{
+  // 	cout << " -> removing landed ship " << *j << endl;
+  // 	i.second.landed_ships.erase(*(j++));
+  //     }
+  //   }
 
-    check = !i.second.landed_ships.empty();
+  //   check = !i.second.landed_ships.empty();
 
-    cout << "landed ships: " << i.second.landed_ships.size() << endl;
+  //   cout << "landed ships: " << i.second.landed_ships.size() << endl;
     
-    // check for fleets targeting this waypoint
-    for (auto &j : fleets){
-      check |= !identifier::get_string_id(j.second.com.target).compare(i.first);
+  //   // check for fleets targeting this waypoint
+  //   for (auto &j : fleets){
+  //     check |= !identifier::get_string_id(j.second.com.target).compare(i.first);
 
-      if (!identifier::get_string_id(j.second.com.target).compare(i.first)){
-	cout << "targeted by: fleet " << j.first << endl;
-      }
-    }
+  //     if (!identifier::get_string_id(j.second.com.target).compare(i.first)){
+  // 	cout << "targeted by: fleet " << j.first << endl;
+  //     }
+  //   }
 
-    // check for waypoints with commands targeting this waypoint
-    for (auto &j : waypoints){
-      for (auto &k : j.second.pending_commands){
-	check |= !identifier::get_string_id(k.target).compare(i.first);
+  //   // check for waypoints with commands targeting this waypoint
+  //   for (auto &j : waypoints){
+  //     for (auto &k : j.second.pending_commands){
+  // 	check |= !identifier::get_string_id(k.target).compare(i.first);
 	
-	if (!identifier::get_string_id(k.target).compare(i.first)){
-	  cout << "targeted by: waypoint " << j.first << endl;
-	}
-      }
-    }
+  // 	if (!identifier::get_string_id(k.target).compare(i.first)){
+  // 	  cout << "targeted by: waypoint " << j.first << endl;
+  // 	}
+  //     }
+  //   }
     
-    if (!check) remove.push_back(i.first);
-  }
+  //   if (!check) remove.push_back(i.first);
+  // }
 
-  for (auto & i : remove) {
-    waypoints.erase(i);
-    cout << "end_step: removed waypoint " << i << endl;
-  }
+  // for (auto & i : remove) {
+  //   waypoints.erase(i);
+  //   cout << "end_step: removed waypoint " << i << endl;
+  // }
 
   // pool research
   for (auto & i : solars){

@@ -201,11 +201,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, choice &c){
 
 // waypoint
 sf::Packet& st3::operator <<(sf::Packet& packet, const waypoint &c){
-  return packet << c.pending_commands << c.position << c.landed_ships;
+  return packet << c.pending_commands << c.position;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, waypoint &c){
-  return packet >> c.pending_commands >> c.position >> c.landed_ships;
+  return packet >> c.pending_commands >> c.position;
 }
 
 // command

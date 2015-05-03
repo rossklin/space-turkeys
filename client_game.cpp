@@ -344,7 +344,6 @@ void st3::client::game::reload_data(game_data &g){
       sf::Color col = graphics::sfcolor(players[socket.id].color);
       waypoint_selector *ws = new waypoint_selector(x.second, col);
       entity_selectors[key] = ws;
-      ws -> ships = ws -> landed_ships;
       cout << " -> added waypoint " << x.first << endl;
     }
   }
@@ -355,7 +354,14 @@ void st3::client::game::reload_data(game_data &g){
   for (auto x : entity_selectors){
     if (x.second -> owned && x.second -> isa(identifier::fleet)){
       fleet_selector *fs = (fleet_selector*)x.second;
-      if (!fs -> is_idle()){
+      if (fs -> is_idle()){
+	source_t wid = identifier::make(identifier::waypoint, identifier::get_string_id(fs -> com.target));
+	if (entity_selectors.count(wid)){
+	  waypoint_selector *wp = (waypoint_selector*)entity_selectors[wid];
+	  wp -> ships += fs -> ships;
+	  buf.insert(wp);
+	}
+      }else{
 	command c = fs -> com;
 
 	point from, to;

@@ -14,10 +14,10 @@ namespace st3{
     // serialized components
     std::list<command> pending_commands;
     point position;
-    std::set<idtype> landed_ships;
+    /* std::set<idtype> landed_ships; */
 
-    // buffer
-    bool keep_me;
+    /* // buffer */
+    /* bool keep_me; */
   };
 };
 #endif

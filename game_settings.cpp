@@ -1,7 +1,7 @@
 #include "game_settings.h"
 
 st3::game_settings::game_settings(){
-  frames_per_round = 40;
+  frames_per_round = 100;
   width = 1000;
   height = 1000;
   ship_speed = 3;
