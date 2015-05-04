@@ -10,6 +10,7 @@
 #include "protocol.h"
 #include "serialization.h"
 #include "utility.h"
+#include "solar_gui.h"
 
 using namespace std;
 using namespace st3;
@@ -761,9 +762,32 @@ int game::count_selected(){
   return sum;
 }
 
+list<source_t> game::selected_solars(){
+  list<source_t> res;
+  for (auto &x : entity_selectors){
+    if (x.second -> isa(identifier::solar) && x.second -> selected){
+      res.push_back(x.first);
+    }
+  }
+  return res;
+}
+
+void game::run_solar_gui(source_t key){
+  solar::solar sol = *((solar_selector*)entity_selectors[key]);
+  solar_gui gui(window, sol);
+  solar::choice_t sc;
+  if (gui.run(sc)){
+    solar_choices[key] = sc;
+    cout << "added solar choice for " << key << endl;
+  }else{
+    cout << "solar choice for " << key << " dismissed" << endl;
+  }
+}
+
 // return true to signal choice step done
 int st3::client::game::choice_event(sf::Event e){
   point p;
+  list<source_t> ss;
 
   if (comgui && comgui -> handle_event(e)){
     // handle comgui effects
@@ -841,6 +865,10 @@ int st3::client::game::choice_event(sf::Event e){
     case sf::Keyboard::Space:
       cout << "choice_event: proceed" << endl;
       return client::query_proceed;
+    case sf::Keyboard::Return:
+      ss = selected_solars();
+      if (ss.size() == 1) run_solar_gui(ss.front());
+      break;
     case sf::Keyboard::Delete:
       for (auto i : list<pair<idtype, command_selector*> >(command_selectors.begin(), command_selectors.end())){
 	if (i.second -> selected){

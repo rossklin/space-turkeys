@@ -6,7 +6,7 @@ cflags = -ggdb --std=c++11 -Wreturn-type -isystem external/include
 lflags = -Lexternal/lib -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -lpthread
 
 server_objects = game_data.o server.o game_handler.o com_server.o grid_tree.o fleet.o solar.o research.o 
-tgui_objects = command_gui.o
+tgui_objects = command_gui.o solar_gui.o
 client_objects = client.o graphics.o client_game.o com_client.o selector.o research.o fleet.o solar.o game_data.o grid_tree.o $(tgui_objects)
 common_objects = game_settings.o serialization.o socket_t.o command.o utility.o types.o ship.o
 all_objects = $(server_objects) $(client_objects) $(common_objects)

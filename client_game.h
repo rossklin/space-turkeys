@@ -29,6 +29,7 @@ namespace st3{
 
       hm_t<idtype, player> players;
       hm_t<idtype, ship> ships;
+      hm_t<source_t, solar::choice_t> solar_choices;
       hm_t<source_t, entity_selector*> entity_selectors;
       hm_t<idtype, command_selector*> command_selectors;
 
@@ -50,6 +51,7 @@ namespace st3{
 
       // event handling
       int choice_event(sf::Event e);
+      void run_solar_gui(source_t key);
       void area_select();
       source_t entity_at(point p);
       idtype command_at(point p);
@@ -75,6 +77,7 @@ namespace st3{
       void deselect_all();
       std::list<idtype> incident_commands(source_t key);
       int count_selected();
+      std::list<source_t> selected_solars();
 
       // graphics
       void draw_window();
