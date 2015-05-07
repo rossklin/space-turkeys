@@ -826,6 +826,7 @@ void game_data::end_step(){
     if (i.second.owner > -1){
       for (int j = 0; j < research::r_num; j++){
 	players[i.second.owner].research_level.field[j] += i.second.dev.new_research[j];
+	cout << i.first << " contributes " << i.second.dev.new_research[j] << " new research to player " << i.second.owner << " in field " << j << endl;
 	i.second.dev.new_research[j] = 0;
       }
     }

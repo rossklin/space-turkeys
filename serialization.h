@@ -57,5 +57,9 @@ namespace st3{
   // player
   sf::Packet& operator <<(sf::Packet& packet, const player &g);
   sf::Packet& operator >>(sf::Packet& packet, player &g);
+
+  // player
+  sf::Packet& operator <<(sf::Packet& packet, const research &g);
+  sf::Packet& operator >>(sf::Packet& packet, research &g);
 };
 #endif

@@ -779,7 +779,11 @@ list<source_t> game::selected_solars(){
 
 void game::run_solar_gui(source_t key){
   solar::solar sol = *((solar_selector*)entity_selectors[key]);
-  solar_gui gui(window, sol);
+  if (sol.owner < 0) {
+    cout << "run solar gui: no owner!" << endl;
+    exit(-1);
+  }
+  solar_gui gui(window, sol, players[sol.owner].research_level);
   solar::choice_t sc = solar_choices[key];
   if (gui.run(sc)){
     solar_choices[key] = sc;

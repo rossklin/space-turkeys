@@ -6,6 +6,7 @@
 
 #include "types.h"
 #include "solar.h"
+#include "research.h"
 
 #include <TGUI/TGUI.hpp>
 
@@ -32,10 +33,11 @@ namespace st3{
     bool done;
     bool accept;
     solar::solar s;
+    research r;
 
   public:
 
-    solar_gui(sf::RenderWindow &w, solar::solar &s);
+    solar_gui(sf::RenderWindow &w, solar::solar s, research r);
     void callback_done(bool a);
     void callback_panel(const tgui::Callback &c);
     void update_info();

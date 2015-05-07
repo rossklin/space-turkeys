@@ -233,11 +233,18 @@ sf::Packet& st3::operator >>(sf::Packet& packet, point &c){
 
 // player
 sf::Packet& st3::operator <<(sf::Packet& packet, const player &c){
-  return packet << c.name << c.color;
+  return packet << c.name << c.color << c.research_level;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, player &c){
-  return packet >> c.name >> c.color;
+  return packet >> c.name >> c.color >> c.research_level;
 }
 
+// research
+sf::Packet& st3::operator <<(sf::Packet& packet, const research &c){
+  return packet << c.field;
+}
 
+sf::Packet& st3::operator >>(sf::Packet& packet, research &c){
+  return packet >> c.field;
+}

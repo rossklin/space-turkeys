@@ -16,7 +16,7 @@ using namespace st3;
 const string tgui_root("external/share/tgui-0.6/");
 
 // should draw and handle event
-solar_gui::solar_gui(sf::RenderWindow &w, solar::solar &sol) : Gui(w), window(w), tabs(*this), s(sol){
+solar_gui::solar_gui(sf::RenderWindow &w, solar::solar sol, research res) : Gui(w), window(w), tabs(*this), s(sol), r(res){
   setGlobalFont(graphics::default_font);
   done = false;
 
@@ -71,6 +71,11 @@ solar_gui::solar_gui(sf::RenderWindow &w, solar::solar &sol) : Gui(w), window(w)
   label_text.push_back(make_pair(" - Scout", to_string(s.dev.fleet_growth[solar::s_scout])));
   label_text.push_back(make_pair(" - Fighter", to_string(s.dev.fleet_growth[solar::s_fighter])));
   label_text.push_back(make_pair(" - Bomber", to_string(s.dev.fleet_growth[solar::s_bomber])));
+
+  label_text.push_back(make_pair("Research", ""));
+  label_text.push_back(make_pair(" - population", to_string(r.field[research::r_population])));
+		       label_text.push_back(make_pair(" - industry", to_string(r.field[research::r_industry])));
+		       label_text.push_back(make_pair(" - ship", to_string(r.field[research::r_ship])));
 
   for (auto x : label_text){
     Label::Ptr ll, lr;

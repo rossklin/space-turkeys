@@ -9,15 +9,16 @@ ship::ship(){
 
 }
 
-ship::ship(ship::class_t c, research &r){
-  speed = 1;
-  hp = 1;
-  interaction_radius = 10;
+ship::ship(ship::class_t c, research &res){
+  float r = res.field[research::r_ship];
+  speed = 1 + r/10;
+  hp = 1 + r/10;
+  interaction_radius = 10 + r/10;
   fleet_id = -1;
   ship_class = c;
   was_killed = false;
 
   if (c == solar::s_scout){
-    speed = 2;
+    speed += 1;
   }
 }
