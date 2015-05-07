@@ -84,37 +84,6 @@ void solar_selector::draw(window_t &w){
   }
 
   w.draw(text);
-
-  // if (selected){
-  //   //draw solar info
-  //   stringstream ss;
-  //   // build info text
-  //   ss << "fleet_growth: " << dev.fleet_growth << endl;
-  //   ss << "new_research: " << dev.new_research << endl;
-  //   ss << "industry: " << dev.industry << endl;
-  //   ss << "resource storage: " << dev.resource << endl;
-  //   ss << "pop: " << population_number << "(" << population_happy << ")" << endl;
-  //   ss << "resource: " << resource << endl;
-  //   ss << "ships: " << ships.size() << endl;
-  //   ss << "defence: " << defense_current << "(" << defense_capacity << ")" << endl;
-
-  //   // setup text
-  //   sf::Text info_text;
-  //   info_text.setString(ss.str());
-  //   sf::FloatRect b = info_text.getLocalBounds();
-  //   // info_text.setOrigin(point(b.left, b.top));
-  //   info_text.setPosition(position + point(radius + 20, -b.height/2));
-  //   b = info_text.getLocalBounds();
-  //   info_text.setScale(utility::inverse_scale(w));
-  //   sf::RectangleShape frame;
-  //   frame.setPosition(point(b.left, b.top));
-  //   frame.setSize(point(b.width, b.height));
-  //   frame.setFillColor(sf::Color(10,20,30,40));
-  //   frame.setOutlineColor(sf::Color(80, 100, 120, 140));
-  //   frame.setOutlineThickness(1);
-  //   w.draw(frame);
-  //   w.draw(info_text);
-  // }
 }
 
 bool solar_selector::isa(string t){

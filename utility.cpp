@@ -157,8 +157,8 @@ void utility::normalize_vector(vector<float> &x){
   }
 }
 
-float utility::sigmoid(float x){
-  return atan(x) / (M_PI / 2);
+float utility::sigmoid(float x, float s){
+  return s * atan(x / s) / (M_PI / 2);
 }
 
 // p > 0

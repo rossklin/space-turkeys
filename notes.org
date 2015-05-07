@@ -1,5 +1,6 @@
 * currently working on
 ** solar gui
+   solar tick equations
 * long term goals
 ** strategy
 *** development: focus on infrastructure, research or industry
@@ -75,6 +76,7 @@
 * basic goals
 ** server game
 *** emulate simultaneous evaluation of ship_bombard
+*** add ship rotation speed and ships can only fire forward
 ** client game
 *** display victor
 *** command_gui should have option to allocate X ships of type T

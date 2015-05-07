@@ -303,6 +303,11 @@ choice st3::client::game::build_choice(){
     }
   }
 
+  // solar choices
+  for (auto &x : solar_choices){
+    c.solar_choices[identifier::get_id(x.first)] = x.second;
+  }
+
   return c;
 }
 
@@ -775,7 +780,7 @@ list<source_t> game::selected_solars(){
 void game::run_solar_gui(source_t key){
   solar::solar sol = *((solar_selector*)entity_selectors[key]);
   solar_gui gui(window, sol);
-  solar::choice_t sc;
+  solar::choice_t sc = solar_choices[key];
   if (gui.run(sc)){
     solar_choices[key] = sc;
     cout << "added solar choice for " << key << endl;

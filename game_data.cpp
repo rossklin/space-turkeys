@@ -635,7 +635,7 @@ void game_data::build(){
     exit(-1);
   }
 
-  dt = 1;
+  dt = 0.1;
 
   cout << "game_data: running dummy build" << endl;
 
@@ -768,8 +768,18 @@ void st3::game_data::solar_tick(idtype id){
   // cout << endl;
 
   // population
-  buf.population_number += solar::births_per_person * s.population_number * (0.1 * (r_base.field[research::r_population] + s.dev.industry[solar::i_agriculture]) - solar::deaths_per_person * s.population_number) * dt;
-  buf.population_happy = 0.1 + utility::sigmoid(r_base.field[research::r_population] - c.population[solar::p_industry]);
+  float allocated = fmin(s.usable_area - i_sum, P[solar::p_agriculture]);
+  float food_cap = (1 + 0.01 * utility::sigmoid(r_base.field[research::r_population] + s.dev.industry[solar::i_agriculture], solar::agriculture_boost_coefficient)) * allocated;
+  float feed = solar::feed_boost_coefficient * (food_cap - s.population_number) / s.population_number;
+  float birth_rate = solar::births_per_person + feed;
+  float death_rate = solar::deaths_per_person / (r_base.field[research::r_population] + 1) + fmax(-feed, 0);
+
+  cout << "population dynamics for " << id << " : " << endl;
+  cout << "pop: " << s.population_number << ", alloc: " << allocated << ", cap: " << food_cap << ", feed: " << feed << ", birth: " << birth_rate << ", death: " << death_rate << endl;
+
+  buf.population_number += (birth_rate - death_rate) * s.population_number * dt;
+  buf.population_happy += (0.1 + 0.01 * utility::sigmoid(r_base.field[research::r_population] - c.population[solar::p_industry], 1000)) * dt;
+  buf.population_happy = fmax(fmin(buf.population_happy, 1), 0);
 
   // cout << "population: " << buf.population_number << "(" << buf.population_happy << ")" << endl;
 
@@ -805,80 +815,11 @@ void game_data::pre_step(){
     cout << "pre step: initialising fleet " << i.first << " to idle:0" << endl;
     fleets[i.first].com.target = identifier::target_idle;
   }
-
-  // // schedule waypoints for deletion
-  // for (auto &i : waypoints){
-  //   waypoints[i.first].keep_me = false;
-  // }
 }
 
-// remove waypoints that the client removed
-void game_data::post_choice_step(){
-  // auto i = waypoints.begin();
-  // while (i != waypoints.end()){
-  //   if (!i -> second.keep_me){
-  //     waypoints.erase(i++);
-  //   }else{
-  //     i++;
-  //   }
-  // }
-}
-
-// remove waypoints with no incoming fleets
-// update waypoints' landed ships
 // pool research
 void game_data::end_step(){
-  bool check;
-  list<source_t> remove;
-
   cout << "end_step:" << endl;
-
-  // for (auto & i : waypoints){
-  //   cout << "checking waypoint " << i.first << endl;
-  //   // check that all "landed" ships are still alive and in a fleet
-  //   // that is idle at this waypoint
-  //   auto j = i.second.landed_ships.begin();
-  //   while (j != i.second.landed_ships.end()){
-  //     fleet &f = fleets[ships[*j].fleet_id];
-  //     if (ships.count(*j) && f.is_idle() && !identifier::get_string_id(f.com.target).compare(i.first)){
-  // 	j++;
-  //     }else{
-  // 	cout << " -> removing landed ship " << *j << endl;
-  // 	i.second.landed_ships.erase(*(j++));
-  //     }
-  //   }
-
-  //   check = !i.second.landed_ships.empty();
-
-  //   cout << "landed ships: " << i.second.landed_ships.size() << endl;
-    
-  //   // check for fleets targeting this waypoint
-  //   for (auto &j : fleets){
-  //     check |= !identifier::get_string_id(j.second.com.target).compare(i.first);
-
-  //     if (!identifier::get_string_id(j.second.com.target).compare(i.first)){
-  // 	cout << "targeted by: fleet " << j.first << endl;
-  //     }
-  //   }
-
-  //   // check for waypoints with commands targeting this waypoint
-  //   for (auto &j : waypoints){
-  //     for (auto &k : j.second.pending_commands){
-  // 	check |= !identifier::get_string_id(k.target).compare(i.first);
-	
-  // 	if (!identifier::get_string_id(k.target).compare(i.first)){
-  // 	  cout << "targeted by: waypoint " << j.first << endl;
-  // 	}
-  //     }
-  //   }
-    
-  //   if (!check) remove.push_back(i.first);
-  // }
-
-  // for (auto & i : remove) {
-  //   waypoints.erase(i);
-  //   cout << "end_step: removed waypoint " << i << endl;
-  // }
 
   // pool research
   for (auto & i : solars){

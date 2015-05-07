@@ -38,7 +38,7 @@ namespace st3{
     point inverse_scale(sf::RenderWindow &w);
     
     // maths
-    float sigmoid(float x);
+    float sigmoid(float x, float s = 1);
     float modulus(float x, float p);
     
   };

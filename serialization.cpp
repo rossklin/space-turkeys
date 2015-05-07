@@ -132,6 +132,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const solar::solar &g){
   return packet
     << g.population_number
     << g.population_happy
+    << g.usable_area
     << g.resource
     << g.dev.industry
     << g.dev.resource
@@ -149,6 +150,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar::solar &g){
   return packet
     >> g.population_number
     >> g.population_happy
+    >> g.usable_area
     >> g.resource
     >> g.dev.industry
     >> g.dev.resource

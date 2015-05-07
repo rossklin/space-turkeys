@@ -17,6 +17,7 @@ namespace st3{
       p_research = 0,
       p_industry,
       p_resource,
+      p_agriculture,
       p_num
     };
 
@@ -48,11 +49,17 @@ namespace st3{
     extern const float resource_per_person;
     extern const float births_per_person;
     extern const float deaths_per_person;
-    extern const float industry_growth_cap;
+    extern const float agriculture_boost_coefficient;
+    extern const float feed_boost_coefficient;
 
     struct development{
       static std::vector<std::vector<float> > ship_cost;
       static std::vector<float> ship_buildtime;
+      static std::vector<std::string> population_names;
+      static std::vector<std::string> industry_names;
+      static std::vector<std::string> research_names;
+      static std::vector<std::string> resource_names;
+      static std::vector<std::string> ship_names;
       static void initialize();
 
       std::vector<float> fleet_growth; // accumulated ships per type
@@ -73,11 +80,12 @@ namespace st3{
 
       // evolution data
       development dev;
-      float population_number; // total population
-      float population_happy; // proportion happy
-      float defense_current; // ~number of ships
-      float defense_capacity;
-      std::vector<float> resource; // non-mined resources in solar
+      sfloat population_number; // total population
+      sfloat population_happy; // proportion happy
+      sfloat defense_current; // ~number of ships
+      sfloat defense_capacity;
+      sfloat usable_area;
+      std::vector<sfloat> resource; // non-mined resources in solar
       std::set<idtype> ships;
 
       // technical data
@@ -85,9 +93,9 @@ namespace st3{
       sint owner;
       sfloat radius;
 
-      float resource_constraint(std::vector<float> r); // how many r can be used before resource runs out?
-
       solar();
+      float resource_constraint(std::vector<float> r); // how many r can be used before resource runs out?
+      std::string get_info();
     };
   };
 };

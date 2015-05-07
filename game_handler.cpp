@@ -69,9 +69,6 @@ void st3::server::game_handler(com c, game_data g){
       }
     }
 
-    // remove non-updated waypoints
-    g.post_choice_step();
-
     // simulation
     cout << "starting simulation ... " << endl;
     frame_count = 0;

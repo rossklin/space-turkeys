@@ -49,8 +49,6 @@ namespace st3{
 
     // before choice: idle fleets and clear waypoint keep_me
     void pre_step(); 
-    // between choice and evolution: remove non-updated waypoints
-    void post_choice_step(); 
     // after evolution: remove unused waypoints
     void end_step(); 
 
