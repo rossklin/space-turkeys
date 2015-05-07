@@ -75,16 +75,6 @@
 *** barbarians
 * basic goals
 ** server game
-*** fog of war
-**** [done] give ships attribute sfloat vision
-**** [done] give fleets attribute sfloat vision
-**** [done] add fleet.vision to serialisation
-**** [done] update fleet.vision in update_fleet_data()
-**** [done] give solars attribute vision
-**** send limited game data objects to client
-     a fleet or solar is seen if it is owned or within vision range of
-     an owned fleet or solar.
-*** research should influence ships
 *** send victor to client on game completion
 *** colonisation/transport ships
 *** emulate simultaneous evaluation of ship_bombard
@@ -104,6 +94,8 @@
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
 * bugs
+** waypoints started with no ships not dissapearing
+** fleets sent to waypoint remain idle
 * issues
 ** socket_t exits on disconnect in thread, causes segfault
 ** [low priority] minimap bounding box drawn incorrectly after window resize
@@ -125,6 +117,19 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** fog of war
+*** [done] give ships attribute sfloat vision
+*** [done] give fleets attribute sfloat vision
+*** [done] add fleet.vision to serialisation
+*** [done] update fleet.vision in update_fleet_data()
+*** [done] give solars attribute vision
+*** send limited game data objects to client
+     a fleet or solar is seen if it is owned or within vision range of
+     an owned fleet or solar.
+** research should influence ships
+** fixed a bug where solar ships were not sent to client
+** gave ships vision
+** fixed a bug where waypoints were cleared between choice evaluations
 ** added research to solar gui
 ** added research influence in ship constructor
 ** added research to serialization

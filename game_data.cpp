@@ -809,10 +809,12 @@ void st3::game_data::solar_tick(idtype id){
 
 // clean up things that will be reloaded from client
 void game_data::pre_step(){
-  // idle all fleets
+  // idle all non-idle fleets
   for (auto &i : fleets){
     cout << "pre step: initialising fleet " << i.first << " to idle:0" << endl;
-    fleets[i.first].com.target = identifier::target_idle;
+    if (!i.second.is_idle()){
+      fleets[i.first].com.target = identifier::target_idle;
+    }
   }
 
   // clear waypoints
