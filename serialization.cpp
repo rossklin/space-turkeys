@@ -143,7 +143,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const solar::solar &g){
     << g.owner
     << g.radius
     << g.defense_current
-    << g.defense_capacity;
+    << g.defense_capacity
+    << g.vision;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, solar::solar &g){
@@ -161,7 +162,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar::solar &g){
     >> g.owner
     >> g.radius
     >> g.defense_current
-    >> g.defense_capacity;
+    >> g.defense_capacity
+    >> g.vision;
 }
 
 // solar choice
@@ -185,11 +187,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar::choice_t &g){
 
 // fleet
 sf::Packet& st3::operator <<(sf::Packet& packet, const fleet &g){
-  return packet << g.com << g.position << g.radius << g.owner << g.ships << g.converge;
+  return packet << g.com << g.position << g.radius << g.vision << g.owner << g.ships << g.converge;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
-  return packet >> g.com >> g.position >> g.radius >> g.owner >> g.ships >> g.converge;
+  return packet >> g.com >> g.position >> g.radius >> g.vision >> g.owner >> g.ships >> g.converge;
 }
 
 // choice

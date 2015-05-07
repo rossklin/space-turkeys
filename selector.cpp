@@ -83,6 +83,15 @@ void solar_selector::draw(window_t &w){
     w.draw(sol);
   }
 
+  if (owned){
+    sol.setRadius(vision);
+    sol.setFillColor(sf::Color::Transparent);
+    sol.setOutlineThickness(-1);
+    sol.setOutlineColor(sf::Color(40, 200, 60, 100));
+    sol.setPosition(position.x - vision, position.y - vision);
+    w.draw(sol);
+  }
+
   w.draw(text);
 }
 
@@ -118,6 +127,15 @@ void fleet_selector::draw(window_t &w){
     s.setOutlineColor(graphics::fleet_outline);
     s.setOutlineThickness(1);
     s.setPosition(position - point(radius, radius));
+    w.draw(s);
+  }
+
+  if (owned){
+    sf::CircleShape s(vision);
+    s.setFillColor(sf::Color::Transparent);
+    s.setOutlineColor(sf::Color(40, 200, 60, 100));
+    s.setOutlineThickness(-1);
+    s.setPosition(position - point(vision, vision));
     w.draw(s);
   }
 }

@@ -23,7 +23,8 @@ namespace st3{
     sint hp;
     sfloat interaction_radius;
 
-    // buffer data
+    // buffer and mechanical data
+    sfloat vision;
     bool was_killed;
 
     ship();

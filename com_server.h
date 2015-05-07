@@ -8,6 +8,7 @@
 
 #include "types.h"
 #include "socket_t.h"
+#include "game_data.h"
 
 namespace st3{
   namespace server{
@@ -25,7 +26,7 @@ namespace st3{
       void deallocate();
       void check_protocol(protocol_t query, sf::Packet &packet);
       void check_protocol(protocol_t query, std::vector<sf::Packet> &packets);
-      void distribute_frames(std::vector<sf::Packet> &g, int &frame_count);
+      void distribute_frames(std::vector<game_data> &g, int &frame_count);
     };
   };
 };

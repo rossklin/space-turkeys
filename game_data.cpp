@@ -244,14 +244,14 @@ void game_data::update_fleet_data(idtype fid){
     }
     f.position = utility::scale_point(p, 1 / (float)count);
 
-    // radius and speed
+    // radius, speed and vision
     float r2 = 0;
-    count = 0;
+    f.vision = 0;
     for (auto k : f.ships){
       ship &s = ships[k];
       speed = fmin(speed, s.speed);
       r2 = fmax(r2, utility::l2d2(s.position - f.position));
-      if (++count > 20) break;
+      f.vision = fmax(f.vision, s.vision);
     }
     f.radius = fmax(sqrt(r2), fleet::min_radius);
     f.speed_limit = speed;
@@ -831,4 +831,64 @@ void game_data::end_step(){
       }
     }
   }
+}
+
+game_data game_data::limit_to(idtype id){
+  // build limited game data object;
+  game_data gc;
+
+  cout << "game_data: limit to: " << id << endl;
+
+  // load fleets
+  for (auto &x : fleets){
+    bool seen = x.second.owner == id;
+    for (auto i = fleets.begin(); i != fleets.end() && !seen; i++){
+      seen |= x.first != i -> first && i -> second.owner == id && utility::l2norm(x.second.position - i -> second.position) < i -> second.vision;
+    }
+
+    for (auto i = solars.begin(); i != solars.end() && !seen; i++){
+      seen |= i -> second.owner == id && utility::l2norm(x.second.position - i -> second.position) < i -> second.vision;
+    }
+    if (seen) gc.fleets[x.first] = x.second;
+  }
+
+  // load ships
+  for (auto &x : gc.fleets) {
+    for (auto &y : x.second.ships){
+      gc.ships[y] = ships[y];
+    }
+  }
+
+  // load solars
+  for (auto &x : solars){
+    bool seen = x.second.owner == id;
+    cout << "solar " << x.first << " at " << x.second.position << ": owned = " << seen << endl;
+    for (auto i = fleets.begin(); i != fleets.end() && !seen; i++){
+      seen |= i -> second.owner == id && utility::l2norm(x.second.position - i -> second.position) < i -> second.vision;
+      if (seen){
+	cout << "spotted by fleet " << i -> first << " at " << i -> second.position << endl;
+      }
+    }
+
+    for (auto i = solars.begin(); i != solars.end() && !seen; i++){
+      seen |= x.first != i -> first && i -> second.owner == id && utility::l2norm(x.second.position - i -> second.position) < i -> second.vision;
+      if (seen){
+	cout << "spotted by solar " << i -> first << " at " << i -> second.position << endl;
+      }
+    }
+    if (seen) gc.solars[x.first] = x.second;
+  }
+
+  // load waypoints
+  for (auto &x : waypoints){
+    if (identifier::get_waypoint_owner(x.first) == id){
+      gc.waypoints[x.first] = x.second;
+    }
+  }
+
+  // load players and settings
+  gc.players = players;
+  gc.settings = settings;
+
+  return gc;
 }

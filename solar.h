@@ -85,6 +85,7 @@ namespace st3{
       sfloat defense_current; // ~number of ships
       sfloat defense_capacity;
       sfloat usable_area;
+      sfloat vision;
       std::vector<sfloat> resource; // non-mined resources in solar
       std::set<idtype> ships;
 

@@ -109,6 +109,7 @@ st3::solar::solar::solar(){
   population_number = 1000;
   population_happy = 1;
   usable_area = 1e8 + utility::random_uniform() * 1e9;
+  vision = 120;
   resource = vector<float>(o_num, 1000);
   dev.fleet_growth = vector<float>(s_num, 0);
   dev.new_research = vector<float>(research::r_num, 0);

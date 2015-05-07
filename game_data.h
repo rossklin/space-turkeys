@@ -56,6 +56,8 @@ namespace st3{
     void build();
     hm_t<idtype, solar::solar> random_solars();
     float heuristic_homes(hm_t<idtype, solar::solar> solar_buf, hm_t<idtype, idtype> &start_solars);
+    game_data limit_to(idtype pid);
+    
   };
 };
 #endif

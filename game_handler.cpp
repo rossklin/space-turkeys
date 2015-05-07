@@ -17,7 +17,8 @@ using namespace st3::server;
 
 void st3::server::game_handler(com c, game_data g){
   sf::Packet packet, p_confirm;
-  vector<sf::Packet> frames(g.settings.frames_per_round);
+  vector<game_data> frames(g.settings.frames_per_round);
+  vector<sf::Packet> packets(c.clients.size());
   int frame_count;
   unsigned int i;
 
@@ -49,10 +50,12 @@ void st3::server::game_handler(com c, game_data g){
 
     // pre, expects: only query
     cout << "preload size: " << g.ships.size() << endl;
-    packet.clear();
-    packet << protocol::confirm;
-    packet << g;
-    c.check_protocol(protocol::game_round, packet);
+    for (int i = 0; i < c.clients.size(); i++){
+      packets[i].clear();
+      packets[i] << protocol::confirm;
+      packets[i] << g.limit_to(c.clients[i].id);
+    }
+    c.check_protocol(protocol::game_round, packets);
 
     // idle the fleets
     g.pre_step();
@@ -77,12 +80,7 @@ void st3::server::game_handler(com c, game_data g){
     cout << "frames size: " << g.ships.size() << endl;
     for (frame_count = 0; frame_count < g.settings.frames_per_round; frame_count++){
       g.increment();
-      frames[frame_count].clear();
-      frames[frame_count] << protocol::confirm;
-      if (!(frames[frame_count] << g)){
-	cout << "failed to serialize frame" << endl;
-	exit(-1);
-      }
+      frames[frame_count] = g;
     }
     
     cout << "waiting for distribute_frames() ..." << endl;

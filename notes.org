@@ -76,11 +76,11 @@
 * basic goals
 ** server game
 *** fog of war
-**** give ships attribute sfloat vision
-**** give fleets attribute sfloat vision
-**** add fleet.vision to serialisation
-**** update fleet.vision in update_fleet_data()
-**** give solars attribute vision
+**** [done] give ships attribute sfloat vision
+**** [done] give fleets attribute sfloat vision
+**** [done] add fleet.vision to serialisation
+**** [done] update fleet.vision in update_fleet_data()
+**** [done] give solars attribute vision
 **** send limited game data objects to client
      a fleet or solar is seen if it is owned or within vision range of
      an owned fleet or solar.
@@ -124,10 +124,10 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+* fixed
 ** added research to solar gui
 ** added research influence in ship constructor
 ** added research to serialization
-* fixed
 ** solar choice interface
 ** replaced waypoint.landed_ships with checking fleet idle target
 ** added minimap, fixed text scale and position

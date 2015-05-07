@@ -17,6 +17,7 @@ namespace st3{
     command com;
     point position;
     sfloat radius;
+    sfloat vision;
     sint owner;
     sbool converge;
 
