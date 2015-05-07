@@ -57,7 +57,7 @@ void st3::server::game_handler(com c, game_data g){
     }
     c.check_protocol(protocol::game_round, packets);
 
-    // idle the fleets
+    // idle the fleets and clear waypoints
     g.pre_step();
 
     // choices, expects: query + choice
@@ -77,7 +77,6 @@ void st3::server::game_handler(com c, game_data g){
     frame_count = 0;
     thread t(&com::distribute_frames, c, ref(frames), ref(frame_count));
 
-    cout << "frames size: " << g.ships.size() << endl;
     for (frame_count = 0; frame_count < g.settings.frames_per_round; frame_count++){
       g.increment();
       frames[frame_count] = g;

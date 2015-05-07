@@ -160,7 +160,6 @@ void game_data::apply_choice(choice c, idtype id){
   cout << "apply_choice for player " << id << ": inserting " << c.waypoints.size() << " waypoints:" << endl;
 
   // keep those waypoints which client sends
-  waypoints.clear();
   for (auto &x : c.waypoints){
     if (identifier::get_waypoint_owner(x.first) != id){
       cout << "apply_choice: player " << id << " tried to insert waypoint owned by " << identifier::get_waypoint_owner(x.first) << endl;
@@ -815,6 +814,9 @@ void game_data::pre_step(){
     cout << "pre step: initialising fleet " << i.first << " to idle:0" << endl;
     fleets[i.first].com.target = identifier::target_idle;
   }
+
+  // clear waypoints
+  waypoints.clear();
 }
 
 // pool research
@@ -852,6 +854,19 @@ game_data game_data::limit_to(idtype id){
     if (seen) gc.fleets[x.first] = x.second;
   }
 
+  // load solars
+  for (auto &x : solars){
+    bool seen = x.second.owner == id;
+    for (auto i = fleets.begin(); i != fleets.end() && !seen; i++){
+      seen |= i -> second.owner == id && utility::l2norm(x.second.position - i -> second.position) < i -> second.vision;
+    }
+
+    for (auto i = solars.begin(); i != solars.end() && !seen; i++){
+      seen |= x.first != i -> first && i -> second.owner == id && utility::l2norm(x.second.position - i -> second.position) < i -> second.vision;
+    }
+    if (seen) gc.solars[x.first] = x.second;
+  }
+
   // load ships
   for (auto &x : gc.fleets) {
     for (auto &y : x.second.ships){
@@ -859,30 +874,19 @@ game_data game_data::limit_to(idtype id){
     }
   }
 
-  // load solars
-  for (auto &x : solars){
-    bool seen = x.second.owner == id;
-    cout << "solar " << x.first << " at " << x.second.position << ": owned = " << seen << endl;
-    for (auto i = fleets.begin(); i != fleets.end() && !seen; i++){
-      seen |= i -> second.owner == id && utility::l2norm(x.second.position - i -> second.position) < i -> second.vision;
-      if (seen){
-	cout << "spotted by fleet " << i -> first << " at " << i -> second.position << endl;
-      }
+  for (auto &x : gc.solars) {
+    for (auto &y : x.second.ships){
+      gc.ships[y] = ships[y];
     }
-
-    for (auto i = solars.begin(); i != solars.end() && !seen; i++){
-      seen |= x.first != i -> first && i -> second.owner == id && utility::l2norm(x.second.position - i -> second.position) < i -> second.vision;
-      if (seen){
-	cout << "spotted by solar " << i -> first << " at " << i -> second.position << endl;
-      }
-    }
-    if (seen) gc.solars[x.first] = x.second;
   }
 
   // load waypoints
   for (auto &x : waypoints){
     if (identifier::get_waypoint_owner(x.first) == id){
+      cout << "waypoint " << x.first << " included" << endl;
       gc.waypoints[x.first] = x.second;
+    }else{
+      cout << "waypoint " << x.first << " excluded" << endl;
     }
   }
 
