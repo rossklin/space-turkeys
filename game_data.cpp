@@ -821,9 +821,35 @@ void game_data::pre_step(){
   waypoints.clear();
 }
 
-// pool research
+// pool research and remove unused waypoints
 void game_data::end_step(){
   cout << "end_step:" << endl;
+
+  bool check;
+  list<source_t> remove;
+
+  for (auto & i : waypoints){
+    check = false;
+    
+    // check for fleets targeting this waypoint
+    for (auto &j : fleets){
+      check |= !identifier::get_string_id(j.second.com.target).compare(i.first);
+    }
+
+    // check for waypoints with commands targeting this waypoint
+    for (auto &j : waypoints){
+      for (auto &k : j.second.pending_commands){
+	check |= !identifier::get_string_id(k.target).compare(i.first);
+      }
+    }
+
+    if (!check) remove.push_back(i.first);
+  }
+
+  for (auto & i : remove) {
+    waypoints.erase(i);
+    cout << "end_step: removed waypoint " << i << endl;
+  }
 
   // pool research
   for (auto & i : solars){

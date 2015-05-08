@@ -83,6 +83,7 @@
 *** add attribute bool entity_selector.seen
     store entity selectors, but unset seen each round. Show non-seen
     entities as semi-transparent, non-interactive.
+*** display "ready to play"
 *** display victor
 *** command_gui should have option to allocate X ships of type T
 *** simulation: interpolate using ship velocity
@@ -94,8 +95,7 @@
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
 * bugs
-** waypoints started with no ships not dissapearing
-** fleets sent to waypoint remain idle
+** waypoints not dissapearing
 * issues
 ** socket_t exits on disconnect in thread, causes segfault
 ** [low priority] minimap bounding box drawn incorrectly after window resize
@@ -117,6 +117,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** fleets sent to waypoint remain idle
 ** fog of war
 *** [done] give ships attribute sfloat vision
 *** [done] give fleets attribute sfloat vision
