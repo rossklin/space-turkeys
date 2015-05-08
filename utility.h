@@ -22,6 +22,7 @@ namespace st3{
     float angle_distance(float a, float b);
     float dpoint2line(point p, point a, point b);
     float random_uniform();
+    std::vector<float> random_uniform(int n);
     point random_point_polar(point p, float r);
     bool point_above(point p, point q);
     bool point_below(point p, point q);
@@ -30,6 +31,10 @@ namespace st3{
 
     // vector maths
     void normalize_vector(std::vector<float> &x);
+    std::vector<float> vdiff(std::vector<float> const &a, std::vector<float> const &b);
+    std::vector<float> vadd(std::vector<float> const &a, std::vector<float> const &b);
+    std::vector<float> vscale(std::vector<float> a, float s);
+    float vl2norm(std::vector<float> const &x);
 
     // sfml stuff
     sf::RectangleShape build_rect(sf::FloatRect r);
@@ -40,6 +45,7 @@ namespace st3{
     // maths
     float sigmoid(float x, float s = 1);
     float modulus(float x, float p);
+    std::vector<sint> different_colors(int n);
     
   };
   point operator - (const point &a, const point &b);

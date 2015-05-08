@@ -324,35 +324,69 @@ list<idtype> game::incident_commands(source_t key){
 }
 
 void st3::client::game::reload_data(game_data &g){
+  cout << "reload data:" << endl;
+  cout << " -> initial entities: " << endl;
+  for (auto x : entity_selectors) cout << x.first << endl;
+
   clear_selectors();
   
-  ships = g.ships;
   players = g.players;
   settings = g.settings;
+  cout << " -> post clear entities: " << endl;
+  for (auto x : entity_selectors) cout << x.first << endl;
 
-  // create entities: fleets, solars and waypoints
+  // update entities: fleets, solars and waypoints
   for (auto x : g.fleets){
     source_t key = identifier::make(identifier::fleet, x.first);
     sf::Color col = graphics::sfcolor(players[x.second.owner].color);
+    if (entity_selectors.count(key)) delete entity_selectors[key];
     entity_selectors[key] = new fleet_selector(x.second, col, x.second.owner == socket.id);
+    entity_selectors[key] -> seen = true;
+    cout << " -> update fleet " << x.first << endl;
   }
 
   for (auto x : g.solars){
     source_t key = identifier::make(identifier::solar, x.first);
     sf::Color col = x.second.owner > -1 ? graphics::sfcolor(players[x.second.owner].color) : graphics::solar_neutral;
+    if (entity_selectors.count(key)) delete entity_selectors[key];
     entity_selectors[key] = new solar_selector(x.second, col, x.second.owner == socket.id);
+    entity_selectors[key] -> seen = true;
+    cout << " -> update solar " << x.first << endl;
   }
 
   for (auto x : g.waypoints){
-    // owned?
-    if (identifier::get_waypoint_owner(x.first) == socket.id){
-      source_t key = identifier::make(identifier::waypoint, x.first);
-      sf::Color col = graphics::sfcolor(players[socket.id].color);
-      waypoint_selector *ws = new waypoint_selector(x.second, col);
-      entity_selectors[key] = ws;
-      cout << " -> added waypoint " << x.first << endl;
+    source_t key = identifier::make(identifier::waypoint, x.first);
+    sf::Color col = graphics::sfcolor(players[socket.id].color);
+    if (entity_selectors.count(key)) delete entity_selectors[key];
+    entity_selectors[key] = new waypoint_selector(x.second, col);
+    entity_selectors[key] -> seen = true;
+    cout << " -> update waypoint " << x.first << endl;
+  }
+
+  // remove entities as server specifies
+  for (auto x : g.remove_entities){
+    if (entity_selectors.count(x)){
+      cout << " -> remove entity " << x << endl;
+      delete entity_selectors[x];
+      entity_selectors.erase(x);
     }
   }
+
+  // keep ships belonging to remaining fleets and solars
+  hm_t<idtype, ship> ship_buf = ships;
+  ships.clear();
+  for (auto x : g.ships) ship_buf[x.first] = x.second;
+
+  for (auto x : entity_selectors){
+    if (x.second -> isa(identifier::fleet) || x.second -> isa(identifier::solar)){
+      for (auto i : x.second -> get_ships()){
+	ships[i] = ship_buf[i];
+      }
+    }
+  }
+
+  cout << " -> resulting entities: " << endl;
+  for (auto x : entity_selectors) cout << x.first << endl;
 
   // propagate remaining ships through waypoints
   // fleets are sources
@@ -583,14 +617,13 @@ void st3::client::game::clear_selectors(){
   comid = 0;
 
   for (auto x : entity_selectors){
-    delete x.second;
+    x.second -> seen = false;
   }
 
   for (auto x : command_selectors){
     delete x.second;
   }
 
-  entity_selectors.clear();
   command_selectors.clear();
 }
 
@@ -971,6 +1004,9 @@ void game::draw_window(){
 
 void game::draw_interface_components(){
 
+  // draw commands
+  for (auto x : command_selectors) x.second -> draw(window);
+
   if (area_select_active && srect.width && srect.height){
     // draw selection rect
     sf::RectangleShape r = utility::build_rect(srect);
@@ -990,14 +1026,11 @@ void st3::client::game::draw_universe(){
   // draw source/target entities
   for (auto x : entity_selectors) x.second -> draw(window);
 
-  // draw commands
-  for (auto x : command_selectors) x.second -> draw(window);
-
   // draw ships in fleets
   for (auto x : ships){
-    if (x.second.fleet_id > -1){
-      sf::Color col = graphics::sfcolor(players[x.second.owner].color);
-      graphics::draw_ship(window, x.second, col);
+    source_t key = identifier::make(identifier::fleet, x.second.fleet_id);
+    if (entity_selectors.count(key)){
+      graphics::draw_ship(window, x.second, entity_selectors[key] -> get_color());
     }
   }
 }

@@ -3,6 +3,7 @@
 #include "game_handler.h"
 #include "com_server.h"
 #include "protocol.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -63,10 +64,12 @@ int main(int argc, char **argv){
     }
   }
 
+  vector<sint> colbuf = utility::different_colors(c.clients.size());
+  int i = 0;
   for (auto x : c.clients){
     player p;
     p.name = x.name;
-    p.color = (sint)rand() | 0xff000000;
+    p.color = colbuf[i++];
     g.players[x.id] = p;
   }
 

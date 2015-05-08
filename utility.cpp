@@ -89,6 +89,12 @@ float utility::random_uniform(){
   return unidist(rng);
 }
 
+vector<float> utility::random_uniform(int n){
+  vector<float> res(n);
+  for (auto &x : res) x = unidist(rng);
+  return res;
+}
+
 point utility::random_point_polar(point p, float r){
   boost::random::normal_distribution<float> n(0, r);
   return point(p.x + n(rng), p.y + n(rng));
@@ -157,8 +163,94 @@ void utility::normalize_vector(vector<float> &x){
   }
 }
 
+float utility::vl2norm(vector<float> const &x){
+  float ss = 0;
+  for (auto &z : x) ss += z * z;
+  return sqrt(ss);
+}
+
+vector<float> utility::vdiff(vector<float> const &a, vector<float> const &b){
+  if (a.size() != b.size()){
+    cout << "vdiff: dimension mismatch" << endl;
+    exit(-1);
+  }
+
+  vector<float> res = a;
+  for (int i = 0; i < res.size(); i++){
+    res[i] -= b[i];
+  }
+
+  return res;
+}
+
+vector<float> utility::vadd(vector<float> const &a, vector<float> const &b){
+  if (a.size() != b.size()){
+    cout << "vdiff: dimension mismatch" << endl;
+    exit(-1);
+  }
+
+  vector<float> res = a;
+  for (int i = 0; i < res.size(); i++){
+    res[i] += b[i];
+  }
+
+  return res;
+}
+
+vector<float> utility::vscale(vector<float> a, float s){
+  for (auto &x : a) x *= s;
+  return a;
+}
+
 float utility::sigmoid(float x, float s){
   return s * atan(x / s) / (M_PI / 2);
+}
+
+vector<sint> utility::different_colors(int n){
+  int rep = 100;
+  int ncheck = n+2;
+  vector<vector<float> > buf(ncheck);
+
+  for (auto &x : buf) {
+    x = utility::random_uniform(3);
+  }
+
+  buf[n] = {0,0,0}; // space color
+  buf[n+1] = {150 / (float)256, 150 / (float)256, 150 / (float)256}; // neutral color
+
+  for (int i = 0; i < rep; i++){
+    for (int j = 0; j < n; j++){
+      float dmin = 10;
+      int t = -1;
+      for (int k = 0; k < ncheck; k++){
+	if (j != k){
+	  float d = utility::vl2norm(utility::vdiff(buf[j], buf[k]));
+	  if (d < dmin){
+	    dmin = d;
+	    t = k;
+	  }
+	}
+      }
+
+      if (t > -1){
+	// move point j away from point t
+	vector<float> delta = utility::vdiff(buf[j], buf[t]);
+	buf[j] = utility::vadd(buf[j], utility::vscale(delta, 0.1));
+	for (int k = 0; k < 3; k++) buf[j][k] = fmin(fmax(buf[j][k], 0), 1);
+      }
+    }
+  }
+
+  // compile result
+  vector<sint> res(n);
+  for (int i = 0; i < n; i++){
+    sint red = buf[i][0] * 255;
+    sint green = buf[i][1] * 255;
+    sint blue = buf[i][2] * 255;
+    res[i] = (red << 16) | (green << 8) | blue | 0xff000000;
+  }
+
+  return res;
 }
 
 // p > 0

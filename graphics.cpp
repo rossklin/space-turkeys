@@ -14,6 +14,13 @@ sf::Color st3::graphics::sfcolor(sint c){
   return sf::Color(mask & (c >> 16), mask & (c >> 8), mask & c, mask & (c >> 24));
 }
 
+sf::Color graphics::fade_color(sf::Color from, sf::Color to, float r){
+  return sf::Color(from.r + r * (to.r - from.r), 
+		   from.g + r * (to.g - from.g), 
+		   from.b + r * (to.b - from.b), 
+		   from.a + r * (to.a - from.a));
+}
+
 void st3::graphics::initialize(){
   
   // setup load text

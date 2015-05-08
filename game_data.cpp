@@ -54,7 +54,7 @@ void game_data::relocate_ships(command &c, set<idtype> &sh, idtype owner){
     idtype sf = ships[i].fleet_id;
     fleets[sf].ships.erase(i);
     if (fleets[sf].ships.empty()){
-      fleets.erase(sf);
+      remove_fleet(sf);
       cout << "relocate ships: erase fleet " << sf << ", total " << fleets.size() << " fleets." << endl;
     }
 
@@ -128,7 +128,7 @@ void game_data::set_fleet_commands(idtype id, list<command> commands){
 
   // check remove
   if (s.ships.empty()){
-    fleets.erase(id);
+    remove_fleet(id);
   }
 }
 
@@ -440,7 +440,7 @@ void game_data::ship_land(idtype ship_id, idtype solar_id){
   fleets[fid].ships.erase(ship_id);
 
   // remove fleet if empty
-  if (fleets[fid].ships.empty()) fleets.erase(fid);
+  if (fleets[fid].ships.empty()) remove_fleet(fid);
 
   // debug output
   cout << "landed ship " << ship_id << " on solar " << solar_id << endl;
@@ -513,6 +513,11 @@ bool game_data::ship_fire(idtype sid, idtype tid){
   return true; // indicate ship initiative is over
 }
 
+void game_data::remove_fleet(idtype i){
+  fleets.erase(i);
+  remove_entities.push_back(identifier::make(identifier::fleet, i));
+}
+
 void game_data::remove_ship(idtype i){
   ship &s = ships[i];
 
@@ -523,7 +528,7 @@ void game_data::remove_ship(idtype i){
   
   // check if fleet is empty
   if (fleets[s.fleet_id].ships.empty()){
-    fleets.erase(s.fleet_id);
+    remove_fleet(s.fleet_id);
     cout << " --> fleet " << s.fleet_id << " is empty, removing" << endl;
   }
 
@@ -848,6 +853,7 @@ void game_data::end_step(){
 
   for (auto & i : remove) {
     waypoints.erase(i);
+    remove_entities.push_back(identifier::make(identifier::waypoint, i));
     cout << "end_step: removed waypoint " << i << endl;
   }
 
@@ -921,6 +927,7 @@ game_data game_data::limit_to(idtype id){
   // load players and settings
   gc.players = players;
   gc.settings = settings;
+  gc.remove_entities = remove_entities;
 
   return gc;
 }

@@ -21,6 +21,7 @@ namespace st3{
     hm_t<idtype, solar::solar> solars;
     hm_t<idtype, player> players;
     hm_t<idtype, solar::choice_t> solar_choices;
+    std::list<source_t> remove_entities;
     game_settings settings;
     grid::tree *ship_grid;
     float dt;
@@ -42,6 +43,7 @@ namespace st3{
     void ship_bombard(idtype ship_id, idtype solar_id);
     bool ship_fire(idtype s, idtype t);
     void remove_ship(idtype id);
+    void remove_fleet(idtype id);
     void solar_tick(idtype id);
     void update_fleet_data(idtype id);
 

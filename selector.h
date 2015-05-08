@@ -23,12 +23,14 @@ namespace st3{
       int queue_level;
       bool selected;
       bool owned;
+      bool seen;
       bool area_selectable;
       sf::Color color;
       std::set<idtype> commands;
       std::set<idtype> allocated_ships;
       
       entity_selector(sf::Color c, bool o);
+      sf::Color get_color();
       virtual ~entity_selector();
       virtual bool contains_point(point p, float &d) = 0;
       virtual bool inside_rect(sf::FloatRect r);

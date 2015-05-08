@@ -19,12 +19,17 @@ source_t entity_selector::last_selected("");
 entity_selector::entity_selector(sf::Color c, bool o){
   color = c;
   owned = o;
+  seen = owned;
   area_selectable = true;
   selected = false;
   queue_level = 0;
 }
 
 entity_selector::~entity_selector(){}
+
+sf::Color entity_selector::get_color(){
+  return seen ? color : graphics::fade_color(color, sf::Color(150,150,150,10), 0.6);
+}
 
 bool entity_selector::inside_rect(sf::FloatRect r){
   return r.contains(get_position());
@@ -72,7 +77,7 @@ void solar_selector::draw(window_t &w){
   sf::CircleShape sol(radius);
   sol.setFillColor(graphics::solar_fill);
   sol.setOutlineThickness(-1);
-  sol.setOutlineColor(color);
+  sol.setOutlineColor(get_color());
   sol.setPosition(position.x - radius, position.y - radius);
   w.draw(sol);
   
@@ -85,14 +90,14 @@ void solar_selector::draw(window_t &w){
 
   if (owned){
     sol.setRadius(vision);
+    sol.setPointCount(vision);
     sol.setFillColor(sf::Color::Transparent);
     sol.setOutlineThickness(-1);
     sol.setOutlineColor(sf::Color(40, 200, 60, 100));
-    sol.setPosition(position.x - vision, position.y - vision);
+    sol.setPosition(position - point(vision, vision));
     w.draw(sol);
+    w.draw(text);
   }
-
-  w.draw(text);
 }
 
 bool solar_selector::isa(string t){
@@ -168,7 +173,7 @@ point waypoint_selector::get_position(){
 void waypoint_selector::draw(window_t &w){
   sf::CircleShape s(radius);
   s.setFillColor(selected ? sf::Color(255,255,255,100) : sf::Color(0,0,0,0));
-  s.setOutlineColor(color);
+  s.setOutlineColor(get_color());
   s.setOutlineThickness(1);
   s.setPosition(position - point(radius, radius));
   w.draw(s);

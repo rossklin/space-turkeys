@@ -77,6 +77,8 @@
 ** server game
 *** send victor to client on game completion
 *** colonisation/transport ships
+*** ship experience and fleet commanders
+*** treasures in space
 *** emulate simultaneous evaluation of ship_bombard
 *** add ship rotation speed and ships can only fire forward
 ** client game
@@ -95,12 +97,10 @@
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
 * bugs
-** waypoints not dissapearing
 * issues
 ** socket_t exits on disconnect in thread, causes segfault
 ** [low priority] minimap bounding box drawn incorrectly after window resize
 ** [low priority] segfault after client side target missing, some turns after resume from suspend.
-** [low priority] player colors difficult to distinguish
 ** [low priority] command_gui scales with zoom
 ** [low priority] area select goes over command gui
 ** [low priority] ship classes should not be in solar?
@@ -116,7 +116,9 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** fixed: player colors difficult to distinguish
 * fixed
+** fixed: waypoints not dissapearing (had erased waypoint removal)
 ** fleets sent to waypoint remain idle
 ** fog of war
 *** [done] give ships attribute sfloat vision

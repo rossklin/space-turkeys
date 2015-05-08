@@ -32,6 +32,7 @@ namespace st3{
     const sf::Color fleet_outline(40,60,180,200);
 
     sf::Color sfcolor(sint);
+    sf::Color fade_color(sf::Color from, sf::Color to, float r);
 
     void initialize();
     void draw_ship(sf::RenderWindow &w, ship s, sf::Color c, float sc = 1);
