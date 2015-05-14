@@ -401,22 +401,20 @@ void st3::client::game::reload_data(game_data &g){
 	  wp -> ships += fs -> ships;
 	  buf.insert(wp);
 	}
-      }else{
+      }else if (entity_selectors.count(fs -> com.target)){
 	command c = fs -> com;
+	point from = fs -> position;
+	point to = entity_selectors[fs -> com.target] -> get_position();
+	// assure we don't assign ships which have been killed
+	c.ships = c.ships & fs -> ships;
+	cout << " -> adding fleet fommand from " << c.source << " to " << c.target << " with " << c.ships.size() << " ships." << endl;
 
-	point from, to;
-	if (g.target_position(c.source, from) && g.target_position(c.target, to)){
-	  // assure we don't assign ships which have been killed
-	  c.ships = c.ships & fs -> ships;
-	  cout << " -> adding fleet fommand from " << c.source << " to " << c.target << " with " << c.ships.size() << " ships." << endl;
-
-	  add_command(c, from, to, false);
-	  if (entity_selectors[c.target] -> isa(identifier::waypoint)){
-	    buf.insert((waypoint_selector*)entity_selectors[c.target]);
-	  }
-	}else{
-	  cout << "client side target position miss!" << endl;
+	add_command(c, from, to, false);
+	if (entity_selectors[c.target] -> isa(identifier::waypoint)){
+	  buf.insert((waypoint_selector*)entity_selectors[c.target]);
 	}
+      }else{
+	cout << "client side target miss: " << fs -> com.target << endl;
       }
     }
   }
@@ -429,33 +427,34 @@ void st3::client::game::reload_data(game_data &g){
     waypoint_selector *s = q.front();
     q.pop();
     for (auto c : s -> pending_commands){
-      entity_selector *t = entity_selectors[c.target];
-      idtype cid = command_id(c);
-      if (cid > -1){
-	// command selector already added
-	command_selector *cs = command_selectors[cid];
+      if (entity_selectors.count(c.target)){
+	entity_selector *t = entity_selectors[c.target];
+	idtype cid = command_id(c);
+	if (cid > -1){
+	  // command selector already added
+	  command_selector *cs = command_selectors[cid];
 	
-	// add new ships to command selector
-	cs -> ships += c.ships & s -> ships;
-	cout << "filling cs " << cid << " with " << cs -> ships.size() << " ships" << endl;
+	  // add new ships to command selector
+	  cs -> ships += c.ships & s -> ships;
+	  cout << "filling cs " << cid << " with " << cs -> ships.size() << " ships" << endl;
 	
-	// add new ships to target waypoint
-	if (t -> isa(identifier::waypoint)){
-	  waypoint_selector *ws = (waypoint_selector*)t;
-	  ws -> ships += cs -> ships;
-	}
-      }else{
-	point from, to;
-	if (g.target_position(c.source, from) && g.target_position(c.target, to)){
+	  // add new ships to target waypoint
+	  if (t -> isa(identifier::waypoint)){
+	    waypoint_selector *ws = (waypoint_selector*)t;
+	    ws -> ships += cs -> ships;
+	  }
+	}else{
+	  point from = s -> get_position();
+	  point to = t -> get_position();
 	  c.ships = c.ships & s -> ships;
 	  add_command(c, from, to, false);
-	}else{
-	  cout << "client side target position miss!" << endl;
 	}
-      }
 
-      if (t -> isa(identifier::waypoint)){
-	q.push((waypoint_selector*)t);
+	if (t -> isa(identifier::waypoint)){
+	  q.push((waypoint_selector*)t);
+	}
+      }else{
+	cout << "client side target miss: " << c.target << endl;
       }
     }
   }
@@ -816,9 +815,9 @@ void game::run_solar_gui(source_t key){
     cout << "run solar gui: no owner!" << endl;
     exit(-1);
   }
-  solar_gui gui(window, sol, players[sol.owner].research_level);
   solar::choice_t sc = solar_choices[key];
-  if (gui.run(sc)){
+  solar_gui gui(window, sol, sc, players[sol.owner].research_level);
+  if (gui.run()){
     solar_choices[key] = sc;
     cout << "added solar choice for " << key << endl;
   }else{

@@ -168,21 +168,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar::solar &g){
 
 // solar choice
 sf::Packet& st3::operator <<(sf::Packet& packet, const solar::choice_t &g){
-  return packet
-    << g.population
-    << g.dev.new_research
-    << g.dev.industry
-    << g.dev.resource
-    << g.dev.fleet_growth;
+  return packet << g.workers << g.sector << g.subsector;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, solar::choice_t &g){
-  return packet
-    >> g.population
-    >> g.dev.new_research
-    >> g.dev.industry
-    >> g.dev.resource
-    >> g.dev.fleet_growth;
+  return packet >> g.workers >> g.sector >> g.subsector;
 }
 
 // fleet

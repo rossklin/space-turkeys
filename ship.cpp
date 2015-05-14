@@ -19,7 +19,8 @@ ship::ship(ship::class_t c, research &res){
   ship_class = c;
   was_killed = false;
 
-  if (c == solar::s_scout){
+  if (c == solar::ship_scout){
     speed += 1;
+    vision *= 1.5;
   }
 }

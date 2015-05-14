@@ -15,211 +15,187 @@ using namespace st3;
 
 const string tgui_root("external/share/tgui-0.6/");
 
+solar_gui::control::control(Gui &g){
+  label = Label::Ptr(g);
+  slider = Slider::Ptr(g);
+  feedback = Label::Ptr(g);
+}
+
+void solar_gui::control::setup(solar_gui::control_group *c,
+			       int id,
+			       string conf, 
+			       point pos, 
+			       point dims, 
+			       string name, 
+			       float base_value,
+			       float value, 
+			       float cap, 
+			       float deriv){
+  label -> load(conf);
+  label -> setPosition(pos.x, pos.y);
+  label -> setSize(dims.x/4, dims.y);
+  label -> setText(name + (base_value >= 0 ? ": " + to_string(base_value) : ""));
+  label -> setTextSize(12);
+
+  slider -> load(conf);
+  slider -> setVerticalScroll(false);
+  slider -> setPosition(pos.x + dims.x/4, pos.y);
+  slider -> setSize(dims.x / 2, dims.y);
+  slider -> setMaximum(cap);
+  slider -> setValue(value);
+  slider -> setCallbackId(id);
+  slider -> bindCallbackEx(&solar_gui::control_group::update_value, c, Slider::ValueChanged); 
+
+  feedback -> load(conf);
+  feedback -> setPosition(pos.x + 3 * dims.x / 4, pos.y);
+  feedback -> setSize(dims.x / 4, dims.y);
+  feedback -> setText(to_string(value) + "(" + to_string(cap) + "), inc: " + to_string(deriv));
+  feedback -> setTextSize(12);
+}
+
+void solar_gui::control::update(float deriv){
+  feedback -> setText(to_string(slider -> getValue()) + "(" + to_string(slider -> getMaximum()) + "), inc: " + to_string(deriv));
+}
+
+solar_gui::control_group::control_group(solar_gui *g, 
+					int i,
+					string conf,
+					string title,
+					point pos,
+					point label_dims,
+					vector<string> names,
+					vector<float> values,
+					vector<float> proportions,
+					float total,
+					solar_gui::incfunc fincs,
+					float c) : 
+  label((Gui&)*g), 
+  cap(c), 
+  incs(fincs), 
+  sg(g), 
+  id(i){
+
+  int n = names.size();
+  float label_offset = label_dims.y;
+  float sum = 0;
+  for (auto x : proportions) sum += x;
+  if (sum > 1) utility::normalize_vector(proportions);
+
+  label -> load(conf);
+  label -> setPosition(pos.x, pos.y);
+  label -> setSize(label_dims.x, label_dims.y);
+  label -> setText(title + ": " + to_string(g -> s.dev.industry[id]));
+  label -> setTextSize(12);
+
+  cout << "control_group: total = " << total << ", props = " << proportions << endl;
+  
+  controls.resize(n);
+  for (int i = 0; i < n; i++){
+    controls[i] = new control((Gui&)*g);
+    controls[i] -> setup(this,
+			 i,
+			 conf,
+			 point(pos.x, pos.y + label_offset),
+			 label_dims,
+			 names[i], 
+			 values.empty() ? -1 : values[i],
+			 fmin(total, cap) * proportions[i],
+			 cap,
+			 incs(i, cap * proportions[i]));
+    label_offset += label_dims.y;
+  }
+}
+
+void solar_gui::control_group::update_value(Callback const& c){
+  Slider *s = (Slider*)c.widget;
+  float sum = 0;
+  float scap = fmin(cap, sg -> get_control_cap(id));
+  for (auto x : controls) sum += x -> slider -> getValue();
+  sum -= s -> getValue();
+
+  if (sum > scap){
+    cout << "update_value: exclusive sum exceeds cap!" << endl;
+    exit(-1);
+  }
+
+  if (sum + s -> getValue() > scap){
+    s -> setValue(scap - sum);
+  }
+
+  controls[c.id] -> update(incs(c.id, s -> getValue()));
+  sg -> update_popsum();
+}
+
+float solar_gui::control_group::get_sum(){
+  float s = 0;
+  for (auto x : controls) s += x -> slider -> getValue();
+  return s;
+}
+
+solar_gui::control_group::~control_group(){
+  for (auto x : controls) delete x;
+}
+
 // should draw and handle event
-solar_gui::solar_gui(sf::RenderWindow &w, solar::solar sol, research res) : Gui(w), window(w), tabs(*this), s(sol), r(res){
+solar_gui::solar_gui(sf::RenderWindow &w, solar::solar sol, solar::choice_t &cc, research res) : Gui(w), window(w), s(sol), c(cc), r(res), header_population(*this){
   setGlobalFont(graphics::default_font);
   done = false;
 
   point margin(10, 10);
   float bottom_panel_height = 40;
   point dimension = point(w.getSize().x, w.getSize().y) - utility::scale_point(margin, 2) - point(0, bottom_panel_height);
-  point label_size(dimension.x / 2, 20);
-  float label_offset = 0;
+  point label_size(dimension.x / 4, 20);
+  float label_offset = margin.y;
   string black = tgui_root + "widgets/Black.conf";
-  list<pair<string, string> > label_text;
-
-  // setup panels
-  topics = {
-    "Overview", 
-    "Population", 
-    "Industry", 
-    "Shipyard",
-    "Research",
-    "Resource"
-  };
-
-  tabs -> load(black);
-  tabs -> setPosition(margin.x, margin.y);
-  for (auto x : topics) tabs -> add(x);
-  tabs -> select(topics[0]);
-  tabs -> bindCallbackEx(&solar_gui::callback_panel, this, Tab::TabChanged);
-
-  for (auto x : topics){
-    panels[x] = Panel::Ptr(*this);
-    panels[x] -> setSize(dimension.x, dimension.y - tabs -> getTabHeight());
-    panels[x] -> setPosition(margin.x, margin.y + tabs -> getTabHeight());
-    panels[x] -> setBackgroundColor(sf::Color::Transparent);
-    panels[x] -> hide();
-  }
 
   // setup overview
-  label_text.push_back(make_pair("Population", to_string(s.population_number) + "(happy: " + to_string(s.population_happy * s.population_number) + ")"));
-  label_text.push_back(make_pair("Defense", to_string(s.defense_current) + "(cap: " + to_string(s.defense_capacity) + ")"));
-
-  label_text.push_back(make_pair("Industries", ""));
-  label_text.push_back(make_pair(" - Infrastructure", to_string(s.dev.industry[solar::i_infrastructure])));
-  label_text.push_back(make_pair(" - Agriculture", to_string(s.dev.industry[solar::i_agriculture])));
-  label_text.push_back(make_pair(" - Shipyard", to_string(s.dev.industry[solar::i_ship])));
-  label_text.push_back(make_pair(" - Resource mining", to_string(s.dev.industry[solar::i_resource])));
-  label_text.push_back(make_pair(" - Research facilities", to_string(s.dev.industry[solar::i_research])));
-
-  label_text.push_back(make_pair("Resources", ""));
-  label_text.push_back(make_pair(" - Metal", to_string(s.dev.resource[solar::o_metal])));
-  label_text.push_back(make_pair(" - Gas", to_string(s.dev.resource[solar::o_gas])));
-
-  label_text.push_back(make_pair("Shipyard", ""));
-  label_text.push_back(make_pair(" - Scout", to_string(s.dev.fleet_growth[solar::s_scout])));
-  label_text.push_back(make_pair(" - Fighter", to_string(s.dev.fleet_growth[solar::s_fighter])));
-  label_text.push_back(make_pair(" - Bomber", to_string(s.dev.fleet_growth[solar::s_bomber])));
-
-  label_text.push_back(make_pair("Research", ""));
-  label_text.push_back(make_pair(" - population", to_string(r.field[research::r_population])));
-		       label_text.push_back(make_pair(" - industry", to_string(r.field[research::r_industry])));
-		       label_text.push_back(make_pair(" - ship", to_string(r.field[research::r_ship])));
-
-  for (auto x : label_text){
-    Label::Ptr ll, lr;
-
-    ll -> load(black);
-    ll -> setPosition(margin.x, margin.y + label_offset);
-    ll -> setSize(label_size.x, label_size.y);
-    ll -> setText(x.first + ":");
-    ll -> setTextSize(12);
-    panels["Overview"] -> add(ll);
-
-    lr -> load(black);
-    lr -> setPosition(margin.x + dimension.x / 2, margin.y + label_offset);
-    lr -> setSize(label_size.x, label_size.y);
-    lr -> setText(x.second);
-    lr -> setTextSize(12);
-    panels["Overview"] -> add(lr);
-    label_offset += label_size.y;
-  }
-
-  // headers
-  label_size.x = dimension.x;
-  label_size.y = 40;
-  label_offset = 60;
-
   header_population -> load(black);
-  header_population -> setPosition(margin.x, 0);
-  header_population -> setSize(label_size.x, label_size.y);
-  panels["Population"] -> add(header_population);
-  header_industry -> load(black);
-  header_industry -> setPosition(margin.x, 0);
-  header_industry -> setSize(label_size.x, label_size.y);
-  panels["Industry"] -> add(header_industry);
-  header_research -> load(black);
-  header_research -> setPosition(margin.x, 0);
-  header_research -> setSize(label_size.x, label_size.y);
-  panels["Research"] -> add(header_research);
-  header_resource -> load(black);
-  header_resource -> setPosition(margin.x, 0);
-  header_resource -> setSize(label_size.x, label_size.y);
-  panels["Resource"] -> add(header_resource);
-  header_ship -> load(black);
-  header_ship -> setPosition(margin.x, 0);
-  header_ship -> setSize(label_size.x, label_size.y);
-  panels["Shipyard"] -> add(header_ship);
+  header_population -> setPosition(margin.x, label_offset);
+  header_population -> setSize(dimension.x, label_size.y);
+  header_population -> setTextSize(12);
 
-  // setup population
-  label_size.x = dimension.x / 4;
+  label_offset += label_size.y;
 
-  population_slider.resize(solar::p_num);
-  for (int i = 0; i < solar::p_num; i++){
-    Label::Ptr lpop;
-    lpop -> load(black);
-    lpop -> setPosition(margin.x, margin.y + label_offset + i * label_size.y);
-    lpop -> setSize(label_size.x, label_size.y);
-    lpop -> setText(solar::development::population_names[i] + ":");
-    panels["Population"] -> add(lpop);
+  // setup controls
+  controls.resize(solar::work_num);
+  for (int i = 0; i < solar::work_num; i++){
+    vector<float> values;
+    
+    switch(i){
+    case solar::work_expansion:
+      values.clear();
+      break;
+    case solar::work_ship:
+      values = s.dev.fleet_growth;
+      break;
+    case solar::work_research:
+      values = r.field;
+      break;
+    case solar::work_resource:
+      values = s.dev.resource;
+      break;
+    }
 
-    population_slider[i] -> load(black);
-    population_slider[i] -> setPosition(margin.x + label_size.x, margin.y + label_offset + i * label_size.y);
-    population_slider[i] -> setVerticalScroll(false);
-    population_slider[i] -> setSize(dimension.x - label_size.x - margin.x, label_size.y / 3);
-    population_slider[i] -> setMaximum(slider_count);
-    population_slider[i] -> bindCallback(&solar_gui::update_info, this, Slider::ValueChanged);
-    panels["Population"] -> add(population_slider[i]);
+    incfunc f = bind(&solar::solar::sub_increment, &s, r, i, placeholders::_1, placeholders::_2);
+    controls[i] = new solar_gui::control_group
+      (this,
+       i,
+       black,
+       solar::development::work_names[i],
+       point(margin.x, margin.y + label_offset),
+       point(dimension.x, label_size.y),
+       solar::development::sub_names[i],
+       values,
+       c.subsector[i],
+       s.population_number * c.workers * c.sector[i],
+       f,
+       s.dev.industry[i]
+       );
+
+    label_offset += (solar::development::sub_names[i].size() + 1) * label_size.y;
   }
 
-  // setup industry
-  industry_slider.resize(solar::i_num);
-  for (int i = 0; i < solar::i_num; i++){
-    Label::Ptr lind;
-    lind -> load(black);
-    lind -> setPosition(margin.x, margin.y + label_offset + i * label_size.y);
-    lind -> setSize(label_size.x, label_size.y);
-    lind -> setText(solar::development::industry_names[i] + ":");
-    panels["Industry"] -> add(lind);
-
-    industry_slider[i] -> load(black);
-    industry_slider[i] -> setPosition(margin.x + label_size.x, margin.y + label_offset + i * label_size.y);
-    industry_slider[i] -> setVerticalScroll(false);
-    industry_slider[i] -> setSize(dimension.x - label_size.x - margin.x, label_size.y / 3);
-    industry_slider[i] -> setMaximum(slider_count);
-    industry_slider[i] -> bindCallback(&solar_gui::update_info, this, Slider::ValueChanged);
-    panels["Industry"] -> add(industry_slider[i]);
-  }  
-
-  // setup research
-  research_slider.resize(research::r_num);
-  for (int i = 0; i < research::r_num; i++){
-    Label::Ptr lind;
-    lind -> load(black);
-    lind -> setPosition(margin.x, margin.y + label_offset + i * label_size.y);
-    lind -> setSize(label_size.x, label_size.y);
-    lind -> setText(solar::development::research_names[i] + ":");
-    panels["Research"] -> add(lind);
-
-    research_slider[i] -> load(black);
-    research_slider[i] -> setPosition(margin.x + label_size.x, margin.y + label_offset + i * label_size.y);
-    research_slider[i] -> setVerticalScroll(false);
-    research_slider[i] -> setSize(dimension.x - label_size.x - margin.x, label_size.y / 3);
-    research_slider[i] -> setMaximum(slider_count);
-    research_slider[i] -> bindCallback(&solar_gui::update_info, this, Slider::ValueChanged);
-    panels["Research"] -> add(research_slider[i]);
-  }  
-
-  // setup shipyard
-  ship_slider.resize(solar::s_num);
-  for (int i = 0; i < solar::s_num; i++){
-    Label::Ptr lind;
-    lind -> load(black);
-    lind -> setPosition(margin.x, margin.y + label_offset + i * label_size.y);
-    lind -> setSize(label_size.x, label_size.y);
-    lind -> setText(solar::development::ship_names[i] + ":");
-    panels["Shipyard"] -> add(lind);
-
-    ship_slider[i] -> load(black);
-    ship_slider[i] -> setPosition(margin.x + label_size.x, margin.y + label_offset + i * label_size.y);
-    ship_slider[i] -> setVerticalScroll(false);
-    ship_slider[i] -> setSize(dimension.x - label_size.x - margin.x, label_size.y / 3);
-    ship_slider[i] -> setMaximum(slider_count);
-    ship_slider[i] -> bindCallback(&solar_gui::update_info, this, Slider::ValueChanged);
-    panels["Shipyard"] -> add(ship_slider[i]);
-  }  
-
-  // setup resource
-  resource_slider.resize(solar::o_num);
-  for (int i = 0; i < solar::o_num; i++){
-    Label::Ptr lind;
-    lind -> load(black);
-    lind -> setPosition(margin.x, margin.y + label_offset + i * label_size.y);
-    lind -> setSize(label_size.x, label_size.y);
-    lind -> setText(solar::development::resource_names[i] + ":");
-    panels["Resource"] -> add(lind);
-
-    resource_slider[i] -> load(black);
-    resource_slider[i] -> setPosition(margin.x + label_size.x, margin.y + label_offset + i * label_size.y);
-    resource_slider[i] -> setVerticalScroll(false);
-    resource_slider[i] -> setSize(dimension.x - label_size.x - margin.x, label_size.y / 3);
-    resource_slider[i] -> setMaximum(slider_count);
-    resource_slider[i] -> bindCallback(&solar_gui::update_info, this, Slider::ValueChanged);
-    panels["Resource"] -> add(resource_slider[i]);
-  }
-
-  panels["Overview"] -> show();
+  update_popsum();
 
   Button::Ptr b(*this);
   b -> load(black);
@@ -236,87 +212,61 @@ solar_gui::solar_gui(sf::RenderWindow &w, solar::solar sol, research res) : Gui(
   bc -> bindCallback(bind(&solar_gui::callback_done, this, false), Button::LeftMouseClicked);
 }
 
-float solar_gui::slider_sum(vector<Slider::Ptr> &v){
-  float sum = 0;
-  for (auto &x : v) sum += x -> getValue();
-  return sum;
-}
-
-void solar_gui::update_info(){
-  header_population -> setText("Total population: " + to_string(s.population_number));
-
-  header_industry -> setText("Available workers: " + to_string(population_slider[solar::p_industry] -> getValue() / slider_sum(population_slider) * s.population_number));
-
-  header_research -> setText("Available researchers: " + to_string(population_slider[solar::p_research] -> getValue() / slider_sum(population_slider) * s.population_number));
-
-  header_resource -> setText("Available miners: " + to_string(population_slider[solar::p_resource] -> getValue() / slider_sum(population_slider) * s.population_number));
-
-  header_ship -> setText("Available ship engineers: " + to_string(population_slider[solar::p_industry] -> getValue() * industry_slider[solar::i_ship] -> getValue() / (slider_sum(population_slider) * slider_sum(industry_slider)) * s.population_number));
+solar_gui::~solar_gui(){
+  for (auto x : controls) delete x;
 }
 
 void solar_gui::callback_done(bool a){
   accept = a;
   done = true;
+  cout << "solar_gui: set accept = " << a << endl;
 }
 
-void solar_gui::callback_panel(const Callback &c){
-  Tab *tabs = (Tab*)c.widget;
-  for (auto &x : panels) x.second -> hide();
-  panels[tabs -> getSelected()] -> show();
+float solar_gui::get_control_cap(int id){
+  float sum = 0;
+  for (auto x : controls) sum += x -> get_sum();
+  sum -= controls[id] -> get_sum();
+  return s.population_number - sum;
 }
 
-void solar_gui::setup_controls(solar::choice_t c){
-  for (int i = 0; i < solar::p_num; i++){
-    population_slider[i] -> setValue(slider_count * c.population[i]);
-  }
-
-  for (int i = 0; i < solar::i_num; i++){
-    industry_slider[i] -> setValue(slider_count * c.dev.industry[i]);
-  }
-
-  for (int i = 0; i < research::r_num; i++){
-    research_slider[i] -> setValue(slider_count * c.dev.new_research[i]);
-  }
-
-  for (int i = 0; i < solar::o_num; i++){
-    resource_slider[i] -> setValue(slider_count * c.dev.resource[i]);
-  }
-
-  for (int i = 0; i < solar::s_num; i++){
-    ship_slider[i] -> setValue(slider_count * c.dev.fleet_growth[i]);
-  }
-
-  update_info();
+void solar_gui::update_popsum(){
+  float sum = 0;
+  for (auto x : controls) sum += x -> get_sum();
+  header_population -> setText("Population: " + to_string(s.population_number) + "(farmers: " + to_string(s.population_number - sum) + ", inc: " + to_string(s.pop_increment(r, s.population_number - sum)) + ")");
 }
 
 solar::choice_t solar_gui::evaluate(){
   solar::choice_t c;
-  for (int i = 0; i < solar::p_num; i++){
-    c.population[i] = population_slider[i] -> getValue() / (float)slider_count;
-  }
+  cout << "solar_gui::evaluate" << endl;
+  if (s.population_number <= 0) return c;
 
-  for (int i = 0; i < research::r_num; i++){
-    c.dev.new_research[i] = research_slider[i] -> getValue() / (float)slider_count;
-  }
+  float worker_sum = 0;
+  for (auto x : controls) worker_sum += x -> get_sum();
+  c.workers = worker_sum / s.population_number;
 
-  for (int i = 0; i < solar::i_num; i++){
-    c.dev.industry[i] = industry_slider[i] -> getValue() / (float)slider_count;
-  }
+  if (worker_sum > 0){
+    for (int i = 0; i < solar::work_num; i++){
+      c.sector[i] = controls[i] -> get_sum() / worker_sum;
+    }
 
-  for (int i = 0; i < solar::o_num; i++){
-    c.dev.resource[i] = resource_slider[i] -> getValue() / (float)slider_count;
-  }
+    for (int i = 0; i < solar::work_num; i++){
+      float csum = controls[i] -> get_sum();
+      if (csum > 0){
+	for (int j = 0; j < solar::development::sub_names[i].size(); j++){
+	  c.subsector[i][j] = controls[i] -> controls[j] -> slider -> getValue() / csum;
+	}
+      }
+      cout << "subsector " << i << ": " << c.subsector[i] << endl;
+    }
 
-  for (int i = 0; i < solar::s_num; i++){
-    c.dev.fleet_growth[i] = ship_slider[i] -> getValue() / (float)slider_count;
+    cout << "sector: " << c.sector << endl;
   }
-
+  
+  cout << "solar_gui::evaluate: returning" << endl;
   return c;
 }
 
-bool solar_gui::run(solar::choice_t &c){
-  setup_controls(c);
-
+bool solar_gui::run(){
   while (!done){
     if (!window.isOpen()) {
       return false;

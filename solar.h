@@ -12,35 +12,33 @@ namespace st3{
   namespace solar{
     extern idtype id_counter;
 
-    // enums for development data
-    enum d_population{
-      p_research = 0,
-      p_industry,
-      p_resource,
-      p_agriculture,
-      p_num
-    };
+    /* // enums for development data */
+    /* enum d_population{ */
+    /*   p_industry = 0, */
+    /*   p_resource, */
+    /*   p_agriculture, */
+    /*   p_num */
+    /* }; */
 
-    enum d_industry{
-      i_infrastructure = 0,
-      i_agriculture,
-      i_ship,
-      i_research,
-      i_resource,
-      i_num
+    enum d_work{
+      work_expansion = 0,
+      work_ship,
+      work_research,
+      work_resource,
+      work_num
     };
 
     enum d_resource{
-      o_metal = 0,
-      o_gas,
-      o_num
+      resource_metal = 0,
+      resource_gas,
+      resource_num
     };
 
     enum d_ship{
-      s_scout = 0,
-      s_fighter,
-      s_bomber,
-      s_num
+      ship_scout = 0,
+      ship_fighter,
+      ship_bomber,
+      ship_num
     };
 
     extern const float research_per_person;
@@ -55,29 +53,36 @@ namespace st3{
     struct development{
       static std::vector<std::vector<float> > ship_cost;
       static std::vector<float> ship_buildtime;
-      static std::vector<std::string> population_names;
-      static std::vector<std::string> industry_names;
-      static std::vector<std::string> research_names;
-      static std::vector<std::string> resource_names;
-      static std::vector<std::string> ship_names;
+      static std::vector<std::string> work_names;
+      static std::vector<std::vector<std::string> > sub_names;
       static void initialize();
 
-      std::vector<float> fleet_growth; // accumulated ships per type
-      std::vector<float> new_research; // accumulated research per field
-      std::vector<float> industry; // population that can be allocated per branch
-      std::vector<float> resource; // resources in storage per type
+      // main work sectors
+      std::vector<sfloat> industry; 
+
+      // sub sectors
+      std::vector<sfloat> fleet_growth;
+      std::vector<sfloat> new_research;
+      std::vector<sfloat> resource;
     };
 
     struct choice_t{
-      std::vector<float> population; // proportion to allocate per sector
-      development dev;
-
+      float workers;
+      void normalize();      
       choice_t();
-      void normalize();
+      std::vector<sfloat> sector; 
+      std::vector<std::vector<sfloat> > subsector;
     };
 
-    struct solar{
+    /* struct choice_t{ */
+    /*   std::vector<sfloat> population; // proportion to allocate per sector */
+    /*   development dev; */
 
+    /*   choice_t(); */
+    /*   void normalize(); */
+    /* }; */
+
+    struct solar{
       // evolution data
       development dev;
       sfloat population_number; // total population
@@ -97,6 +102,8 @@ namespace st3{
       solar();
       float resource_constraint(std::vector<float> r); // how many r can be used before resource runs out?
       std::string get_info();
+      float sub_increment(research const &r, int sub_idx, int i, float n);
+      float pop_increment(research const &r, float n);
     };
   };
 };

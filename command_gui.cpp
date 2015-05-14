@@ -16,10 +16,10 @@ using namespace st3;
 command_gui::command_gui(idtype cid, sf::RenderWindow *window, hm_t<idtype, ship> s, set<idtype> prealloc, point p, sf::Color c){
   w = window;
   comid = cid;
-  bounds = sf::FloatRect(p.x, p.y, table_width + 2 * padding, solar::s_num * table_height + 2 * padding);
+  bounds = sf::FloatRect(p.x, p.y, table_width + 2 * padding, solar::ship_num * table_height + 2 * padding);
 
-  tables.resize(solar::s_num);
-  for (int i = 0; i < solar::s_num; i++){
+  tables.resize(solar::ship_num);
+  for (int i = 0; i < solar::ship_num; i++){
     // collect data for this ship class table
     hm_t<idtype, ship> sbuf;
     set<idtype> pbuf;

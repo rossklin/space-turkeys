@@ -36,14 +36,14 @@ void st3::graphics::draw_ship(sf::RenderWindow &w, ship s, sf::Color col, float 
   sf::Color cnose(255,200,180,200);
 
   switch (s.ship_class){
-  case solar::s_scout:
+  case solar::ship_scout:
     svert.resize(4);
     svert[0] = sf::Vertex(point(2, 0), col);
     svert[1] = sf::Vertex(point(-2, -1), col);
     svert[2] = sf::Vertex(point(-2, 1), col);
     svert[3] = sf::Vertex(point(2, 0), col);
     break;
-  case solar::s_fighter:
+  case solar::ship_fighter:
     svert.resize(5);
     svert[0] = sf::Vertex(point(2, 0), cnose);
     svert[1] = sf::Vertex(point(-2, -1), col);
@@ -51,7 +51,7 @@ void st3::graphics::draw_ship(sf::RenderWindow &w, ship s, sf::Color col, float 
     svert[3] = sf::Vertex(point(-2, 1), col);
     svert[4] = sf::Vertex(point(2, 0), cnose);
     break;
-  case solar::s_bomber:
+  case solar::ship_bomber:
     svert.resize(7);
     svert[0] = sf::Vertex(point(2, 0), col);
     svert[1] = sf::Vertex(point(0, -3), cnose);

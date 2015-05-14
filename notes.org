@@ -1,9 +1,7 @@
 * currently working on
-** solar gui
-   solar tick equations
+** implement solar::solar::[pop|sub]_increment
 * long term goals
 ** strategy
-*** development: focus on infrastructure, research or industry
 *** different solars have different resources
     specific research projects
     specific production
@@ -36,7 +34,8 @@
     Each solar's population has trends of opinion concerning
     development focus and diplomacy
 ** tactics
-*** ship components
+*** ships
+**** ship components
     construct on grid with structure components? 
     each component has a type, size, energy usage, cost...
 **** engine
@@ -46,18 +45,24 @@
 **** hull
 **** life support
 **** cargo hold
-*** ship types
-**** bombers
+**** ship types
+***** bombers
      good at bombing solars
      bad at fighting any other ship
-**** fighters
+***** fighters
      good at fighting battleships
      bad at bombing solars
-**** battleships
+***** battleships
      good at destroying bombers
      bad at fighting fighters
-**** transport
+***** transport
      automatically deployed ship for trade agreements
+**** ship experience and fleet commanders
+**** add ship rotation speed and ships can only fire forward
+** world
+*** generate map while exploring
+*** define discovered area for players
+*** treasures in space
 *** terrain types
 **** nebula
      damaging area with low sight
@@ -71,21 +76,20 @@
      find resources
      [low shields] risk damage
 *** moving solars
-*** fog of war
 *** barbarians
 * basic goals
 ** server game
+*** ability to build defense
+*** faster initial expansion
+*** remove waypoints with neither incoming nor outgoing commands
 *** send victor to client on game completion
 *** colonisation/transport ships
-*** ship experience and fleet commanders
-*** treasures in space
 *** emulate simultaneous evaluation of ship_bombard
-*** add ship rotation speed and ships can only fire forward
 ** client game
-*** add attribute bool entity_selector.seen
-    store entity selectors, but unset seen each round. Show non-seen
-    entities as semi-transparent, non-interactive.
-*** display "ready to play"
+*** templates and feedback in solar gui
+    show per round increments in overview
+*** clickable minimap
+*** choice/evolution: display ready players, autoplay when all ready
 *** display victor
 *** command_gui should have option to allocate X ships of type T
 *** simulation: interpolate using ship velocity
@@ -96,7 +100,12 @@
     messages such as "your fleet was destroyed" or "your solar X
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
+** distribution
+   cmake build in a build directory so one can clean
+   disable form_builder in tgui (check opts with ccmake)
 * bugs
+** fleets follow targets that leave sight
+** fleets follow last assigned in split
 * issues
 ** socket_t exits on disconnect in thread, causes segfault
 ** [low priority] minimap bounding box drawn incorrectly after window resize
@@ -116,8 +125,15 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-** fixed: player colors difficult to distinguish
+** [fixed for single fleet relocation] fleet targets are lost on split (new id)
+** fixed: orders targeting unseen targets disappear
+   also targeting fleets that leave sight
+** fixed a bug where bombarded solars get negative defense/population
 * fixed
+** add attribute bool entity_selector.seen
+    store entity selectors, but unset seen each round. Show non-seen
+    entities as semi-transparent, non-interactive.
+** fixed: player colors difficult to distinguish
 ** fixed: waypoints not dissapearing (had erased waypoint removal)
 ** fleets sent to waypoint remain idle
 ** fog of war
