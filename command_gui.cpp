@@ -224,7 +224,7 @@ bool command_table::handle_event(sf::Event e){
   switch (e.type){
   case sf::Event::MouseButtonReleased:
     if (e.mouseButton.button == sf::Mouse::Left){
-      p = w -> mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
+      p = point(e.mouseButton.x, e.mouseButton.y);
       if ((i = get_cache_index(p)) > -1){
 	move_ship(cache_ids[i]);
       }else if ((i = get_alloc_index(p)) > -1){
@@ -242,10 +242,10 @@ bool command_table::handle_event(sf::Event e){
 
     return bounds.contains(p);
   case sf::Event::MouseButtonPressed:
-    p = w -> mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
+    p = point(e.mouseButton.x, e.mouseButton.y);
     return bounds.contains(p);
   case sf::Event::MouseMoved:
-    p = w -> mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
+    p = point(e.mouseMove.x, e.mouseMove.y);
     if ((i = get_cache_index(p)) > -1){
       hover_index = i;
       hover_side = 0;

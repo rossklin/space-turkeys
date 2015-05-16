@@ -784,10 +784,12 @@ bool st3::client::game::select_command_at(point p){
       ready_ships[x] = ships[x];
     }
 
-    comgui = new command_gui(it -> first, &window, 
+    comgui = new command_gui(it -> first, 
+			     &window, 
 			     ready_ships,
 			     it -> second -> ships,
-			     utility::scale_point(it -> second -> from + it -> second -> to, 0.5), 
+			     // utility::scale_point(it -> second -> from + it -> second -> to, 0.5), 
+			     point(0,0),
 			     graphics::sfcolor(players[socket.id].color));
 
     return true;
@@ -1018,7 +1020,9 @@ void game::draw_interface_components(){
   }
 
   // draw command gui
+  window.setView(window.getDefaultView());
   if (comgui) comgui -> draw();
+  window.setView(view_game);
 
 }
 

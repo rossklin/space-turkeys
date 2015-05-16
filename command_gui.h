@@ -51,8 +51,8 @@ namespace st3{
     
   public:
     static constexpr float padding = 5;
-    static constexpr float table_width = 200;
-    static constexpr float table_height = 100;
+    static constexpr float table_width = 400;
+    static constexpr float table_height = 180;
 
     std::set<idtype> cached, allocated;
     idtype comid;
