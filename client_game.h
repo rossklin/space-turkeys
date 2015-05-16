@@ -26,6 +26,7 @@ namespace st3{
       sf::FloatRect srect;
       idtype comid;
       game_settings settings;
+      float dt;
 
       hm_t<idtype, player> players;
       hm_t<idtype, ship> ships;

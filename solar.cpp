@@ -14,11 +14,8 @@ vector<float> development::ship_buildtime;
 // vector<string> development::population_names;
 vector<string> development::work_names;
 vector<vector<string> > development::sub_names;
+vector<float> development::p3;
 
-const float st3::solar::research_per_person = 1e-3;
-const float st3::solar::industry_per_person = 2e-3;
-const float st3::solar::fleet_per_person = 2e-2;
-const float st3::solar::resource_per_person = 1e-1;
 const float st3::solar::births_per_person = 2e-3;
 const float st3::solar::deaths_per_person = 2e-3;
 const float st3::solar::agriculture_boost_coefficient = 1e3;
@@ -72,6 +69,13 @@ void development::initialize(){
 
   // work names
   sub_names[work_expansion] = work_names;
+
+  // production per person
+  p3.resize(work_num);
+  p3[work_research] = 1e-3;
+  p3[work_expansion] = 2e-3;
+  p3[work_ship] = 2e-2;
+  p3[work_resource] = 2e-2;
 }
 
 void choice_t::normalize(){
@@ -125,12 +129,40 @@ string st3::solar::solar::get_info(){
   return ss.str();
 }
 
+// increment per [sub]sector per unit time
 float st3::solar::solar::sub_increment(research const &r, int sector_idx, int sub_idx, float workers){
+  float rate;
+
   cout << "solar::sub_increment: " << sector_idx << "," << sub_idx << "," << workers << endl;
-  return -1;
+
+  switch(sector_idx){
+  case work_research:
+    rate = development::p3[work_research];
+    break;
+  case work_expansion:
+    rate = development::p3[work_expansion] * r.field[research::r_industry];
+    break;
+  case work_ship:
+    rate = development::p3[work_ship] * r.field[research::r_industry] / development::ship_buildtime[sub_idx];
+    break;
+  case work_resource:
+    rate = development::p3[work_resource] * r.field[research::r_industry];
+    break;
+  }
+
+  return rate * workers * population_happy;
 }
 
 float st3::solar::solar::pop_increment(research const &r, float farmers){
-  cout << "solar::pop_increment: " << farmers << endl;
-  return -1;
+  float food_cap = (1.5 + 0.01 * utility::sigmoid(r.field[research::r_population], agriculture_boost_coefficient)) * farmers;
+
+  float feed = feed_boost_coefficient * (food_cap - population_number) / population_number;
+
+  float birth_rate = births_per_person + feed;
+
+  float death_rate = deaths_per_person / (r.field[research::r_population] + 1) + fmax(-feed, 0);
+
+  cout << "pop: " << population_number << ", happy: " << population_happy << ", farmers: " << farmers << ", cap: " << food_cap << ", feed: " << feed << ", birth: " << birth_rate << ", death: " << death_rate << endl;
+
+  return (birth_rate - death_rate) * population_number;
 }

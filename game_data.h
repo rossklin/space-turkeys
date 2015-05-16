@@ -24,7 +24,7 @@ namespace st3{
     std::list<source_t> remove_entities;
     game_settings settings;
     grid::tree *ship_grid;
-    float dt;
+    sfloat dt;
     
     // apply_choice
     void apply_choice(choice c, idtype id);

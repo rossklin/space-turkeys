@@ -685,7 +685,6 @@ void game_data::build(){
   int ntest = 100;
   float unfairness = INFINITY;
   hm_t<idtype, idtype> test_homes;
-  int q_start = 10;
   int d_start = 20;
 
   for (int i = 0; i < ntest && unfairness > 0; i++){
@@ -700,14 +699,17 @@ void game_data::build(){
 	solar::solar &s = solars[x.second];
 	s.owner = x.first;
 	s.defense_current = s.defense_capacity = d_start;
-	for (int j = 0; j < q_start; j++){
-	  ship::class_t key = utility::random_uniform() < 0.5 ? solar::ship_scout : solar::ship_fighter;
-	  research rbase;
-	  ship sh(key, rbase);
-	  idtype id = ship::id_counter++;
-	  ships[id] = sh;
-	  s.ships.insert(id);
-	}
+	research rbase;
+
+	ship shs(solar::ship_scout, rbase);
+	idtype id = ship::id_counter++;
+	ships[id] = shs;
+	s.ships.insert(id);
+
+	ship shf(solar::ship_fighter, rbase);
+	id = ship::id_counter++;
+	ships[id] = shf;
+	s.ships.insert(id);
       }
     }
   }
@@ -743,7 +745,7 @@ void st3::game_data::solar_tick(idtype id){
   // capped population assignments
   P.resize(solar::work_num);
   for (i = 0; i < solar::work_num; i++){
-    P[i] = fmin(Ph * c.sector[i] * s.population_happy, s.dev.industry[i]);
+    P[i] = fmin(Ph * c.sector[i], s.dev.industry[i]);
     // cout << P[i] << ", ";
   }
   // cout << endl;
@@ -752,7 +754,7 @@ void st3::game_data::solar_tick(idtype id){
   // research
   for (i = 0; i < research::r_num; i++){
     float allocated = P[solar::work_research] * c.subsector[solar::work_research][i];
-    buf.dev.new_research[i] += solar::research_per_person * allocated * dt;
+    buf.dev.new_research[i] += s.sub_increment(r_base, solar::work_research, i, allocated) * dt;
     // cout << s.dev.new_research[i] << ", ";
   }
   // cout << endl;
@@ -763,7 +765,7 @@ void st3::game_data::solar_tick(idtype id){
   float i_cap = s.usable_area;
   for (i = 0; i < solar::work_num; i++){
     float allocated = P[solar::work_expansion] * c.subsector[solar::work_expansion][i];
-    float build = solar::industry_per_person * allocated * r_base.field[research::r_industry];
+    float build = s.sub_increment(r_base, solar::work_expansion, i, allocated);
 
     buf.dev.industry[i] += build * dt;
     i_sum += buf.dev.industry[i];
@@ -781,7 +783,7 @@ void st3::game_data::solar_tick(idtype id){
   for (i = 0; i < solar::ship_num; i++){
     vector<float> r = solar::development::ship_cost[i];
     float allocated = P[solar::work_ship] * c.subsector[solar::work_ship][i];
-    float build = solar::fleet_per_person * r_base.field[research::r_industry] * allocated / solar::development::ship_buildtime[i];
+    float build = s.sub_increment(r_base, solar::work_ship, i, allocated);
     build = fmin(build, s.resource_constraint(r));
     buf.dev.fleet_growth[i] += build * dt;
 
@@ -798,7 +800,7 @@ void st3::game_data::solar_tick(idtype id){
   // cout << "resource: ";
   for (i = 0; i < solar::resource_num; i++){
     float allocated = P[solar::work_resource] * c.subsector[solar::work_resource][i];
-    float delta = solar::resource_per_person * r_base.field[research::r_industry] * allocated;
+    float delta = s.sub_increment(r_base, solar::work_resource, i, allocated);
     float r = fmin(delta, s.resource[i]);
     buf.resource[i] -= r * dt; // resources on solar
     buf.dev.resource[i] += r * dt; // resources in storage
@@ -808,15 +810,10 @@ void st3::game_data::solar_tick(idtype id){
 
   // population
   float allocated = fmin(s.usable_area - i_sum, s.population_number * s.population_happy * (1 - c.workers));
-  float food_cap = (1.5 + 0.01 * utility::sigmoid(r_base.field[research::r_population], solar::agriculture_boost_coefficient)) * allocated;
-  float feed = solar::feed_boost_coefficient * (food_cap - s.population_number) / s.population_number;
-  float birth_rate = solar::births_per_person + feed;
-  float death_rate = solar::deaths_per_person / (r_base.field[research::r_population] + 1) + fmax(-feed, 0);
 
   cout << "population dynamics for " << id << " : " << endl;
-  cout << "pop: " << s.population_number << ", happy: " << s.population_happy << ", farmers: " << (s.population_number * s.population_happy * (1 - c.workers)) << ", alloc: " << allocated << ", cap: " << food_cap << ", feed: " << feed << ", birth: " << birth_rate << ", death: " << death_rate << endl;
 
-  buf.population_number += (birth_rate - death_rate) * s.population_number * dt;
+  buf.population_number += s.pop_increment(r_base, allocated) * dt;
   buf.population_happy += 0.001 * (1 + 0.1 * utility::sigmoid(r_base.field[research::r_population] - P[solar::work_ship], 1000)) * dt;
   buf.population_happy = fmax(fmin(buf.population_happy, 1), 0);
 
@@ -963,6 +960,7 @@ game_data game_data::limit_to(idtype id){
   gc.players = players;
   gc.settings = settings;
   gc.remove_entities = remove_entities;
+  gc.dt = dt;
 
   return gc;
 }

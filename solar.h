@@ -12,14 +12,6 @@ namespace st3{
   namespace solar{
     extern idtype id_counter;
 
-    /* // enums for development data */
-    /* enum d_population{ */
-    /*   p_industry = 0, */
-    /*   p_resource, */
-    /*   p_agriculture, */
-    /*   p_num */
-    /* }; */
-
     enum d_work{
       work_expansion = 0,
       work_ship,
@@ -41,10 +33,6 @@ namespace st3{
       ship_num
     };
 
-    extern const float research_per_person;
-    extern const float industry_per_person;
-    extern const float fleet_per_person;
-    extern const float resource_per_person;
     extern const float births_per_person;
     extern const float deaths_per_person;
     extern const float agriculture_boost_coefficient;
@@ -55,6 +43,7 @@ namespace st3{
       static std::vector<float> ship_buildtime;
       static std::vector<std::string> work_names;
       static std::vector<std::vector<std::string> > sub_names;
+      static std::vector<float> p3;
       static void initialize();
 
       // main work sectors
@@ -74,13 +63,6 @@ namespace st3{
       std::vector<std::vector<sfloat> > subsector;
     };
 
-    /* struct choice_t{ */
-    /*   std::vector<sfloat> population; // proportion to allocate per sector */
-    /*   development dev; */
-
-    /*   choice_t(); */
-    /*   void normalize(); */
-    /* }; */
 
     struct solar{
       // evolution data
@@ -105,6 +87,8 @@ namespace st3{
       float sub_increment(research const &r, int sub_idx, int i, float n);
       float pop_increment(research const &r, float n);
     };
+
+    void initialize();
   };
 };
 #endif

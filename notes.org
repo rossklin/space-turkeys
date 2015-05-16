@@ -1,5 +1,4 @@
 * currently working on
-** implement solar::solar::[pop|sub]_increment
 * long term goals
 ** strategy
 *** different solars have different resources
@@ -79,8 +78,8 @@
 *** barbarians
 * basic goals
 ** server game
+*** neutral planets should start with less industry
 *** ability to build defense
-*** faster initial expansion
 *** remove waypoints with neither incoming nor outgoing commands
 *** send victor to client on game completion
 *** colonisation/transport ships
@@ -107,6 +106,8 @@
 ** fleets follow targets that leave sight
 ** fleets follow last assigned in split
 * issues
+** [fixed?] solar gui lists increments per unit time
+   game settings stores round length in ticks
 ** socket_t exits on disconnect in thread, causes segfault
 ** [low priority] minimap bounding box drawn incorrectly after window resize
 ** [low priority] segfault after client side target missing, some turns after resume from suspend.
@@ -125,11 +126,14 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** add template selector to gui
+** implement templates in solar_gui.cpp
+** faster initial expansion
+* fixed
 ** [fixed for single fleet relocation] fleet targets are lost on split (new id)
 ** fixed: orders targeting unseen targets disappear
    also targeting fleets that leave sight
 ** fixed a bug where bombarded solars get negative defense/population
-* fixed
 ** add attribute bool entity_selector.seen
     store entity selectors, but unset seen each round. Show non-seen
     entities as semi-transparent, non-interactive.

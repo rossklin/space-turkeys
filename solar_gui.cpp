@@ -15,6 +15,8 @@ using namespace st3;
 
 const string tgui_root("external/share/tgui-0.6/");
 
+vector<string> solar_gui::template_name({"population","industry","ship"});
+
 solar_gui::control::control(Gui &g){
   label = Label::Ptr(g);
   slider = Slider::Ptr(g);
@@ -39,8 +41,8 @@ void solar_gui::control::setup(solar_gui::control_group *c,
 
   slider -> load(conf);
   slider -> setVerticalScroll(false);
-  slider -> setPosition(pos.x + dims.x/4, pos.y);
-  slider -> setSize(dims.x / 2, dims.y);
+  slider -> setPosition(pos.x + dims.x/4 + 0.1 * dims.x / 2, pos.y);
+  slider -> setSize(0.8 * dims.x / 2, dims.y / 2);
   slider -> setMaximum(cap);
   slider -> setValue(value);
   slider -> setCallbackId(id);
@@ -49,7 +51,7 @@ void solar_gui::control::setup(solar_gui::control_group *c,
   feedback -> load(conf);
   feedback -> setPosition(pos.x + 3 * dims.x / 4, pos.y);
   feedback -> setSize(dims.x / 4, dims.y);
-  feedback -> setText(to_string(value) + "(" + to_string(cap) + "), inc: " + to_string(deriv));
+  feedback -> setText(to_string((int)value) + "(" + to_string((int)cap) + "), inc: " + to_string(deriv));
   feedback -> setTextSize(12);
 }
 
@@ -78,6 +80,7 @@ solar_gui::control_group::control_group(solar_gui *g,
   int n = names.size();
   float label_offset = label_dims.y;
   float sum = 0;
+  float local_cap = fmin(total, cap);
   for (auto x : proportions) sum += x;
   if (sum > 1) utility::normalize_vector(proportions);
 
@@ -99,10 +102,23 @@ solar_gui::control_group::control_group(solar_gui *g,
 			 label_dims,
 			 names[i], 
 			 values.empty() ? -1 : values[i],
-			 fmin(total, cap) * proportions[i],
+			 local_cap * proportions[i],
 			 cap,
-			 incs(i, cap * proportions[i]));
+			 incs(i, local_cap * proportions[i]) * sg -> round_time);
     label_offset += label_dims.y;
+  }
+}
+
+void solar_gui::control_group::load_controls(float tot, vector<float> p){
+  float sum = 0;
+  float local_cap = fmin(tot, cap);
+  for (auto x : p) sum += x;
+  if (sum > 1) utility::normalize_vector(p);
+
+  cout << "control_group::load_controls: sector " << id << " setting total " << tot << " and props " << p << endl;
+
+  for (int i = 0; i < p.size(); i++){
+    controls[i] -> slider -> setValue(fmin(cap, tot) * p[i]);
   }
 }
 
@@ -122,7 +138,7 @@ void solar_gui::control_group::update_value(Callback const& c){
     s -> setValue(scap - sum);
   }
 
-  controls[c.id] -> update(incs(c.id, s -> getValue()));
+  controls[c.id] -> update(incs(c.id, s -> getValue()) * sg -> round_time);
   sg -> update_popsum();
 }
 
@@ -137,9 +153,19 @@ solar_gui::control_group::~control_group(){
 }
 
 // should draw and handle event
-solar_gui::solar_gui(sf::RenderWindow &w, solar::solar sol, solar::choice_t &cc, research res) : Gui(w), window(w), s(sol), c(cc), r(res), header_population(*this){
+solar_gui::solar_gui(sf::RenderWindow &w, solar::solar sol, solar::choice_t cc, research res, float rt) : 
+  Gui(w), 
+  window(w), 
+  s(sol), 
+  c(cc), 
+  r(res), 
+  header_population(*this),
+  tsel(*this),
+  round_time(rt){
+  
   setGlobalFont(graphics::default_font);
   done = false;
+  c.normalize();
 
   point margin(10, 10);
   float bottom_panel_height = 40;
@@ -157,26 +183,14 @@ solar_gui::solar_gui(sf::RenderWindow &w, solar::solar sol, solar::choice_t &cc,
   label_offset += label_size.y;
 
   // setup controls
-  controls.resize(solar::work_num);
-  for (int i = 0; i < solar::work_num; i++){
-    vector<float> values;
-    
-    switch(i){
-    case solar::work_expansion:
-      values.clear();
-      break;
-    case solar::work_ship:
-      values = s.dev.fleet_growth;
-      break;
-    case solar::work_research:
-      values = r.field;
-      break;
-    case solar::work_resource:
-      values = s.dev.resource;
-      break;
-    }
+  controls.resize(solar::work_num, 0);
+  vector<vector<float> > values(solar::work_num);
 
-    incfunc f = bind(&solar::solar::sub_increment, &s, r, i, placeholders::_1, placeholders::_2);
+  values[solar::work_ship] = s.dev.fleet_growth;
+  values[solar::work_research] = r.field;
+  values[solar::work_resource] = s.dev.resource;
+  for (int i = 0; i < solar::work_num; i++){
+    if (controls[i]) delete controls[i];
     controls[i] = new solar_gui::control_group
       (this,
        i,
@@ -185,10 +199,10 @@ solar_gui::solar_gui(sf::RenderWindow &w, solar::solar sol, solar::choice_t &cc,
        point(margin.x, margin.y + label_offset),
        point(dimension.x, label_size.y),
        solar::development::sub_names[i],
-       values,
+       values[i],
        c.subsector[i],
        s.population_number * c.workers * c.sector[i],
-       f,
+       bind(&solar::solar::sub_increment, &s, r, i, placeholders::_1, placeholders::_2),
        s.dev.industry[i]
        );
 
@@ -197,6 +211,13 @@ solar_gui::solar_gui(sf::RenderWindow &w, solar::solar sol, solar::choice_t &cc,
 
   update_popsum();
 
+  // template selector
+  tsel -> load(black);
+  tsel -> setSize(dimension.x, 40);
+  tsel -> setPosition(margin.x, margin.y + dimension.y - 150);
+  for (auto x : template_name) tsel -> addItem(x);
+  tsel -> bindCallback(bind(&solar_gui::callback_template, this), ComboBox::ItemSelected);
+  
   Button::Ptr b(*this);
   b -> load(black);
   b -> setSize(200, 40);
@@ -210,6 +231,21 @@ solar_gui::solar_gui(sf::RenderWindow &w, solar::solar sol, solar::choice_t &cc,
   bc -> setPosition(margin.x + dimension.x / 2 - bc -> getSize().x, margin.y + dimension.y);
   bc -> setText("CANCEL");
   bc -> bindCallback(bind(&solar_gui::callback_done, this, false), Button::LeftMouseClicked);
+}
+
+void solar_gui::callback_template(){
+  load_template(tsel -> getSelectedItem());
+}
+
+void solar_gui::load_controls(solar::choice_t ch){
+  c = ch;
+  c.normalize();
+
+  for (int i = 0; i < controls.size(); i++){
+    controls[i] -> load_controls(s.population_number * c.workers * c.sector[i], c.subsector[i]);
+  }
+
+  update_popsum();
 }
 
 solar_gui::~solar_gui(){
@@ -232,7 +268,7 @@ float solar_gui::get_control_cap(int id){
 void solar_gui::update_popsum(){
   float sum = 0;
   for (auto x : controls) sum += x -> get_sum();
-  header_population -> setText("Population: " + to_string(s.population_number) + "(farmers: " + to_string(s.population_number - sum) + ", inc: " + to_string(s.pop_increment(r, s.population_number - sum)) + ")");
+  header_population -> setText("Population: " + to_string(s.population_number) + "(farmers: " + to_string(s.population_number - sum) + ", inc: " + to_string(s.pop_increment(r, s.population_number - sum) * round_time) + ")");
 }
 
 solar::choice_t solar_gui::evaluate(){
@@ -287,4 +323,62 @@ bool solar_gui::run(){
   c = evaluate();
 
   return accept;
+}
+
+float solar_gui::compute_workers_nostarve(float priority){
+  float n = s.population_number;
+  // dp/dt = a f p + b p
+  float dmax = s.pop_increment(r, n);
+  float dmin = s.pop_increment(r, 0);
+  float dsel = fmin(dmax, fmax(0, dmin + priority * (dmax - dmin)));
+  float b = dmin / n;
+  float a = (dmax - b * n) / pow(n, 2);
+  float f = (dsel - b * n) / (a * n);
+  return (n - f) / n;
+}
+
+float solar_gui::compute_workers(float priority){
+  float n = s.population_number;
+  // dp/dt = a f p + b p
+  float dmax = s.pop_increment(r, n);
+  float dmin = s.pop_increment(r, 0);
+  float dsel = dmin + priority * (dmax - dmin);
+  float b = dmin / n;
+  float a = (dmax - b * n) / pow(n, 2);
+  float f = (dsel - b * n) / (a * n);
+  return (n - f) / n;
+}
+
+void solar_gui::load_template(string s){
+  solar::choice_t c;
+  for (auto &x : c.sector) x = 0;
+  for (auto &x : c.subsector) for (auto &y : x) y = 0;
+
+  if (!s.compare("population")){
+    c.workers = compute_workers_nostarve(0.8);
+    c.sector[solar::work_research] = 1;
+    c.subsector[solar::work_research][research::r_population] = 1;
+  }else if (!s.compare("industry")){
+    c.workers = compute_workers_nostarve(0.5);
+    c.sector[solar::work_expansion] = 1;
+    c.sector[solar::work_research] = 0.5;
+    c.subsector[solar::work_expansion][solar::work_expansion] = 1;
+    c.subsector[solar::work_expansion][solar::work_ship] = 0.2;
+    c.subsector[solar::work_expansion][solar::work_research] = 0.4;
+    c.subsector[solar::work_expansion][solar::work_resource] = 0.2;
+    c.subsector[solar::work_research][research::r_industry] = 1;
+  }else if (!s.compare("ship")){
+    c.workers = compute_workers_nostarve(0.3);
+    c.sector[solar::work_expansion] = 1;
+    c.sector[solar::work_ship] = 2;
+    c.sector[solar::work_resource] = 1;
+    c.subsector[solar::work_expansion][solar::work_ship] = 1;
+    for (auto &x : c.subsector[solar::work_ship]) x = 1;
+    for (auto &x : c.subsector[solar::work_resource]) x = 1;
+  }else{
+    cout << "load_template: unknown: " << s << endl;
+    exit(-1);
+  }
+
+  load_controls(c);
 }

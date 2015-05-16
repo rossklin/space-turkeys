@@ -332,8 +332,11 @@ void st3::client::game::reload_data(game_data &g){
   
   players = g.players;
   settings = g.settings;
+  dt = g.dt;
   cout << " -> post clear entities: " << endl;
   for (auto x : entity_selectors) cout << x.first << endl;
+
+  cout << "dt = " << dt << endl;
 
   // update entities: fleets, solars and waypoints
   for (auto x : g.fleets){
@@ -815,10 +818,9 @@ void game::run_solar_gui(source_t key){
     cout << "run solar gui: no owner!" << endl;
     exit(-1);
   }
-  solar::choice_t sc = solar_choices[key];
-  solar_gui gui(window, sol, sc, players[sol.owner].research_level);
+  solar_gui gui(window, sol, solar_choices[key], players[sol.owner].research_level, settings.frames_per_round * dt);
   if (gui.run()){
-    solar_choices[key] = sc;
+    solar_choices[key] = gui.c;
     cout << "added solar choice for " << key << endl;
   }else{
     cout << "solar choice for " << key << " dismissed" << endl;
