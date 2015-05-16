@@ -15,8 +15,10 @@ using namespace st3;
 
 const string tgui_root("external/share/tgui-0.6/");
 
+// names of solar gui templates
 vector<string> solar_gui::template_name({"population","industry","ship"});
 
+// constructor: assign Gui parent ref to control components
 solar_gui::control::control(Gui &g){
   label = Label::Ptr(g);
   slider = Slider::Ptr(g);

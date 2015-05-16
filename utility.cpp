@@ -15,18 +15,22 @@ boost::random::uniform_01<float> unidist;
 // POINT ARITHMETICS
 // ****************************************
 
+// scalar product of points a and b
 float utility::scalar_mult(point a, point b){
   return a.x * b.x + a.y * b.y;
 }
 
+// squared l2 norm of point p
 float utility::l2d2(point p){
   return scalar_mult(p, p);
 }
 
+// l2 norm of point p
 float utility::l2norm(point p){
   return sqrt(l2d2(p));
 }
 
+// angle between point p and x-axis
 float utility::point_angle(point p){
   if (p.x > 0){
     return atan(p.y / p.x);
@@ -39,34 +43,26 @@ float utility::point_angle(point p){
   }
 }
 
-float utility::point_mult(point a, point b){
-  return a.x * b.x + a.y * b.y;
-}
-
+// scale point p by factor a
 point utility::scale_point(point p, float a){
   return point(a * p.x, a * p.y);
 }
 
+// scalar projection coefficient of point a on r
 float utility::sproject(point a, point r){
-  return point_mult(a,r) / point_mult(r,r);
+  return scalar_mult(a,r) / scalar_mult(r,r);
 }
 
 // shortest distance between angles a and b
 float utility::angle_distance(float a, float b){
   float r;
-
   r = modulus(b - a, 2 * M_PI);
-
-  if (r > M_PI){
-    r = 2 * M_PI - r;
-  }
-
+  if (r > M_PI) r = 2 * M_PI - r;
   return r;
 }
 
 // shortest distance between p and line from a to b
 float utility::dpoint2line(point p, point a, point b){
-
   if (angle_distance(point_angle(p - a), point_angle(b - a)) > M_PI/2){
     return l2norm(p - a);
   }else if (angle_distance(point_angle(p - b), point_angle(a - b)) > M_PI/2){
@@ -77,46 +73,56 @@ float utility::dpoint2line(point p, point a, point b){
   }
 }
 
+// point difference operator
 point st3::operator -(const point &a, const point &b){
   return point(a.x - b.x, a.y - b.y);
 }
 
+// point addition operator
 point st3::operator +(const point &a, const point &b){
   return point(a.x + b.x, a.y + b.y);
 }
 
+// random float ~U(0,1)
 float utility::random_uniform(){
   return unidist(rng);
 }
 
+// vector of n random floats ~U(0,1) 
 vector<float> utility::random_uniform(int n){
   vector<float> res(n);
   for (auto &x : res) x = unidist(rng);
   return res;
 }
 
+// random point with gaussian distribution around p, sigma = r
 point utility::random_point_polar(point p, float r){
   boost::random::normal_distribution<float> n(0, r);
   return point(p.x + n(rng), p.y + n(rng));
 }
 
+// p geq q both dims
 bool utility::point_above(point p, point q){
   return p.x >= q.x && p.y >= q.y;
 }
 
+// p lt q both dims
 bool utility::point_below(point p, point q){
   return p.x < q.x && p.y < q.y;
 }
 
+// a above p and below q
 bool utility::point_between(point a, point p, point q){
   return point_above(a, p) && point_below(a, q);
 }
 
+// normalized point with angle a to x-axis
 point utility::normv(float a){
   return point(cos(a), sin(a));
 }
 
 // sfml stuff
+// make an sf::RectangleShape with given bounds
 sf::RectangleShape utility::build_rect(sf::FloatRect bounds){
   sf::RectangleShape r;
   r.setSize(sf::Vector2f(bounds.width, bounds.height));
@@ -140,14 +146,14 @@ sf::Transform utility::view_inverse_transform(sf::RenderWindow &w){
   return t;
 }
 
-// transform from pixels to points
+// scale from pixels to points
 point utility::inverse_scale(sf::RenderWindow &w){
   sf::View v = w.getView();
   return point(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
 }
 
 // vector maths
-
+// normalize the vector
 void utility::normalize_vector(vector<float> &x){
   if (x.empty()) return;
 
@@ -163,12 +169,14 @@ void utility::normalize_vector(vector<float> &x){
   }
 }
 
+// l2norm of the vector
 float utility::vl2norm(vector<float> const &x){
   float ss = 0;
   for (auto &z : x) ss += z * z;
   return sqrt(ss);
 }
 
+// vector difference
 vector<float> utility::vdiff(vector<float> const &a, vector<float> const &b){
   if (a.size() != b.size()){
     cout << "vdiff: dimension mismatch" << endl;
@@ -183,6 +191,7 @@ vector<float> utility::vdiff(vector<float> const &a, vector<float> const &b){
   return res;
 }
 
+// vector addition
 vector<float> utility::vadd(vector<float> const &a, vector<float> const &b){
   if (a.size() != b.size()){
     cout << "vdiff: dimension mismatch" << endl;
@@ -197,15 +206,20 @@ vector<float> utility::vadd(vector<float> const &a, vector<float> const &b){
   return res;
 }
 
+// rescale vector a by s
 vector<float> utility::vscale(vector<float> a, float s){
   for (auto &x : a) x *= s;
   return a;
 }
 
+// sigmoid function: approaches -s below -s and s above s, like
+// identity function between
 float utility::sigmoid(float x, float s){
   return s * atan(x / s) / (M_PI / 2);
 }
 
+// generate a vector of n different colors, which are also different
+// from black (background) and grey (neutral solar) colors
 vector<sint> utility::different_colors(int n){
   int rep = 100;
   int ncheck = n+2;
@@ -253,23 +267,27 @@ vector<sint> utility::different_colors(int n){
   return res;
 }
 
-// p > 0
+// return x mod p, presuming p > 0
 float utility::modulus(float x, float p){
   int num = floor(x / p);
   return x - num * p;
 }
 
+// output vector x to stream ss
 ostream & st3::operator << (ostream &ss, vector<float> const &x){
   for (auto y : x) ss << y << ", ";
   return ss;
 }
 
+// output point x to stream ss
 ostream & st3::operator << (ostream &ss, point const &x){
   ss << "(" << x.x << ", " << x.y << ")" << endl;
   return ss;
 }
 
-// set operations
+// set arithmetic operations
+
+// elements in a not in b
 template<typename T>
 set<T> st3::operator - (const set<T> &a, const set<T> &b){
   set<T> res = a;
@@ -277,12 +295,14 @@ set<T> st3::operator - (const set<T> &a, const set<T> &b){
   return res;
 }
 
+// remove elements in b from a
 template<typename T>
 set<T> st3::operator -= (set<T> &a, const set<T> &b){
   for (auto &x : b) a.erase(x);
   return a;
 }
 
+// elements in a or b
 template<typename T>
 set<T> st3::operator + (const set<T> &a, const set<T> &b){
   set<T> res = a;
@@ -290,28 +310,20 @@ set<T> st3::operator + (const set<T> &a, const set<T> &b){
   return res;
 }
 
+// add elements in b to a
 template<typename T>
 set<T> st3::operator += (set<T> &a, const set<T> &b){
   for (auto &x : b) a.insert(x);
   return a;
 }
 
+// elements in a and b
 template<typename T>
 set<T> st3::operator & (const set<T> &a, const set<T> &b){
   set<T> res;
   for (auto &x : b) {
     if (a.count(x)) res.insert(x);
   }
-
-  return res;
-}
-
-
-template<typename T>
-set<T> st3::operator | (const set<T> &a, const set<T> &b){
-  set<T> res;
-  for (auto &x : b) res.insert(x);
-  for (auto &x : a) res.insert(x);
   return res;
 }
 
@@ -321,4 +333,3 @@ template set<idtype> st3::operator -= (set<idtype> &a, const set<idtype> &b);
 template set<idtype> st3::operator + (const set<idtype> &a, const set<idtype> &b);
 template set<idtype> st3::operator += (set<idtype> &a, const set<idtype> &b);
 template set<idtype> st3::operator & (const set<idtype> &a, const set<idtype> &b);
-template set<idtype> st3::operator | (const set<idtype> &a, const set<idtype> &b);
