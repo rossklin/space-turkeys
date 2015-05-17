@@ -57,10 +57,28 @@ namespace st3{
     */
     std::string make(std::string t, std::string k);
 
-    
+    /*! get the type of a source symbol
+      @param s source symbol
+      @return type identifier
+    */
     std::string get_type(std::string s);
+
+    /*! get the id of a source symbol
+      @param s source symbol with id
+      @return id
+    */
     st3::idtype get_id(std::string s);
+
+    /*! get the string id of a source symbol
+      @param s source symbol with string id
+      @return string id
+    */
     source_t get_string_id(std::string s);
+
+    /*! get the owner id from a waypoint source symbol string id
+      @param v string id of a waypoint source symbol
+      @return id of the owner of the waypoint
+    */
     st3::idtype get_waypoint_owner(source_t v);
   };
 };

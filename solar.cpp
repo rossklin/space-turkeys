@@ -9,19 +9,18 @@ using namespace std;
 using namespace st3;
 using namespace solar;
 
-vector<vector<float> > development::ship_cost;
-vector<float> development::ship_buildtime;
-// vector<string> development::population_names;
-vector<string> development::work_names;
-vector<vector<string> > development::sub_names;
-vector<float> development::p3;
+vector<vector<float> > st3::solar::ship_cost;
+vector<float> st3::solar::ship_buildtime;
+vector<string> st3::solar::work_names;
+vector<vector<string> > st3::solar::sub_names;
+vector<float> st3::solar::p3;
 
 const float st3::solar::births_per_person = 2e-3;
 const float st3::solar::deaths_per_person = 2e-3;
 const float st3::solar::agriculture_boost_coefficient = 1e3;
 const float st3::solar::feed_boost_coefficient = 4e-3;
 
-void development::initialize(){
+void st3::solar::initialize(){
   ship_cost.resize(ship_num);
   ship_buildtime.resize(ship_num);
   for (auto &x : ship_cost) x.resize(resource_num);
@@ -97,8 +96,8 @@ choice_t::choice_t(){
 float st3::solar::solar::resource_constraint(std::vector<float> r){
   float max = INFINITY;
 
-  for (int i = 0; i < dev.resource.size(); i++){
-    max = fmin(max, dev.resource[i] / r[i]);
+  for (int i = 0; i < resource_storage.size(); i++){
+    max = fmin(max, resource_storage[i] / r[i]);
   }
 
   return max;
@@ -110,18 +109,18 @@ st3::solar::solar::solar(){
   usable_area = 1e8 + utility::random_uniform() * 1e9;
   vision = 120;
   resource = vector<float>(resource_num, 1000);
-  dev.fleet_growth = vector<float>(ship_num, 0);
-  dev.new_research = vector<float>(research::r_num, 0);
-  dev.industry = vector<float>(work_num, 200);
-  dev.resource = vector<float>(resource_num, 0);
+  fleet_growth = vector<float>(ship_num, 0);
+  new_research = vector<float>(research::r_num, 0);
+  industry = vector<float>(work_num, 200);
+  resource_storage = vector<float>(resource_num, 0);
 }
 
 string st3::solar::solar::get_info(){
   stringstream ss;
-  ss << "fleet_growth: " << dev.fleet_growth << endl;
-  ss << "new_research: " << dev.new_research << endl;
-  ss << "industry: " << dev.industry << endl;
-  ss << "resource storage: " << dev.resource << endl;
+  ss << "fleet_growth: " << fleet_growth << endl;
+  ss << "new_research: " << new_research << endl;
+  ss << "industry: " << industry << endl;
+  ss << "resource storage: " << resource_storage << endl;
   ss << "pop: " << population_number << "(" << population_happy << ")" << endl;
   ss << "resource: " << resource << endl;
   ss << "ships: " << ships.size() << endl;
@@ -137,16 +136,16 @@ float st3::solar::solar::sub_increment(research const &r, int sector_idx, int su
 
   switch(sector_idx){
   case work_research:
-    rate = development::p3[work_research];
+    rate = p3[work_research];
     break;
   case work_expansion:
-    rate = development::p3[work_expansion] * r.field[research::r_industry];
+    rate = p3[work_expansion] * r.field[research::r_industry];
     break;
   case work_ship:
-    rate = development::p3[work_ship] * r.field[research::r_industry] / development::ship_buildtime[sub_idx];
+    rate = p3[work_ship] * r.field[research::r_industry] / ship_buildtime[sub_idx];
     break;
   case work_resource:
-    rate = development::p3[work_resource] * r.field[research::r_industry];
+    rate = p3[work_resource] * r.field[research::r_industry];
     break;
   }
 

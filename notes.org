@@ -102,6 +102,8 @@
 ** distribution
    cmake build in a build directory so one can clean
    disable form_builder in tgui (check opts with ccmake)
+** structure
+*** remove solar::development as no longer nessecary
 * bugs
 ** fleets follow targets that leave sight
 ** fleets follow last assigned in split
