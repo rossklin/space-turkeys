@@ -745,7 +745,7 @@ void st3::game_data::solar_tick(idtype id){
   // capped population assignments
   P.resize(solar::work_num);
   for (i = 0; i < solar::work_num; i++){
-    P[i] = fmin(Ph * c.sector[i], s.dev.industry[i]);
+    P[i] = fmin(Ph * c.sector[i], s.industry[i]);
     // cout << P[i] << ", ";
   }
   // cout << endl;
@@ -754,8 +754,8 @@ void st3::game_data::solar_tick(idtype id){
   // research
   for (i = 0; i < research::r_num; i++){
     float allocated = P[solar::work_research] * c.subsector[solar::work_research][i];
-    buf.dev.new_research[i] += s.sub_increment(r_base, solar::work_research, i, allocated) * dt;
-    // cout << s.dev.new_research[i] << ", ";
+    buf.new_research[i] += s.sub_increment(r_base, solar::work_research, i, allocated) * dt;
+    // cout << s.new_research[i] << ", ";
   }
   // cout << endl;
 
@@ -767,13 +767,13 @@ void st3::game_data::solar_tick(idtype id){
     float allocated = P[solar::work_expansion] * c.subsector[solar::work_expansion][i];
     float build = s.sub_increment(r_base, solar::work_expansion, i, allocated);
 
-    buf.dev.industry[i] += build * dt;
-    i_sum += buf.dev.industry[i];
-    // cout << s.dev.industry[i] << ", ";
+    buf.industry[i] += build * dt;
+    i_sum += buf.industry[i];
+    // cout << s.industry[i] << ", ";
   }
 
   if (i_sum > i_cap){
-    for (auto &x : buf.dev.industry) x *= i_cap / i_sum;
+    for (auto &x : buf.industry) x *= i_cap / i_sum;
   }
   // cout << endl;
 
@@ -781,20 +781,20 @@ void st3::game_data::solar_tick(idtype id){
   // pre-check resource constraints?
   // cout << "fleet: ";
   for (i = 0; i < solar::ship_num; i++){
-    vector<float> r = solar::development::ship_cost[i];
+    vector<float> r = st3::solar::ship_cost[i];
     float allocated = P[solar::work_ship] * c.subsector[solar::work_ship][i];
     float build = s.sub_increment(r_base, solar::work_ship, i, allocated);
     build = fmin(build, s.resource_constraint(r));
-    buf.dev.fleet_growth[i] += build * dt;
+    buf.fleet_growth[i] += build * dt;
 
     for (int j = 0; j < solar::resource_num; j++){
-      buf.dev.resource[j] -= r[j] * build * dt;
+      buf.resource_storage[j] -= r[j] * build * dt;
     }
-    // cout << s.dev.fleet_growth[i] << ", ";
+    // cout << s.fleet_growth[i] << ", ";
   }
   // cout << endl;
   // temp fix: can't have negative resources
-  for (auto &x : buf.dev.resource) x = fmax(x, 0);
+  for (auto &x : buf.resource_storage) x = fmax(x, 0);
 
   // resource
   // cout << "resource: ";
@@ -803,8 +803,8 @@ void st3::game_data::solar_tick(idtype id){
     float delta = s.sub_increment(r_base, solar::work_resource, i, allocated);
     float r = fmin(delta, s.resource[i]);
     buf.resource[i] -= r * dt; // resources on solar
-    buf.dev.resource[i] += r * dt; // resources in storage
-    // cout << s.dev.resource[i] << ", ";
+    buf.resource_storage[i] += r * dt; // resources in storage
+    // cout << s.resource_storage[i] << ", ";
   }
   // cout << endl;
 
@@ -823,22 +823,22 @@ void st3::game_data::solar_tick(idtype id){
   s.defense_current = fmin(s.defense_current + 0.01, s.defense_capacity);
 
   // assignment
-  s.dev.industry.swap(buf.dev.industry);
-  s.dev.new_research.swap(buf.dev.new_research);
-  s.dev.resource.swap(buf.dev.resource);
+  s.industry.swap(buf.industry);
+  s.new_research.swap(buf.new_research);
+  s.resource_storage.swap(buf.resource_storage);
   s.resource.swap(buf.resource);
-  s.dev.fleet_growth.swap(buf.dev.fleet_growth);
+  s.fleet_growth.swap(buf.fleet_growth);
   s.population_number = buf.population_number;
   s.population_happy = buf.population_happy;
 
   // new ships
   for (i = 0; i < solar::ship_num; i++){
-    while (s.dev.fleet_growth[i] >= 1){
+    while (s.fleet_growth[i] >= 1){
       ship sh(i, r_base);
       idtype sid = ship::id_counter++;
       ships[sid] = sh;
       s.ships.insert(sid);
-      s.dev.fleet_growth[i]--;
+      s.fleet_growth[i]--;
       // cout << "ship " << sid << " was created for player " << s.owner << " at solar " << id << endl;
     }
   }
@@ -893,9 +893,9 @@ void game_data::end_step(){
   for (auto & i : solars){
     if (i.second.owner > -1){
       for (int j = 0; j < research::r_num; j++){
-	players[i.second.owner].research_level.field[j] += i.second.dev.new_research[j];
-	cout << i.first << " contributes " << i.second.dev.new_research[j] << " new research to player " << i.second.owner << " in field " << j << endl;
-	i.second.dev.new_research[j] = 0;
+	players[i.second.owner].research_level.field[j] += i.second.new_research[j];
+	cout << i.first << " contributes " << i.second.new_research[j] << " new research to player " << i.second.owner << " in field " << j << endl;
+	i.second.new_research[j] = 0;
       }
     }
   }

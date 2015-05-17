@@ -22,7 +22,7 @@ void st3::server::game_handler(com c, game_data g){
   int frame_count;
   unsigned int i;
 
-  solar::development::initialize();
+  st3::solar::initialize();
   
   p_confirm << protocol::confirm;
 

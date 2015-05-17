@@ -43,7 +43,7 @@ void st3::client::game::run(){
   view_minimap = view_game;
   view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
 
-  solar::development::initialize();
+  st3::solar::initialize();
 
   // game loop
   while (proceed){

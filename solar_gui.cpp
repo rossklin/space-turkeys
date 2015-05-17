@@ -89,7 +89,7 @@ solar_gui::control_group::control_group(solar_gui *g,
   label -> load(conf);
   label -> setPosition(pos.x, pos.y);
   label -> setSize(label_dims.x, label_dims.y);
-  label -> setText(title + ": " + to_string(g -> s.dev.industry[id]));
+  label -> setText(title + ": " + to_string(g -> s.industry[id]));
   label -> setTextSize(12);
 
   cout << "control_group: total = " << total << ", props = " << proportions << endl;
@@ -188,27 +188,27 @@ solar_gui::solar_gui(sf::RenderWindow &w, solar::solar sol, solar::choice_t cc, 
   controls.resize(solar::work_num, 0);
   vector<vector<float> > values(solar::work_num);
 
-  values[solar::work_ship] = s.dev.fleet_growth;
+  values[solar::work_ship] = s.fleet_growth;
   values[solar::work_research] = r.field;
-  values[solar::work_resource] = s.dev.resource;
+  values[solar::work_resource] = s.resource_storage;
   for (int i = 0; i < solar::work_num; i++){
     if (controls[i]) delete controls[i];
     controls[i] = new solar_gui::control_group
       (this,
        i,
        black,
-       solar::development::work_names[i],
+       st3::solar::work_names[i],
        point(margin.x, margin.y + label_offset),
        point(dimension.x, label_size.y),
-       solar::development::sub_names[i],
+       st3::solar::sub_names[i],
        values[i],
        c.subsector[i],
        s.population_number * c.workers * c.sector[i],
        bind(&solar::solar::sub_increment, &s, r, i, placeholders::_1, placeholders::_2),
-       s.dev.industry[i]
+       s.industry[i]
        );
 
-    label_offset += (solar::development::sub_names[i].size() + 1) * label_size.y;
+    label_offset += (st3::solar::sub_names[i].size() + 1) * label_size.y;
   }
 
   update_popsum();
@@ -290,7 +290,7 @@ solar::choice_t solar_gui::evaluate(){
     for (int i = 0; i < solar::work_num; i++){
       float csum = controls[i] -> get_sum();
       if (csum > 0){
-	for (int j = 0; j < solar::development::sub_names[i].size(); j++){
+	for (int j = 0; j < st3::solar::sub_names[i].size(); j++){
 	  c.subsector[i][j] = controls[i] -> controls[j] -> slider -> getValue() / csum;
 	}
       }
