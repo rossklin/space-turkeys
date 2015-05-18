@@ -1,4 +1,9 @@
 * currently working on
+** setting up autotools
+   aclocal generates aclocal.m4
+   automake --add-missing uses configure.ac, aclocal.m3 and Makefile.am to build Makefile.in
+   autoconf uses configure.ac to build configure
+   configure uses Makefile.in to build Makefile
 * long term goals
 ** strategy
 *** different solars have different resources
@@ -108,6 +113,7 @@
 ** fleets follow targets that leave sight
 ** fleets follow last assigned in split
 * issues
+** entity_selector does not need attribute allocated (sum over commands)
 ** [fixed?] solar gui lists increments per unit time
    game settings stores round length in ticks
 ** socket_t exits on disconnect in thread, causes segfault
@@ -127,6 +133,8 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** renamed Makefile -> Makefile.linux
+** set up for autotools - add configure to git
 * fixed
 ** [low priority] command_gui scales with zoom
 ** add template selector to gui

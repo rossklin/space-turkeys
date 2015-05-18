@@ -13,7 +13,7 @@ using namespace std;
 using namespace tgui;
 using namespace st3;
 
-const string tgui_root("external/share/tgui-0.6/");
+const string tgui_root("/usr/local/share/tgui-0.6/");
 
 // names of solar gui templates
 vector<string> solar_gui::template_name({"population","industry","ship"});
