@@ -25,9 +25,20 @@ sndfile
 openal
 xcb-image
 
-After they are installed, a simple './configure && make && make install' 
-should be sufficient to build both dependencies and the Space Turkeys
-executables.
+After they are installed, a simple './configure && make && make
+install' should in the future be sufficient to build both dependencies
+and the Space Turkeys executables. However, tgui cmakelists requires
+that sfml be built before tgui is configured, and I have not figured
+out how to get automake to generate a makefile where building tgui
+depends on configuring tgui. For now this means either run make twice
+so that the second time the condition is met, or comment out the dep
+check section in tgui cmakelists:
+
+# # FindSFML couldn't find SFML.
+# if( NOT SFML_FOUND )
+#     set( SFML_ROOT "" CACHE PATH "SFML root directory" )
+#     message( FATAL_ERROR "CMake couldn't find SFML. Set the SFML_ROOT entry to SFML's root directory (containing \"include\" and \"lib\" directories)." )
+# endif()
 
 RUN ----------------------------------------
 
