@@ -1,9 +1,4 @@
 * currently working on
-** setting up autotools
-   aclocal generates aclocal.m4
-   automake --add-missing uses configure.ac, aclocal.m3 and Makefile.am to build Makefile.in
-   autoconf uses configure.ac to build configure
-   configure uses Makefile.in to build Makefile
 * long term goals
 ** strategy
 *** different solars have different resources
@@ -133,9 +128,12 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-** renamed Makefile -> Makefile.linux
-** set up for autotools - add configure to git
 * fixed
+** setting up autotools
+   aclocal generates aclocal.m4
+   automake --add-missing uses configure.ac, aclocal.m3 and Makefile.am to build Makefile.in
+   autoconf uses configure.ac to build configure
+   configure uses Makefile.in to build Makefile
 ** [low priority] command_gui scales with zoom
 ** add template selector to gui
 ** implement templates in solar_gui.cpp

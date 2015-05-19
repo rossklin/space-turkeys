@@ -11,7 +11,7 @@ dependencies. Space Turkeys uses boost, plus SFML and TGUI which are
 submodules to this repository. Thus, either clone with '--recursive'
 or run 'git submodule init' and 'git submodule update' to get the
 submodule contents. Then you will need the following libraries which
-SFML depend on:
+SFML depends on:
 
 pthread
 opengl
@@ -25,9 +25,15 @@ sndfile
 openal
 xcb-image
 
-After they are installed, a simple 'make external all' should be
-sufficient to build both dependencies and the Space Turkeys
+After they are installed, a simple './configure && make && make install' 
+should be sufficient to build both dependencies and the Space Turkeys
 executables.
+
+RUN ----------------------------------------
+
+To start a game with N players, run 'st_server N' on one
+machine. Then, each player runs 'st_client server_ip_address'. The
+server should start the game once all N players have connected.
 
 CONTACT ----------------------------------------
 Ross: rossklin@gmail.com
