@@ -28,7 +28,8 @@ cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .
 
 #tgui
 cd $wd/external/src/TGUI
-cmake -DSFML_INCLUDE_DIR=$wd/external/src/SFML/include -DTGUI_BUILD_FORM_BUILDER:BOOL=FALSE -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .
+echo "cmake -DSFML_ROOT=$wd/external/src/SFML -DTGUI_BUILD_FORM_BUILDER:BOOL=FALSE -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ."
+cmake -DSFML_ROOT=$wd/external/src/SFML -DTGUI_BUILD_FORM_BUILDER:BOOL=FALSE -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .
 
 cd $wd				 
 
