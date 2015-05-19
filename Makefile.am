@@ -5,3 +5,4 @@ st_server_SOURCES = game_data.cpp server.cpp game_handler.cpp com_server.cpp gri
 st_client_SOURCES = client.cpp graphics.cpp client_game.cpp com_client.cpp selector.cpp research.cpp fleet.cpp solar.cpp game_data.cpp grid_tree.cpp command_gui.cpp solar_gui.cpp game_settings.cpp serialization.cpp socket_t.cpp command.cpp utility.cpp types.cpp ship.cpp
 
 SUBDIRS = external/src/SFML external/src/TGUI docs
+

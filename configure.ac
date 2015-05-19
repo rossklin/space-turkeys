@@ -19,17 +19,16 @@ if test -z "$DOXYGEN";
    then AC_MSG_WARN([Doxygen not found - continuing without Doxygen support])
 fi
 
-# configure external libs with cmake
+# configure external sfml with cmake
 export wd=$(pwd)
 
 # sfml
 cd $wd/external/src/SFML
 cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .
 
-#tgui
+# tgui
 cd $wd/external/src/TGUI
-echo "cmake -DSFML_ROOT=$wd/external/src/SFML -DTGUI_BUILD_FORM_BUILDER:BOOL=FALSE -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ."
-cmake -DSFML_ROOT=$wd/external/src/SFML -DTGUI_BUILD_FORM_BUILDER:BOOL=FALSE -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .
+cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local -DSFML_ROOT=../SFML .
 
 cd $wd				 
 

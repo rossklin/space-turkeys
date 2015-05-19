@@ -108,6 +108,8 @@
 ** fleets follow targets that leave sight
 ** fleets follow last assigned in split
 * issues
+** tgui cmake requires that sfml libraries exist
+   but automake refuses to call anything at beginning of build
 ** entity_selector does not need attribute allocated (sum over commands)
 ** [fixed?] solar gui lists increments per unit time
    game settings stores round length in ticks
