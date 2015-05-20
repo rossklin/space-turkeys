@@ -30,7 +30,7 @@ cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .
 # tgui
 cp $wd/tgui_makelists.txt $wd/external/src/TGUI/CMakeLists.txt
 cd $wd/external/src/TGUI
-cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local -DSFML_INCLUDE_DIR=../SFML/include .
+cmake -DTGUI_BUILD_FORM_BUILDER=FALSE -DCMAKE_INSTALL_PREFIX:PATH=/usr/local -DSFML_INCLUDE_DIR=../SFML/include .
 
 cd $wd				 
 
