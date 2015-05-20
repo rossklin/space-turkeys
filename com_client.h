@@ -12,6 +12,7 @@
 namespace st3{
   struct game_data;
 
+  /*! client side specifics */
   namespace client{
     /*! enum for client query status */
     const int query_query = 0; /*!< requery */

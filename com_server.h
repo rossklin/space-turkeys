@@ -11,6 +11,8 @@
 #include "game_data.h"
 
 namespace st3{
+
+  /*! server side specifics */
   namespace server{
 
     /*! special socket functions for server */

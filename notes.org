@@ -78,15 +78,15 @@
 *** barbarians
 * basic goals
 ** server game
-*** neutral planets should start with less industry
+*** make solars more different
+*** neutral solars should start with less industry
 *** ability to build defense
 *** remove waypoints with neither incoming nor outgoing commands
 *** send victor to client on game completion
 *** colonisation/transport ships
+    and make some solars without defense
 *** emulate simultaneous evaluation of ship_bombard
 ** client game
-*** templates and feedback in solar gui
-    show per round increments in overview
 *** clickable minimap
 *** choice/evolution: display ready players, autoplay when all ready
 *** display victor
@@ -108,15 +108,15 @@
 ** fleets follow targets that leave sight
 ** fleets follow last assigned in split
 * issues
-** how to get make to only rebuild docs when nessecary?
 ** tgui cmake requires that sfml libraries exist
    but automake refuses to call anything at beginning of build
    try:
    a) get make to call cmake in tgui after building sfml
    b) fork tgui and remove dep check so cmake can be called in configure
-** [fixed?] solar gui lists increments per unit time
-   game settings stores round length in ticks
+   
+   temp: manually remove dep check or run make twice
 ** socket_t exits on disconnect in thread, causes segfault
+** [low priority] how to get make to only rebuild docs when nessecary?
 ** [low priority] minimap bounding box drawn incorrectly after window resize
 ** [low priority] segfault after client side target missing, some turns after resume from suspend.
 ** [low priority] area select goes over command gui
@@ -133,9 +133,13 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+* fixed
+** templates and feedback in solar gui
+    show per round increments in overview
+** [fixed?] solar gui lists increments per unit time
+   game settings stores round length in ticks
 ** moved dt from game_data to game_settings to avoid duplicate in client_game
 ** removed entity_selector::allocated_ships
-* fixed
 ** setting up autotools
    aclocal generates aclocal.m4
    automake --add-missing uses configure.ac, aclocal.m3 and Makefile.am to build Makefile.in
