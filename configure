@@ -3000,6 +3000,7 @@ fi
 
 
 # AC_CONFIG_HEADERS([config.h])
+# AC_SUBST(print_date, "echo $(shell date)")
 
 # Checks for programs.
 ac_ext=cpp

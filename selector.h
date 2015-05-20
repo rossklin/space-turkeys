@@ -119,10 +119,16 @@ namespace st3{
     /*! entity_selector representing a waypoint */
     class waypoint_selector : public entity_selector, public waypoint{
     public:
-      static constexpr float radius = 10;
-      std::set<idtype> ships;
+      static constexpr float radius = 10; /*!< grid size of waypoint representation */
+      std::set<idtype> ships; /*!< ids of ships available at this waypoint */
       
-      waypoint_selector(waypoint &f, sf::Color c);
+      /*! construct a waypoint selector with given waypoint and color
+	@param w the waypoint
+	@param c the color
+       */
+      waypoint_selector(waypoint &w, sf::Color c);
+
+      /*! empty deconstructor */
       ~waypoint_selector();
       bool contains_point(point p, float &d);
       void draw(window_t &w);
@@ -131,15 +137,33 @@ namespace st3{
       std::set<idtype> get_ships();
     };
 
+    /*! selector representing a command */
     class command_selector : public command{
     public:
-      bool selected;
-      point from;
-      point to;
+      bool selected; /*!< whether the command_selector is selected */
+      point from; /*!< source point */
+      point to; /*!< destination point */
 
+      /*! construct a command_selector with given command, source point and destination point 
+	@param c the command
+	@param s the source point
+	@param d the destination point
+      */
       command_selector(command &c, point s, point d);
+
+      /*! empty destructor */
       ~command_selector();
+
+      /*! draw the command selector on a window
+	@param w the window
+      */
       void draw(window_t &w);
+
+      /*! check whether a point intersects the command_selector
+	@param p the point
+	@param[out] d the "distance" from the selector to the point
+	@return whether the point intersects the command_selector
+      */
       bool contains_point(point p, float &d);
     };
   };

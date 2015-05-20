@@ -131,13 +131,13 @@ sf::RectangleShape utility::build_rect(sf::FloatRect bounds){
 }
 
 // point coordinates of view ul corner
-point utility::ul_corner(sf::RenderWindow &w){
+point utility::ul_corner(window_t &w){
   sf::View v = w.getView();
   return v.getCenter() - utility::scale_point(v.getSize(), 0.5);
 }
 
 // transform from pixels to points
-sf::Transform utility::view_inverse_transform(sf::RenderWindow &w){
+sf::Transform utility::view_inverse_transform(window_t &w){
   sf::Transform t;
   sf::View v = w.getView();
 
@@ -147,7 +147,7 @@ sf::Transform utility::view_inverse_transform(sf::RenderWindow &w){
 }
 
 // scale from pixels to points
-point utility::inverse_scale(sf::RenderWindow &w){
+point utility::inverse_scale(window_t &w){
   sf::View v = w.getView();
   return point(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
 }

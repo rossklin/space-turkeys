@@ -11,7 +11,7 @@ using namespace st3::client;
 
 void st3::client::load_frames(socket_t socket, vector<game_data> &g, int &loaded){
   sf::Packet pq, pr;
-  int done = client::query_ask;
+  int done = query_query;
 
   sint i = 0;
   while (i < g.size()){
@@ -41,16 +41,13 @@ void st3::client::query(socket_t socket,
 
   if (pr >> message){
     if (message == protocol::confirm){
-      done = client::query_proceed;
+      done = query_accepted;
     }else if (message == protocol::invalid){
       cout << "query: server says invalid" << endl;
       exit(-1);
-    }else if (message == protocol::standby){
-      cout << "query: server says standby" << endl;
-      exit(-1);
     }else if (message == protocol::complete){
       cout << "query: server says complete" << endl;
-      done = client::query_finished;
+      done = query_game_complete;
     }else {
       cout << "query: unknown response: " << message << endl;
       exit(-1);

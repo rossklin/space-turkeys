@@ -8,6 +8,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "types.h"
+#include "graphics.h"
 
 namespace st3{
   /*! Arithmetics for points, vectors, sets and sfml objects. */
@@ -179,19 +180,19 @@ namespace st3{
       @param w window to get the view from
       @return coordinates corresponding to UL corner of current view of w
     */
-    point ul_corner(sf::RenderWindow &w);
+    point ul_corner(window_t &w);
 
     /*! compute an sf::Transform mapping from coordinates to pixels
       @param w the current window
       @return the transform
     */
-    sf::Transform view_inverse_transform(sf::RenderWindow &w);
+    sf::Transform view_inverse_transform(window_t &w);
 
     /*! compute the scale factor mapping coordinate size to pixel size
       @param w the current window
       @return point containing x and y scales
     */
-    point inverse_scale(sf::RenderWindow &w);
+    point inverse_scale(window_t &w);
 
     /* **************************************** */
     /* MATHS */

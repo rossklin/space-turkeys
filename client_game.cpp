@@ -68,7 +68,7 @@ void st3::client::game::run(){
 // ****************************************
 
 bool st3::client::game::pre_step(){
-  int done = client::query_ask;
+  int done = query_query;
   sf::Packet packet, pq;
   game_data data;
 
@@ -85,7 +85,7 @@ bool st3::client::game::pre_step(){
 	   ref(done));
 
   while (!done){
-    if (!window.isOpen()) done |= client::query_finished;
+    if (!window.isOpen()) done |= query_game_complete;
 
     sf::Event event;
     while (window.pollEvent(event)){
@@ -99,14 +99,14 @@ bool st3::client::game::pre_step(){
   cout << "pre_step: waiting for com thread to finish..." << endl;
   t.join();
 
-  if (done & query_finished){
+  if (done & query_game_complete){
     cout << "pre_step: finished" << endl;
-    exit(0);
+    return false;
   }
 
   if (!(packet >> data)){
     cout << "pre_step: failed to deserialize game_data" << endl;
-    exit(-1);
+    return false;
   }
 
   reload_data(data);
@@ -121,7 +121,7 @@ bool st3::client::game::pre_step(){
 // ****************************************
 
 void st3::client::game::choice_step(){
-  int done = client::query_ask;
+  int done = query_query;
   sf::Packet pq, pr;
 
   cout << "choice_step: start" << endl;
@@ -135,7 +135,7 @@ void st3::client::game::choice_step(){
     sf::Event event;
     while (window.pollEvent(event)){
       if (event.type == sf::Event::Closed){
-	done |= client::query_finished;
+	done |= query_game_complete;
       }else{
 	done |= choice_event(event);
       }
@@ -148,7 +148,7 @@ void st3::client::game::choice_step(){
     sf::sleep(sf::milliseconds(100));
   }
 
-  if (done & client::query_finished){
+  if (done & query_game_complete){
     cout << "choice_step: finishded" << endl;
     exit(0);
   }
@@ -158,7 +158,7 @@ void st3::client::game::choice_step(){
   message = "sending choice to server...";
 
   choice c = build_choice();
-  done = client::query_ask;
+  done = query_query;
   pq << protocol::choice;
   pq << c;
 
@@ -171,7 +171,7 @@ void st3::client::game::choice_step(){
   cout << "choice step: sending" << endl;
 
   while (!done){
-    if (!window.isOpen()) done |= client::query_finished;
+    if (!window.isOpen()) done |= query_game_complete;
 
     sf::Event event;
     while (window.pollEvent(event)){
@@ -182,7 +182,7 @@ void st3::client::game::choice_step(){
     sf::sleep(sf::milliseconds(100));
   }
 
-  if (done & client::query_finished){
+  if (done & query_game_complete){
     cout << "choice send: finished" << endl;
     exit(0);
   }
@@ -200,7 +200,7 @@ void st3::client::game::choice_step(){
 // ****************************************
 
 void st3::client::game::simulation_step(){
-  int done = client::query_ask;
+  int done = query_query;
   bool playing = true;
   int idx = -1;
   int loaded = 0;
@@ -208,8 +208,8 @@ void st3::client::game::simulation_step(){
   thread t(load_frames, socket, ref(g), ref(loaded));
 
   while (!done){
-    if (!window.isOpen()) done |= client::query_finished;
-    if (idx == settings.frames_per_round - 1) done |= client::query_proceed;
+    if (!window.isOpen()) done |= query_game_complete;
+    if (idx == settings.frames_per_round - 1) done |= query_accepted;
 
     sf::Event event;
     while (window.pollEvent(event)){
@@ -242,7 +242,7 @@ void st3::client::game::simulation_step(){
 
   t.join();
 
-  if (done & client::query_finished){
+  if (done & query_game_complete){
     cout << "simulation step: finished" << endl;
     exit(0);
   }
@@ -332,11 +332,10 @@ void st3::client::game::reload_data(game_data &g){
   
   players = g.players;
   settings = g.settings;
-  dt = g.dt;
   cout << " -> post clear entities: " << endl;
   for (auto x : entity_selectors) cout << x.first << endl;
 
-  cout << "dt = " << dt << endl;
+  cout << "dt = " << settings.dt << endl;
 
   // update entities: fleets, solars and waypoints
   for (auto x : g.fleets){
@@ -483,8 +482,6 @@ idtype game::command_id(command c){
 
 void st3::client::game::add_command(command c, point from, point to, bool fill_ships){
   if (command_exists(c)) return;
-  idtype id = comid++;
-  command_selector *cs = new command_selector(c, from, to);
   entity_selector *s = entity_selectors[c.source];
   entity_selector *t = entity_selectors[c.target];
 
@@ -493,6 +490,9 @@ void st3::client::game::add_command(command c, point from, point to, bool fill_s
     cout << "add_command: circular waypoint graphs forbidden!" << endl;
     return;
   }
+
+  idtype id = comid++;
+  command_selector *cs = new command_selector(c, from, to);
 
   cout << "add command: " << id << " from " << c.source << " to " << c.target << endl;
   
@@ -839,7 +839,7 @@ void game::run_solar_gui(source_t key){
     cout << "run solar gui: no owner!" << endl;
     exit(-1);
   }
-  solar_gui gui(window, sol, solar_choices[key], players[sol.owner].research_level, settings.frames_per_round * dt);
+  solar_gui gui(window, sol, solar_choices[key], players[sol.owner].research_level, settings.frames_per_round * settings.dt);
   if (gui.run()){
     solar_choices[key] = gui.c;
     cout << "added solar choice for " << key << endl;
@@ -884,7 +884,7 @@ int st3::client::game::choice_event(sf::Event e){
     // // unset source entity's non-allocated ships
     // s -> allocated_ships -= comgui -> cached;
 
-    return client::query_ask;
+    return query_query;
   }
 
   switch (e.type){
@@ -928,7 +928,7 @@ int st3::client::game::choice_event(sf::Event e){
     switch (e.key.code){
     case sf::Keyboard::Space:
       cout << "choice_event: proceed" << endl;
-      return client::query_proceed;
+      return query_accepted;
     case sf::Keyboard::Return:
       ss = selected_solars();
       if (ss.size() == 1) run_solar_gui(ss.front());
@@ -950,7 +950,7 @@ int st3::client::game::choice_event(sf::Event e){
     break;
   };
 
-  return client::query_ask;
+  return query_query;
 }
 
 void st3::client::game::controls(){

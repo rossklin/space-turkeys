@@ -13,7 +13,7 @@
 using namespace std;
 using namespace st3;
 
-command_gui::command_gui(idtype cid, sf::RenderWindow *window, hm_t<idtype, ship> s, set<idtype> prealloc, point p, sf::Color c){
+command_gui::command_gui(idtype cid, window_t *window, hm_t<idtype, ship> s, set<idtype> prealloc, point p, sf::Color c){
   w = window;
   comid = cid;
   bounds = sf::FloatRect(p.x, p.y, table_width + 2 * padding, solar::ship_num * table_height + 2 * padding);
@@ -62,7 +62,7 @@ void command_gui::draw(){
 
 command_table::command_table(){}
 
-command_table::command_table(sf::RenderWindow *window, hm_t<idtype, ship> s, set<idtype> prealloc, point p, sf::Color c){
+command_table::command_table(window_t *window, hm_t<idtype, ship> s, set<idtype> prealloc, point p, sf::Color c){
   point box_dims;
   inner_padding = 20;
   outer_padding = 5;

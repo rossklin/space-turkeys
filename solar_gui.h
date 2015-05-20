@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 
+#include "graphics.h"
 #include "types.h"
 #include "solar.h"
 #include "research.h"
@@ -129,7 +130,7 @@ namespace st3{
     };
 
     /*! reference to the window */
-    sf::RenderWindow &window;
+    window_t &window;
 
     /*! controls for sectors */
     std::vector<control_group*> controls;
@@ -166,7 +167,7 @@ namespace st3{
       @param r current research level
       @param rt timer per round
      */
-    solar_gui(sf::RenderWindow &w, solar::solar s, solar::choice_t c, research r, float rt);
+    solar_gui(window_t &w, solar::solar s, solar::choice_t c, research r, float rt);
 
     /*! destructor: deletes sector controls */
     ~solar_gui();

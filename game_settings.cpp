@@ -9,4 +9,5 @@ st3::game_settings::game_settings(){
   solar_maxrad = 20;
   num_solars = 20;
   fleet_default_radius = 10;
+  dt = 0.1;
 }

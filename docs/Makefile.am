@@ -1,16 +1,15 @@
 if HAVE_DOXYGEN
 directory = $(top_srcdir)/docs/html
 
-dist_man_HTML = $(directory)/index.html
-$(directory)/index.html: doxyfile.stamp
+dist_man_HTML = $(directory)
+$(dist_man_HTML): force_check
 
-doxyfile.stamp:
+all-local: force_check
+
+force_check:
 	$(DOXYGEN) Doxyfile
-	echo Timestamp > doxyfile.stamp
+	true
 
-CLEANFILES = doxyfile.stamp
-
-all-local: doxyfile.stamp
 clean-local:
 	rm -rf $(directory)
 endif

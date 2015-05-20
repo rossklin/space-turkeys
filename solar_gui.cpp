@@ -155,7 +155,7 @@ solar_gui::control_group::~control_group(){
 }
 
 // should draw and handle event
-solar_gui::solar_gui(sf::RenderWindow &w, solar::solar sol, solar::choice_t cc, research res, float rt) : 
+solar_gui::solar_gui(window_t &w, solar::solar sol, solar::choice_t cc, research res, float rt) : 
   Gui(w), 
   window(w), 
   s(sol), 

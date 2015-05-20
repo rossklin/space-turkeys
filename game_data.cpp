@@ -134,22 +134,29 @@ void game_data::set_fleet_commands(idtype id, list<command> commands){
 
   // split fleets
   for (auto &x : commands){
-    fid = x.ships == s.ships ? id : fleet::id_counter++;
-    fleet f;
-    f.com = x;
-    f.com.source = identifier::make(identifier::fleet, fid);
-    f.position = s.position;
-    f.radius = s.radius;
-    f.owner = s.owner;
-    for (auto i : x.ships){
-      if (s.ships.count(i)){
-	ships[i].fleet_id = fid;
-	s.ships.erase(i);
-	f.ships.insert(i);
+    if (x.ships == s.ships){
+      // maintain id for trackability
+      s.com.target = x.target;
+      // if all ships were assigned, break.
+      break;
+    }else{
+      fid = fleet::id_counter++;
+      fleet f;
+      f.com = x;
+      f.com.source = identifier::make(identifier::fleet, fid);
+      f.position = s.position;
+      f.radius = s.radius;
+      f.owner = s.owner;
+      for (auto i : x.ships){
+	if (s.ships.count(i)){
+	  ships[i].fleet_id = fid;
+	  s.ships.erase(i);
+	  f.ships.insert(i);
+	}
       }
-    }
 
-    fleets[fid] = f;
+      fleets[fid] = f;
+    }
   }
 
   // check remove
@@ -162,20 +169,16 @@ void game_data::set_solar_commands(idtype id, list<command> commands){
   solar::solar &s = solars[id];
 
   // create fleets
-  set<idtype> ready;
   for (auto &x : commands){
-    ready.clear();
     for (auto i : x.ships){
-      if (s.ships.count(i)){
-	ready.insert(i);
-	s.ships.erase(i);
-      }else{
+      if (!s.ships.count(i)){
 	cout << "set_solar_commands: invalid ship id: " << i << endl;
 	exit(-1);
       }
     }
 
-    generate_fleet(s.position, s.owner, x, ready);
+    s.ships -= x.ships;
+    generate_fleet(s.position, s.owner, x, x.ships);
   }
 }
  
@@ -477,6 +480,9 @@ void game_data::ship_land(idtype ship_id, idtype solar_id){
   // remove from fleet
   fleets[fid].ships.erase(ship_id);
 
+  // remove from grid
+  ship_grid -> remove(ship_id);
+
   // remove fleet if empty
   if (fleets[fid].ships.empty()) remove_fleet(fid);
 
@@ -677,8 +683,6 @@ void game_data::build(){
     exit(-1);
   }
 
-  dt = 0.1;
-
   cout << "game_data: running dummy build" << endl;
 
   // build solars
@@ -727,6 +731,7 @@ void st3::game_data::solar_tick(idtype id){
   solar::solar &s = solars[id];
   solar::choice_t &c = solar_choices[id];
   research &r_base = players[s.owner].research_level;
+  float dt = settings.dt;
 
   if (s.owner < 0 || s.population_number <= 0){
     s.population_number = 0;
@@ -960,7 +965,6 @@ game_data game_data::limit_to(idtype id){
   gc.players = players;
   gc.settings = settings;
   gc.remove_entities = remove_entities;
-  gc.dt = dt;
 
   return gc;
 }

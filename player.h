@@ -6,10 +6,11 @@
 #include "research.h"
 
 namespace st3{
+  /*! player data */
   struct player{
-    std::string name;
-    sint color;
-    research research_level;
+    std::string name; /*!< name of the player */
+    sint color; /*!< the player's color */
+    research research_level; /*!< the player's research level */
   };
 };
 #endif

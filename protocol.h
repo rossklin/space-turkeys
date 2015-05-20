@@ -4,18 +4,25 @@
 #include "types.h"
 
 namespace st3{
+  /*! constants used in client server communication */
   namespace protocol{
-    // queries
-    const sint game_round = 0; 
-    const sint choice = 1;
-    const sint frame = 2;
-    const sint connect = 3;
 
-    // responses
-    const sint confirm = 1004;
-    const sint standby = 1005;
-    const sint complete = 1006;
-    const sint invalid = 1007;
+    /* **************************************** */
+    /* QUERIES */
+    /* **************************************** */
+    
+    const sint game_round = 0; /*!< query whether to start the game round */
+    const sint choice = 1; /*!< query whether to send the choice */
+    const sint frame = 2; /*!< query to get a simulation frame */
+    const sint connect = 3; /*!< query to connect */
+
+    /* **************************************** */
+    /* RESPONSES */
+    /* **************************************** */
+    
+    const sint confirm = 1000; /*!< confirm a query */
+    const sint complete = 1001; /*!< tell the client the game is complete */
+    const sint invalid = 1002; /*!< tell the client the query is invalid */
   };
 };
 #endif

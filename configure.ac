@@ -6,6 +6,7 @@ AC_INIT([Space Turkeys], [3.0], [rossklin@gmail.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_SRCDIR([solar.h])
 # AC_CONFIG_HEADERS([config.h])
+# AC_SUBST(print_date, "echo $(shell date)")
 
 # Checks for programs.
 AC_PROG_CXX

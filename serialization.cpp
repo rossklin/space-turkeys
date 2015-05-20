@@ -72,14 +72,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, T &container){
 
 // game_data
 sf::Packet& st3::operator <<(sf::Packet& packet, const game_data &g){
-  cout << "send game data: dt = " << g.dt << endl;
-  return packet << g.players << g.fleets << g.waypoints << g.ships << g.solars << g.settings << g.remove_entities << g.dt;
+  return packet << g.players << g.fleets << g.waypoints << g.ships << g.solars << g.settings << g.remove_entities;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, game_data &g){
-  sf::Packet& res = packet >> g.players >> g.fleets >> g.waypoints >> g.ships >> g.solars >> g.settings >> g.remove_entities >> g.dt;
-  cout << "receive game data: dt = " << g.dt << endl;
-  return res;
+  return packet >> g.players >> g.fleets >> g.waypoints >> g.ships >> g.solars >> g.settings >> g.remove_entities;
 }
 
 // game_settings
@@ -91,7 +88,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const game_settings &g){
     << g.ship_speed
     << g.solar_minrad
     << g.solar_maxrad
-    << g.num_solars;
+    << g.num_solars
+    << g.dt;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, game_settings &g){
@@ -102,7 +100,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, game_settings &g){
      >> g.ship_speed
      >> g.solar_minrad
      >> g.solar_maxrad
-     >> g.num_solars;
+     >> g.num_solars
+     >> g.dt;
 }
 
 // ship

@@ -30,7 +30,7 @@ void st3::graphics::initialize(){
   }
 }
 
-void st3::graphics::draw_ship(sf::RenderWindow &w, ship s, sf::Color col, float sc){
+void st3::graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){
   vector<sf::Vertex> svert;
 
   sf::Color cnose(255,200,180,200);

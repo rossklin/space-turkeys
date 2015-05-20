@@ -201,8 +201,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 @HAVE_DOXYGEN_TRUE@directory = $(top_srcdir)/docs/html
-@HAVE_DOXYGEN_TRUE@dist_man_HTML = $(directory)/index.html
-@HAVE_DOXYGEN_TRUE@CLEANFILES = doxyfile.stamp
+@HAVE_DOXYGEN_TRUE@dist_man_HTML = $(directory)
 all: all-am
 
 .SUFFIXES:
@@ -302,7 +301,6 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
-	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -392,13 +390,14 @@ uninstall-am:
 	mostlyclean-generic pdf pdf-am ps ps-am tags-am uninstall \
 	uninstall-am
 
-@HAVE_DOXYGEN_TRUE@$(directory)/index.html: doxyfile.stamp
+@HAVE_DOXYGEN_TRUE@$(dist_man_HTML): force_check
 
-@HAVE_DOXYGEN_TRUE@doxyfile.stamp:
+@HAVE_DOXYGEN_TRUE@all-local: force_check
+
+@HAVE_DOXYGEN_TRUE@force_check:
 @HAVE_DOXYGEN_TRUE@	$(DOXYGEN) Doxyfile
-@HAVE_DOXYGEN_TRUE@	echo Timestamp > doxyfile.stamp
+@HAVE_DOXYGEN_TRUE@	true
 
-@HAVE_DOXYGEN_TRUE@all-local: doxyfile.stamp
 @HAVE_DOXYGEN_TRUE@clean-local:
 @HAVE_DOXYGEN_TRUE@	rm -rf $(directory)
 

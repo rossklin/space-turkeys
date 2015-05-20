@@ -1,6 +1,7 @@
 #include <string>
 
 #include "game_data.h"
+#include "graphics.h"
 
 using namespace std;
 
@@ -54,7 +55,7 @@ void data_loader(sf::TcpSocket &s, game_data &g){
   }
 }
 
-void game(sf::TcpSocket &socket, sf::RenderWindow &window){
+void game(sf::TcpSocket &socket, window_t &window){
   game_data g;
   g.run = true;
 
