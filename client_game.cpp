@@ -503,10 +503,10 @@ void st3::client::game::add_command(command c, point from, point to, bool fill_s
   s -> commands.insert(id);
 
   // add ships to command
-  set<idtype> ready_ships = s -> get_ready_ships();
+  set<idtype> ready_ships = get_ready_ships(c.source);
   cout << "ready ships: " << ready_ships.size() << endl;
   if (fill_ships) cs -> ships = ready_ships;
-  s -> allocated_ships += cs -> ships;
+  // s -> allocated_ships += cs -> ships;
 
   // add ships to waypoint
   if (t -> isa(identifier::waypoint)){
@@ -541,7 +541,7 @@ void game::recursive_waypoint_deallocate(source_t wid, set<idtype> a){
   if (a.empty()) return;
 
   s -> ships -= a;
-  s -> allocated_ships -= a;
+  // s -> allocated_ships -= a;
 
   cout << "removing " << a.size() << " ships from waypoint " << wid << endl;
   
@@ -594,7 +594,7 @@ void st3::client::game::remove_command(idtype key){
     s -> commands.erase(key);
 
     // deallocate ships from source
-    s -> allocated_ships -= cships;
+    // s -> allocated_ships -= cships;
 
     cout << " .. calling RWD" << endl;
     // remove ships from waypoint
@@ -776,7 +776,7 @@ bool st3::client::game::select_command_at(point p){
     // setup command gui
     hm_t<idtype, ship> ready_ships;
     
-    for (auto x : entity_selectors[it -> second -> source] -> get_ready_ships()){
+    for (auto x : get_ready_ships(it -> second -> source)){
       ready_ships[x] = ships[x];
     }
     
@@ -802,6 +802,25 @@ int game::count_selected(){
   int sum = 0;
   for (auto x : entity_selectors) sum += x.second -> selected;
   return sum;
+}
+
+// ids of non-allocated ships for entity selector
+set<idtype> game::get_ready_ships(source_t id){
+
+  if (!entity_selectors.count(id)) {
+    cout << "get ready ships: entity selector " << id << " not found!" << endl;
+    exit(-1);
+  }
+
+  entity_selector *e = entity_selectors[id];
+  set<idtype> s = e -> get_ships();
+  for (auto c : e -> commands){
+    for (auto x : command_selectors[c] -> ships){
+      s.erase(x);
+    }
+  }
+
+  return s;
 }
 
 list<source_t> game::selected_solars(){
@@ -859,11 +878,11 @@ int st3::client::game::choice_event(sf::Event e){
     // set command selector's ships
     cs -> ships = comgui -> allocated;
     
-    // set source entity's allocated ships
-    s -> allocated_ships += comgui -> allocated;
+    // // set source entity's allocated ships
+    // s -> allocated_ships += comgui -> allocated;
 
-    // unset source entity's non-allocated ships
-    s -> allocated_ships -= comgui -> cached;
+    // // unset source entity's non-allocated ships
+    // s -> allocated_ships -= comgui -> cached;
 
     return client::query_ask;
   }

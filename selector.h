@@ -27,7 +27,6 @@ namespace st3{
       bool area_selectable; /*!< can this entity be area selected? */
       sf::Color color; /*!< the player color of this entity */
       std::set<idtype> commands; /*! the commands given to this entity */
-      std::set<idtype> allocated_ships; /*! set of ships allocated in commands */
       
       /*! construct an entity selector with given color and ownership
 	@param c the color
@@ -76,11 +75,6 @@ namespace st3{
 	@return set of ship ids
       */
       virtual std::set<idtype> get_ships() = 0;
-
-      /*! get the non-allocated ships associated to the selector
-	@return set of ship ids
-      */
-      virtual std::set<idtype> get_ready_ships();
     };
 
     /*! entity_selector representing a solar */

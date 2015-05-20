@@ -35,15 +35,6 @@ bool entity_selector::inside_rect(sf::FloatRect r){
   return r.contains(get_position());
 }
 
-// ids of non-allocated ships
-set<idtype> entity_selector::get_ready_ships(){
-  set<idtype> s = get_ships();
-  for (auto x : allocated_ships){
-    s.erase(x);
-  }
-  return s;
-}
-
 // ****************************************
 // SOLAR SELECTOR
 // ****************************************

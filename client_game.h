@@ -78,6 +78,7 @@ namespace st3{
       void deselect_all();
       std::list<idtype> incident_commands(source_t key);
       int count_selected();
+      virtual std::set<idtype> get_ready_ships(source_t sel_id);
       std::list<source_t> selected_solars();
 
       // graphics
