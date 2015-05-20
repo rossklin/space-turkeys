@@ -19,6 +19,7 @@ namespace st3{
       work_ship,
       work_research,
       work_resource,
+      work_defense,
       work_num
     };
 
@@ -36,6 +37,13 @@ namespace st3{
       ship_fighter,
       ship_bomber,
       ship_num
+    };
+
+    /*! defense work choices */
+    enum d_defense{
+      defense_enhance = 0,
+      defense_repair,
+      defense_num
     };
 
     /*! solar system coefficient: births per person per unit time */

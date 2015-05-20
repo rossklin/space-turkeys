@@ -78,10 +78,8 @@
 *** barbarians
 * basic goals
 ** server game
-*** make solars more different
 *** neutral solars should start with less industry
 *** ability to build defense
-*** remove waypoints with neither incoming nor outgoing commands
 *** send victor to client on game completion
 *** colonisation/transport ships
     and make some solars without defense

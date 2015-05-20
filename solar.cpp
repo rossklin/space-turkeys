@@ -59,6 +59,9 @@ void st3::solar::initialize(){
   industry_cost[work_resource][resource_metal] = 0.2;
   industry_cost[work_resource][resource_gas] = 0.1;
   industry_cost[work_resource][resource_organics] = 0.2;
+  industry_cost[work_defense][resource_metal] = 0.2;
+  industry_cost[work_defense][resource_gas] = 0.1;
+  industry_cost[work_defense][resource_organics] = 0.1;
 
   // names
   work_names.resize(work_num);
@@ -66,6 +69,7 @@ void st3::solar::initialize(){
   work_names[work_research] = "research";
   work_names[work_resource] = "resource";
   work_names[work_ship] = "ship";
+  work_names[work_defense] = "defense";
 
   sub_names.resize(work_num);
 
@@ -87,6 +91,11 @@ void st3::solar::initialize(){
   sub_names[work_research][research::r_industry] = "industry";
   sub_names[work_research][research::r_ship] = "ship";
 
+  // defense names
+  sub_names[work_defense].resize(defense_num);
+  sub_names[work_defense][defense_enhance] = "enhance";
+  sub_names[work_defense][defense_repair] = "repair";
+
   // work names
   sub_names[work_expansion] = work_names;
 
@@ -96,6 +105,7 @@ void st3::solar::initialize(){
   p3[work_expansion] = 2e-3;
   p3[work_ship] = 2e-2;
   p3[work_resource] = 2e-2;
+  p3[work_defense] = 2e-2;
 }
 
 void choice_t::normalize(){
@@ -112,6 +122,7 @@ choice_t::choice_t(){
   subsector[work_ship] = vector<float>(ship_num, 1);
   subsector[work_research] = vector<float>(research::r_num, 1);
   subsector[work_resource] = vector<float>(resource_num, 1);
+  subsector[work_defense] = vector<float>(defense_num, 1);
 }
 
 float st3::solar::solar::resource_constraint(std::vector<float> r){
@@ -167,6 +178,13 @@ float st3::solar::solar::sub_increment(research const &r, int sector_idx, int su
     break;
   case work_resource:
     rate = p3[work_resource] * r.field[research::r_industry];
+    break;
+  case work_defense:
+    if (sub_idx == defense_enhance){
+      rate = 10 * p3[work_defense] * r.field[research::r_industry] / (defense_current + 1);
+    }else if (sub_idx == defense_repair){
+      rate = p3[work_defense] * r.field[research::r_industry] / (defense_current + 1);
+    }
     break;
   }
 

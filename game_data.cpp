@@ -733,6 +733,7 @@ void st3::game_data::solar_tick(idtype id){
   solar::choice_t &c = solar_choices[id];
   research &r_base = players[s.owner].research_level;
   float dt = settings.dt;
+  float allocated, build;
 
   if (s.owner < 0 || s.population_number <= 0){
     s.population_number = 0;
@@ -759,7 +760,7 @@ void st3::game_data::solar_tick(idtype id){
   // cout << "Research: ";
   // research
   for (i = 0; i < research::r_num; i++){
-    float allocated = P[solar::work_research] * c.subsector[solar::work_research][i];
+    allocated = P[solar::work_research] * c.subsector[solar::work_research][i];
     buf.new_research[i] += s.sub_increment(r_base, solar::work_research, i, allocated) * dt;
     // cout << s.new_research[i] << ", ";
   }
@@ -770,8 +771,8 @@ void st3::game_data::solar_tick(idtype id){
   float i_sum = 0;
   float i_cap = s.usable_area;
   for (i = 0; i < solar::work_num; i++){
-    float allocated = P[solar::work_expansion] * c.subsector[solar::work_expansion][i];
-    float build = s.sub_increment(r_base, solar::work_expansion, i, allocated);
+    allocated = P[solar::work_expansion] * c.subsector[solar::work_expansion][i];
+    build = s.sub_increment(r_base, solar::work_expansion, i, allocated);
 
     vector<float> r = st3::solar::industry_cost[i];
     build = fmin(build, s.resource_constraint(r));
@@ -791,13 +792,23 @@ void st3::game_data::solar_tick(idtype id){
   }
   // cout << endl;
 
+  // defense enhance
+  allocated = P[solar::work_defense] * c.subsector[solar::work_defense][solar::defense_enhance];
+  build = s.sub_increment(r_base, solar::work_defense, solar::defense_enhance, allocated);
+  buf.defense_capacity += build * dt;  
+
+  // defense repair
+  allocated = P[solar::work_defense] * c.subsector[solar::work_defense][solar::defense_repair];
+  build = s.sub_increment(r_base, solar::work_defense, solar::defense_repair, allocated);
+  buf.defense_current = fmin(buf.defense_current + build, buf.defense_capacity);
+
   // fleet 
   // pre-check resource constraints?
   // cout << "fleet: ";
   for (i = 0; i < solar::ship_num; i++){
     vector<float> r = st3::solar::ship_cost[i];
-    float allocated = P[solar::work_ship] * c.subsector[solar::work_ship][i];
-    float build = s.sub_increment(r_base, solar::work_ship, i, allocated);
+    allocated = P[solar::work_ship] * c.subsector[solar::work_ship][i];
+    build = s.sub_increment(r_base, solar::work_ship, i, allocated);
     build = fmin(build, s.resource_constraint(r));
     buf.fleet_growth[i] += build * dt;
 
@@ -813,7 +824,7 @@ void st3::game_data::solar_tick(idtype id){
   // resource
   // cout << "resource: ";
   for (i = 0; i < solar::resource_num; i++){
-    float allocated = P[solar::work_resource] * c.subsector[solar::work_resource][i];
+    allocated = P[solar::work_resource] * c.subsector[solar::work_resource][i];
     float delta = s.sub_increment(r_base, solar::work_resource, i, allocated);
     float r = fmin(delta, s.resource[i]);
     buf.resource[i] -= r * dt; // resources on solar
@@ -823,7 +834,7 @@ void st3::game_data::solar_tick(idtype id){
   // cout << endl;
 
   // population
-  float allocated = fmin(s.usable_area - i_sum, s.population_number * s.population_happy * (1 - c.workers));
+  allocated = fmin(s.usable_area - i_sum, s.population_number * s.population_happy * (1 - c.workers));
 
   cout << "population dynamics for " << id << " : " << endl;
 
@@ -833,9 +844,6 @@ void st3::game_data::solar_tick(idtype id){
 
   // cout << "population: " << buf.population_number << "(" << buf.population_happy << ")" << endl;
 
-  // defense
-  s.defense_current = fmin(s.defense_current + 0.01, s.defense_capacity);
-
   // assignment
   s.industry.swap(buf.industry);
   s.new_research.swap(buf.new_research);
@@ -844,6 +852,8 @@ void st3::game_data::solar_tick(idtype id){
   s.fleet_growth.swap(buf.fleet_growth);
   s.population_number = buf.population_number;
   s.population_happy = buf.population_happy;
+  s.defense_current = buf.defense_current;
+  s.defense_capacity = buf.defense_capacity;
 
   // new ships
   for (i = 0; i < solar::ship_num; i++){

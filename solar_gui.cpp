@@ -216,7 +216,7 @@ solar_gui::solar_gui(window_t &w, solar::solar sol, solar::choice_t cc, research
   // template selector
   tsel -> load(black);
   tsel -> setSize(dimension.x, 40);
-  tsel -> setPosition(margin.x, margin.y + dimension.y - 150);
+  tsel -> setPosition(margin.x, margin.y + dimension.y - 100);
   for (auto x : template_name) tsel -> addItem(x);
   tsel -> bindCallback(bind(&solar_gui::callback_template, this), ComboBox::ItemSelected);
   
@@ -270,7 +270,7 @@ float solar_gui::get_control_cap(int id){
 void solar_gui::update_popsum(){
   float sum = 0;
   for (auto x : controls) sum += x -> get_sum();
-  header_population -> setText("Population: " + to_string(s.population_number) + "(farmers: " + to_string(s.population_number - sum) + ", inc: " + to_string(s.pop_increment(r, s.population_number - sum) * round_time) + ")");
+  header_population -> setText("Population: " + to_string(s.population_number) + "(farmers: " + to_string(s.population_number - sum) + ", inc: " + to_string(s.pop_increment(r, s.population_number - sum) * round_time) + "), def: " + to_string(s.defense_current) + " [" + to_string(s.defense_capacity) + "]");
 }
 
 solar::choice_t solar_gui::evaluate(){
