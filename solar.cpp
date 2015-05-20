@@ -10,6 +10,7 @@ using namespace st3;
 using namespace solar;
 
 vector<vector<float> > st3::solar::ship_cost;
+vector<vector<float> > st3::solar::industry_cost;
 vector<float> st3::solar::ship_buildtime;
 vector<string> st3::solar::work_names;
 vector<vector<string> > st3::solar::sub_names;
@@ -22,12 +23,15 @@ const float st3::solar::feed_boost_coefficient = 4e-3;
 
 void st3::solar::initialize(){
   ship_cost.resize(ship_num);
+  industry_cost.resize(work_num);
   ship_buildtime.resize(ship_num);
   for (auto &x : ship_cost) x.resize(resource_num);
-
+  
+  // ships
   // scout
   ship_cost[ship_scout][resource_metal] = 1;
   ship_cost[ship_scout][resource_gas] = 1;
+  ship_cost[ship_scout][resource_organics] = 1;
   ship_buildtime[ship_scout] = 10;
 
   // fighter
@@ -40,7 +44,23 @@ void st3::solar::initialize(){
   ship_cost[ship_bomber][resource_gas] = 2;
   ship_buildtime[ship_bomber] = 30;
 
-  // industry names
+  // industry
+  // costs
+  for (auto &x : industry_cost) x.resize(resource_num);
+
+  industry_cost[work_expansion][resource_metal] = 0.4;
+  industry_cost[work_expansion][resource_gas] = 0.1;
+  industry_cost[work_expansion][resource_organics] = 0.1;
+  industry_cost[work_ship][resource_metal] = 0.4;
+  industry_cost[work_ship][resource_gas] = 0.2;
+  industry_cost[work_research][resource_metal] = 0.1;
+  industry_cost[work_research][resource_gas] = 0.4;
+  industry_cost[work_research][resource_organics] = 0.4;
+  industry_cost[work_resource][resource_metal] = 0.2;
+  industry_cost[work_resource][resource_gas] = 0.1;
+  industry_cost[work_resource][resource_organics] = 0.2;
+
+  // names
   work_names.resize(work_num);
   work_names[work_expansion] = "ind. expansion";
   work_names[work_research] = "research";
@@ -53,6 +73,7 @@ void st3::solar::initialize(){
   sub_names[work_resource].resize(resource_num);
   sub_names[work_resource][resource_metal] = "metal";
   sub_names[work_resource][resource_gas] = "gas";
+  sub_names[work_resource][resource_organics] = "organics";
 
   // ship names
   sub_names[work_ship].resize(ship_num);
@@ -108,7 +129,7 @@ st3::solar::solar::solar(){
   population_happy = 1;
   usable_area = 1e8 + utility::random_uniform() * 1e9;
   vision = 120;
-  resource = vector<float>(resource_num, 1000);
+  resource = utility::vscale(utility::random_uniform(resource_num), 1000);
   fleet_growth = vector<float>(ship_num, 0);
   new_research = vector<float>(research::r_num, 0);
   industry = vector<float>(work_num, 200);

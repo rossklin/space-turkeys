@@ -26,6 +26,7 @@ namespace st3{
     enum d_resource{
       resource_metal = 0,
       resource_gas,
+      resource_organics,
       resource_num
     };
 
@@ -49,8 +50,11 @@ namespace st3{
     /*! solar system coefficient: effect factor for food */
     extern const float feed_boost_coefficient;
 
-    /*! research costs for each resource for each ship class */
+    /*! resource costs for each resource for each ship class */
     extern std::vector<std::vector<float> > ship_cost;
+
+    /*! resource costs for each resource for each industry sector */
+    extern std::vector<std::vector<float> > industry_cost;
       
     /*! ship construction units required to build each ship class */
     extern std::vector<float> ship_buildtime;

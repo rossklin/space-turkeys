@@ -106,16 +106,17 @@
 *** remove solar::development as no longer nessecary
 * bugs
 ** fleets follow targets that leave sight
+   check range of sight in update fleet data?
 ** fleets follow last assigned in split
 * issues
-** tgui cmake requires that sfml libraries exist
+** socket_t exits on disconnect in thread, causes segfault
+** [has tempfix] tgui cmake requires that sfml libraries exist
    but automake refuses to call anything at beginning of build
    try:
    a) get make to call cmake in tgui after building sfml
    b) fork tgui and remove dep check so cmake can be called in configure
    
-   temp: manually remove dep check or run make twice
-** socket_t exits on disconnect in thread, causes segfault
+   temp: overwriting tgui cmakelists in configure
 ** [low priority] how to get make to only rebuild docs when nessecary?
 ** [low priority] minimap bounding box drawn incorrectly after window resize
 ** [low priority] segfault after client side target missing, some turns after resume from suspend.

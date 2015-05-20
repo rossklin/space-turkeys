@@ -364,11 +364,13 @@ void solar_gui::load_template(string s){
     c.workers = compute_workers_nostarve(0.5);
     c.sector[solar::work_expansion] = 1;
     c.sector[solar::work_research] = 0.5;
+    c.sector[solar::work_resource] = 0.5;
     c.subsector[solar::work_expansion][solar::work_expansion] = 1;
     c.subsector[solar::work_expansion][solar::work_ship] = 0.2;
     c.subsector[solar::work_expansion][solar::work_research] = 0.4;
     c.subsector[solar::work_expansion][solar::work_resource] = 0.2;
     c.subsector[solar::work_research][research::r_industry] = 1;
+    for (auto &x : c.subsector[solar::work_resource]) x = 1;
   }else if (!s.compare("ship")){
     c.workers = compute_workers_nostarve(0.3);
     c.sector[solar::work_expansion] = 1;

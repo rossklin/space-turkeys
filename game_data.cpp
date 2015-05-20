@@ -703,6 +703,7 @@ void game_data::build(){
 	solar::solar &s = solars[x.second];
 	s.owner = x.first;
 	s.defense_current = s.defense_capacity = d_start;
+	s.resource = vector<float>(solar::resource_num, 1000);
 	research rbase;
 
 	ship shs(solar::ship_scout, rbase);
@@ -772,7 +773,15 @@ void st3::game_data::solar_tick(idtype id){
     float allocated = P[solar::work_expansion] * c.subsector[solar::work_expansion][i];
     float build = s.sub_increment(r_base, solar::work_expansion, i, allocated);
 
+    vector<float> r = st3::solar::industry_cost[i];
+    build = fmin(build, s.resource_constraint(r));
+
     buf.industry[i] += build * dt;
+
+    for (int j = 0; j < solar::resource_num; j++){
+      buf.resource_storage[j] -= r[j] * build * dt;
+    }
+
     i_sum += buf.industry[i];
     // cout << s.industry[i] << ", ";
   }

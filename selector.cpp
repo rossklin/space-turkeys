@@ -66,7 +66,13 @@ void solar_selector::draw(window_t &w){
   text.setScale(utility::inverse_scale(w));
 
   sf::CircleShape sol(radius);
-  sol.setFillColor(graphics::solar_fill);
+  // compute fill color
+  sf::Color cfill;
+  cfill.r = 256 * utility::sigmoid(resource[st3::solar::resource_metal] / 1000);
+  cfill.g = 256 * utility::sigmoid(resource[st3::solar::resource_organics] / 1000);
+  cfill.b = 256 * utility::sigmoid(resource[st3::solar::resource_gas] / 1000);
+  cfill.a = 100;
+  sol.setFillColor(cfill);
   sol.setOutlineThickness(-1);
   sol.setOutlineColor(get_color());
   sol.setPosition(position.x - radius, position.y - radius);
