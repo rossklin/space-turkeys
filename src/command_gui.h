@@ -94,7 +94,7 @@ namespace st3{
     
   public:
     static constexpr float table_width = 400; /*!< width of tables */
-    static constexpr float table_height = 180; /*!< height of tables */
+    static constexpr float table_height = 150; /*!< height of tables */
 
     std::set<idtype> cached, allocated; /*!< sets of ids of waiting and allocated ships */
     idtype comid; /*!< id of associated command selector */

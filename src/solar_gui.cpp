@@ -212,20 +212,19 @@ solar_gui::solar_gui(window_t &w, solar::solar sol, solar::choice_t cc, research
     label_offset += (st3::solar::sub_names[i].size() + 1) * label_size.y;
   }
 
-  load_template("population");
   update_popsum();
 
   // template selector
   Label::Ptr tlabel(*this);
   tlabel -> load(black);
   tlabel -> setSize(80, 30);
-  tlabel -> setPosition(margin.x, margin.y + dimension.y - 80);
+  tlabel -> setPosition(margin.x, margin.y + dimension.y - 60);
   tlabel -> setText("Load template:");
   tlabel -> setTextSize(12);
 
   tsel -> load(black);
   tsel -> setSize(200, 30);
-  tsel -> setPosition(margin.x + 100, margin.y + dimension.y - 80);
+  tsel -> setPosition(margin.x + 100, margin.y + dimension.y - 60);
   for (auto x : template_name) tsel -> addItem(x);
   tsel -> bindCallback(bind(&solar_gui::callback_template, this), ComboBox::ItemSelected);
   
@@ -279,7 +278,8 @@ float solar_gui::get_control_cap(int id){
 void solar_gui::update_popsum(){
   float sum = 0;
   for (auto x : controls) sum += x -> get_sum();
-  header_population -> setText("Population: " + to_string(s.population_number) + "(farmers: " + to_string(s.population_number - sum) + ", inc: " + to_string(s.pop_increment(r, s.population_number - sum) * round_time) + "), def: " + to_string(s.defense_current) + " [" + to_string(s.defense_capacity) + "]");
+  vector<string> happy_string({":C", ":(", ":|", ":)", ":D"});
+  header_population -> setText(happy_string[happy_string.size() * fmin(s.population_happy, 0.99)] + " Population: " + to_string(s.population_number) + "(farmers: " + to_string(s.population_number - sum) + ", inc: " + to_string(s.pop_increment(r, s.population_number - sum) * round_time) + "), def: " + to_string(s.defense_current) + " [" + to_string(s.defense_capacity) + "]");
 }
 
 solar::choice_t solar_gui::evaluate(){
@@ -316,13 +316,24 @@ solar::choice_t solar_gui::evaluate(){
 bool solar_gui::run(){
   while (!done){
     if (!window.isOpen()) {
-      return false;
+      cout << "solar gui window close not handled!" << endl;
+      exit(-1);
     }
 
     sf::Event event;
     while (window.pollEvent(event)){
       if (event.type == sf::Event::Closed) window.close();
       handleEvent(event);
+      if (event.type == sf::Event::KeyPressed){
+	switch (event.key.code){
+	case sf::Keyboard::Return:
+	  callback_done(true);
+	  break;
+	case sf::Keyboard::Escape:
+	  callback_done(false);
+	  break;
+	}
+      }
     }
 
     window.clear();

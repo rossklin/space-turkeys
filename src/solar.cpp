@@ -26,8 +26,9 @@ const float st3::solar::fpp_per_research = 2e-2;
 
 void st3::solar::initialize(){
   ship_cost.resize(ship_num);
-  industry_cost.resize(work_num);
   ship_buildtime.resize(ship_num);
+  industry_cost.resize(work_num);
+
   for (auto &x : ship_cost) x.resize(resource_num);
   
   // ships
@@ -46,6 +47,12 @@ void st3::solar::initialize(){
   ship_cost[ship_bomber][resource_metal] = 3;
   ship_cost[ship_bomber][resource_gas] = 2;
   ship_buildtime[ship_bomber] = 30;
+
+  // colonizer
+  ship_cost[ship_colonizer][resource_metal] = 3;
+  ship_cost[ship_colonizer][resource_gas] = 2;
+  ship_cost[ship_colonizer][resource_organics] = 4;
+  ship_buildtime[ship_colonizer] = 40;
 
   // industry
   // costs
@@ -87,6 +94,7 @@ void st3::solar::initialize(){
   sub_names[work_ship][ship_scout] = "scout";
   sub_names[work_ship][ship_fighter] = "fighter";
   sub_names[work_ship][ship_bomber] = "bomber";
+  sub_names[work_ship][ship_colonizer] = "colonizer";
 
   // research names
   sub_names[work_research].resize(research::r_num);
@@ -139,15 +147,16 @@ float st3::solar::solar::resource_constraint(std::vector<float> r){
 }
 
 st3::solar::solar::solar(){
-  population_number = 1000;
+  population_number = 0;
   population_happy = 1;
   usable_area = 1e8 + utility::random_uniform() * 1e9;
   vision = 120;
   resource = utility::vscale(utility::random_uniform(resource_num), 1000);
   fleet_growth = vector<float>(ship_num, 0);
   new_research = vector<float>(research::r_num, 0);
-  industry = vector<float>(work_num, 200);
+  industry = vector<float>(work_num, 0);
   resource_storage = vector<float>(resource_num, 0);
+  defense_current = defense_capacity = 0;
 }
 
 string st3::solar::solar::get_info(){
@@ -196,7 +205,10 @@ float st3::solar::solar::sub_increment(research const &r, int sector_idx, int su
   return rate * workers * population_happy;
 }
 
-float st3::solar::solar::pop_increment(research const &r, float farmers){
+float st3::solar::solar::pop_increment(research const &r, float allocated){
+  float i_sum = 0;
+  for (auto x : industry) i_sum += x;
+  float farmers = fmin(usable_area - i_sum, allocated);
   float food_cap = (food_per_person + fpp_per_research * utility::sigmoid(r.field[research::r_population], agriculture_limit_coefficient)) * farmers;
   float feed = feed_boost_coefficient * (food_cap - population_number) / population_number;
   float birth_rate = births_per_person + feed;

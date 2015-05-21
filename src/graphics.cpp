@@ -61,6 +61,14 @@ void st3::graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){
     svert[5] = sf::Vertex(point(0, 3), cnose);
     svert[6] = sf::Vertex(point(2, 0), col);
     break;
+  case solar::ship_colonizer:
+    svert.resize(5);
+    svert[0] = sf::Vertex(point(2, 1), col);
+    svert[1] = sf::Vertex(point(2, -1), col);
+    svert[2] = sf::Vertex(point(-2, -1), col);
+    svert[3] = sf::Vertex(point(-2, 1), col);
+    svert[4] = sf::Vertex(point(2, 1), col);
+    break;
   default:
     cout << "invalid ship type: " << s.ship_class << endl;
     exit(-1);

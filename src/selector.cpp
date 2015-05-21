@@ -72,6 +72,7 @@ void solar_selector::draw(window_t &w){
   cfill.g = 256 * utility::sigmoid(resource[st3::solar::resource_organics] / 1000);
   cfill.b = 256 * utility::sigmoid(resource[st3::solar::resource_gas] / 1000);
   cfill.a = 100;
+  sol.setPointCount(radius / utility::inverse_scale(w).x);
   sol.setFillColor(cfill);
   sol.setOutlineThickness(-1);
   sol.setOutlineColor(get_color());
@@ -87,7 +88,7 @@ void solar_selector::draw(window_t &w){
 
   if (owned){
     sol.setRadius(vision);
-    sol.setPointCount(vision);
+    sol.setPointCount(vision / utility::inverse_scale(w).x);
     sol.setFillColor(sf::Color::Transparent);
     sol.setOutlineThickness(-1);
     sol.setOutlineColor(sf::Color(40, 200, 60, 100));
@@ -95,6 +96,16 @@ void solar_selector::draw(window_t &w){
     w.draw(sol);
     w.draw(text);
   }
+
+  // draw defense indicator
+  float defrad = radius + 4; 
+  sol.setRadius(defrad);
+  sol.setPointCount(defrad / utility::inverse_scale(w).x);
+  sol.setOutlineThickness(utility::sigmoid(defense_current, 100) / 20);
+  sol.setOutlineColor(sf::Color(100, 140, 200, 150));
+  sol.setFillColor(sf::Color::Transparent);
+  sol.setPosition(position - point(defrad, defrad));
+  w.draw(sol);
 }
 
 bool solar_selector::isa(string t){
@@ -125,6 +136,7 @@ point fleet_selector::get_position(){
 void fleet_selector::draw(window_t &w){
   if (selected){
     sf::CircleShape s(radius);
+    s.setPointCount(radius / utility::inverse_scale(w).x);
     s.setFillColor(graphics::fleet_fill);
     s.setOutlineColor(graphics::fleet_outline);
     s.setOutlineThickness(1);
@@ -134,6 +146,7 @@ void fleet_selector::draw(window_t &w){
 
   if (owned){
     sf::CircleShape s(vision);
+    s.setPointCount(vision / utility::inverse_scale(w).x);
     s.setFillColor(sf::Color::Transparent);
     s.setOutlineColor(sf::Color(40, 200, 60, 100));
     s.setOutlineThickness(-1);

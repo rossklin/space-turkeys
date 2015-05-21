@@ -188,7 +188,10 @@ namespace st3{
     */
     sf::Transform view_inverse_transform(window_t &w);
 
-    /*! compute the scale factor mapping coordinate size to pixel size
+    /*! compute the scale factor coordinates per pixel
+
+      such that coord_dims = inverse_scale() * pixel_dims
+      
       @param w the current window
       @return point containing x and y scales
     */

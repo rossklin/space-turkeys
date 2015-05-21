@@ -524,6 +524,28 @@ void game_data::ship_bombard(idtype ship_id, idtype solar_id){
   ship &s = ships[ship_id];
   float damage;
 
+  // check colonization
+  if (s.ship_class == solar::ship_colonizer){
+    if (sol.owner == -1 && sol.defense_current <= 0){
+      sol.owner = s.owner;
+      sol.population_number = 100;
+      sol.population_happy = 1;
+      sol.defense_current = 1;
+      sol.industry = vector<float>(solar::work_num, 20);
+      cout << "player " << sol.owner << " colonizes solar " << solar_id << endl;
+
+      remove_ship(ship_id);
+    }
+
+    return;
+  }
+
+  // check if defenses already destroyed
+  if (sol.owner == -1 && sol.defense_current <= 0){
+    return;
+  }
+
+  // deal damage
   switch(s.ship_class){
   case solar::ship_scout:
   case solar::ship_fighter:
@@ -541,9 +563,8 @@ void game_data::ship_bombard(idtype ship_id, idtype solar_id){
   sol.population_number = fmax(sol.population_number - 10 * damage, 0);
   sol.population_happy *= 0.9;
 
-  if (sol.defense_current <= 0){
+  if (sol.owner > -1 && sol.defense_current <= 0){
     sol.owner = s.owner;
-    sol.population_number += 100; // todo: temporary fix
     cout << "player " << sol.owner << " conquers solar " << solar_id << endl;
   }
 
@@ -733,6 +754,10 @@ void game_data::build(){
 	s.owner = x.first;
 	s.defense_current = s.defense_capacity = d_start;
 	s.resource = vector<float>(solar::resource_num, 1000);
+	s.industry = vector<float>(solar::work_num, 200);
+	s.usable_area = 1e9;
+	s.population_number = 1000;
+	s.population_happy = 1;
 	research rbase;
 
 	ship shs(solar::ship_scout, rbase);
@@ -863,10 +888,8 @@ void st3::game_data::solar_tick(idtype id){
   // cout << endl;
 
   // population
-  allocated = fmin(s.usable_area - i_sum, s.population_number * s.population_happy * (1 - c.workers));
-
+  allocated = s.population_number * (1 - c.workers);
   cout << "population dynamics for " << id << " : " << endl;
-
   buf.population_number += s.pop_increment(r_base, allocated) * dt;
   buf.population_happy += 0.001 * (1 + 0.1 * utility::sigmoid(r_base.field[research::r_population] - P[solar::work_ship], 1000)) * dt;
   buf.population_happy = fmax(fmin(buf.population_happy, 1), 0);

@@ -78,11 +78,7 @@
 *** barbarians
 * basic goals
 ** server game
-*** neutral solars should start with less industry
-*** ability to build defense
 *** send victor to client on game completion
-*** colonisation/transport ships
-    and make some solars without defense
 *** emulate simultaneous evaluation of ship_bombard
 ** client game
 *** clickable minimap
@@ -101,15 +97,17 @@
    cmake build in a build directory so one can clean
    disable form_builder in tgui (check opts with ccmake)
 ** structure
-*** remove solar::development as no longer nessecary
+*** consider making work sector into a graph node class
 * bugs
 * issues
-** incorrect number of workers assigned in solar gui templates
-   needs solar::starve_limit
-** lack of resource is not indicated in solar gui
+** solar gui
+*** does not draw buttons in resized window
+*** incorrect number of workers assigned in templates
+    probably due to that pop_increment is non-linear
+    needs solar::starve_limit
+*** resource cost and lack of resource is not indicated
+*** template selector is ugly
 ** view_game should match window aspect ratio (also after resize)
-** defense build rates need to be checked
-** solar gui template selector is ugly
 ** socket_t exits on disconnect in thread, causes segfault
 ** [has tempfix] tgui cmake requires that sfml libraries exist
    but automake refuses to call anything at beginning of build
@@ -130,9 +128,15 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** colonisation/transport ships
+    and make some solars without defense
+** incorrect population increment shown
+** should respond to return/escape keys
+** does not terminate on window close event
 ** minimap drawn over comgui
 ** [low priority] minimap bounding box drawn incorrectly after window resize
 * fixed
+** defense build rates need to be checked
 ** fleets follow targets that leave sight
    check range of sight in update fleet data?
 ** fleets follow last assigned in split

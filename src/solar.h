@@ -9,7 +9,13 @@
 namespace st3{
   struct research;
 
-  /*! types and functions related to solars */
+  /*! types and functions related to solars 
+    
+    When adding [sub]sectors, remember to:
+    - add initializers in solar::initialize
+    - add the [sub]sector in solar::sub_increment
+    - add the [sub]sector in solar gui templates
+   */
   namespace solar{
     extern idtype id_counter;
 
@@ -36,6 +42,7 @@ namespace st3{
       ship_scout = 0,
       ship_fighter,
       ship_bomber,
+      ship_colonizer,
       ship_num
     };
 
