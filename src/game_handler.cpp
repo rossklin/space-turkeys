@@ -43,7 +43,7 @@ void st3::server::game_handler(com c, game_data g){
       cout << "game complete" << endl;
       packet.clear();
       packet << protocol::complete;
-      packet << g;
+      packet << (psum == 1 ? c.clients[pid].name : string("tie"));
       c.check_protocol(protocol::game_round, packet);
       return;
     }

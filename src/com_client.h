@@ -15,9 +15,10 @@ namespace st3{
   /*! client side specifics */
   namespace client{
     /*! enum for client query status */
-    const int query_query = 0; /*!< requery */
-    const int query_accepted = 1; /*!< query complete */
-    const int query_game_complete = 2; /*!< game complete */
+    const int query_query = 0; /*!< requery again */
+    const int query_accepted = 1; /*!< the query was confirmed */
+    const int query_aborted = 2; /*!< the query was aborted */
+    const int query_game_complete = 4; /*!< the game is complete */
 
     /*! send a query to the server and store the response
       @param socket socket to communicate on

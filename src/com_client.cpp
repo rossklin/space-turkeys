@@ -22,14 +22,11 @@ void st3::client::load_frames(socket_t socket, vector<game_data> &g, int &loaded
       i++;
       loaded = i;
     }else{
-      sf::sleep(sf::milliseconds(10));
+      sf::sleep(sf::milliseconds(1));
     }
   }
 }
 
-
-// blocking function: send package pq to socket, receive package pr
-// from socket, then set the value of done to true (for threading)
 void st3::client::query(socket_t socket, 
 	   sf::Packet &pq,
 	   sf::Packet &pr,

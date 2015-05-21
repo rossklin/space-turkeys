@@ -25,15 +25,23 @@ int main(int argc, char **argv){
   int width = 800;
   int height = 600;
   string ip = "127.0.0.1";
+  string name = "Name_blabla";
 
-  if (argc > 2){
-    cout << "usage: " << argv[0] << " [ip_number]" << endl;
+  srand(time(NULL));
+
+  name[rand()%name.length()] = rand() % 256;
+  name[rand()%name.length()] = rand() % 256;
+  name[rand()%name.length()] = rand() % 256;
+
+  if (argc > 3){
+    cout << "usage: " << argv[0] << " [ip_number] [name]" << endl;
     exit(-1);
+  }else if (argc == 3){
+    ip = argv[1];
+    name = argv[2];
   }else if (argc == 2){
     ip = argv[1];
   }
-
-  srand(time(NULL));
 
   // connect
   cout << "connecting...";
@@ -48,17 +56,12 @@ int main(int argc, char **argv){
   game g;
   sf::Packet pq, pr;
   int done;
-  string mes = "Name_blabla";
 
   g.socket.socket = &tcp_socket;
   g.socket.allocate_packet();
 
-  mes[rand()%mes.length()] = rand() % 256;
-  mes[rand()%mes.length()] = rand() % 256;
-  mes[rand()%mes.length()] = rand() % 256;
-
   cout << "sending name...";
-  pq << protocol::connect << mes;
+  pq << protocol::connect << name;
 
   query(g.socket, pq, pr, done);
 

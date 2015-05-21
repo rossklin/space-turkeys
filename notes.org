@@ -78,8 +78,8 @@
 *** barbarians
 * basic goals
 ** server game
-*** send victor to client on game completion
 *** emulate simultaneous evaluation of ship_bombard
+*** decide what to do with clients without objects
 ** client game
 *** clickable minimap
 *** choice/evolution: display ready players, autoplay when all ready
@@ -101,21 +101,14 @@
 * bugs
 * issues
 ** solar gui
+*** solar gui is ugly
 *** incorrect number of workers assigned in templates
     probably due to that pop_increment is non-linear
     needs solar::starve_limit
     or solar::farmers_for_growthratio (growth per population)
 *** resource cost and lack of resource is not indicated
-** colonizer creates population
 ** view_game should match window aspect ratio (also after resize)
 ** socket_t exits on disconnect in thread, causes segfault
-** [has tempfix] tgui cmake requires that sfml libraries exist
-   but automake refuses to call anything at beginning of build
-   try:
-   a) get make to call cmake in tgui after building sfml
-   b) fork tgui and remove dep check so cmake can be called in configure
-   
-   temp: overwriting tgui cmakelists in configure
 ** [low priority] how to get make to only rebuild docs when nessecary?
 ** [low priority] ships bombard and land in order of fleet, unfair
    add a map<player, damage> to solar, evaluate conquering after
@@ -125,13 +118,21 @@
    was updated
 
    consider tracking fleet splits so a fleet can chose a new target.
+** [has tempfix] tgui cmake requires that sfml libraries exist
+   but automake refuses to call anything at beginning of build
+   try:
+   a) get make to call cmake in tgui after building sfml
+   b) fork tgui and remove dep check so cmake can be called in configure
+   
+   temp: overwriting tgui cmakelists in configure
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+* fixed
+** send victor to client on game completion
 ** solar gui does not draw buttons in resized window
 ** sending colonizer ships spends population
 ** template selector is ugly
-* fixed
 ** colonisation/transport ships
     and make some solars without defense
 ** incorrect population increment shown

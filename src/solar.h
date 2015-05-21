@@ -179,12 +179,14 @@ namespace st3{
 	@param sector_idx the work sector
 	@param sub_idx the sub sector
 	@param n the number of assigned workers
+	@return increment per unit time
       */
       float sub_increment(research const &r, int sector_idx, int sub_idx, float n);
 
       /*! compute the population increment per unit time 
 	@param r current research level
 	@param n number of assigned farmers
+	@return increment per unit time
       */
       float pop_increment(research const &r, float n);
     };

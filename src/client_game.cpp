@@ -45,9 +45,11 @@ void st3::client::game::run(){
   st3::solar::initialize();
 
   // game loop
-  while (proceed){
+  while (true){
     clear_guis();
-    proceed &= pre_step();
+
+    if (!pre_step()) break;
+
     if (first){
       first = false;
       for (auto i : entity_selectors){
@@ -57,7 +59,9 @@ void st3::client::game::run(){
 	}
       }
     }
+
     choice_step();
+
     simulation_step();
   }
 }
@@ -84,7 +88,7 @@ bool st3::client::game::pre_step(){
 	   ref(done));
 
   while (!done){
-    if (!window.isOpen()) done |= query_game_complete;
+    if (!window.isOpen()) done |= query_aborted;
 
     sf::Event event;
     while (window.pollEvent(event)){
@@ -100,6 +104,29 @@ bool st3::client::game::pre_step(){
 
   if (done & query_game_complete){
     cout << "pre_step: finished" << endl;
+
+    string winner;
+    if (!(packet >> winner)){
+      cout << "server does not declare winner!" << endl;
+      return false;
+    }
+
+    message = "winner: " + winner;
+    
+    for (int i = 0; i < 40 && window.isOpen(); i++){
+      sf::Event event;
+      while (window.pollEvent(event)){
+	if (event.type == sf::Event::Closed) window.close();
+      }
+      draw_window();
+      sf::sleep(sf::milliseconds(100));
+    }
+
+    return false;
+  }
+
+  if (done & query_aborted){
+    cout << "pre step: aborted" << endl;
     return false;
   }
 

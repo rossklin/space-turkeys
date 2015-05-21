@@ -739,7 +739,7 @@ void game_data::build(){
   int ntest = 100;
   float unfairness = INFINITY;
   hm_t<idtype, idtype> test_homes;
-  int d_start = 20;
+  int d_start = 10;
 
   for (int i = 0; i < ntest && unfairness > 0; i++){
     hm_t<idtype, solar::solar> solar_buf = random_solars();
