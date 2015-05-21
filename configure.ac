@@ -4,16 +4,16 @@
 AC_PREREQ([2.69])
 AC_INIT([Space Turkeys], [3.0], [rossklin@gmail.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
-AC_CONFIG_SRCDIR([solar.h])
+AC_CONFIG_SRCDIR([src/solar.h])
 # AC_CONFIG_HEADERS([config.h])
-# AC_SUBST(print_date, "echo $(shell date)")
 
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
-# AC_PROG_INSTALL
+AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_CHECK_TOOL([CMAKE], [cmake])
+
 # check for doxygen
 AC_CHECK_PROGS([DOXYGEN], [doxygen])
 if test -z "$DOXYGEN";
@@ -65,14 +65,15 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([clock_gettime floor inet_ntoa memmove memset pow select socket sqrt strchr strstr strtol strtoul])
 
 # set include paths
-CXXFLAGS="$CXXFLAGS -std=c++11 -isystem external/src/SFML/include -isystem external/src/TGUI/include -Wl,-rpath=/usr/local/lib"
-LDFLAGS="$LDFLAGS -Lexternal/src/SFML/lib -Lexternal/src/TGUI/lib"
+extdir=../external/src
+CXXFLAGS="$CXXFLAGS -std=c++11 -isystem $extdir/SFML/include -isystem $extdir/TGUI/include -Wl,-rpath=/usr/local/lib"
+LDFLAGS="$LDFLAGS -L$extdir/SFML/lib -L$extdir/TGUI/lib"
 LIBS="$LIBS -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -ltgui"
 
-AC_CONFIG_FILES([Makefile docs/Makefile])
+AC_CONFIG_FILES([Makefile docs/Makefile src/Makefile])
+# AC_CONFIG_SUBDIRS([src])
 
-AM_CONDITIONAL([HAVE_DOXYGEN], 
-[test -n "$DOXYGEN"])
+AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([docs/Doxyfile])])
 
 AC_OUTPUT

@@ -107,6 +107,9 @@
    check range of sight in update fleet data?
 ** fleets follow last assigned in split
 * issues
+** defense build rates need to be checked
+** solar gui template selector needs to move down a bit
+** solar gui template selector is ugly
 ** socket_t exits on disconnect in thread, causes segfault
 ** [has tempfix] tgui cmake requires that sfml libraries exist
    but automake refuses to call anything at beginning of build

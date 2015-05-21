@@ -585,7 +585,7 @@ PACKAGE_STRING='Space Turkeys 3.0'
 PACKAGE_BUGREPORT='rossklin@gmail.com'
 PACKAGE_URL=''
 
-ac_unique_file="solar.h"
+ac_unique_file="src/solar.h"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -3000,7 +3000,6 @@ fi
 
 
 # AC_CONFIG_HEADERS([config.h])
-# AC_SUBST(print_date, "echo $(shell date)")
 
 # Checks for programs.
 ac_ext=cpp
@@ -4427,7 +4426,7 @@ else
 fi
 
 
-# AC_PROG_INSTALL
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether ${MAKE-make} sets \$(MAKE)" >&5
 $as_echo_n "checking whether ${MAKE-make} sets \$(MAKE)... " >&6; }
 set x ${MAKE-make}
@@ -4550,6 +4549,7 @@ esac
 else
   CMAKE="$ac_cv_prog_CMAKE"
 fi
+
 
 # check for doxygen
 for ac_prog in doxygen
@@ -5767,12 +5767,14 @@ done
 
 
 # set include paths
-CXXFLAGS="$CXXFLAGS -std=c++11 -isystem external/src/SFML/include -isystem external/src/TGUI/include -Wl,-rpath=/usr/local/lib"
-LDFLAGS="$LDFLAGS -Lexternal/src/SFML/lib -Lexternal/src/TGUI/lib"
+extdir=../external/src
+CXXFLAGS="$CXXFLAGS -std=c++11 -isystem $extdir/SFML/include -isystem $extdir/TGUI/include -Wl,-rpath=/usr/local/lib"
+LDFLAGS="$LDFLAGS -L$extdir/SFML/lib -L$extdir/TGUI/lib"
 LIBS="$LIBS -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -ltgui"
 
-ac_config_files="$ac_config_files Makefile docs/Makefile"
+ac_config_files="$ac_config_files Makefile docs/Makefile src/Makefile"
 
+# AC_CONFIG_SUBDIRS([src])
 
  if test -n "$DOXYGEN"; then
   HAVE_DOXYGEN_TRUE=
@@ -6539,6 +6541,7 @@ do
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "docs/Makefile") CONFIG_FILES="$CONFIG_FILES docs/Makefile" ;;
+    "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "docs/Doxyfile") CONFIG_FILES="$CONFIG_FILES docs/Doxyfile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
