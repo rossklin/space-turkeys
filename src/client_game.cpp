@@ -40,6 +40,7 @@ void st3::client::game::run(){
   view_game = sf::View(sf::FloatRect(0, 0, settings.width, settings.height));
   view_minimap = view_game;
   view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
+  view_window = window.getDefaultView();
 
   st3::solar::initialize();
 
@@ -999,13 +1000,13 @@ void game::draw_window(){
   // draw minimap bounds
   sf::FloatRect fr = view_minimap.getViewport();
   sf::RectangleShape r;
-  r.setPosition(fr.left * window.getSize().x, fr.top * window.getSize().y);
-  r.setSize(point(fr.width * window.getSize().x, fr.height * window.getSize().y));
+  r.setPosition(fr.left * view_window.getSize().x, fr.top * view_window.getSize().y);
+  r.setSize(point(fr.width * view_window.getSize().x, fr.height * view_window.getSize().y));
   r.setOutlineColor(sf::Color(255,255,255));
   r.setFillColor(sf::Color(0,0,25,100));
   r.setOutlineThickness(1);
 
-  window.setView(window.getDefaultView());
+  window.setView(view_window);
   window.draw(text);
   window.draw(r);
 
@@ -1016,6 +1017,13 @@ void game::draw_window(){
   r.setPosition(ul);
   r.setSize(view_game.getSize());
   window.draw(r);
+
+  // draw command gui
+  if (comgui) {
+    window.setView(view_window);
+    comgui -> draw();
+  }
+
   window.display();
 
   // reset game view
@@ -1023,6 +1031,7 @@ void game::draw_window(){
 }
 
 void game::draw_interface_components(){
+  window.setView(view_game);
 
   // draw commands
   for (auto x : command_selectors) x.second -> draw(window);
@@ -1035,11 +1044,6 @@ void game::draw_interface_components(){
     r.setOutlineThickness(1);
     window.draw(r);
   }
-
-  // draw command gui
-  window.setView(window.getDefaultView());
-  if (comgui) comgui -> draw();
-  window.setView(view_game);
 
 }
 

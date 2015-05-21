@@ -18,8 +18,11 @@ vector<float> st3::solar::p3;
 
 const float st3::solar::births_per_person = 2e-3;
 const float st3::solar::deaths_per_person = 2e-3;
-const float st3::solar::agriculture_boost_coefficient = 1e3;
-const float st3::solar::feed_boost_coefficient = 4e-3;
+const float st3::solar::agriculture_limit_coefficient = 1e3;
+const float st3::solar::feed_boost_coefficient = 2e-2;
+const float st3::solar::crowding_rate = 1e-6;
+const float st3::solar::food_per_person = 2;
+const float st3::solar::fpp_per_research = 2e-2;
 
 void st3::solar::initialize(){
   ship_cost.resize(ship_num);
@@ -181,26 +184,26 @@ float st3::solar::solar::sub_increment(research const &r, int sector_idx, int su
     break;
   case work_defense:
     if (sub_idx == defense_enhance){
-      rate = 10 * p3[work_defense] * r.field[research::r_industry] / (defense_current + 1);
+      rate = 10 * p3[work_defense] * r.field[research::r_industry] / (defense_capacity + 1);
     }else if (sub_idx == defense_repair){
-      rate = p3[work_defense] * r.field[research::r_industry] / (defense_current + 1);
+      rate = p3[work_defense] * r.field[research::r_industry];
     }
     break;
   }
+
+  cout << "sub increment rate: " << (rate * workers * population_happy) << endl;
 
   return rate * workers * population_happy;
 }
 
 float st3::solar::solar::pop_increment(research const &r, float farmers){
-  float food_cap = (1.5 + 0.01 * utility::sigmoid(r.field[research::r_population], agriculture_boost_coefficient)) * farmers;
-
+  float food_cap = (food_per_person + fpp_per_research * utility::sigmoid(r.field[research::r_population], agriculture_limit_coefficient)) * farmers;
   float feed = feed_boost_coefficient * (food_cap - population_number) / population_number;
-
   float birth_rate = births_per_person + feed;
+  float crowding = crowding_rate / (r.field[research::r_population] + 1) * population_number;
+  float death_rate = deaths_per_person / (r.field[research::r_population] + 1) + fmax(-feed, 0) + crowding;
 
-  float death_rate = deaths_per_person / (r.field[research::r_population] + 1) + fmax(-feed, 0);
-
-  cout << "pop: " << population_number << ", happy: " << population_happy << ", farmers: " << farmers << ", cap: " << food_cap << ", feed: " << feed << ", birth: " << birth_rate << ", death: " << death_rate << endl;
+  cout << "pop: " << population_number << ", happy: " << population_happy << ", farmers: " << farmers << ", cap: " << food_cap << ", feed: " << feed << ", birth: " << birth_rate << ", crowding: " << crowding << ", death: " << death_rate << endl;
 
   return (birth_rate - death_rate) * population_number;
 }

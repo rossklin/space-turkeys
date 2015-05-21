@@ -53,10 +53,19 @@ namespace st3{
     extern const float deaths_per_person;
 
     /*! solar system coefficient: limit of food production boost factor per person */
-    extern const float agriculture_boost_coefficient;
+    extern const float agriculture_limit_coefficient;
+
+    /*! base food production per farmer */
+    extern const float food_per_person;
+
+    /*! food production per farmer increase per research level */
+    extern const float fpp_per_research;
 
     /*! solar system coefficient: effect factor for food */
     extern const float feed_boost_coefficient;
+
+    /*! solar system coefficient: effect factor for food */
+    extern const float crowding_rate;
 
     /*! resource costs for each resource for each ship class */
     extern std::vector<std::vector<float> > ship_cost;

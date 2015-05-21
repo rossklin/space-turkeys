@@ -90,6 +90,7 @@ solar_gui::control_group::control_group(solar_gui *g,
   label -> setPosition(pos.x, pos.y);
   label -> setSize(label_dims.x, label_dims.y);
   label -> setText(title + ": " + to_string(g -> s.industry[id]));
+  label -> setTextStyle(sf::Text::Bold);
   label -> setTextSize(12);
 
   cout << "control_group: total = " << total << ", props = " << proportions << endl;
@@ -211,12 +212,20 @@ solar_gui::solar_gui(window_t &w, solar::solar sol, solar::choice_t cc, research
     label_offset += (st3::solar::sub_names[i].size() + 1) * label_size.y;
   }
 
+  load_template("population");
   update_popsum();
 
   // template selector
+  Label::Ptr tlabel(*this);
+  tlabel -> load(black);
+  tlabel -> setSize(80, 30);
+  tlabel -> setPosition(margin.x, margin.y + dimension.y - 80);
+  tlabel -> setText("Load template:");
+  tlabel -> setTextSize(12);
+
   tsel -> load(black);
-  tsel -> setSize(dimension.x, 40);
-  tsel -> setPosition(margin.x, margin.y + dimension.y - 100);
+  tsel -> setSize(200, 30);
+  tsel -> setPosition(margin.x + 100, margin.y + dimension.y - 80);
   for (auto x : template_name) tsel -> addItem(x);
   tsel -> bindCallback(bind(&solar_gui::callback_template, this), ComboBox::ItemSelected);
   
@@ -329,7 +338,7 @@ bool solar_gui::run(){
 
 float solar_gui::compute_workers_nostarve(float priority){
   float n = s.population_number;
-  // dp/dt = a f p + b p
+  // dp/dt = a f n + b n
   float dmax = s.pop_increment(r, n);
   float dmin = s.pop_increment(r, 0);
   float dsel = fmin(dmax, fmax(0, dmin + priority * (dmax - dmin)));

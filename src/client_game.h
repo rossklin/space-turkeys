@@ -28,6 +28,7 @@ namespace st3{
       window_t window; /*!< sfml window for drawing the interface */
       sf::View view_game; /*!< sfml view for game objects */
       sf::View view_minimap; /*!< sfml view for the minimap */
+      sf::View view_window; /*!< sfml view fitting window */
       std::string message; /*!< game round progress message */
       bool area_select_active; /*!< whether area selection is active */
       sf::FloatRect srect; /*!< area selection rectangle */

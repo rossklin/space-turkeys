@@ -104,9 +104,11 @@
 *** remove solar::development as no longer nessecary
 * bugs
 * issues
-** minimap drawn over comgui
+** incorrect number of workers assigned in solar gui templates
+   needs solar::starve_limit
+** lack of resource is not indicated in solar gui
+** view_game should match window aspect ratio (also after resize)
 ** defense build rates need to be checked
-** solar gui template selector needs to move down a bit
 ** solar gui template selector is ugly
 ** socket_t exits on disconnect in thread, causes segfault
 ** [has tempfix] tgui cmake requires that sfml libraries exist
@@ -117,11 +119,6 @@
    
    temp: overwriting tgui cmakelists in configure
 ** [low priority] how to get make to only rebuild docs when nessecary?
-** [low priority] minimap bounding box drawn incorrectly after window resize
-** [low priority] segfault after client side target missing, some turns after resume from suspend.
-** [low priority] area select goes over command gui
-** [low priority] ship classes should not be in solar?
-   but then ship classes will be replaced with ship components...
 ** [low priority] ships bombard and land in order of fleet, unfair
    add a map<player, damage> to solar, evaluate conquering after
    bombardment phase
@@ -133,10 +130,12 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** minimap drawn over comgui
+** [low priority] minimap bounding box drawn incorrectly after window resize
+* fixed
 ** fleets follow targets that leave sight
    check range of sight in update fleet data?
 ** fleets follow last assigned in split
-* fixed
 ** templates and feedback in solar gui
     show per round increments in overview
 ** [fixed?] solar gui lists increments per unit time
