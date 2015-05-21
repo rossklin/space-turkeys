@@ -101,12 +101,12 @@
 * bugs
 * issues
 ** solar gui
-*** does not draw buttons in resized window
 *** incorrect number of workers assigned in templates
     probably due to that pop_increment is non-linear
     needs solar::starve_limit
+    or solar::farmers_for_growthratio (growth per population)
 *** resource cost and lack of resource is not indicated
-*** template selector is ugly
+** colonizer creates population
 ** view_game should match window aspect ratio (also after resize)
 ** socket_t exits on disconnect in thread, causes segfault
 ** [has tempfix] tgui cmake requires that sfml libraries exist
@@ -128,6 +128,10 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** solar gui does not draw buttons in resized window
+** sending colonizer ships spends population
+** template selector is ugly
+* fixed
 ** colonisation/transport ships
     and make some solars without defense
 ** incorrect population increment shown
@@ -135,7 +139,6 @@
 ** does not terminate on window close event
 ** minimap drawn over comgui
 ** [low priority] minimap bounding box drawn incorrectly after window resize
-* fixed
 ** defense build rates need to be checked
 ** fleets follow targets that leave sight
    check range of sight in update fleet data?

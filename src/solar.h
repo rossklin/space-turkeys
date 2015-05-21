@@ -74,6 +74,9 @@ namespace st3{
     /*! solar system coefficient: effect factor for food */
     extern const float crowding_rate;
 
+    /*! number of people that go in a colonizer */
+    extern const float colonizer_population;
+
     /*! resource costs for each resource for each ship class */
     extern std::vector<std::vector<float> > ship_cost;
 

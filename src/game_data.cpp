@@ -528,7 +528,7 @@ void game_data::ship_bombard(idtype ship_id, idtype solar_id){
   if (s.ship_class == solar::ship_colonizer){
     if (sol.owner == -1 && sol.defense_current <= 0){
       sol.owner = s.owner;
-      sol.population_number = 100;
+      sol.population_number = solar::colonizer_population;
       sol.population_happy = 1;
       sol.defense_current = 1;
       sol.industry = vector<float>(solar::work_num, 20);
@@ -910,11 +910,16 @@ void st3::game_data::solar_tick(idtype id){
   // new ships
   for (i = 0; i < solar::ship_num; i++){
     while (s.fleet_growth[i] >= 1){
-      ship sh(i, r_base);
-      idtype sid = ship::id_counter++;
-      ships[sid] = sh;
-      s.ships.insert(sid);
-      s.fleet_growth[i]--;
+      if (i != solar::ship_colonizer || s.population_number >= solar::colonizer_population){
+	if (i == solar::ship_colonizer){
+	  s.population_number -= solar::colonizer_population;
+	}
+	ship sh(i, r_base);
+	idtype sid = ship::id_counter++;
+	ships[sid] = sh;
+	s.ships.insert(sid);
+	s.fleet_growth[i]--;
+      }
       // cout << "ship " << sid << " was created for player " << s.owner << " at solar " << id << endl;
     }
   }

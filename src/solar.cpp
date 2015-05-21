@@ -23,6 +23,7 @@ const float st3::solar::feed_boost_coefficient = 2e-2;
 const float st3::solar::crowding_rate = 1e-6;
 const float st3::solar::food_per_person = 2;
 const float st3::solar::fpp_per_research = 2e-2;
+const float st3::solar::colonizer_population = 1e2;
 
 void st3::solar::initialize(){
   ship_cost.resize(ship_num);

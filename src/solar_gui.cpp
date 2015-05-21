@@ -172,7 +172,7 @@ solar_gui::solar_gui(window_t &w, solar::solar sol, solar::choice_t cc, research
 
   point margin(10, 10);
   float bottom_panel_height = 40;
-  point dimension = point(w.getSize().x, w.getSize().y) - utility::scale_point(margin, 2) - point(0, bottom_panel_height);
+  point dimension = point(w.getDefaultView().getSize().x, w.getDefaultView().getSize().y) - utility::scale_point(margin, 2) - point(0, bottom_panel_height);
   point label_size(dimension.x / 4, 20);
   float label_offset = margin.y;
   string black = tgui_root + "widgets/Black.conf";
@@ -215,16 +215,17 @@ solar_gui::solar_gui(window_t &w, solar::solar sol, solar::choice_t cc, research
   update_popsum();
 
   // template selector
+  float template_y = margin.y + dimension.y - 60;
   Label::Ptr tlabel(*this);
   tlabel -> load(black);
   tlabel -> setSize(80, 30);
-  tlabel -> setPosition(margin.x, margin.y + dimension.y - 60);
+  tlabel -> setPosition(margin.x, template_y);
   tlabel -> setText("Load template:");
   tlabel -> setTextSize(12);
 
   tsel -> load(black);
-  tsel -> setSize(200, 30);
-  tsel -> setPosition(margin.x + 100, margin.y + dimension.y - 60);
+  tsel -> setSize(0.8 * dimension.x / 2, 20);
+  tsel -> setPosition(margin.x + 1.2 * dimension.x / 4, template_y);
   for (auto x : template_name) tsel -> addItem(x);
   tsel -> bindCallback(bind(&solar_gui::callback_template, this), ComboBox::ItemSelected);
   
