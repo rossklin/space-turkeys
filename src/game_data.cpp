@@ -13,6 +13,7 @@ using namespace st3;
 idtype ship::id_counter = 0;
 idtype solar::id_counter = 0;
 idtype fleet::id_counter = 0;
+idtype waypoint::id_counter = 0;
 
 bool game_data::target_position(target_t t, point &p){
   string type = identifier::get_type(t);
@@ -52,6 +53,7 @@ void game_data::relocate_ships(command &c, set<idtype> &sh, idtype owner){
   bool reassign = fleet_buf.size() == 1 && fleets[sf].ships == sh;
 
   if (reassign){
+    cout << "relocate: reassign" << endl;
     fid = sf;
     fleets[sf].com = c;
     fleets[sf].com.source = identifier::make(identifier::fleet, fid);
@@ -133,7 +135,10 @@ void game_data::set_fleet_commands(idtype id, list<command> commands){
   idtype fid;
 
   // split fleets
-  for (auto &x : commands){
+  // evaluate commands in random order
+  vector<command> buf(commands.begin(), commands.end());
+  random_shuffle(buf.begin(), buf.end());
+  for (auto &x : buf){
     if (x.ships == s.ships){
       // maintain id for trackability
       s.com.target = x.target;
@@ -301,6 +306,24 @@ void game_data::update_fleet_data(idtype fid){
 	f.com.target = identifier::target_idle;
       }
     }
+
+    // target left sight?
+    if ((!f.is_idle())
+	&& (!identifier::get_type(f.com.target).compare(identifier::fleet))
+	&& (!fleet_seen_by(identifier::get_id(f.com.target), f.owner))){
+
+      cout << "fleet " << fid << " looses sight of " << f.com.target << endl;
+      // create a waypoint and reset target
+      waypoint w;
+      if (!target_position(f.com.target, w.position)){
+	cout << "unset fleet target: fleet position not found: " << f.com.target << endl;
+	exit(-1);
+      }
+
+      string wid = to_string(f.owner) + "#" + to_string(--waypoint::id_counter);
+      waypoints[wid] = w;
+      f.com.target = identifier::make(identifier::waypoint, wid);
+    }
   }
 }
 
@@ -427,7 +450,13 @@ void game_data::increment(){
     }
     
     remove.clear();
-    for (auto &y : w.pending_commands){
+
+    // evaluate commands in random order
+    vector<command> buf(w.pending_commands.begin(), w.pending_commands.end());
+    random_shuffle(buf.begin(), buf.end());
+    cout << "relocate from " << x.first << ": command order: " << endl;
+    for (auto &y : buf){
+      cout << " -> " << y.target << endl;
       // check if all ships in command y are either landed or dead
       check = true;
       ready_ships.clear();
@@ -925,6 +954,26 @@ void game_data::end_step(){
   }
 }
 
+bool game_data::fleet_seen_by(idtype fid, idtype pid){
+  if (!fleets.count(fid)){
+    cout << "fleet seen by: not found: " << fid << endl;
+    exit(-1);
+  }
+
+  fleet &f = fleets[fid];
+  bool seen = f.owner == pid;
+
+  for (auto i = fleets.begin(); i != fleets.end() && !seen; i++){
+    seen |= fid != i -> first && i -> second.owner == pid && utility::l2norm(f.position - i -> second.position) < i -> second.vision;
+  }
+
+  for (auto i = solars.begin(); i != solars.end() && !seen; i++){
+    seen |= i -> second.owner == pid && utility::l2norm(f.position - i -> second.position) < i -> second.vision;
+  }
+
+  return seen;
+}
+
 game_data game_data::limit_to(idtype id){
   // build limited game data object;
   game_data gc;
@@ -933,15 +982,7 @@ game_data game_data::limit_to(idtype id){
 
   // load fleets
   for (auto &x : fleets){
-    bool seen = x.second.owner == id;
-    for (auto i = fleets.begin(); i != fleets.end() && !seen; i++){
-      seen |= x.first != i -> first && i -> second.owner == id && utility::l2norm(x.second.position - i -> second.position) < i -> second.vision;
-    }
-
-    for (auto i = solars.begin(); i != solars.end() && !seen; i++){
-      seen |= i -> second.owner == id && utility::l2norm(x.second.position - i -> second.position) < i -> second.vision;
-    }
-    if (seen) gc.fleets[x.first] = x.second;
+    if (fleet_seen_by(x.first, id)) gc.fleets[x.first] = x.second;
   }
 
   // load solars

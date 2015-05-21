@@ -16,8 +16,6 @@ using namespace std;
 using namespace st3;
 using namespace st3::client;
 
-idtype waypoint::id_counter = 0;
-
 sf::FloatRect fixrect(sf::FloatRect r);
 bool add2selection();
 bool ctrlsel();

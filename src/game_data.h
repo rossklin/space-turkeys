@@ -225,6 +225,13 @@ namespace st3{
     */
     float heuristic_homes(hm_t<idtype, solar::solar> solar_buf, hm_t<idtype, idtype> &start_solars);
 
+    /*! check whether a fleet is in sight for a player
+      @param fid id of the fleet
+      @param pid id of the player
+      @return whether the fleet is seen
+    */
+    bool fleet_seen_by(idtype fid, idtype pid);
+
     /*! compute a sight-limited copy of the game data
 
       Computes a game data object with only those entities visible to

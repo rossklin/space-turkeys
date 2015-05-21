@@ -103,10 +103,8 @@
 ** structure
 *** remove solar::development as no longer nessecary
 * bugs
-** fleets follow targets that leave sight
-   check range of sight in update fleet data?
-** fleets follow last assigned in split
 * issues
+** minimap drawn over comgui
 ** defense build rates need to be checked
 ** solar gui template selector needs to move down a bit
 ** solar gui template selector is ugly
@@ -135,6 +133,9 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** fleets follow targets that leave sight
+   check range of sight in update fleet data?
+** fleets follow last assigned in split
 * fixed
 ** templates and feedback in solar gui
     show per round increments in overview
