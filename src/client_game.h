@@ -6,6 +6,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "socket_t.h"
+#include "fixed_star.h"
 #include "graphics.h"
 #include "game_data.h"
 #include "choice.h"
@@ -42,6 +43,10 @@ namespace st3{
       hm_t<idtype, command_selector*> command_selectors; /*!< graphical representations for commands */
 
       command_gui *comgui; /*!< gui for assigning ships to commands */
+
+		std::vector<fixed_star> fixed_stars;
+		static constexpr float grid_size = 20;
+		std::set<std::pair<int, int> > known_universe;
 
       /*! default contsructor */
       game();
@@ -261,6 +266,8 @@ namespace st3{
 
       /*! draw command selectors, area selection rect and command gui */
       void draw_interface_components();
+      
+      void add_fixed_stars (point position, float vision);
     };
   };
 };

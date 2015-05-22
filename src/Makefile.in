@@ -91,11 +91,12 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_st_client_OBJECTS = client.$(OBJEXT) graphics.$(OBJEXT) \
 	client_game.$(OBJEXT) com_client.$(OBJEXT) selector.$(OBJEXT) \
-	research.$(OBJEXT) fleet.$(OBJEXT) solar.$(OBJEXT) \
-	game_data.$(OBJEXT) grid_tree.$(OBJEXT) command_gui.$(OBJEXT) \
-	solar_gui.$(OBJEXT) game_settings.$(OBJEXT) \
-	serialization.$(OBJEXT) socket_t.$(OBJEXT) command.$(OBJEXT) \
-	utility.$(OBJEXT) types.$(OBJEXT) ship.$(OBJEXT)
+	research.$(OBJEXT) fixed_star.$(OBJEXT) fleet.$(OBJEXT) \
+	solar.$(OBJEXT) game_data.$(OBJEXT) grid_tree.$(OBJEXT) \
+	command_gui.$(OBJEXT) solar_gui.$(OBJEXT) \
+	game_settings.$(OBJEXT) serialization.$(OBJEXT) \
+	socket_t.$(OBJEXT) command.$(OBJEXT) utility.$(OBJEXT) \
+	types.$(OBJEXT) ship.$(OBJEXT)
 st_client_OBJECTS = $(am_st_client_OBJECTS)
 st_client_LDADD = $(LDADD)
 am_st_server_OBJECTS = game_data.$(OBJEXT) server.$(OBJEXT) \
@@ -257,7 +258,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 st_server_SOURCES = game_data.cpp server.cpp game_handler.cpp com_server.cpp grid_tree.cpp fleet.cpp solar.cpp research.cpp game_settings.cpp serialization.cpp socket_t.cpp command.cpp utility.cpp types.cpp ship.cpp
-st_client_SOURCES = client.cpp graphics.cpp client_game.cpp com_client.cpp selector.cpp research.cpp fleet.cpp solar.cpp game_data.cpp grid_tree.cpp command_gui.cpp solar_gui.cpp game_settings.cpp serialization.cpp socket_t.cpp command.cpp utility.cpp types.cpp ship.cpp
+st_client_SOURCES = client.cpp graphics.cpp client_game.cpp com_client.cpp selector.cpp research.cpp fixed_star.cpp fleet.cpp solar.cpp game_data.cpp grid_tree.cpp command_gui.cpp solar_gui.cpp game_settings.cpp serialization.cpp socket_t.cpp command.cpp utility.cpp types.cpp ship.cpp
 all: all-am
 
 .SUFFIXES:
@@ -355,6 +356,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/com_server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/command.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/command_gui.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fixed_star.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fleet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/game_data.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/game_handler.Po@am__quote@
