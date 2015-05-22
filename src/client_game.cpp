@@ -349,6 +349,32 @@ list<idtype> game::incident_commands(source_t key){
   return res;
 }
 
+void st3::client::game::add_fixed_stars (point position, float vision) {
+  float r = vision - grid_size;
+  
+  for (float p = -r; p < r; p += grid_size) {
+    float ymax = sqrt (r * r - p * p);
+    for (float j = -ymax; j < ymax; j += grid_size) {
+      int grid_x = round ((position.x + p) / grid_size);
+      int grid_y = round ((position.y + j) / grid_size);
+      pair<int, int> grid_index (grid_x, grid_y);
+      
+      for (int i = rand () % 3; i >= 0; i--) {
+        if (known_universe.count (grid_index) == 0) {
+          point star_position;
+          star_position.x = grid_index.first * grid_size + utility::random_uniform () * grid_size;
+          star_position.y = grid_index.second * grid_size + utility::random_uniform () * grid_size;
+          
+          fixed_star star(star_position);
+          fixed_stars.push_back (star);
+
+          known_universe.insert (grid_index);
+        }
+      }
+    }
+  }
+}
+
 void st3::client::game::reload_data(game_data &g){
   cout << "reload data:" << endl;
   cout << " -> initial entities: " << endl;
@@ -370,6 +396,8 @@ void st3::client::game::reload_data(game_data &g){
     if (entity_selectors.count(key)) delete entity_selectors[key];
     entity_selectors[key] = new fleet_selector(x.second, col, x.second.owner == socket.id);
     entity_selectors[key] -> seen = true;
+    if (x.second.owner == socket.id) add_fixed_stars (x.second.position, x.second.vision);
+    
     cout << " -> update fleet " << x.first << endl;
   }
 
@@ -379,6 +407,8 @@ void st3::client::game::reload_data(game_data &g){
     if (entity_selectors.count(key)) delete entity_selectors[key];
     entity_selectors[key] = new solar_selector(x.second, col, x.second.owner == socket.id);
     entity_selectors[key] -> seen = true;
+    if (x.second.owner == socket.id) add_fixed_stars (x.second.position, x.second.vision);
+
     cout << " -> update solar " << x.first << endl;
   }
 
@@ -1075,6 +1105,8 @@ void game::draw_interface_components(){
 }
 
 void st3::client::game::draw_universe(){
+
+  for (auto star : fixed_stars) star.draw (window);
 
   // draw source/target entities
   for (auto x : entity_selectors) x.second -> draw(window);
