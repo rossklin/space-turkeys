@@ -13,10 +13,17 @@
 using namespace std;
 using namespace st3;
 
-command_gui::command_gui(idtype cid, window_t *window, hm_t<idtype, ship> s, set<idtype> prealloc, point p, sf::Color c){
+float command_gui::table_width = 0;
+float command_gui::table_height = 0;
+
+command_gui::command_gui(idtype cid, window_t *window, hm_t<idtype, ship> s, set<idtype> prealloc, point dims, sf::Color c){
+  float margin = 10;
+  point p(margin, margin);
   w = window;
   comid = cid;
-  bounds = sf::FloatRect(p.x, p.y, table_width + 2 * padding, solar::ship_num * table_height + 2 * padding);
+  table_width = (dims.x - 2 * (padding + margin)) / 3;
+  table_height = (dims.y - 2 * (padding + margin)) / solar::ship_num;
+  bounds = sf::FloatRect(p.x, p.y, table_width + 2 * padding, dims.y - 2 * margin);
 
   tables.resize(solar::ship_num);
   for (int i = 0; i < solar::ship_num; i++){
@@ -110,8 +117,8 @@ command_table::command_table(window_t *window, hm_t<idtype, ship> s, set<idtype>
   float arrow_mid = bounds.top + bounds.height / 2;
   float arrow_bottom = bounds.top + bounds.height - outer_padding;
   float arrow_height = (bounds.height - 2 * outer_padding) / 4;
-  float arrow_left = cache_bounds.left + cache_bounds.width;
-  float arrow_right = alloc_bounds.left;
+  float arrow_left = cache_bounds.left + cache_bounds.width + 2;
+  float arrow_right = alloc_bounds.left - 2;
   
   fa_arrow.setPointCount(3);
   fa_arrow.setPoint(0, point(arrow_left, arrow_top));
@@ -224,10 +231,13 @@ bool command_table::handle_event(sf::Event e){
   switch (e.type){
   case sf::Event::MouseButtonReleased:
     if (e.mouseButton.button == sf::Mouse::Left){
-      p = point(e.mouseButton.x, e.mouseButton.y);
+      p = w -> mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
+      
       if ((i = get_cache_index(p)) > -1){
+	cout << "found cache index: " << i << endl;
 	move_ship(cache_ids[i]);
       }else if ((i = get_alloc_index(p)) > -1){
+	cout << "found alloc index: " << i << endl;
 	move_ship(alloc_ids[i]);
       }else if (fa_arrow.getLocalBounds().contains(p)){
 	cout << "filling allocated" << endl;
@@ -242,10 +252,10 @@ bool command_table::handle_event(sf::Event e){
 
     return bounds.contains(p);
   case sf::Event::MouseButtonPressed:
-    p = point(e.mouseButton.x, e.mouseButton.y);
+    p = w -> mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
     return bounds.contains(p);
   case sf::Event::MouseMoved:
-    p = point(e.mouseMove.x, e.mouseMove.y);
+    p = w -> mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
     if ((i = get_cache_index(p)) > -1){
       hover_index = i;
       hover_side = 0;

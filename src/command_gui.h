@@ -93,8 +93,8 @@ namespace st3{
     static constexpr float padding = 5;
     
   public:
-    static constexpr float table_width = 400; /*!< width of tables */
-    static constexpr float table_height = 150; /*!< height of tables */
+    static float table_width; /*!< width of tables */
+    static float table_height; /*!< height of tables */
 
     std::set<idtype> cached, allocated; /*!< sets of ids of waiting and allocated ships */
     idtype comid; /*!< id of associated command selector */
@@ -104,10 +104,10 @@ namespace st3{
       @param w window to draw on
       @param s table of available ships
       @param prealloc ids of ships that should initially be allocated
-      @param p point of ul corner
+      @param dims width and height
       @param c color for drawing ships
     */
-    command_gui(idtype id, window_t *w, hm_t<idtype, ship> s, std::set<idtype> prealloc, point p, sf::Color c);
+    command_gui(idtype id, window_t *w, hm_t<idtype, ship> s, std::set<idtype> prealloc, point dims, sf::Color c);
 
     /*! handle an event
       @param e the event
