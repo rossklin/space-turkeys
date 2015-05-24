@@ -100,6 +100,7 @@
 *** consider making work sector into a graph node class
 * bugs
 * issues
+** when attempting to target a solar with a fleet on, the fleet is targeted
 ** solar gui
 *** solar gui is ugly
 *** incorrect number of workers assigned in templates
@@ -107,6 +108,15 @@
     needs solar::starve_limit
     or solar::farmers_for_growthratio (growth per population)
 *** resource cost and lack of resource is not indicated
+*** all increments are off
+** comgui click position is off
+** difficult to understand
+*** population dynamics (happy/production/growth)
+*** effects of research etc.
+*** assigning ships in chained commands
+*** conquering and colonizing, defense visualizer
+** stars appear in lumps
+   generate outside vision in intermediate buffer?
 ** view_game should match window aspect ratio (also after resize)
 ** socket_t exits on disconnect in thread, causes segfault
 ** [low priority] how to get make to only rebuild docs when nessecary?
@@ -128,6 +138,11 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** client generated solar choice for other player's solar
+   maybe happened after the solar was conquered?
+   
+   probably fixed: removing choices for non-owned solars in
+   client::game::reload_data
 * fixed
 ** send victor to client on game completion
 ** solar gui does not draw buttons in resized window
