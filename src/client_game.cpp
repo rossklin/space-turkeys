@@ -849,8 +849,7 @@ bool st3::client::game::select_command_at(point p){
 			     &window, 
 			     ready_ships,
 			     it -> second -> ships,
-			     // utility::scale_point(it -> second -> from + it -> second -> to, 0.5), 
-			     point(0,0),
+			     view_window.getSize(),
 			     graphics::sfcolor(players[socket.id].color));
 
     return true;
@@ -914,6 +913,7 @@ int st3::client::game::choice_event(sf::Event e){
   point p;
   list<source_t> ss;
 
+  window.setView(view_window);
   if (comgui && comgui -> handle_event(e)){
     // handle comgui effects
 
@@ -948,6 +948,7 @@ int st3::client::game::choice_event(sf::Event e){
     return query_query;
   }
 
+  window.setView(view_game);
   switch (e.type){
   case sf::Event::MouseButtonPressed:
     if (e.mouseButton.button == sf::Mouse::Left){
@@ -1051,6 +1052,8 @@ void game::draw_window(){
   draw_universe();
   draw_interface_components();
 
+  window.setView(view_window);
+
   // draw text
   sf::Text text;
   text.setFont(graphics::default_font); 
@@ -1058,32 +1061,33 @@ void game::draw_window(){
   text.setColor(sf::Color(200,200,200));
   text.setString(message);
   text.setPosition(point(10,10));
-
-  // draw minimap bounds
-  sf::FloatRect fr = view_minimap.getViewport();
-  sf::RectangleShape r;
-  r.setPosition(fr.left * view_window.getSize().x, fr.top * view_window.getSize().y);
-  r.setSize(point(fr.width * view_window.getSize().x, fr.height * view_window.getSize().y));
-  r.setOutlineColor(sf::Color(255,255,255));
-  r.setFillColor(sf::Color(0,0,25,100));
-  r.setOutlineThickness(1);
-
-  window.setView(view_window);
   window.draw(text);
-  window.draw(r);
 
-  // draw minimap contents
-  window.setView(view_minimap);
-  draw_universe();
-  r.setOutlineColor(sf::Color(0, 255, 0));
-  r.setPosition(ul);
-  r.setSize(view_game.getSize());
-  window.draw(r);
 
   // draw command gui
   if (comgui) {
     window.setView(view_window);
     comgui -> draw();
+  }else{
+    // draw minimap bounds
+    sf::FloatRect fr = view_minimap.getViewport();
+    sf::RectangleShape r;
+    r.setPosition(fr.left * view_window.getSize().x, fr.top * view_window.getSize().y);
+    r.setSize(point(fr.width * view_window.getSize().x, fr.height * view_window.getSize().y));
+    r.setOutlineColor(sf::Color(255,255,255));
+    r.setFillColor(sf::Color(0,0,25,100));
+    r.setOutlineThickness(1);
+
+    window.draw(r);
+
+    // draw minimap contents
+    window.setView(view_minimap);
+    draw_universe();
+    r.setOutlineColor(sf::Color(0, 255, 0));
+    r.setPosition(ul);
+    r.setSize(view_game.getSize());
+    window.draw(r);
+
   }
 
   window.display();
