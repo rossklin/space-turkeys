@@ -529,6 +529,11 @@ void st3::client::game::reload_data(game_data &g){
       }
     }
   }
+
+  // check ownerhsip for solar choices
+  for (auto &x : solar_choices){
+    if (!(entity_selectors.count(x.first) && entity_selectors[x.first] -> owned)) solar_choices.erase(x.first);
+  }
 }
 
 // ****************************************
