@@ -140,6 +140,8 @@ namespace st3{
     /*! selector representing a command */
     class command_selector : public command{
     public:
+      static constexpr int queue_max = 100000; /*!< level at which click selection order wraps */
+      int queue_level; /*!< selection queue level: command selectors with lower level get priority */
       bool selected; /*!< whether the command_selector is selected */
       point from; /*!< source point */
       point to; /*!< destination point */

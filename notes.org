@@ -84,16 +84,19 @@
 *** target options
 **** available options
      target space: "goto waypoint"
+     target waypoint: "goto waypoint"
      target friendly fleet: "follow", "join"
      target opponent fleet: "follow", "attack"
      target friendly solar: "land"
      target opponent solar: "attack"
      target neutral solar: "attack", (if undefended) "colonize"
-**** add to command: action (from above options)
-**** add command::action to command::operator ==
-**** add queue_level to command
-**** replace entity_at with entities_at
-**** replace right click event handler with target option gui
+**** [done] add to command: action (from above options)
+**** [done] add command::action to command::operator ==
+**** [done] add queue_level to command_selector
+**** [done] add queue_level checking to command_at
+**** [done] replace entity_at with entities_at
+**** [done] replace right click event handler with target option gui
+**** implement command action in game_data::increment
 *** clickable minimap
 *** choice/evolution: display ready players, autoplay when all ready
 *** command_gui should have option to allocate X ships of type T

@@ -213,7 +213,7 @@ bool command_selector::contains_point(point p, float &d){
   d = utility::dpoint2line(p, from, to);
 
   // todo: command size?
-  return d < 3;
+  return d < 5;
 }
 
 void command_selector::draw(window_t &w){
