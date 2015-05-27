@@ -350,7 +350,7 @@ list<idtype> game::incident_commands(source_t key){
 }
 
 void st3::client::game::add_fixed_stars (point position, float vision) {
-  float r = vision - grid_size;
+  float r = vision + grid_size;
   
   for (float p = -r; p < r; p += grid_size) {
     float ymax = sqrt (r * r - p * p);
@@ -367,7 +367,7 @@ void st3::client::game::add_fixed_stars (point position, float vision) {
           
           fixed_star star(star_position);
           
-          if (utility::l2norm(star_position - position) <= vision) {
+          if (utility::l2norm(star_position - position) < vision) {
             fixed_stars.push_back (star);
           } else {
             hidden_stars.push_back (star);
@@ -379,11 +379,13 @@ void st3::client::game::add_fixed_stars (point position, float vision) {
     }
   }
   
-  for (int i = 0; i < hidden_stars.size (); i++) {
-    if (utility::l2norm (hidden_stars[i].position - position) <= vision) {
-      fixed_star star = hidden_stars[i];
-      hidden_stars.erase (hidden_stars.begin() + i);
+  auto i = hidden_stars.begin();
+  while (i != hidden_stars.end()) {
+    fixed_star star = *i;
+    i++;
+    if (utility::l2norm (star.position - position) < vision) {
       fixed_stars.push_back (star);
+      hidden_stars.remove (star);
     }
   }
 }
