@@ -81,9 +81,21 @@
 *** emulate simultaneous evaluation of ship_bombard
 *** decide what to do with clients without objects
 ** client game
+*** target options
+**** available options
+     target space: "goto waypoint"
+     target friendly fleet: "follow", "join"
+     target opponent fleet: "follow", "attack"
+     target friendly solar: "land"
+     target opponent solar: "attack"
+     target neutral solar: "attack", (if undefended) "colonize"
+**** add to command: action (from above options)
+**** add command::action to command::operator ==
+**** add queue_level to command
+**** replace entity_at with entities_at
+**** replace right click event handler with target option gui
 *** clickable minimap
 *** choice/evolution: display ready players, autoplay when all ready
-*** display victor
 *** command_gui should have option to allocate X ships of type T
 *** simulation: interpolate using ship velocity
 *** draw all ships in same size, have a ship.draw_scale
@@ -103,6 +115,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** display victor
 ** client generated solar choice for other player's solar
    maybe happened after the solar was conquered?
    
