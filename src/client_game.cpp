@@ -366,11 +366,24 @@ void st3::client::game::add_fixed_stars (point position, float vision) {
           star_position.y = grid_index.second * grid_size + utility::random_uniform () * grid_size;
           
           fixed_star star(star_position);
-          fixed_stars.push_back (star);
-
+          
+          if (utility::l2norm(star_position - position) <= vision) {
+            fixed_stars.push_back (star);
+          } else {
+            hidden_stars.push_back (star);
+          }
+          
           known_universe.insert (grid_index);
         }
       }
+    }
+  }
+  
+  for (int i = 0; i < hidden_stars.size (); i++) {
+    if (utility::l2norm (hidden_stars[i].position - position) <= vision) {
+      fixed_star star = hidden_stars[i];
+      hidden_stars.erase (hidden_stars.begin() + i);
+      fixed_stars.push_back (star);
     }
   }
 }

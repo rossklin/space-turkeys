@@ -4,14 +4,17 @@
 using namespace st3::utility;
 
 st3::client::fixed_star::fixed_star(point p) {
+	float redshift;
+	
 	radius = 1;
 	position = p;
-	float redshift = utility::random_uniform ();
-
+	
+	redshift = utility::random_uniform ();
+	
 	color.r = 255;
-	color.g = 255 - 30 * redshift;
-	color.b = 255 - 30 * redshift;
-	color.a = 200 + 55 * utility::random_uniform ();
+	color.g = 255 - 60 * redshift;
+	color.b = 255 - 60 * redshift;
+	color.a = 2 + 55 * utility::random_uniform ();
 }
 
 void st3::client::fixed_star::draw(st3::window_t &w) {

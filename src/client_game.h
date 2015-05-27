@@ -45,6 +45,8 @@ namespace st3{
       command_gui *comgui; /*!< gui for assigning ships to commands */
 
 		std::vector<fixed_star> fixed_stars;
+		std::vector<fixed_star> hidden_stars;
+		
 		static constexpr float grid_size = 20;
 		std::set<std::pair<int, int> > known_universe;
 
