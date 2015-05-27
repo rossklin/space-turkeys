@@ -11,7 +11,7 @@ st3::client::fixed_star::fixed_star(point p) {
 	color.r = 255;
 	color.g = 255 - 30 * redshift;
 	color.b = 255 - 30 * redshift;
-	color.a = 200 + 55 * utility::random_uniform ();
+	color.a = 20 + 55 * utility::random_uniform ();
 }
 
 void st3::client::fixed_star::draw(st3::window_t &w) {
