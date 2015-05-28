@@ -126,6 +126,13 @@ namespace st3{
       @param solar_id id of solar to land at
     */
     void ship_land(idtype ship_id, idtype solar_id);
+    
+    /*! colonize a solar
+
+      @param ship_id id of colonizer ship to use
+      @param solar_id id of solar to colonize
+    */
+    void ship_colonize(idtype ship_id, idtype solar_id);
 
     /*! let a ship bombard a solar
 

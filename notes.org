@@ -96,7 +96,7 @@
 **** [done] add queue_level checking to command_at
 **** [done] replace entity_at with entities_at
 **** [done] replace right click event handler with target option gui
-**** implement command action in game_data::increment
+**** [done] implement command action in game_data::increment
 *** clickable minimap
 *** choice/evolution: display ready players, autoplay when all ready
 *** command_gui should have option to allocate X ships of type T
@@ -114,6 +114,12 @@
 ** structure
 *** consider making work sector into a graph node class
 * bugs
+** comgui does not show action
+** command selectors drawn on top of each other
+** targui text does not fit width
+** targui scales with zoom
+** targui shows self as target (though this does not create a command)
+** command selectors should clear queue level in clear_guis()
 * remember
 ** when updating a struct/class, also update serialization
 * git pending

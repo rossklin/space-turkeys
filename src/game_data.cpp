@@ -142,6 +142,7 @@ void game_data::set_fleet_commands(idtype id, list<command> commands){
     if (x.ships == s.ships){
       // maintain id for trackability
       s.com.target = x.target;
+      s.com.action = x.action;
       // if all ships were assigned, break.
       break;
     }else{
@@ -214,7 +215,7 @@ void game_data::apply_choice(choice c, idtype id){
   for (auto x : c.commands){
     cout << "apply_choice: checking command key " << x.first << endl;
 
-    if (!identifier::get_type(x.first).compare(identifier::solar)){
+    if (identifier::get_type(x.first) == identifier::solar){
       // commands for solar
       idtype sid = identifier::get_id(x.first);
 
@@ -226,7 +227,7 @@ void game_data::apply_choice(choice c, idtype id){
 
       // apply the commands
       set_solar_commands(sid, x.second);
-    }else if (!identifier::get_type(x.first).compare(identifier::fleet)){
+    }else if (identifier::get_type(x.first) == identifier::fleet){
       // command for fleet
       idtype fid = identifier::get_id(x.first);
       
@@ -261,69 +262,96 @@ void game_data::deallocate_grid(){
 
 void game_data::update_fleet_data(idtype fid){
   fleet &f = fleets[fid];
-    
-  // update fleet data
-  if (!((f.update_counter++) % fleet::update_period)){
-    float speed = INFINITY;
-    int count;
 
-    // position
-    point p(0,0);
-    count = 0;
-    for (auto k : f.ships){
-      ship &s = ships[k];
-      p = p + s.position;
-      if (++count > 20) break;
-    }
-    f.position = utility::scale_point(p, 1 / (float)count);
+  // need to update fleet data?
+  if (((f.update_counter++) % fleet::update_period)) return;
+  float speed = INFINITY;
+  int count;
 
-    // radius, speed and vision
-    float r2 = 0;
-    f.vision = 0;
-    for (auto k : f.ships){
-      ship &s = ships[k];
-      speed = fmin(speed, s.speed);
-      r2 = fmax(r2, utility::l2d2(s.position - f.position));
-      f.vision = fmax(f.vision, s.vision);
-    }
-    f.radius = fmax(sqrt(r2), fleet::min_radius);
-    f.speed_limit = speed;
+  // position
+  point p(0,0);
+  count = 0;
+  for (auto k : f.ships){
+    ship &s = ships[k];
+    p = p + s.position;
+    if (++count > 20) break;
+  }
+  f.position = utility::scale_point(p, 1 / (float)count);
 
-    // have arrived?
-    if (!f.is_idle()){
-      point target;
-      if (target_position(f.com.target, target)){
-	f.converge = utility::l2d2(target - f.position) < fleet::interact_d2;
+  // radius, speed and vision
+  float r2 = 0;
+  f.vision = 0;
+  for (auto k : f.ships){
+    ship &s = ships[k];
+    speed = fmin(speed, s.speed);
+    r2 = fmax(r2, utility::l2d2(s.position - f.position));
+    f.vision = fmax(f.vision, s.vision);
+  }
+  f.radius = fmax(sqrt(r2), fleet::min_radius);
+  f.speed_limit = speed;
 
-	// set to idle and 'land' ships if converged to waypoint
-	if (f.converge && !identifier::get_type(f.com.target).compare(identifier::waypoint)){
-	  source_t wid = identifier::get_string_id(f.com.target);
-	  f.com.target = identifier::make(identifier::idle, wid);
-	  cout << "set fleet " << fid << " idle target: " << f.com.target << endl;
-	}
-      }else{
-	cout << "fleet " << fid << ": target " << f.com.target << " missing, setting idle:0" << endl;
-	f.com.target = identifier::target_idle;
+  // have arrived?
+  if (!f.is_idle()){
+    point target;
+    if (target_position(f.com.target, target)){
+      bool reach = utility::l2d2(target - f.position) < fleet::interact_d2;
+
+      // set fleet converge status for appropriate actions
+      if (f.com.action == command::action_land
+	  || f.com.action == command::action_attack
+	  || f.com.action == command::action_colonize) {
+	f.converge = reach;
       }
-    }
 
-    // target left sight?
-    if ((!f.is_idle())
-	&& (!identifier::get_type(f.com.target).compare(identifier::fleet))
-	&& (!fleet_seen_by(identifier::get_id(f.com.target), f.owner))){
-
-      cout << "fleet " << fid << " looses sight of " << f.com.target << endl;
-      // create a waypoint and reset target
-      waypoint w;
-      if (!target_position(f.com.target, w.position)){
-	cout << "unset fleet target: fleet position not found: " << f.com.target << endl;
+      // set to idle and 'land' ships if converged to waypoint
+      if (reach && identifier::get_type(f.com.target) == identifier::waypoint && f.com.action == command::action_waypoint){
+	source_t wid = identifier::get_string_id(f.com.target);
+	f.com.target = identifier::make(identifier::idle, wid);
+	cout << "set fleet " << fid << " idle target: " << f.com.target << endl;
+      }else if (reach && identifier::get_type(f.com.target) == identifier::waypoint){
+	cout << "fleet " << fid << " converged to waypoint but invalid action: " << f.com.action << endl;
 	exit(-1);
       }
 
-      string wid = to_string(f.owner) + "#" + to_string(--waypoint::id_counter);
-      waypoints[wid] = w;
-      f.com.target = identifier::make(identifier::waypoint, wid);
+      // check fleet joins
+      if (f.com.action == command::action_join && reach){
+	if (identifier::get_type(f.com.target) != identifier::fleet){
+	  cout << "fleet " << fid << " trying to join non-fleet " << f.com.target << endl;
+	  exit(-1);
+	}
+
+	idtype target_id = identifier::get_id(f.com.target);
+	fleet &fleet_t = fleets[target_id];
+	for (auto i : f.ships){
+	  ships[i].fleet_id = target_id;
+	  fleet_t.ships.insert(i);
+	}
+	remove_fleet(fid);
+	return;
+      }
+    }else{
+      cout << "fleet " << fid << ": target " << f.com.target << " missing, setting idle:0" << endl;
+      f.com.target = identifier::target_idle;
     }
+  }
+
+  // target left sight?
+  if ((!f.is_idle())
+      && (identifier::get_type(f.com.target) == identifier::fleet)
+      && (!fleet_seen_by(identifier::get_id(f.com.target), f.owner))){
+
+    cout << "fleet " << fid << " looses sight of " << f.com.target << endl;
+    // create a waypoint and reset target
+    waypoint w;
+    if (!target_position(f.com.target, w.position)){
+      cout << "unset fleet target: fleet position not found: " << f.com.target << endl;
+      exit(-1);
+    }
+
+    string wid = to_string(f.owner) + "#" + to_string(--waypoint::id_counter);
+    waypoints[wid] = w;
+    f.com.target = identifier::make(identifier::waypoint, wid);
+    f.com.action = command::action_waypoint;
   }
 }
 
@@ -385,15 +413,19 @@ void game_data::increment(){
       for (auto i : sids){
 	ship &s = ships[i];
 	// check if ship s has reached a destination solar
-	if (!identifier::get_type(f.com.target).compare(identifier::solar)){
+	if (identifier::get_type(f.com.target) == identifier::solar){
 	  idtype sid = solar_at(s.position);
 	  if (sid == identifier::get_id(f.com.target)){
 	    solar::solar &sol = solars[sid];
 	    if (utility::l2d2(sol.position - s.position) < sol.radius * sol.radius){
-	      if (sol.owner == s.owner){
+	      // ship interacts with solar
+	      if (f.com.action == command::action_land){
 		ship_land(i, sid);
-	      }else{
+	      }else if (f.com.action == command::action_attack){
 		ship_bombard(i, sid);
+	      }else if (f.com.action == command::action_colonize){
+		// non-colonizer ships will be sent to ship_bombard
+		ship_colonize(i, sid);
 	      }
 	    }
 	  }
@@ -519,10 +551,15 @@ void game_data::ship_land(idtype ship_id, idtype solar_id){
   cout << "landed ship " << ship_id << " on solar " << solar_id << endl;
 }
 
-void game_data::ship_bombard(idtype ship_id, idtype solar_id){
+void game_data::ship_colonize(idtype ship_id, idtype solar_id){
   solar::solar &sol = solars[solar_id];
   ship &s = ships[ship_id];
-  float damage;
+
+  // check if solar already colonized
+  if (sol.owner == s.owner){
+    ship_land(ship_id, solar_id);
+    return;
+  }
 
   // check colonization
   if (s.ship_class == solar::ship_colonizer){
@@ -533,10 +570,21 @@ void game_data::ship_bombard(idtype ship_id, idtype solar_id){
       sol.defense_current = 1;
       sol.industry = vector<float>(solar::work_num, 20);
       cout << "player " << sol.owner << " colonizes solar " << solar_id << endl;
-
       remove_ship(ship_id);
     }
+  }else{
+    ship_bombard(ship_id, solar_id);
+  }
+}
 
+void game_data::ship_bombard(idtype ship_id, idtype solar_id){
+  solar::solar &sol = solars[solar_id];
+  ship &s = ships[ship_id];
+  float damage;
+
+  // check if solar already captured
+  if (sol.owner == s.owner){
+    ship_land(ship_id, solar_id);
     return;
   }
 
@@ -553,6 +601,9 @@ void game_data::ship_bombard(idtype ship_id, idtype solar_id){
     break;
   case solar::ship_bomber:
     damage = 2 + 2 * utility::random_uniform();
+    break;
+  case solar::ship_colonizer:
+    damage = 0.1 * utility::random_uniform();
     break;
   }
 
@@ -602,6 +653,8 @@ bool game_data::ship_fire(idtype sid, idtype tid){
     return utility::random_uniform() < fighter_rapidfire; // fighters may fire multiple times
   case solar::ship_bomber:
     return true; // bombers dont fire at ships
+  case solar::ship_colonizer:
+    return true; // colonizers don't fire at ships
   }
 
   return true; // indicate ship initiative is over

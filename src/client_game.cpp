@@ -544,7 +544,11 @@ idtype game::command_id(command c){
 }
 
 void st3::client::game::add_command(command c, point from, point to, bool fill_ships){
-  if (command_exists(c)) return;
+  if (command_exists(c)) {
+    cout << "add_command: from " << c.source << " to " << c.target << " action " << c.action << ": already exists!" << endl;
+    return;
+  }
+
   entity_selector *s = entity_selectors[c.source];
   entity_selector *t = entity_selectors[c.target];
 
@@ -796,23 +800,15 @@ idtype st3::client::game::command_at(point p){
     }
   }
 
+  if (key > -1 && key != command_selector::last_selected){
+    command_selectors[key] -> queue_level = (command_selectors[key] -> queue_level + 1) % command_selector::queue_max;
+    command_selector::last_selected = key;
+  }
+
   cout << "command at: " << p.x << "," << p.y << ": " << key << endl;
 
   return key;
 }
-
-// void st3::client::game::target_at(source_t k, string a){
-
-//   if (entity_selectors.count(key)){
-//     cout << "target at: " << key << endl;
-//     command2entity(key);
-//   }else{
-//     cout << "target at: point " << p.x << "," << p.y << endl;
-//     if (count_selected()){
-//       command2entity(add_waypoint(p));
-//     }
-//   }
-// }
 
 bool st3::client::game::select_at(point p){
   cout << "select at: " << p.x << "," << p.y << endl;
@@ -928,8 +924,7 @@ int st3::client::game::choice_event(sf::Event e){
   point p;
   list<source_t> ss;
 
-  window.setView(view_window);
-
+  window.setView(view_game);
   if (targui && targui -> handle_event(e)){
     if (targui -> done){
       if (targui -> selected_option.key != "cancel"){
@@ -946,6 +941,7 @@ int st3::client::game::choice_event(sf::Event e){
     return query_query;
   }
 
+  window.setView(view_window);
   if (comgui && comgui -> handle_event(e)){
     // handle comgui effects
 
@@ -994,11 +990,21 @@ int st3::client::game::choice_event(sf::Event e){
       } else if (!select_command_at(p)){
 	select_at(p);
       }
-    } else if (e.mouseButton.button == sf::Mouse::Right){
+    } else if (e.mouseButton.button == sf::Mouse::Right && count_selected()){
       // target_at(p);
       // set up targui
       set<source_t> keys = entities_at(p);
       list<target_gui::option_t> options;
+      
+      // check if a colonizer is available
+      bool has_colonizer = false;
+      for (auto x : entity_selectors){
+	if (x.second -> selected){
+	  for (auto i : x.second -> get_ships()){
+	    has_colonizer |= ships[i].ship_class == solar::ship_colonizer;
+	  }
+	}
+      }
 
       if (keys.empty()){
 	options.push_back(target_gui::option_add_waypoint);
@@ -1023,7 +1029,9 @@ int st3::client::game::choice_event(sf::Event e){
 	      // non-owned solar
 	      solar_selector *ss = (solar_selector*)e;
 	      options.push_back(target_gui::option_t(x, command::action_attack));
-	      if (ss -> owner == -1 && ss -> defense_current <= 0){
+	      if (ss -> owner == -1 
+		  && ss -> defense_current <= 0
+		  && has_colonizer){
 		// undefended neutral solar
 		options.push_back(target_gui::option_t(x, command::action_colonize));
 	      }
@@ -1053,8 +1061,13 @@ int st3::client::game::choice_event(sf::Event e){
   case sf::Event::KeyPressed:
     switch (e.key.code){
     case sf::Keyboard::Space:
-      cout << "choice_event: proceed" << endl;
-      return query_accepted;
+      if (comgui || targui){
+	clear_guis();
+      }else{
+	cout << "choice_event: proceed" << endl;
+	return query_accepted;
+      }
+      break;
     case sf::Keyboard::Return:
       ss = selected_solars();
       if (ss.size() == 1) run_solar_gui(ss.front());
@@ -1127,12 +1140,16 @@ void game::draw_window(){
   text.setPosition(point(10,10));
   window.draw(text);
 
+  // draw targui
+  window.setView(view_game);
+  if (targui) targui -> draw();
 
   // draw command gui
   if (comgui) {
     window.setView(view_window);
     comgui -> draw();
   }else{
+    window.setView(view_window);
     // draw minimap bounds
     sf::FloatRect fr = view_minimap.getViewport();
     sf::RectangleShape r;
