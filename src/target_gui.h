@@ -27,16 +27,24 @@ namespace st3{
     std::vector<option_t> options;
     int highlight_index;
     sf::RenderWindow *window;
+    sf::FloatRect bounds;
 
     static const point option_size;
 
     int compute_index(point p);
   public:
-    sf::FloatRect bounds;
+    point position;
     option_t selected_option;
+    std::list<source_t> selected_entities;
     bool done;
 
-    target_gui(point p, std::list<option_t> options, sf::RenderWindow *w);
+    /*! construct a target gui
+      @param p coordinate position
+      @param options list of target options to show
+      @param sel list of selected entities to set up commands for
+      @param w pointer to window for coorinate transform and drawing
+    */
+    target_gui(point p, std::list<option_t> options, std::list<source_t> sel, sf::RenderWindow *w);
 
     /*! handle an event
       @param e the event

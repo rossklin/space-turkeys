@@ -1,4 +1,6 @@
 * currently working on
+** command selectors drawn on top of each other
+** targui shows self as target (though this does not create a command)
 * long term goals
 ** strategy
 *** different solars have different resources
@@ -90,13 +92,6 @@
      target friendly solar: "land"
      target opponent solar: "attack"
      target neutral solar: "attack", (if undefended) "colonize"
-**** [done] add to command: action (from above options)
-**** [done] add command::action to command::operator ==
-**** [done] add queue_level to command_selector
-**** [done] add queue_level checking to command_at
-**** [done] replace entity_at with entities_at
-**** [done] replace right click event handler with target option gui
-**** [done] implement command action in game_data::increment
 *** clickable minimap
 *** choice/evolution: display ready players, autoplay when all ready
 *** command_gui should have option to allocate X ships of type T
@@ -113,17 +108,22 @@
    disable form_builder in tgui (check opts with ccmake)
 ** structure
 *** consider making work sector into a graph node class
-* bugs
-** comgui does not show action
-** command selectors drawn on top of each other
-** targui text does not fit width
-** targui scales with zoom
-** targui shows self as target (though this does not create a command)
-** command selectors should clear queue level in clear_guis()
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** selector queue cycling
+** targui scales with zoom
+** comgui does not show action
+** targui remembers selected entities
+** targui text does not fit width
 * fixed
+** [done] add to command: action (from above options)
+** [done] add command::action to command::operator ==
+** [done] add queue_level to command_selector
+** [done] add queue_level checking to command_at
+** [done] replace entity_at with entities_at
+** [done] replace right click event handler with target option gui
+** [done] implement command action in game_data::increment
 ** display victor
 ** client generated solar choice for other player's solar
    maybe happened after the solar was conquered?

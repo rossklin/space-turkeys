@@ -14,8 +14,6 @@ using namespace st3::client;
 // ENTITY SELECTOR
 // ****************************************
 
-source_t entity_selector::last_selected("");
-
 entity_selector::entity_selector(sf::Color c, bool o){
   color = c;
   owned = o;
@@ -201,11 +199,10 @@ set<idtype> waypoint_selector::get_ships(){
 // COMMAND SELECTOR
 // ****************************************
 
-idtype command_selector::last_selected = 0;
-
 command_selector::command_selector(command &c, point s, point d) : command(c){
   from = s;
   to = d;
+  queue_level = 0;
   selected = false;
 }
 

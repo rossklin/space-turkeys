@@ -27,6 +27,7 @@ bool ctrlsel();
 game::game(){
   comgui = 0;
   targui = 0;
+  selector_queue = 1;
 }
 
 void game::clear_guis(){
@@ -717,7 +718,7 @@ void st3::client::game::area_select(){
   }
 }
 
-void st3::client::game::command2entity(source_t key, string act){
+void st3::client::game::command2entity(source_t key, string act, list<source_t> selected_entities){
   if (!entity_selectors.count(key)){
     cout << "command2entity: invalid key: " << key << endl;
     exit(-1);
@@ -732,11 +733,11 @@ void st3::client::game::command2entity(source_t key, string act){
 
   cout << "command2entity: " << key << endl;
 
-  for (auto x : entity_selectors){
-    if (x.second != s && x.second -> selected){
-      cout << "command2entity: adding " << x.first << endl;
-      c.source = x.first;
-      from = x.second -> get_position();
+  for (auto x : selected_entities){
+    if (entity_selectors.count(x) && x != key){
+      cout << "command2entity: adding " << x << endl;
+      c.source = x;
+      from = entity_selectors[x] -> get_position();
       add_command(c, from, to);
     }
   }
@@ -757,11 +758,11 @@ set<source_t> st3::client::game::entities_at(point p){
   return keys;
 }
 
-source_t st3::client::game::entity_at(point p){
+source_t st3::client::game::entity_at(point p, int *q){
   float d;
   set<source_t> keys = entities_at(p);
   source_t key = "";
-  int q = entity_selector::queue_max;
+  int qmin = selector_queue;
 
   cout << "entity_at:" << endl;
 
@@ -769,26 +770,23 @@ source_t st3::client::game::entity_at(point p){
   for (auto x : keys){
     cout << "checking entity: " << x << endl;
     entity_selector *e = entity_selectors[x];
-    if (e -> queue_level < q){
-      q = e -> queue_level;
+    if (e -> queue_level < qmin){
+      qmin = e -> queue_level;
       key = x;
-      cout << "entity_at: k = " << key << ", q = " << e -> queue_level << endl;
+      cout << "entity_at: k = " << key << ", qmin = " << e -> queue_level << endl;
     }
   }
 
   cout << "entity at: " << p.x << "," << p.y << ": " << key << endl;
-  if (key.length() && key.compare(entity_selector::last_selected)){
-    entity_selectors[key] -> queue_level = (entity_selectors[key] -> queue_level + 1) % entity_selector::queue_max;
-    entity_selector::last_selected = key;
-  }
+
+  if (q) *q = qmin;
 
   return key;
 }
 
 
-idtype st3::client::game::command_at(point p){
-  float max_click_dist = 50;
-  int qmin = command_selector::queue_max;
+idtype st3::client::game::command_at(point p, int *q){
+  int qmin = selector_queue;
   float d;
   idtype key = -1;
 
@@ -800,25 +798,30 @@ idtype st3::client::game::command_at(point p){
     }
   }
 
-  if (key > -1 && key != command_selector::last_selected){
-    command_selectors[key] -> queue_level = (command_selectors[key] -> queue_level + 1) % command_selector::queue_max;
-    command_selector::last_selected = key;
-  }
-
   cout << "command at: " << p.x << "," << p.y << ": " << key << endl;
+
+  if (q) *q = qmin;
 
   return key;
 }
 
 bool st3::client::game::select_at(point p){
   cout << "select at: " << p.x << "," << p.y << endl;
-  source_t key = entity_at(p);
+  int qent, qcom;
+  source_t key = entity_at(p, &qent);
+  idtype cid = command_at(p, &qcom);
+
+  if (qcom < qent) return select_command(cid);
+
   auto it = entity_selectors.find(key);
  
   if (!add2selection()) deselect_all();
 
   if (it != entity_selectors.end() && it -> second -> owned){
     it -> second -> selected = !(it -> second -> selected);
+    it -> second -> queue_level = selector_queue++;
+
+    // debug printouts
     cout << "selector found: " << it -> first << " -> " << it -> second -> selected << endl;
 
     if (it -> second -> selected){
@@ -834,15 +837,15 @@ bool st3::client::game::select_at(point p){
   return false;
 }
 
-bool st3::client::game::select_command_at(point p){
-  cout << "select at: " << p.x << "," << p.y << endl;
-  idtype key = command_at(p);
+bool st3::client::game::select_command(idtype key){
   auto it = command_selectors.find(key);
  
   if (!add2selection()) deselect_all();
 
   if (it != command_selectors.end()){
     it -> second -> selected = !(it -> second -> selected);
+    it -> second -> queue_level = selector_queue++;
+    
     cout << "command found: " << it -> first << " -> " << it -> second -> selected << endl;
 
     // setup command gui
@@ -861,7 +864,10 @@ bool st3::client::game::select_command_at(point p){
 			     ready_ships,
 			     it -> second -> ships,
 			     view_window.getSize(),
-			     graphics::sfcolor(players[socket.id].color));
+			     graphics::sfcolor(players[socket.id].color),
+			     "source: " + it -> second -> source 
+			     + ", target: " + it -> second -> target 
+			     + ", action: " + it -> second -> action);
 
     return true;
   }
@@ -904,6 +910,14 @@ list<source_t> game::selected_solars(){
   return res;
 }
 
+list<source_t> game::selected_entities(){
+  list<source_t> res;
+  for (auto &x : entity_selectors){
+    if (x.second -> selected) res.push_back(x.first);
+  }
+  return res;
+}
+
 void game::run_solar_gui(source_t key){
   solar::solar sol = *((solar_selector*)entity_selectors[key]);
   if (sol.owner < 0) {
@@ -930,10 +944,10 @@ int st3::client::game::choice_event(sf::Event e){
       if (targui -> selected_option.key != "cancel"){
 	source_t k = targui -> selected_option.key;
 	if (k == "add_waypoint"){
-	  k = add_waypoint(point(targui -> bounds.left, targui -> bounds.top));
+	  k = add_waypoint(targui -> position);
 	}
 
-	command2entity(k, targui -> selected_option.option);
+	command2entity(k, targui -> selected_option.option, targui -> selected_entities);
       }
       delete targui;
       targui = 0;
@@ -987,7 +1001,7 @@ int st3::client::game::choice_event(sf::Event e){
     if (e.mouseButton.button == sf::Mouse::Left){
       if (abs(srect.width) > 5 || abs(srect.height) > 5){
 	area_select();
-      } else if (!select_command_at(p)){
+      }else{
 	select_at(p);
       }
     } else if (e.mouseButton.button == sf::Mouse::Right && count_selected()){
@@ -1041,7 +1055,7 @@ int st3::client::game::choice_event(sf::Event e){
       }
 
       options.push_back(target_gui::option_cancel);
-      targui = new target_gui(p, options, &window);
+      targui = new target_gui(p, options, selected_entities(), &window);
     }
 
     // clear selection rect
@@ -1131,15 +1145,6 @@ void game::draw_window(){
 
   window.setView(view_window);
 
-  // draw text
-  sf::Text text;
-  text.setFont(graphics::default_font); 
-  text.setCharacterSize(24);
-  text.setColor(sf::Color(200,200,200));
-  text.setString(message);
-  text.setPosition(point(10,10));
-  window.draw(text);
-
   // draw targui
   window.setView(view_game);
   if (targui) targui -> draw();
@@ -1150,6 +1155,16 @@ void game::draw_window(){
     comgui -> draw();
   }else{
     window.setView(view_window);
+
+    // draw text
+    sf::Text text;
+    text.setFont(graphics::default_font); 
+    text.setCharacterSize(24);
+    text.setColor(sf::Color(200,200,200));
+    text.setString(message);
+    text.setPosition(point(10,10));
+    window.draw(text);
+
     // draw minimap bounds
     sf::FloatRect fr = view_minimap.getViewport();
     sf::RectangleShape r;

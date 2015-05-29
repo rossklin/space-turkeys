@@ -14,7 +14,11 @@ const point target_gui::option_size = point(200, 30);
 
 target_gui::option_t::option_t(source_t k, string v) : key(k), option(v){}
 
-st3::target_gui::target_gui(point p, list<target_gui::option_t> opts, sf::RenderWindow *w) : selected_option("",""){
+st3::target_gui::target_gui(point p, list<target_gui::option_t> opts, list<source_t> sel, sf::RenderWindow *w) : 
+  selected_option("",""), 
+  selected_entities(sel),
+  position(p){
+  
   if (opts.empty()){
     cout << "attempting to build target gui without options!" << endl;
     exit(-1);
@@ -64,37 +68,48 @@ bool st3::target_gui::handle_event(sf::Event e){
 }
 
 int st3::target_gui::compute_index(point p){
-  if (bounds.contains(p)){
-    return (p.y - bounds.top) / option_size.y;
+  point scale = utility::inverse_scale(*window);
+  sf::FloatRect scaled_bounds(bounds.left, bounds.top, 
+			      bounds.width * scale.x,
+			      bounds.height * scale.y);
+
+  if (scaled_bounds.contains(p)){
+    return (p.y - scaled_bounds.top) / (option_size.y * scale.y);
   }else{
     return -1;
   }
 }
 
 void st3::target_gui::draw(){
-  sf::Text text;
+  vector<sf::Text> text(options.size());
+  float max_width = 0;
   sf::RectangleShape r;
+  point scale = utility::inverse_scale(*window);
+  point boxdims(option_size.x * scale.x, option_size.y * scale.y);
 
-  text.setFont(graphics::default_font); 
-  text.setCharacterSize(0.8 * option_size.y);
-  text.setColor(sf::Color(10,20,30));
+  for (int i = 0; i < options.size(); i++){
+    text[i].setFont(graphics::default_font); 
+    text[i].setCharacterSize(0.5 * option_size.y);
+    text[i].setScale(scale);
+    text[i].setColor(sf::Color(10,20,30));
+    text[i].setString(options[i].key + " - " + options[i].option);
+    text[i].setPosition(bounds.left, bounds.top + i * boxdims.y);
+    max_width = fmax(max_width, text[i].getLocalBounds().width);
+  }
 
-  r.setSize(option_size);
+  r.setSize(point(fmax(boxdims.x, max_width * scale.x), boxdims.y));
   r.setOutlineColor(sf::Color(200,200,200));
-  r.setOutlineThickness(2);
+  r.setOutlineThickness(2 * scale.x);
   
   for (int i = 0; i < options.size(); i++){
-    r.setPosition(bounds.left, bounds.top + i * option_size.y);
+    r.setPosition(bounds.left, bounds.top + i * boxdims.y);
     if (i == highlight_index){
       r.setFillColor(sf::Color(150,150,150));
     }else{
       r.setFillColor(sf::Color(150,150,150,150));
     }
-
-    text.setString(options[i].key + " - " + options[i].option);
-    text.setPosition(bounds.left, bounds.top + i * option_size.y);
     
     window -> draw(r);
-    window -> draw(text);
+    window -> draw(text[i]);
   }
 }

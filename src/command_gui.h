@@ -89,8 +89,10 @@ namespace st3{
     std::vector<command_table> tables; /*!< one table for each ship class */
     sf::FloatRect bounds; /*!< drawing bounds in pixel coordinates */
     window_t *w; /*!< window to draw on */
+    std::string header_string;
 
     static constexpr float padding = 5;
+    static constexpr float header_height = 40;
     
   public:
     static float table_width; /*!< width of tables */
@@ -106,8 +108,9 @@ namespace st3{
       @param prealloc ids of ships that should initially be allocated
       @param dims width and height
       @param c color for drawing ships
+      @param hstring text for header
     */
-    command_gui(idtype id, window_t *w, hm_t<idtype, ship> s, std::set<idtype> prealloc, point dims, sf::Color c);
+    command_gui(idtype id, window_t *w, hm_t<idtype, ship> s, std::set<idtype> prealloc, point dims, sf::Color c, std::string hstring);
 
     /*! handle an event
       @param e the event
