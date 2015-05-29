@@ -3,14 +3,23 @@
 
 #include <set>
 #include <list>
+#include <string>
 
 #include "types.h"
 
 namespace st3{
   /*! struct representing a command */
   struct command{
+    static const std::string action_waypoint;
+    static const std::string action_follow;
+    static const std::string action_join;
+    static const std::string action_attack;
+    static const std::string action_land;
+    static const std::string action_colonize;
+
     source_t source; /*!< key of entity holding the command */
     target_t target; /*!< key of target */
+    std::string action;
     std::set<idtype> ships; /*!< ids of ships allocated to the command */
 
     /*! default constructor */

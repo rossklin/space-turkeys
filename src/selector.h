@@ -17,9 +17,6 @@ namespace st3{
     class entity_selector{
       static const int max_click_distance = 20; /*!< greatest distance from entities at which clicks are handled */
     public:
-      static constexpr int queue_max = 100000; /*!< level at which click selection order wraps */
-      static source_t last_selected; /*!< source identifier of latest selected entity */
-
       int queue_level; /*!< selection queue level: entities with lower level get priority */
       bool selected; /*!< is this entity selected? */
       bool owned; /*!< is the game object owned by the client? */
@@ -140,6 +137,7 @@ namespace st3{
     /*! selector representing a command */
     class command_selector : public command{
     public:
+      int queue_level; /*!< selection queue level: command selectors with lower level get priority */
       bool selected; /*!< whether the command_selector is selected */
       point from; /*!< source point */
       point to; /*!< destination point */

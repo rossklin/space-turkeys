@@ -14,6 +14,7 @@
 #include "selector.h"
 #include "utility.h"
 #include "command_gui.h"
+#include "target_gui.h"
 
 namespace st3{
   namespace client{
@@ -41,13 +42,15 @@ namespace st3{
       hm_t<source_t, solar::choice_t> solar_choices; /*!< stored choices for solars */
       hm_t<source_t, entity_selector*> entity_selectors; /*!< graphical representations for solars, fleets and waypoints */
       hm_t<idtype, command_selector*> command_selectors; /*!< graphical representations for commands */
+      int selector_queue;
 
       command_gui *comgui; /*!< gui for assigning ships to commands */
+      target_gui *targui; /*!< gui for selecting command action */
 
-		std::vector<fixed_star> fixed_stars;
-		std::list<fixed_star> hidden_stars;
-		static constexpr float grid_size = 20;
-		std::set<std::pair<int, int> > known_universe;
+      std::vector<fixed_star> fixed_stars;
+      std::list<fixed_star> hidden_stars;
+      static constexpr float grid_size = 20;
+      std::set<std::pair<int, int> > known_universe;
 
       /*! default contsructor */
       game();
@@ -99,6 +102,13 @@ namespace st3{
       /*! select selectors in the selection rectangle */
       void area_select();
 
+      /*! get the keys of all entity selectors at a point
+
+	@param p the point
+	@return set of keys of entities
+      */
+      std::set<source_t> entities_at(point p);
+
       /*! get the key of the entity selector at a point
 
 	If there are entities at the point, this function identifies
@@ -106,28 +116,19 @@ namespace st3{
 	level and returns the key.
 
 	@param p the point
+	@param[out] q set to queue level of found entity
 	@return the key, or "" if no entity was found
       */
-      source_t entity_at(point p);
+      source_t entity_at(point p, int *q = 0);
 
       /*! get the id of the command_selector at a point
 	@param p the point
+	@param[out] q set to queue level of found command
 	@return the id
       */
-      idtype command_at(point p);
+      idtype command_at(point p, int *q = 0);
 
-      /*! set up commands to a point
-
-	If there is an entity at the point, add comands from each
-	selected entity to the targeted entity. Else, add a waypoint
-	selector at the point and set up commands from each selected
-	entity to the waypoint.
-
-	@param p the point
-      */
-      void target_at(point p);
-
-      /*! select the entity at a point if there is one
+      /*! select the selector at a point if there is one
 	@param p the point
 	@return whether an entity was selected
       */
@@ -135,13 +136,12 @@ namespace st3{
 
       /*! setup the command gui
 	
-	if there is a command selector at the given point, select the
-	command selector and set up the command gui.
+	select the command selector and set up the command gui.
 
-	@param p point to check for command selector
+	@param key id of the command selector
 	@return whether a command selector was selected
       */
-      bool select_command_at(point p);
+      bool select_command(idtype key);
 
       /*! translate the game view according to user input */
       void controls();
@@ -207,8 +207,10 @@ namespace st3{
 
       /*! add commands from selected entities to a target entity
 	@param key entity to target
+	@param action command action
+	@param list of selected entities
       */
-      void command2entity(source_t key);
+      void command2entity(source_t key, std::string action, std::list<std::string> sel);
 
       /*! add a waypoint selector at a given point
 	@param p the point
@@ -251,6 +253,11 @@ namespace st3{
 	@return list of keys of selected solar selectors
       */
       std::list<source_t> selected_solars();
+
+      /*! get a list of keys of all selected entity selectors
+	@return list of keys of selected entity selectors
+      */
+      std::list<source_t> selected_entities();
 
       /* **************************************** */
       /* GRAPHICS */

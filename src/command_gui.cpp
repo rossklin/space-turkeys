@@ -16,13 +16,14 @@ using namespace st3;
 float command_gui::table_width = 0;
 float command_gui::table_height = 0;
 
-command_gui::command_gui(idtype cid, window_t *window, hm_t<idtype, ship> s, set<idtype> prealloc, point dims, sf::Color c){
+command_gui::command_gui(idtype cid, window_t *window, hm_t<idtype, ship> s, set<idtype> prealloc, point dims, sf::Color c, string hstring){
   float margin = 10;
   point p(margin, margin);
   w = window;
   comid = cid;
-  table_width = (dims.x - 2 * (padding + margin)) / 3;
-  table_height = (dims.y - 2 * (padding + margin)) / solar::ship_num;
+  header_string = hstring;
+  table_width = 0.4 * (dims.x - 2 * (padding + margin));
+  table_height = (dims.y - header_height - 2 * (padding + margin)) / solar::ship_num;
   bounds = sf::FloatRect(p.x, p.y, table_width + 2 * padding, dims.y - 2 * margin);
 
   tables.resize(solar::ship_num);
@@ -36,7 +37,7 @@ command_gui::command_gui(idtype cid, window_t *window, hm_t<idtype, ship> s, set
 	if (prealloc.count(x.first)) pbuf.insert(x.first);
       }
     }
-    point x = p + point(padding, padding + i * table_height);
+    point x = p + point(padding, padding + header_height + i * table_height);
 
     tables[i] = command_table(w, sbuf, pbuf, x, c);
   }
@@ -64,6 +65,25 @@ void command_gui::draw(){
   r.setOutlineThickness(1);
   w -> draw(r);
 
+  // draw header
+  sf::Text text;
+  text.setFont(graphics::default_font); 
+  text.setCharacterSize(0.5 * header_height);
+  text.setColor(sf::Color(200,200,200));
+  text.setString(header_string);
+
+  // scale text to fit and center it
+  float text_margin = 2;
+  float text_bound = bounds.width - 2 * text_margin;
+  point text_dims(text.getLocalBounds().width, text.getLocalBounds().height);
+  float rescale = (text_bound) / fmax(text_bound, text_dims.x);
+  text.setScale(point(rescale, rescale));
+  text_dims.x *= rescale;
+  text_dims.y *= rescale;
+  text.setPosition(point(bounds.left + text_margin + (text_bound - text_dims.x) / 2, bounds.top + (header_height - text_dims.y) / 2));
+  w -> draw(text);
+
+  // draw tables
   for (auto &t : tables) t.draw();
 }
 
