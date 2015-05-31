@@ -212,11 +212,19 @@ float st3::solar::solar::pop_increment(research const &r, float allocated){
   float farmers = fmin(usable_area - i_sum, allocated);
   float food_cap = (food_per_person + fpp_per_research * utility::sigmoid(r.field[research::r_population], agriculture_limit_coefficient)) * farmers;
   float feed = feed_boost_coefficient * (food_cap - population_number) / population_number;
-  float birth_rate = births_per_person + feed;
+  float birth_rate = births_per_person;
   float crowding = crowding_rate / (r.field[research::r_population] + 1) * population_number;
-  float death_rate = deaths_per_person / (r.field[research::r_population] + 1) + fmax(-feed, 0) + crowding;
+  float death_rate = deaths_per_person / (r.field[research::r_population] + 1) + crowding;
 
   cout << "pop: " << population_number << ", happy: " << population_happy << ", farmers: " << farmers << ", cap: " << food_cap << ", feed: " << feed << ", birth: " << birth_rate << ", crowding: " << crowding << ", death: " << death_rate << endl;
 
-  return (birth_rate - death_rate) * population_number;
+  return (birth_rate - death_rate + feed) * population_number;
+}
+
+float st3::solar::solar::farmers_for_growthratio(float r){
+  float food_cap = food_per_person + fpp_per_research * utility::sigmoid(r.field[research::r_population], agriculture_limit_coefficient);
+  float K = births_per_person - feed_boost_coefficient - deaths_per_person / (r.field[research::r_population] + 1) - crowding_rate / (r.field[research::r_population] + 1) * population_number;
+  float Q = feed_boost_coefficient * food_cap / pop;
+  float F = (r - K) / Q;
+  return F;
 }

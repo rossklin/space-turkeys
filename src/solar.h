@@ -189,6 +189,12 @@ namespace st3{
 	@return increment per unit time
       */
       float pop_increment(research const &r, float n);
+
+      /*! compute number of farmers required for given relative growth
+	@param r requested relative growth
+	@return required number of farmers
+      */
+      float farmers_for_growthratio(float r);
     };
 
     /*! initialize static data */

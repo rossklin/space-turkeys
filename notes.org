@@ -111,12 +111,12 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+* fixed
 ** selector queue cycling
 ** targui scales with zoom
 ** comgui does not show action
 ** targui remembers selected entities
 ** targui text does not fit width
-* fixed
 ** [done] add to command: action (from above options)
 ** [done] add command::action to command::operator ==
 ** [done] add queue_level to command_selector

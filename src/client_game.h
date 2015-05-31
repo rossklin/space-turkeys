@@ -42,7 +42,7 @@ namespace st3{
       hm_t<source_t, solar::choice_t> solar_choices; /*!< stored choices for solars */
       hm_t<source_t, entity_selector*> entity_selectors; /*!< graphical representations for solars, fleets and waypoints */
       hm_t<idtype, command_selector*> command_selectors; /*!< graphical representations for commands */
-      int selector_queue;
+      int selector_queue; /*!< index for back end of selector queue */
 
       command_gui *comgui; /*!< gui for assigning ships to commands */
       target_gui *targui; /*!< gui for selecting command action */
