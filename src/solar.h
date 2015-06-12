@@ -191,10 +191,11 @@ namespace st3{
       float pop_increment(research const &r, float n);
 
       /*! compute number of farmers required for given relative growth
-	@param r requested relative growth
+	@param q requested relative growth
+	@param r current research state
 	@return required number of farmers
       */
-      float farmers_for_growthratio(float r);
+      float farmers_for_growthratio(float q, research const &r);
     };
 
     /*! initialize static data */

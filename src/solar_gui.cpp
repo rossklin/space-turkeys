@@ -348,41 +348,23 @@ bool solar_gui::run(){
   return accept;
 }
 
-float solar_gui::compute_workers_nostarve(float priority){
-  float n = s.population_number;
-  // dp/dt = a f n + b n
-  float dmax = s.pop_increment(r, n);
-  float dmin = s.pop_increment(r, 0);
-  float dsel = fmin(dmax, fmax(0, dmin + priority * (dmax - dmin)));
-  float b = dmin / n;
-  float a = (dmax - b * n) / pow(n, 2);
-  float f = (dsel - b * n) / (a * n);
-  return (n - f) / n;
-}
-
-float solar_gui::compute_workers(float priority){
-  float n = s.population_number;
-  // dp/dt = a f p + b p
-  float dmax = s.pop_increment(r, n);
-  float dmin = s.pop_increment(r, 0);
-  float dsel = dmin + priority * (dmax - dmin);
-  float b = dmin / n;
-  float a = (dmax - b * n) / pow(n, 2);
-  float f = (dsel - b * n) / (a * n);
-  return (n - f) / n;
-}
-
-void solar_gui::load_template(string s){
+void solar_gui::load_template(string temp){
   solar::choice_t c;
   for (auto &x : c.sector) x = 0;
   for (auto &x : c.subsector) for (auto &y : x) y = 0;
 
-  if (!s.compare("population")){
-    c.workers = compute_workers_nostarve(0.8);
+  // (x/dt+1)^(t/dt) = q + 1
+  // x = dt * ((q+1)^(dt/t) - 1)
+  auto fratio = [&](float q) -> float {return pow(1 + q, 1 / round_time) - 1;};
+
+  if (temp == "population"){
+    float r_farmers = s.farmers_for_growthratio(fratio(0.1), r);
+    c.workers = fmax(0, 1 - r_farmers / s.population_number);
     c.sector[solar::work_research] = 1;
     c.subsector[solar::work_research][research::r_population] = 1;
-  }else if (!s.compare("industry")){
-    c.workers = compute_workers_nostarve(0.5);
+  }else if (temp == "industry"){
+    float r_farmers = s.farmers_for_growthratio(fratio(0.05), r);
+    c.workers = fmax(0, 1 - r_farmers / s.population_number);
     c.sector[solar::work_expansion] = 1;
     c.sector[solar::work_research] = 0.5;
     c.sector[solar::work_resource] = 0.5;
@@ -392,8 +374,9 @@ void solar_gui::load_template(string s){
     c.subsector[solar::work_expansion][solar::work_resource] = 0.2;
     c.subsector[solar::work_research][research::r_industry] = 1;
     for (auto &x : c.subsector[solar::work_resource]) x = 1;
-  }else if (!s.compare("ship")){
-    c.workers = compute_workers_nostarve(0.3);
+  }else if (temp == "ship"){
+    float r_farmers = s.farmers_for_growthratio(fratio(0.01), r);
+    c.workers = fmax(0, 1 - r_farmers / s.population_number);
     c.sector[solar::work_expansion] = 1;
     c.sector[solar::work_ship] = 2;
     c.sector[solar::work_resource] = 1;
@@ -401,7 +384,7 @@ void solar_gui::load_template(string s){
     for (auto &x : c.subsector[solar::work_ship]) x = 1;
     for (auto &x : c.subsector[solar::work_resource]) x = 1;
   }else{
-    cout << "load_template: unknown: " << s << endl;
+    cout << "load_template: unknown: " << temp << endl;
     exit(-1);
   }
 

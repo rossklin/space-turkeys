@@ -208,18 +208,6 @@ namespace st3{
       @param s name of template
     */
     void load_template(std::string s);
-
-    /*! compute the number of workers s.t. the population increment is a factor p between the minimun and the maximum
-      @param p population growth priority
-      @return allowed number of workers
-    */
-    float compute_workers(float p);
-
-    /*! compute the number of workers s.t. the population increment is at least 0 but if possible a factor p between the minimun and the maximum
-      @param p population growth priority
-      @return allowed number of workers
-    */
-    float compute_workers_nostarve(float p);
   };
 };
 #endif
