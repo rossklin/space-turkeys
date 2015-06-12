@@ -184,6 +184,11 @@ namespace st3{
     */
     void solar_tick(idtype id);
 
+    /*! evaluate post interaction effects on solar (e.g. damage from ships)
+      @param id id of the solar
+    */
+    void solar_effects(idtype id);
+
     /*! update a fleet
 
       Updates the position, radius, vision and converge/idle status of

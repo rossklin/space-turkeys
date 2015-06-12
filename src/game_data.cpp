@@ -564,13 +564,7 @@ void game_data::ship_colonize(idtype ship_id, idtype solar_id){
   // check colonization
   if (s.ship_class == solar::ship_colonizer){
     if (sol.owner == -1 && sol.defense_current <= 0){
-      sol.owner = s.owner;
-      sol.population_number = solar::colonizer_population;
-      sol.population_happy = 1;
-      sol.defense_current = 1;
-      sol.industry = vector<float>(solar::work_num, 20);
-      cout << "player " << sol.owner << " colonizes solar " << solar_id << endl;
-      remove_ship(ship_id);
+      sol.colonization_attempts[s.owner] = ship_id;
     }
   }else{
     ship_bombard(ship_id, solar_id);
@@ -607,19 +601,57 @@ void game_data::ship_bombard(idtype ship_id, idtype solar_id){
     break;
   }
 
-  cout << "ship " << ship_id << " bombards solar " << solar_id << ", resulting defense: " << sol.defense_current << endl;
+  sol.damage_taken[s.owner] += damage;
+  remove_ship(ship_id);
 
-  // todo: add some random destruction to solar
-  sol.defense_current = fmax(sol.defense_current - damage, 0);
-  sol.population_number = fmax(sol.population_number - 10 * damage, 0);
-  sol.population_happy *= 0.9;
+  cout << "ship " << ship_id << " bombards solar " << solar_id << ", damage: " << damage << endl;
+}
 
-  if (sol.owner > -1 && sol.defense_current <= 0){
-    sol.owner = s.owner;
-    cout << "player " << sol.owner << " conquers solar " << solar_id << endl;
+void game_data::solar_effects(int solar_id){
+  solar::solar &sol = solars[solar_id];
+  float total_damage = 0;
+  float highest_id = -1;
+  float highest_sum = 0;
+
+  // analyse damage
+  for (auto x : sol.damage_taken) {
+    total_damage += x.second;
+    if (x.second > highest_sum){
+      highest_sum = x.second;
+      highest_id = x.first;
+    }
+
+    cout << "solar_effects: " << x.second << " damage from player " << x.first << endl;
   }
 
-  remove_ship(ship_id);
+  if (highest_id > -1){
+    // todo: add some random destruction to solar
+    sol.defense_current = fmax(sol.defense_current - total_damage, 0);
+    sol.population_number = fmax(sol.population_number - 10 * total_damage, 0);
+    sol.population_happy *= 0.9;
+
+    if (sol.owner > -1 && sol.defense_current <= 0){
+      sol.owner = highest_id;
+      cout << "player " << sol.owner << " conquers solar " << solar_id << endl;
+    }else{
+      cout << "resulting defense for solar " << solar_id << ": " << sol.defense_current << endl;
+    }
+  }
+
+  // colonization: randomize among attempts
+  float count = 0;
+  float num = sol.colonization_attempts.size();
+  for (auto i : sol.colonization_attempts){
+    if (utility::random_uniform() <= 1 / (num - count++)){
+      sol.owner = i.first;
+      sol.population_number = solar::colonizer_population;
+      sol.population_happy = 1;
+      sol.defense_current = 1;
+      sol.industry = vector<float>(solar::work_num, 20);
+      cout << "player " << sol.owner << " colonizes solar " << solar_id << endl;
+      remove_ship(i.second);
+    }
+  }
 }
 
 bool game_data::ship_fire(idtype sid, idtype tid){
@@ -842,6 +874,11 @@ void st3::game_data::solar_tick(idtype id){
   float dt = settings.dt;
   float allocated, build;
 
+  // effect trackers
+  solar_effects(id);
+  s.damage_taken.clear();
+  s.colonization_attempts.clear();
+
   if (s.owner < 0 || s.population_number <= 0){
     s.population_number = 0;
     return;
@@ -944,10 +981,11 @@ void st3::game_data::solar_tick(idtype id){
   allocated = s.population_number * (1 - c.workers);
   cout << "population dynamics for " << id << " : " << endl;
   buf.population_number += s.pop_increment(r_base, allocated) * dt;
-  buf.population_happy += 0.001 * (1 + 0.1 * utility::sigmoid(r_base.field[research::r_population] - P[solar::work_ship], 1000)) * dt;
+  float happy_increment = 1e-2 * utility::sigmoid(log(1 + r_base.field[research::r_population]) - log(1 + P[solar::work_ship]), 1000) * dt;
+  buf.population_happy += happy_increment;
   buf.population_happy = fmax(fmin(buf.population_happy, 1), 0);
 
-  // cout << "population: " << buf.population_number << "(" << buf.population_happy << ")" << endl;
+  cout << "population: " << buf.population_number << "(" << buf.population_happy << ", " << happy_increment << ")" << endl;
 
   // assignment
   s.industry.swap(buf.industry);
@@ -976,6 +1014,7 @@ void st3::game_data::solar_tick(idtype id){
       // cout << "ship " << sid << " was created for player " << s.owner << " at solar " << id << endl;
     }
   }
+
 }
 
 // clean up things that will be reloaded from client

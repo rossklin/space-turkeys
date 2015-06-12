@@ -1,4 +1,5 @@
 * currently working on
+** solar happy update does not match happy_increment
 ** command selectors drawn on top of each other
 ** targui shows self as target (though this does not create a command)
 * long term goals

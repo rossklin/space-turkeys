@@ -160,6 +160,12 @@ namespace st3{
       /*! radius of the solar */
       sfloat radius;
 
+      /*! damage taken from different players */
+      hm_t<idtype, float> damage_taken;
+
+      /*! colonization attempts from different ships */
+      hm_t<idtype, idtype> colonization_attempts;
+
       /*! default constructor (data are set in game_data::build) */
       solar();
       
