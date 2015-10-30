@@ -25,6 +25,9 @@ namespace st3{
   template <typename key, typename value>
     using hm_t = std::unordered_map<key,value>;
 
+  /*! map for dynamically listing named parameters */
+  typedef hm_t<std::string, sfloat> vmap;
+
   /*! type used to represent a point in coordinate space */
   typedef sf::Vector2f point;
 
