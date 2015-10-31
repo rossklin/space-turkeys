@@ -731,6 +731,20 @@ hm_t<idtype, solar::solar> game_data::random_solars(){
     s.position.y = s.radius + rand() % (int)(settings.height - 2 * s.radius);
     s.owner = -1;
     s.defense_capacity = s.defense_current = rand() % q_start;
+
+    s.population = 0;
+    s.happieness = 1;
+    s.vision = 120;
+    s.research = 0;
+    s.housing = 0;
+    
+    s.water = 1000 * utility::random_uniform();
+    s.space = 1000 * utility::random_uniform();
+    
+    s.resource.organics.available = 1000 * utility::random_uniform();
+    s.resource.metals.available = 1000 * utility::random_uniform();
+    s.resource.gases.available = 1000 * utility::random_uniform();
+
     buf[i] = s;
   }
 
@@ -813,12 +827,23 @@ float game_data::heuristic_homes(hm_t<idtype, solar::solar> solar_buf, hm_t<idty
 
 // players and settings should be set before build is called
 void game_data::build(){
+  static research rbase;
+  
   if (players.empty()){
     cout << "game_data: build: no players!" << endl;
     exit(-1);
   }
 
   cout << "game_data: running dummy build" << endl;
+
+  cost::resource_allocation<cost::resource_data> initial_resources;
+  initial_resources.organics.available = 1000;
+  initial_resources.metals.available = 1000;
+  initial_resources.gases.available = 1000;
+  
+  cost::sector_base initial_capacities;
+  initial_capacities.agriculture = 80;
+  initial_capacities.infrastructure = 60;
 
   // build solars
   int ntest = 100;
@@ -838,21 +863,19 @@ void game_data::build(){
 	solar::solar &s = solars[x.second];
 	s.owner = x.first;
 	s.defense_current = s.defense_capacity = d_start;
-	s.resource = vector<float>(solar::resource_num, 1000);
-	s.industry = vector<float>(solar::work_num, 200);
-	s.usable_area = 1e9;
-	s.population_number = 1000;
-	s.population_happy = 1;
-	research rbase;
+	s.resource = initial_resources;
+	s.sector_capacity = initial_capacities;
+	s.water = 1000;
+	s.space = 1000;
+	s.population = 100;
+	s.happieness = 1;
 
-	ship shs(solar::ship_scout, rbase);
 	idtype id = ship::id_counter++;
-	ships[id] = shs;
+	ships[id] = base_ship.scout;
 	s.ships.insert(id);
 
-	ship shf(solar::ship_fighter, rbase);
 	id = ship::id_counter++;
-	ships[id] = shf;
+	ships[id] = base_ship.fighter;
 	s.ships.insert(id);
       }
     }

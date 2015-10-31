@@ -4,50 +4,41 @@ using namespace std;
 using namespace st3;
 using namespace cost;
 
-hm_t<string, sector_cost> st3::cost::sector; 
-hm_t<string, vmap> st3::cost::ship;
-hm_t<string, vmap> st3::cost::defense;
-hm_t<string, vmap> st3::cost::research;
+sector_allocation<sector_cost> cost::sector_expansion;
+sector_cost cost::housing;
+ship_allocation<resource_base> cost::ship_build;
 
 void st3::cost::initialize(){
-  
-  // ships
-  
-  // scout
-  ship["scout"]["metals"] = 1;
-  ship["scout"]["organics"] = 1;
-  ship["scout"]["time"] = 1;
-  
-  // fighter
-  ship["fighter"]["metals"] = 2;
-  ship["fighter"]["organics"] = 2;
-  ship["fighter"]["time"] = 2;
-  
-  // bomber
-  ship["bomber"]["metals"] = 6;
-  ship["bomber"]["organics"] = 4;
-  ship["bomber"]["time"] = 6;
-  
-  // colonizer
-  ship["colonizer"]["metals"] = 3; 
-  ship["colonizer"]["organics"] = 4;
-  ship["colonizer"]["water"] = 3;
-  ship["colonizer"]["time"] = 4;
+  // sector costs
+  sector_expansion.agriculture.res.organics = 1;
+  sector_expansion.agriculture.water = 1;
+  sector_expansion.agriculture.space = 2;
 
-  // infrastructure
-
-  sector["agriculture"]["space"] = 1;
-  sector["agriculture"]["water"] = 1;
-  sector["agriculture"]["organics"] = 1;
-  sector["agriculture"]["time"] = 1;  
-
-  sector["infrastructure"]["metals"] = 2;
-  sector["infrastructure"]["organics"] = 1;
-  sector["infrastructure"]["time"] = 1;
-
-  sector["mining"]["metals"] = 2;
-  sector["mining"]["organics"] = 1;
-  sector["mining"]["time"] = 1;
+  sector_expansion.infrastructure.res.metals = 1;
+  sector_expansion.infrastructure.res.gases = 1;
 
   ...
+
+  // ship costs
+  ship_build.scout.res.metals = 1;
+  ship_build.scout.res.gases = 1;
+  ship_biuld.scout.time = 1;
+
+  ship_build.fighter.res.metals = 2;
+  ship_build.fighter.res.gases = 1;
+  ship_build.fighter.time = 2;
+
+  ship_build.bomber.res.metals = 4;
+  ship_build.bomber.res.gases = 3;
+  ship_build.bomber.time = 4;
+
+  ship_build.colonizer.res.metals = 4;
+  ship_build.colonizer.res.gases = 2;
+  ship_build.colonizer.res.organics = 3;
+  ship_build.colonizer.time = 6;
+
+  // housing costs
+  housing.res.metals = 1;
+  hosing.water = 1;
+  housing.space = 1;
 }

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "types.h"
+#include "cost.h"
 
 namespace st3{
   struct research;
@@ -32,15 +33,8 @@ namespace st3{
 
     sfloat vision; /*!< ship's sight radius */
     bool was_killed; /*!< track when the ship is killed */
-
-    /*! default constructor */
-    ship();
-
-    /*! build a ship of given class and research level
-      @param c ship class
-      @param r research level
-    */
-    ship(class_t c, research &r);
   };
+
+  cost::ship_allocation<ship> base_ship;
 };
 #endif

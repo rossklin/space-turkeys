@@ -12,17 +12,6 @@ namespace st3{
   /*! types and functions related to solars */
   namespace solar{
     extern idtype id_counter;
-
-    namespace coef{
-      /*! solar system coefficient: births per person per unit time */
-      extern const float birth;
-
-      /*! solar system coefficient: deaths per person per unit time */
-      extern const float death;
-
-      /*! solar system coefficient: effect factor for food */
-      extern const float crowding;
-    };
     
     /*! choice of priorities for solar system */
     struct choice_t{
@@ -34,16 +23,21 @@ namespace st3{
     /*! data representing a solar system */
     struct solar{
       /*! work places available in main sectors */
-      vmap sector_capacity;
+      cost::sector_base sector_capacity;
 
       /*! ship growth per class */
-      vmap fleet_growth;
+      cost::ship_base fleet_growth;
 
       /*! amount of research produced */
-      float research;
+      sfloat research;
 
+      /*! nr of homes available to live in */
+      sfloat housing;
+      sfloat water;
+      sfloat space;
+      
       /*! amount of each resource */
-      hm_t<std::string, vmap> resource;
+      cost::resource_allocation<cost::resource_data> resource;
 
       /*! number of inhabitants */
       sfloat population;
