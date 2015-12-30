@@ -3,6 +3,7 @@
 
 #include <set>
 #include <vector>
+
 #include "types.h"
 #include "ship.h"
 
@@ -12,19 +13,33 @@ namespace st3{
   /*! types and functions related to solars */
   namespace solar{
     extern idtype id_counter;
+
+    namespace choice{
+      struct c_research{
+	std::string identifier;
+      };
+
+      struct c_military{
+	cost::ship_allocation<int> ship_priority;
+	cost::turret_allocation<int> turret_priority;
+      };
+
+      typedef cost::resource_allocation<int> c_mining;
     
-    /*! choice of priorities for solar system */
-    struct choice_t{
-      vmap assign;
-      vmap military;
-      vmap infrastructure;
+      /*! choice of priorities for solar system */
+      struct choice_t{
+	cost::sector_allocation<int> allocation;
+
+	c_research research;
+	c_military military;
+	c_mining mining;
+
+	int count_allocation();
+      };
     };
 
     /*! data representing a solar system */
     struct solar{
-      /*! work places available in main sectors */
-      cost::sector_base sector_capacity;
-
       /*! ship growth per class */
       cost::ship_base fleet_growth;
 

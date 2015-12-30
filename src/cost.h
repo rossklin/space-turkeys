@@ -7,7 +7,6 @@ namespace st3{
   namespace cost{
 
     /* type allocation templates */
-    
     template<typename T>
     struct resource_allocation{
       T organics;
