@@ -16,11 +16,10 @@ namespace st3{
 
     template<typename T>
     struct sector_allocation{
-      T agriculture;
-      T infrastructure;
       T research;
       T culture;
       T military;
+      T mining;
     };
 
     template<typename T>

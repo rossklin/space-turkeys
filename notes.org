@@ -1,9 +1,11 @@
 * currently working on
 ** rewrite solar/gui
+*** decide whether expansion should be a sector and/or have sub choices
+*** continue implementing solar_gui.cpp
+*** rewrite event handler for activating solar gui and new research gui
+*** implement seperate research gui
 *** finish cost.cpp
-*** implement farmers_for_growthratio in solar.cpp
 *** apply updated solar.h in game_data::solar_tick
-*** write new solar_gui.cpp
 ** targui should only appear when multiple targets are available
 ** solar happy update does not match happy_increment
 ** command selectors drawn on top of each other

@@ -14,28 +14,20 @@ namespace st3{
   namespace solar{
     extern idtype id_counter;
 
-    namespace choice{
-      struct c_research{
-	std::string identifier;
-      };
+    struct c_military{
+      cost::ship_allocation<int> ship_priority;
+      cost::turret_allocation<int> turret_priority;
+    };
 
-      struct c_military{
-	cost::ship_allocation<int> ship_priority;
-	cost::turret_allocation<int> turret_priority;
-      };
-
-      typedef cost::resource_allocation<int> c_mining;
+    typedef cost::resource_allocation<int> c_mining;
     
-      /*! choice of priorities for solar system */
-      struct choice_t{
-	cost::sector_allocation<int> allocation;
+    /*! choice of priorities for solar system */
+    struct choice_t{
+      cost::sector_allocation<int> allocation;
+      c_military military;
+      c_mining mining;
 
-	c_research research;
-	c_military military;
-	c_mining mining;
-
-	int count_allocation();
-      };
+      int count_allocation();
     };
 
     /*! data representing a solar system */
