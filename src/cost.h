@@ -20,6 +20,7 @@ namespace st3{
       T culture;
       T military;
       T mining;
+      T expansion;
     };
 
     template<typename T>

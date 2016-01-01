@@ -25,22 +25,6 @@ namespace st3{
       data();
     };
     
-    class gui : public sfg::Window{
-      data research_level;
-
-    public:
-      typedef std::shared_ptr<base> Ptr;
-      typedef std::shared_ptr<const base> PtrConst;
-
-      choice::c_researc response;
-      bool accept;
-      bool done;
-
-      static Ptr Create(choice::c_research c, data r) override;
-	
-    protected:
-      s_research(choice::c_research c, data r);
-    };
   };
 };
 #endif

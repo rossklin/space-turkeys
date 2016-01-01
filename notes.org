@@ -1,11 +1,10 @@
 * currently working on
 ** rewrite solar/gui
-*** decide whether expansion should be a sector and/or have sub choices
-*** continue implementing solar_gui.cpp
-*** rewrite event handler for activating solar gui and new research gui
-*** implement seperate research gui
+*** expansion should be a sector and have sub choices
+*** implement all graphics::interface interfaces
+*** client_game::run should build graphics::interface::main_interface and set global desktop and research
 *** finish cost.cpp
-*** apply updated solar.h in game_data::solar_tick
+*** apply updated solar (choice) structure in solar_tick
 ** targui should only appear when multiple targets are available
 ** solar happy update does not match happy_increment
 ** command selectors drawn on top of each other
