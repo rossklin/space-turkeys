@@ -64,91 +64,116 @@ namespace st3{
 
     namespace interface{
 
-      extern research::data *research_level;
-      extern Desktop *desktop;
-
       // base class for choice windows
-      template<typename C>
-      class query : public sfg::Window{
+      template<typename C, typename R>
+      class query : public C{
       public:
-	C response;
-	bool accept;
-	bool done;
+	R response;
       };
 
-      // main interface
-      class main_interface : public query<choice::choice>{
-	typedef std::shared_ptr<main_interface> Ptr;
-	typedef std::shared_ptr<const main_interface> PtrConst;
+      // bottom panel
+      class bottom_panel : public query<sfg::Window, choice::choice>{
+	typedef std::shared_ptr<bottom_panel> Ptr;
+	typedef std::shared_ptr<const bottom_panel> PtrConst;
 
-	static Ptr Create(choice::choice c, research::data r) override;
+	static Ptr Create() override;
 	
       protected:
-	main_interface(choice::choice c, research::data r);	
+	bottom_panel();	
+      };
+
+      // top panel
+      class top_panel : public sfg::Window{
+	typedef std::shared_ptr<top_panel> Ptr;
+	typedef std::shared_ptr<const top_panel> PtrConst;
+
+	static Ptr Create() override;
+	
+      protected:
+	top_panel();	
       };
 
       // research window
-      class research_window : public query<choice::c_research>{
+      class research_window : public query<sfg::Window, choice::c_research>{
       public:
 	typedef std::shared_ptr<research_window> Ptr;
 	typedef std::shared_ptr<const research_window> PtrConst;
 
-	static Ptr Create(choice::c_research c, data r) override;
+	static Ptr Create(choice::c_research c) override;
 	
       protected:
-	research_window(choice::c_research c, data r);
+	research_window(choice::c_research c);
       };
 
       // solar choice windows
       namespace solar_query{
 	// military choice sub window
-	class military : public query<solar::choice::c_military>{
+	class military : public query<sfg::Box, solar::choice::c_military>{
 	public:      
 	  typedef std::shared_ptr<military> Ptr;
 	  typedef std::shared_ptr<const military> PtrConst;
 
-	  static Ptr Create(solar::choice::c_military c, research::data r) override;
+	  static Ptr Create(solar::choice::c_military c) override;
 	
 	protected:
-	  military(solar::choice::c_military c, research::data r);
+	  military(solar::choice::c_military c);
 	};
 
 	// mining choice sub window
-	class mining : public query<solar::choice::c_mining>{
+	class mining : public query<sfg::Box, solar::choice::c_mining>{
 	public:      
 	  typedef std::shared_ptr<mining> Ptr;
 	  typedef std::shared_ptr<const mining> PtrConst;
 
-	  static Ptr Create(solar::choice::c_mining c, research::data r) override;
+	  static Ptr Create(solar::choice::c_mining c) override;
 	
 	protected:
-	  mining(solar::choice::c_mining c, research::data r);
+	  mining(solar::choice::c_mining c);
 	};
 
 	// mining choice sub window
-	class expansion : public query<solar::choice::c_expansion>{
+	class expansion : public query<sfg::Box, solar::choice::c_expansion>{
 	public:      
 	  typedef std::shared_ptr<expansion> Ptr;
 	  typedef std::shared_ptr<const expansion> PtrConst;
 
-	  static Ptr Create(solar::choice::c_expansion c, research::data r) override;
+	  static Ptr Create(solar::choice::c_expansion c) override;
 	
 	protected:
-	  expansion(solar::choice::c_expansion c, research::data r);
+	  expansion(solar::choice::c_expansion c);
 	};
 
 	// main window
-	class main_window : query<solar::choice::choice_t>{
+	class main_window : query<sfg::Window, solar::choice::choice_t>{
+	  Box::Ptr layout;
 	public:
 	  typedef std::shared_ptr<query> Ptr;
 	  typedef std::shared_ptr<const query> PtrConst;
 
-	  static Ptr Create(solar::choice::choice_t c, research::data r, solar s) override;
+	  int id;
+
+	  static Ptr Create(int id, solar s) override;
 	
 	protected:
-	  main_window(solar::choice::choice_t c, research::data r, solar s);
+	  main_window(int id, solar s);
 	};
       };
+
+      // main interface
+      class main_interface : public sfg::Desktop {
+	sfg::Widget::Ptr query_window;
+
+      public:
+	research::data research_level;
+	choice::choice response;
+	bool accept;
+	bool done;
+
+	main_interface(choice::choice c, research::data r);
+	void reset_query_window(sfg::Widget::Ptr p);
+      };
+
+      extern main_interface *desktop;
     };
   };
 };

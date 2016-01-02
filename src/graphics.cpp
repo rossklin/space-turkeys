@@ -91,20 +91,48 @@ using namespace interface;
 
 // build and wrap in shared ptr
 
-main_interface::Create(choice::choice c){return Ptr(new main_interface(c));}
-research_window::Create(choice::c_research c){return Ptr(new research_window(c));}
 
-solar_query::main_window::Create(solar::choice::choice_t c){return Ptr(new solar_query::main_window(c));}
+bottom_panel::Create(){return Ptr(new bottom_panel());}
+top_panel::Create(){return Ptr(new top_panel());}
 
-solar_query::expansion::Create(solar::choice::c_expansion c){return Ptr(new solar_query::military(c));}
-solar_query::military::Create(solar::choice::c_military c){return Ptr(new solar_query::military(c));}
-solar_query::mining::Create(solar::choice::c_mining c){return Ptr(new solar_query::mining(c));}
+research_window::Create(){return Ptr(new research_window());}
+
+solar_query::main_window::Create(int id, solar::solar s){return Ptr(new solar_query::main_window(id, s));}
+solar_query::expansion::Create(){return Ptr(new solar_query::military());}
+solar_query::military::Create(){return Ptr(new solar_query::military());}
+solar_query::mining::Create(){return Ptr(new solar_query::mining());}
 
 // constructors
 
 // main interface
-main_interface::main_interface(choice::choice c) : response(c) {
 
+main_interface::main_interface(choice::choice c, research::data r) : response(c), research_level(r){
+  auto top = top_panel::Create();
+  auto bottom = bottom_panel::Create();
+
+  
+}
+
+bottom_panel::bottom_panel(){
+  auto layout = Box::Create(Box::Orientation::HORIZONTAL);
+  auto b_proceed = Button::Create("PROCEED");
+
+  b_proceed -> GetSignal(Widget::OnLeftClick).Connect([&done, &accept](){
+      done = true;
+      accept = true;
+    };);
+}
+
+top_panel::top_panel() {
+  auto layout = Box::Create(Box::Orientation::HORIZONTAL);
+  auto b_research = Button::Create("RESEARCH");
+
+  b_research -> GetSignal(Widget::OnLeftClick).Connect([](){
+      desktop -> reset_query_window(research_window::Create(desktop -> response.research));
+    };);
+
+  layout -> Pack(b_research);
+  Add(layout);
 }
 
 // research window

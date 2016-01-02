@@ -1,8 +1,11 @@
 * currently working on
 ** rewrite solar/gui
-*** expansion should be a sector and have sub choices
+*** build sfgui central object somewhere, e.g. in client_game::run?
+*** introduce some geometric information for interfaces, e.g. in main_interface constructor
 *** implement all graphics::interface interfaces
-*** client_game::run should build graphics::interface::main_interface and set global desktop and research
+*** client_game::build_choice should build main_interface
+*** client_game::build_choice should run interface event/draw loop
+*** client_game::build_choice should link game object events to interface objects, e.g. solar clicked
 *** finish cost.cpp
 *** apply updated solar (choice) structure in solar_tick
 ** targui should only appear when multiple targets are available
