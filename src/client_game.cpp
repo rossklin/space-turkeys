@@ -14,7 +14,8 @@
 
 using namespace std;
 using namespace st3;
-using namespace st3::client;
+using namespace client;
+using namespace graphics::interface;
 
 sf::FloatRect fixrect(sf::FloatRect r);
 bool add2selection();
@@ -55,6 +56,7 @@ void st3::client::game::run(){
     if (!pre_step()) break;
 
     if (first){
+      // initialize position at home solar
       first = false;
       for (auto i : entity_selectors){
 	if (i.second -> isa(identifier::solar) && i.second -> owned){
@@ -160,7 +162,12 @@ void st3::client::game::choice_step(){
 
   // CREATE THE CHOICE (USER INTERFACE)
 
+  // construct interface
+  main_interface gui(players[socket.id].research);
+  sf::Clock clock;
+
   while (!done){
+    auto delta = clock.restart().asSeconds();
 
     sf::Event event;
     while (window.pollEvent(event)){
@@ -168,14 +175,30 @@ void st3::client::game::choice_step(){
 	done |= query_game_complete;
       }else{
 	done |= choice_event(event);
+
+	if (!done) gui.HandleEvent(event);
       }
     }
 
+    if (gui.done){
+      done |= query_accepted;
+      if (!gui.accept) done |= query_game_complete;
+    }
+
+    // update controls
     controls();
 
+    // draw universe and game objects
     draw_window();
 
-    sf::sleep(sf::milliseconds(100));
+    // update sfgui
+    gui.Update(delta);
+
+    // draw sfgui
+    sfgui.Display(window);
+
+    // display on screen
+    window.display();
   }
 
   if (done & query_game_complete){
@@ -187,7 +210,8 @@ void st3::client::game::choice_step(){
 
   message = "sending choice to server...";
 
-  choice c = build_choice();
+  // add commands to choice
+  choice c = build_choice(gui.response);
   done = query_query;
   pq << protocol::choice;
   pq << c;
@@ -303,8 +327,7 @@ command st3::client::game::build_command(idtype key){
   return (command)*command_selectors[key];
 }
 
-choice st3::client::game::build_choice(){
-  choice c;
+ choice st3::client::game::build_choice(choice::choice c){
   cout << "build choice:" << endl;
   for (auto x : entity_selectors){
     if (x.second -> isa(identifier::waypoint)){
@@ -330,11 +353,6 @@ choice st3::client::game::build_choice(){
 	cout << "adding command " << y << " with key " << x.first << ", source " << c.commands[x.first].back().source << " and target " << c.commands[x.first].back().target << endl;
       }
     }
-  }
-
-  // solar choices
-  for (auto &x : solar_choices){
-    c.solar_choices[identifier::get_id(x.first)] = x.second;
   }
 
   return c;
@@ -1200,8 +1218,6 @@ void game::draw_window(){
     window.draw(r);
 
   }
-
-  window.display();
 
   // reset game view
   window.setView(view_game);

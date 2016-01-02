@@ -76,6 +76,9 @@ int main(int argc, char **argv){
   settings.antialiasingLevel = 8;
   g.window.create(sf::VideoMode(width, height), "SFML Turkeys!", sf::Style::Default, settings);
   graphics::initialize();
+  // todo: might need to g.window.setActive(), and might not even be able to
+  // construct sfgui in g before g.window.create()
+  
   g.run();
 
   g.socket.deallocate_packet();

@@ -1,13 +1,14 @@
 * currently working on
 ** rewrite solar/gui
-*** build sfgui central object somewhere, e.g. in client_game::run?
+*** [done] build sfgui central object somewhere, e.g. in client_game?
 *** introduce some geometric information for interfaces, e.g. in main_interface constructor
 *** implement all graphics::interface interfaces
-*** client_game::build_choice should build main_interface
-*** client_game::build_choice should run interface event/draw loop
+*** [done] client_game::build_choice should build main_interface
+*** [done] client_game::build_choice should run interface event/draw loop
 *** client_game::build_choice should link game object events to interface objects, e.g. solar clicked
 *** finish cost.cpp
 *** apply updated solar (choice) structure in solar_tick
+** move solar choice to choice
 ** targui should only appear when multiple targets are available
 ** solar happy update does not match happy_increment
 ** command selectors drawn on top of each other
