@@ -106,11 +106,23 @@ solar_query::mining::Create(){return Ptr(new solar_query::mining());}
 
 // main interface
 
-main_interface::main_interface(choice::choice c, research::data r) : response(c), research_level(r){
-  auto top = top_panel::Create();
-  auto bottom = bottom_panel::Create();
-
+main_interface::main_interface(sf::Vector2u d, research::data r) : research_level(r), dims(d){
+  // build geometric data
+  int top_height = 0.2 * d.y;
+  int bottom_start = 0.8 * d.y;
+  int bottom_height = d.y - bottom_start - 1;
+  qw_top = 0.3 * d.y;
+  qw_bottom = 0.7 * d.y;
   
+  auto top = top_panel::Create();
+  top -> SetPosition(sf::Vector2i(0,0));
+  top -> SetSize(sf::Vector2u(d.x, top_height));
+  Add(top);
+  
+  auto bottom = bottom_panel::Create();
+  bottom -> SetPosition(sf::Vector2i(0, bottom_start));
+  bottom -> SetSize(sf::Vector2u(d.x, bottom_height));
+  Add(bottom);
 }
 
 bottom_panel::bottom_panel(){
@@ -121,6 +133,9 @@ bottom_panel::bottom_panel(){
       done = true;
       accept = true;
     };);
+
+  layout -> Pack(b_proceed);
+  Add(layout);
 }
 
 top_panel::top_panel() {
@@ -137,37 +152,103 @@ top_panel::top_panel() {
 
 // research window
 research_window::research_window(choice::c_research c) : response(c) {
-
+  // todo: write me
 }
 
 // main window for solar choice
 solar_query::main_window::main_window(solar::choice::choice_t c) : response(c){
   int max_allocation;
-  auto layout = Box::Create(Box::Orientation::VERTICAL);
-  auto l_help = Label::Create("Click left/right to add/reduce");
+  sub_window = 0;
+  
+  layout = Box::Create(Box::Orientation::VERTICAL);
+
+  layout -> Pack(Label::Create("Customize solar choice for solar " + to_string(solar_id)));
+  layout -> Pack(Label::Create("Click left/right to add/reduce"));
+  layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
 
   // sector allocation buttons
-  auto b_culture = Button::Create("CULTURE");
+  auto increment_builder = [&response, max_allocation] (string label, int &allocation) {
+    auto b = Button::Create(label + ": " + to_string(allocation));
+    
+    b -> GetSignal(Widget::OnLeftClick).Connect([&response, max_allocation, &allocation](){
+	if (response.count_allocation() < max_allocation) allocation++;
+      };);
 
-  b_culture -> GetSignal(Widget::OnLeftClick).Connect([&response, max_allocation](){
-      if (response.count_allocation() < max_allocation) response.allocation.culture++;
+    b -> GetSignal(Widget::OnRightClick).Connect([&response, &allocation](){
+	if (allocation > 0) allocation--;
+      };);
+
+    return b;
+  };
+  
+  auto b_culture = increment_builder("CULTURE", response.allocation.culture);
+  layout -> Pack(b_culture);
+  
+  auto b_mining = increment_builder("MINING", response.allocation.mining);
+  auto b_military = increment_builder("MILITARY", response.allocation.military);
+  auto b_expansion = increment_builder("EXPANSION", response.allocation.expansion);
+
+  auto sub_mining = Button::Create(">");
+  
+  sub_mining -> GetSignal(Widget::OnLeftClick).Connect([&response, sub_window, layout](){
+      if (sub_window) layout -> Remove(sub_window);
+      sub_window = solar_query::mining::Create(&response.mining);
+      layout -> Pack(sub_window);
     };);
 
-  b_culture -> GetSignal(Widget::OnRightClick).Connect([&response](){
-      if (response.allocation.culture > 0) response.allocation.culture--;
+  auto sub_military = Button::Create(">");
+  
+  sub_military -> GetSignal(Widget::OnLeftClick).Connect([&response, sub_window, layout](){
+      if (sub_window) layout -> Remove(sub_window);
+      sub_window = solar_query::military::Create(&response.military);
+      layout -> Pack(sub_window);
+    };);
+
+  auto sub_expansion = Button::Create(">");
+  
+  sub_expansion -> GetSignal(Widget::OnLeftClick).Connect([&response, sub_window, layout](){
+      if (sub_window) layout -> Remove(sub_window);
+      sub_window = solar_query::expansion::Create(&response.expansion);
+      layout -> Pack(sub_window);
+    };);
+
+  auto l_mining = Box::Create(Box::Orientation::HORIZONTAL);
+  auto l_military = Box::Create(Box::Orientation::HORIZONTAL);
+  auto l_expansion = Box::Create(Box::Orientation::HORIZONTAL);
+
+  l_mining -> Pack(b_mining);
+  l_mining -> Pack(sub_mining);
+
+  l_military -> Pack(b_military);
+  l_military -> Pack(sub_military);
+
+  l_expansion -> Pack(b_expansion);
+  l_expansion -> Pack(sub_expansion);
+
+  layout -> Pack(l_mining);
+  layout -> Pack(l_military);
+  layout -> Pack(l_expansion);
+
+  auto b_accept = Button::Create("ACCEPT");
+
+  b_accept -> GetSignal(Widget::OnLeftClick).Connect([&response] () {
+      desktop -> response.solar_choices[solar_id] = response;
+      desktop -> clear_qw();
     };);
   
-  auto b_military = Button::Create("MILITARY");
-  auto b_mining = Button::Create("MINING");
-  auto b_expansion = Button::Create("EXANSION");
-  auto b_accept = Button::Create("ACCEPT");
   auto b_cancel = Button::Create("CANCEL");
 
-  // add sub window buttons
+  b_cancel -> GetSignal(Widget::OnLeftClick).Connect([] () {
+      desktop -> clear_qw();
+    };);
 
-  // pack them in layout
+  auto l_respons = Box::Create(Box::Orientation::HORIZONTAL);
+  l_response -> Pack(b_accept);
+  l_response -> Pack(b_cancel);
 
-  // add layout to this
+  layout -> Pack(l_response);
+
+  Add(layout);
 }
 
 // sub window for expansion choice

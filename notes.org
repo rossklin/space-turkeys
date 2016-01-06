@@ -2,6 +2,7 @@
 ** rewrite solar/gui
 *** [done] build sfgui central object somewhere, e.g. in client_game?
 *** introduce some geometric information for interfaces, e.g. in main_interface constructor
+*** include solar sub queries in solar main window
 *** implement all graphics::interface interfaces
 *** [done] client_game::build_choice should build main_interface
 *** [done] client_game::build_choice should run interface event/draw loop

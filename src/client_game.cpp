@@ -163,7 +163,7 @@ void st3::client::game::choice_step(){
   // CREATE THE CHOICE (USER INTERFACE)
 
   // construct interface
-  main_interface gui(players[socket.id].research);
+  main_interface gui(window.getSize(), players[socket.id].research);
   sf::Clock clock;
 
   while (!done){

@@ -20,12 +20,14 @@ namespace st3{
     };
 
     typedef cost::resource_allocation<int> c_mining;
+    typedef cost::sector_allocation<int> c_expansion;
     
     /*! choice of priorities for solar system */
     struct choice_t{
       cost::sector_allocation<int> allocation;
       c_military military;
       c_mining mining;
+      c_expansion expansion;
 
       int count_allocation();
     };

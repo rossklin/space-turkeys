@@ -108,49 +108,54 @@ namespace st3{
       // solar choice windows
       namespace solar_query{
 	// military choice sub window
-	class military : public query<sfg::Box, solar::choice::c_military>{
+	class military : public query<sfg::Box, solar::choice::c_military*>{
 	public:      
 	  typedef std::shared_ptr<military> Ptr;
 	  typedef std::shared_ptr<const military> PtrConst;
 
-	  static Ptr Create(solar::choice::c_military c) override;
+	  static Ptr Create(solar::choice::c_military *c) override;
 	
 	protected:
-	  military(solar::choice::c_military c);
+	  military(solar::choice::c_military *c);
 	};
 
 	// mining choice sub window
-	class mining : public query<sfg::Box, solar::choice::c_mining>{
+	class mining : public query<sfg::Box, solar::choice::c_mining*>{
 	public:      
 	  typedef std::shared_ptr<mining> Ptr;
 	  typedef std::shared_ptr<const mining> PtrConst;
 
-	  static Ptr Create(solar::choice::c_mining c) override;
+	  static Ptr Create(solar::choice::c_mining *c) override;
 	
 	protected:
-	  mining(solar::choice::c_mining c);
+	  mining(solar::choice::c_mining *c);
 	};
 
 	// mining choice sub window
-	class expansion : public query<sfg::Box, solar::choice::c_expansion>{
+	class expansion : public query<sfg::Box, solar::choice::c_expansion*>{
 	public:      
 	  typedef std::shared_ptr<expansion> Ptr;
 	  typedef std::shared_ptr<const expansion> PtrConst;
 
-	  static Ptr Create(solar::choice::c_expansion c) override;
+	  static Ptr Create(solar::choice::c_expansion *c) override;
 	
 	protected:
-	  expansion(solar::choice::c_expansion c);
+	  expansion(solar::choice::c_expansion *c);
 	};
 
 	// main window
 	class main_window : query<sfg::Window, solar::choice::choice_t>{
+	  // sub interface tracker
+	  sfg::Widget::Ptr sub_window;
+
+	  // layout
 	  Box::Ptr layout;
+	  
 	public:
 	  typedef std::shared_ptr<query> Ptr;
 	  typedef std::shared_ptr<const query> PtrConst;
 
-	  int id;
+	  int solar_id;
 
 	  static Ptr Create(int id, solar s) override;
 	
@@ -161,16 +166,27 @@ namespace st3{
 
       // main interface
       class main_interface : public sfg::Desktop {
-	sfg::Widget::Ptr query_window;
-
       public:
+	sfg::Widget::Ptr query_window;
+	sf::Vector2u dims;
+
+	// desktop geometry data
+	int qw_top;
+	int qw_bottom;
+
+	// research level used by interface components
 	research::data research_level;
+
+	// data for generating the client's choice
 	choice::choice response;
+
+	// progress communication variables for game loop
 	bool accept;
 	bool done;
 
-	main_interface(choice::choice c, research::data r);
-	void reset_query_window(sfg::Widget::Ptr p);
+	main_interface(sf::Vector2u dims, research::data r);
+	void reset_qw(sfg::Widget::Ptr p);
+	void clear_qw();
       };
 
       extern main_interface *desktop;
