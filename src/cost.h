@@ -30,6 +30,12 @@ namespace st3{
       T bomber;
       T colonizer;
     };
+
+    template<typename T>
+    struct turret_allocation{
+      T laser_turret;
+      T rocket_turret;
+    };
     
     struct resource_data{
       float initial;

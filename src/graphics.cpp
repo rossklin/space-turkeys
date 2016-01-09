@@ -155,38 +155,49 @@ research_window::research_window(choice::c_research c) : response(c) {
   // todo: write me
 }
 
+
+// build a labeled button to modify priority data
+Button::Ptr factory (string label, int &data, function<bool()> inc_val){
+  auto b = Button::Create(label + to_string(data));
+
+  b -> GetSignal(Widget::OnLeftClick).connect([&data, b, label, inc_val](){
+      if (inc_val) data++;
+      b -> SetLabel(label + ": " + to_string(data));
+    };);
+    
+  b -> GetSignal(Widget::OnRightClick).connect([&data, b, label](){
+      if (data > 0) data--;
+      b -> SetLabel(label + ": " + to_string(data));
+    };);
+
+  return b;
+};
+
+
 // main window for solar choice
 solar_query::main_window::main_window(solar::choice::choice_t c) : response(c){
   int max_allocation;
   sub_window = 0;
-  
-  layout = Box::Create(Box::Orientation::VERTICAL);
 
-  layout -> Pack(Label::Create("Customize solar choice for solar " + to_string(solar_id)));
-  layout -> Pack(Label::Create("Click left/right to add/reduce"));
-  layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
+  layout = Box::Create(Box::Oreintation::HORIZONTAL);
+  
+  selection_layout = Box::Create(Box::Orientation::VERTICAL);
+
+  selection_layout -> Pack(Label::Create("Customize solar choice for solar " + to_string(solar_id)));
+  selection_layout -> Pack(Label::Create("Click left/right to add/reduce"));
+  selection_layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
 
   // sector allocation buttons
-  auto increment_builder = [&response, max_allocation] (string label, int &allocation) {
-    auto b = Button::Create(label + ": " + to_string(allocation));
-    
-    b -> GetSignal(Widget::OnLeftClick).Connect([&response, max_allocation, &allocation](){
-	if (response.count_allocation() < max_allocation) allocation++;
-      };);
 
-    b -> GetSignal(Widget::OnRightClick).Connect([&response, &allocation](){
-	if (allocation > 0) allocation--;
-      };);
-
-    return b;
-  };
+  // increment validator function for button factory
+  auto inc_val = [&response, max_allocation] () {return response.count_allocation() < max_allocation;};
   
-  auto b_culture = increment_builder("CULTURE", response.allocation.culture);
-  layout -> Pack(b_culture);
+  auto b_culture = factory("CULTURE", response.allocation.culture, inc_val);
+  selection_layout -> Pack(b_culture);
   
-  auto b_mining = increment_builder("MINING", response.allocation.mining);
-  auto b_military = increment_builder("MILITARY", response.allocation.military);
-  auto b_expansion = increment_builder("EXPANSION", response.allocation.expansion);
+  auto b_mining = factory("MINING", response.allocation.mining, inc_val);
+  auto b_military = factory("MILITARY", response.allocation.military, inc_val);
+  auto b_expansion = factory("EXPANSION", response.allocation.expansion, inc_val);
 
   auto sub_mining = Button::Create(">");
   
@@ -225,9 +236,9 @@ solar_query::main_window::main_window(solar::choice::choice_t c) : response(c){
   l_expansion -> Pack(b_expansion);
   l_expansion -> Pack(sub_expansion);
 
-  layout -> Pack(l_mining);
-  layout -> Pack(l_military);
-  layout -> Pack(l_expansion);
+  selection_layout -> Pack(l_mining);
+  selection_layout -> Pack(l_military);
+  selection_layout -> Pack(l_expansion);
 
   auto b_accept = Button::Create("ACCEPT");
 
@@ -246,22 +257,54 @@ solar_query::main_window::main_window(solar::choice::choice_t c) : response(c){
   l_response -> Pack(b_accept);
   l_response -> Pack(b_cancel);
 
-  layout -> Pack(l_response);
+  selection_layout -> Pack(l_response);
+
+  layout -> Pack(selection_layout);
 
   Add(layout);
 }
 
-// sub window for expansion choice
-solar_query::expansion::expansion(solar::choice::c_expansion c) : response(c){
 
+// sub window for expansion choice
+solar_query::expansion::expansion(solar::choice::c_expansion *c) : response(c){
+  auto layout = Box::Create(Box::Orientation::VERTICAL);
+  auto inc_val = [](){return true;};
+
+  // add buttons for expandable sectors
+  layout -> Pack(factory("research", c -> research, inc_val));
+  layout -> Pack(factory("culture", c -> culture, inc_val));
+  layout -> Pack(factory("military", c -> military, inc_val));
+  layout -> Pack(factory("mining", c -> mining, inc_val));
+
+  Pack(layout);
 };
 
 // sub window for military choice
-solar_query::military::military(solar::choice::c_military c) : response(c){
+solar_query::military::military(solar::choice::c_military *c) : response(c){
+  auto layout = Box::Create(Box::Orientation::VERTICAL);
+  auto inc_val = [](){return true;};
 
+  // add buttons for expandable sectors
+  layout -> Pack(factory("scout", c -> ship_priority.scout, inc_val));
+  layout -> Pack(factory("fighter", c -> ship_priority.fighter, inc_val));
+  layout -> Pack(factory("bomber", c -> ship_priority.bomber, inc_val));
+  layout -> Pack(factory("colonizer", c -> ship_priority.colonizer, inc_val));
+
+  layout -> Pack(factory("rocket turret", c -> turret_priority.rocket_turret, inc_val));
+  layout -> Pack(factory("laser_turret", c -> turret_priority.laser_turret, inc_val));
+
+  Pack(layout);
 };
 
 // sub window for mining choice
-solar_query::mining::s_mining(solar::choice::c_mining c) : response(c){
+solar_query::mining::mining(solar::choice::c_mining *c) : response(c){
+  auto layout = Box::Create(Box::Orientation::VERTICAL);
+  auto inc_val = [](){return true;};
 
+  // add buttons for expandable sectors
+  layout -> Pack(factory("organics", c -> organics, inc_val));
+  layout -> Pack(factory("metals", c -> metals, inc_val));
+  layout -> Pack(factory("gases", c -> gases, inc_val));
+
+  Pack(layout);
 };
