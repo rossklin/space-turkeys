@@ -30,11 +30,17 @@ namespace st3{
       /*! amount of each resource */
       cost::resource_allocation<cost::resource_data> resource;
 
+      /*! development of each sector */
+      cost::sector_base sector;
+
+      /*! ecosystem status */
+      sfloat ecology;
+
       /*! number of inhabitants */
       sfloat population;
 
       /*! proportion of happy inhabitants */
-      sfloat happieness;
+      sfloat happiness;
 
       /*! current defense level */
       sfloat defense_current;
@@ -70,7 +76,7 @@ namespace st3{
 	@param r resource cost per resource type
 	@return how many r there are stored resources for
       */
-      float resource_constraint(vmap r);
+      float resource_constraint(cost::resource_base r);
 
       /*! compile a string describing the solar
 	@return the string 

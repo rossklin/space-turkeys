@@ -127,11 +127,11 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+* fixed
 ** [done] default values for solar choice
 ** moved solar::choice_t to choice.h
 ** [done] finish cost.cpp
 ** [done] client_game::build_choice should link game object events to interface objects, e.g. solar clicked
-* fixed
 ** selector queue cycling
 ** targui scales with zoom
 ** comgui does not show action
@@ -338,5 +338,6 @@
 
    gets n=-9744, for some reason still enters push loop. Test run with
    &&res in loop condition. Check if n is wrong from start.
+   
    
    

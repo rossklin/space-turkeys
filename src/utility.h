@@ -78,6 +78,12 @@ namespace st3{
     float dpoint2line(point p, point a, point b);
 
     /*! 
+      generates a random number normally distributed as (m, s)
+      @return the random number
+    */
+    float random_normal(float m, float s);
+
+    /*! 
       generates a random number uniformly distributed in [0,1]
       @return the random number
     */

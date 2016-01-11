@@ -910,116 +910,32 @@ void st3::game_data::solar_tick(idtype id){
   c.normalize();
 
   solar::solar buf(s);
-  float Ph = s.population_number * c.workers;
-  vector<float> P;
 
-  // cout << "solar " << id << " tick: " << endl;
+  // ecological development
+  buf.ecology += ((s.space_status() * s.water_status() - s.ecology) + utility::random_normal(0, 1)) * dt;
 
-  // cout << "Population: ";
-  // capped population assignments
-  P.resize(solar::work_num);
-  for (i = 0; i < solar::work_num; i++){
-    P[i] = fmin(Ph * c.sector[i], s.industry[i]);
-    // cout << P[i] << ", ";
-  }
-  // cout << endl;
+  // population development
+  buf.population += s.population * (s.happiness * (solar::f_growth + s.sector.culture) - utility::random_uniform(0, solar::f_crowding) * s.population / s.ecology) * dt;
 
-  // cout << "Research: ";
-  // research
-  for (i = 0; i < research::r_num; i++){
-    allocated = P[solar::work_research] * c.subsector[solar::work_research][i];
-    buf.new_research[i] += s.sub_increment(r_base, solar::work_research, i, allocated) * dt;
-    // cout << s.new_research[i] << ", ";
-  }
-  // cout << endl;
+  // happiness development
+  buf.happiness += (s.sector.culture + c.allocation.culture * s.happiness - log(s.population) / s.ecology + utility::random_normal(0,1)) * dt;
 
-  // industry
-  // cout << "industry: ";
-  float i_sum = 0;
-  float i_cap = s.usable_area;
-  for (i = 0; i < solar::work_num; i++){
-    allocated = P[solar::work_expansion] * c.subsector[solar::work_expansion][i];
-    build = s.sub_increment(r_base, solar::work_expansion, i, allocated);
+  // research development
+  buf.research += c.allocation.research * buf.population * buf.sector.research * buf.happiness * dt;
 
-    vector<float> r = st3::solar::industry_cost[i];
-    build = fmin(build, s.resource_constraint(r));
+  // expansions
+  auto computer = [](float x, cost::sector_cost d){
+    return fmin(c.allocation.expansion * x * s.population * s.happiness / d.time, s.resource_constraint(d.res)) * dt;
+  };
 
-    buf.industry[i] += build * dt;
+  buf.sector.culture += computer(c.expansion.culture, cost::sector_expansion.culture);
+  buf.sector.research += computer(c.expansion.research, cost::sector_expansion.research);
+  buf.sector.mining += computer(c.expansion.mining, cost::sector_expansion.mining);
+  buf.sector.military += computer(c.expansion.military, cost::sector_expansion.military);
 
-    for (int j = 0; j < solar::resource_num; j++){
-      buf.resource_storage[j] -= r[j] * build * dt;
-    }
+  // todo: complete ...
 
-    i_sum += buf.industry[i];
-    // cout << s.industry[i] << ", ";
-  }
-
-  if (i_sum > i_cap){
-    for (auto &x : buf.industry) x *= i_cap / i_sum;
-  }
-  // cout << endl;
-
-  // defense enhance
-  allocated = P[solar::work_defense] * c.subsector[solar::work_defense][solar::defense_enhance];
-  build = s.sub_increment(r_base, solar::work_defense, solar::defense_enhance, allocated);
-  buf.defense_capacity += build * dt;  
-
-  // defense repair
-  allocated = P[solar::work_defense] * c.subsector[solar::work_defense][solar::defense_repair];
-  build = s.sub_increment(r_base, solar::work_defense, solar::defense_repair, allocated);
-  buf.defense_current = fmin(buf.defense_current + build, buf.defense_capacity);
-
-  // fleet 
-  // pre-check resource constraints?
-  // cout << "fleet: ";
-  for (i = 0; i < solar::ship_num; i++){
-    vector<float> r = st3::solar::ship_cost[i];
-    allocated = P[solar::work_ship] * c.subsector[solar::work_ship][i];
-    build = s.sub_increment(r_base, solar::work_ship, i, allocated);
-    build = fmin(build, s.resource_constraint(r));
-    buf.fleet_growth[i] += build * dt;
-
-    for (int j = 0; j < solar::resource_num; j++){
-      buf.resource_storage[j] -= r[j] * build * dt;
-    }
-    // cout << s.fleet_growth[i] << ", ";
-  }
-  // cout << endl;
-  // temp fix: can't have negative resources
-  for (auto &x : buf.resource_storage) x = fmax(x, 0);
-
-  // resource
-  // cout << "resource: ";
-  for (i = 0; i < solar::resource_num; i++){
-    allocated = P[solar::work_resource] * c.subsector[solar::work_resource][i];
-    float delta = s.sub_increment(r_base, solar::work_resource, i, allocated);
-    float r = fmin(delta, s.resource[i]);
-    buf.resource[i] -= r * dt; // resources on solar
-    buf.resource_storage[i] += r * dt; // resources in storage
-    // cout << s.resource_storage[i] << ", ";
-  }
-  // cout << endl;
-
-  // population
-  allocated = s.population_number * (1 - c.workers);
-  cout << "population dynamics for " << id << " : " << endl;
-  buf.population_number += s.pop_increment(r_base, allocated) * dt;
-  float happy_increment = 1e-2 * utility::sigmoid(log(1 + r_base.field[research::r_population]) - log(1 + P[solar::work_ship]), 1000) * dt;
-  buf.population_happy += happy_increment;
-  buf.population_happy = fmax(fmin(buf.population_happy, 1), 0);
-
-  cout << "population: " << buf.population_number << "(" << buf.population_happy << ", " << happy_increment << ")" << endl;
-
-  // assignment
-  s.industry.swap(buf.industry);
-  s.new_research.swap(buf.new_research);
-  s.resource_storage.swap(buf.resource_storage);
-  s.resource.swap(buf.resource);
-  s.fleet_growth.swap(buf.fleet_growth);
-  s.population_number = buf.population_number;
-  s.population_happy = buf.population_happy;
-  s.defense_current = buf.defense_current;
-  s.defense_capacity = buf.defense_capacity;
+  // remember to assign buf to s
 
   // new ships
   for (i = 0; i < solar::ship_num; i++){
