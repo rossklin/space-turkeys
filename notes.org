@@ -1,10 +1,11 @@
 * currently working on
 ** rewrite solar/gui
-*** client_game::build_choice should link game object events to interface objects, e.g. solar clicked
-*** finish cost.cpp
-*** default values for solar choice
 *** apply updated solar (choice) structure in solar_tick
 *** figure out how to limit sub sector priority
+*** research structure
+*** [done] default values for solar choice
+*** [done] finish cost.cpp
+*** [done] client_game::build_choice should link game object events to interface objects, e.g. solar clicked
 *** [done] implement all graphics::interface interfaces
 *** [done] build sfgui central object somewhere, e.g. in client_game?
 *** [done] introduce some geometric information for interfaces
@@ -126,6 +127,10 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** [done] default values for solar choice
+** moved solar::choice_t to choice.h
+** [done] finish cost.cpp
+** [done] client_game::build_choice should link game object events to interface objects, e.g. solar clicked
 * fixed
 ** selector queue cycling
 ** targui scales with zoom

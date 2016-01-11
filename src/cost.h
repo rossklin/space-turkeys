@@ -65,9 +65,6 @@ namespace st3{
     /*! cost for sector expansion */
     extern sector_allocation<sector_cost> sector_expansion;
 
-    /*! cost for housing expansion */
-    extern sector_cost housing;
-
     /*! cost for ship */
     extern ship_allocation<ship_cost> ship_build;
 

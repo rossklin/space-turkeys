@@ -175,8 +175,7 @@ Button::Ptr factory (string label, int &data, function<bool()> inc_val){
 
 
 // main window for solar choice
-solar_query::main_window::main_window(solar::choice::choice_t c) : response(c){
-  int max_allocation;
+solar_query::main_window::main_window(choice::c_solar c) : response(c){
   sub_window = 0;
 
   layout = Box::Create(Box::Oreintation::HORIZONTAL);
@@ -190,7 +189,9 @@ solar_query::main_window::main_window(solar::choice::choice_t c) : response(c){
   // sector allocation buttons
 
   // increment validator function for button factory
-  auto inc_val = [&response, max_allocation] () {return response.count_allocation() < max_allocation;};
+  auto inc_val = [&response] () {
+    return response.count_allocation() < choice::c_solar::max_allocation;
+  };
   
   auto b_culture = factory("CULTURE", response.allocation.culture, inc_val);
   selection_layout -> Pack(b_culture);

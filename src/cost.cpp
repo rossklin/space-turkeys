@@ -1,3 +1,4 @@
+#include <cstring>
 #include "cost.h"
 
 using namespace std;
@@ -5,19 +6,44 @@ using namespace st3;
 using namespace cost;
 
 sector_allocation<sector_cost> cost::sector_expansion;
-sector_cost cost::housing;
 ship_allocation<resource_base> cost::ship_build;
 
 void st3::cost::initialize(){
   // sector costs
-  sector_expansion.agriculture.res.organics = 1;
-  sector_expansion.agriculture.water = 1;
-  sector_expansion.agriculture.space = 2;
+  // initialize to zero
+  memset(&sector_expansion, 0, sizeof(sector_expansion));
+  
+  // T research;
+  sector_expansion.research.res.organics = 1;
+  sector_expansion.research.res.gases = 1;
+  sector_expansion.research.res.metals = 1;
+  sector_expansion.research.water = 1;
+  sector_expansion.research.space = 1;
+  sector_expansion.research.time = 10;
+  
+  // T culture;
+  sector_expansion.culture.res.organics = 8;
+  sector_expansion.culture.res.gases = 4;
+  sector_expansion.culture.res.metals = 5;
+  sector_expansion.culture.water = 10;
+  sector_expansion.culture.space = 10;
+  sector_expansion.culture.time = 4;
 
-  sector_expansion.infrastructure.res.metals = 1;
-  sector_expansion.infrastructure.res.gases = 1;
+  // T military;
+  sector_expansion.military.res.organics = 0;
+  sector_expansion.military.res.gases = 4;
+  sector_expansion.military.res.metals = 8;
+  sector_expansion.military.water = 2;
+  sector_expansion.military.space = 4;
+  sector_expansion.military.time = 6;
 
-  ...
+  // T mining;
+  sector_expansion.mining.res.organics = 0;
+  sector_expansion.mining.res.gases = 8;
+  sector_expansion.mining.res.metals = 4;
+  sector_expansion.mining.water = 4;
+  sector_expansion.mining.space = 4;
+  sector_expansion.mining.time = 6;
 
   // ship costs
   ship_build.scout.res.metals = 1;
@@ -36,9 +62,4 @@ void st3::cost::initialize(){
   ship_build.colonizer.res.gases = 2;
   ship_build.colonizer.res.organics = 3;
   ship_build.colonizer.time = 6;
-
-  // housing costs
-  housing.res.metals = 1;
-  hosing.water = 1;
-  housing.space = 1;
 }

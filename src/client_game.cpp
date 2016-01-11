@@ -957,13 +957,8 @@ void game::run_solar_gui(source_t key){
     cout << "run solar gui: no owner!" << endl;
     exit(-1);
   }
-  solar_gui gui(window, sol, solar_choices[key], players[sol.owner].research_level, settings.frames_per_round * settings.dt);
-  if (gui.run()){
-    solar_choices[key] = gui.c;
-    cout << "added solar choice for " << key << endl;
-  }else{
-    cout << "solar choice for " << key << " dismissed" << endl;
-  }
+
+  interface::desktop -> reset_qw(interface::solar_query::main_window::Create(identifer::get_id(key), sol));
 }
 
 // return true to signal choice step done
