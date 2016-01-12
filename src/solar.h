@@ -6,6 +6,7 @@
 
 #include "types.h"
 #include "ship.h"
+#include "turret.h"
 
 namespace st3{
   struct research;
@@ -18,6 +19,12 @@ namespace st3{
     struct solar{
       /*! ship growth per class */
       cost::ship_base fleet_growth;
+
+      /*! turret growth per class */
+      cost::turret_base turret_growth;
+
+      /*! turrets in solar */
+      std::list<turret::turret> turrets;
 
       /*! amount of research produced */
       sfloat research;
@@ -42,15 +49,6 @@ namespace st3{
       /*! proportion of happy inhabitants */
       sfloat happiness;
 
-      /*! current defense level */
-      sfloat defense_current;
-      
-      /*! defense level capacity */
-      sfloat defense_capacity;
-
-      /*! vision radius */
-      sfloat vision;
-
       /*! ships landed at solar */
       std::set<idtype> ships;
 
@@ -73,29 +71,28 @@ namespace st3{
       solar();
       
       /*! compute how many units of a given resource cost can be built
+          from resources in storage
+
 	@param r resource cost per resource type
 	@return how many r there are stored resources for
       */
       float resource_constraint(cost::resource_base r);
 
+      /*! Compute degree of availability of space for natural habitat
+          on scale [0,1] */
+      float space_status();
+
+      /*! Compute degree of availability of clean water on scale
+          [0,1] */
+      float water_status();
+
+      /*! Compute the vision radius from turrets */
+      float compute_vision();
+
       /*! compile a string describing the solar
 	@return the string 
       */
       std::string get_info();
-
-      /*! compute the population increment per unit time 
-	@param r current research level
-	@param n number of assigned farmers
-	@return increment per unit time
-      */
-      float pop_increment(research const &r, float n);
-
-      /*! compute number of farmers required for given relative growth
-	@param q requested relative growth
-	@param r current research state
-	@return required number of farmers
-      */
-      float farmers_for_growthratio(float q, research const &r);
     };
   };
 };

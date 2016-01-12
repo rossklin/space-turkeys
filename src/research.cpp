@@ -11,15 +11,53 @@ using namespace st3;
 using namespace research;
 using namespace sfg;
 
-data::data(){
-  field.resize(r_num, 1);
+cost::allocation<ship> research::ship_templates;
+
+void initialize(){
+  ship s, a;
+  s.speed = 1;
+  s.vision = 50;
+  s.hp = 1;
+  s.interaction_radius = 10;
+  s.fleet_id = -1;
+  s.ship_class = "";
+  s.was_killed = false;
+
+  ship_templates.setup(cost::keywords::ship);
+
+  a = s;
+  a.speed = 2;
+  a.vision = 100;
+  a.ship_class = "scout";
+  ship_templates[a.ship_class] = a;
+
+  a = s;
+  a.hp = 2;
+  a.interaction_radius = 20;
+  a.ship_class = "fighter";
+  ship_templates[a.ship_class] = a;
+
+  a = s;
+  a.ship_class = "bomber";
+  ship_templates[a.ship_class] = a;
+
+  a = s;
+  a.speed = 0.5;
+  a.hp = 2;
+  a.ship_class = "colonizer";
+  ship_templates[a.ship_class] = a;
+
+  ship_templates.confirm_content(cost::keywords::ship);
 }
 
-// gui
-// wrap in shared pointer
-gui::Create(choice::c_research c, research r){return Ptr(new gui(c, r));}
+data::data(){
+  x = "this is a research object";
+}
 
-// constructor
-gui::gui(choice::c_research c, data r) : response(c){
-  
-};
+ship data::build_ship(string c){
+  ship s = ship_templates[c];
+
+  // todo: apply research boosts
+
+  return s;
+}

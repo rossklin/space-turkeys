@@ -8,15 +8,13 @@
 #include "cost.h"
 
 namespace st3{
-  struct research;
-
   /*! ship game object */
   struct ship{
     /*! counter for ship ids */
     static idtype id_counter;
 
     /*! type for ship class identifier */
-    typedef sint class_t;
+    typedef std::string class_t;
 
     // serialised variables
 
@@ -34,7 +32,5 @@ namespace st3{
     sfloat vision; /*!< ship's sight radius */
     bool was_killed; /*!< track when the ship is killed */
   };
-
-  cost::ship_allocation<ship> base_ship;
 };
 #endif

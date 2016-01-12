@@ -908,52 +908,70 @@ void st3::game_data::solar_tick(idtype id){
   }
 
   c.normalize();
-
+  float workers = s.happiness * s.population;
   solar::solar buf(s);
 
   // ecological development
   buf.ecology += ((s.space_status() * s.water_status() - s.ecology) + utility::random_normal(0, 1)) * dt;
 
   // population development
-  buf.population += s.population * (s.happiness * (solar::f_growth + s.sector.culture) - utility::random_uniform(0, solar::f_crowding) * s.population / s.ecology) * dt;
+  buf.population += s.population * (s.happiness * (solar::f_growth + s.sector["culture"]) - utility::random_uniform(0, solar::f_crowding) * s.population / s.ecology) * dt;
 
   // happiness development
-  buf.happiness += (s.sector.culture + c.allocation.culture * s.happiness - log(s.population) / s.ecology + utility::random_normal(0,1)) * dt;
+  buf.happiness += (s.sector["culture"] + c.allocation["culture"] * s.happiness - log(s.population) / s.ecology + utility::random_normal(0,1)) * dt;
 
   // research development
-  buf.research += c.allocation.research * buf.population * buf.sector.research * buf.happiness * dt;
+  buf.research += c.allocation["research"] * buf.population * buf.sector["research"] * buf.happiness * dt;
 
   // expansions
-  auto computer = [](float x, cost::sector_cost d){
-    return fmin(c.allocation.expansion * x * s.population * s.happiness / d.time, s.resource_constraint(d.res)) * dt;
-  };
+  for (auto v : cost::keywords::sector)
+    buf.sector[v] += fmin(c.allocation["expansion"] * c.expansion[v] * workers / cost::sector_expansion[v].time, s.resource_constraint(cost::sector_expansion[v])) * dt;
 
-  buf.sector.culture += computer(c.expansion.culture, cost::sector_expansion.culture);
-  buf.sector.research += computer(c.expansion.research, cost::sector_expansion.research);
-  buf.sector.mining += computer(c.expansion.mining, cost::sector_expansion.mining);
-  buf.sector.military += computer(c.expansion.military, cost::sector_expansion.military);
+  // mining
+  for (auto v : cost::keywords::sector){
+    float move = fmin(s.resource[v].available, c.allocation["mining"] * c.mining[v] * workers) * dt;
+    buf.resource["metals"].available -= move;
+    buf.resource["metals"].storage += move;
+  }
 
-  // todo: complete ...
+  // military industry
+  for (auto v : cost::ship_allocation::keywords)
+    buf.fleet_growth[v] += fmin(c.allocation["military"] * c.military[v] * workers, s.resource_constraint(cost::ship_build[v])) * dt;
+  
+  for (auto v : cost::turret_allocation::keywords)
+    buf.turret_growth[v] += fmin(c.allocation["military"] * c.military[v] * workers, s.resource_constraint(cost::turret_build[v])) * dt;
 
-  // remember to assign buf to s
+  s = buf;
 
   // new ships
-  for (i = 0; i < solar::ship_num; i++){
-    while (s.fleet_growth[i] >= 1){
-      if (i != solar::ship_colonizer || s.population_number >= solar::colonizer_population){
-	if (i == solar::ship_colonizer){
-	  s.population_number -= solar::colonizer_population;
+  auto add_ship = [&](string i){
+    idtype sid = ship::id_counter++;
+    ships[sid] = r_base.build_ship(i);
+    s.ships.insert(sid);
+    s.fleet_growth[i]--;
+  };
+    
+  for (auto v : cost::ship_allocation::keywords){
+    while (s.fleet_growth[v] >= 1){      
+      if (v == "colonizer"){
+	if (s.population >= ship::colonizer_population){
+	  s.population -= ship::colonizer_population;
+	  add_ship(v);
 	}
-	ship sh(i, r_base);
-	idtype sid = ship::id_counter++;
-	ships[sid] = sh;
-	s.ships.insert(sid);
-	s.fleet_growth[i]--;
+      }else{
+	add_ship(v);
       }
-      // cout << "ship " << sid << " was created for player " << s.owner << " at solar " << id << endl;
     }
   }
 
+  // new turrets
+  for (auto v : cost::turret_allocation::keywords){
+    while (s.turret_growth[v] >= 1){
+      turret::turret t = 
+      s.turrets.push_back(r_base.build_turret(v));
+      s.turret_growth[v]--;
+    }
+  }
 }
 
 // clean up things that will be reloaded from client

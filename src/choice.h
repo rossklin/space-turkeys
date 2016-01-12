@@ -16,20 +16,14 @@ namespace st3{
       std::string identifier;
     };
 
-    struct c_military{
-      cost::ship_allocation<sfloat> ship_priority;
-      cost::turret_allocation<sfloat> turret_priority;
-    };
+    typedef cost::countable_allocation<sfloat> c_military;
+    typedef cost::countable_allocation<sfloat> c_mining;
+    typedef cost::countable_allocation<sfloat> c_expansion;
 
-    struct c_mining : public cost::resource_allocation<sfloat>{
-    };
-    
-    struct c_expansion : public cost::sector_allocation<sfloat>{
-    };
-        
     /*! choice of priorities for solar system */
     struct c_solar{
-      cost::sector_allocation<sfloat> allocation;
+      cost::countable_allocation<sfloat> allocation;
+
       c_military military;
       c_mining mining;
       c_expansion expansion;

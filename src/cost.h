@@ -5,68 +5,65 @@
 
 namespace st3{
   namespace cost{
-
-    /* type allocation templates */
-    template<typename T>
-    struct resource_allocation{
-      T organics;
-      T metals;
-      T gases;
-    };
-
-    template<typename T>
-    struct sector_allocation{
-      T research;
-      T culture;
-      T military;
-      T mining;
-      T expansion;
-    };
-
-    template<typename T>
-    struct ship_allocation{
-      T scout;
-      T fighter;
-      T bomber;
-      T colonizer;
-    };
-
-    template<typename T>
-    struct turret_allocation{
-      T laser_turret;
-      T rocket_turret;
+    namespace keywords{
+      extern const std::vector<std::string> resource;
+      extern const std::vector<std::string> sector;
+      extern const std::vector<std::string> ship;
+      extern const std::vector<std::string> turret;
     };
     
-    struct resource_data{
-      float initial;
-      float available;
-      float storage;
-      float occupied;
+    /* Templated string hash map which will complain when attempting
+       to access a non-initialized key. Use together with keywords. */
+    template<typename T>
+    struct allocation{
+      hm_t<std::string, T> data;
 
-      resource_data();
+      void setup(std::vector<std::string> x);
+      bool confirm_content(std::vector<std::string> x);
+      T& operator[] (const std::string& k);
     };
 
-    typedef resource_allocation<sfloat> resource_base;
-    typedef sector_allocation<sfloat> sector_base;
-    typedef ship_allocation<sfloat> ship_base;
+    template<typename T>
+    struct countable_allocation : public allocation<T>{
+      T count();
+    };
+        
+    struct resource_data{
+      float available;
+      float storage;
+    };
 
     struct sector_cost{
-      resource_base res;
+      allocation<sfloat> res;
       sfloat water;
       sfloat space;
       sfloat time;
+
+      sector_cost();
     };
 
     struct ship_cost{
-      resource_base res;
+      allocation<sfloat> res;
       sfloat time;
+
+      ship_cost();
+    };
+
+    struct turret_cost{
+      allocation<sfloat> res;
+      sfloat time;
+
+      turret_cost();
     };
 
     /*! cost for sector expansion */
-    extern sector_allocation<sector_cost> sector_expansion;
+    extern allocation<sector_cost> sector_expansion;
 
     /*! cost for ship */
-    extern ship_allocation<ship_cost> ship_build;
+    extern allocation<ship_cost> ship_build;
+
+    /*! cost for turret */
+    extern allocation<turret_cost> turret_build;
 
     void initialize();
   };

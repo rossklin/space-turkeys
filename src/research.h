@@ -1,30 +1,26 @@
 #ifndef _STK_RESEARCH
 #define _STK_RESEARCH
 
-#include <vector>
-
-#include <SFGUI/Window.hpp>
+#include <string>
+#include "ship.h"
+#include "turret.h"
 
 namespace st3{
   namespace research{
+    extern cost::allocation<ship> ship_templates;
 
+    void initialize();
+    
     /*! struct representing the research level of a player */
     struct data{
-      /*! the available fields of research */
-      enum fields{
-	r_population = 0,
-	r_industry,
-	r_ship,
-	r_num
-      };
-    
-      /*! levels of the fields of research */
-      std::vector<float> field;
+      std::string x;
 
       /*! default constructor */
       data();
-    };
-    
+
+      ship build_ship(std::string v);
+      turret build_turret(std::string v);
+    };    
   };
 };
 #endif
