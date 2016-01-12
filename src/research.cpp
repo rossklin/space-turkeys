@@ -11,7 +11,7 @@ using namespace st3;
 using namespace research;
 using namespace sfg;
 
-cost::allocation<ship> research::ship_templates;
+cost::ship_allocation<ship> research::ship_templates;
 
 void initialize(){
   ship s, a;

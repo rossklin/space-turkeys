@@ -10,7 +10,7 @@ namespace st3{
   struct player{
     std::string name; /*!< name of the player */
     sint color; /*!< the player's color */
-    research research_level; /*!< the player's research level */
+    research::data research_level; /*!< the player's research level */
   };
 };
 #endif

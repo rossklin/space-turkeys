@@ -22,7 +22,7 @@ namespace st3{
     hm_t<source_t, waypoint> waypoints; /*!< table of waypoints */
     hm_t<idtype, solar::solar> solars; /*!< table of solars */
     hm_t<idtype, player> players; /*!< table of players */
-    hm_t<idtype, solar::choice_t> solar_choices; /*!< table of choices for solars */
+    hm_t<idtype, choice::c_solar> solar_choices; /*!< table of choices for solars */
     std::list<source_t> remove_entities; /*! list of entities to remove to send to clients */
     game_settings settings; /*! game settings */
     grid::tree *ship_grid; /*! grid search tree to track ship positions */
@@ -39,7 +39,7 @@ namespace st3{
       @param c the choice
       @param id the client id
     */
-    void apply_choice(choice c, idtype id);
+    void apply_choice(choice::choice c, idtype id);
 
     /*! try to get the position of a target
 

@@ -128,10 +128,11 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** made specific allocation classes
+* fixed
 ** [done] add a turret class
 ** [done] implement vectorised allocation templates in graphics.cpp
 ** [done] apply updated solar (choice) structure in solar_tick
-* fixed
 ** figure out how to limit sub sector priority
 ** [done] default values for solar choice
 ** moved solar::choice_t to choice.h

@@ -7,7 +7,7 @@
 
 namespace st3{
   namespace research{
-    extern cost::allocation<ship> ship_templates;
+    extern cost::ship_allocation<ship> ship_templates;
 
     void initialize();
     

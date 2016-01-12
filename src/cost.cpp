@@ -13,15 +13,54 @@ const vector<string> keywords::sector = {"research", "culture", "military", "min
 const vector<string> keywords::ship = {"scout", "fighter", "bomber", "colonizer"};
 const vector<string> keywords::turret = {"radar turret", "rocket turret"};
 
+// basic allocation
+template<typename T>
+allocation<T>::setup(vector<string> x){
+  T buf;
+  data.clear();
+  for (auto v : x) data[v] = T;
+}
+
+template<typename T>
+T& allocation<T>::operator[](string v){
+  if (data.count(v)){
+    return data[v];
+  }else{
+    cout << "allocation access: invalid index: " << v << endl;
+    exit(-1);
+  }
+}
+
+template<typename T>
+void allocation::confirm_content(vector<string> x){
+  for (auto v : x) {
+    if (!data.count(v)) {
+      cout << "allocation: unconfirmed content: " << v << endl;
+      exit(-1);
+    }
+  }
+}
+
+template<typename T>
+T countable_allocation<T>::count(){
+  T r;
+  for (auto x : data) T += x.second;
+  return T;
+}
+
+// specific allocations
+
+template<typename T> ship_allocation<T>::ship_allocation() {setup(keywords::ship);}
+template<typename T> turret_allocation<T>::turret_allocation() {setup(keywords::turret);}
+template<typename T> resource_allocation<T>::resource_allocation() {setup(keywords::resource);}
+template<typename T> sector_allocation<T>::sector_allocation() {setup(keywords::sector);}
+
+// cost initializer
 
 void st3::cost::initialize(){
   // sector costs
   
   // T research;
-  sector_expansion.setup(keywords::sector);
-  for (auto v : keywords::sector)
-    sector_expansion[v].res.setup(keywords::resource);
-  
   sector_expansion["research"].res["organics"] = 1;
   sector_expansion["research"].res["gases"] = 1;
   sector_expansion["research"].res["metals"] = 1;
@@ -53,13 +92,7 @@ void st3::cost::initialize(){
   sector_expansion["mining"].space = 4;
   sector_expansion["mining"].time = 6;
 
-  sector_expansion.confirm_content(keywords::sector);
-
-  // ship costs
-  ship_build.setup(keywords::ship);
-  for (auto v : keywords::ship)
-    ship_build[v].res.setup(keywords::resource);
-  
+  // ship costs  
   ship_build["scout"].res["metals"] = 1;
   ship_build["scout"].res["gases"] = 1;
   ship_biuld["scout"].time = 1;
@@ -77,21 +110,16 @@ void st3::cost::initialize(){
   ship_build["colonizer"].res["organics"] = 3;
   ship_build["colonizer"].time = 6;
 
-  ship_build::confirm_content(keywords::ship);
-
-  // turret costs
-
-  turret_build.setup(keywords::turret);
-  for (auto v : keywords::turret)
-    turret_build[v].res.setup(keywords::resource);
-
   turret_build["radar turret"].res["metals"] = 1;
   turret_build["radar turret"].res["gases"] = 1;
   turret_build["radar turret"].time = 2;
 
   turret_build["rocket turret"].res["metals"] = 1;
   turret_build["rocket turret"].res["gases"] = 2;
-  turret_build["radar turret"].time = 2;
+  turret_build["rocket turret"].time = 2;
 
+  // assure all content is initialized
+  sector_expansion.confirm_content(keywords::sector);
+  ship_build.confirm_content(keywords::ship);
   turret_build.confirm_content(keywords::turret);  
 }

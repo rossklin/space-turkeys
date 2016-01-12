@@ -73,10 +73,11 @@ namespace st3{
 
       // bottom panel
       class bottom_panel : public query<sfg::Window, choice::choice>{
+      public:
 	typedef std::shared_ptr<bottom_panel> Ptr;
 	typedef std::shared_ptr<const bottom_panel> PtrConst;
 
-	static Ptr Create() override;
+	static Ptr Create();
 	
       protected:
 	bottom_panel();	
@@ -87,7 +88,7 @@ namespace st3{
 	typedef std::shared_ptr<top_panel> Ptr;
 	typedef std::shared_ptr<const top_panel> PtrConst;
 
-	static Ptr Create() override;
+	static Ptr Create();
 	
       protected:
 	top_panel();	
@@ -99,7 +100,7 @@ namespace st3{
 	typedef std::shared_ptr<research_window> Ptr;
 	typedef std::shared_ptr<const research_window> PtrConst;
 
-	static Ptr Create(choice::c_research c) override;
+	static Ptr Create(choice::c_research c);
 	
       protected:
 	research_window(choice::c_research c);
@@ -108,48 +109,48 @@ namespace st3{
       // solar choice windows
       namespace solar_query{
 	// military choice sub window
-	class military : public query<sfg::Box, solar::choice::c_military*>{
+	class military : public query<sfg::Box, choice::c_military*>{
 	public:      
 	  typedef std::shared_ptr<military> Ptr;
 	  typedef std::shared_ptr<const military> PtrConst;
 
-	  static Ptr Create(solar::choice::c_military *c) override;
+	  static Ptr Create(choice::c_military *c);
 	
 	protected:
-	  military(solar::choice::c_military *c);
+	  military(choice::c_military *c);
 	};
 
 	// mining choice sub window
-	class mining : public query<sfg::Box, solar::choice::c_mining*>{
+	class mining : public query<sfg::Box, choice::c_mining*>{
 	public:      
 	  typedef std::shared_ptr<mining> Ptr;
 	  typedef std::shared_ptr<const mining> PtrConst;
 
-	  static Ptr Create(solar::choice::c_mining *c) override;
+	  static Ptr Create(choice::c_mining *c);
 	
 	protected:
-	  mining(solar::choice::c_mining *c);
+	  mining(choice::c_mining *c);
 	};
 
 	// mining choice sub window
-	class expansion : public query<sfg::Box, solar::choice::c_expansion*>{
+	class expansion : public query<sfg::Box, choice::c_expansion*>{
 	public:      
 	  typedef std::shared_ptr<expansion> Ptr;
 	  typedef std::shared_ptr<const expansion> PtrConst;
 
-	  static Ptr Create(solar::choice::c_expansion *c) override;
+	  static Ptr Create(choice::c_expansion *c);
 	
 	protected:
-	  expansion(solar::choice::c_expansion *c);
+	  expansion(choice::c_expansion *c);
 	};
 
 	// main window
-	class main_window : query<sfg::Window, solar::choice::choice_t>{
+	class main_window : query<sfg::Window, choice::c_solar>{
 	  // sub interface tracker
 	  sfg::Widget::Ptr sub_window;
 
 	  // layout
-	  Box::Ptr layout;
+	  sfg::Box::Ptr layout;
 	  
 	public:
 	  typedef std::shared_ptr<query> Ptr;
@@ -157,10 +158,10 @@ namespace st3{
 
 	  int solar_id;
 
-	  static Ptr Create(int id, solar s) override;
+	  static Ptr Create(int id, solar::solar s);
 	
 	protected:
-	  main_window(int id, solar s);
+	  main_window(int id, solar::solar s);
 	};
       };
 

@@ -19,51 +19,84 @@ namespace st3{
       hm_t<std::string, T> data;
 
       void setup(std::vector<std::string> x);
-      bool confirm_content(std::vector<std::string> x);
+      void confirm_content(std::vector<std::string> x);
       T& operator[] (const std::string& k);
     };
 
     template<typename T>
-    struct countable_allocation : public allocation<T>{
+    struct countable_allocation : public virtual allocation<T>{
       T count();
     };
-        
+
+    /*! base allocation classes */
+    template<typename T>
+    struct ship_allocation : public virtual allocation<T>{
+      ship_allocation();
+    };
+
+    template<typename T>
+    struct turret_allocation : public virtual allocation<T>{
+      turret_allocation();
+    };
+
+    template<typename T>
+    struct sector_allocation : public virtual allocation<T>{
+      sector_allocation();
+    };
+
+    template<typename T>
+    struct resource_allocation : public virtual allocation<T>{
+      resource_allocation();
+    };
+    
+    /*! countable base allocation classes */
+    template<typename T>
+    struct countable_ship_allocation : public virtual ship_allocation<T>, public virtual countable_allocation<T>{
+    };
+
+    template<typename T>
+    struct countable_turret_allocation : public virtual turret_allocation<T>, public virtual countable_allocation<T>{
+    };
+
+    template<typename T>
+    struct countable_sector_allocation : public virtual sector_allocation<T>, public virtual countable_allocation<T>{
+    };
+
+    template<typename T>
+    struct countable_resource_allocation : public virtual resource_allocation<T>, public virtual countable_allocation<T>{
+    };
+
+    // cost structures
     struct resource_data{
       float available;
       float storage;
     };
 
     struct sector_cost{
-      allocation<sfloat> res;
+      resource_allocation<sfloat> res;
       sfloat water;
       sfloat space;
       sfloat time;
-
-      sector_cost();
     };
 
     struct ship_cost{
-      allocation<sfloat> res;
+      resource_allocation<sfloat> res;
       sfloat time;
-
-      ship_cost();
     };
 
     struct turret_cost{
-      allocation<sfloat> res;
+      resource_allocation<sfloat> res;
       sfloat time;
-
-      turret_cost();
     };
 
     /*! cost for sector expansion */
-    extern allocation<sector_cost> sector_expansion;
+    extern sector_allocation<sector_cost> sector_expansion;
 
     /*! cost for ship */
-    extern allocation<ship_cost> ship_build;
+    extern ship_allocation<ship_cost> ship_build;
 
     /*! cost for turret */
-    extern allocation<turret_cost> turret_build;
+    extern turret_allocation<turret_cost> turret_build;    
 
     void initialize();
   };

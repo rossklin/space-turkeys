@@ -9,7 +9,6 @@
 #include "turret.h"
 
 namespace st3{
-  struct research;
 
   /*! types and functions related to solars */
   namespace solar{
@@ -18,13 +17,13 @@ namespace st3{
     /*! data representing a solar system */
     struct solar{
       /*! ship growth per class */
-      cost::ship_base fleet_growth;
+      cost::ship_allocation<sfloat> fleet_growth;
 
       /*! turret growth per class */
-      cost::turret_base turret_growth;
+      cost::turret_allocation<sfloat> turret_growth;
 
       /*! turrets in solar */
-      std::list<turret::turret> turrets;
+      std::list<turret> turrets;
 
       /*! amount of research produced */
       sfloat research;
@@ -38,7 +37,7 @@ namespace st3{
       cost::resource_allocation<cost::resource_data> resource;
 
       /*! development of each sector */
-      cost::sector_base sector;
+      cost::sector_allocation<sfloat> sector;
 
       /*! ecosystem status */
       sfloat ecology;
@@ -76,7 +75,7 @@ namespace st3{
 	@param r resource cost per resource type
 	@return how many r there are stored resources for
       */
-      float resource_constraint(cost::resource_base r);
+      float resource_constraint(cost::resource_allocation<sfloat> r);
 
       /*! Compute degree of availability of space for natural habitat
           on scale [0,1] */
@@ -88,6 +87,9 @@ namespace st3{
 
       /*! Compute the vision radius from turrets */
       float compute_vision();
+
+      /*! Check whether any functioning turrets remain */
+      bool has_defense();
 
       /*! compile a string describing the solar
 	@return the string 

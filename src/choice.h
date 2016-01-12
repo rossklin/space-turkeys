@@ -11,18 +11,23 @@ namespace st3{
   /*! struct representing what a player can chose */
   namespace choice{ 
     const int max_allocation = 10;
+
     
     struct c_research{
       std::string identifier;
     };
 
-    typedef cost::countable_allocation<sfloat> c_military;
-    typedef cost::countable_allocation<sfloat> c_mining;
-    typedef cost::countable_allocation<sfloat> c_expansion;
+    struct c_military{
+      cost::countable_ship_allocation<sfloat> c_ship;
+      cost::countable_turret_allocation<sfloat> c_turret;
+    };
+
+    typedef cost::countable_resource_allocation<sfloat> c_mining;
+    typedef cost::countable_sector_allocation<sfloat> c_expansion;
 
     /*! choice of priorities for solar system */
     struct c_solar{
-      cost::countable_allocation<sfloat> allocation;
+      cost::countable_sector_allocation<sfloat> allocation;
 
       c_military military;
       c_mining mining;

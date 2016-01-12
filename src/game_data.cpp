@@ -188,7 +188,7 @@ void game_data::set_solar_commands(idtype id, list<command> commands){
   }
 }
  
-void game_data::apply_choice(choice c, idtype id){
+void game_data::apply_choice(choice::choice c, idtype id){
   cout << "game_data: running dummy apply choice" << endl;
 
   // todo: security checks
@@ -562,8 +562,8 @@ void game_data::ship_colonize(idtype ship_id, idtype solar_id){
   }
 
   // check colonization
-  if (s.ship_class == solar::ship_colonizer){
-    if (sol.owner == -1 && sol.defense_current <= 0){
+  if (s.ship_class == "colonizer"){
+    if (sol.owner == -1 && !sol.has_defense()){
       sol.colonization_attempts[s.owner] = ship_id;
     }
   }else{
@@ -583,22 +583,18 @@ void game_data::ship_bombard(idtype ship_id, idtype solar_id){
   }
 
   // check if defenses already destroyed
-  if (sol.owner == -1 && sol.defense_current <= 0){
+  if (sol.owner == -1 && !sol.has_defense()){
     return;
   }
 
   // deal damage
-  switch(s.ship_class){
-  case solar::ship_scout:
-  case solar::ship_fighter:
+  if (s.ship_class == "scout"){
+  }else if (s.ship_class == "fighter"){
     damage = utility::random_uniform();
-    break;
-  case solar::ship_bomber:
+  }else if (s.ship_class == "bomber"){
     damage = 2 + 2 * utility::random_uniform();
-    break;
-  case solar::ship_colonizer:
+  }else if (s.ship_class == "colonizer"){
     damage = 0.1 * utility::random_uniform();
-    break;
   }
 
   sol.damage_taken[s.owner] += damage;
@@ -626,15 +622,15 @@ void game_data::solar_effects(int solar_id){
 
   if (highest_id > -1){
     // todo: add some random destruction to solar
-    sol.defense_current = fmax(sol.defense_current - total_damage, 0);
+    sol.damage_turrets(total_damage);
     sol.population_number = fmax(sol.population_number - 10 * total_damage, 0);
     sol.population_happy *= 0.9;
 
-    if (sol.owner > -1 && sol.defense_current <= 0){
+    if (sol.owner > -1 && !sol.has_defense()){
       sol.owner = highest_id;
       cout << "player " << sol.owner << " conquers solar " << solar_id << endl;
     }else{
-      cout << "resulting defense for solar " << solar_id << ": " << sol.defense_current << endl;
+      cout << "resulting defense for solar " << solar_id << ": " << sol.has_defense() << endl;
     }
   }
 
@@ -643,11 +639,8 @@ void game_data::solar_effects(int solar_id){
   float num = sol.colonization_attempts.size();
   for (auto i : sol.colonization_attempts){
     if (utility::random_uniform() <= 1 / (num - count++)){
+      player[i.first].research.colonize(&sol);
       sol.owner = i.first;
-      sol.population_number = solar::colonizer_population;
-      sol.population_happy = 1;
-      sol.defense_current = 1;
-      sol.industry = vector<float>(solar::work_num, 20);
       cout << "player " << sol.owner << " colonizes solar " << solar_id << endl;
       remove_ship(i.second);
     }
@@ -662,8 +655,7 @@ bool game_data::ship_fire(idtype sid, idtype tid){
   ship &t = ships[tid];
   cout << "ship " << sid << " fires on ship " << tid << endl;
 
-  switch(s.ship_class){
-  case solar::ship_scout:
+  if (s.ship_class == "scout"){
     if (utility::random_uniform() < scout_accuracy){
       t.hp -= utility::random_uniform();
       cout << " -> hit!" << endl;
@@ -673,7 +665,7 @@ bool game_data::ship_fire(idtype sid, idtype tid){
       }
     }
     return true;
-  case solar::ship_fighter:
+  if (s.ship_class == "fighter"){
     if (utility::random_uniform() < fighter_accuracy){
       t.hp -= utility::random_uniform();
       cout << " -> hit!" << endl;
@@ -683,9 +675,9 @@ bool game_data::ship_fire(idtype sid, idtype tid){
       }
     }
     return utility::random_uniform() < fighter_rapidfire; // fighters may fire multiple times
-  case solar::ship_bomber:
+  if (s.ship_class == "bomber"){
     return true; // bombers dont fire at ships
-  case solar::ship_colonizer:
+  if (s.ship_class == "colonizer"){
     return true; // colonizers don't fire at ships
   }
 
