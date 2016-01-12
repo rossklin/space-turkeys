@@ -623,8 +623,8 @@ void game_data::solar_effects(int solar_id){
   if (highest_id > -1){
     // todo: add some random destruction to solar
     sol.damage_turrets(total_damage);
-    sol.population_number = fmax(sol.population_number - 10 * total_damage, 0);
-    sol.population_happy *= 0.9;
+    sol.population = fmax(sol.population - 10 * total_damage, 0);
+    sol.happiness *= 0.9;
 
     if (sol.owner > -1 && !sol.has_defense()){
       sol.owner = highest_id;
@@ -639,7 +639,7 @@ void game_data::solar_effects(int solar_id){
   float num = sol.colonization_attempts.size();
   for (auto i : sol.colonization_attempts){
     if (utility::random_uniform() <= 1 / (num - count++)){
-      player[i.first].research.colonize(&sol);
+      players[i.first].research_level.colonize(&sol);
       sol.owner = i.first;
       cout << "player " << sol.owner << " colonizes solar " << solar_id << endl;
       remove_ship(i.second);
@@ -665,7 +665,7 @@ bool game_data::ship_fire(idtype sid, idtype tid){
       }
     }
     return true;
-  if (s.ship_class == "fighter"){
+  }else if (s.ship_class == "fighter"){
     if (utility::random_uniform() < fighter_accuracy){
       t.hp -= utility::random_uniform();
       cout << " -> hit!" << endl;
@@ -675,9 +675,9 @@ bool game_data::ship_fire(idtype sid, idtype tid){
       }
     }
     return utility::random_uniform() < fighter_rapidfire; // fighters may fire multiple times
-  if (s.ship_class == "bomber"){
+  }else if (s.ship_class == "bomber"){
     return true; // bombers dont fire at ships
-  if (s.ship_class == "colonizer"){
+  }else if (s.ship_class == "colonizer"){
     return true; // colonizers don't fire at ships
   }
 

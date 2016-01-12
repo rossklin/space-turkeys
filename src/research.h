@@ -4,6 +4,7 @@
 #include <string>
 #include "ship.h"
 #include "turret.h"
+#include "solar.h"
 
 namespace st3{
   namespace research{
@@ -20,6 +21,7 @@ namespace st3{
 
       ship build_ship(std::string v);
       turret build_turret(std::string v);
+      void colonize(solar::solar *s);
     };    
   };
 };

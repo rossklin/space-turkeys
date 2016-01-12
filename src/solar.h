@@ -91,6 +91,9 @@ namespace st3{
       /*! Check whether any functioning turrets remain */
       bool has_defense();
 
+      /*! have turrets take damage */
+      void damage_turrets(float d);
+
       /*! compile a string describing the solar
 	@return the string 
       */

@@ -128,8 +128,8 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-** made specific allocation classes
 * fixed
+** made specific allocation classes
 ** [done] add a turret class
 ** [done] implement vectorised allocation templates in graphics.cpp
 ** [done] apply updated solar (choice) structure in solar_tick
