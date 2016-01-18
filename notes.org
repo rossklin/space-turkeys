@@ -1,10 +1,7 @@
 * currently working on
 ** rewrite solar/gui
 *** check choice sub allocation for military
-*** check template instantiation
-*** research structure
-*** new command gui and target gui
-*** check that serializations still matche content
+*** check that serializations still match content
 *** check that all initialize-functions are called
 *** move keywords and allocations to "types.h"
 *** [done] consider adding named string constants for sub sectors etc.
@@ -20,6 +17,18 @@
 *** [done] give solar sub query windows a data return reference
 *** [done] client_game::build_choice should build main_interface
 *** [done] client_game::build_choice should run interface event/draw loop
+** new command gui and target gui
+** research structure
+*** hash table
+*** nodes with:
+     requirement list
+     cost
+     level
+     level-dependent modifier functions
+     allow list
+*** prioritized build_[ship|turret]
+    e.g. focus on any of stealth, damage, speed etc.
+** new ships with trigger functions
 ** consider making ship sub classes for e.g. colonizer population
 ** targui should only appear when multiple targets are available
 ** solar happy update does not match happy_increment
@@ -135,11 +144,14 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-*** c_solar::normalize uses countable_allocation::normalize
-*** fixed compile step errors
-*** [done] consider adding named string constants for sub sectors etc.
-*** fix: serialization templates prefer general over specific
+*** figure out why file-global allocation sub classes init empty
+    probably the keywords data they use is not initialized?
+    moved to initializers
 * fixed
+** c_solar::normalize uses countable_allocation::normalize
+** fixed compile step errors
+** [done] consider adding named string constants for sub sectors etc.
+** fix: serialization templates prefer general over specific
 ** made specific allocation classes
 ** [done] add a turret class
 ** [done] implement vectorised allocation templates in graphics.cpp

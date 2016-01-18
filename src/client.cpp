@@ -15,6 +15,8 @@
 #include "client_game.h"
 #include "com_client.h"
 #include "protocol.h"
+#include "cost.h"
+#include "research.h"
 
 using namespace std;
 using namespace st3;
@@ -75,7 +77,10 @@ int main(int argc, char **argv){
   sf::ContextSettings settings;
   settings.antialiasingLevel = 8;
   g.window.create(sf::VideoMode(width, height), "SFML Turkeys!", sf::Style::Default, settings);
+  
   graphics::initialize();
+  cost::initialize();
+  research::initialize();
   // todo: might need to g.window.setActive(), and might not even be able to
   // construct sfgui in g before g.window.create()
   
@@ -84,5 +89,7 @@ int main(int argc, char **argv){
   g.socket.deallocate_packet();
   tcp_socket.disconnect();
 
+  cost::cleanup();
+  research::cleanup();
   return 0;
 }

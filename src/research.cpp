@@ -1,20 +1,21 @@
 #include <vector>
 
-#include <SFGUI/SFGUI.hpp>
-#include <SFGUI/Widgets.hpp>
-#include <SFML/Graphics.hpp>
-
 #include "research.h"
 
 using namespace std;
 using namespace st3;
 using namespace research;
-using namespace sfg;
 
-cost::ship_allocation<ship> research::ship_templates;
-cost::turret_allocation<turret> research::turret_templates;
+cost::ship_allocation<ship> &research::ship_templates;
+cost::turret_allocation<turret> &research::turret_templates;
 
-void initialize(){
+void research::initialize(){
+  
+  auto ship_templates_b = new cost::ship_allocation<ship>();
+  auto turret_templates_b = new cost::turret_allocation<turret>();
+  ship_templates = *ship_templates_b;
+  turret_templates = *turret_templates_b;
+
   ship s, a;
   s.speed = 1;
   s.vision = 50;
@@ -66,6 +67,11 @@ void initialize(){
   turret_templates[buf.turret_class] = buf;
 
   turret_templates.confirm_content(cost::keywords::turret);
+}
+
+void research::cleanup(){
+  delete &ship_templates;
+  delete &turret_templates;
 }
 
 data::data(){

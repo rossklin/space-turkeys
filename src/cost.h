@@ -106,15 +106,16 @@ namespace st3{
     };
 
     /*! cost for sector expansion */
-    extern sector_allocation<sector_cost> sector_expansion;
+    extern sector_allocation<sector_cost> &sector_expansion;
 
     /*! cost for ship */
-    extern ship_allocation<ship_cost> ship_build;
+    extern ship_allocation<ship_cost> &ship_build;
 
     /*! cost for turret */
-    extern turret_allocation<turret_cost> turret_build;    
+    extern turret_allocation<turret_cost> &turret_build;    
 
     void initialize();
+    void cleanup();
   };
 };
 #endif

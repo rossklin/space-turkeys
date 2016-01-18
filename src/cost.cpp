@@ -9,9 +9,9 @@ using namespace std;
 using namespace st3;
 using namespace cost;
 
-sector_allocation<sector_cost> cost::sector_expansion;
-ship_allocation<ship_cost> cost::ship_build;
-turret_allocation<turret_cost> cost::turret_build;
+sector_allocation<sector_cost> &cost::sector_expansion;
+ship_allocation<ship_cost> &cost::ship_build;
+turret_allocation<turret_cost> &cost::turret_build;
 
 const vector<string> keywords::resource = {
   keywords::key_metals,
@@ -91,6 +91,15 @@ template<typename T> sector_allocation<T>::sector_allocation() {allocation<T>::s
 // cost initializer
 using namespace keywords;
 void st3::cost::initialize(){
+
+  auto sector_expansion_b = new sector_allocation<sector_cost>();
+  auto ship_build_b = new ship_allocation<ship_cost>();
+  auto turret_build_b = new turret_allocation<turret_cost>();
+
+  sector_expansion = *sector_expansion_b;
+  ship_build = *ship_build_b;
+  turret_build = *turret_build_b;
+
   // sector costs
   
   // T research;
@@ -155,6 +164,12 @@ void st3::cost::initialize(){
   sector_expansion.confirm_content(keywords::sector);
   ship_build.confirm_content(keywords::ship);
   turret_build.confirm_content(keywords::turret);  
+}
+
+void cost::cleanup(){
+  delete &sector_expansion;
+  delete &ship_build;
+  delete &turret_build;
 }
 
 // template instantiations

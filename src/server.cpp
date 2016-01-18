@@ -4,6 +4,8 @@
 #include "com_server.h"
 #include "protocol.h"
 #include "utility.h"
+#include "cost.h"
+#include "research.h"
 
 using namespace std;
 using namespace st3;
@@ -42,6 +44,8 @@ int main(int argc, char **argv){
   listener.close();
 
   cout << "starting with " << clients.size() << " clients" << endl;
+  research::initialize();
+  cost::initialize();
 
   com c(clients);
   game_data g;
@@ -84,6 +88,9 @@ int main(int argc, char **argv){
     x -> disconnect();
     delete x;
   }
+
+  research::cleanup();
+  cost::cleanup();
 
   return 0;
 }
