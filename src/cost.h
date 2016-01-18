@@ -10,6 +10,21 @@ namespace st3{
       extern const std::vector<std::string> sector;
       extern const std::vector<std::string> ship;
       extern const std::vector<std::string> turret;
+
+      const std::string key_metals = "metals";
+      const std::string key_organics = "organics";
+      const std::string key_gases = "gases";
+      const std::string key_research = "research";
+      const std::string key_culture = "culture";
+      const std::string key_mining = "mining";
+      const std::string key_military = "military";
+      const std::string key_expansion = "expansion";
+      const std::string key_scout = "scout";
+      const std::string key_fighter = "fighter";
+      const std::string key_bomber = "bomber";
+      const std::string key_colonizer = "colonizer";
+      const std::string key_radar_turret = "radar turret";
+      const std::string key_rocket_turret = "rocket turret";
     };
     
     /* Templated string hash map which will complain when attempting
@@ -26,6 +41,7 @@ namespace st3{
     template<typename T>
     struct countable_allocation : public virtual allocation<T>{
       T count();
+      void normalize();
     };
 
     /*! base allocation classes */

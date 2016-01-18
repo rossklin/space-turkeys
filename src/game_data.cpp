@@ -9,6 +9,7 @@
 
 using namespace std;
 using namespace st3;
+using namespace cost;
 
 idtype ship::id_counter = 0;
 idtype solar::id_counter = 0;
@@ -722,20 +723,17 @@ hm_t<idtype, solar::solar> game_data::random_solars(){
     s.position.x = s.radius + rand() % (int)(settings.width - 2 * s.radius);
     s.position.y = s.radius + rand() % (int)(settings.height - 2 * s.radius);
     s.owner = -1;
-    s.defense_capacity = s.defense_current = rand() % q_start;
 
     s.population = 0;
-    s.happieness = 1;
-    s.vision = 120;
+    s.happiness = 1;
     s.research = 0;
-    s.housing = 0;
     
     s.water = 1000 * utility::random_uniform();
     s.space = 1000 * utility::random_uniform();
-    
-    s.resource.organics.available = 1000 * utility::random_uniform();
-    s.resource.metals.available = 1000 * utility::random_uniform();
-    s.resource.gases.available = 1000 * utility::random_uniform();
+    s.ecology = utility::random_uniform();
+
+    for (auto v : keywords::resource)
+      s.resource[v].available = 1000 * utility::random_uniform();
 
     buf[i] = s;
   }
@@ -819,7 +817,7 @@ float game_data::heuristic_homes(hm_t<idtype, solar::solar> solar_buf, hm_t<idty
 
 // players and settings should be set before build is called
 void game_data::build(){
-  static research rbase;
+  static research::data rbase;
   
   if (players.empty()){
     cout << "game_data: build: no players!" << endl;
@@ -828,15 +826,10 @@ void game_data::build(){
 
   cout << "game_data: running dummy build" << endl;
 
-  cost::resource_allocation<cost::resource_data> initial_resources;
-  initial_resources.organics.available = 1000;
-  initial_resources.metals.available = 1000;
-  initial_resources.gases.available = 1000;
+  resource_allocation<resource_data> initial_resources;
+  for (auto v : keywords::resource)
+    initial_resources[v].available = 1000;
   
-  cost::sector_base initial_capacities;
-  initial_capacities.agriculture = 80;
-  initial_capacities.infrastructure = 60;
-
   // build solars
   int ntest = 100;
   float unfairness = INFINITY;
@@ -854,20 +847,18 @@ void game_data::build(){
       for (auto x : test_homes){
 	solar::solar &s = solars[x.second];
 	s.owner = x.first;
-	s.defense_current = s.defense_capacity = d_start;
 	s.resource = initial_resources;
-	s.sector_capacity = initial_capacities;
 	s.water = 1000;
 	s.space = 1000;
 	s.population = 100;
-	s.happieness = 1;
+	s.happiness = 1;
 
 	idtype id = ship::id_counter++;
-	ships[id] = base_ship.scout;
+	ships[id] = rbase.build_ship("scout");
 	s.ships.insert(id);
 
 	id = ship::id_counter++;
-	ships[id] = base_ship.fighter;
+	ships[id] = rbase.build_ship("fighter");
 	s.ships.insert(id);
       }
     }
@@ -884,8 +875,8 @@ void game_data::build(){
 void st3::game_data::solar_tick(idtype id){
   int i;
   solar::solar &s = solars[id];
-  solar::choice_t &c = solar_choices[id];
-  research &r_base = players[s.owner].research_level;
+  choice::c_solar &c = solar_choices[id];
+  research::data &r_base = players[s.owner].research_level;
   float dt = settings.dt;
   float allocated, build;
 
@@ -894,8 +885,8 @@ void st3::game_data::solar_tick(idtype id){
   s.damage_taken.clear();
   s.colonization_attempts.clear();
 
-  if (s.owner < 0 || s.population_number <= 0){
-    s.population_number = 0;
+  if (s.owner < 0 || s.population <= 0){
+    s.population = 0;
     return;
   }
 
@@ -907,31 +898,31 @@ void st3::game_data::solar_tick(idtype id){
   buf.ecology += ((s.space_status() * s.water_status() - s.ecology) + utility::random_normal(0, 1)) * dt;
 
   // population development
-  buf.population += s.population * (s.happiness * (solar::f_growth + s.sector["culture"]) - utility::random_uniform(0, solar::f_crowding) * s.population / s.ecology) * dt;
+  buf.population += s.population * (s.happiness * (solar::f_growth + s.sector[keywords::key_culture]) - utility::random_uniform(0, solar::f_crowding) * s.population / s.ecology) * dt;
 
   // happiness development
-  buf.happiness += (s.sector["culture"] + c.allocation["culture"] * s.happiness - log(s.population) / s.ecology + utility::random_normal(0,1)) * dt;
+  buf.happiness += (s.sector[keywords::key_culture] + c.allocation[keywords::key_culture] * s.happiness - log(s.population) / s.ecology + utility::random_normal(0,1)) * dt;
 
   // research development
-  buf.research += c.allocation["research"] * buf.population * buf.sector["research"] * buf.happiness * dt;
+  buf.research += c.allocation[keywords::key_research] * buf.population * buf.sector[keywords::key_research] * buf.happiness * dt;
 
   // expansions
-  for (auto v : cost::keywords::sector)
-    buf.sector[v] += fmin(c.allocation["expansion"] * c.expansion[v] * workers / cost::sector_expansion[v].time, s.resource_constraint(cost::sector_expansion[v])) * dt;
+  for (auto v : keywords::sector)
+    buf.sector[v] += fmin(c.allocation[keywords::key_expansion] * c.expansion[v] * workers / sector_expansion[v].time, s.resource_constraint(sector_expansion[v].res)) * dt;
 
   // mining
-  for (auto v : cost::keywords::sector){
-    float move = fmin(s.resource[v].available, c.allocation["mining"] * c.mining[v] * workers) * dt;
-    buf.resource["metals"].available -= move;
-    buf.resource["metals"].storage += move;
+  for (auto v : keywords::resource){
+    float move = fmin(s.resource[v].available, c.allocation[keywords::key_mining] * c.mining[v] * workers) * dt;
+    buf.resource[v].available -= move;
+    buf.resource[v].storage += move;
   }
 
   // military industry
-  for (auto v : cost::ship_allocation::keywords)
-    buf.fleet_growth[v] += fmin(c.allocation["military"] * c.military[v] * workers, s.resource_constraint(cost::ship_build[v])) * dt;
+  for (auto v : keywords::ship)
+    buf.fleet_growth[v] += fmin(c.allocation[keywords::key_military] * c.military.c_ship[v] * workers, s.resource_constraint(ship_build[v].res)) * dt;
   
-  for (auto v : cost::turret_allocation::keywords)
-    buf.turret_growth[v] += fmin(c.allocation["military"] * c.military[v] * workers, s.resource_constraint(cost::turret_build[v])) * dt;
+  for (auto v : keywords::turret)
+    buf.turret_growth[v] += fmin(c.allocation[keywords::key_military] * c.military.c_turret[v] * workers, s.resource_constraint(turret_build[v].res)) * dt;
 
   s = buf;
 
@@ -943,11 +934,11 @@ void st3::game_data::solar_tick(idtype id){
     s.fleet_growth[i]--;
   };
     
-  for (auto v : cost::ship_allocation::keywords){
+  for (auto v : keywords::ship){
     while (s.fleet_growth[v] >= 1){      
       if (v == "colonizer"){
-	if (s.population >= ship::colonizer_population){
-	  s.population -= ship::colonizer_population;
+	if (s.population >= r_base.colonizer_population()){
+	  s.population -= r_base.colonizer_population();
 	  add_ship(v);
 	}
       }else{
@@ -957,9 +948,8 @@ void st3::game_data::solar_tick(idtype id){
   }
 
   // new turrets
-  for (auto v : cost::turret_allocation::keywords){
+  for (auto v : keywords::turret){
     while (s.turret_growth[v] >= 1){
-      turret::turret t = 
       s.turrets.push_back(r_base.build_turret(v));
       s.turret_growth[v]--;
     }
@@ -1014,11 +1004,8 @@ void game_data::end_step(){
   // pool research
   for (auto & i : solars){
     if (i.second.owner > -1){
-      for (int j = 0; j < research::r_num; j++){
-	players[i.second.owner].research_level.field[j] += i.second.new_research[j];
-	cout << i.first << " contributes " << i.second.new_research[j] << " new research to player " << i.second.owner << " in field " << j << endl;
-	i.second.new_research[j] = 0;
-      }
+      players[i.second.owner].research_level.develope(i.second.research);
+      i.second.research = 0;
     }
   }
 }
@@ -1037,7 +1024,7 @@ bool game_data::fleet_seen_by(idtype fid, idtype pid){
   }
 
   for (auto i = solars.begin(); i != solars.end() && !seen; i++){
-    seen |= i -> second.owner == pid && utility::l2norm(f.position - i -> second.position) < i -> second.vision;
+    seen |= i -> second.owner == pid && utility::l2norm(f.position - i -> second.position) < i -> second.compute_vision();
   }
 
   return seen;
@@ -1062,7 +1049,7 @@ game_data game_data::limit_to(idtype id){
     }
 
     for (auto i = solars.begin(); i != solars.end() && !seen; i++){
-      seen |= x.first != i -> first && i -> second.owner == id && utility::l2norm(x.second.position - i -> second.position) < i -> second.vision;
+      seen |= x.first != i -> first && i -> second.owner == id && utility::l2norm(x.second.position - i -> second.position) < i -> second.compute_vision();
     }
     if (seen) gc.solars[x.first] = x.second;
   }

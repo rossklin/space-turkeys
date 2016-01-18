@@ -36,23 +36,20 @@ void graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){
 
   sf::Color cnose(255,200,180,200);
 
-  switch (s.ship_class){
-  case solar::ship_scout:
+  if (s.ship_class == "scout"){
     svert.resize(4);
     svert[0] = sf::Vertex(point(2, 0), col);
     svert[1] = sf::Vertex(point(-2, -1), col);
     svert[2] = sf::Vertex(point(-2, 1), col);
     svert[3] = sf::Vertex(point(2, 0), col);
-    break;
-  case solar::ship_fighter:
+  }else if (s.ship_class == "fighter"){
     svert.resize(5);
     svert[0] = sf::Vertex(point(2, 0), cnose);
     svert[1] = sf::Vertex(point(-2, -1), col);
     svert[2] = sf::Vertex(point(-3, 0), col);
     svert[3] = sf::Vertex(point(-2, 1), col);
     svert[4] = sf::Vertex(point(2, 0), cnose);
-    break;
-  case solar::ship_bomber:
+  }else if (s.ship_class == "bomber"){
     svert.resize(7);
     svert[0] = sf::Vertex(point(2, 0), col);
     svert[1] = sf::Vertex(point(0, -3), cnose);
@@ -61,16 +58,14 @@ void graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){
     svert[4] = sf::Vertex(point(-2, 3), cnose);
     svert[5] = sf::Vertex(point(0, 3), cnose);
     svert[6] = sf::Vertex(point(2, 0), col);
-    break;
-  case solar::ship_colonizer:
+  }else if (s.ship_class == "colonizer"){
     svert.resize(5);
     svert[0] = sf::Vertex(point(2, 1), col);
     svert[1] = sf::Vertex(point(2, -1), col);
     svert[2] = sf::Vertex(point(-2, -1), col);
     svert[3] = sf::Vertex(point(-2, 1), col);
     svert[4] = sf::Vertex(point(2, 1), col);
-    break;
-  default:
+  }else{
     cout << "invalid ship type: " << s.ship_class << endl;
     exit(-1);
   }
@@ -82,6 +77,39 @@ void graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){
   w.draw(&svert[0], svert.size(), sf::LinesStrip, t);
 }
 
+
+// sfml stuff
+// make an sf::RectangleShape with given bounds
+sf::RectangleShape graphics::build_rect(sf::FloatRect bounds){
+  sf::RectangleShape r;
+  r.setSize(sf::Vector2f(bounds.width, bounds.height));
+  r.setPosition(sf::Vector2f(bounds.left, bounds.top));
+  return r;
+}
+
+// point coordinates of view ul corner
+point graphics::ul_corner(window_t &w){
+  sf::View sv = w.getView();
+  point v = sv.getSize();
+  return sv.getCenter() - point(v.x * 0.5, v.y * 0.5);
+}
+
+// transform from pixels to points
+sf::Transform graphics::view_inverse_transform(window_t &w){
+  sf::Transform t;
+  sf::View v = w.getView();
+
+  t.translate(ul_corner(w));
+  t.scale(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
+  return t;
+}
+
+// scale from pixels to points
+point graphics::inverse_scale(window_t &w){
+  sf::View v = w.getView();
+  return point(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
+}
+
 /* **************************************** */
 /* INTERFACES */
 /* **************************************** */
@@ -89,20 +117,38 @@ void graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){
 using namespace sfg;
 using namespace interface;
 
+main_interface *interface::desktop;
+
 // build and wrap in shared ptr
 
+bottom_panel::Ptr bottom_panel::Create(bool &a, bool &b){return Ptr(new bottom_panel(a, b));}
+top_panel::Ptr top_panel::Create(){return Ptr(new top_panel());}
 
-bottom_panel::Create(){return Ptr(new bottom_panel());}
-top_panel::Create(){return Ptr(new top_panel());}
+research_window::Ptr research_window::Create(choice::c_research *c){return Ptr(new research_window(c));}
 
-research_window::Create(){return Ptr(new research_window());}
-
-solar_query::main_window::Create(int id, solar::solar s){return Ptr(new solar_query::main_window(id, s));}
-solar_query::expansion::Create(){return Ptr(new solar_query::military());}
-solar_query::military::Create(){return Ptr(new solar_query::military());}
-solar_query::mining::Create(){return Ptr(new solar_query::mining());}
+solar_query::main_window::Ptr solar_query::main_window::Create(int id, solar::solar s){return Ptr(new solar_query::main_window(id, s));}
+solar_query::expansion::Ptr solar_query::expansion::Create(choice::c_expansion &c){return Ptr(new solar_query::expansion(c));}
+solar_query::military::Ptr solar_query::military::Create(choice::c_military &c){return Ptr(new solar_query::military(c));}
+solar_query::mining::Ptr solar_query::mining::Create(choice::c_mining &c){return Ptr(new solar_query::mining(c));}
 
 // constructors
+//query
+template<typename C, typename R>
+query<C,R>::query() : Window(Window::Style::TOPLEVEL) { }
+
+// boxed
+solar_query::boxed::boxed(Box::Orientation o){
+  layout = Box::Create(o);
+  Add(layout);
+}
+
+const string& solar_query::boxed::GetName() const {
+  return "boxed";
+};
+
+sf::Vector2f solar_query::boxed::CalculateRequisition(){
+  return layout -> GetRequisition();
+}
 
 // main interface
 
@@ -115,92 +161,119 @@ main_interface::main_interface(sf::Vector2u d, research::data r) : research_leve
   qw_bottom = 0.7 * d.y;
   
   auto top = top_panel::Create();
-  top -> SetPosition(sf::Vector2i(0,0));
-  top -> SetSize(sf::Vector2u(d.x, top_height));
+  top -> SetPosition(sf::Vector2f(0,0));
+  top -> SetRequisition(sf::Vector2f(d.x, top_height));
   Add(top);
   
-  auto bottom = bottom_panel::Create();
-  bottom -> SetPosition(sf::Vector2i(0, bottom_start));
-  bottom -> SetSize(sf::Vector2u(d.x, bottom_height));
+  auto bottom = bottom_panel::Create(done, accept);
+  bottom -> SetPosition(sf::Vector2f(0, bottom_start));
+  bottom -> SetRequisition(sf::Vector2f(d.x, bottom_height));
   Add(bottom);
 }
 
-bottom_panel::bottom_panel(){
+void main_interface::reset_qw(Widget::Ptr w){
+  clear_qw();
+  if (w == 0) return;
+  
+  query_window = w;
+  Add(query_window);
+}
+
+void main_interface::clear_qw(){
+  if (query_window) Remove(query_window);
+  query_window = 0;
+}
+
+bottom_panel::bottom_panel(bool &done, bool &accept) {
   auto layout = Box::Create(Box::Orientation::HORIZONTAL);
   auto b_proceed = Button::Create("PROCEED");
 
   b_proceed -> GetSignal(Widget::OnLeftClick).Connect([&done, &accept](){
       done = true;
       accept = true;
-    };);
+    });
 
   layout -> Pack(b_proceed);
   Add(layout);
 }
 
-top_panel::top_panel() {
+top_panel::top_panel() : Window(Window::Style::TOPLEVEL) {
   auto layout = Box::Create(Box::Orientation::HORIZONTAL);
   auto b_research = Button::Create("RESEARCH");
 
   b_research -> GetSignal(Widget::OnLeftClick).Connect([](){
-      desktop -> reset_query_window(research_window::Create(desktop -> response.research));
-    };);
+      desktop -> reset_qw(research_window::Create(&desktop -> response.research));
+    });
 
   layout -> Pack(b_research);
   Add(layout);
 }
 
 // research window
-research_window::research_window(choice::c_research c) : response(c) {
+research_window::research_window(choice::c_research *c) {
   // todo: write me
 }
 
 
 // build a labeled button to modify priority data
-Button::Ptr factory (string label, int &data, function<bool()> inc_val){
+Button::Ptr factory (string label, float &data, function<bool()> inc_val){
   auto b = Button::Create(label + to_string(data));
 
-  b -> GetSignal(Widget::OnLeftClick).connect([&data, b, label, inc_val](){
+  b -> GetSignal(Widget::OnLeftClick).Connect([&data, b, label, inc_val](){
       if (inc_val()) data++;
       b -> SetLabel(label + ": " + to_string(data));
-    };);
+    });
     
-  b -> GetSignal(Widget::OnRightClick).connect([&data, b, label](){
+  b -> GetSignal(Widget::OnRightClick).Connect([&data, b, label](){
       if (data > 0) data--;
       b -> SetLabel(label + ": " + to_string(data));
-    };);
+    });
 
   return b;
 };
 
 
 // main window for solar choice
-solar_query::main_window::main_window(choice::c_solar c) : response(c){
+solar_query::main_window::main_window(idtype solar_id, solar::solar s){
+  // sub interface tracker
   sub_window = 0;
-
-  layout = Box::Create(Box::Oreintation::HORIZONTAL);
-  
+  layout = Box::Create(Box::Orientation::HORIZONTAL);
   selection_layout = Box::Create(Box::Orientation::VERTICAL);
+
+  response = desktop -> response.solar_choices[solar_id];
 
   selection_layout -> Pack(Label::Create("Customize solar choice for solar " + to_string(solar_id)));
   selection_layout -> Pack(Label::Create("Click left/right to add/reduce"));
   selection_layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
 
   // sector allocation buttons
+  hm_t<string, function<void()> > subcall;
+
+  subcall[cost::keywords::key_mining] = [this](){
+    if (sub_window) layout -> Remove(sub_window);
+    sub_window = solar_query::mining::Create(response.mining);
+    layout -> Pack(sub_window);
+  };
+
+  subcall[cost::keywords::key_military] = [this](){
+    if (sub_window) layout -> Remove(sub_window);
+    sub_window = solar_query::military::Create(response.military);
+    layout -> Pack(sub_window);
+  };
+
+  subcall[cost::keywords::key_expansion] = [this](){
+    if (sub_window) layout -> Remove(sub_window);
+    sub_window = solar_query::expansion::Create(response.expansion);
+    layout -> Pack(sub_window);
+  };
 
   for (auto v : cost::keywords::sector){
-    auto b = factory(v, response.allocation[v], [&response](){return response.count() < choice::max_allocation;});
+    auto b = factory(v, response.allocation[v], [this](){return response.allocation.count() < choice::max_allocation;});
 
-    if (set({"mining", "military", "expansion"}).count(v)){
+    if (subcall.count(v)){
       // sectors with sub interfaces
       auto sub = Button::Create(">");
-  
-      sub -> GetSignal(Widget::OnLeftClick).Connect([&response, sub_window, layout](){
-	  if (sub_window) layout -> Remove(sub_window);
-	  sub_window = solar_query::mining::Create(&response["mining"]);
-	  layout -> Pack(sub_window);
-	};);
-
+      sub -> GetSignal(Widget::OnLeftClick).Connect(subcall[v]);
       auto l = Box::Create(Box::Orientation::HORIZONTAL);
       l -> Pack(b);
       l -> Pack(sub);
@@ -213,18 +286,18 @@ solar_query::main_window::main_window(choice::c_solar c) : response(c){
 
   auto b_accept = Button::Create("ACCEPT");
 
-  b_accept -> GetSignal(Widget::OnLeftClick).Connect([&response] () {
+  b_accept -> GetSignal(Widget::OnLeftClick).Connect([=] () {
       desktop -> response.solar_choices[solar_id] = response;
       desktop -> clear_qw();
-    };);
+    });
   
   auto b_cancel = Button::Create("CANCEL");
 
   b_cancel -> GetSignal(Widget::OnLeftClick).Connect([] () {
       desktop -> clear_qw();
-    };);
+    });
 
-  auto l_respons = Box::Create(Box::Orientation::HORIZONTAL);
+  auto l_response = Box::Create(Box::Orientation::HORIZONTAL);
   l_response -> Pack(b_accept);
   l_response -> Pack(b_cancel);
 
@@ -237,40 +310,28 @@ solar_query::main_window::main_window(choice::c_solar c) : response(c){
 
 
 // sub window for expansion choice
-solar_query::expansion::expansion(solar::choice::c_expansion *c) : response(c){
-  auto layout = Box::Create(Box::Orientation::VERTICAL);
-
+solar_query::expansion::expansion(choice::c_expansion &c) : boxed(Box::Orientation::VERTICAL){
   // add buttons for expandable sectors
-  for (auto v : cost::keywords::expansion){
+  for (auto v : cost::keywords::sector){
     if (v != "expansion"){
-      layout -> Pack(factory(v, c[v], [&c](){return c.count() < cost::max_allocation;}));
+      layout -> Pack(factory(v, c[v], [&c](){return c.count() < choice::max_allocation;}));
     }
   }
-
-  Pack(layout);
 };
 
 // sub window for military choice
-solar_query::military::military(solar::choice::c_military *c) : response(c){
-  auto layout = Box::Create(Box::Orientation::VERTICAL);
-
+solar_query::military::military(choice::c_military &c) : boxed(Box::Orientation::VERTICAL){
   // add buttons for expandable sectors
   for (auto v : cost::keywords::ship)
-    layout -> Pack(factory(v, c[v], [&c](){return c.count() < cost::max_allocation;}));
+    layout -> Pack(factory(v, c.c_ship[v], [&c](){return c.c_ship.count() < choice::max_allocation;}));
 
   for (auto v : cost::keywords::turret)
-    layout -> Pack(factory(v, c[v], [&c](){return c.count() < cost::max_allocation;}));
-
-  Pack(layout);
+    layout -> Pack(factory(v, c.c_turret[v], [&c](){return c.c_turret.count() < choice::max_allocation;}));
 };
 
 // sub window for mining choice
-solar_query::mining::mining(solar::choice::c_mining *c) : response(c){
-  auto layout = Box::Create(Box::Orientation::VERTICAL);
-
+solar_query::mining::mining(choice::c_mining &c) : boxed(Box::Orientation::VERTICAL){
   // add buttons for expandable sectors
-  for (auto v : cost::keywords::mining){
-    layout -> Pack(factory(v, c[v], [&c](){return c.count() < cost::max_allocation;}));
-
-  Pack(layout);
+  for (auto v : cost::keywords::resource)
+    layout -> Pack(factory(v, c[v], [&c](){return c.count() < choice::max_allocation;}));
 };

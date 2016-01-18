@@ -28,9 +28,9 @@ cd $wd/external/src/SFML
 cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .
 
 # tgui
-cp $wd/tgui_makelists.txt $wd/external/src/TGUI/CMakeLists.txt
-cd $wd/external/src/TGUI
-cmake -DTGUI_BUILD_FORM_BUILDER=FALSE -DCMAKE_INSTALL_PREFIX:PATH=/usr/local -DSFML_INCLUDE_DIR=../SFML/include .
+# cp $wd/tgui_makelists.txt $wd/external/src/TGUI/CMakeLists.txt
+# cd $wd/external/src/TGUI
+# cmake -DTGUI_BUILD_FORM_BUILDER=FALSE -DCMAKE_INSTALL_PREFIX:PATH=/usr/local -DSFML_INCLUDE_DIR=../SFML/include .
 
 cd $wd				 
 
@@ -66,9 +66,9 @@ AC_CHECK_FUNCS([clock_gettime floor inet_ntoa memmove memset pow select socket s
 
 # set include paths
 extdir=../external/src
-CXXFLAGS="$CXXFLAGS -std=c++11 -isystem $extdir/SFML/include -isystem $extdir/TGUI/include -Wl,-rpath=/usr/local/lib"
-LDFLAGS="$LDFLAGS -L$extdir/SFML/lib -L$extdir/TGUI/lib"
-LIBS="$LIBS -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -ltgui"
+CXXFLAGS="$CXXFLAGS -std=c++11 -isystem $extdir/SFML/include -Wl,-rpath=/usr/local/lib"
+LDFLAGS="$LDFLAGS -L$extdir/SFML/lib"
+LIBS="$LIBS -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -lsfgui"
 
 AC_CONFIG_FILES([Makefile docs/Makefile src/Makefile])
 # AC_CONFIG_SUBDIRS([src])

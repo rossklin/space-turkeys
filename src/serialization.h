@@ -2,6 +2,7 @@
 #define _STK_SERIALIZATION
 
 #include "game_data.h"
+#include "cost.h"
 
 namespace st3{
 
@@ -15,7 +16,7 @@ namespace st3{
     @return reference to the resulting packet
   */
   template<typename T>
-    sf::Packet& operator <<(sf::Packet& packet, const T &container);
+  sf::Packet& inner_iterated_insert(sf::Packet& packet, const T &container);
 
   /*! stream a list-like container out of a packet
     @param packet the packet
@@ -23,7 +24,23 @@ namespace st3{
     @return reference to the resulting packet
   */
   template<typename T>
-    sf::Packet& operator >>(sf::Packet& packet, T &container);
+  sf::Packet& inner_iterated_extract(sf::Packet& packet, T &container);
+
+  // testing container specific templates to avoid selection ambiguity
+  template<typename T>
+  sf::Packet& operator <<(sf::Packet& packet, const std::list<T> &container);
+  template<typename T>
+  sf::Packet& operator >>(sf::Packet& packet, std::list<T> &container);
+
+  template<typename T>
+  sf::Packet& operator <<(sf::Packet& packet, const std::vector<T> &container);
+  template<typename T>
+  sf::Packet& operator >>(sf::Packet& packet, std::vector<T> &container);
+
+  template<typename T>
+  sf::Packet& operator <<(sf::Packet& packet, const std::set<T> &container);
+  template<typename T>
+  sf::Packet& operator >>(sf::Packet& packet, std::set<T> &container);
 
   // stream ops for hm_t
   /*! stream a hm_t into a packet
@@ -32,7 +49,7 @@ namespace st3{
     @return reference to the resulting packet
   */
   template<typename ID, typename T>
-    sf::Packet& operator <<(sf::Packet& packet, const hm_t<ID, T> &g);
+  sf::Packet& operator <<(sf::Packet& packet, const hm_t<ID, T> &g);
 
   /*! stream a hm_t out of a packet
     @param packet the packet
@@ -40,7 +57,14 @@ namespace st3{
     @return reference to the resulting packet
   */
   template<typename ID, typename T>
-    sf::Packet& operator >>(sf::Packet& packet, hm_t<ID, T> &g);
+  sf::Packet& operator >>(sf::Packet& packet, hm_t<ID, T> &g);
+
+  template<typename T>
+  sf::Packet& operator <<(sf::Packet& packet, const cost::allocation<T> &g);
+
+  template<typename T>
+  sf::Packet& operator >>(sf::Packet& packet, cost::allocation<T> &g);
+
 
   /* **************************************** */
   /*   GAME DATA OBJECTS */
@@ -81,14 +105,14 @@ namespace st3{
     @param g the object to stream
     @return reference to the resulting packet
   */
-  sf::Packet& operator <<(sf::Packet& packet, const choice &c);
+  sf::Packet& operator <<(sf::Packet& packet, const choice::choice &c);
 
   /*! stream a choice out of a packet
     @param packet the packet
     @param g the object to stream
     @return reference to the resulting packet
   */
-  sf::Packet& operator >>(sf::Packet& packet, choice &c);
+  sf::Packet& operator >>(sf::Packet& packet, choice::choice &c);
 
   /*! stream a waypoint into packet
     @param packet the packet
@@ -132,6 +156,20 @@ namespace st3{
   */
   sf::Packet& operator >>(sf::Packet& packet, ship &g);
 
+  /*! stream a turret into packet
+    @param packet the packet
+    @param g the object to stream
+    @return reference to the resulting packet
+  */
+  sf::Packet& operator <<(sf::Packet& packet, const turret &g);
+
+  /*! stream a turret out of a packet
+    @param packet the packet
+    @param g the object to stream
+    @return reference to the resulting packet
+  */
+  sf::Packet& operator >>(sf::Packet& packet, turret &g);
+
   /*! stream a solar into packet
     @param packet the packet
     @param g the object to stream
@@ -151,14 +189,14 @@ namespace st3{
     @param g the object to stream
     @return reference to the resulting packet
   */
-  sf::Packet& operator <<(sf::Packet& packet, const solar::choice_t &g);
+  sf::Packet& operator <<(sf::Packet& packet, const choice::c_solar &g);
 
   /*! stream a solar choice out of a packet
     @param packet the packet
     @param g the object to stream
     @return reference to the resulting packet
   */
-  sf::Packet& operator >>(sf::Packet& packet, solar::choice_t &g);
+  sf::Packet& operator >>(sf::Packet& packet, choice::c_solar &g);
 
   /*! stream a fleet into packet
     @param packet the packet
@@ -207,13 +245,27 @@ namespace st3{
     @param g the object to stream
     @return reference to the resulting packet
   */
-  sf::Packet& operator <<(sf::Packet& packet, const research &g);
+  sf::Packet& operator <<(sf::Packet& packet, const research::data &g);
 
   /*! stream a research out of a packet
     @param packet the packet
     @param g the object to stream
     @return reference to the resulting packet
   */
-  sf::Packet& operator >>(sf::Packet& packet, research &g);
+  sf::Packet& operator >>(sf::Packet& packet, research::data &g);
+
+  /*! stream a resource_data into a packet
+    @param packet the packet
+    @param g the object to stream
+    @return reference to the resulting packet
+  */
+  sf::Packet& operator <<(sf::Packet& packet, const cost::resource_data &g);
+
+  /*! stream a resource_data out of a packet
+    @param packet the packet
+    @param g the object to stream
+    @return reference to the resulting packet
+  */
+  sf::Packet& operator >>(sf::Packet& packet, cost::resource_data &g);
 };
 #endif

@@ -1,1 +1,1 @@
-SUBDIRS = external/src/SFML external/src/TGUI docs src
+SUBDIRS = external/src/SFML docs src

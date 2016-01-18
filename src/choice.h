@@ -6,12 +6,12 @@
 #include "types.h"
 #include "command.h"
 #include "solar.h"
+#include "waypoint.h"
 
 namespace st3{
   /*! struct representing what a player can chose */
   namespace choice{ 
     const int max_allocation = 10;
-
     
     struct c_research{
       std::string identifier;
@@ -35,7 +35,6 @@ namespace st3{
 
       c_solar();
       void normalize(); // normalize to proportions
-      sfloat count_allocation();
     };
 
     struct choice{

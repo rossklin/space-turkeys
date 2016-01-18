@@ -1,5 +1,6 @@
 #include <iostream>
 #include <set>
+
 #include "serialization.h"
 
 using namespace std;
@@ -39,7 +40,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<ID, T> &g){
 
 // packet stream ops for list-like container
 template<typename T>
-sf::Packet& st3::operator <<(sf::Packet& packet, const T &container){
+sf::Packet& st3::inner_iterated_insert(sf::Packet& packet, const T &container){
   bool res = true;
   sint n = container.size();
   res &= (bool)(packet << n);
@@ -51,7 +52,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const T &container){
 }
 
 template<typename T>
-sf::Packet& st3::operator >>(sf::Packet& packet, T &container){
+sf::Packet& st3::inner_iterated_extract(sf::Packet& packet, T &container){
   sint n;
   bool res = true;
 
@@ -65,6 +66,36 @@ sf::Packet& st3::operator >>(sf::Packet& packet, T &container){
 
   return packet;
 }
+
+template<typename T>
+sf::Packet& st3::operator <<(sf::Packet& packet, const std::list<T> &container){return inner_iterated_insert(packet, container);}
+
+template<typename T>
+sf::Packet& st3::operator >>(sf::Packet& packet, std::list<T> &container){return inner_iterated_extract(packet, container);}
+
+template<typename T>
+sf::Packet& st3::operator <<(sf::Packet& packet, const std::vector<T> &container){return inner_iterated_insert(packet, container);}
+
+template<typename T>
+sf::Packet& st3::operator >>(sf::Packet& packet, std::vector<T> &container){return inner_iterated_extract(packet, container);}
+
+template<typename T>
+sf::Packet& st3::operator <<(sf::Packet& packet, const std::set<T> &container){return inner_iterated_insert(packet, container);}
+
+template<typename T>
+sf::Packet& st3::operator >>(sf::Packet& packet, std::set<T> &container){return inner_iterated_extract(packet, container);}
+
+// packet stream ops for cost::allocation
+template<typename T>
+sf::Packet& st3::operator <<(sf::Packet& packet, const cost::allocation<T> &g){
+  return packet << g.data;
+}
+
+template<typename T>
+sf::Packet& st3::operator >>(sf::Packet& packet, cost::allocation<T> &g){
+  return packet >> g.data;
+}
+
 
 // ****************************************
 // SPECIFIC STRUCT STREAM OPS
@@ -129,52 +160,71 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
     >> g.interaction_radius;
 }
 
+// turret
+sf::Packet& st3::operator <<(sf::Packet& packet, const turret &g){
+  return packet 
+    << g.turret_class
+    << g.range
+    << g.vision
+    << g.damage
+    << g.hp;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, turret &g){
+  return packet 
+    >> g.turret_class
+    >> g.range
+    >> g.vision
+    >> g.damage
+    >> g.hp;
+}
+
 // solar
 sf::Packet& st3::operator <<(sf::Packet& packet, const solar::solar &g){
   return packet
-    << g.population_number
-    << g.population_happy
-    << g.usable_area
-    << g.resource
-    << g.industry
-    << g.resource_storage
-    << g.new_research
     << g.fleet_growth
-    << g.ships
-    << g.position
-    << g.owner
-    << g.radius
-    << g.defense_current
-    << g.defense_capacity
-    << g.vision;
+    << g.turret_growth
+    << g.turrets
+    << g.research
+    << g.water
+    << g.space
+    << g.ecology
+    << g.resource
+    << g.sector
+    << g.population;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, solar::solar &g){
   return packet
-    >> g.population_number
-    >> g.population_happy
-    >> g.usable_area
-    >> g.resource
-    >> g.industry
-    >> g.resource_storage
-    >> g.new_research
     >> g.fleet_growth
-    >> g.ships
-    >> g.position
-    >> g.owner
-    >> g.radius
-    >> g.defense_current
-    >> g.defense_capacity
-    >> g.vision;
+    >> g.turret_growth
+    >> g.turrets
+    >> g.research
+    >> g.water
+    >> g.space
+    >> g.ecology
+    >> g.resource
+    >> g.sector
+    >> g.population;
 }
 
 // solar choice
-sf::Packet& st3::operator <<(sf::Packet& packet, const solar::choice_t &g){
-  return packet << g.workers << g.sector << g.subsector;
+sf::Packet& st3::operator <<(sf::Packet& packet, const choice::c_solar &g){
+  return packet
+    << g.allocation
+    << g.military.c_ship
+    << g.military.c_turret
+    << g.mining
+    << g.expansion;
 }
 
-sf::Packet& st3::operator >>(sf::Packet& packet, solar::choice_t &g){
-  return packet >> g.workers >> g.sector >> g.subsector;
+sf::Packet& st3::operator >>(sf::Packet& packet, choice::c_solar &g){
+  return packet
+    >> g.allocation
+    >> g.military.c_ship
+    >> g.military.c_turret
+    >> g.mining
+    >> g.expansion;
 }
 
 // fleet
@@ -187,11 +237,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
 }
 
 // choice
-sf::Packet& st3::operator <<(sf::Packet& packet, const choice &c){
+sf::Packet& st3::operator <<(sf::Packet& packet, const choice::choice &c){
   return packet << c.commands << c.solar_choices << c.waypoints;
 }
 
-sf::Packet& st3::operator >>(sf::Packet& packet, choice &c){
+sf::Packet& st3::operator >>(sf::Packet& packet, choice::choice &c){
   return packet >> c.commands >> c.solar_choices >> c.waypoints;
 }
 
@@ -235,10 +285,18 @@ sf::Packet& st3::operator >>(sf::Packet& packet, player &c){
 }
 
 // research
-sf::Packet& st3::operator <<(sf::Packet& packet, const research &c){
-  return packet << c.field;
+sf::Packet& st3::operator <<(sf::Packet& packet, const research::data &c){
+  return packet << c.x;
 }
 
-sf::Packet& st3::operator >>(sf::Packet& packet, research &c){
-  return packet >> c.field;
+sf::Packet& st3::operator >>(sf::Packet& packet, research::data &c){
+  return packet >> c.x;
+}
+
+sf::Packet& st3::operator <<(sf::Packet& packet, const cost::resource_data &g){
+  return packet << g.available << g.storage;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, cost::resource_data &g){
+  return packet >> g.available >> g.storage;
 }

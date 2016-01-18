@@ -39,7 +39,7 @@ namespace st3{
 
       hm_t<idtype, player> players; /*!< data for players in the game */
       hm_t<idtype, ship> ships; /*!< data for ships in the game */
-      hm_t<source_t, solar::choice_t> solar_choices; /*!< stored choices for solars */
+      hm_t<source_t, choice::c_solar> solar_choices; /*!< stored choices for solars */
       hm_t<source_t, entity_selector*> entity_selectors; /*!< graphical representations for solars, fleets and waypoints */
       hm_t<idtype, command_selector*> command_selectors; /*!< graphical representations for commands */
       int selector_queue; /*!< index for back end of selector queue */
@@ -81,7 +81,7 @@ namespace st3{
       /*! make a choice from the user interface
 	@return the choice
       */
-      choice build_choice();
+      choice::choice build_choice(choice::choice c);
 
       /*! update gui with new game data
 	@param g the game data

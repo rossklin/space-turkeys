@@ -61,16 +61,16 @@ void solar_selector::draw(window_t &w){
   text.setOrigin(point(text_dims.left + text_dims.width/2, text_dims.top + text_dims.height / 2));
   text.setPosition(position); 
   text.setColor(sf::Color(200,200,200));
-  text.setScale(utility::inverse_scale(w));
+  text.setScale(graphics::inverse_scale(w));
 
   sf::CircleShape sol(radius);
   // compute fill color
   sf::Color cfill;
-  cfill.r = 256 * utility::sigmoid(resource[st3::solar::resource_metal] / 1000);
-  cfill.g = 256 * utility::sigmoid(resource[st3::solar::resource_organics] / 1000);
-  cfill.b = 256 * utility::sigmoid(resource[st3::solar::resource_gas] / 1000);
+  cfill.r = 256 * utility::sigmoid(resource[cost::keywords::key_metals].available / 1000);
+  cfill.g = 256 * utility::sigmoid(resource[cost::keywords::key_organics].available / 1000);
+  cfill.b = 256 * utility::sigmoid(resource[cost::keywords::key_gases].available / 1000);
   cfill.a = 100;
-  sol.setPointCount(radius / utility::inverse_scale(w).x);
+  sol.setPointCount(radius / graphics::inverse_scale(w).x);
   sol.setFillColor(cfill);
   sol.setOutlineThickness(-1);
   sol.setOutlineColor(get_color());
@@ -85,12 +85,12 @@ void solar_selector::draw(window_t &w){
   }
 
   if (owned){
-    sol.setRadius(vision);
-    sol.setPointCount(vision / utility::inverse_scale(w).x);
+    sol.setRadius(compute_vision());
+    sol.setPointCount(compute_vision() / graphics::inverse_scale(w).x);
     sol.setFillColor(sf::Color::Transparent);
     sol.setOutlineThickness(-1);
     sol.setOutlineColor(sf::Color(40, 200, 60, 100));
-    sol.setPosition(position - point(vision, vision));
+    sol.setPosition(position - point(compute_vision(), compute_vision()));
     w.draw(sol);
     w.draw(text);
   }
@@ -98,8 +98,8 @@ void solar_selector::draw(window_t &w){
   // draw defense indicator
   float defrad = radius + 4; 
   sol.setRadius(defrad);
-  sol.setPointCount(defrad / utility::inverse_scale(w).x);
-  sol.setOutlineThickness(utility::sigmoid(defense_current, 100) / 20);
+  sol.setPointCount(defrad / graphics::inverse_scale(w).x);
+  sol.setOutlineThickness(utility::sigmoid(has_defense(), 100) / 20);
   sol.setOutlineColor(sf::Color(100, 140, 200, 150));
   sol.setFillColor(sf::Color::Transparent);
   sol.setPosition(position - point(defrad, defrad));
@@ -134,7 +134,7 @@ point fleet_selector::get_position(){
 void fleet_selector::draw(window_t &w){
   if (selected){
     sf::CircleShape s(radius);
-    s.setPointCount(radius / utility::inverse_scale(w).x);
+    s.setPointCount(radius / graphics::inverse_scale(w).x);
     s.setFillColor(graphics::fleet_fill);
     s.setOutlineColor(graphics::fleet_outline);
     s.setOutlineThickness(1);
@@ -144,7 +144,7 @@ void fleet_selector::draw(window_t &w){
 
   if (owned){
     sf::CircleShape s(vision);
-    s.setPointCount(vision / utility::inverse_scale(w).x);
+    s.setPointCount(vision / graphics::inverse_scale(w).x);
     s.setFillColor(sf::Color::Transparent);
     s.setOutlineColor(sf::Color(40, 200, 60, 100));
     s.setOutlineThickness(-1);
@@ -236,7 +236,7 @@ void command_selector::draw(window_t &w){
   // text.setStyle(sf::Text::Underlined);
   sf::FloatRect text_dims = text.getLocalBounds();
   text.setPosition(utility::scale_point(to + from, 0.5) - point(text_dims.width/2, text_dims.height + 10));
-  text.setScale(utility::inverse_scale(w));
+  text.setScale(graphics::inverse_scale(w));
 
   // setup arrow colors
   if (selected){

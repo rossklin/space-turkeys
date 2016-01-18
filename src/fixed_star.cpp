@@ -17,7 +17,7 @@ st3::client::fixed_star::fixed_star(point p) {
 void st3::client::fixed_star::draw(st3::window_t &w) {
 	sf::CircleShape star(radius);
 	
-	star.setRadius(radius * utility::inverse_scale(w).x);
+	star.setRadius(radius * graphics::inverse_scale(w).x);
 	star.setPointCount(10);
 	star.setFillColor(color);
 	star.setPosition(position.x - radius, position.y - radius);

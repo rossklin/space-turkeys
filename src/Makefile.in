@@ -96,7 +96,7 @@ am_st_client_OBJECTS = client.$(OBJEXT) graphics.$(OBJEXT) \
 	command_gui.$(OBJEXT) game_settings.$(OBJEXT) \
 	serialization.$(OBJEXT) socket_t.$(OBJEXT) command.$(OBJEXT) \
 	utility.$(OBJEXT) types.$(OBJEXT) target_gui.$(OBJEXT) \
-	choice.$(OBJEXT)
+	choice.$(OBJEXT) cost.$(OBJEXT)
 st_client_OBJECTS = $(am_st_client_OBJECTS)
 st_client_LDADD = $(LDADD)
 am_st_server_OBJECTS = game_data.$(OBJEXT) server.$(OBJEXT) \
@@ -104,7 +104,8 @@ am_st_server_OBJECTS = game_data.$(OBJEXT) server.$(OBJEXT) \
 	grid_tree.$(OBJEXT) fleet.$(OBJEXT) solar.$(OBJEXT) \
 	research.$(OBJEXT) game_settings.$(OBJEXT) \
 	serialization.$(OBJEXT) socket_t.$(OBJEXT) command.$(OBJEXT) \
-	utility.$(OBJEXT) types.$(OBJEXT)
+	utility.$(OBJEXT) types.$(OBJEXT) cost.$(OBJEXT) \
+	choice.$(OBJEXT)
 st_server_OBJECTS = $(am_st_server_OBJECTS)
 st_server_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -257,8 +258,8 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-st_server_SOURCES = game_data.cpp server.cpp game_handler.cpp com_server.cpp grid_tree.cpp fleet.cpp solar.cpp research.cpp game_settings.cpp serialization.cpp socket_t.cpp command.cpp utility.cpp types.cpp
-st_client_SOURCES = client.cpp graphics.cpp client_game.cpp com_client.cpp selector.cpp research.cpp fixed_star.cpp fleet.cpp solar.cpp game_data.cpp grid_tree.cpp command_gui.cpp game_settings.cpp serialization.cpp socket_t.cpp command.cpp utility.cpp types.cpp target_gui.cpp choice.cpp
+st_server_SOURCES = game_data.cpp server.cpp game_handler.cpp com_server.cpp grid_tree.cpp fleet.cpp solar.cpp research.cpp game_settings.cpp serialization.cpp socket_t.cpp command.cpp utility.cpp types.cpp cost.cpp choice.cpp
+st_client_SOURCES = client.cpp graphics.cpp client_game.cpp com_client.cpp selector.cpp research.cpp fixed_star.cpp fleet.cpp solar.cpp game_data.cpp grid_tree.cpp command_gui.cpp game_settings.cpp serialization.cpp socket_t.cpp command.cpp utility.cpp types.cpp target_gui.cpp choice.cpp cost.cpp
 all: all-am
 
 .SUFFIXES:
@@ -357,6 +358,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/com_server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/command.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/command_gui.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cost.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fixed_star.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fleet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/game_data.Po@am__quote@

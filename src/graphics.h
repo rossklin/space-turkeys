@@ -62,6 +62,39 @@ namespace st3{
     */
     void draw_ship(window_t &w, ship s, sf::Color c, float sc = 1);
 
+    
+    /* **************************************** */
+    /* SFML STUFF */
+    /* **************************************** */
+
+    /*! build and sfml rectangle shape from given bounds
+      @param r bounds
+      @return an sf::RectangleShape with size and position from r
+    */
+    sf::RectangleShape build_rect(sf::FloatRect r);
+
+    /*! compute coordinates of the upper left corner of the current view
+      @param w window to get the view from
+      @return coordinates corresponding to UL corner of current view of w
+    */
+    point ul_corner(window_t &w);
+
+    /*! compute an sf::Transform mapping from coordinates to pixels
+      @param w the current window
+      @return the transform
+    */
+    sf::Transform view_inverse_transform(window_t &w);
+
+    /*! compute the scale factor coordinates per pixel
+
+      such that coord_dims = inverse_scale() * pixel_dims
+      
+      @param w the current window
+      @return point containing x and y scales
+    */
+    point inverse_scale(window_t &w);
+
+
     namespace interface{
 
       // base class for choice windows
@@ -69,6 +102,7 @@ namespace st3{
       class query : public C{
       public:
 	R response;
+	query();
       };
 
       // bottom panel
@@ -77,14 +111,15 @@ namespace st3{
 	typedef std::shared_ptr<bottom_panel> Ptr;
 	typedef std::shared_ptr<const bottom_panel> PtrConst;
 
-	static Ptr Create();
+	static Ptr Create(bool &a, bool &b);
 	
-      protected:
-	bottom_panel();	
+      protected:	
+	bottom_panel(bool &a, bool &b);	
       };
 
       // top panel
       class top_panel : public sfg::Window{
+      public:
 	typedef std::shared_ptr<top_panel> Ptr;
 	typedef std::shared_ptr<const top_panel> PtrConst;
 
@@ -100,58 +135,68 @@ namespace st3{
 	typedef std::shared_ptr<research_window> Ptr;
 	typedef std::shared_ptr<const research_window> PtrConst;
 
-	static Ptr Create(choice::c_research c);
+	static Ptr Create(choice::c_research *c);
 	
       protected:
-	research_window(choice::c_research c);
+	research_window(choice::c_research *c);
       };
 
       // solar choice windows
       namespace solar_query{
+	class boxed : public sfg::Container{
+	public:
+	  const std::string& GetName() const;
+	  sf::Vector2f CalculateRequisition();
+
+	protected:
+	  boxed(sfg::Box::Orientation o);
+	  sfg::Box::Ptr layout;
+	};
+	
 	// military choice sub window
-	class military : public query<sfg::Box, choice::c_military*>{
+	class military : public boxed{
 	public:      
 	  typedef std::shared_ptr<military> Ptr;
 	  typedef std::shared_ptr<const military> PtrConst;
 
-	  static Ptr Create(choice::c_military *c);
+	  static Ptr Create(choice::c_military &c);
 	
 	protected:
-	  military(choice::c_military *c);
+	  military(choice::c_military &c);
 	};
 
 	// mining choice sub window
-	class mining : public query<sfg::Box, choice::c_mining*>{
+	class mining : public boxed{
 	public:      
 	  typedef std::shared_ptr<mining> Ptr;
 	  typedef std::shared_ptr<const mining> PtrConst;
 
-	  static Ptr Create(choice::c_mining *c);
+	  static Ptr Create(choice::c_mining &c);
 	
 	protected:
-	  mining(choice::c_mining *c);
+	  mining(choice::c_mining &c);
 	};
 
 	// mining choice sub window
-	class expansion : public query<sfg::Box, choice::c_expansion*>{
+	class expansion : public boxed{
 	public:      
 	  typedef std::shared_ptr<expansion> Ptr;
 	  typedef std::shared_ptr<const expansion> PtrConst;
 
-	  static Ptr Create(choice::c_expansion *c);
+	  static Ptr Create(choice::c_expansion &c);
 	
 	protected:
-	  expansion(choice::c_expansion *c);
+	  expansion(choice::c_expansion &c);
 	};
 
 	// main window
-	class main_window : query<sfg::Window, choice::c_solar>{
+	class main_window : public query<sfg::Window, choice::c_solar>{
 	  // sub interface tracker
 	  sfg::Widget::Ptr sub_window;
-
-	  // layout
+  
 	  sfg::Box::Ptr layout;
-	  
+	  sfg::Box::Ptr selection_layout;
+
 	public:
 	  typedef std::shared_ptr<query> Ptr;
 	  typedef std::shared_ptr<const query> PtrConst;

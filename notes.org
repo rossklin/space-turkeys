@@ -1,6 +1,13 @@
 * currently working on
 ** rewrite solar/gui
+*** check choice sub allocation for military
+*** check template instantiation
 *** research structure
+*** new command gui and target gui
+*** check that serializations still matche content
+*** check that all initialize-functions are called
+*** move keywords and allocations to "types.h"
+*** [done] consider adding named string constants for sub sectors etc.
 *** [done] add a turret class
 *** [done] implement vectorised allocation templates in graphics.cpp
 *** [done] apply updated solar (choice) structure in solar_tick
@@ -13,7 +20,7 @@
 *** [done] give solar sub query windows a data return reference
 *** [done] client_game::build_choice should build main_interface
 *** [done] client_game::build_choice should run interface event/draw loop
-** move solar choice to choice
+** consider making ship sub classes for e.g. colonizer population
 ** targui should only appear when multiple targets are available
 ** solar happy update does not match happy_increment
 ** command selectors drawn on top of each other
@@ -128,6 +135,10 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+*** c_solar::normalize uses countable_allocation::normalize
+*** fixed compile step errors
+*** [done] consider adding named string constants for sub sectors etc.
+*** fix: serialization templates prefer general over specific
 * fixed
 ** made specific allocation classes
 ** [done] add a turret class

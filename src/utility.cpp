@@ -1,5 +1,5 @@
 #include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_01.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
 #include <boost/random/normal_distribution.hpp>
 
 #include "utility.h"
@@ -9,7 +9,6 @@ using namespace st3;
 using namespace st3::utility;
 
 boost::random::mt19937 rng;
-boost::random::uniform_01<float> unidist;
 
 // ****************************************
 // POINT ARITHMETICS
@@ -83,15 +82,23 @@ point st3::operator +(const point &a, const point &b){
   return point(a.x + b.x, a.y + b.y);
 }
 
-// random float ~U(0,1)
-float utility::random_uniform(){
-  return unidist(rng);
+// normal ~N(m,s)
+float utility::random_normal(float m, float s){
+  boost::random::normal_distribution<float> dist(m,s);
+  return dist(rng);
+}
+
+// random float ~U(a,b)
+float utility::random_uniform(float a, float b){
+  boost::random::uniform_real_distribution<float> dist(a,b);
+  return dist(rng);
 }
 
 // vector of n random floats ~U(0,1) 
-vector<float> utility::random_uniform(int n){
+vector<float> utility::random_uniform_vector(int n, float a, float b){
+  boost::random::uniform_real_distribution<float> dist(a,b);
   vector<float> res(n);
-  for (auto &x : res) x = unidist(rng);
+  for (auto &x : res) x = dist(rng);
   return res;
 }
 
@@ -119,37 +126,6 @@ bool utility::point_between(point a, point p, point q){
 // normalized point with angle a to x-axis
 point utility::normv(float a){
   return point(cos(a), sin(a));
-}
-
-// sfml stuff
-// make an sf::RectangleShape with given bounds
-sf::RectangleShape utility::build_rect(sf::FloatRect bounds){
-  sf::RectangleShape r;
-  r.setSize(sf::Vector2f(bounds.width, bounds.height));
-  r.setPosition(sf::Vector2f(bounds.left, bounds.top));
-  return r;
-}
-
-// point coordinates of view ul corner
-point utility::ul_corner(window_t &w){
-  sf::View v = w.getView();
-  return v.getCenter() - utility::scale_point(v.getSize(), 0.5);
-}
-
-// transform from pixels to points
-sf::Transform utility::view_inverse_transform(window_t &w){
-  sf::Transform t;
-  sf::View v = w.getView();
-
-  t.translate(ul_corner(w));
-  t.scale(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
-  return t;
-}
-
-// scale from pixels to points
-point utility::inverse_scale(window_t &w){
-  sf::View v = w.getView();
-  return point(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
 }
 
 // vector maths
@@ -226,7 +202,7 @@ vector<sint> utility::different_colors(int n){
   vector<vector<float> > buf(ncheck);
 
   for (auto &x : buf) {
-    x = utility::random_uniform(3);
+    x = utility::random_uniform_vector(3);
   }
 
   buf[n] = {0,0,0}; // space color

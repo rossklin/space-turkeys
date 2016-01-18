@@ -23,16 +23,17 @@ command_gui::command_gui(idtype cid, window_t *window, hm_t<idtype, ship> s, set
   comid = cid;
   header_string = hstring;
   table_width = 0.4 * (dims.x - 2 * (padding + margin));
-  table_height = (dims.y - header_height - 2 * (padding + margin)) / solar::ship_num;
+  table_height = (dims.y - header_height - 2 * (padding + margin)) / cost::keywords::ship.size();
   bounds = sf::FloatRect(p.x, p.y, table_width + 2 * padding, dims.y - 2 * margin);
 
-  tables.resize(solar::ship_num);
-  for (int i = 0; i < solar::ship_num; i++){
+  tables.resize(cost::keywords::ship.size());
+  int i = 0;
+  for (auto v : cost::keywords::ship){
     // collect data for this ship class table
     hm_t<idtype, ship> sbuf;
     set<idtype> pbuf;
     for (auto x : s){
-      if (x.second.ship_class == i) {
+      if (x.second.ship_class == v) {
 	sbuf[x.first] = x.second;
 	if (prealloc.count(x.first)) pbuf.insert(x.first);
       }
@@ -40,6 +41,7 @@ command_gui::command_gui(idtype cid, window_t *window, hm_t<idtype, ship> s, set
     point x = p + point(padding, padding + header_height + i * table_height);
 
     tables[i] = command_table(w, sbuf, pbuf, x, c);
+    i++;
   }
 }
 
@@ -59,7 +61,7 @@ bool command_gui::handle_event(sf::Event e){
 
 void command_gui::draw(){
   // draw root box
-  sf::RectangleShape r = utility::build_rect(bounds);
+  sf::RectangleShape r = graphics::build_rect(bounds);
   r.setFillColor(sf::Color(20, 180, 50, 40));
   r.setOutlineColor(sf::Color(80, 120, 240, 200));
   r.setOutlineThickness(1);
@@ -160,19 +162,19 @@ command_table::command_table(window_t *window, hm_t<idtype, ship> s, set<idtype>
 
 void command_table::draw(){
   // draw root box
-  sf::RectangleShape r = utility::build_rect(bounds);
+  sf::RectangleShape r = graphics::build_rect(bounds);
   r.setFillColor(sf::Color(20, 180, 50, 40));
   r.setOutlineColor(sf::Color(80, 120, 240, 200));
   r.setOutlineThickness(1);
   w -> draw(r);
 
   // draw inner boxes
-  r = utility::build_rect(cache_bounds);
+  r = graphics::build_rect(cache_bounds);
   r.setFillColor(sf::Color(40, 120, 80, 40));
   r.setOutlineColor(sf::Color(80, 120, 240, 200));
   r.setOutlineThickness(1);
   w -> draw(r);
-  r = utility::build_rect(alloc_bounds);
+  r = graphics::build_rect(alloc_bounds);
   r.setFillColor(sf::Color(40, 120, 80, 40));
   r.setOutlineColor(sf::Color(80, 120, 240, 200));
   r.setOutlineThickness(1);

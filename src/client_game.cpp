@@ -10,12 +10,10 @@
 #include "protocol.h"
 #include "serialization.h"
 #include "utility.h"
-#include "solar_gui.h"
 
 using namespace std;
 using namespace st3;
 using namespace client;
-using namespace graphics::interface;
 
 sf::FloatRect fixrect(sf::FloatRect r);
 bool add2selection();
@@ -46,8 +44,6 @@ void st3::client::game::run(){
   view_minimap = view_game;
   view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
   view_window = window.getDefaultView();
-
-  st3::solar::initialize();
 
   // game loop
   while (true){
@@ -163,7 +159,7 @@ void st3::client::game::choice_step(){
   // CREATE THE CHOICE (USER INTERFACE)
 
   // construct interface
-  main_interface gui(window.getSize(), players[socket.id].research);
+  graphics::interface::main_interface gui(window.getSize(), players[socket.id].research_level);
   sf::Clock clock;
 
   while (!done){
@@ -211,7 +207,7 @@ void st3::client::game::choice_step(){
   message = "sending choice to server...";
 
   // add commands to choice
-  choice c = build_choice(gui.response);
+  choice::choice c = build_choice(gui.response);
   done = query_query;
   pq << protocol::choice;
   pq << c;
@@ -327,7 +323,7 @@ command st3::client::game::build_command(idtype key){
   return (command)*command_selectors[key];
 }
 
- choice st3::client::game::build_choice(choice::choice c){
+ choice::choice st3::client::game::build_choice(choice::choice c){
   cout << "build choice:" << endl;
   for (auto x : entity_selectors){
     if (x.second -> isa(identifier::waypoint)){
@@ -443,7 +439,7 @@ void st3::client::game::reload_data(game_data &g){
     if (entity_selectors.count(key)) delete entity_selectors[key];
     entity_selectors[key] = new solar_selector(x.second, col, x.second.owner == socket.id);
     entity_selectors[key] -> seen = true;
-    if (x.second.owner == socket.id) add_fixed_stars (x.second.position, x.second.vision);
+    if (x.second.owner == socket.id) add_fixed_stars (x.second.position, x.second.compute_vision());
 
     cout << " -> update solar " << x.first << endl;
   }
@@ -958,7 +954,7 @@ void game::run_solar_gui(source_t key){
     exit(-1);
   }
 
-  interface::desktop -> reset_qw(interface::solar_query::main_window::Create(identifer::get_id(key), sol));
+  graphics::interface::desktop -> reset_qw(graphics::interface::solar_query::main_window::Create(identifier::get_id(key), sol));
 }
 
 // return true to signal choice step done
@@ -1043,7 +1039,7 @@ int st3::client::game::choice_event(sf::Event e){
       for (auto x : entity_selectors){
 	if (x.second -> selected){
 	  for (auto i : x.second -> get_ships()){
-	    has_colonizer |= ships[i].ship_class == solar::ship_colonizer;
+	    has_colonizer |= ships[i].ship_class == "colonizer";
 	  }
 	}
       }
@@ -1072,7 +1068,7 @@ int st3::client::game::choice_event(sf::Event e){
 	      solar_selector *ss = (solar_selector*)e;
 	      options.push_back(target_gui::option_t(x, command::action_attack));
 	      if (ss -> owner == -1 
-		  && ss -> defense_current <= 0
+		  && !ss -> has_defense()
 		  && has_colonizer){
 		// undefended neutral solar
 		options.push_back(target_gui::option_t(x, command::action_colonize));
@@ -1167,7 +1163,7 @@ void game::draw_window(){
 
   // draw main interface
   window.setView(view_game);
-  point ul = utility::ul_corner(window);
+  point ul = graphics::ul_corner(window);
   draw_universe();
   draw_interface_components();
 
@@ -1226,7 +1222,7 @@ void game::draw_interface_components(){
 
   if (area_select_active && srect.width && srect.height){
     // draw selection rect
-    sf::RectangleShape r = utility::build_rect(srect);
+    sf::RectangleShape r = graphics::build_rect(srect);
     r.setFillColor(sf::Color(250,250,250,50));
     r.setOutlineColor(sf::Color(80, 120, 240, 200));
     r.setOutlineThickness(1);

@@ -21,8 +21,6 @@ void st3::server::game_handler(com c, game_data g){
   vector<sf::Packet> packets(c.clients.size());
   int frame_count;
   unsigned int i;
-
-  st3::solar::initialize();
   
   p_confirm << protocol::confirm;
 
@@ -64,7 +62,7 @@ void st3::server::game_handler(com c, game_data g){
     c.check_protocol(protocol::choice, p_confirm);
 
     for (i = 0; i < c.clients.size(); i++){
-      choice ch;
+      choice::choice ch;
       if (*c.clients[i].data >> ch){
 	g.apply_choice(ch, c.clients[i].id);
       }else{

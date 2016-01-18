@@ -3,6 +3,7 @@
 
 #include <set>
 #include <vector>
+#include <list>
 
 #include "types.h"
 #include "ship.h"
@@ -13,6 +14,8 @@ namespace st3{
   /*! types and functions related to solars */
   namespace solar{
     extern idtype id_counter;
+    const float f_growth = 1;
+    const float f_crowding = 1;
 
     /*! data representing a solar system */
     struct solar{
@@ -28,19 +31,15 @@ namespace st3{
       /*! amount of research produced */
       sfloat research;
 
-      /*! nr of homes available to live in */
-      sfloat housing;
       sfloat water;
       sfloat space;
+      sfloat ecology;
       
       /*! amount of each resource */
       cost::resource_allocation<cost::resource_data> resource;
 
       /*! development of each sector */
       cost::sector_allocation<sfloat> sector;
-
-      /*! ecosystem status */
-      sfloat ecology;
 
       /*! number of inhabitants */
       sfloat population;

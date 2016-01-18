@@ -4,48 +4,80 @@
 #include "research.h"
 #include "solar.h"
 #include "utility.h"
+#include "cost.h"
 
 using namespace std;
 using namespace st3;
 using namespace solar;
 
-float solar::resource_constraint(vmap r){
+float solar::solar::resource_constraint(cost::resource_allocation<sfloat> r){
   float m = INFINITY;
 
-  for (auto x : r) {
-    if (r.second > 0) m = fmin(m, resource[r.first] / r.second);
-  }
+  for (auto v : cost::keywords::resource)
+    if (r[v] > 0) m = fmin(m, resource[v].available / r[v]);
 
   return m;
 }
 
-st3::solar::solar::solar(){}
+solar::solar::solar(){}
 
-string st3::solar::solar::get_info(){
+string solar::solar::get_info(){
   stringstream ss;
   // ss << "fleet_growth: " << fleet_growth << endl;
   // ss << "new_research: " << new_research << endl;
   // ss << "industry: " << industry << endl;
   // ss << "resource storage: " << resource_storage << endl;
-  ss << "pop: " << population << "(" << happieness << ")" << endl;
+  ss << "pop: " << population << "(" << happiness << ")" << endl;
   // ss << "resource: " << resource << endl;
   ss << "ships: " << ships.size() << endl;
-  ss << "defence: " << defense_current << "(" << defense_capacity << ")" << endl;
   return ss.str();
 }
 
-float st3::solar::solar::pop_increment(research const &r, float allocated){
-  float farmers = fmin(sector_capacity["agriculture"], allocated);
-  float food_cap = r.population.food_rate() * farmers;
+sfloat solar::solar::compute_vision(){
+  sfloat res = 0;
 
-  float feed = r.population.feed_rate() * (food_cap - population);
-  float crowding = r.crowding_rate() * (housing - population);
+  for (auto &x : turrets)
+    res = fmax(res, x.vision);
 
-  cout << "pop: " << population << ", happy: " << happieness << ", farmers: " << farmers << ", cap: " << food_cap << ", feed: " << feed << ", crowding: " << crowding << endl;
-
-  return (r.birth_rate() - r.death_rate() - crowding) * population + feed;
+  return res;
 }
 
-float st3::solar::solar::farmers_for_growthratio(float q, research const &r){
-  ...
+bool solar::solar::has_defense(){
+  return turrets.size() > 0;
+}
+
+void solar::solar::damage_turrets(float d){
+  float d0 = d;
+  if (turrets.empty()) return;
+
+  while (d > 0 && turrets.size() > 0){
+    for (auto i = turrets.begin(); d > 0 && i != turrets.end(); i++){
+      float k = fmin(utility::random_uniform(0, 0.1 * d0), d);
+      i -> hp -= k;
+      d -= k;
+      if (i -> hp <= 0) turrets.erase(i--);
+    }
+  }
+}
+
+// [0,1] evaluation of available free space
+float solar::solar::space_status(){
+  if (space <= 0) return 0;
+  
+  float used = 0;
+  for (auto v : cost::keywords::sector)
+    used += sector[v] * cost::sector_expansion[v].space;
+
+  return (space - used) / space;
+}
+
+// [0,1] evaluation of available water
+float solar::solar::water_status(){
+  if (water <= 0) return 0;
+  
+  float used = 0;
+  for (auto v : cost::keywords::sector)
+    used += sector[v] * cost::sector_expansion[v].water;
+
+  return (water - used) / water;
 }

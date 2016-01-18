@@ -5,10 +5,7 @@
 #include <vector>
 #include <set>
 
-#include <SFML/Graphics.hpp>
-
 #include "types.h"
-#include "graphics.h"
 
 namespace st3{
   /*! Arithmetics for points, vectors, sets and sfml objects. */
@@ -81,20 +78,22 @@ namespace st3{
       generates a random number normally distributed as (m, s)
       @return the random number
     */
-    float random_normal(float m, float s);
+    float random_normal(float m = 0, float s = 1);
 
     /*! 
-      generates a random number uniformly distributed in [0,1]
+      generates a random number uniformly distributed in [a, b]
+      @param a lower bound
+      @param b upper bound
       @return the random number
     */
-    float random_uniform();
+    float random_uniform(float a = 0, float b = 1);
     
     /*! 
       generates a vector of uniformly distributed values in [0,1]
       @param n size of vector to generate
       @return the vector
     */
-    std::vector<float> random_uniform(int n);
+    std::vector<float> random_uniform_vector(int n, float a = 0, float b = 1);
 
     /*! 
       generates a random point with gaussian distribution 
@@ -171,37 +170,6 @@ namespace st3{
       @return square root of sum of squares of x
     */
     float vl2norm(std::vector<float> const &x);
-
-    /* **************************************** */
-    /* SFML STUFF */
-    /* **************************************** */
-
-    /*! build and sfml rectangle shape from given bounds
-      @param r bounds
-      @return an sf::RectangleShape with size and position from r
-    */
-    sf::RectangleShape build_rect(sf::FloatRect r);
-
-    /*! compute coordinates of the upper left corner of the current view
-      @param w window to get the view from
-      @return coordinates corresponding to UL corner of current view of w
-    */
-    point ul_corner(window_t &w);
-
-    /*! compute an sf::Transform mapping from coordinates to pixels
-      @param w the current window
-      @return the transform
-    */
-    sf::Transform view_inverse_transform(window_t &w);
-
-    /*! compute the scale factor coordinates per pixel
-
-      such that coord_dims = inverse_scale() * pixel_dims
-      
-      @param w the current window
-      @return point containing x and y scales
-    */
-    point inverse_scale(window_t &w);
 
     /* **************************************** */
     /* MATHS */

@@ -68,7 +68,7 @@ bool st3::target_gui::handle_event(sf::Event e){
 }
 
 int st3::target_gui::compute_index(point p){
-  point scale = utility::inverse_scale(*window);
+  point scale = graphics::inverse_scale(*window);
   sf::FloatRect scaled_bounds(bounds.left, bounds.top, 
 			      bounds.width * scale.x,
 			      bounds.height * scale.y);
@@ -84,7 +84,7 @@ void st3::target_gui::draw(){
   vector<sf::Text> text(options.size());
   float max_width = 0;
   sf::RectangleShape r;
-  point scale = utility::inverse_scale(*window);
+  point scale = graphics::inverse_scale(*window);
   point boxdims(option_size.x * scale.x, option_size.y * scale.y);
 
   for (int i = 0; i < options.size(); i++){
