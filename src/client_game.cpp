@@ -191,7 +191,7 @@ void st3::client::game::choice_step(){
     gui.Update(delta);
 
     // draw sfgui
-    sfgui.Display(window);
+    sfgui -> Display(window);
 
     // display on screen
     window.display();

@@ -1,8 +1,11 @@
 * currently working on
 ** rewrite solar/gui
-*** check choice sub allocation for military
-*** check that serializations still match content
-*** check that all initialize-functions are called
+*** adding a Box::Ptr in a Window fails internally (graphics.cpp: 209)
+    error: bad_weak_ptr
+    std::shared_ptr (count 4, weak 2)
+
+    Probably caused by that methods are not called through a shared
+    pointer in the constructor? Move constructor to create method...
 *** move keywords and allocations to "types.h"
 *** [done] consider adding named string constants for sub sectors etc.
 *** [done] add a turret class
@@ -29,7 +32,9 @@
 *** prioritized build_[ship|turret]
     e.g. focus on any of stealth, damage, speed etc.
 ** new ships with trigger functions
-** consider making ship sub classes for e.g. colonizer population
+*** make a solar build queue
+**** ship/turret designer interface
+**** ship design focus/priority
 ** targui should only appear when multiple targets are available
 ** solar happy update does not match happy_increment
 ** command selectors drawn on top of each other
@@ -144,10 +149,13 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-*** figure out why file-global allocation sub classes init empty
+*** check that serializations still match content
+*** check choice sub allocation for military
+* fixed
+** check that all initialize-functions are called
+** figure out why file-global allocation sub classes init empty
     probably the keywords data they use is not initialized?
     moved to initializers
-* fixed
 ** c_solar::normalize uses countable_allocation::normalize
 ** fixed compile step errors
 ** [done] consider adding named string constants for sub sectors etc.

@@ -9,10 +9,6 @@ using namespace std;
 using namespace st3;
 using namespace cost;
 
-sector_allocation<sector_cost> &cost::sector_expansion;
-ship_allocation<ship_cost> &cost::ship_build;
-turret_allocation<turret_cost> &cost::turret_build;
-
 const vector<string> keywords::resource = {
   keywords::key_metals,
   keywords::key_organics,
@@ -83,93 +79,135 @@ void countable_allocation<T>::normalize(){
 
 // specific allocations
 
-template<typename T> ship_allocation<T>::ship_allocation() {allocation<T>::setup(keywords::ship);}
-template<typename T> turret_allocation<T>::turret_allocation() {allocation<T>::setup(keywords::turret);}
-template<typename T> resource_allocation<T>::resource_allocation() {allocation<T>::setup(keywords::resource);}
-template<typename T> sector_allocation<T>::sector_allocation() {allocation<T>::setup(keywords::sector);}
+template<typename T> ship_allocation<T>::ship_allocation() {
+  if (keywords::ship.empty()){
+    cout << "ship_allocation(): no keywords!" << endl;
+    exit(-1);
+  }
+  
+  allocation<T>::setup(keywords::ship);
+}
+
+template<typename T> turret_allocation<T>::turret_allocation() {
+  if (keywords::turret.empty()){
+    cout << "turret_allocation(): no keywords!" << endl;
+    exit(-1);
+  }
+  
+  allocation<T>::setup(keywords::turret);
+}
+
+template<typename T> resource_allocation<T>::resource_allocation() {
+  if (keywords::resource.empty()){
+    cout << "resource_allocation(): no keywords!" << endl;
+    exit(-1);
+  }
+  
+  allocation<T>::setup(keywords::resource);
+}
+
+template<typename T> sector_allocation<T>::sector_allocation() {
+  if (keywords::sector.empty()){
+    cout << "sector_allocation(): no keywords!" << endl;
+    exit(-1);
+  }
+  
+  allocation<T>::setup(keywords::sector);
+}
+
 
 // cost initializer
 using namespace keywords;
-void st3::cost::initialize(){
 
-  auto sector_expansion_b = new sector_allocation<sector_cost>();
-  auto ship_build_b = new ship_allocation<ship_cost>();
-  auto turret_build_b = new turret_allocation<turret_cost>();
+sector_allocation<sector_cost>& cost::sector_expansion(){
+  static sector_allocation<sector_cost> buf;
+  static bool init = false;
 
-  sector_expansion = *sector_expansion_b;
-  ship_build = *ship_build_b;
-  turret_build = *turret_build_b;
+  if (!init){
+    init = true;
 
-  // sector costs
+    // T research;
+    buf[key_research].res[key_organics] = 1;
+    buf[key_research].res[key_gases] = 1;
+    buf[key_research].res[key_metals] = 1;
+    buf[key_research].water = 1;
+    buf[key_research].space = 1;
+    buf[key_research].time = 10;
   
-  // T research;
-  sector_expansion[key_research].res[key_organics] = 1;
-  sector_expansion[key_research].res[key_gases] = 1;
-  sector_expansion[key_research].res[key_metals] = 1;
-  sector_expansion[key_research].water = 1;
-  sector_expansion[key_research].space = 1;
-  sector_expansion[key_research].time = 10;
-  
-  // T culture;
-  sector_expansion[key_culture].res[key_organics] = 8;
-  sector_expansion[key_culture].res[key_gases] = 4;
-  sector_expansion[key_culture].res[key_metals] = 5;
-  sector_expansion[key_culture].water = 10;
-  sector_expansion[key_culture].space = 10;
-  sector_expansion[key_culture].time = 4;
+    // T culture;
+    buf[key_culture].res[key_organics] = 8;
+    buf[key_culture].res[key_gases] = 4;
+    buf[key_culture].res[key_metals] = 5;
+    buf[key_culture].water = 10;
+    buf[key_culture].space = 10;
+    buf[key_culture].time = 4;
 
-  // T military;
-  sector_expansion[key_military].res[key_organics] = 0;
-  sector_expansion[key_military].res[key_gases] = 4;
-  sector_expansion[key_military].res[key_metals] = 8;
-  sector_expansion[key_military].water = 2;
-  sector_expansion[key_military].space = 4;
-  sector_expansion[key_military].time = 6;
+    // T military;
+    buf[key_military].res[key_organics] = 0;
+    buf[key_military].res[key_gases] = 4;
+    buf[key_military].res[key_metals] = 8;
+    buf[key_military].water = 2;
+    buf[key_military].space = 4;
+    buf[key_military].time = 6;
 
-  // T mining;
-  sector_expansion[key_mining].res[key_organics] = 0;
-  sector_expansion[key_mining].res[key_gases] = 8;
-  sector_expansion[key_mining].res[key_metals] = 4;
-  sector_expansion[key_mining].water = 4;
-  sector_expansion[key_mining].space = 4;
-  sector_expansion[key_mining].time = 6;
+    // T mining;
+    buf[key_mining].res[key_organics] = 0;
+    buf[key_mining].res[key_gases] = 8;
+    buf[key_mining].res[key_metals] = 4;
+    buf[key_mining].water = 4;
+    buf[key_mining].space = 4;
+    buf[key_mining].time = 6;
+  }
 
-  // ship costs  
-  ship_build[key_scout].res[key_metals] = 1;
-  ship_build[key_scout].res[key_gases] = 1;
-  ship_build[key_scout].time = 1;
-
-  ship_build[key_fighter].res[key_metals] = 2;
-  ship_build[key_fighter].res[key_gases] = 1;
-  ship_build[key_fighter].time = 2;
-
-  ship_build[key_bomber].res[key_metals] = 4;
-  ship_build[key_bomber].res[key_gases] = 3;
-  ship_build[key_bomber].time = 4;
-
-  ship_build[key_colonizer].res[key_metals] = 4;
-  ship_build[key_colonizer].res[key_gases] = 2;
-  ship_build[key_colonizer].res[key_organics] = 3;
-  ship_build[key_colonizer].time = 6;
-
-  turret_build[key_radar_turret].res[key_metals] = 1;
-  turret_build[key_radar_turret].res[key_gases] = 1;
-  turret_build[key_radar_turret].time = 2;
-
-  turret_build[key_rocket_turret].res[key_metals] = 1;
-  turret_build[key_rocket_turret].res[key_gases] = 2;
-  turret_build[key_rocket_turret].time = 2;
-
-  // assure all content is initialized
-  sector_expansion.confirm_content(keywords::sector);
-  ship_build.confirm_content(keywords::ship);
-  turret_build.confirm_content(keywords::turret);  
+  return buf;
 }
 
-void cost::cleanup(){
-  delete &sector_expansion;
-  delete &ship_build;
-  delete &turret_build;
+ship_allocation<ship_cost>& cost::ship_build(){
+  static ship_allocation<ship_cost> buf;
+  static bool init = false;
+
+  if (!init){
+    init = true;
+
+    // ship costs  
+    buf[key_scout].res[key_metals] = 1;
+    buf[key_scout].res[key_gases] = 1;
+    buf[key_scout].time = 1;
+
+    buf[key_fighter].res[key_metals] = 2;
+    buf[key_fighter].res[key_gases] = 1;
+    buf[key_fighter].time = 2;
+
+    buf[key_bomber].res[key_metals] = 4;
+    buf[key_bomber].res[key_gases] = 3;
+    buf[key_bomber].time = 4;
+
+    buf[key_colonizer].res[key_metals] = 4;
+    buf[key_colonizer].res[key_gases] = 2;
+    buf[key_colonizer].res[key_organics] = 3;
+    buf[key_colonizer].time = 6;
+  }
+
+  return buf;
+}
+
+turret_allocation<turret_cost>& cost::turret_build(){
+  static turret_allocation<turret_cost> buf;
+  static bool init = false;
+
+  if (!init){
+    init = true;
+
+    buf[key_radar_turret].res[key_metals] = 1;
+    buf[key_radar_turret].res[key_gases] = 1;
+    buf[key_radar_turret].time = 2;
+
+    buf[key_rocket_turret].res[key_metals] = 1;
+    buf[key_rocket_turret].res[key_gases] = 2;
+    buf[key_rocket_turret].time = 2;
+  }
+
+  return buf;
 }
 
 // template instantiations

@@ -44,7 +44,7 @@ namespace st3{
       hm_t<idtype, command_selector*> command_selectors; /*!< graphical representations for commands */
       int selector_queue; /*!< index for back end of selector queue */
 
-      sfg::SFGUI sfgui;
+      sfg::SFGUI *sfgui;
       command_gui *comgui; /*!< gui for assigning ships to commands */
       target_gui *targui; /*!< gui for selecting command action */
 

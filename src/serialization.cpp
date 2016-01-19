@@ -191,7 +191,13 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const solar::solar &g){
     << g.ecology
     << g.resource
     << g.sector
-    << g.population;
+    << g.population
+    << g.happiness
+    << g.ships
+    << g.position
+    << g.owner
+    << g.radius
+    << g.damage_taken;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, solar::solar &g){
@@ -205,7 +211,13 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar::solar &g){
     >> g.ecology
     >> g.resource
     >> g.sector
-    >> g.population;
+    >> g.population
+    >> g.happiness
+    >> g.ships
+    >> g.position
+    >> g.owner
+    >> g.radius
+    >> g.damage_taken;
 }
 
 // solar choice

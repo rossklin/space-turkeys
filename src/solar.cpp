@@ -66,7 +66,7 @@ float solar::solar::space_status(){
   
   float used = 0;
   for (auto v : cost::keywords::sector)
-    used += sector[v] * cost::sector_expansion[v].space;
+    used += sector[v] * cost::sector_expansion()[v].space;
 
   return (space - used) / space;
 }
@@ -77,7 +77,7 @@ float solar::solar::water_status(){
   
   float used = 0;
   for (auto v : cost::keywords::sector)
-    used += sector[v] * cost::sector_expansion[v].water;
+    used += sector[v] * cost::sector_expansion()[v].water;
 
   return (water - used) / water;
 }

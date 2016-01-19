@@ -77,19 +77,20 @@ int main(int argc, char **argv){
   sf::ContextSettings settings;
   settings.antialiasingLevel = 8;
   g.window.create(sf::VideoMode(width, height), "SFML Turkeys!", sf::Style::Default, settings);
+
+  sfg::SFGUI sfgui;
+
+  g.sfgui = &sfgui;
+  g.window.setActive();
   
   graphics::initialize();
-  cost::initialize();
-  research::initialize();
-  // todo: might need to g.window.setActive(), and might not even be able to
-  // construct sfgui in g before g.window.create()
+  // todo: might need to g.window.setActive(), and might not even be
+  // able to construct sfgui in g before g.window.create()
   
   g.run();
 
   g.socket.deallocate_packet();
   tcp_socket.disconnect();
 
-  cost::cleanup();
-  research::cleanup();
   return 0;
 }

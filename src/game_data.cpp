@@ -908,7 +908,7 @@ void st3::game_data::solar_tick(idtype id){
 
   // expansions
   for (auto v : keywords::sector)
-    buf.sector[v] += fmin(c.allocation[keywords::key_expansion] * c.expansion[v] * workers / sector_expansion[v].time, s.resource_constraint(sector_expansion[v].res)) * dt;
+    buf.sector[v] += fmin(c.allocation[keywords::key_expansion] * c.expansion[v] * workers / sector_expansion()[v].time, s.resource_constraint(sector_expansion()[v].res)) * dt;
 
   // mining
   for (auto v : keywords::resource){
@@ -919,10 +919,10 @@ void st3::game_data::solar_tick(idtype id){
 
   // military industry
   for (auto v : keywords::ship)
-    buf.fleet_growth[v] += fmin(c.allocation[keywords::key_military] * c.military.c_ship[v] * workers, s.resource_constraint(ship_build[v].res)) * dt;
+    buf.fleet_growth[v] += fmin(c.allocation[keywords::key_military] * c.military.c_ship[v] * workers, s.resource_constraint(ship_build()[v].res)) * dt;
   
   for (auto v : keywords::turret)
-    buf.turret_growth[v] += fmin(c.allocation[keywords::key_military] * c.military.c_turret[v] * workers, s.resource_constraint(turret_build[v].res)) * dt;
+    buf.turret_growth[v] += fmin(c.allocation[keywords::key_military] * c.military.c_turret[v] * workers, s.resource_constraint(turret_build()[v].res)) * dt;
 
   s = buf;
 

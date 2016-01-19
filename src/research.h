@@ -8,11 +8,8 @@
 
 namespace st3{
   namespace research{
-    extern cost::ship_allocation<ship> &ship_templates;
-    extern cost::turret_allocation<turret> &turret_templates;
-
-    void initialize();
-    void cleanup();
+    cost::ship_allocation<ship> &ship_templates();
+    cost::turret_allocation<turret> &turret_templates();
     
     /*! struct representing the research level of a player */
     struct data{
