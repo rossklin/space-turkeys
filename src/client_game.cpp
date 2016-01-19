@@ -159,7 +159,9 @@ void st3::client::game::choice_step(){
   // CREATE THE CHOICE (USER INTERFACE)
 
   // construct interface
+  window.setView(view_window);
   graphics::interface::main_interface gui(window.getSize(), players[socket.id].research_level);
+  graphics::interface::desktop = &gui;
   sf::Clock clock;
 
   while (!done){
@@ -245,6 +247,8 @@ void st3::client::game::choice_step(){
   cout << "choice step: waiting for query thread" << endl;
   t.join();
   cout << "choice step: complete" << endl;
+
+  graphics::interface::desktop = 0;
 }
 
 // ****************************************
@@ -1169,8 +1173,6 @@ void game::draw_window(){
   draw_universe();
   draw_interface_components();
 
-  window.setView(view_window);
-
   // draw targui
   window.setView(view_game);
   if (targui) targui -> draw();
@@ -1209,7 +1211,6 @@ void game::draw_window(){
     r.setPosition(ul);
     r.setSize(view_game.getSize());
     window.draw(r);
-
   }
 
   // reset game view

@@ -1,11 +1,6 @@
 * currently working on
 ** rewrite solar/gui
-*** adding a Box::Ptr in a Window fails internally (graphics.cpp: 209)
-    error: bad_weak_ptr
-    std::shared_ptr (count 4, weak 2)
-
-    Probably caused by that methods are not called through a shared
-    pointer in the constructor? Move constructor to create method...
+*** interface is drawn on mini-map^^
 *** move keywords and allocations to "types.h"
 *** [done] consider adding named string constants for sub sectors etc.
 *** [done] add a turret class
@@ -149,9 +144,15 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-*** check that serializations still match content
-*** check choice sub allocation for military
 * fixed
+** adding a Box::Ptr in a Window fails internally (graphics.cpp: 209)
+    error: bad_weak_ptr
+    std::shared_ptr (count 4, weak 2)
+
+    Probably caused by that methods are not called through a shared
+    pointer in the constructor? Move constructor to create method...
+** check that serializations still match content
+** check choice sub allocation for military
 ** check that all initialize-functions are called
 ** figure out why file-global allocation sub classes init empty
     probably the keywords data they use is not initialized?
