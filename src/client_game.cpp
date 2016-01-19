@@ -187,6 +187,8 @@ void st3::client::game::choice_step(){
     // draw universe and game objects
     draw_window();
 
+    window.setView(view_window);
+
     // update sfgui
     gui.Update(delta);
 

@@ -121,15 +121,62 @@ main_interface *interface::desktop;
 
 // build and wrap in shared ptr
 
-bottom_panel::Ptr bottom_panel::Create(bool &a, bool &b){return Ptr(new bottom_panel(a, b));}
-top_panel::Ptr top_panel::Create(){return Ptr(new top_panel());}
+bottom_panel::Ptr bottom_panel::Create(bool &done, bool &accept){
+  auto buf = Ptr(new bottom_panel(done, accept));
+  
+  auto layout = Box::Create(Box::Orientation::HORIZONTAL);
+  auto b_proceed = Button::Create("PROCEED");
+
+  b_proceed -> GetSignal(Widget::OnLeftClick).Connect([&done, &accept](){
+      done = true;
+      accept = true;
+    });
+
+  layout -> Pack(b_proceed);
+  buf -> Add(layout);
+  return buf;
+}
+
+top_panel::Ptr top_panel::Create(){
+  auto buf = Ptr(new top_panel());
+
+  auto layout = Box::Create(Box::Orientation::HORIZONTAL);
+  auto b_research = Button::Create("RESEARCH");
+
+  b_research -> GetSignal(Widget::OnLeftClick).Connect([](){
+      desktop -> reset_qw(research_window::Create(&desktop -> response.research));
+    });
+
+  layout -> Pack(b_research);
+  buf -> Add(layout);
+  return buf;
+}
 
 research_window::Ptr research_window::Create(choice::c_research *c){return Ptr(new research_window(c));}
 
-solar_query::main_window::Ptr solar_query::main_window::Create(int id, solar::solar s){return Ptr(new solar_query::main_window(id, s));}
-solar_query::expansion::Ptr solar_query::expansion::Create(choice::c_expansion &c){return Ptr(new solar_query::expansion(c));}
-solar_query::military::Ptr solar_query::military::Create(choice::c_military &c){return Ptr(new solar_query::military(c));}
-solar_query::mining::Ptr solar_query::mining::Create(choice::c_mining &c){return Ptr(new solar_query::mining(c));}
+solar_query::main_window::Ptr solar_query::main_window::Create(int id, solar::solar s){
+  auto buf = Ptr(new solar_query::main_window(id, s));
+  buf -> Add(buf -> layout);
+  return buf;
+}
+
+solar_query::expansion::Ptr solar_query::expansion::Create(choice::c_expansion &c){
+  auto buf = Ptr(new solar_query::expansion(c));
+  buf -> Add(buf -> layout);
+  return buf;
+}
+
+solar_query::military::Ptr solar_query::military::Create(choice::c_military &c){
+  auto buf = Ptr(new solar_query::military(c));
+  buf -> Add(buf -> layout);
+  return buf;
+}
+
+solar_query::mining::Ptr solar_query::mining::Create(choice::c_mining &c){
+  auto buf = Ptr(new solar_query::mining(c));
+  buf -> Add(buf -> layout);
+  return buf;
+}
 
 // constructors
 //query
@@ -139,11 +186,11 @@ query<C,R>::query() : Window(Window::Style::TOPLEVEL) { }
 // boxed
 solar_query::boxed::boxed(Box::Orientation o){
   layout = Box::Create(o);
-  Add(layout);
 }
 
 const string& solar_query::boxed::GetName() const {
-  return "boxed";
+  static string buf = "boxed";
+  return buf;
 };
 
 sf::Vector2f solar_query::boxed::CalculateRequisition(){
@@ -153,6 +200,9 @@ sf::Vector2f solar_query::boxed::CalculateRequisition(){
 // main interface
 
 main_interface::main_interface(sf::Vector2u d, research::data r) : research_level(r), dims(d){
+  done = false;
+  accept = false;
+  
   // build geometric data
   int top_height = 0.2 * d.y;
   int bottom_start = 0.8 * d.y;
@@ -185,28 +235,9 @@ void main_interface::clear_qw(){
 }
 
 bottom_panel::bottom_panel(bool &done, bool &accept) {
-  auto layout = Box::Create(Box::Orientation::HORIZONTAL);
-  auto b_proceed = Button::Create("PROCEED");
-
-  b_proceed -> GetSignal(Widget::OnLeftClick).Connect([&done, &accept](){
-      done = true;
-      accept = true;
-    });
-
-  layout -> Pack(b_proceed);
-  Add(layout);
 }
 
 top_panel::top_panel() : Window(Window::Style::TOPLEVEL) {
-  auto layout = Box::Create(Box::Orientation::HORIZONTAL);
-  auto b_research = Button::Create("RESEARCH");
-
-  b_research -> GetSignal(Widget::OnLeftClick).Connect([](){
-      desktop -> reset_qw(research_window::Create(&desktop -> response.research));
-    });
-
-  layout -> Pack(b_research);
-  Add(layout);
 }
 
 // research window
@@ -304,8 +335,6 @@ solar_query::main_window::main_window(idtype solar_id, solar::solar s){
   selection_layout -> Pack(l_response);
 
   layout -> Pack(selection_layout);
-
-  Add(layout);
 }
 
 

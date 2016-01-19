@@ -198,8 +198,8 @@ namespace st3{
 	  sfg::Box::Ptr selection_layout;
 
 	public:
-	  typedef std::shared_ptr<query> Ptr;
-	  typedef std::shared_ptr<const query> PtrConst;
+	  typedef std::shared_ptr<main_window> Ptr;
+	  typedef std::shared_ptr<const main_window> PtrConst;
 
 	  int solar_id;
 
