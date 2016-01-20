@@ -3,6 +3,7 @@
 
 #include <set>
 #include <string>
+#include <functional>
 #include <SFML/Graphics.hpp>
 
 #include "socket_t.h"
@@ -263,6 +264,11 @@ namespace st3{
       /* **************************************** */
       /* GRAPHICS */
       /* **************************************** */
+
+      std::function<int(sf::Event)> default_event_handler;
+      std::function<int()> default_body;
+
+      int window_loop(int &done, std::function<int(sf::Event)> event_handler, std::function<int(void)> body);
 
       /*! draw the gui
 	

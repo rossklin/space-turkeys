@@ -114,7 +114,7 @@ namespace st3{
 	static Ptr Create(bool &a, bool &b);
 	
       protected:	
-	bottom_panel(bool &a, bool &b);	
+	bottom_panel();	
       };
 
       // top panel
@@ -221,7 +221,7 @@ namespace st3{
 	int qw_bottom;
 
 	// research level used by interface components
-	research::data research_level;
+	research::data &research_level;
 
 	// data for generating the client's choice
 	choice::choice response;
@@ -230,7 +230,7 @@ namespace st3{
 	bool accept;
 	bool done;
 
-	main_interface(sf::Vector2u dims, research::data r);
+	main_interface(sf::Vector2u dims, research::data &r);
 	void reset_qw(sfg::Widget::Ptr p);
 	void clear_qw();
       };

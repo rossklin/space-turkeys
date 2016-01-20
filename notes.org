@@ -145,6 +145,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** generalized client game window loops to a function
 ** adding a Box::Ptr in a Window fails internally (graphics.cpp: 209)
     error: bad_weak_ptr
     std::shared_ptr (count 4, weak 2)

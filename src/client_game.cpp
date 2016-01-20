@@ -14,6 +14,7 @@
 using namespace std;
 using namespace st3;
 using namespace client;
+using namespace graphics;
 
 sf::FloatRect fixrect(sf::FloatRect r);
 bool add2selection();
@@ -27,6 +28,19 @@ game::game(){
   comgui = 0;
   targui = 0;
   selector_queue = 1;
+
+  default_event_handler = [this](sf::Event e) -> int {
+    if (e.type == sf::Event::Closed) {
+      window.close();
+      return query_aborted;
+    }else{
+      return 0;
+    }
+  };
+
+  default_body = [this] () -> int {
+    if (window.isOpen()) {return 0;} else {return query_aborted;}
+  };
 }
 
 void game::clear_guis(){
@@ -36,7 +50,8 @@ void game::clear_guis(){
   targui = 0;
 }
 
-void st3::client::game::run(){
+void st3::client::game::run(){  
+  
   bool proceed = true;
   bool first = true;
   area_select_active = false;
@@ -44,6 +59,11 @@ void st3::client::game::run(){
   view_minimap = view_game;
   view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
   view_window = window.getDefaultView();
+
+
+  // construct interface
+  window.setView(view_window);
+  interface::desktop = new interface::main_interface(window.getSize(), players[socket.id].research_level);
 
   // game loop
   while (true){
@@ -66,6 +86,9 @@ void st3::client::game::run(){
 
     simulation_step();
   }
+
+  delete interface::desktop;
+  interface::desktop = 0;
 }
 
 // ****************************************
@@ -89,17 +112,7 @@ bool st3::client::game::pre_step(){
 	   ref(packet), 
 	   ref(done));
 
-  while (!done){
-    if (!window.isOpen()) done |= query_aborted;
-
-    sf::Event event;
-    while (window.pollEvent(event)){
-      if (event.type == sf::Event::Closed) window.close();
-    }
-
-    draw_window();
-    sf::sleep(sf::milliseconds(100));
-  }
+  done = window_loop(done, default_event_handler, default_body);
 
   cout << "pre_step: waiting for com thread to finish..." << endl;
   t.join();
@@ -114,16 +127,19 @@ bool st3::client::game::pre_step(){
     }
 
     message = "winner: " + winner;
-    
-    for (int i = 0; i < 40 && window.isOpen(); i++){
-      sf::Event event;
-      while (window.pollEvent(event)){
-	if (event.type == sf::Event::Closed) window.close();
-      }
-      draw_window();
-      sf::sleep(sf::milliseconds(100));
-    }
 
+    int i = 0;
+
+    auto body = [this, &i]() -> int {
+      if (i++ < 40 && window.isOpen()){
+	return 0;
+      }else{
+	return query_aborted;
+      }
+    };
+    
+    done = window_loop(done, default_event_handler, body);
+    
     return false;
   }
 
@@ -158,48 +174,18 @@ void st3::client::game::choice_step(){
 
   // CREATE THE CHOICE (USER INTERFACE)
 
-  // construct interface
-  window.setView(view_window);
-  graphics::interface::main_interface gui(window.getSize(), players[socket.id].research_level);
-  graphics::interface::desktop = &gui;
-  sf::Clock clock;
-
-  while (!done){
-    auto delta = clock.restart().asSeconds();
-
-    sf::Event event;
-    while (window.pollEvent(event)){
-      if (event.type == sf::Event::Closed){
-	done |= query_game_complete;
-      }else{
-	done |= choice_event(event);
-
-	if (!done) gui.HandleEvent(event);
-      }
+  auto event_handler = [this](sf::Event e) -> int {
+    int done = 0;
+    if (e.type == sf::Event::Closed){
+      window.close();
+    }else{
+      done |= choice_event(e);
+      if (!done) interface::desktop -> HandleEvent(e);
     }
+    return done;
+  };
 
-    if (gui.done){
-      done |= query_accepted;
-      if (!gui.accept) done |= query_game_complete;
-    }
-
-    // update controls
-    controls();
-
-    // draw universe and game objects
-    draw_window();
-
-    window.setView(view_window);
-
-    // update sfgui
-    gui.Update(delta);
-
-    // draw sfgui
-    sfgui -> Display(window);
-
-    // display on screen
-    window.display();
-  }
+  done = window_loop(done, event_handler, default_body);
 
   if (done & query_game_complete){
     cout << "choice_step: finishded" << endl;
@@ -211,7 +197,7 @@ void st3::client::game::choice_step(){
   message = "sending choice to server...";
 
   // add commands to choice
-  choice::choice c = build_choice(gui.response);
+  choice::choice c = build_choice(interface::desktop -> response);
   done = query_query;
   pq << protocol::choice;
   pq << c;
@@ -224,17 +210,7 @@ void st3::client::game::choice_step(){
 
   cout << "choice step: sending" << endl;
 
-  while (!done){
-    if (!window.isOpen()) done |= query_game_complete;
-
-    sf::Event event;
-    while (window.pollEvent(event)){
-      if (event.type == sf::Event::Closed) window.close();
-    }
-
-    draw_window();
-    sf::sleep(sf::milliseconds(100));
-  }
+  done = window_loop(done, default_event_handler, default_body);
 
   if (done & query_game_complete){
     cout << "choice send: finished" << endl;
@@ -247,8 +223,6 @@ void st3::client::game::choice_step(){
   cout << "choice step: waiting for query thread" << endl;
   t.join();
   cout << "choice step: complete" << endl;
-
-  graphics::interface::desktop = 0;
 }
 
 // ****************************************
@@ -263,28 +237,24 @@ void st3::client::game::simulation_step(){
   vector<game_data> g(settings.frames_per_round);
   thread t(load_frames, socket, ref(g), ref(loaded));
 
-  while (!done){
-    if (!window.isOpen()) done |= query_game_complete;
-    if (idx == settings.frames_per_round - 1) done |= query_accepted;
-
-    sf::Event event;
-    while (window.pollEvent(event)){
-      switch (event.type){
-      case sf::Event::Closed:
-	window.close();
-	break;
-      case sf::Event::KeyPressed:
-	if (event.key.code == sf::Keyboard::Space){
-	  playing = !playing;
-	}
-	break;
-      }
+  auto event_handler = [this, &playing] (sf::Event e) -> int {
+    switch (e.type){
+    case sf::Event::Closed:
+    window.close();
+    return query_aborted;
+    case sf::Event::KeyPressed:
+    if (e.key.code == sf::Keyboard::Space){
+      playing = !playing;
     }
+    return 0;
+    }
+  };
 
-    controls();
+  auto body = [&,this] () -> int {
+    if (!window.isOpen()) return query_aborted;
+    if (idx == settings.frames_per_round - 1) return query_accepted;
+
     message = "evolution: " + to_string((100 * idx) / settings.frames_per_round) + " %" + (playing ? "" : "(paused)");
-
-    draw_window();
 
     playing &= idx < loaded - 1;
 
@@ -292,13 +262,14 @@ void st3::client::game::simulation_step(){
       idx++;
       reload_data(g[idx]);
     }
+    return 0;
+  };
 
-    sf::sleep(sf::milliseconds(100));    
-  }
+  done = window_loop(done, event_handler, body);
 
   t.join();
 
-  if (done & query_game_complete){
+  if (done & (query_game_complete | query_aborted)){
     cout << "simulation step: finished" << endl;
     exit(0);
   }
@@ -313,7 +284,7 @@ source_t game::add_waypoint(point p){
   waypoint w;
   w.position = p;
 
-  entity_selectors[k] = new waypoint_selector(w, graphics::sfcolor(players[socket.id].color));
+  entity_selectors[k] = new waypoint_selector(w, sfcolor(players[socket.id].color));
 
   cout << "added waypoint " << k << endl;
 
@@ -430,7 +401,7 @@ void st3::client::game::reload_data(game_data &g){
   // update entities: fleets, solars and waypoints
   for (auto x : g.fleets){
     source_t key = identifier::make(identifier::fleet, x.first);
-    sf::Color col = graphics::sfcolor(players[x.second.owner].color);
+    sf::Color col = sfcolor(players[x.second.owner].color);
     if (entity_selectors.count(key)) delete entity_selectors[key];
     entity_selectors[key] = new fleet_selector(x.second, col, x.second.owner == socket.id);
     entity_selectors[key] -> seen = true;
@@ -441,7 +412,7 @@ void st3::client::game::reload_data(game_data &g){
 
   for (auto x : g.solars){
     source_t key = identifier::make(identifier::solar, x.first);
-    sf::Color col = x.second.owner > -1 ? graphics::sfcolor(players[x.second.owner].color) : graphics::solar_neutral;
+    sf::Color col = x.second.owner > -1 ? sfcolor(players[x.second.owner].color) : solar_neutral;
     if (entity_selectors.count(key)) delete entity_selectors[key];
     entity_selectors[key] = new solar_selector(x.second, col, x.second.owner == socket.id);
     entity_selectors[key] -> seen = true;
@@ -452,7 +423,7 @@ void st3::client::game::reload_data(game_data &g){
 
   for (auto x : g.waypoints){
     source_t key = identifier::make(identifier::waypoint, x.first);
-    sf::Color col = graphics::sfcolor(players[socket.id].color);
+    sf::Color col = sfcolor(players[socket.id].color);
     if (entity_selectors.count(key)) delete entity_selectors[key];
     entity_selectors[key] = new waypoint_selector(x.second, col);
     entity_selectors[key] -> seen = true;
@@ -899,7 +870,7 @@ bool st3::client::game::select_command(idtype key){
 			     ready_ships,
 			     it -> second -> ships,
 			     view_window.getSize(),
-			     graphics::sfcolor(players[socket.id].color),
+			     sfcolor(players[socket.id].color),
 			     "source: " + it -> second -> source 
 			     + ", target: " + it -> second -> target 
 			     + ", action: " + it -> second -> action);
@@ -960,7 +931,7 @@ void game::run_solar_gui(source_t key){
     exit(-1);
   }
 
-  graphics::interface::desktop -> reset_qw(graphics::interface::solar_query::main_window::Create(identifier::get_id(key), sol));
+  interface::desktop -> reset_qw(interface::solar_query::main_window::Create(identifier::get_id(key), sol));
 }
 
 // return true to signal choice step done
@@ -1163,13 +1134,50 @@ void st3::client::game::controls(){
 // ****************************************
 // GRAPHICS
 // ****************************************
+using namespace graphics;
+
+int game::window_loop(int &done, function<int(sf::Event)> event_handler, function<int(void)> body){
+  sf::Clock clock;
+
+  while (!done){
+    auto delta = clock.restart().asSeconds();
+
+    sf::Event event;
+    while (window.pollEvent(event)){
+      done |= event_handler(event);
+    }
+    
+    if (!window.isOpen()) done |= query_aborted;
+
+    done |= body();
+
+    // update controls
+    controls();
+
+    // draw universe and game objects
+    draw_window();
+
+    window.setView(view_window);
+
+    // update sfgui
+    interface::desktop -> Update(delta);
+
+    // draw sfgui
+    sfgui -> Display(window);
+
+    // display on screen
+    window.display();
+  }
+
+  return done;
+}
 
 void game::draw_window(){
   window.clear();
 
   // draw main interface
   window.setView(view_game);
-  point ul = graphics::ul_corner(window);
+  point ul = ul_corner(window);
   draw_universe();
   draw_interface_components();
 
@@ -1186,7 +1194,7 @@ void game::draw_window(){
 
     // draw text
     sf::Text text;
-    text.setFont(graphics::default_font); 
+    text.setFont(default_font); 
     text.setCharacterSize(24);
     text.setColor(sf::Color(200,200,200));
     text.setString(message);
@@ -1225,7 +1233,7 @@ void game::draw_interface_components(){
 
   if (area_select_active && srect.width && srect.height){
     // draw selection rect
-    sf::RectangleShape r = graphics::build_rect(srect);
+    sf::RectangleShape r = build_rect(srect);
     r.setFillColor(sf::Color(250,250,250,50));
     r.setOutlineColor(sf::Color(80, 120, 240, 200));
     r.setOutlineThickness(1);
@@ -1245,7 +1253,7 @@ void st3::client::game::draw_universe(){
   for (auto x : ships){
     source_t key = identifier::make(identifier::fleet, x.second.fleet_id);
     if (entity_selectors.count(key)){
-      graphics::draw_ship(window, x.second, entity_selectors[key] -> get_color());
+      draw_ship(window, x.second, entity_selectors[key] -> get_color());
     }
   }
 }

@@ -122,7 +122,7 @@ main_interface *interface::desktop;
 // build and wrap in shared ptr
 
 bottom_panel::Ptr bottom_panel::Create(bool &done, bool &accept){
-  auto buf = Ptr(new bottom_panel(done, accept));
+  auto buf = Ptr(new bottom_panel());
   
   auto layout = Box::Create(Box::Orientation::HORIZONTAL);
   auto b_proceed = Button::Create("PROCEED");
@@ -199,7 +199,7 @@ sf::Vector2f solar_query::boxed::CalculateRequisition(){
 
 // main interface
 
-main_interface::main_interface(sf::Vector2u d, research::data r) : research_level(r), dims(d){
+main_interface::main_interface(sf::Vector2u d, research::data &r) : research_level(r), dims(d){
   done = false;
   accept = false;
   
@@ -234,7 +234,7 @@ void main_interface::clear_qw(){
   query_window = 0;
 }
 
-bottom_panel::bottom_panel(bool &done, bool &accept) {
+bottom_panel::bottom_panel() {
 }
 
 top_panel::top_panel() : Window(Window::Style::TOPLEVEL) {
