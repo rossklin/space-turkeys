@@ -204,8 +204,8 @@ main_interface::main_interface(sf::Vector2u d, research::data &r) : research_lev
   accept = false;
   
   // build geometric data
-  int top_height = 0.2 * d.y;
-  int bottom_start = 0.8 * d.y;
+  int top_height = 0.1 * d.y;
+  int bottom_start = 0.9 * d.y;
   int bottom_height = d.y - bottom_start - 1;
   qw_top = 0.3 * d.y;
   qw_bottom = 0.7 * d.y;

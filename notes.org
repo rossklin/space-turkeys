@@ -1,20 +1,11 @@
 * currently working on
 ** rewrite solar/gui
-*** interface is drawn on mini-map^^
+*** solar gui is small (not filling sub window dims?)
+*** clicking in solar gui also triggers game object event handler
+*** accepting solar gui does not destroy priority buttons
+    maybe stuck in event functions?
+*** frame rate (during simulation) is to high
 *** move keywords and allocations to "types.h"
-*** [done] consider adding named string constants for sub sectors etc.
-*** [done] add a turret class
-*** [done] implement vectorised allocation templates in graphics.cpp
-*** [done] apply updated solar (choice) structure in solar_tick
-*** [done] default values for solar choice
-*** [done] finish cost.cpp
-*** [done] client_game::build_choice should link game object events to interface objects, e.g. solar clicked
-*** [done] implement all graphics::interface interfaces
-*** [done] build sfgui central object somewhere, e.g. in client_game?
-*** [done] introduce some geometric information for interfaces
-*** [done] give solar sub query windows a data return reference
-*** [done] client_game::build_choice should build main_interface
-*** [done] client_game::build_choice should run interface event/draw loop
 ** new command gui and target gui
 ** research structure
 *** hash table
@@ -144,6 +135,12 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+*** simulation step is not drawn
+    Solved: fixed a bug where the simulation step event handler forgot
+    to return a value.
+*** interface is drawn on mini-map^^
+    Solved: note: sfgui draws on the latest view which was drawn upon,
+    not on the current view!
 * fixed
 ** generalized client game window loops to a function
 ** adding a Box::Ptr in a Window fails internally (graphics.cpp: 209)

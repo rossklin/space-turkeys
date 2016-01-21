@@ -51,7 +51,6 @@ point solar_selector::get_position(){
 }
 
 void solar_selector::draw(window_t &w){
-
   // setup text
   sf::Text text;
   text.setString(to_string(ships.size()));

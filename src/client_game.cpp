@@ -57,7 +57,7 @@ void st3::client::game::run(){
   area_select_active = false;
   view_game = sf::View(sf::FloatRect(0, 0, settings.width, settings.height));
   view_minimap = view_game;
-  view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
+  view_minimap.setViewport(sf::FloatRect(0.01, 0.61, 0.28, 0.28));
   view_window = window.getDefaultView();
 
 
@@ -230,49 +230,69 @@ void st3::client::game::choice_step(){
 // ****************************************
 
 void st3::client::game::simulation_step(){
-  int done = query_query;
+  int done = 0;
   bool playing = true;
   int idx = -1;
   int loaded = 0;
   vector<game_data> g(settings.frames_per_round);
+
+  cout << "simluation: starting data loader" << endl;
+  
   thread t(load_frames, socket, ref(g), ref(loaded));
 
   auto event_handler = [this, &playing] (sf::Event e) -> int {
     switch (e.type){
     case sf::Event::Closed:
-    window.close();
-    return query_aborted;
+      window.close();
+      return query_aborted;
     case sf::Event::KeyPressed:
-    if (e.key.code == sf::Keyboard::Space){
-      playing = !playing;
-    }
-    return 0;
+      if (e.key.code == sf::Keyboard::Space){
+        playing = !playing;
+      }
+      return 0;
+    default:
+      return 0;
     }
   };
 
   auto body = [&,this] () -> int {
-    if (!window.isOpen()) return query_aborted;
-    if (idx == settings.frames_per_round - 1) return query_accepted;
+    if (!window.isOpen()){
+      cout << "simulation: aborted by window close" << endl;
+      return query_aborted;
+    }
+    
+    if (idx == settings.frames_per_round - 1) {
+      cout << "simulation: all loaded" << endl;
+      return query_accepted;
+    }
 
     message = "evolution: " + to_string((100 * idx) / settings.frames_per_round) + " %" + (playing ? "" : "(paused)");
 
     playing &= idx < loaded - 1;
 
+    cout << "simulation: frame " << idx << endl;
+
     if (playing){
+      cout << "simulation: step" << endl;
       idx++;
       reload_data(g[idx]);
     }
     return 0;
   };
 
+  cout << "simlulation: starting loop" << endl;
+
   done = window_loop(done, event_handler, body);
 
-  t.join();
-
   if (done & (query_game_complete | query_aborted)){
-    cout << "simulation step: finished" << endl;
+    cout << "simulation step: exit" << endl;
     exit(0);
   }
+
+  cout << "simulation: waiting for thread join" << endl;
+  t.join();
+
+  cout << "simulation: finished." << endl;
 }
 
 // ****************************************
@@ -1158,6 +1178,7 @@ int game::window_loop(int &done, function<int(sf::Event)> event_handler, functio
     draw_window();
 
     window.setView(view_window);
+    // todo: add a dummy draw here to ensure sfgui uses this view
 
     // update sfgui
     interface::desktop -> Update(delta);
@@ -1168,6 +1189,8 @@ int game::window_loop(int &done, function<int(sf::Event)> event_handler, functio
     // display on screen
     window.display();
   }
+
+  cout << "window_loop: done: " << done << endl;
 
   return done;
 }
@@ -1190,6 +1213,11 @@ void game::draw_window(){
     window.setView(view_window);
     comgui -> draw();
   }else{
+
+    // draw minimap contents
+    window.setView(view_minimap);
+    draw_universe();
+
     window.setView(view_window);
 
     // draw text
@@ -1198,7 +1226,7 @@ void game::draw_window(){
     text.setCharacterSize(24);
     text.setColor(sf::Color(200,200,200));
     text.setString(message);
-    text.setPosition(point(10,10));
+    text.setPosition(point(10, 0.2 * (interface::desktop -> dims.y)));
     window.draw(text);
 
     // draw minimap bounds
@@ -1209,20 +1237,8 @@ void game::draw_window(){
     r.setOutlineColor(sf::Color(255,255,255));
     r.setFillColor(sf::Color(0,0,25,100));
     r.setOutlineThickness(1);
-
-    window.draw(r);
-
-    // draw minimap contents
-    window.setView(view_minimap);
-    draw_universe();
-    r.setOutlineColor(sf::Color(0, 255, 0));
-    r.setPosition(ul);
-    r.setSize(view_game.getSize());
     window.draw(r);
   }
-
-  // reset game view
-  window.setView(view_game);
 }
 
 void game::draw_interface_components(){
@@ -1244,7 +1260,7 @@ void game::draw_interface_components(){
 
 void st3::client::game::draw_universe(){
 
-  for (auto star : fixed_stars) star.draw (window);
+  for (auto star : fixed_stars) star.draw(window);
 
   // draw source/target entities
   for (auto x : entity_selectors) x.second -> draw(window);
