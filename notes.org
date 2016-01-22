@@ -1,5 +1,8 @@
 * currently working on
 ** rewrite solar/gui
+*** no solar info/data
+*** proceed button ineffective
+*** priority buttons unresponsive to first right click
 *** boxes do not comply to requisition/allocation requests
 **** solar query base fills whole window
 **** sub query does not expand and fill
@@ -131,17 +134,17 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-*** digits are ugly
-*** clicking a solar (sub) query priority button causes segfault
+* fixed
+** digits are ugly
+** clicking a solar (sub) query priority button causes segfault
     fix: used a normal pointer to the button
     since introduction of referenced buttons in event handlers
-*** clicking in solar gui also triggers game object event handler
-*** accepting solar gui does not destroy priority buttons
+** clicking in solar gui also triggers game object event handler
+** accepting solar gui does not destroy priority buttons
     fixed: byref widgets to event handlers
     ... nor does it destroy sub window buttons
     maybe stuck in event functions?
-*** frame rate is to high
-* fixed
+** frame rate is to high
 ** simulation step is not drawn
     Solved: fixed a bug where the simulation step event handler forgot
     to return a value.

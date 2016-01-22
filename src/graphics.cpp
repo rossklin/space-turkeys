@@ -11,6 +11,8 @@ using namespace graphics;
 sf::Font graphics::default_font;
 sf::Vector2u interface::desktop_dims;
 sf::FloatRect interface::qw_allocation;
+int interface::top_height;
+int interface::bottom_start;
 
 sf::Color graphics::sfcolor(sint c){
   sint mask = 0xff;
@@ -137,7 +139,7 @@ bottom_panel::Ptr bottom_panel::Create(bool &done, bool &accept){
   layout -> Pack(b_proceed);
   buf -> Add(layout);
 
-  buf -> SetAllocation(sf::FloatRect(0, qw_allocation.top + qw_allocation.height, desktop_dims.x, desktop_dims.y - (qw_allocation.top + qw_allocation.height)));
+  buf -> SetAllocation(sf::FloatRect(0, bottom_start, desktop_dims.x, desktop_dims.y - bottom_start));
   return buf;
 }
 
@@ -153,7 +155,7 @@ top_panel::Ptr top_panel::Create(){
 
   layout -> Pack(b_research);
   buf -> Add(layout);
-  buf -> SetAllocation(sf::FloatRect(0, 0, desktop_dims.x, qw_allocation.top));
+  buf -> SetAllocation(sf::FloatRect(0, 0, desktop_dims.x, top_height));
   return buf;
 }
 
@@ -214,8 +216,8 @@ main_interface::main_interface(sf::Vector2u d, research::data &r) : research_lev
   desktop_dims = d;
   
   // build geometric data
-  int top_height = 0.1 * d.y;
-  int bottom_start = 0.9 * d.y;
+  top_height = 0.1 * d.y;
+  bottom_start = 0.9 * d.y;
   int bottom_height = d.y - bottom_start - 1;
   int qw_top = 0.2 * d.y;
   int qw_bottom = 0.8 * d.y;

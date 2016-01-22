@@ -212,6 +212,8 @@ namespace st3{
       // desktop geometry data
       extern sf::Vector2u desktop_dims;
       extern sf::FloatRect qw_allocation;
+      extern int top_height;
+      extern int bottom_start;
 
       // main interface
       class main_interface : public sfg::Desktop {
