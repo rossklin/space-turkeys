@@ -204,21 +204,19 @@ namespace st3{
 	  int solar_id;
 
 	  static Ptr Create(int id, solar::solar s);
-	
 	protected:
 	  main_window(int id, solar::solar s);
 	};
       };
 
+      // desktop geometry data
+      extern sf::Vector2u desktop_dims;
+      extern sf::FloatRect qw_allocation;
+
       // main interface
       class main_interface : public sfg::Desktop {
       public:
 	sfg::Widget::Ptr query_window;
-	sf::Vector2u dims;
-
-	// desktop geometry data
-	int qw_top;
-	int qw_bottom;
 
 	// research level used by interface components
 	research::data &research_level;
@@ -233,6 +231,7 @@ namespace st3{
 	main_interface(sf::Vector2u dims, research::data &r);
 	void reset_qw(sfg::Widget::Ptr p);
 	void clear_qw();
+	sf::Vector2f sub_dims();
       };
 
       extern main_interface *desktop;

@@ -1,26 +1,9 @@
 * currently working on
 ** rewrite solar/gui
-*** solar gui is small (not filling sub window dims?)
-*** clicking in solar gui also triggers game object event handler
-*** accepting solar gui does not destroy priority buttons
-    maybe stuck in event functions?
-*** frame rate (during simulation) is to high
+*** boxes do not comply to requisition/allocation requests
+**** solar query base fills whole window
+**** sub query does not expand and fill
 *** move keywords and allocations to "types.h"
-** new command gui and target gui
-** research structure
-*** hash table
-*** nodes with:
-     requirement list
-     cost
-     level
-     level-dependent modifier functions
-     allow list
-*** prioritized build_[ship|turret]
-    e.g. focus on any of stealth, damage, speed etc.
-** new ships with trigger functions
-*** make a solar build queue
-**** ship/turret designer interface
-**** ship design focus/priority
 ** targui should only appear when multiple targets are available
 ** solar happy update does not match happy_increment
 ** command selectors drawn on top of each other
@@ -59,7 +42,11 @@
     Each solar's population has trends of opinion concerning
     development focus and diplomacy
 ** tactics
-*** ships
+*** new ships with trigger functions
+**** make a solar build queue
+***** ship/turret designer interface
+***** ship design focus/priority
+*** old ship model
 **** ship components
     construct on grid with structure components? 
     each component has a type, size, energy usage, cost...
@@ -104,10 +91,19 @@
 *** barbarians
 * basic goals
 ** server game
-*** emulate simultaneous evaluation of ship_bombard
+*** research structure
+**** hash table
+**** nodes with:
+     requirement list
+     cost
+     level
+     level-dependent modifier functions
+     allow list
+**** prioritized build_[ship|turret]
+    e.g. focus on any of stealth, damage, speed etc.
 *** decide what to do with clients without objects
 ** client game
-*** target options
+*** new command gui and target gui
 **** available options
      target space: "goto waypoint"
      target waypoint: "goto waypoint"
@@ -135,13 +131,23 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-*** simulation step is not drawn
+*** digits are ugly
+*** clicking a solar (sub) query priority button causes segfault
+    fix: used a normal pointer to the button
+    since introduction of referenced buttons in event handlers
+*** clicking in solar gui also triggers game object event handler
+*** accepting solar gui does not destroy priority buttons
+    fixed: byref widgets to event handlers
+    ... nor does it destroy sub window buttons
+    maybe stuck in event functions?
+*** frame rate is to high
+* fixed
+** simulation step is not drawn
     Solved: fixed a bug where the simulation step event handler forgot
     to return a value.
-*** interface is drawn on mini-map^^
+** interface is drawn on mini-map^^
     Solved: note: sfgui draws on the latest view which was drawn upon,
     not on the current view!
-* fixed
 ** generalized client game window loops to a function
 ** adding a Box::Ptr in a Window fails internally (graphics.cpp: 209)
     error: bad_weak_ptr

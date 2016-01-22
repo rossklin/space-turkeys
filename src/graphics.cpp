@@ -9,6 +9,8 @@ using namespace st3;
 using namespace graphics;
 
 sf::Font graphics::default_font;
+sf::Vector2u interface::desktop_dims;
+sf::FloatRect interface::qw_allocation;
 
 sf::Color graphics::sfcolor(sint c){
   sint mask = 0xff;
@@ -134,6 +136,8 @@ bottom_panel::Ptr bottom_panel::Create(bool &done, bool &accept){
 
   layout -> Pack(b_proceed);
   buf -> Add(layout);
+
+  buf -> SetAllocation(sf::FloatRect(0, qw_allocation.top + qw_allocation.height, desktop_dims.x, desktop_dims.y - (qw_allocation.top + qw_allocation.height)));
   return buf;
 }
 
@@ -149,6 +153,7 @@ top_panel::Ptr top_panel::Create(){
 
   layout -> Pack(b_research);
   buf -> Add(layout);
+  buf -> SetAllocation(sf::FloatRect(0, 0, desktop_dims.x, qw_allocation.top));
   return buf;
 }
 
@@ -157,24 +162,28 @@ research_window::Ptr research_window::Create(choice::c_research *c){return Ptr(n
 solar_query::main_window::Ptr solar_query::main_window::Create(int id, solar::solar s){
   auto buf = Ptr(new solar_query::main_window(id, s));
   buf -> Add(buf -> layout);
+  buf -> SetAllocation(qw_allocation);
   return buf;
 }
 
 solar_query::expansion::Ptr solar_query::expansion::Create(choice::c_expansion &c){
   auto buf = Ptr(new solar_query::expansion(c));
   buf -> Add(buf -> layout);
+  buf -> SetRequisition(desktop -> sub_dims());
   return buf;
 }
 
 solar_query::military::Ptr solar_query::military::Create(choice::c_military &c){
   auto buf = Ptr(new solar_query::military(c));
   buf -> Add(buf -> layout);
+  buf -> SetRequisition(desktop -> sub_dims());
   return buf;
 }
 
 solar_query::mining::Ptr solar_query::mining::Create(choice::c_mining &c){
   auto buf = Ptr(new solar_query::mining(c));
   buf -> Add(buf -> layout);
+  buf -> SetRequisition(desktop -> sub_dims());
   return buf;
 }
 
@@ -199,26 +208,28 @@ sf::Vector2f solar_query::boxed::CalculateRequisition(){
 
 // main interface
 
-main_interface::main_interface(sf::Vector2u d, research::data &r) : research_level(r), dims(d){
+main_interface::main_interface(sf::Vector2u d, research::data &r) : research_level(r){
   done = false;
   accept = false;
+  desktop_dims = d;
   
   // build geometric data
   int top_height = 0.1 * d.y;
   int bottom_start = 0.9 * d.y;
   int bottom_height = d.y - bottom_start - 1;
-  qw_top = 0.3 * d.y;
-  qw_bottom = 0.7 * d.y;
+  int qw_top = 0.2 * d.y;
+  int qw_bottom = 0.8 * d.y;
+  qw_allocation = sf::FloatRect(10, qw_top, d.x - 20, qw_bottom - qw_top);
   
   auto top = top_panel::Create();
-  top -> SetPosition(sf::Vector2f(0,0));
-  top -> SetRequisition(sf::Vector2f(d.x, top_height));
   Add(top);
   
   auto bottom = bottom_panel::Create(done, accept);
-  bottom -> SetPosition(sf::Vector2f(0, bottom_start));
-  bottom -> SetRequisition(sf::Vector2f(d.x, bottom_height));
   Add(bottom);
+}
+
+sf::Vector2f main_interface::sub_dims(){
+  return sf::Vector2f(qw_allocation.width/2, qw_allocation.height);
 }
 
 void main_interface::reset_qw(Widget::Ptr w){
@@ -245,19 +256,23 @@ research_window::research_window(choice::c_research *c) {
   // todo: write me
 }
 
+string label_builder(string label, float data){
+  return label + ": " + to_string((int)round(data));
+}
 
 // build a labeled button to modify priority data
 Button::Ptr factory (string label, float &data, function<bool()> inc_val){
-  auto b = Button::Create(label + to_string(data));
+  auto b = Button::Create(label_builder(label, data));
+  auto p = b.get();
 
-  b -> GetSignal(Widget::OnLeftClick).Connect([&data, b, label, inc_val](){
+  b -> GetSignal(Widget::OnLeftClick).Connect([&data, p, label, inc_val](){
       if (inc_val()) data++;
-      b -> SetLabel(label + ": " + to_string(data));
+      p -> SetLabel(label_builder(label, data));
     });
     
-  b -> GetSignal(Widget::OnRightClick).Connect([&data, b, label](){
+  b -> GetSignal(Widget::OnRightClick).Connect([&data, p, label](){
       if (data > 0) data--;
-      b -> SetLabel(label + ": " + to_string(data));
+      p -> SetLabel(label_builder(label, data));
     });
 
   return b;
@@ -333,7 +348,7 @@ solar_query::main_window::main_window(idtype solar_id, solar::solar s){
   l_response -> Pack(b_cancel);
 
   selection_layout -> Pack(l_response);
-
+  selection_layout -> SetRequisition(desktop -> sub_dims());
   layout -> Pack(selection_layout);
 }
 

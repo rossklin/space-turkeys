@@ -34,6 +34,7 @@ game::game(){
       window.close();
       return query_aborted;
     }else{
+      interface::desktop -> HandleEvent(e);
       return 0;
     }
   };
@@ -96,7 +97,7 @@ void st3::client::game::run(){
 // ****************************************
 
 bool st3::client::game::pre_step(){
-  int done = query_query;
+  int done = 0;
   sf::Packet packet, pq;
   game_data data;
 
@@ -165,7 +166,7 @@ bool st3::client::game::pre_step(){
 // ****************************************
 
 void st3::client::game::choice_step(){
-  int done = query_query;
+  int done = 0;
   sf::Packet pq, pr;
 
   cout << "choice_step: start" << endl;
@@ -198,7 +199,7 @@ void st3::client::game::choice_step(){
 
   // add commands to choice
   choice::choice c = build_choice(interface::desktop -> response);
-  done = query_query;
+  done = 0;
   pq << protocol::choice;
   pq << c;
 
@@ -959,6 +960,8 @@ int st3::client::game::choice_event(sf::Event e){
   point p;
   list<source_t> ss;
 
+  if (interface::desktop -> query_window) return 0;
+
   window.setView(view_game);
   if (targui && targui -> handle_event(e)){
     if (targui -> done){
@@ -973,7 +976,7 @@ int st3::client::game::choice_event(sf::Event e){
       delete targui;
       targui = 0;
     }
-    return query_query;
+    return 0;
   }
 
   window.setView(view_window);
@@ -1002,7 +1005,7 @@ int st3::client::game::choice_event(sf::Event e){
     // set command selector's ships
     cs -> ships = comgui -> allocated;
     
-    return query_query;
+    return 0;
   }
 
   window.setView(view_game);
@@ -1124,7 +1127,7 @@ int st3::client::game::choice_event(sf::Event e){
     break;
   };
 
-  return query_query;
+  return 0;
 }
 
 void st3::client::game::controls(){
@@ -1158,6 +1161,7 @@ using namespace graphics;
 
 int game::window_loop(int &done, function<int(sf::Event)> event_handler, function<int(void)> body){
   sf::Clock clock;
+  float frame_time = 1/(float)20;
 
   while (!done){
     auto delta = clock.restart().asSeconds();
@@ -1188,6 +1192,9 @@ int game::window_loop(int &done, function<int(sf::Event)> event_handler, functio
 
     // display on screen
     window.display();
+
+    sf::Time wait_for = sf::seconds(fmax(frame_time - clock.getElapsedTime().asSeconds(), 0));
+    sf::sleep(wait_for);
   }
 
   cout << "window_loop: done: " << done << endl;
@@ -1212,7 +1219,7 @@ void game::draw_window(){
   if (comgui) {
     window.setView(view_window);
     comgui -> draw();
-  }else{
+  }else if (interface::desktop -> query_window == 0){
 
     // draw minimap contents
     window.setView(view_minimap);
@@ -1226,7 +1233,7 @@ void game::draw_window(){
     text.setCharacterSize(24);
     text.setColor(sf::Color(200,200,200));
     text.setString(message);
-    text.setPosition(point(10, 0.2 * (interface::desktop -> dims.y)));
+    text.setPosition(point(10, 0.2 * (interface::desktop_dims.y)));
     window.draw(text);
 
     // draw minimap bounds
