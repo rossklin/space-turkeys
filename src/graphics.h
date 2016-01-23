@@ -196,7 +196,7 @@ namespace st3{
   
 	  sfg::Box::Ptr layout;
 	  sfg::Box::Ptr selection_layout;
-
+	  solar::solar sol;
 	public:
 	  typedef std::shared_ptr<main_window> Ptr;
 	  typedef std::shared_ptr<const main_window> PtrConst;
@@ -206,6 +206,7 @@ namespace st3{
 	  static Ptr Create(int id, solar::solar s);
 	protected:
 	  main_window(int id, solar::solar s);
+	  sfg::Box::Ptr build_info();
 	};
       };
 

@@ -282,9 +282,9 @@ Button::Ptr factory (string label, float &data, function<bool()> inc_val){
 
 
 // main window for solar choice
-solar_query::main_window::main_window(idtype solar_id, solar::solar s){
+solar_query::main_window::main_window(idtype solar_id, solar::solar s) : sol(s){
   // sub interface tracker
-  sub_window = 0;
+  sub_window = build_info();
   layout = Box::Create(Box::Orientation::HORIZONTAL);
   selection_layout = Box::Create(Box::Orientation::VERTICAL);
 
@@ -295,33 +295,29 @@ solar_query::main_window::main_window(idtype solar_id, solar::solar s){
   selection_layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
 
   // sector allocation buttons
-  hm_t<string, function<void()> > subcall;
-
-  subcall[cost::keywords::key_mining] = [this](){
-    if (sub_window) layout -> Remove(sub_window);
-    sub_window = solar_query::mining::Create(response.mining);
-    layout -> Pack(sub_window);
-  };
-
-  subcall[cost::keywords::key_military] = [this](){
-    if (sub_window) layout -> Remove(sub_window);
-    sub_window = solar_query::military::Create(response.military);
-    layout -> Pack(sub_window);
-  };
-
-  subcall[cost::keywords::key_expansion] = [this](){
-    if (sub_window) layout -> Remove(sub_window);
-    sub_window = solar_query::expansion::Create(response.expansion);
-    layout -> Pack(sub_window);
-  };
+  hm_t<string, function<Widget::Ptr()> > subq;
+  subq[cost::keywords::key_mining] = [this] () {return solar_query::mining::Create(response.mining);};
+  subq[cost::keywords::key_military] = [this] () {return solar_query::military::Create(response.military);};
+  subq[cost::keywords::key_expansion] = [this] () {return solar_query::expansion::Create(response.expansion);};
 
   for (auto v : cost::keywords::sector){
     auto b = factory(v, response.allocation[v], [this](){return response.allocation.count() < choice::max_allocation;});
 
-    if (subcall.count(v)){
+    if (subq.count(v)){
       // sectors with sub interfaces
       auto sub = Button::Create(">");
-      sub -> GetSignal(Widget::OnLeftClick).Connect(subcall[v]);
+      sub -> GetSignal(Widget::OnLeftClick).Connect([this,v,subq](){
+	  static bool active = false;
+	  if (sub_window) layout -> Remove(sub_window);
+	  if (active){
+	    active = false;
+	    sub_window = build_info();
+	  }else{
+	    active = true;
+	    sub_window = subq.at(v)();
+	  }
+	  layout -> Pack(sub_window);
+	});
       auto l = Box::Create(Box::Orientation::HORIZONTAL);
       l -> Pack(b);
       l -> Pack(sub);
@@ -352,8 +348,16 @@ solar_query::main_window::main_window(idtype solar_id, solar::solar s){
   selection_layout -> Pack(l_response);
   selection_layout -> SetRequisition(desktop -> sub_dims());
   layout -> Pack(selection_layout);
+  layout -> Pack(sub_window);
 }
 
+Box::Ptr solar_query::main_window::build_info(){
+  auto res = Box::Create(Box::Orientation::VERTICAL);
+  res -> Pack(Label::Create("Population: " + to_string(sol.population)));
+  res -> Pack(Label::Create("Happiness: " + to_string(sol.happiness)));
+  res -> SetRequisition(desktop -> sub_dims());
+  return res;	      
+}
 
 // sub window for expansion choice
 solar_query::expansion::expansion(choice::c_expansion &c) : boxed(Box::Orientation::VERTICAL){

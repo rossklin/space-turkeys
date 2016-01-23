@@ -168,6 +168,8 @@ bool st3::client::game::pre_step(){
 void st3::client::game::choice_step(){
   int done = 0;
   sf::Packet pq, pr;
+  interface::desktop -> done = false;
+  interface::desktop -> accept = false;
 
   cout << "choice_step: start" << endl;
 
@@ -186,9 +188,16 @@ void st3::client::game::choice_step(){
     return done;
   };
 
-  done = window_loop(done, event_handler, default_body);
+  auto body = [this] () -> int {
+    if (interface::desktop -> done) {
+      return interface::desktop -> accept ? query_accepted : query_game_complete;
+    }
+    return default_body();
+  };
 
-  if (done & query_game_complete){
+  done = window_loop(done, event_handler, body);
+
+  if (done & (query_game_complete | query_aborted)){
     cout << "choice_step: finishded" << endl;
     exit(0);
   }
