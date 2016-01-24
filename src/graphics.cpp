@@ -294,6 +294,9 @@ solar_query::main_window::main_window(idtype solar_id, solar::solar s) : sol(s){
   selection_layout -> Pack(Label::Create("Click left/right to add/reduce"));
   selection_layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
 
+  // choice template buttons
+  
+
   // sector allocation buttons
   hm_t<string, function<Widget::Ptr()> > subq;
   subq[cost::keywords::key_mining] = [this] () {return solar_query::mining::Create(response.mining);};

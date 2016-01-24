@@ -1,5 +1,10 @@
 * currently working on
 ** rewrite solar/gui
+*** bad default solar choice (add templates?)
+**** added choice templates
+**** how should choice template buttons trigger allocation button update?
+     consider connecting a custom signal?
+     remember to set sub window to build_info()
 *** no quit button
 *** expand solar info/data
 *** ship build run away (increase cost/time?)
