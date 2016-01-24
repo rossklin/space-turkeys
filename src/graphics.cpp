@@ -353,8 +353,15 @@ solar_query::main_window::main_window(idtype solar_id, solar::solar s) : sol(s){
 
 Box::Ptr solar_query::main_window::build_info(){
   auto res = Box::Create(Box::Orientation::VERTICAL);
-  res -> Pack(Label::Create("Population: " + to_string(sol.population)));
+  res -> Pack(Label::Create("Population: " + to_string((int)sol.population)));
   res -> Pack(Label::Create("Happiness: " + to_string(sol.happiness)));
+  res -> Pack(Label::Create("Ecology: " + to_string(sol.ecology)));
+  res -> Pack(Label::Create("Water: " + to_string(sol.water_status())));
+  res -> Pack(Label::Create("Space: " + to_string(sol.space_status())));
+
+  for (auto v : cost::keywords::sector)
+    res -> Pack(Label::Create("Sector " + v + ": " + to_string(sol.sector[v])));
+  
   res -> SetRequisition(desktop -> sub_dims());
   return res;	      
 }

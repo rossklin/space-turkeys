@@ -106,6 +106,12 @@ template<typename T> resource_allocation<T>::resource_allocation() {
   allocation<T>::setup(keywords::resource);
 }
 
+template<typename T>
+resource_allocation<T> cost::operator * (float a, resource_allocation<T> b){
+  for (auto v : keywords::resource) b[v] *= a;
+  return b;
+}
+
 template<typename T> sector_allocation<T>::sector_allocation() {
   if (keywords::sector.empty()){
     cout << "sector_allocation(): no keywords!" << endl;
@@ -223,3 +229,4 @@ template struct turret_allocation<st3::turret>;
 template struct sector_allocation<sfloat>;
 template struct countable_allocation<sfloat>;
 
+template resource_allocation<float> cost::operator * (float a, resource_allocation<float> b);

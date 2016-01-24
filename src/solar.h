@@ -14,8 +14,8 @@ namespace st3{
   /*! types and functions related to solars */
   namespace solar{
     extern idtype id_counter;
-    const float f_growth = 1;
-    const float f_crowding = 1;
+    const float f_growth = 1e-2;
+    const float f_crowding = 1e-1;
 
     /*! data representing a solar system */
     struct solar{

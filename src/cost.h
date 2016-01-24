@@ -64,7 +64,10 @@ namespace st3{
     struct resource_allocation : public virtual allocation<T>{
       resource_allocation();
     };
-    
+
+    template<typename T>
+    resource_allocation<T> operator * (float a, resource_allocation<T> b);
+
     /*! countable base allocation classes */
     template<typename T>
     struct countable_ship_allocation : public virtual ship_allocation<T>, public virtual countable_allocation<T>{

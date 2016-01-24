@@ -14,7 +14,7 @@ float solar::solar::resource_constraint(cost::resource_allocation<sfloat> r){
   float m = INFINITY;
 
   for (auto v : cost::keywords::resource)
-    if (r[v] > 0) m = fmin(m, resource[v].available / r[v]);
+    if (r[v] > 0) m = fmin(m, resource[v].storage / r[v]);
 
   return m;
 }
