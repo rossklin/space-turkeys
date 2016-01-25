@@ -14,10 +14,10 @@ namespace st3{
   /*! types and functions related to solars */
   namespace solar{
     extern idtype id_counter;
-    const float f_growth = 1e-2;
-    const float f_crowding = 1e-1;
-    const float f_minerate = 1e-2;
-    const float f_buildrate = 1e-1;
+    extern const float f_growth;
+    extern const float f_crowding;
+    extern const float f_minerate;
+    extern const float f_buildrate;
 
     /*! data representing a solar system */
     struct solar{

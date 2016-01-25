@@ -893,7 +893,7 @@ void st3::game_data::solar_tick(idtype id){
   float workers = s.happiness * s.population;
   solar::solar buf(s);
   float base_growth = s.population * s.happiness * solar::f_growth;
-  float culture_growth = s.population * s.happiness * solar::f_growth * s.sector[keywords::key_culture];
+  float culture_growth = base_growth * s.sector[keywords::key_culture];
   float random_growth = s.population * solar::f_growth * utility::random_normal(0, 1);
   float crowding_death = s.population * solar::f_crowding * s.population / (s.ecology * s.space * s.space_status() + 1);
   float pop_growth = base_growth + culture_growth + random_growth - crowding_death;
@@ -902,7 +902,7 @@ void st3::game_data::solar_tick(idtype id){
   cout << "*tick*[" << id << "]: " << s.population << ": happy: " << s.happiness << ", growth: " << base_growth << ", cgrowth: " << culture_growth << ", cdeath: " << crowding_death << ", random: " << random_growth << ", total: " << pop_growth;
 
   // ecological development
-  buf.ecology += ((s.space_status() * s.water_status() - s.ecology) + utility::random_normal(0, 1)) * dt;
+  buf.ecology += 0.01 * ((s.space_status() * s.water_status() - s.ecology) + utility::random_normal(0, 1)) * dt;
   buf.ecology = fmax(fmin(buf.ecology, 1), 0);
 
   if (s.population > 0){
@@ -911,7 +911,7 @@ void st3::game_data::solar_tick(idtype id){
     buf.population += pop_growth * dt;
 
     // happiness development
-    buf.happiness += (s.sector[keywords::key_culture] + c.allocation[keywords::key_culture] - 0.1 * log(s.population) / (s.ecology + 1) + utility::random_normal(0,1) - (s.happiness - 0.5)) * dt;
+    buf.happiness += 0.01 * (s.sector[keywords::key_culture] + c.allocation[keywords::key_culture] - 0.1 * log(s.population) / (s.ecology + 1) + utility::random_normal(0,1) - (s.happiness - 0.5)) * dt;
     buf.happiness = fmax(fmin(1, buf.happiness), 0);
 
     // research development

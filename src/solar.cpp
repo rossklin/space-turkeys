@@ -10,6 +10,11 @@ using namespace std;
 using namespace st3;
 using namespace solar;
 
+const float solar::f_growth = 4e-2;
+const float solar::f_crowding = 2e-2;
+const float solar::f_minerate = 1e-2;
+const float solar::f_buildrate = 1e-1;
+
 float solar::solar::resource_constraint(cost::resource_allocation<sfloat> r){
   float m = INFINITY;
 
