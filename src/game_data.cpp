@@ -925,6 +925,10 @@ void st3::game_data::solar_tick(idtype id){
 
       float quantity = fmin(dt * solar::f_buildrate * c.allocation[keywords::key_expansion] * c.expansion[v] * workers / (multiplier * sector_expansion()[v].time), s.resource_constraint(effective_cost));
 
+      if (quantity < 0){
+	cout << "error" << endl;
+      }
+      
       buf.sector[v] += quantity;
       buf.pay_resources(quantity * effective_cost);
     }

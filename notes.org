@@ -2,12 +2,6 @@
 ** rewrite solar/gui
 *** turrets do no damage? take no damage?
     look over solar combat routines
-*** solar choice has negative values in solar tick
-    possibly fixed by initializing summation var in allocation::count
-
-    possibly fixed by limiting water usage checks to expansion
-    sectors
-*** crowding death goes to NaN
 *** no quit button
 *** expand solar info/data
 *** priority buttons unresponsive to first right click
@@ -143,6 +137,12 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** solar choice has negative values in solar tick
+    possibly fixed by initializing summation var in allocation::count
+
+    possibly fixed by limiting water usage checks to expansion
+    sectors
+** crowding death goes to NaN
 ** notes on some bugs
 ** fixes to solar dynamics resource payments
 ** ship build run away (increase cost/time?)
@@ -402,6 +402,7 @@
 
    gets n=-9744, for some reason still enters push loop. Test run with
    &&res in loop condition. Check if n is wrong from start.
+   
    
    
    

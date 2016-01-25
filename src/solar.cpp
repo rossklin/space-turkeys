@@ -21,7 +21,7 @@ float solar::solar::resource_constraint(cost::resource_allocation<sfloat> r){
 
 void solar::solar::pay_resources(cost::resource_allocation<float> total){
   for (auto k : cost::keywords::resource)
-    resource[k].storage -= total[k];
+    resource[k].storage = fmax(resource[k].storage - total[k], 0);
 }
 
 solar::solar::solar(){}
