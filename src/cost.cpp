@@ -138,6 +138,7 @@ sector_allocation<sector_cost>& cost::sector_expansion(){
 
   if (!init){
     init = true;
+    buf.data.erase(keywords::key_expansion);
 
     // T research;
     buf[key_research].res[key_organics] = 1;
@@ -170,6 +171,8 @@ sector_allocation<sector_cost>& cost::sector_expansion(){
     buf[key_mining].water = 4;
     buf[key_mining].space = 4;
     buf[key_mining].time = 6;
+
+    buf.confirm_content(keywords::expansion);
   }
 
   return buf;

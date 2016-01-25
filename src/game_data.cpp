@@ -903,6 +903,7 @@ void st3::game_data::solar_tick(idtype id){
 
   // ecological development
   buf.ecology += ((s.space_status() * s.water_status() - s.ecology) + utility::random_normal(0, 1)) * dt;
+  buf.ecology = fmax(fmin(buf.ecology, 1), 0);
 
   if (s.population > 0){
     // population development
@@ -917,7 +918,7 @@ void st3::game_data::solar_tick(idtype id){
     buf.research += c.allocation[keywords::key_research] * buf.population * buf.sector[keywords::key_research] * buf.happiness * dt;
 
     // expansions
-    for (auto v : keywords::sector){
+    for (auto v : keywords::expansion){
       float level = floor(s.sector[v]);
       float multiplier = pow(2, level);
       cost::resource_allocation<float> effective_cost = multiplier * sector_expansion()[v].res;
