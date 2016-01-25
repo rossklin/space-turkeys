@@ -16,6 +16,8 @@ namespace st3{
     extern idtype id_counter;
     const float f_growth = 1e-2;
     const float f_crowding = 1e-1;
+    const float f_minerate = 1e-2;
+    const float f_buildrate = 1e-1;
 
     /*! data representing a solar system */
     struct solar{
@@ -67,6 +69,8 @@ namespace st3{
 
       /*! default constructor (data are set in game_data::build) */
       solar();
+
+      void pay_resources(cost::resource_allocation<float> r);
       
       /*! compute how many units of a given resource cost can be built
           from resources in storage

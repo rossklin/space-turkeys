@@ -35,6 +35,7 @@ namespace st3{
 
       c_solar();
       void normalize(); // normalize to proportions
+      void set_zeros();
       static hm_t<std::string,c_solar> const &template_table();
       static c_solar empty_choice();
     };

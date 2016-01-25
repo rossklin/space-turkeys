@@ -66,7 +66,7 @@ AC_CHECK_FUNCS([clock_gettime floor inet_ntoa memmove memset pow select socket s
 
 # set include paths
 extdir=../external/src
-CXXFLAGS="$CXXFLAGS -std=c++11 -isystem $extdir/SFML/include -Wl,-rpath=/usr/local/lib"
+CXXFLAGS="$CXXFLAGS -O0 -std=c++11 -isystem $extdir/SFML/include -Wl,-rpath=/usr/local/lib"
 LDFLAGS="$LDFLAGS -L$extdir/SFML/lib"
 LIBS="$LIBS -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -lsfgui"
 

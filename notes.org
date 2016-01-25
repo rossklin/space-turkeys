@@ -1,13 +1,12 @@
 * currently working on
 ** rewrite solar/gui
-*** bad default solar choice (add templates?)
-**** added choice templates
-**** how should choice template buttons trigger allocation button update?
-     consider connecting a custom signal?
-     remember to set sub window to build_info()
+*** turrets do no damage? take no damage?
+    look over solar combat routines
+*** solar choice has negative values in solar tick
+    possibly fixed by initializing summation var in allocation::count
+*** crowding death goes to NaN
 *** no quit button
 *** expand solar info/data
-*** ship build run away (increase cost/time?)
 *** priority buttons unresponsive to first right click
 *** boxes do not comply to requisition/allocation requests
 **** solar query base fills whole window
@@ -140,6 +139,14 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+*** notes on some bugs
+*** fixes to solar dynamics resource payments
+*** ship build run away (increase cost/time?)
+*** bad default solar choice (add templates?)
+**** added choice templates
+**** how should choice template buttons trigger allocation button update?
+     consider connecting a custom signal?
+     remember to set sub window to build_info()
 * fixed
 ** sector expansion happens without resources
 ** added basic solar info

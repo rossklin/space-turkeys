@@ -295,7 +295,10 @@ solar_query::main_window::main_window(idtype solar_id, solar::solar s) : sol(s){
   selection_layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
 
   // choice template buttons
-  
+  auto template_map = choice::c_solar::template_table();
+  hm_t<string, Button::Ptr> alloc_button;
+  auto template_layout = Box::Create(Box::Orientation::HORIZONTAL);
+  selection_layout -> Pack(template_layout);
 
   // sector allocation buttons
   hm_t<string, function<Widget::Ptr()> > subq;
@@ -329,6 +332,25 @@ solar_query::main_window::main_window(idtype solar_id, solar::solar s) : sol(s){
       // sectors without sub interfaces
       selection_layout -> Pack(b);
     }
+
+    alloc_button[v] = b;
+  }
+
+  for (auto &x : template_map){
+    auto b = Button::Create("Template: " + x.first);
+    b -> GetSignal(Widget::OnLeftClick).Connect([this, x, alloc_button] () {
+	// apply template choice
+	response = x.second;
+
+	// clear sup window
+	if (sub_window) layout -> Remove(sub_window);
+	layout -> Pack(sub_window = build_info());
+
+	// update allocation buttons
+	for (auto v : alloc_button)
+	  v.second -> SetLabel(label_builder(v.first, response.allocation[v.first]));
+      });
+    template_layout -> Pack(b);
   }
 
   auto b_accept = Button::Create("ACCEPT");
@@ -364,6 +386,11 @@ Box::Ptr solar_query::main_window::build_info(){
 
   for (auto v : cost::keywords::sector)
     res -> Pack(Label::Create("Sector " + v + ": " + to_string(sol.sector[v])));
+
+  for (auto v : cost::keywords::resource)
+    res -> Pack(Label::Create("Resource " + v + ": " + to_string(sol.resource[v].storage) + "[" + to_string(sol.resource[v].available) + "]"));
+
+  res -> Pack(Label::Create("Turrets: " + to_string(sol.turrets.size())));
   
   res -> SetRequisition(desktop -> sub_dims());
   return res;	      

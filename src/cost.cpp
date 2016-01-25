@@ -65,7 +65,7 @@ void allocation<T>::confirm_content(vector<string> x){
 
 template<typename T>
 T countable_allocation<T>::count(){
-  T r;
+  T r = 0;
   for (auto x : allocation<T>::data) r += x.second;
   return r;
 }

@@ -19,6 +19,11 @@ float solar::solar::resource_constraint(cost::resource_allocation<sfloat> r){
   return m;
 }
 
+void solar::solar::pay_resources(cost::resource_allocation<float> total){
+  for (auto k : cost::keywords::resource)
+    resource[k].storage -= total[k];
+}
+
 solar::solar::solar(){}
 
 string solar::solar::get_info(){
@@ -67,6 +72,11 @@ float solar::solar::space_status(){
   float used = 0;
   for (auto v : cost::keywords::sector)
     used += sector[v] * cost::sector_expansion()[v].space;
+
+  if (used > space){
+    cout << "space_status: used more than space" << endl;
+    exit(-1);
+  }
 
   return (space - used) / space;
 }
