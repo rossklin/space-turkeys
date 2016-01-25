@@ -8,6 +8,7 @@ namespace st3{
     namespace keywords{
       extern const std::vector<std::string> resource;
       extern const std::vector<std::string> sector;
+      extern const std::vector<std::string> expansion;
       extern const std::vector<std::string> ship;
       extern const std::vector<std::string> turret;
 

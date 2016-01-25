@@ -4,6 +4,9 @@
     look over solar combat routines
 *** solar choice has negative values in solar tick
     possibly fixed by initializing summation var in allocation::count
+
+    possibly fixed by limiting water usage checks to expansion
+    sectors
 *** crowding death goes to NaN
 *** no quit button
 *** expand solar info/data
@@ -139,15 +142,15 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-*** notes on some bugs
-*** fixes to solar dynamics resource payments
-*** ship build run away (increase cost/time?)
-*** bad default solar choice (add templates?)
+* fixed
+** notes on some bugs
+** fixes to solar dynamics resource payments
+** ship build run away (increase cost/time?)
+** bad default solar choice (add templates?)
 **** added choice templates
 **** how should choice template buttons trigger allocation button update?
      consider connecting a custom signal?
      remember to set sub window to build_info()
-* fixed
 ** sector expansion happens without resources
 ** added basic solar info
 ** added listening to proceed button

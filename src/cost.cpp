@@ -23,6 +23,13 @@ const vector<string> keywords::sector = {
   keywords::key_expansion
 };
 
+const vector<string> keywords::expansion = {
+  keywords::key_research,
+  keywords::key_culture,
+  keywords::key_military,
+  keywords::key_mining
+};
+
 const vector<string> keywords::ship = {
   keywords::key_scout,
   keywords::key_fighter,

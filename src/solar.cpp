@@ -86,8 +86,13 @@ float solar::solar::water_status(){
   if (water <= 0) return 0;
   
   float used = 0;
-  for (auto v : cost::keywords::sector)
+  for (auto v : cost::keywords::expansion)
     used += sector[v] * cost::sector_expansion()[v].water;
+
+  if (used > water){
+    cout << "water status: used more than water!" << endl;
+    exit(-1);
+  }
 
   return (water - used) / water;
 }
