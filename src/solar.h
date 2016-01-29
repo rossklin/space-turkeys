@@ -10,6 +10,9 @@
 #include "turret.h"
 
 namespace st3{
+  namespace choice{
+    struct c_solar;
+  };
 
   /*! types and functions related to solars */
   namespace solar{
@@ -69,6 +72,8 @@ namespace st3{
 
       /*! default constructor (data are set in game_data::build) */
       solar();
+
+      solar dynamics(choice::c_solar &c, float dt);
 
       void pay_resources(cost::resource_allocation<float> r);
       

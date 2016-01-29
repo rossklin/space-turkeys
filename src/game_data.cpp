@@ -905,74 +905,7 @@ void st3::game_data::solar_tick(idtype id){
     return;
   }
 
-  c.normalize();
-  float workers = s.happiness * s.population;
-  solar::solar buf(s);
-  float base_growth = s.population * s.happiness * solar::f_growth;
-  float culture_growth = base_growth * s.sector[keywords::key_culture];
-  float random_growth = s.population * solar::f_growth * utility::random_normal(0, 1);
-  float crowding_death = s.population * solar::f_crowding * s.population / (s.ecology * s.space * s.space_status() + 1);
-  float pop_growth = base_growth + culture_growth + random_growth - crowding_death;
-
-  // debug printout
-  cout << "*tick*[" << id << "]: " << s.population << ": happy: " << s.happiness << ", growth: " << base_growth << ", cgrowth: " << culture_growth << ", cdeath: " << crowding_death << ", random: " << random_growth << ", total: " << pop_growth;
-
-  // ecological development
-  buf.ecology += 0.01 * ((s.space_status() * s.water_status() - s.ecology) + utility::random_normal(0, 1)) * dt;
-  buf.ecology = fmax(fmin(buf.ecology, 1), 0);
-
-  if (s.population > 0){
-    // population development
-    
-    buf.population += pop_growth * dt;
-
-    // happiness development
-    buf.happiness += 0.01 * (s.sector[keywords::key_culture] + c.allocation[keywords::key_culture] - 0.1 * log(s.population) / (s.ecology + 1) + utility::random_normal(0,1) - (s.happiness - 0.5)) * dt;
-    buf.happiness = fmax(fmin(1, buf.happiness), 0);
-
-    // research development
-    buf.research += c.allocation[keywords::key_research] * buf.population * buf.sector[keywords::key_research] * buf.happiness * dt;
-
-    // expansions
-    for (auto v : keywords::expansion){
-      float level = floor(s.sector[v]);
-      float multiplier = pow(2, level);
-      cost::resource_allocation<float> effective_cost = multiplier * sector_expansion()[v].res;
-
-      float quantity = fmin(dt * solar::f_buildrate * c.allocation[keywords::key_expansion] * c.expansion[v] * workers / (multiplier * sector_expansion()[v].time), s.resource_constraint(effective_cost));
-
-      if (quantity < 0){
-	cout << "error" << endl;
-      }
-      
-      buf.sector[v] += quantity;
-      buf.pay_resources(quantity * effective_cost);
-    }
-
-    // mining
-    for (auto v : keywords::resource){
-      float move = fmin(s.resource[v].available, dt * solar::f_minerate * c.allocation[keywords::key_mining] * c.mining[v] * workers);
-      buf.resource[v].available -= move;
-      buf.resource[v].storage += move;
-    }
-
-    // military industry
-    for (auto v : keywords::ship){
-      auto build_cost = ship_build()[v];
-      float quantity = fmin(dt * solar::f_buildrate * c.allocation[keywords::key_military] * c.military.c_ship[v] * workers / build_cost.time, s.resource_constraint(build_cost.res));
-      buf.fleet_growth[v] += quantity;
-      buf.pay_resources(quantity * build_cost.res);
-    }
-  
-    for (auto v : keywords::turret){
-      auto build_cost = turret_build()[v];
-      float quantity = fmin(dt * solar::f_buildrate * c.allocation[keywords::key_military] * c.military.c_turret[v] * workers / build_cost.time, s.resource_constraint(build_cost.res));
-      buf.turret_growth[v] += quantity;
-      buf.pay_resources(quantity * build_cost.res);
-    }
-  }
-
-  s = buf;
+  s = s.dynamics(c, dt);
 
   // new ships
   auto add_ship = [&](string i){

@@ -14,6 +14,7 @@
    and after a fleet is spotted a secon time, old dead ships from this
    fleet reappear..?
 ** bombing ships concentrate in a ball
+** move expansion costs to research?
 ** targui should only appear when multiple targets are available
 ** solar happy update does not match happy_increment
 ** command selectors drawn on top of each other
@@ -37,25 +38,12 @@
 **** peace
 **** military alliance
 **** trade agreement
-*** population
-    Population can be distributed between production goals
-
-    A political system makes the population happy but limits
-    population distribution choices
-
-    A happy population grows
-
-    A large population without infrastructure becomes unhappy
-
-    An unhappy population does not produce well
-
-    Each solar's population has trends of opinion concerning
-    development focus and diplomacy
 ** tactics
 *** new ships with trigger functions
 **** make a solar build queue
 ***** ship/turret designer interface
 ***** ship design focus/priority
+*** resources on map to match with buildings?
 *** old ship model
 **** ship components
     construct on grid with structure components? 
