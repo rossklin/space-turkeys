@@ -1,8 +1,7 @@
 * currently working on
 ** rewrite solar/gui
-*** turrets do no damage? take no damage?
-    look over solar combat routines
 *** solar system stability tests
+*** projectile graphics object
 *** no quit button
 *** expand solar info/data
 *** priority buttons unresponsive to first right click
@@ -10,6 +9,11 @@
 **** solar query base fills whole window
 **** sub query does not expand and fill
 *** move keywords and allocations to "types.h"
+** why does sending frames take so long...
+** dead ships are not removed properly during simulation
+   and after a fleet is spotted a secon time, old dead ships from this
+   fleet reappear..?
+** bombing ships concentrate in a ball
 ** targui should only appear when multiple targets are available
 ** solar happy update does not match happy_increment
 ** command selectors drawn on top of each other
@@ -137,6 +141,8 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+*** turrets do no damage? take no damage?
+    look over solar combat routines
 * fixed
 ** solar choice has negative values in solar tick
     possibly fixed by initializing summation var in allocation::count

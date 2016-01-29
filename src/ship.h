@@ -29,7 +29,8 @@ namespace st3{
     sfloat damage_solar;
     sfloat damage_ship;
     sfloat accuracy;
-    sfloat rapidfire;
+    sfloat load_time;
+    sfloat load;
 
     // buffer and mechanical data
 

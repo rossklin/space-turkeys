@@ -26,7 +26,8 @@ cost::ship_allocation<ship>& research::ship_templates(){
     s.damage_solar = 0;
     s.damage_ship = 0;
     s.accuracy = 0;
-    s.rapidfire = 0;
+    s.load_time = 100;
+    s.load = 0;
 
     a = s;
     a.speed = 2;
@@ -43,14 +44,13 @@ cost::ship_allocation<ship>& research::ship_templates(){
     a.damage_solar = 1;
     a.damage_ship = 2;
     a.accuracy = 0.7;
-    a.rapidfire = 0.3;
+    a.load_time = 30;
     buf[a.ship_class] = a;
 
     a = s;
     a.ship_class = keywords::key_bomber;
     a.damage_solar = 5;
     a.accuracy = 0.8;
-    a.rapidfire = 0.2;
     buf[a.ship_class] = a;
 
     a = s;
@@ -78,7 +78,8 @@ cost::turret_allocation<turret> &research::turret_templates(){
     x.vision = 100;
     x.damage = 1;
     x.accuracy = 0.5;
-    x.rapidfire = 0;
+    x.load_time = 100;
+    x.load = 0;
 
     a = x;
     a.turret_class = cost::keywords::key_rocket_turret;

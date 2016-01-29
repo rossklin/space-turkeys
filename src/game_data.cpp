@@ -388,6 +388,9 @@ void game_data::increment(){
     for (auto i : sids){
       ship &s = ships[i];
 
+      // load weapons
+      s.load = fmin(s.load + 1, s.load_time);
+
       // check fleet is not idle
       if (!f.is_idle()){
 	point delta;
@@ -431,16 +434,23 @@ void game_data::increment(){
 	  }
 	}
 
-	if (ships.count(i)){
+	// ship interactions
+	if (ships.count(i) && s.load >= s.load_time && s.damage_ship > 0){
 	  cout << "ship " << i << " interactions..." << endl;
-	  // ship interactions
+	  s.load = 0;
+
+	  // find targetable ships
 	  list<grid::iterator_type> res = ship_grid -> search(s.position, s.interaction_radius);
-	  vector<grid::iterator_type> targ(res.begin(), res.end());
-	  random_shuffle(targ.begin(), targ.end());
-	  for (auto k : targ){
-	    if (ships[k.first].owner != s.owner){
-	      if (ship_fire(i, k.first)) break;
-	    }
+	  list<idtype> buf;
+	  for (auto &x : res){
+	    if (ships[x.first].owner != s.owner) buf.push_back(x.first);
+	  }
+
+	  // fire at a random enemy
+	  if (!buf.empty()){
+	    vector<idtype> targ(buf.begin(), buf.end());
+	    idtype k = targ[rand() % targ.size()];
+	    ship_fire(i, k); 
 	  }
 	}
       }
@@ -454,25 +464,32 @@ void game_data::increment(){
   // solar turrets fire
   for (auto &s : solars){
     for (auto &t : s.second.turrets){
-      if (t.damage > 0){
+      t.load = fmin(t.load + 1, t.load_time);
+      if (t.damage > 0 && t.load >= t.load_time){
+
+	// find targetable ships
 	list<grid::iterator_type> res = ship_grid -> search(s.second.position, t.range);
 	list<idtype> buf;
 	for (auto &x : res){
 	  if (ships[x.first].owner != s.second.owner) buf.push_back(x.first);
 	}
-	vector<idtype> targ(buf.begin(), buf.end());
-	
-	bool hit = true;
 
-	while (hit && targ.size() > 0){
+	// fire at a random enemy
+	if (!buf.empty()){
+	  t.load = 0;
+	  vector<idtype> targ(buf.begin(), buf.end());
+	
 	  int tid = targ[rand() % targ.size()];
 	  cout << "turret from solar " << s.first << " fires at ship " << tid << endl;
-	  if (hit = (utility::random_uniform() < t.accuracy)){
+	  if (utility::random_uniform() < t.accuracy){
 	    ships[tid].hp -= utility::random_uniform(0, t.damage);
 	    if (ships[tid].hp <= 0) ships[tid].was_killed = true;
-	    hit &= (utility::random_uniform() < t.rapidfire);
 	    cout << " -> hit" << endl;
+	  }else{
+	    cout << " -> miss" << endl;
 	  }
+	}else{
+	  cout << "solar " << s.first << ": turret: no enemies!" << endl;
 	}
       }
     }
@@ -616,15 +633,10 @@ void game_data::ship_bombard(idtype ship_id, idtype solar_id){
   }
 
   // deal damage
-  bool hit = true;
-  while (hit){
-    if (hit = (utility::random_uniform() < s.accuracy)){
-      sol.damage_taken[s.owner] += utility::random_uniform(0, s.damage_solar);
-    }
-    hit &= (utility::random_uniform() < s.rapidfire);
+  if (s.load >= s.load_time && utility::random_uniform() < s.accuracy){
+    s.load = 0;
+    sol.damage_taken[s.owner] += utility::random_uniform(0, s.damage_solar);
   }
-
-  // remove_ship(ship_id);
 
   cout << "ship " << ship_id << " bombards solar " << solar_id << ", damage: " << damage << endl;
 }
@@ -673,7 +685,7 @@ void game_data::solar_effects(int solar_id){
   }
 }
 
-bool game_data::ship_fire(idtype sid, idtype tid){
+void game_data::ship_fire(idtype sid, idtype tid){
   ship &s = ships[sid];
   ship &t = ships[tid];
   cout << "ship " << sid << " fires on ship " << tid << endl;
@@ -685,12 +697,7 @@ bool game_data::ship_fire(idtype sid, idtype tid){
       t.was_killed = true;
       cout << " -> ship " << tid << " dies!" << endl;
     }
-
-    // return false with p = s.rapidfire
-    if (utility::random_uniform() < s.rapidfire) return false;
   }
-
-  return true; // indicate ship initiative is over
 }
 
 void game_data::remove_fleet(idtype i){

@@ -155,7 +155,7 @@ namespace st3{
       @param t id of the targeted ship
       @return whether ship s gets rapidfire and can fire again
     */
-    bool ship_fire(idtype s, idtype t);
+    void ship_fire(idtype s, idtype t);
 
     /*! remove a ship
       
