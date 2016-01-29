@@ -145,7 +145,11 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
     << g.speed
     << g.owner
     << g.hp
-    << g.interaction_radius;
+    << g.interaction_radius
+    << g.damage_solar
+    << g.damage_ship
+    << g.accuracy
+    << g.rapidfire;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
@@ -157,7 +161,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
     >> g.speed
     >> g.owner
     >> g.hp
-    >> g.interaction_radius;
+    >> g.interaction_radius
+    >> g.damage_solar
+    >> g.damage_ship
+    >> g.accuracy
+    >> g.rapidfire;
 }
 
 // turret
@@ -167,6 +175,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const turret &g){
     << g.range
     << g.vision
     << g.damage
+    << g.accuracy
+    << g.rapidfire
     << g.hp;
 }
 
@@ -176,6 +186,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, turret &g){
     >> g.range
     >> g.vision
     >> g.damage
+    >> g.accuracy
+    >> g.rapidfire
     >> g.hp;
 }
 

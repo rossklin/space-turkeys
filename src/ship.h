@@ -26,6 +26,10 @@ namespace st3{
     sint owner; /*!< id of the ship's owner */
     sint hp; /*!< ship's hit points */
     sfloat interaction_radius; /*!< radius in which the ship can fire */
+    sfloat damage_solar;
+    sfloat damage_ship;
+    sfloat accuracy;
+    sfloat rapidfire;
 
     // buffer and mechanical data
 

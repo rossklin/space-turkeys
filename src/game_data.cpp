@@ -451,6 +451,33 @@ void game_data::increment(){
 
   cout << "post ship interact fleet count: " << fleets.size() << endl;
 
+  // solar turrets fire
+  for (auto &s : solars){
+    for (auto &t : s.second.turrets){
+      if (t.damage > 0){
+	list<grid::iterator_type> res = ship_grid -> search(s.second.position, t.range);
+	list<idtype> buf;
+	for (auto &x : res){
+	  if (ships[x.first].owner != s.second.owner) buf.push_back(x.first);
+	}
+	vector<idtype> targ(buf.begin(), buf.end());
+	
+	bool hit = true;
+
+	while (hit && targ.size() > 0){
+	  int tid = targ[rand() % targ.size()];
+	  cout << "turret from solar " << s.first << " fires at ship " << tid << endl;
+	  if (hit = (utility::random_uniform() < t.accuracy)){
+	    ships[tid].hp -= utility::random_uniform(0, t.damage);
+	    if (ships[tid].hp <= 0) ships[tid].was_killed = true;
+	    hit &= (utility::random_uniform() < t.rapidfire);
+	    cout << " -> hit" << endl;
+	  }
+	}
+      }
+    }
+  }
+  
   // remove killed ships
   auto it = ships.begin();
   while (it != ships.end()){
@@ -562,7 +589,7 @@ void game_data::ship_colonize(idtype ship_id, idtype solar_id){
   }
 
   // check colonization
-  if (s.ship_class == "colonizer"){
+  if (s.ship_class == cost::keywords::key_colonizer){
     if (sol.owner == -1 && !sol.has_defense()){
       sol.colonization_attempts[s.owner] = ship_id;
     }
@@ -584,21 +611,20 @@ void game_data::ship_bombard(idtype ship_id, idtype solar_id){
 
   // check if defenses already destroyed
   if (sol.owner == -1 && !sol.has_defense()){
+    cout << "ship_bombard: neutral: no defense!" << endl;
     return;
   }
 
   // deal damage
-  if (s.ship_class == "scout"){
-  }else if (s.ship_class == "fighter"){
-    damage = utility::random_uniform();
-  }else if (s.ship_class == "bomber"){
-    damage = 2 + 2 * utility::random_uniform();
-  }else if (s.ship_class == "colonizer"){
-    damage = 0.1 * utility::random_uniform();
+  bool hit = true;
+  while (hit){
+    if (hit = (utility::random_uniform() < s.accuracy)){
+      sol.damage_taken[s.owner] += utility::random_uniform(0, s.damage_solar);
+    }
+    hit &= (utility::random_uniform() < s.rapidfire);
   }
 
-  sol.damage_taken[s.owner] += damage;
-  remove_ship(ship_id);
+  // remove_ship(ship_id);
 
   cout << "ship " << ship_id << " bombards solar " << solar_id << ", damage: " << damage << endl;
 }
@@ -648,37 +674,20 @@ void game_data::solar_effects(int solar_id){
 }
 
 bool game_data::ship_fire(idtype sid, idtype tid){
-  float scout_accuracy = 0.3;
-  float fighter_accuracy = 0.7;
-  float fighter_rapidfire = 0.3;
   ship &s = ships[sid];
   ship &t = ships[tid];
   cout << "ship " << sid << " fires on ship " << tid << endl;
 
-  if (s.ship_class == "scout"){
-    if (utility::random_uniform() < scout_accuracy){
-      t.hp -= utility::random_uniform();
-      cout << " -> hit!" << endl;
-      if (t.hp <= 0){
-	t.was_killed = true;
-	cout << " -> ship " << tid << " dies!" << endl;
-      }
+  if (s.damage_ship > 0 && utility::random_uniform() < s.accuracy){
+    t.hp -= utility::random_uniform(0, s.damage_ship);
+    cout << " -> hit!" << endl;
+    if (t.hp <= 0){
+      t.was_killed = true;
+      cout << " -> ship " << tid << " dies!" << endl;
     }
-    return true;
-  }else if (s.ship_class == "fighter"){
-    if (utility::random_uniform() < fighter_accuracy){
-      t.hp -= utility::random_uniform();
-      cout << " -> hit!" << endl;
-      if (t.hp <= 0){
-	t.was_killed = true;
-	cout << " -> ship " << tid << " dies!" << endl;
-      }
-    }
-    return utility::random_uniform() < fighter_rapidfire; // fighters may fire multiple times
-  }else if (s.ship_class == "bomber"){
-    return true; // bombers dont fire at ships
-  }else if (s.ship_class == "colonizer"){
-    return true; // colonizers don't fire at ships
+
+    // return false with p = s.rapidfire
+    if (utility::random_uniform() < s.rapidfire) return false;
   }
 
   return true; // indicate ship initiative is over
@@ -975,7 +984,7 @@ void st3::game_data::solar_tick(idtype id){
     
   for (auto v : keywords::ship){
     while (s.fleet_growth[v] >= 1){      
-      if (v == "colonizer"){
+      if (v == cost::keywords::key_colonizer){
 	if (s.population >= r_base.colonizer_population()){
 	  s.population -= r_base.colonizer_population();
 	  add_ship(v);

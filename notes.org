@@ -2,6 +2,7 @@
 ** rewrite solar/gui
 *** turrets do no damage? take no damage?
     look over solar combat routines
+*** solar system stability tests
 *** no quit button
 *** expand solar info/data
 *** priority buttons unresponsive to first right click

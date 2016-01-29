@@ -1,10 +1,12 @@
 #include <vector>
 
 #include "research.h"
+#include "cost.h"
 
 using namespace std;
 using namespace st3;
 using namespace research;
+using namespace cost;
 
 cost::ship_allocation<ship>& research::ship_templates(){
   static bool init = false;
@@ -21,27 +23,40 @@ cost::ship_allocation<ship>& research::ship_templates(){
     s.fleet_id = -1;
     s.ship_class = "";
     s.was_killed = false;
+    s.damage_solar = 0;
+    s.damage_ship = 0;
+    s.accuracy = 0;
+    s.rapidfire = 0;
 
     a = s;
     a.speed = 2;
     a.vision = 100;
-    a.ship_class = "scout";
+    a.ship_class = keywords::key_scout;
+    a.damage_ship = 0.2;
+    a.accuracy = 0.3;
     buf[a.ship_class] = a;
 
     a = s;
     a.hp = 2;
     a.interaction_radius = 20;
-    a.ship_class = "fighter";
+    a.ship_class = keywords::key_fighter;
+    a.damage_solar = 1;
+    a.damage_ship = 2;
+    a.accuracy = 0.7;
+    a.rapidfire = 0.3;
     buf[a.ship_class] = a;
 
     a = s;
-    a.ship_class = "bomber";
+    a.ship_class = keywords::key_bomber;
+    a.damage_solar = 5;
+    a.accuracy = 0.8;
+    a.rapidfire = 0.2;
     buf[a.ship_class] = a;
 
     a = s;
     a.speed = 0.5;
     a.hp = 2;
-    a.ship_class = "colonizer";
+    a.ship_class = keywords::key_colonizer;
     buf[a.ship_class] = a;
 
     buf.confirm_content(cost::keywords::ship);
@@ -62,6 +77,8 @@ cost::turret_allocation<turret> &research::turret_templates(){
     x.hp = 1;
     x.vision = 100;
     x.damage = 1;
+    x.accuracy = 0.5;
+    x.rapidfire = 0;
 
     a = x;
     a.turret_class = cost::keywords::key_rocket_turret;
