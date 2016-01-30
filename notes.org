@@ -1,16 +1,14 @@
 * currently working on
 ** rewrite solar/gui
-*** solar system stability tests
-**** parallel cost subtractions
-*** projectile graphics object
 *** no quit button
+*** projectile graphics object
 *** expand solar info/data
 *** priority buttons unresponsive to first right click
 *** boxes do not comply to requisition/allocation requests
 **** solar query base fills whole window
 **** sub query does not expand and fill
 *** move keywords and allocations to "types.h"
-** why does sending frames take so long...
+** why does sending frames take so long?
 ** dead ships are not removed properly during simulation
    and after a fleet is spotted a secon time, old dead ships from this
    fleet reappear..?
@@ -130,9 +128,11 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-*** turrets do no damage? take no damage?
-    look over solar combat routines
 * fixed
+** solar system stability tests
+**** parallel cost subtractions
+** turrets do no damage? take no damage?
+    look over solar combat routines
 ** solar choice has negative values in solar tick
     possibly fixed by initializing summation var in allocation::count
 
@@ -398,6 +398,7 @@
 
    gets n=-9744, for some reason still enters push loop. Test run with
    &&res in loop condition. Check if n is wrong from start.
+   
    
    
    

@@ -15,6 +15,7 @@ namespace st3{
     const sint choice = 1; /*!< query whether to send the choice */
     const sint frame = 2; /*!< query to get a simulation frame */
     const sint connect = 3; /*!< query to connect */
+    const sint leave = 4;
 
     /* **************************************** */
     /* RESPONSES */

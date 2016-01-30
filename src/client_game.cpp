@@ -199,6 +199,8 @@ void st3::client::game::choice_step(){
 
   if (done & (query_game_complete | query_aborted)){
     cout << "choice_step: finishded" << endl;
+    pq << protocol::leave;
+    while (!socket.send(pq)) sf::sleep(sf::milliseconds(100));
     exit(0);
   }
 
@@ -1132,6 +1134,8 @@ int st3::client::game::choice_event(sf::Event e){
     case sf::Keyboard::I:
       view_game.zoom(1 / 1.2);
       break;
+    case sf::Keyboard::Escape:
+      return query_aborted;
     }
     break;
   };

@@ -50,18 +50,19 @@ int main(int argc, char **argv){
     c.allocation[cost::keywords::key_culture] = 1;
     c.allocation[cost::keywords::key_expansion] = 1;
     c.allocation[cost::keywords::key_mining] = 1;
-    c.allocation[cost::keywords::key_military] = 1;
+    c.allocation[cost::keywords::key_military] = 0;
     c.allocation[cost::keywords::key_research] = 0;
     
     c.expansion[cost::keywords::key_culture] = 1;
+    c.expansion[cost::keywords::key_military] = 0;
+    c.expansion[cost::keywords::key_mining] = 0;
+    c.expansion[cost::keywords::key_research] = 0;
 
     c.mining[cost::keywords::key_gases] = 1;
     c.mining[cost::keywords::key_metals] = 1;
     c.mining[cost::keywords::key_organics] = 1;
 
     c.military.c_ship[cost::keywords::key_fighter] = 1;
-
-    c = ctable["military expansion"];
     
     for (int j = 0; j < steps; j++){
       s = s.dynamics(c, dt);
