@@ -70,6 +70,14 @@ void allocation<T>::confirm_content(vector<string> x){
   }
 }
 
+// countable allocation
+template<typename T>
+void countable_allocation<T>::setup(vector<string> x){
+  T buf = 0;
+  allocation<T>::data.clear();
+  for (auto v : x) allocation<T>::data[v] = buf;
+}
+
 template<typename T>
 T countable_allocation<T>::count(){
   T r = 0;
@@ -114,9 +122,18 @@ template<typename T> resource_allocation<T>::resource_allocation() {
 }
 
 template<typename T>
-resource_allocation<T> cost::operator * (float a, resource_allocation<T> b){
-  for (auto v : keywords::resource) b[v] *= a;
-  return b;
+void countable_allocation<T>::scale(float a){
+  for (auto &x : allocation<T>::data) x.second *= a;
+}
+
+template<typename T>
+void countable_allocation<T>::add(countable_allocation<T> a){
+  for (auto &x : a.data){
+    if (!allocation<T>::data.count(x.first)){
+      cout << "countable_allocation::add: element mismatch: " << x.first << endl;
+    }
+    allocation<T>::data[x.first] += x.second;
+  }
 }
 
 template<typename T> sector_allocation<T>::sector_allocation() {
@@ -238,5 +255,3 @@ template struct turret_allocation<sfloat>;
 template struct turret_allocation<st3::turret>;
 template struct sector_allocation<sfloat>;
 template struct countable_allocation<sfloat>;
-
-template resource_allocation<float> cost::operator * (float a, resource_allocation<float> b);

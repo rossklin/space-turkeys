@@ -1,6 +1,7 @@
 * currently working on
 ** rewrite solar/gui
 *** solar system stability tests
+**** parallel cost subtractions
 *** projectile graphics object
 *** no quit button
 *** expand solar info/data

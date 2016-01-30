@@ -132,22 +132,6 @@ solar::solar solar::solar::dynamics(choice::c_solar &c, float dt){
     // research development
     buf.research += c.allocation[cost::keywords::key_research] * buf.population * buf.sector[cost::keywords::key_research] * buf.happiness * dt;
 
-    // expansions
-    for (auto v : cost::keywords::expansion){
-      float level = floor(sector[v]);
-      float multiplier = pow(2, level);
-      cost::resource_allocation<float> effective_cost = multiplier * cost::sector_expansion()[v].res;
-
-      float quantity = fmin(dt * st3::solar::f_buildrate * c.allocation[cost::keywords::key_expansion] * c.expansion[v] * workers / (multiplier * cost::sector_expansion()[v].time), resource_constraint(effective_cost));
-
-      if (quantity < 0){
-	cout << "error" << endl;
-      }
-      
-      buf.sector[v] += quantity;
-      buf.pay_resources(quantity * effective_cost);
-    }
-
     // mining
     for (auto v : cost::keywords::resource){
       float move = fmin(resource[v].available, dt * st3::solar::f_minerate * c.allocation[cost::keywords::key_mining] * c.mining[v] * workers);
@@ -155,20 +139,57 @@ solar::solar solar::solar::dynamics(choice::c_solar &c, float dt){
       buf.resource[v].storage += move;
     }
 
+    // for all costs, sum desired quantity and cost
+    float total_quantity = 0;
+    cost::countable_resource_allocation<float> total_cost;
+    hm_t<string, float> weight_table;
+
+    // expansions
+    for (auto v : cost::keywords::expansion){
+      float level = floor(sector[v]);
+      float multiplier = pow(2, level);
+      cost::countable_resource_allocation<float> effective_cost = cost::sector_expansion()[v].res;
+      effective_cost.scale(multiplier);
+      float quantity = dt * st3::solar::f_buildrate * c.allocation[cost::keywords::key_expansion] * c.expansion[v] * workers / (multiplier * cost::sector_expansion()[v].time);
+
+      total_quantity += quantity;
+      effective_cost.scale(quantity);
+      total_cost.add(effective_cost);
+      weight_table[v] = quantity;
+    }
+    
     // military industry
     for (auto v : cost::keywords::ship){
       auto build_cost = cost::ship_build()[v];
-      float quantity = fmin(dt * st3::solar::f_buildrate * c.allocation[cost::keywords::key_military] * c.military.c_ship[v] * workers / build_cost.time, resource_constraint(build_cost.res));
-      buf.fleet_growth[v] += quantity;
-      buf.pay_resources(quantity * build_cost.res);
+      float quantity = dt * st3::solar::f_buildrate * c.allocation[cost::keywords::key_military] * c.military.c_ship[v] * workers / build_cost.time;;
+      total_quantity += quantity;
+      build_cost.res.scale(quantity);
+      total_cost.add(build_cost.res);
+      weight_table[v] = quantity;
     }
-  
+
     for (auto v : cost::keywords::turret){
       auto build_cost = cost::turret_build()[v];
-      float quantity = fmin(dt * st3::solar::f_buildrate * c.allocation[cost::keywords::key_military] * c.military.c_turret[v] * workers / build_cost.time, resource_constraint(build_cost.res));
-      buf.turret_growth[v] += quantity;
-      buf.pay_resources(quantity * build_cost.res);
+      float quantity = dt * st3::solar::f_buildrate * c.allocation[cost::keywords::key_military] * c.military.c_turret[v] * workers / build_cost.time;;
+      total_quantity += quantity;
+      build_cost.res.scale(quantity);
+      total_cost.add(build_cost.res);
+      weight_table[v] = quantity;
     }
+
+    float allowed = fmin(1, resource_constraint(total_cost));
+
+    for (auto v : cost::keywords::ship)
+      buf.fleet_growth[v] += allowed * weight_table[v];
+
+    for (auto v : cost::keywords::turret)
+      buf.turret_growth[v] += allowed * weight_table[v];
+
+    for (auto v : cost::keywords::expansion)
+      buf.sector[v] += allowed * weight_table[v];
+
+    total_cost.scale(allowed);
+    buf.pay_resources(total_cost);
   }
 
   return buf;

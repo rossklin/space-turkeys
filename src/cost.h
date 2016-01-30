@@ -34,15 +34,18 @@ namespace st3{
     struct allocation{
       hm_t<std::string, T> data;
 
-      void setup(std::vector<std::string> x);
+      virtual void setup(std::vector<std::string> x);
       void confirm_content(std::vector<std::string> x);
       T& operator[] (const std::string& k);
     };
 
     template<typename T>
     struct countable_allocation : public virtual allocation<T>{
+      void setup(std::vector<std::string> x) override;
       T count();
       void normalize();
+      void add(countable_allocation<T> a);
+      void scale(float a);
     };
 
     /*! base allocation classes */
@@ -65,9 +68,6 @@ namespace st3{
     struct resource_allocation : public virtual allocation<T>{
       resource_allocation();
     };
-
-    template<typename T>
-    resource_allocation<T> operator * (float a, resource_allocation<T> b);
 
     /*! countable base allocation classes */
     template<typename T>
@@ -93,19 +93,19 @@ namespace st3{
     };
 
     struct sector_cost{
-      resource_allocation<sfloat> res;
+      countable_resource_allocation<sfloat> res;
       sfloat water;
       sfloat space;
       sfloat time;
     };
 
     struct ship_cost{
-      resource_allocation<sfloat> res;
+      countable_resource_allocation<sfloat> res;
       sfloat time;
     };
 
     struct turret_cost{
-      resource_allocation<sfloat> res;
+      countable_resource_allocation<sfloat> res;
       sfloat time;
     };
 
