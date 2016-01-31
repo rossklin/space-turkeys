@@ -165,6 +165,8 @@ solar_query::main_window::Ptr solar_query::main_window::Create(int id, solar::so
   auto buf = Ptr(new solar_query::main_window(id, s));
   buf -> Add(buf -> layout);
   buf -> SetAllocation(qw_allocation);
+  buf -> SetTitle("Customize solar choice for solar " + to_string(buf -> solar_id));
+
   return buf;
 }
 
@@ -263,7 +265,7 @@ string label_builder(string label, float data){
 }
 
 // build a labeled button to modify priority data
-Button::Ptr factory (string label, float &data, function<bool()> inc_val){
+Button::Ptr factory (string label, float &data, function<bool()> inc_val, Label::Ptr tip = 0){
   auto b = Button::Create(label_builder(label, data));
   auto p = b.get();
 
@@ -277,81 +279,54 @@ Button::Ptr factory (string label, float &data, function<bool()> inc_val){
       p -> SetLabel(label_builder(label, data));
     });
 
+  if (tip){
+    b -> GetSignal(Widget::OnMouseEnter).Connect([tip, label](){
+	tip -> SetText("Modify priority for " + label);
+      });
+  }
+
   return b;
 };
 
 
 // main window for solar choice
-solar_query::main_window::main_window(idtype solar_id, solar::solar s) : sol(s){
-  // sub interface tracker
-  sub_window = build_info();
-  layout = Box::Create(Box::Orientation::HORIZONTAL);
-  selection_layout = Box::Create(Box::Orientation::VERTICAL);
-
+solar_query::main_window::main_window(idtype sid, solar::solar s) : sol(s), solar_id(sid){
   response = desktop -> response.solar_choices[solar_id];
 
-  selection_layout -> Pack(Label::Create("Customize solar choice for solar " + to_string(solar_id)));
-  selection_layout -> Pack(Label::Create("Click left/right to add/reduce"));
-  selection_layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
+  // main layout
+  layout = Box::Create(Box::Orientation::VERTICAL, 20);
 
+  layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
+  tooltip = Label::Create("...");
+  layout -> Pack(tooltip);
+  layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
+
+  auto meta_layout = Box::Create(Box::Orientation::HORIZONTAL);
+  meta_layout -> Pack(choice_layout = Box::Create(Box::Orientation::VERTICAL));
+  meta_layout -> Pack(Separator::Create(Separator::Orientation::VERTICAL));
+  meta_layout -> Pack(sub_layout = Box::Create(Box::Orientation::VERTICAL));
+  meta_layout -> Pack(Separator::Create(Separator::Orientation::VERTICAL));
+  meta_layout -> Pack(info_layout = Box::Create(Box::Orientation::VERTICAL));
+    
   // choice template buttons
   auto template_map = choice::c_solar::template_table();
   hm_t<string, Button::Ptr> alloc_button;
   auto template_layout = Box::Create(Box::Orientation::HORIZONTAL);
-  selection_layout -> Pack(template_layout);
-
-  // sector allocation buttons
-  hm_t<string, function<Widget::Ptr()> > subq;
-  subq[cost::keywords::key_mining] = [this] () {return solar_query::mining::Create(response.mining);};
-  subq[cost::keywords::key_military] = [this] () {return solar_query::military::Create(response.military);};
-  subq[cost::keywords::key_expansion] = [this] () {return solar_query::expansion::Create(response.expansion);};
-
-  for (auto v : cost::keywords::sector){
-    auto b = factory(v, response.allocation[v], [this](){return response.allocation.count() < choice::max_allocation;});
-
-    if (subq.count(v)){
-      // sectors with sub interfaces
-      auto sub = Button::Create(">");
-      sub -> GetSignal(Widget::OnLeftClick).Connect([this,v,subq](){
-	  static bool active = false;
-	  if (sub_window) layout -> Remove(sub_window);
-	  if (active){
-	    active = false;
-	    sub_window = build_info();
-	  }else{
-	    active = true;
-	    sub_window = subq.at(v)();
-	  }
-	  layout -> Pack(sub_window);
-	});
-      auto l = Box::Create(Box::Orientation::HORIZONTAL);
-      l -> Pack(b);
-      l -> Pack(sub);
-      selection_layout -> Pack(l);
-    }else{
-      // sectors without sub interfaces
-      selection_layout -> Pack(b);
-    }
-
-    alloc_button[v] = b;
-  }
 
   for (auto &x : template_map){
     auto b = Button::Create("Template: " + x.first);
-    b -> GetSignal(Widget::OnLeftClick).Connect([this, x, alloc_button] () {
-	// apply template choice
+    b -> GetSignal(Widget::OnLeftClick).Connect([this, x] () {
 	response = x.second;
-
-	// clear sup window
-	if (sub_window) layout -> Remove(sub_window);
-	layout -> Pack(sub_window = build_info());
-
-	// update allocation buttons
-	for (auto v : alloc_button)
-	  v.second -> SetLabel(label_builder(v.first, response.allocation[v.first]));
+	build_choice();
       });
     template_layout -> Pack(b);
   }
+
+  layout -> Pack(template_layout);
+  layout -> Pack(meta_layout);
+
+  build_choice();
+  build_info();
 
   auto b_accept = Button::Create("ACCEPT");
 
@@ -370,13 +345,48 @@ solar_query::main_window::main_window(idtype solar_id, solar::solar s) : sol(s){
   l_response -> Pack(b_accept);
   l_response -> Pack(b_cancel);
 
-  selection_layout -> Pack(l_response);
-  selection_layout -> SetRequisition(desktop -> sub_dims());
-  layout -> Pack(selection_layout);
-  layout -> Pack(sub_window);
+  layout -> Pack(l_response);
+  layout -> SetRequisition(desktop -> sub_dims());
 }
 
-Box::Ptr solar_query::main_window::build_info(){
+void solar_query::main_window::build_choice(){
+  // sector allocation buttons
+  auto layout = Box::Create(Box::Orientation::VERTICAL);
+  hm_t<string, function<Widget::Ptr()> > subq;
+  subq[cost::keywords::key_mining] = [this] () {return solar_query::mining::Create(response.mining);};
+  subq[cost::keywords::key_military] = [this] () {return solar_query::military::Create(response.military);};
+  subq[cost::keywords::key_expansion] = [this] () {return solar_query::expansion::Create(response.expansion);};
+
+  for (auto v : cost::keywords::sector){
+    auto b = factory(v, response.allocation[v], [this](){return response.allocation.count() < choice::max_allocation;}, tooltip);
+
+    if (subq.count(v)){
+      // sectors with sub interfaces
+      auto sub = Button::Create(">");
+      sub -> GetSignal(Widget::OnLeftClick).Connect([this,v,subq](){build_sub(subq.at(v)());});
+      auto l = Box::Create(Box::Orientation::HORIZONTAL);
+      l -> Pack(b);
+      l -> Pack(sub);
+      layout -> Pack(l);
+    }else{
+      // sectors without sub interfaces
+      layout -> Pack(b);
+    }
+  }
+
+  auto frame = Frame::Create("Sector priorities");
+  frame -> Add(layout);
+
+  choice_layout -> RemoveAll();
+  choice_layout -> Pack(frame);
+}
+
+void solar_query::main_window::build_sub(Widget::Ptr p){
+  sub_layout -> RemoveAll();
+  sub_layout -> Pack(p);
+}
+
+void solar_query::main_window::build_info(){
   auto res = Box::Create(Box::Orientation::VERTICAL);
   res -> Pack(Label::Create("Population: " + to_string((int)sol.population)));
   res -> Pack(Label::Create("Happiness: " + to_string(sol.happiness)));
@@ -391,9 +401,12 @@ Box::Ptr solar_query::main_window::build_info(){
     res -> Pack(Label::Create("Resource " + v + ": " + to_string(sol.resource[v].storage) + "[" + to_string(sol.resource[v].available) + "]"));
 
   res -> Pack(Label::Create("Turrets: " + to_string(sol.turrets.size())));
-  
-  res -> SetRequisition(desktop -> sub_dims());
-  return res;	      
+
+  auto frame = Frame::Create("Solar info");
+  frame -> Add(res);
+
+  info_layout -> RemoveAll();
+  info_layout -> Pack(frame);
 }
 
 // sub window for expansion choice

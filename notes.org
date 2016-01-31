@@ -1,21 +1,18 @@
 * currently working on
-** rewrite solar/gui
-*** expand solar info/data
-*** priority buttons unresponsive to first right click
-*** boxes do not comply to requisition/allocation requests
-**** solar query base fills whole window
-**** sub query does not expand and fill
+** consider moving sub window classes to main window build routine
+   so they can access tooltip etc.
 ** dead ships are not removed properly during simulation
    and after a fleet is spotted a secon time, old dead ships from this
    fleet reappear..?
 ** why does sending frames take so long?
 ** lacking proper leave game functionality
+** end game status not displayed
 ** bombing ships concentrate in a ball
+** priority buttons unresponsive to first right click
 ** projectile graphics object
 ** move keywords and allocations to "types.h"
 ** move expansion costs to research?
 ** targui should only appear when multiple targets are available
-** solar happy update does not match happy_increment
 ** command selectors drawn on top of each other
 ** targui shows self as target (though this does not create a command)
 * long term goals

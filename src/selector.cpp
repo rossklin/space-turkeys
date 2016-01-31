@@ -98,7 +98,7 @@ void solar_selector::draw(window_t &w){
   float defrad = radius + 4; 
   sol.setRadius(defrad);
   sol.setPointCount(defrad / graphics::inverse_scale(w).x);
-  sol.setOutlineThickness(utility::sigmoid(has_defense(), 100) / 20);
+  sol.setOutlineThickness(utility::sigmoid(turrets.size(), 100) / 20);
   sol.setOutlineColor(sf::Color(100, 140, 200, 150));
   sol.setFillColor(sf::Color::Transparent);
   sol.setPosition(position - point(defrad, defrad));
