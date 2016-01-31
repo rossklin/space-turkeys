@@ -4,11 +4,13 @@
 ** dead ships are not removed properly during simulation
    and after a fleet is spotted a secon time, old dead ships from this
    fleet reappear..?
+** sub divide solar dynamics so components are accessible from gui
 ** why does sending frames take so long?
 ** lacking proper leave game functionality
 ** end game status not displayed
 ** bombing ships concentrate in a ball
 ** priority buttons unresponsive to first right click
+** simulation progress bar
 ** projectile graphics object
 ** move keywords and allocations to "types.h"
 ** move expansion costs to research?

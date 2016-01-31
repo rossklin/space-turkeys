@@ -173,21 +173,18 @@ solar_query::main_window::Ptr solar_query::main_window::Create(int id, solar::so
 solar_query::expansion::Ptr solar_query::expansion::Create(choice::c_expansion &c){
   auto buf = Ptr(new solar_query::expansion(c));
   buf -> Add(buf -> layout);
-  buf -> SetRequisition(desktop -> sub_dims());
   return buf;
 }
 
 solar_query::military::Ptr solar_query::military::Create(choice::c_military &c){
   auto buf = Ptr(new solar_query::military(c));
   buf -> Add(buf -> layout);
-  buf -> SetRequisition(desktop -> sub_dims());
   return buf;
 }
 
 solar_query::mining::Ptr solar_query::mining::Create(choice::c_mining &c){
   auto buf = Ptr(new solar_query::mining(c));
   buf -> Add(buf -> layout);
-  buf -> SetRequisition(desktop -> sub_dims());
   return buf;
 }
 
@@ -319,6 +316,9 @@ solar_query::main_window::main_window(idtype sid, solar::solar s) : sol(s), sola
 	response = x.second;
 	build_choice();
       });
+    b -> GetSignal(Widget::OnMouseEnter).Connect([this,x] () {
+	tooltip -> SetText("Use template " + x.first);
+      });
     template_layout -> Pack(b);
   }
 
@@ -363,7 +363,8 @@ void solar_query::main_window::build_choice(){
     if (subq.count(v)){
       // sectors with sub interfaces
       auto sub = Button::Create(">");
-      sub -> GetSignal(Widget::OnLeftClick).Connect([this,v,subq](){build_sub(subq.at(v)());});
+      sub -> GetSignal(Widget::OnLeftClick).Connect([this,v,subq] () {build_sub(subq.at(v)());});
+      sub -> GetSignal(Widget::OnMouseEnter).Connect([this,v] () {tooltip -> SetText("Edit sub choices for " + v);});
       auto l = Box::Create(Box::Orientation::HORIZONTAL);
       l -> Pack(b);
       l -> Pack(sub);
@@ -388,19 +389,26 @@ void solar_query::main_window::build_sub(Widget::Ptr p){
 
 void solar_query::main_window::build_info(){
   auto res = Box::Create(Box::Orientation::VERTICAL);
-  res -> Pack(Label::Create("Population: " + to_string((int)sol.population)));
-  res -> Pack(Label::Create("Happiness: " + to_string(sol.happiness)));
-  res -> Pack(Label::Create("Ecology: " + to_string(sol.ecology)));
-  res -> Pack(Label::Create("Water: " + to_string(sol.water_status())));
-  res -> Pack(Label::Create("Space: " + to_string(sol.space_status())));
+
+  auto label_build = [] (string v) -> Label::Ptr{
+    auto a = Label::Create(v);
+    a -> SetAlignment(sf::Vector2f(0, 0));
+    return a;
+  };
+  
+  res -> Pack(label_build("Population: " + to_string((int)sol.population)));
+  res -> Pack(label_build("Happiness: " + to_string(sol.happiness)));
+  res -> Pack(label_build("Ecology: " + to_string(sol.ecology)));
+  res -> Pack(label_build("Water: " + to_string(sol.water_status())));
+  res -> Pack(label_build("Space: " + to_string(sol.space_status())));
 
   for (auto v : cost::keywords::sector)
-    res -> Pack(Label::Create("Sector " + v + ": " + to_string(sol.sector[v])));
+    res -> Pack(label_build("Sector " + v + ": " + to_string(sol.sector[v])));
 
   for (auto v : cost::keywords::resource)
-    res -> Pack(Label::Create("Resource " + v + ": " + to_string(sol.resource[v].storage) + "[" + to_string(sol.resource[v].available) + "]"));
+    res -> Pack(label_build("Resource " + v + ": " + to_string(sol.resource[v].storage) + "[" + to_string(sol.resource[v].available) + "]"));
 
-  res -> Pack(Label::Create("Turrets: " + to_string(sol.turrets.size())));
+  res -> Pack(label_build("Turrets: " + to_string(sol.turrets.size())));
 
   auto frame = Frame::Create("Solar info");
   frame -> Add(res);
