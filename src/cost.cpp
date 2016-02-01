@@ -243,6 +243,10 @@ turret_allocation<turret_cost>& cost::turret_build(){
   return buf;
 }
 
+float cost::expansion_multiplier(float level){
+  return pow(2, floor(level));
+}
+
 // template instantiations
 template struct allocation<resource_data>;
 template struct allocation<st3::ship>;

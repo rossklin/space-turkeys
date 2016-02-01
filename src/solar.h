@@ -106,6 +106,16 @@ namespace st3{
 	@return the string 
       */
       std::string get_info();
+
+      float poluation_increment();
+      float ecology_increment();
+      float happiness_increment(choice::c_solar &c);
+      float research_increment(choice::c_solar &c);
+      float resource_increment(std::string v, choice::c_solar &c);
+      float expansion_increment(std::string v, choice::c_solar &c);
+      float ship_increment(std::string v, choice::c_solar &c);
+      float turret_increment(std::string v, choice::c_solar &c);
+      float compute_workers();
     };
   };
 };

@@ -1,8 +1,8 @@
 * currently working on
+** sub divide solar dynamics so components are accessible from gui
 ** dead ships are not removed properly during simulation
    and after a fleet is spotted a secon time, old dead ships from this
    fleet reappear..?
-** sub divide solar dynamics so components are accessible from gui
 ** why does sending frames take so long?
 ** lacking proper leave game functionality
 ** end game status not displayed

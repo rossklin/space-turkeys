@@ -103,38 +103,71 @@ float solar::solar::water_status(){
   return (water - used) / water;
 }
 
-solar::solar solar::solar::dynamics(choice::c_solar &c, float dt){
-  c.normalize();
-  float workers = happiness * population;
-  auto buf = *this;
+float solar::solar::poluation_increment(){
   float base_growth = population * happiness * st3::solar::f_growth;
   float culture_growth = base_growth * sector[cost::keywords::key_culture];
   float random_growth = population * st3::solar::f_growth * utility::random_normal(0, 1);
   float crowding_death = population * st3::solar::f_crowding * population / (ecology * space * space_status() + 1);
-  float pop_growth = base_growth + culture_growth + random_growth - crowding_death;
+  return base_growth + culture_growth + random_growth - crowding_death;
+}
 
-  // debug printout
-  // cout << "dynamics: " << population << ": happy: " << happiness << ", growth: " << base_growth << ", cgrowth: " << culture_growth << ", cdeath: " << crowding_death << ", random: " << random_growth << ", total: " << pop_growth;
+float solar::solar::ecology_increment(){
+  return 0.01 * ((space_status() * water_status() - ecology) + utility::random_normal(0, 0.01));
+}
+
+float solar::solar::happiness_increment(choice::c_solar &c){
+  return 0.01 * (sector[cost::keywords::key_culture] + c.allocation[cost::keywords::key_culture] - 0.1 * log(population) / (ecology + 1) + utility::random_normal(0,1) - (happiness - 0.5));
+}
+
+float solar::solar::research_increment(choice::c_solar &c){
+  return c.allocation[cost::keywords::key_research] * population * sector[cost::keywords::key_research] * happiness;
+}
+
+float solar::solar::resource_increment(string v, choice::c_solar &c){
+  return st3::solar::f_minerate * c.allocation[cost::keywords::key_mining] * c.mining[v] * compute_workers();
+}
+
+float solar::solar::expansion_increment(string v, choice::c_solar &c){
+  return st3::solar::f_buildrate * c.allocation[cost::keywords::key_expansion] * c.expansion[v] * compute_workers() / (cost::expansion_multiplier(sector[v]) * cost::sector_expansion()[v].time);
+}
+
+float solar::solar::ship_increment(string v, choice::c_solar &c){
+  auto build_cost = cost::ship_build()[v];
+  return st3::solar::f_buildrate * c.allocation[cost::keywords::key_military] * c.military.c_ship[v] * compute_workers() / build_cost.time;
+}
+
+float solar::solar::turret_increment(string v, choice::c_solar &c){
+  auto build_cost = cost::turret_build()[v];
+  return st3::solar::f_buildrate * c.allocation[cost::keywords::key_military] * c.military.c_turret[v] * compute_workers() / build_cost.time;
+}
+
+float solar::solar::compute_workers(){
+  return happiness * population;
+}
+
+solar::solar solar::solar::dynamics(choice::c_solar &c, float dt){
+  c.normalize();
+  auto buf = *this;
 
   // ecological development
-  buf.ecology += 0.01 * ((space_status() * water_status() - ecology) + utility::random_normal(0, 1)) * dt;
+  buf.ecology += ecology_increment() * dt;
   buf.ecology = fmax(fmin(buf.ecology, 1), 0);
 
   if (population > 0){
     // population development
     
-    buf.population += pop_growth * dt;
+    buf.population += poluation_increment() * dt;
 
     // happiness development
-    buf.happiness += 0.01 * (sector[cost::keywords::key_culture] + c.allocation[cost::keywords::key_culture] - 0.1 * log(population) / (ecology + 1) + utility::random_normal(0,1) - (happiness - 0.5)) * dt;
+    buf.happiness += happiness_increment(c) * dt;
     buf.happiness = fmax(fmin(1, buf.happiness), 0);
 
     // research development
-    buf.research += c.allocation[cost::keywords::key_research] * buf.population * buf.sector[cost::keywords::key_research] * buf.happiness * dt;
+    buf.research += research_increment(c) * dt;
 
     // mining
     for (auto v : cost::keywords::resource){
-      float move = fmin(resource[v].available, dt * st3::solar::f_minerate * c.allocation[cost::keywords::key_mining] * c.mining[v] * workers);
+      float move = fmin(resource[v].available, dt * resource_increment(v, c));
       buf.resource[v].available -= move;
       buf.resource[v].storage += move;
     }
@@ -146,11 +179,9 @@ solar::solar solar::solar::dynamics(choice::c_solar &c, float dt){
 
     // expansions
     for (auto v : cost::keywords::expansion){
-      float level = floor(sector[v]);
-      float multiplier = pow(2, level);
       cost::countable_resource_allocation<float> effective_cost = cost::sector_expansion()[v].res;
-      effective_cost.scale(multiplier);
-      float quantity = dt * st3::solar::f_buildrate * c.allocation[cost::keywords::key_expansion] * c.expansion[v] * workers / (multiplier * cost::sector_expansion()[v].time);
+      effective_cost.scale(cost::expansion_multiplier(sector[v]));
+      float quantity = dt * expansion_increment(v, c);
 
       total_quantity += quantity;
       effective_cost.scale(quantity);
@@ -160,8 +191,8 @@ solar::solar solar::solar::dynamics(choice::c_solar &c, float dt){
     
     // military industry
     for (auto v : cost::keywords::ship){
+      float quantity = dt * ship_increment(v, c);
       auto build_cost = cost::ship_build()[v];
-      float quantity = dt * st3::solar::f_buildrate * c.allocation[cost::keywords::key_military] * c.military.c_ship[v] * workers / build_cost.time;;
       total_quantity += quantity;
       build_cost.res.scale(quantity);
       total_cost.add(build_cost.res);
@@ -169,8 +200,8 @@ solar::solar solar::solar::dynamics(choice::c_solar &c, float dt){
     }
 
     for (auto v : cost::keywords::turret){
+      float quantity = dt * turret_increment(v, c);
       auto build_cost = cost::turret_build()[v];
-      float quantity = dt * st3::solar::f_buildrate * c.allocation[cost::keywords::key_military] * c.military.c_turret[v] * workers / build_cost.time;;
       total_quantity += quantity;
       build_cost.res.scale(quantity);
       total_cost.add(build_cost.res);

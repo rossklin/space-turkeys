@@ -117,6 +117,8 @@ namespace st3{
 
     /*! cost for turret */
     turret_allocation<turret_cost> &turret_build();
+
+    float expansion_multiplier(float level);
   };
 };
 #endif
