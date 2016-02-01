@@ -1,5 +1,4 @@
 * currently working on
-** sub divide solar dynamics so components are accessible from gui
 ** dead ships are not removed properly during simulation
    and after a fleet is spotted a secon time, old dead ships from this
    fleet reappear..?
@@ -7,6 +6,7 @@
 ** lacking proper leave game functionality
 ** end game status not displayed
 ** bombing ships concentrate in a ball
+** sfg window does not resize on sfml window resize
 ** priority buttons unresponsive to first right click
 ** simulation progress bar
 ** projectile graphics object
@@ -126,6 +126,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** sub divide solar dynamics so components are accessible from gui
 ** consider moving sub window classes to main window build routine
    so they can access tooltip etc.
 ** solar system stability tests

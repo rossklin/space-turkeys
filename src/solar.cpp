@@ -106,17 +106,16 @@ float solar::solar::water_status(){
 float solar::solar::poluation_increment(){
   float base_growth = population * happiness * st3::solar::f_growth;
   float culture_growth = base_growth * sector[cost::keywords::key_culture];
-  float random_growth = population * st3::solar::f_growth * utility::random_normal(0, 1);
   float crowding_death = population * st3::solar::f_crowding * population / (ecology * space * space_status() + 1);
-  return base_growth + culture_growth + random_growth - crowding_death;
+  return base_growth + culture_growth - crowding_death;
 }
 
 float solar::solar::ecology_increment(){
-  return 0.01 * ((space_status() * water_status() - ecology) + utility::random_normal(0, 0.01));
+  return 0.01 * ((space_status() * water_status() - ecology));
 }
 
 float solar::solar::happiness_increment(choice::c_solar &c){
-  return 0.01 * (sector[cost::keywords::key_culture] + c.allocation[cost::keywords::key_culture] - 0.1 * log(population) / (ecology + 1) + utility::random_normal(0,1) - (happiness - 0.5));
+  return 0.01 * (sector[cost::keywords::key_culture] + c.allocation[cost::keywords::key_culture] - 0.1 * log(population) / (ecology + 1) - (happiness - 0.5));
 }
 
 float solar::solar::research_increment(choice::c_solar &c){
@@ -148,18 +147,20 @@ float solar::solar::compute_workers(){
 solar::solar solar::solar::dynamics(choice::c_solar &c, float dt){
   c.normalize();
   auto buf = *this;
+  float dw = sqrt(dt);
 
   // ecological development
-  buf.ecology += ecology_increment() * dt;
+  buf.ecology += ecology_increment() * dt + utility::random_normal(0, 0.01) * dw;
   buf.ecology = fmax(fmin(buf.ecology, 1), 0);
 
   if (population > 0){
     // population development
     
-    buf.population += poluation_increment() * dt;
+    float random_growth = population * st3::solar::f_growth * utility::random_normal(0, 1);
+    buf.population += poluation_increment() * dt + random_growth * dw;
 
     // happiness development
-    buf.happiness += happiness_increment(c) * dt;
+    buf.happiness += happiness_increment(c) * dt + utility::random_normal(0, 0.01) * dw;
     buf.happiness = fmax(fmin(1, buf.happiness), 0);
 
     // research development

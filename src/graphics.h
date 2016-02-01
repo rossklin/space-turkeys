@@ -2,6 +2,7 @@
 #define _STK_GRAPHICS
 
 #include <string>
+#include <functional>
 
 #include <SFGUI/SFGUI.hpp>
 #include <SFGUI/Widgets.hpp>
@@ -166,6 +167,8 @@ namespace st3{
 	void build_military();
 	void build_mining();
 	void build_expansion();
+
+	sfg::Button::Ptr priority_button(std::string label, float &data, std::function<bool()> inc_val, sfg::Label::Ptr tip = 0);
       };
 
       // desktop geometry data

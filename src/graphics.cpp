@@ -186,7 +186,7 @@ main_interface::main_interface(sf::Vector2u d, research::data &r) : research_lev
   top_height = 0.1 * d.y;
   bottom_start = 0.9 * d.y;
   int bottom_height = d.y - bottom_start - 1;
-  int qw_top = 0.2 * d.y;
+  int qw_top = 0.1 * d.y + 10;
   int qw_bottom = 0.8 * d.y;
   qw_allocation = sf::FloatRect(10, qw_top, d.x - 20, qw_bottom - qw_top);
   
@@ -225,23 +225,26 @@ research_window::research_window(choice::c_research *c) {
   // todo: write me
 }
 
-string label_builder(string label, float data){
-  return label + ": " + to_string((int)round(data));
-}
-
 // build a labeled button to modify priority data
-Button::Ptr factory (string label, float &data, function<bool()> inc_val, Label::Ptr tip = 0){
+Button::Ptr main_window::priority_button(string label, float &data, function<bool()> inc_val, Label::Ptr tip){
+
+  auto label_builder = [] (string label, float data){
+    return label + ": " + to_string((int)round(data));
+  };
+
   auto b = Button::Create(label_builder(label, data));
   auto p = b.get();
 
-  b -> GetSignal(Widget::OnLeftClick).Connect([&data, p, label, inc_val](){
+  b -> GetSignal(Widget::OnLeftClick).Connect([this, &data, p, label, inc_val, label_builder](){
       if (inc_val()) data++;
       p -> SetLabel(label_builder(label, data));
+      build_info();
     });
     
-  b -> GetSignal(Widget::OnRightClick).Connect([&data, p, label](){
+  b -> GetSignal(Widget::OnRightClick).Connect([this, &data, p, label, label_builder](){
       if (data > 0) data--;
       p -> SetLabel(label_builder(label, data));
+      build_info();
     });
 
   if (tip){
@@ -253,13 +256,12 @@ Button::Ptr factory (string label, float &data, function<bool()> inc_val, Label:
   return b;
 };
 
-
 // main window for solar choice
 main_window::main_window(idtype sid, solar::solar s) : sol(s), solar_id(sid){
   response = desktop -> response.solar_choices[solar_id];
 
   // main layout
-  layout = Box::Create(Box::Orientation::VERTICAL, 20);
+  layout = Box::Create(Box::Orientation::VERTICAL, 10);
 
   layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
   tooltip = Label::Create("...");
@@ -280,6 +282,7 @@ main_window::main_window(idtype sid, solar::solar s) : sol(s), solar_id(sid){
     b -> GetSignal(Widget::OnLeftClick).Connect([this, x] () {
 	response = x.second;
 	build_choice();
+	build_info();
 	new_sub("(chose sub edit)");
       });
     b -> GetSignal(Widget::OnMouseEnter).Connect([this,x] () {
@@ -325,7 +328,7 @@ void main_window::build_choice(){
   subq[cost::keywords::key_expansion] = [this] () {build_expansion();};
 
   for (auto v : cost::keywords::sector){
-    auto b = factory(v, response.allocation[v], [this](){return response.allocation.count() < choice::max_allocation;}, tooltip);
+    auto b = priority_button(v, response.allocation[v], [this](){return response.allocation.count() < choice::max_allocation;}, tooltip);
 
     if (subq.count(v)){
       // sectors with sub interfaces
@@ -349,30 +352,57 @@ void main_window::build_choice(){
   choice_layout -> Pack(frame);
 }
 
+string format_float(float x){
+  stringstream stream;
+  stream << fixed << setprecision(2) << x;
+  return stream.str();
+}
+
 void main_window::build_info(){
   auto res = Box::Create(Box::Orientation::VERTICAL);
+  choice::c_solar c = response;
+  c.normalize();
 
-  auto label_build = [] (string v) -> Label::Ptr{
-    auto a = Label::Create(v);
+  auto label_build = [this] (string v, float absolute, float delta) -> Label::Ptr{
+    auto a = Label::Create(v + ": " + format_float(absolute) + " [" + format_float(delta) + "]");
     a -> SetAlignment(sf::Vector2f(0, 0));
+    a -> GetSignal(Widget::OnMouseEnter).Connect([this, v] () {
+	tooltip -> SetText("Status for " + v + " (rate of change in parenthesis)");
+      });
+    
     return a;
   };
-  
-  res -> Pack(label_build("Population: " + to_string((int)sol.population)));
-  res -> Pack(label_build("Happiness: " + to_string(sol.happiness)));
-  res -> Pack(label_build("Ecology: " + to_string(sol.ecology)));
-  res -> Pack(label_build("Water: " + to_string(sol.water_status())));
-  res -> Pack(label_build("Space: " + to_string(sol.space_status())));
-  
-  for (auto v : cost::keywords::sector)
-    res -> Pack(label_build("Sector " + v + ": " + to_string(sol.sector[v])));
 
+  auto buf = Box::Create(Box::Orientation::VERTICAL);
+  buf -> Pack(label_build("Population", sol.population, sol.poluation_increment()));
+  buf -> Pack(label_build("Happiness", sol.happiness, sol.happiness_increment(c)));
+  buf -> Pack(label_build("Ecology", sol.ecology, sol.ecology_increment()));
+  buf -> Pack(label_build("Water", sol.water_status(), 0));
+  buf -> Pack(label_build("Space", sol.space_status(), 0));
+  auto frame_buf = Frame::Create("Stats");
+  frame_buf -> Add(buf);
+  res -> Pack(frame_buf);
+
+  buf = Box::Create(Box::Orientation::VERTICAL);
+  for (auto v : cost::keywords::expansion)
+    buf -> Pack(label_build(v, sol.sector[v], sol.expansion_increment(v, c)));
+
+  frame_buf = Frame::Create("Sectors");
+  frame_buf -> Add(buf);
+  res -> Pack(frame_buf);
+
+  buf = Box::Create(Box::Orientation::VERTICAL);
   for (auto v : cost::keywords::resource)
-    res -> Pack(label_build("Resource " + v + ": " + to_string(sol.resource[v].storage) + "[" + to_string(sol.resource[v].available) + "]"));
+    buf -> Pack(label_build(v, sol.resource[v].storage, sol.resource_increment(v, c)));
 
-  res -> Pack(label_build("Turrets: " + to_string(sol.turrets.size())));
+  frame_buf = Frame::Create("Resources");
+  frame_buf -> Add(buf);
+  res -> Pack(frame_buf);
 
-  auto frame = Frame::Create("Solar info");
+  res -> Pack(label_build("Ships", sol.ships.size(), 0));
+  res -> Pack(label_build("Turrets", sol.turrets.size(), 0));
+
+  auto frame = Frame::Create("Solar " + to_string(solar_id) + " info");
   frame -> Add(res);
 
   info_layout -> RemoveAll();
@@ -395,7 +425,7 @@ void main_window::build_expansion(){
   
   // add buttons for expandable sectors
   for (auto v : cost::keywords::expansion){
-    buf -> Pack(factory(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip));
+    buf -> Pack(priority_button(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip));
   }
 };
 
@@ -406,10 +436,10 @@ void main_window::build_military(){
   
   // add buttons for expandable sectors
   for (auto v : cost::keywords::ship)
-    buf -> Pack(factory(v, c.c_ship[v], [&c](){return c.c_ship.count() < choice::max_allocation;}, tooltip));
+    buf -> Pack(priority_button(v, c.c_ship[v], [&c](){return c.c_ship.count() < choice::max_allocation;}, tooltip));
 
   for (auto v : cost::keywords::turret)
-    buf -> Pack(factory(v, c.c_turret[v], [&c](){return c.c_turret.count() < choice::max_allocation;}, tooltip));
+    buf -> Pack(priority_button(v, c.c_turret[v], [&c](){return c.c_turret.count() < choice::max_allocation;}, tooltip));
 };
 
 // sub window for mining choice
@@ -419,7 +449,7 @@ void main_window::build_mining(){
 
   // add buttons for expandable sectors
   for (auto v : cost::keywords::resource){
-    auto b = factory(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip);
+    auto b = priority_button(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip);
     buf -> Pack(b);
   }
 };
