@@ -278,6 +278,23 @@ void st3::client::game::simulation_step(){
       return query_accepted;
     }
 
+    // draw load progress
+    window.setView(view_window);
+
+    auto colored_rect = [] (sf::Color c, float r) -> sf::RectangleShape{
+      float w = interface::desktop_dims.x - 20;
+      auto rect = graphics::build_rect(sf::FloatRect(10, interface::top_height + 10, r * w, 20));
+      c.a = 150;
+      rect.setFillColor(c);
+      rect.setOutlineColor(sf::Color::White);
+      rect.setOutlineThickness(1);
+      return rect;
+    };
+
+    window.draw(colored_rect(sf::Color::Red, 1));
+    window.draw(colored_rect(sf::Color::Blue, loaded / (float) settings.frames_per_round));
+    window.draw(colored_rect(sf::Color::Green, idx / (float) settings.frames_per_round));
+
     message = "evolution: " + to_string((100 * idx) / settings.frames_per_round) + " %" + (playing ? "" : "(paused)");
 
     playing &= idx < loaded - 1;
@@ -1186,16 +1203,18 @@ int game::window_loop(int &done, function<int(sf::Event)> event_handler, functio
     
     if (!window.isOpen()) done |= query_aborted;
 
-    done |= body();
-
     // update controls
     controls();
 
     // draw universe and game objects
     draw_window();
 
+    // main content callback
+    done |= body();
+
     window.setView(view_window);
     // todo: add a dummy draw here to ensure sfgui uses this view
+    
 
     // update sfgui
     interface::desktop -> Update(delta);

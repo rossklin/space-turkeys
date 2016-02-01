@@ -103,7 +103,7 @@ namespace st3{
       class query : public C{
       public:
 	R response;
-	query();
+	query(char style = 0);
       };
 
       // bottom panel

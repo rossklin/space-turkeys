@@ -173,7 +173,7 @@ main_window::Ptr main_window::Create(int id, solar::solar s){
 // constructors
 //query
 template<typename C, typename R>
-query<C,R>::query() : Window(Window::Style::TOPLEVEL) { }
+query<C,R>::query(char s) : Window(s) { }
 
 // main interface
 
@@ -217,7 +217,7 @@ void main_interface::clear_qw(){
 bottom_panel::bottom_panel() {
 }
 
-top_panel::top_panel() : Window(Window::Style::TOPLEVEL) {
+top_panel::top_panel() : Window(Window::Style::BACKGROUND) {
 }
 
 // research window
