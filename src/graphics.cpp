@@ -161,8 +161,8 @@ top_panel::Ptr top_panel::Create(){
 
 research_window::Ptr research_window::Create(choice::c_research *c){return Ptr(new research_window(c));}
 
-solar_query::main_window::Ptr solar_query::main_window::Create(int id, solar::solar s){
-  auto buf = Ptr(new solar_query::main_window(id, s));
+main_window::Ptr main_window::Create(int id, solar::solar s){
+  auto buf = Ptr(new main_window(id, s));
   buf -> Add(buf -> layout);
   buf -> SetAllocation(qw_allocation);
   buf -> SetTitle("Customize solar choice for solar " + to_string(buf -> solar_id));
@@ -170,42 +170,10 @@ solar_query::main_window::Ptr solar_query::main_window::Create(int id, solar::so
   return buf;
 }
 
-solar_query::expansion::Ptr solar_query::expansion::Create(choice::c_expansion &c){
-  auto buf = Ptr(new solar_query::expansion(c));
-  buf -> Add(buf -> layout);
-  return buf;
-}
-
-solar_query::military::Ptr solar_query::military::Create(choice::c_military &c){
-  auto buf = Ptr(new solar_query::military(c));
-  buf -> Add(buf -> layout);
-  return buf;
-}
-
-solar_query::mining::Ptr solar_query::mining::Create(choice::c_mining &c){
-  auto buf = Ptr(new solar_query::mining(c));
-  buf -> Add(buf -> layout);
-  return buf;
-}
-
 // constructors
 //query
 template<typename C, typename R>
 query<C,R>::query() : Window(Window::Style::TOPLEVEL) { }
-
-// boxed
-solar_query::boxed::boxed(Box::Orientation o){
-  layout = Box::Create(o);
-}
-
-const string& solar_query::boxed::GetName() const {
-  static string buf = "boxed";
-  return buf;
-};
-
-sf::Vector2f solar_query::boxed::CalculateRequisition(){
-  return layout -> GetRequisition();
-}
 
 // main interface
 
@@ -287,7 +255,7 @@ Button::Ptr factory (string label, float &data, function<bool()> inc_val, Label:
 
 
 // main window for solar choice
-solar_query::main_window::main_window(idtype sid, solar::solar s) : sol(s), solar_id(sid){
+main_window::main_window(idtype sid, solar::solar s) : sol(s), solar_id(sid){
   response = desktop -> response.solar_choices[solar_id];
 
   // main layout
@@ -300,14 +268,11 @@ solar_query::main_window::main_window(idtype sid, solar::solar s) : sol(s), sola
 
   auto meta_layout = Box::Create(Box::Orientation::HORIZONTAL);
   meta_layout -> Pack(choice_layout = Box::Create(Box::Orientation::VERTICAL));
-  meta_layout -> Pack(Separator::Create(Separator::Orientation::VERTICAL));
   meta_layout -> Pack(sub_layout = Box::Create(Box::Orientation::VERTICAL));
-  meta_layout -> Pack(Separator::Create(Separator::Orientation::VERTICAL));
   meta_layout -> Pack(info_layout = Box::Create(Box::Orientation::VERTICAL));
     
   // choice template buttons
   auto template_map = choice::c_solar::template_table();
-  hm_t<string, Button::Ptr> alloc_button;
   auto template_layout = Box::Create(Box::Orientation::HORIZONTAL);
 
   for (auto &x : template_map){
@@ -315,6 +280,7 @@ solar_query::main_window::main_window(idtype sid, solar::solar s) : sol(s), sola
     b -> GetSignal(Widget::OnLeftClick).Connect([this, x] () {
 	response = x.second;
 	build_choice();
+	new_sub("(chose sub edit)");
       });
     b -> GetSignal(Widget::OnMouseEnter).Connect([this,x] () {
 	tooltip -> SetText("Use template " + x.first);
@@ -326,6 +292,7 @@ solar_query::main_window::main_window(idtype sid, solar::solar s) : sol(s), sola
   layout -> Pack(meta_layout);
 
   build_choice();
+  new_sub("(chose sub edit)");
   build_info();
 
   auto b_accept = Button::Create("ACCEPT");
@@ -349,13 +316,13 @@ solar_query::main_window::main_window(idtype sid, solar::solar s) : sol(s), sola
   layout -> SetRequisition(desktop -> sub_dims());
 }
 
-void solar_query::main_window::build_choice(){
+void main_window::build_choice(){
   // sector allocation buttons
   auto layout = Box::Create(Box::Orientation::VERTICAL);
-  hm_t<string, function<Widget::Ptr()> > subq;
-  subq[cost::keywords::key_mining] = [this] () {return solar_query::mining::Create(response.mining);};
-  subq[cost::keywords::key_military] = [this] () {return solar_query::military::Create(response.military);};
-  subq[cost::keywords::key_expansion] = [this] () {return solar_query::expansion::Create(response.expansion);};
+  hm_t<string, function<void()> > subq;
+  subq[cost::keywords::key_mining] = [this] () {build_mining();};
+  subq[cost::keywords::key_military] = [this] () {build_military();};
+  subq[cost::keywords::key_expansion] = [this] () {build_expansion();};
 
   for (auto v : cost::keywords::sector){
     auto b = factory(v, response.allocation[v], [this](){return response.allocation.count() < choice::max_allocation;}, tooltip);
@@ -363,7 +330,7 @@ void solar_query::main_window::build_choice(){
     if (subq.count(v)){
       // sectors with sub interfaces
       auto sub = Button::Create(">");
-      sub -> GetSignal(Widget::OnLeftClick).Connect([this,v,subq] () {build_sub(subq.at(v)());});
+      sub -> GetSignal(Widget::OnLeftClick).Connect([v,subq] () {subq.at(v)();});
       sub -> GetSignal(Widget::OnMouseEnter).Connect([this,v] () {tooltip -> SetText("Edit sub choices for " + v);});
       auto l = Box::Create(Box::Orientation::HORIZONTAL);
       l -> Pack(b);
@@ -382,12 +349,7 @@ void solar_query::main_window::build_choice(){
   choice_layout -> Pack(frame);
 }
 
-void solar_query::main_window::build_sub(Widget::Ptr p){
-  sub_layout -> RemoveAll();
-  sub_layout -> Pack(p);
-}
-
-void solar_query::main_window::build_info(){
+void main_window::build_info(){
   auto res = Box::Create(Box::Orientation::VERTICAL);
 
   auto label_build = [] (string v) -> Label::Ptr{
@@ -401,7 +363,7 @@ void solar_query::main_window::build_info(){
   res -> Pack(label_build("Ecology: " + to_string(sol.ecology)));
   res -> Pack(label_build("Water: " + to_string(sol.water_status())));
   res -> Pack(label_build("Space: " + to_string(sol.space_status())));
-
+  
   for (auto v : cost::keywords::sector)
     res -> Pack(label_build("Sector " + v + ": " + to_string(sol.sector[v])));
 
@@ -417,29 +379,47 @@ void solar_query::main_window::build_info(){
   info_layout -> Pack(frame);
 }
 
+Box::Ptr main_window::new_sub(string v){
+  auto buf = Box::Create(Box::Orientation::VERTICAL);
+  auto frame = Frame::Create(v);
+  frame -> Add(buf);
+  sub_layout -> RemoveAll();
+  sub_layout -> Pack(frame);
+  return buf;
+}
+ 
 // sub window for expansion choice
-solar_query::expansion::expansion(choice::c_expansion &c) : boxed(Box::Orientation::VERTICAL){
+void main_window::build_expansion(){
+  choice::c_expansion &c = response.expansion;
+  auto buf = new_sub("Expansion priorities");
+  
   // add buttons for expandable sectors
-  for (auto v : cost::keywords::sector){
-    if (v != "expansion"){
-      layout -> Pack(factory(v, c[v], [&c](){return c.count() < choice::max_allocation;}));
-    }
+  for (auto v : cost::keywords::expansion){
+    buf -> Pack(factory(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip));
   }
 };
 
 // sub window for military choice
-solar_query::military::military(choice::c_military &c) : boxed(Box::Orientation::VERTICAL){
+void main_window::build_military(){
+  choice::c_military &c = response.military;
+  auto buf = new_sub("Military build priorities");
+  
   // add buttons for expandable sectors
   for (auto v : cost::keywords::ship)
-    layout -> Pack(factory(v, c.c_ship[v], [&c](){return c.c_ship.count() < choice::max_allocation;}));
+    buf -> Pack(factory(v, c.c_ship[v], [&c](){return c.c_ship.count() < choice::max_allocation;}, tooltip));
 
   for (auto v : cost::keywords::turret)
-    layout -> Pack(factory(v, c.c_turret[v], [&c](){return c.c_turret.count() < choice::max_allocation;}));
+    buf -> Pack(factory(v, c.c_turret[v], [&c](){return c.c_turret.count() < choice::max_allocation;}, tooltip));
 };
 
 // sub window for mining choice
-solar_query::mining::mining(choice::c_mining &c) : boxed(Box::Orientation::VERTICAL){
+void main_window::build_mining(){
+  choice::c_mining &c = response.mining;
+  auto buf = new_sub("Mining resource priorities");
+
   // add buttons for expandable sectors
-  for (auto v : cost::keywords::resource)
-    layout -> Pack(factory(v, c[v], [&c](){return c.count() < choice::max_allocation;}));
+  for (auto v : cost::keywords::resource){
+    auto b = factory(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip);
+    buf -> Pack(b);
+  }
 };

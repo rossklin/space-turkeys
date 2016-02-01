@@ -1,6 +1,4 @@
 * currently working on
-** consider moving sub window classes to main window build routine
-   so they can access tooltip etc.
 ** dead ships are not removed properly during simulation
    and after a fleet is spotted a secon time, old dead ships from this
    fleet reappear..?
@@ -128,6 +126,8 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** consider moving sub window classes to main window build routine
+   so they can access tooltip etc.
 ** solar system stability tests
 **** parallel cost subtractions
 ** turrets do no damage? take no damage?

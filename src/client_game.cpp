@@ -963,7 +963,7 @@ void game::run_solar_gui(source_t key){
     exit(-1);
   }
 
-  interface::desktop -> reset_qw(interface::solar_query::main_window::Create(identifier::get_id(key), sol));
+  interface::desktop -> reset_qw(interface::main_window::Create(identifier::get_id(key), sol));
 }
 
 // return true to signal choice step done

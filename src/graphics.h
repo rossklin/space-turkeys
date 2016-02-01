@@ -142,76 +142,30 @@ namespace st3{
       };
 
       // solar choice windows
-      namespace solar_query{
-	class boxed : public sfg::Container{
-	public:
-	  const std::string& GetName() const;
-	  sf::Vector2f CalculateRequisition();
+      class main_window : public query<sfg::Window, choice::c_solar>{
+	// sub interface tracker
+	sfg::Box::Ptr layout;
+	sfg::Box::Ptr choice_layout;
+	sfg::Box::Ptr sub_layout;
+	sfg::Box::Ptr info_layout;
+	sfg::Label::Ptr tooltip;
 
-	protected:
-	  boxed(sfg::Box::Orientation o);
-	  sfg::Box::Ptr layout;
-	};
-	
-	// military choice sub window
-	class military : public boxed{
-	public:      
-	  typedef std::shared_ptr<military> Ptr;
-	  typedef std::shared_ptr<const military> PtrConst;
+	solar::solar sol;
+      public:
+	typedef std::shared_ptr<main_window> Ptr;
+	typedef std::shared_ptr<const main_window> PtrConst;
 
-	  static Ptr Create(choice::c_military &c);
-	
-	protected:
-	  military(choice::c_military &c);
-	};
+	int solar_id;
 
-	// mining choice sub window
-	class mining : public boxed{
-	public:      
-	  typedef std::shared_ptr<mining> Ptr;
-	  typedef std::shared_ptr<const mining> PtrConst;
-
-	  static Ptr Create(choice::c_mining &c);
-	
-	protected:
-	  mining(choice::c_mining &c);
-	};
-
-	// mining choice sub window
-	class expansion : public boxed{
-	public:      
-	  typedef std::shared_ptr<expansion> Ptr;
-	  typedef std::shared_ptr<const expansion> PtrConst;
-
-	  static Ptr Create(choice::c_expansion &c);
-	
-	protected:
-	  expansion(choice::c_expansion &c);
-	};
-
-	// main window
-	class main_window : public query<sfg::Window, choice::c_solar>{
-	  // sub interface tracker
-	  sfg::Box::Ptr layout;
-	  sfg::Box::Ptr choice_layout;
-	  sfg::Box::Ptr sub_layout;
-	  sfg::Box::Ptr info_layout;
-	  sfg::Label::Ptr tooltip;
-
-	  solar::solar sol;
-	public:
-	  typedef std::shared_ptr<main_window> Ptr;
-	  typedef std::shared_ptr<const main_window> PtrConst;
-
-	  int solar_id;
-
-	  static Ptr Create(int id, solar::solar s);
-	protected:
-	  main_window(int id, solar::solar s);
-	  void build_info();
-	  void build_choice();
-	  void build_sub(sfg::Widget::Ptr p);
-	};
+	static Ptr Create(int id, solar::solar s);
+      protected:
+	main_window(int id, solar::solar s);
+	void build_info();
+	void build_choice();
+	sfg::Box::Ptr new_sub(std::string v);
+	void build_military();
+	void build_mining();
+	void build_expansion();
       };
 
       // desktop geometry data
