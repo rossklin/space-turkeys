@@ -3,13 +3,16 @@
    and after a fleet is spotted a secon time, old dead ships from this
    fleet reappear..?
 ** why does sending frames take so long?
+*** tried a threaded approach 
+    Why does server keep distributing beyond end of array?
+
+    ... then it fails with invalid query.
 ** lacking proper leave game functionality
 ** end game status not displayed
 ** bombing ships concentrate in a ball
 ** sfg window does not resize on sfml window resize
 ** priority buttons unresponsive to first right click
 ** simulation progress bar
-** projectile graphics object
 ** move keywords and allocations to "types.h"
 ** move expansion costs to research?
 ** targui should only appear when multiple targets are available
@@ -126,6 +129,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** projectile graphics object
 ** sub divide solar dynamics so components are accessible from gui
 ** consider moving sub window classes to main window build routine
    so they can access tooltip etc.

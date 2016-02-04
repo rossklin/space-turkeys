@@ -1,5 +1,6 @@
 #include <iostream>
 #include <queue>
+#include <thread>
 
 #include "com_server.h"
 #include "protocol.h"
@@ -135,63 +136,69 @@ void st3::server::com::check_protocol(protocol_t query, sf::Packet &packet){
   cout << "com::check_protocol: end" << endl;
 }
 
+void distribute_frames_to(vector<game_data> buf, int &available_frames, client_t *c){
+  int idx = -1;
+  int lim_start = 0;
+  int lim_end;
+  vector<game_data> g(buf.size());
+  bool run = true;
+
+  cout << "distribute " << g.size() << " frames to " << c -> id << ": start" << endl;
+  
+  while (run){
+    lim_end = available_frames;
+    for (int i = lim_start; i < lim_end; i++)
+      g[i] = buf[i].limit_to(c -> id);
+    lim_start = lim_end;
+    
+    if (idx < 0 && c -> receive_query(protocol::frame)){
+      if (!(*(c -> data) >> idx)){
+	c -> send_invalid();
+	cout << "invalid: failed to load idx from client " << c -> id << endl;
+	idx = -1;
+      }
+    }
+    
+    if (idx >= 0 && idx < lim_end){
+      sf::Packet psend;
+      psend << protocol::confirm;
+      if (!(psend << g[idx])){
+	cout << "failed to serialize frame!" << endl;
+	exit(-1);
+      }
+
+      cout << "distribute frame " << idx << " to client " << c -> id << endl;
+
+      if (c -> send(psend)) idx = -1;
+    }else if (idx > ((int)g.size() - 1)){
+      c -> send_invalid();
+      cout << "invalid: client " << c -> id << " asked for frame " << idx << endl;
+      idx = -1;
+    }
+    run = idx < ((int)g.size() - 1);
+
+    cout << "distr: " << c -> id << ": " << idx << " of " << (g.size() - 1) << ": " << run << endl;
+    
+    sf::sleep(sf::milliseconds(1));
+  }
+
+  cout << "distributed " << idx << " of " << (g.size() - 1) << " frames to " << c -> id << ": end" << endl;
+}
+
 void st3::server::com::distribute_frames(vector<game_data> &g, int &frame_count){
-  queue<client_t*> q_in;
-  queue<cfi> q_out;
+  list<thread*> ts;
 
   cout << "com::distribute_frames: " << clients.size() << " clients:" << endl;
   for (unsigned int i = 0; i < clients.size(); i++){
-    q_in.push(&clients[i]);
+    thread* t = new thread(distribute_frames_to, ref(g), ref(frame_count), &clients[i]);
+    ts.push_back(t);
     cout << clients[i].name << endl;
   }
 
-  while (q_in.size() || q_out.size()){
-    if (q_in.size()){
-      client_t* c = q_in.front();
-      q_in.pop();
-
-      if (c -> receive_query(protocol::frame)){
-	int idx;
-	if (*(c -> data) >> idx){
-	  q_out.push(cfi(c, idx));
-	}else{
-	  c -> send_invalid();
-	  q_in.push(c);
-	}
-      }else{
-	q_in.push(c);
-      }
-    }
-
-    if (q_out.size()){
-      cfi c = q_out.front();
-      q_out.pop();
-
-      if (c.second >= 0 && c.second < frame_count){
-	sf::Packet psend;
-	psend << protocol::confirm;
-	if (!(psend << (g[c.second].limit_to(c.first -> id)))){
-	  cout << "failed to serialize frame!" << endl;
-	  exit(-1);
-	}
-
-	if (c.first -> send(psend)){
-	  if (c.second < g.size() - 1){
-	    q_in.push(c.first);
-	  }else{
-	  }
-	}else{
-	  q_out.push(c);
-	}
-      }else if (c.second >= 0 && c.second < g.size()){
-	q_out.push(c);
-      }else{
-	c.first -> send_invalid();
-	q_in.push(c.first);
-      }
-    }
-
-    sf::sleep(sf::milliseconds(1));
+  for (auto x : ts) {
+    x -> join();
+    delete x;
   }
+
   cout << "com::distribute_frames: end" << endl;
 }
