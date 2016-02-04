@@ -25,6 +25,12 @@ void st3::client::load_frames(socket_t socket, vector<game_data> &g, int &loaded
       sf::sleep(sf::milliseconds(1));
     }
   }
+
+  // indicate done
+  i = -1;
+  pq.clear();
+  pq << protocol::frame << i;
+  query(socket, pq, pr, done);
 }
 
 void st3::client::query(socket_t socket, 

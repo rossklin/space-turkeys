@@ -3,10 +3,7 @@
    and after a fleet is spotted a secon time, old dead ships from this
    fleet reappear..?
 ** why does sending frames take so long?
-*** tried a threaded approach 
-    Why does server keep distributing beyond end of array?
-
-    ... then it fails with invalid query.
+   turns out this is game_data.increment()
 ** lacking proper leave game functionality
 ** end game status not displayed
 ** bombing ships concentrate in a ball

@@ -137,25 +137,44 @@ void st3::server::com::check_protocol(protocol_t query, sf::Packet &packet){
 }
 
 void distribute_frames_to(vector<game_data> buf, int &available_frames, client_t *c){
-  int idx = -1;
+  // debuging purpose, only 2 threads allowed!
+  static thread::id tid[2];
+  static int tidc = 0;
+
+  tid[tidc++] = this_thread::get_id();
+  
   int lim_start = 0;
   int lim_end;
   vector<game_data> g(buf.size());
-  bool run = true;
+  int last_idx = g.size() - 1;
+  int no_frame = -1;
+  int idx = no_frame;
+  bool verbose = this_thread::get_id() == tid[0];
 
   cout << "distribute " << g.size() << " frames to " << c -> id << ": start" << endl;
   
-  while (run){
+  while (idx < last_idx){
     lim_end = available_frames;
     for (int i = lim_start; i < lim_end; i++)
       g[i] = buf[i].limit_to(c -> id);
     lim_start = lim_end;
     
-    if (idx < 0 && c -> receive_query(protocol::frame)){
+    if (idx == no_frame && c -> receive_query(protocol::frame)){
       if (!(*(c -> data) >> idx)){
 	c -> send_invalid();
-	cout << "invalid: failed to load idx from client " << c -> id << endl;
 	idx = -1;
+	exit(-1);
+      }
+
+      if (verbose) cout << "client " << c -> id << " requests frame " << idx << endl;
+
+      if (idx == no_frame){
+	if (verbose) cout << "client " << c -> id << " is done!" << endl;
+	// indicates done
+	sf::Packet p;
+	p << protocol::confirm;
+	c -> send(p);
+	break;
       }
     }
     
@@ -167,17 +186,15 @@ void distribute_frames_to(vector<game_data> buf, int &available_frames, client_t
 	exit(-1);
       }
 
-      cout << "distribute frame " << idx << " to client " << c -> id << endl;
+      if (verbose) cout << "sending frame " << idx << " to client " << c -> id << endl;
 
-      if (c -> send(psend)) idx = -1;
-    }else if (idx > ((int)g.size() - 1)){
+      if (c -> send(psend)) idx = no_frame;
+    }else if (idx > last_idx){
+      cout << "client " << c -> id << " required invalid frame " << idx << endl;
       c -> send_invalid();
-      cout << "invalid: client " << c -> id << " asked for frame " << idx << endl;
       idx = -1;
+      exit(-1);
     }
-    run = idx < ((int)g.size() - 1);
-
-    cout << "distr: " << c -> id << ": " << idx << " of " << (g.size() - 1) << ": " << run << endl;
     
     sf::sleep(sf::milliseconds(1));
   }
