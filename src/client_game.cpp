@@ -199,7 +199,7 @@ void st3::client::game::choice_step(){
   if (done & (query_game_complete | query_aborted)){
     cout << "choice_step: finishded" << endl;
     pq << protocol::leave;
-    while (!socket -> send(pq)) sf::sleep(sf::milliseconds(100));
+    while (!socket -> send_packet(pq)) sf::sleep(sf::milliseconds(100));
     exit(0);
   }
 

@@ -362,9 +362,7 @@ void game_data::increment(){
   cout << "incr. begin fleet count: " << fleets.size() << endl;
 
   // update solar data
-  for (auto &x : solars){
-    solar_tick(x.first);
-  }
+  for (auto &x : solars) solar_tick(x.first);
 
   // buffer fleet ids as fleets may be removed in loop
   for (auto &x : fleets){

@@ -1,4 +1,6 @@
 * currently working on
+** ships not showing on client since sockets redesign
+** go through game_data::increment
 ** dead ships are not removed properly during simulation
    and after a fleet is spotted a secon time, old dead ships from this
    fleet reappear..?
