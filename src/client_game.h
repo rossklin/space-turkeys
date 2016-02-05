@@ -27,7 +27,7 @@ namespace st3{
       objects, as well as sub guis. 
     */
     struct game{
-      socket_t socket; /*!< socket for server communication */
+      socket_t *socket; /*!< socket for server communication */
       window_t window; /*!< sfml window for drawing the interface */
       sf::View view_game; /*!< sfml view for game objects */
       sf::View view_minimap; /*!< sfml view for the minimap */

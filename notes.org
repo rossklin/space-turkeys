@@ -1,16 +1,4 @@
 * currently working on
-** server socket mess
-*** client_t must deallocate it's TcpSocket on dtor
-    ... so that check_protocol can remove dc clients
-
-    ... and server main must not deallocate them
-
-    Perhaps move listening/accepting to server::com?
-
-    Perhaps inherit sf::TcpSocket?
-*** server::com needs a method 'bool has_multiple_clients()'
-    To be run after check_protocol
-*** check for protocol::leave in simulation step as well
 ** dead ships are not removed properly during simulation
    and after a fleet is spotted a secon time, old dead ships from this
    fleet reappear..?
@@ -138,6 +126,18 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** server socket mess
+*** client_t must deallocate it's TcpSocket on dtor
+    ... so that check_protocol can remove dc clients
+
+    ... and server main must not deallocate them
+
+    Perhaps move listening/accepting to server::com?
+
+    Perhaps inherit sf::TcpSocket?
+*** server::com needs a method 'bool has_multiple_clients()'
+    To be run after check_protocol
+*** check for protocol::leave in simulation step as well
 ** projectile graphics object
 ** sub divide solar dynamics so components are accessible from gui
 ** consider moving sub window classes to main window build routine

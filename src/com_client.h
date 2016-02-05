@@ -26,9 +26,8 @@ namespace st3{
       @param[out] package wiht response
       @param[out] done query status
     */
-    void query(socket_t socket, 
+    void query(socket_t *socket, 
 	       sf::Packet &pq,
-	       sf::Packet &pr,
 	       int &done);
 
     /*! load simulation frames 
@@ -36,7 +35,7 @@ namespace st3{
       @param[out] g vector to store loaded game data in
       @param[out] loaded reference to update number of loaded frames
     */
-    void load_frames(socket_t socket, std::vector<game_data> &g, int &loaded);
+    void load_frames(socket_t *socket, std::vector<game_data> &g, int &loaded);
   };
 };
 

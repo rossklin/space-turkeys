@@ -23,7 +23,6 @@ using namespace st3;
 using namespace st3::client;
 
 int main(int argc, char **argv){
-  sf::TcpSocket tcp_socket;
   int width = 800;
   int height = 600;
   string ip = "127.0.0.1";
@@ -47,32 +46,30 @@ int main(int argc, char **argv){
 
   // connect
   cout << "connecting...";
-  if (tcp_socket.connect(ip, 53000) != sf::Socket::Done){
+  game g;
+  g.socket = new socket_t();
+  if (g.socket -> connect(ip, 53000) != sf::Socket::Done){
     cout << "client: connection failed." << endl;
     return -1;
   }
-  tcp_socket.setBlocking(false);
+  g.socket -> setBlocking(false);
   cout << "done." << endl;
 
   // create graphics
-  game g;
   sf::Packet pq, pr;
   int done;
-
-  g.socket.socket = &tcp_socket;
-  g.socket.allocate_packet();
 
   cout << "sending name...";
   pq << protocol::connect << name;
 
-  query(g.socket, pq, pr, done);
+  query(g.socket, pq, done);
 
-  if (!(pr >> g.socket.id)){
+  if (!(g.socket -> data >> g.socket -> id)){
     cout << "server failed to provide id" << endl;
     exit(-1);
   }
 
-  cout << "received player id: " << g.socket.id << endl;
+  cout << "received player id: " << g.socket -> id << endl;
 
   sf::ContextSettings settings;
   settings.antialiasingLevel = 8;
@@ -89,8 +86,8 @@ int main(int argc, char **argv){
   
   g.run();
 
-  g.socket.deallocate_packet();
-  tcp_socket.disconnect();
+  g.socket -> disconnect();
+  delete g.socket;
 
   return 0;
 }

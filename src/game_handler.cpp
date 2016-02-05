@@ -18,7 +18,7 @@ using namespace st3::server;
 void st3::server::game_handler(com c, game_data g){
   sf::Packet packet, p_confirm;
   vector<game_data> frames(g.settings.frames_per_round);
-  vector<sf::Packet> packets(c.clients.size());
+  hm_t<sint, sf::Packet> packets;
   int frame_count;
   unsigned int i;
   
@@ -41,16 +41,15 @@ void st3::server::game_handler(com c, game_data g){
       cout << "game complete" << endl;
       packet.clear();
       packet << protocol::complete;
-      packet << (psum == 1 ? c.clients[pid].name : string("tie"));
+      packet << (psum == 1 ? c.clients[pid] -> name : string("tie"));
       c.check_protocol(protocol::game_round, packet);
       return;
     }
 
     // pre, expects: only query
-    for (int i = 0; i < c.clients.size(); i++){
-      packets[i].clear();
-      packets[i] << protocol::confirm;
-      packets[i] << g.limit_to(c.clients[i].id);
+    for (auto x : c.clients){
+      packets[x.first] << protocol::confirm;
+      packets[x.first] << g.limit_to(x.first);
     }
     c.check_protocol(protocol::game_round, packets);
 
@@ -60,12 +59,12 @@ void st3::server::game_handler(com c, game_data g){
     // choices, expects: query + choice
     c.check_protocol(protocol::choice, p_confirm);
 
-    for (i = 0; i < c.clients.size(); i++){
+    for (auto x : c.clients){
       choice::choice ch;
-      if (*c.clients[i].data >> ch){
-	g.apply_choice(ch, c.clients[i].id);
+      if (x.second -> data >> ch){
+	g.apply_choice(ch, x.first);
       }else{
-	cout << "choice for player " << c.clients[i].id << " failed to unpack!" << endl;
+	cout << "choice for player " << x.first << " failed to unpack!" << endl;
       }
     }
 

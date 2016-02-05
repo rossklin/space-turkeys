@@ -64,7 +64,7 @@ void st3::client::game::run(){
 
   // construct interface
   window.setView(view_window);
-  interface::desktop = new interface::main_interface(window.getSize(), players[socket.id].research_level);
+  interface::desktop = new interface::main_interface(window.getSize(), players[socket -> id].research_level);
 
   // game loop
   while (true){
@@ -98,7 +98,7 @@ void st3::client::game::run(){
 
 bool st3::client::game::pre_step(){
   int done = 0;
-  sf::Packet packet, pq;
+  sf::Packet pq;
   game_data data;
 
   message = "loading game data...";
@@ -110,7 +110,6 @@ bool st3::client::game::pre_step(){
   thread t(query, 
 	   socket, 
 	   ref(pq),
-	   ref(packet), 
 	   ref(done));
 
   done = window_loop(done, default_event_handler, default_body);
@@ -122,7 +121,7 @@ bool st3::client::game::pre_step(){
     cout << "pre_step: finished" << endl;
 
     string winner;
-    if (!(packet >> winner)){
+    if (!(socket -> data >> winner)){
       cout << "server does not declare winner!" << endl;
       return false;
     }
@@ -149,7 +148,7 @@ bool st3::client::game::pre_step(){
     return false;
   }
 
-  if (!(packet >> data)){
+  if (!(socket -> data >> data)){
     cout << "pre_step: failed to deserialize game_data" << endl;
     return false;
   }
@@ -200,7 +199,7 @@ void st3::client::game::choice_step(){
   if (done & (query_game_complete | query_aborted)){
     cout << "choice_step: finishded" << endl;
     pq << protocol::leave;
-    while (!socket.send(pq)) sf::sleep(sf::milliseconds(100));
+    while (!socket -> send(pq)) sf::sleep(sf::milliseconds(100));
     exit(0);
   }
 
@@ -217,7 +216,6 @@ void st3::client::game::choice_step(){
   thread t(query, 
 	   socket, 
 	   ref(pq),
-	   ref(pr), 
 	   ref(done));
 
   cout << "choice step: sending" << endl;
@@ -329,11 +327,11 @@ void st3::client::game::simulation_step(){
 // ****************************************
 
 source_t game::add_waypoint(point p){
-  source_t k = identifier::make(identifier::waypoint, to_string(socket.id) + "#" + to_string(waypoint::id_counter++));
+  source_t k = identifier::make(identifier::waypoint, to_string(socket -> id) + "#" + to_string(waypoint::id_counter++));
   waypoint w;
   w.position = p;
 
-  entity_selectors[k] = new waypoint_selector(w, sfcolor(players[socket.id].color));
+  entity_selectors[k] = new waypoint_selector(w, sfcolor(players[socket -> id].color));
 
   cout << "added waypoint " << k << endl;
 
@@ -452,9 +450,9 @@ void st3::client::game::reload_data(game_data &g){
     source_t key = identifier::make(identifier::fleet, x.first);
     sf::Color col = sfcolor(players[x.second.owner].color);
     if (entity_selectors.count(key)) delete entity_selectors[key];
-    entity_selectors[key] = new fleet_selector(x.second, col, x.second.owner == socket.id);
+    entity_selectors[key] = new fleet_selector(x.second, col, x.second.owner == socket -> id);
     entity_selectors[key] -> seen = true;
-    if (x.second.owner == socket.id) add_fixed_stars (x.second.position, x.second.vision);
+    if (x.second.owner == socket -> id) add_fixed_stars (x.second.position, x.second.vision);
     
     cout << " -> update fleet " << x.first << endl;
   }
@@ -463,16 +461,16 @@ void st3::client::game::reload_data(game_data &g){
     source_t key = identifier::make(identifier::solar, x.first);
     sf::Color col = x.second.owner > -1 ? sfcolor(players[x.second.owner].color) : solar_neutral;
     if (entity_selectors.count(key)) delete entity_selectors[key];
-    entity_selectors[key] = new solar_selector(x.second, col, x.second.owner == socket.id);
+    entity_selectors[key] = new solar_selector(x.second, col, x.second.owner == socket -> id);
     entity_selectors[key] -> seen = true;
-    if (x.second.owner == socket.id) add_fixed_stars (x.second.position, x.second.compute_vision());
+    if (x.second.owner == socket -> id) add_fixed_stars (x.second.position, x.second.compute_vision());
 
     cout << " -> update solar " << x.first << endl;
   }
 
   for (auto x : g.waypoints){
     source_t key = identifier::make(identifier::waypoint, x.first);
-    sf::Color col = sfcolor(players[socket.id].color);
+    sf::Color col = sfcolor(players[socket -> id].color);
     if (entity_selectors.count(key)) delete entity_selectors[key];
     entity_selectors[key] = new waypoint_selector(x.second, col);
     entity_selectors[key] -> seen = true;
@@ -919,7 +917,7 @@ bool st3::client::game::select_command(idtype key){
 			     ready_ships,
 			     it -> second -> ships,
 			     view_window.getSize(),
-			     sfcolor(players[socket.id].color),
+			     sfcolor(players[socket -> id].color),
 			     "source: " + it -> second -> source 
 			     + ", target: " + it -> second -> target 
 			     + ", action: " + it -> second -> action);

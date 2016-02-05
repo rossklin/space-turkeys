@@ -5,27 +5,11 @@ using namespace std;
 using namespace st3;
 
 st3::socket_t::socket_t(){
-  socket = 0;
   id = -1;
 }
 
-st3::socket_t::socket_t(sf::TcpSocket *s){
-  socket = s;
-  id = -1;
-}
-
-void st3::socket_t::allocate_packet(){
-  cout << "socket " << id << ": allocating" << endl;
-  data = new sf::Packet();
-}
-
-void st3::socket_t::deallocate_packet(){
-  cout << "socket " << id << ": deallocating" << endl;
-  delete data;
-}
-
-bool st3::socket_t::send(sf::Packet &packet){
-  switch(status = socket -> send(packet)){
+bool st3::socket_t::send_packet(sf::Packet &packet){
+  switch(status = send(packet)){
   case sf::Socket::Disconnected:
     cout << "socket_t::send: disconnected." << endl;
     exit(-1);
@@ -44,12 +28,9 @@ bool st3::socket_t::send(sf::Packet &packet){
   }
 }
 
-bool st3::socket_t::receive(){
-  return receive(*data);
-}
-
-bool st3::socket_t::receive(sf::Packet &packet){
-  switch(status = socket -> receive(packet)){
+bool st3::socket_t::receive_packet(){
+  data.clear();
+  switch(status = receive(data)){
   case sf::Socket::Disconnected:
     cout << "socket_t::receive: disconnected." << endl;
     exit(-1);

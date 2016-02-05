@@ -10,12 +10,10 @@ using namespace std;
 using namespace st3;
 using namespace st3::server;
 
-typedef pair<client_t*, int> cfi;
-
 void st3::server::client_t::send_invalid(){
   sf::Packet p;
   p << protocol::invalid;
-  if(!send(p)){
+  if(!send_packet(p)){
     cout << "client_t::failed to send: invalid" << endl;
   }
 }
@@ -23,8 +21,8 @@ void st3::server::client_t::send_invalid(){
 bool st3::server::client_t::receive_query(protocol_t query){
   protocol_t input;
 
-  if (receive()){
-    if (*data >> input){
+  if (receive_packet()){
+    if (data >> input){
       if (input == query){
 	return true;
       }else if (input == protocol::leave){
@@ -52,30 +50,72 @@ void server::client_t::check_protocol(protocol_t q, sf::Packet &p){
     sf::sleep(sf::milliseconds(10));
   }
 
-  while (!send(p)){
+  while (!send_packet(p)){
     if (!is_connected()) return;
     sf::sleep(sf::milliseconds(10));
   }
 }
 
-st3::server::com::com(vector<sf::TcpSocket*> c){
-  cout << "com: allocating " << c.size() << " clients" << endl;
-  clients.resize(c.size());
-  for (sint i = 0; i < clients.size(); i++){
-    clients[i].socket = c[i];
-    clients[i].id = i;
-    clients[i].allocate_packet();
+void server::com::disconnect(){
+  for (auto c : clients){
+    c.second -> disconnect();
+    delete c.second;
+  }
+  clients.clear();
+}
+
+bool server::com::connect(int num_clients){
+  sf::TcpListener listener;
+
+  disconnect();
+
+  cout << "binding listener ...";
+  // bind the listener to a port
+  if (listener.listen(53000) != sf::Socket::Done) {
+    cout << "failed." << endl;
+    return false;
+  }
+
+  cout << "done." << endl;
+  
+  // accept a new connection
+  for (int i = 0; i < num_clients; i++){
+    cout << "listening...";
+    clients[i] = new client_t();
+    clients[i] -> id = i;
+    if (listener.accept(*clients[i]) != sf::Socket::Done) {
+      cout << "error." << endl;
+      disconnect();
+      return false;
+    }
+    clients[i] -> setBlocking(false);
+    cout << "client connected!" << endl;
+  }
+
+  listener.close();
+
+  cout << "starting with " << clients.size() << " clients" << endl;
+  return true;
+}
+
+bool server::com::introduce(){
+  // formalities
+  hm_t<sint, sf::Packet> packets;
+
+  for (auto c : clients)
+    packets[c.first] << protocol::confirm << c.second -> id;
+
+  check_protocol(protocol::connect, packets);
+
+  for (auto c : clients){
+    if (!(c.second -> data >> c.second -> name)){
+      cout << "client " << c.first << " failed to provide name." << endl;
+      exit(-1);
+    }
   }
 }
 
-void st3::server::com::deallocate(){
-  cout << "com::~com: dealocating " << clients.size() << " clients" << endl;
-  for (auto x : clients) {
-    x.deallocate_packet();
-  }
-}
-
-void st3::server::com::check_protocol(protocol_t query, vector<sf::Packet> &packets){
+void st3::server::com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &packets){
   list<thread> ts;
 
   if (packets.size() < clients.size()){
@@ -83,27 +123,20 @@ void st3::server::com::check_protocol(protocol_t query, vector<sf::Packet> &pack
     return;
   }
 
-  for (unsigned int i = 0; i < clients.size(); i++){
-    ts.push_back(thread(&com::client_t::check_protocol, &clients[i], query, ref(packets[i])));
+  for (auto c : clients){
+    ts.push_back(thread(&server::client_t::check_protocol, c.second, query, ref(packets[c.first])));
   }
 
-  for (auto t : ts) t.join();
+  for (auto &t : ts) t.join();
 
   // remove disconnected clients
-  vector<client_t*> buf;
-  for (auto i : clients){
-    if (i -> is_connected()){
-      buf.push_back(i);
-    }else{
-      delete i;
-    }
-  }
-
-  clients = buf;
+  for (auto i = clients.begin(); i != clients.end(); i++)
+    if (!i -> second -> is_connected()) clients.erase((i++) -> first);
 }
 
 void st3::server::com::check_protocol(protocol_t query, sf::Packet &packet){
-  vector<sf::Packet> v(clients.size(), packet);
+  hm_t<sint, sf::Packet> v;
+  for (auto c : clients) v[c.first] = packet;
   check_protocol(query, v);
 }
 
@@ -131,7 +164,7 @@ void distribute_frames_to(vector<game_data> buf, int &available_frames, client_t
     lim_start = lim_end;
     
     if (idx == no_frame && c -> receive_query(protocol::frame)){
-      if (!(*(c -> data) >> idx)){
+      if (!(c -> data >> idx)){
 	c -> send_invalid();
 	idx = -1;
 	exit(-1);
@@ -144,7 +177,7 @@ void distribute_frames_to(vector<game_data> buf, int &available_frames, client_t
 	// indicates done
 	sf::Packet p;
 	p << protocol::confirm;
-	c -> send(p);
+	c -> send_packet(p);
 	break;
       }
     }
@@ -159,7 +192,7 @@ void distribute_frames_to(vector<game_data> buf, int &available_frames, client_t
 
       if (verbose) cout << "sending frame " << idx << " to client " << c -> id << endl;
 
-      if (c -> send(psend)) idx = no_frame;
+      if (c -> send_packet(psend)) idx = no_frame;
     }else if (idx > last_idx){
       cout << "client " << c -> id << " required invalid frame " << idx << endl;
       c -> send_invalid();
@@ -174,19 +207,15 @@ void distribute_frames_to(vector<game_data> buf, int &available_frames, client_t
 }
 
 void st3::server::com::distribute_frames(vector<game_data> &g, int &frame_count){
-  list<thread*> ts;
+  list<thread> ts;
 
   cout << "com::distribute_frames: " << clients.size() << " clients:" << endl;
-  for (unsigned int i = 0; i < clients.size(); i++){
-    thread* t = new thread(distribute_frames_to, ref(g), ref(frame_count), &clients[i]);
-    ts.push_back(t);
-    cout << clients[i].name << endl;
+  for (auto c : clients){
+    ts.push_back(thread(distribute_frames_to, ref(g), ref(frame_count), c.second));
+    cout << c.second -> name << endl;
   }
 
-  for (auto x : ts) {
-    x -> join();
-    delete x;
-  }
+  for (auto &x : ts) x.join();
 
   cout << "com::distribute_frames: end" << endl;
 }

@@ -40,15 +40,13 @@ namespace st3{
 
     /*! structure handling a set of clients */
     struct com{
-      std::vector<client_t> clients; /*!< clients */
+      hm_t<int, client_t*> clients; /*!< clients */
 
-      /*! construct a com
-	@param c vector of pointers to sockets
-      */
-      com(std::vector<sf::TcpSocket*> c);
+      bool connect(int n);
 
-      /*! deallocate the packets of clients */
-      void deallocate();
+      bool introduce();
+
+      void disconnect();
 
       /*! receive an expected query and send a packet
 	
@@ -68,7 +66,7 @@ namespace st3{
        @param query query to expect
        @param packets vector with one packet per client
       */
-      void check_protocol(protocol_t query, std::vector<sf::Packet> &packets);
+      void check_protocol(protocol_t query, hm_t<sint, sf::Packet> &packets);
 
       /*! distribute simulated game data to clients
 
