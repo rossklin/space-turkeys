@@ -27,6 +27,9 @@ bool st3::server::client_t::receive_query(protocol_t query){
     if (*data >> input){
       if (input == query){
 	return true;
+      }else if (input == protocol::leave){
+	cout << "client " << id << " disconnected!" << endl;
+	status = sf::Socket::Status::Disconnected;
       }else{
 	cout << "client_t::receive_query: input " << input << " does not match query " << query << endl;
 	exit(-1);
@@ -37,6 +40,22 @@ bool st3::server::client_t::receive_query(protocol_t query){
     }
   }
   return false;
+}
+
+bool server::client_t::is_connected(){
+  return status != sf::Socket::Disconnected;
+}
+
+void server::client_t::check_protocol(protocol_t q, sf::Packet &p){
+  while (!receive_query(q)){
+    if (!is_connected()) return;
+    sf::sleep(sf::milliseconds(10));
+  }
+
+  while (!send(p)){
+    if (!is_connected()) return;
+    sf::sleep(sf::milliseconds(10));
+  }
 }
 
 st3::server::com::com(vector<sf::TcpSocket*> c){
@@ -57,7 +76,7 @@ void st3::server::com::deallocate(){
 }
 
 void st3::server::com::check_protocol(protocol_t query, vector<sf::Packet> &packets){
-  queue<cfi> q_in, q_out;
+  list<thread> ts;
 
   if (packets.size() < clients.size()){
     cout << "check_protocol: to few packets!" << endl;
@@ -65,75 +84,27 @@ void st3::server::com::check_protocol(protocol_t query, vector<sf::Packet> &pack
   }
 
   for (unsigned int i = 0; i < clients.size(); i++){
-    q_in.push(cfi(&clients[i], i));
+    ts.push_back(thread(&com::client_t::check_protocol, &clients[i], query, ref(packets[i])));
   }
 
-  cout << "com::check_protocol(multi): start" << endl;
-  while (q_in.size() || q_out.size()){
-    // wait for these clients to send query
-    if (q_in.size()){
-      cfi c = q_in.front();
-      q_in.pop();
+  for (auto t : ts) t.join();
 
-      if (c.first -> receive_query(query)){
-	q_out.push(c);
-      }else{
-	q_in.push(c);
-      }
+  // remove disconnected clients
+  vector<client_t*> buf;
+  for (auto i : clients){
+    if (i -> is_connected()){
+      buf.push_back(i);
+    }else{
+      delete i;
     }
-
-    // reply to these clients with package
-    if (q_out.size()){
-      cfi c = q_out.front();
-      q_out.pop();
-	
-      if (!c.first -> send(packets[c.second])){
-	cout << "com: failed to send packet" << endl;
-	q_out.push(c);
-      }
-    }
-
-    sf::sleep(sf::milliseconds(100));
   }
-  cout << "com::check_protocol(multi): end" << endl;
+
+  clients = buf;
 }
 
 void st3::server::com::check_protocol(protocol_t query, sf::Packet &packet){
-  queue<client_t*> q_in, q_out;
-
-  for (unsigned int i = 0; i < clients.size(); i++){
-    q_in.push(&clients[i]);
-  }
-
-  cout << "com::check_protocol: start" << endl;
-  while (q_in.size() || q_out.size()){
-
-    // wait for these clients to send query
-    if (q_in.size()){
-      client_t *c = q_in.front();
-      q_in.pop();
-
-      if (c -> receive_query(query)){
-	q_out.push(c);
-      }else{
-	q_in.push(c);
-      }
-    }
-
-    // reply to these clients with package
-    if (q_out.size()){
-      client_t *c = q_out.front();
-      q_out.pop();
-	
-      if (!c -> send(packet)){
-	cout << "com: failed to send packet" << endl;
-	q_out.push(c);
-      }
-    }
-
-    sf::sleep(sf::milliseconds(100));
-  }
-  cout << "com::check_protocol: end" << endl;
+  vector<sf::Packet> v(clients.size(), packet);
+  check_protocol(query, v);
 }
 
 void distribute_frames_to(vector<game_data> buf, int &available_frames, client_t *c){

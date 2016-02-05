@@ -32,6 +32,10 @@ namespace st3{
 	@return whether the receive succeded
       */
       bool receive_query(protocol_t query);
+
+      void check_protocol(protocol_t q, sf::Packet &p);
+
+      bool is_connected();
     };
 
     /*! structure handling a set of clients */
