@@ -1,10 +1,6 @@
 * currently working on
-** After fixing leave game, server says invalid query on simulation
-** dead ships are not removed properly during simulation
-   and after a fleet is spotted a secon time, old dead ships from this
-   fleet reappear..?
 ** end game status not displayed
-** bombing ships concentrate in a ball
+** fix ship swarm movement
 ** sfg window does not resize on sfml window resize
 ** priority buttons unresponsive to first right click
 ** simulation progress bar
@@ -124,6 +120,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** After fixing leave game, server says invalid query on simulation
 ** lacking proper leave game functionality
 ** why does sending frames take so long?
    turns out this is game_data.increment()
