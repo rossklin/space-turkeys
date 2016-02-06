@@ -1150,7 +1150,9 @@ int st3::client::game::choice_event(sf::Event e){
       view_game.zoom(1 / 1.2);
       break;
     case sf::Keyboard::Escape:
-      return query_aborted;
+      if(graphics::popup_query("Really quit?", window)){
+	return query_aborted;
+      }
     }
     break;
   };
