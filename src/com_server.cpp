@@ -131,8 +131,13 @@ void st3::server::com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &
   for (auto &t : ts) t.join();
 
   // remove disconnected clients
-  for (auto i = clients.begin(); i != clients.end(); i++)
-    if (!i -> second -> is_connected()) clients.erase((i++) -> first);
+  for (auto i = clients.begin(); i != clients.end();){
+    if (!i -> second -> is_connected()) {
+      clients.erase((i++) -> first);
+    }else{
+      i++;
+    }
+  }
 }
 
 void st3::server::com::check_protocol(protocol_t query, sf::Packet &packet){

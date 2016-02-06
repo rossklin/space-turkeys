@@ -25,6 +25,7 @@ namespace st3{
     // mechanical components
     int update_counter; /*!< counter for updating fleet data */
     float speed_limit; /*!< speed of slowest ship in fleet */
+    bool remove;
     
     /*! default constructor */
     fleet();

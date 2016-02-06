@@ -69,14 +69,6 @@ void game_data::relocate_ships(command &c, set<idtype> &sh, idtype owner){
     // clear ships from parent fleets
     for (auto i : sh) fleets[ships[i].fleet_id].ships.erase(i);
 
-    // remove empty parent fleets
-    for (auto i : fleet_buf){
-      if (fleets[i].ships.empty()){
-	remove_fleet(i);
-	cout << "relocate ships: erase fleet " << i << ", total " << fleets.size() << " fleets." << endl;
-      }
-    }
-
     // debug printout
     if (fleet_buf.size() == 1){
       cout << "relocate ship mismatch: " << endl << sf << ": ";
@@ -164,11 +156,6 @@ void game_data::set_fleet_commands(idtype id, list<command> commands){
 
       fleets[fid] = f;
     }
-  }
-
-  // check remove
-  if (s.ships.empty()){
-    remove_fleet(id);
   }
 }
 
@@ -327,7 +314,7 @@ void game_data::update_fleet_data(idtype fid){
 	  ships[i].fleet_id = target_id;
 	  fleet_t.ships.insert(i);
 	}
-	remove_fleet(fid);
+	fleets[fid].remove = true;
 	return;
       }
     }else{
@@ -356,34 +343,19 @@ void game_data::update_fleet_data(idtype fid){
   }
 }
 
-void game_data::increment(){
-  list<idtype> fids;
-  set<idtype> sids;
-  cout << "incr. begin fleet count: " << fleets.size() << endl;
-
-  // update solar data
-  for (auto &x : solars) solar_tick(x.first);
-
-  // buffer fleet ids as fleets may be removed in loop
-  for (auto &x : fleets){
-    fids.push_back(x.first);
-  }
-
-  cout << "pre move fleet count: " << fleets.size() << endl;
-
+void game_data::move_ships(){
   // move ships
-  for (auto fid : fids){
-    cout << "running increment for fleet " << fid << endl;
-    fleet &f = fleets[fid];
+  for (auto &x : fleets){
+    fleet &f = x.second;
+    cout << "running increment for fleet " << x.first << endl;
     point to;
     if (!(target_position(f.com.target, to) || f.is_idle())){
-      cout << "fleet " << fid << ": target " << f.com.target << " missing and not idle, setting idle:0" << endl;
+      cout << "fleet " << x.first << ": target " << f.com.target << " missing and not idle, setting idle:0" << endl;
       f.com.target = identifier::target_idle;
     }
 
     // ship arithmetics
-    sids = f.ships; // need to copy explicitly?
-    for (auto i : sids){
+    for (auto i : f.ships){
       ship &s = ships[i];
 
       // load weapons
@@ -404,60 +376,70 @@ void game_data::increment(){
       }
     }
   }
+}
 
-  cout << "pre ship interact fleet count: " << fleets.size() << endl;
+void game_data::ship_solar_interactions(){
+  for (auto &x : fleets){
+    fleet &f = x.second;
+    auto sids = f.ships;
 
-  for (auto fid : fids){
-    if (fleets.count(fid)){
-      fleet &f = fleets[fid];
-      sids = f.ships;
-      for (auto i : sids){
-	ship &s = ships[i];
-	// check if ship s has reached a destination solar
-	if (identifier::get_type(f.com.target) == identifier::solar){
-	  idtype sid = solar_at(s.position);
-	  if (sid == identifier::get_id(f.com.target)){
-	    solar::solar &sol = solars[sid];
-	    if (utility::l2d2(sol.position - s.position) < sol.radius * sol.radius){
-	      // ship interacts with solar
-	      if (f.com.action == command::action_land){
-		ship_land(i, sid);
-	      }else if (f.com.action == command::action_attack){
-		ship_bombard(i, sid);
-	      }else if (f.com.action == command::action_colonize){
-		// non-colonizer ships will be sent to ship_bombard
-		ship_colonize(i, sid);
-	      }
+    for (auto i : sids){
+      ship &s = ships[i];
+
+      // check if ship s has reached a destination solar
+      if (identifier::get_type(f.com.target) == identifier::solar){
+	idtype sid = solar_at(s.position);
+	if (sid == identifier::get_id(f.com.target)){
+	  solar::solar &sol = solars[sid];
+	  if (utility::l2d2(sol.position - s.position) < pow(sol.radius, 2)){
+	    // ship interacts with solar
+	    if (f.com.action == command::action_land){
+	      ship_land(i, sid);
+	    }else if (f.com.action == command::action_attack){
+	      ship_bombard(i, sid);
+	    }else if (f.com.action == command::action_colonize){
+	      // non-colonizer ships will be sent to ship_bombard
+	      ship_colonize(i, sid);
 	    }
-	  }
-	}
-
-	// ship interactions
-	if (ships.count(i) && s.load >= s.load_time && s.damage_ship > 0){
-	  cout << "ship " << i << " interactions..." << endl;
-	  s.load = 0;
-
-	  // find targetable ships
-	  list<grid::iterator_type> res = ship_grid -> search(s.position, s.interaction_radius);
-	  list<idtype> buf;
-	  for (auto &x : res){
-	    if (ships[x.first].owner != s.owner) buf.push_back(x.first);
-	  }
-
-	  // fire at a random enemy
-	  if (!buf.empty()){
-	    vector<idtype> targ(buf.begin(), buf.end());
-	    idtype k = targ[rand() % targ.size()];
-	    ship_fire(i, k); 
 	  }
 	}
       }
     }
-
-    if (fleets.count(fid)) update_fleet_data(fid);
   }
+}
 
-  cout << "post ship interact fleet count: " << fleets.size() << endl;
+void game_data::ship_ship_interactions(){
+  for (auto &x : fleets){
+    fleet &f = x.second;
+    auto sids = f.ships;
+
+    for (auto i : sids){
+      ship &s = ships[i];
+
+      // ship interactions
+      if (s.load >= s.load_time && s.damage_ship > 0){
+	cout << "ship " << i << " interactions..." << endl;
+	s.load = 0;
+
+	// find targetable ships
+	list<grid::iterator_type> res = ship_grid -> search(s.position, s.interaction_radius);
+	list<idtype> buf;
+	for (auto &x : res){
+	  if (ships[x.first].owner != s.owner) buf.push_back(x.first);
+	}
+
+	// fire at a random enemy
+	if (!buf.empty()){
+	  vector<idtype> targ(buf.begin(), buf.end());
+	  idtype k = targ[rand() % targ.size()];
+	  ship_fire(i, k); 
+	}
+      }
+    }
+  }
+}
+
+void game_data::turret_interactions(){
 
   // solar turrets fire
   for (auto &s : solars){
@@ -481,7 +463,7 @@ void game_data::increment(){
 	  cout << "turret from solar " << s.first << " fires at ship " << tid << endl;
 	  if (utility::random_uniform() < t.accuracy){
 	    ships[tid].hp -= utility::random_uniform(0, t.damage);
-	    if (ships[tid].hp <= 0) ships[tid].was_killed = true;
+	    if (ships[tid].hp <= 0) ships[tid].remove = true;
 	    cout << " -> hit" << endl;
 	  }else{
 	    cout << " -> miss" << endl;
@@ -492,19 +474,10 @@ void game_data::increment(){
       }
     }
   }
+}
+
+void game_data::waypoint_triggers(){
   
-  // remove killed ships
-  auto it = ships.begin();
-  while (it != ships.end()){
-    if (it -> second.was_killed){
-      remove_ship((it++) -> first);
-    }else{
-      it++;
-    }
-  }
-
-  cout << "pre wp fleet count: " << fleets.size() << endl;
-
   // waypoint triggers
   for (auto &x : waypoints){
     cout << "waypoint trigger: checking " << x.first << endl;
@@ -562,9 +535,59 @@ void game_data::increment(){
       w.pending_commands.remove(y);
     }
   }
+}
+
+void game_data::remove_units(){
+
+  // remove ships
+  for (auto i = ships.begin(); i != ships.end();){
+    if (i -> second.remove){
+      remove_ship((i++) -> first);
+    }else{
+      i++;
+    }
+  }
+
+  // remove fleets
+  for (auto i = fleets.begin(); i != fleets.end();){
+    if (i -> second.ships.empty() || i -> second.remove){
+      remove_fleet((i++) -> first);
+    }else{
+      i++;
+    }
+  }
+}
+
+void game_data::increment(){
+  cout << "incr. begin fleet count: " << fleets.size() << endl;
+
+  // update solar data
+  for (auto &x : solars) solar_tick(x.first);
+
+  cout << "pre move fleet count: " << fleets.size() << endl;
+
+  move_ships();
+  
+  cout << "pre ship interact fleet count: " << fleets.size() << endl;
+
+  ship_solar_interactions();
+  remove_units();
+
+  ship_ship_interactions();
+  remove_units();
+
+  cout << "post ship interact fleet count: " << fleets.size() << endl;
+
+  turret_interactions();
+  remove_units();
+
+  for (auto &f : fleets) update_fleet_data(f.first);
+
+  cout << "pre wp fleet count: " << fleets.size() << endl;
+  waypoint_triggers();
 
   cout << "incr. end fleet count: " << fleets.size() << endl;
-
+  remove_units();
 }
 
 // ****************************************
@@ -585,9 +608,6 @@ void game_data::ship_land(idtype ship_id, idtype solar_id){
 
   // remove from grid
   ship_grid -> remove(ship_id);
-
-  // remove fleet if empty
-  if (fleets[fid].ships.empty()) remove_fleet(fid);
 
   // debug output
   cout << "landed ship " << ship_id << " on solar " << solar_id << endl;
@@ -678,7 +698,7 @@ void game_data::solar_effects(int solar_id){
       players[i.first].research_level.colonize(&sol);
       sol.owner = i.first;
       cout << "player " << sol.owner << " colonizes solar " << solar_id << endl;
-      remove_ship(i.second);
+      ships[i.second].remove = true;
     }
   }
 }
@@ -692,7 +712,7 @@ void game_data::ship_fire(idtype sid, idtype tid){
     t.hp -= utility::random_uniform(0, s.damage_ship);
     cout << " -> hit!" << endl;
     if (t.hp <= 0){
-      t.was_killed = true;
+      t.remove = true;
       cout << " -> ship " << tid << " dies!" << endl;
     }
   }
@@ -710,12 +730,6 @@ void game_data::remove_ship(idtype i){
 
   // remove from fleet
   fleets[s.fleet_id].ships.erase(i);
-  
-  // check if fleet is empty
-  if (fleets[s.fleet_id].ships.empty()){
-    remove_fleet(s.fleet_id);
-    cout << " --> fleet " << s.fleet_id << " is empty, removing" << endl;
-  }
 
   // remove from grid
   ship_grid -> remove(i);

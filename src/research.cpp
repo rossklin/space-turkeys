@@ -22,7 +22,7 @@ cost::ship_allocation<ship>& research::ship_templates(){
     s.interaction_radius = 10;
     s.fleet_id = -1;
     s.ship_class = "";
-    s.was_killed = false;
+    s.remove = false;
     s.damage_solar = 0;
     s.damage_ship = 0;
     s.accuracy = 0;

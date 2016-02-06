@@ -62,11 +62,15 @@ void solar::solar::damage_turrets(float d){
   if (turrets.empty()) return;
 
   while (d > 0 && turrets.size() > 0){
-    for (auto i = turrets.begin(); d > 0 && i != turrets.end(); i++){
+    for (auto i = turrets.begin(); d > 0 && i != turrets.end();){
       float k = fmin(utility::random_uniform(0, 0.1 * d0), d);
       i -> hp -= k;
       d -= k;
-      if (i -> hp <= 0) turrets.erase(i--);
+      if (i -> hp <= 0) {
+	turrets.erase(i++);
+      }else{
+	i++;
+      }
     }
   }
 }

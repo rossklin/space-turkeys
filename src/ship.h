@@ -35,7 +35,7 @@ namespace st3{
     // buffer and mechanical data
 
     sfloat vision; /*!< ship's sight radius */
-    bool was_killed; /*!< track when the ship is killed */
+    bool remove; /*!< track when the ship is killed */
   };
 };
 #endif

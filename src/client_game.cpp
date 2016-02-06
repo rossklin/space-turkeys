@@ -1255,6 +1255,17 @@ void game::draw_window(){
     window.setView(view_minimap);
     draw_universe();
 
+    // draw view rectangle
+    sf::RectangleShape r;
+    sf::Vector2f center = view_game.getCenter();
+    sf::Vector2f size = view_game.getSize();
+    r.setPosition(center.x - size.x / 2, center.y - size.y / 2);
+    r.setSize(sf::Vector2f(size.x, size.y));
+    r.setFillColor(sf::Color::Transparent);
+    r.setOutlineColor(sf::Color::Green);
+    r.setOutlineThickness(1);
+    window.draw(r);
+    
     window.setView(view_window);
 
     // draw text
@@ -1268,7 +1279,6 @@ void game::draw_window(){
 
     // draw minimap bounds
     sf::FloatRect fr = view_minimap.getViewport();
-    sf::RectangleShape r;
     r.setPosition(fr.left * view_window.getSize().x, fr.top * view_window.getSize().y);
     r.setSize(point(fr.width * view_window.getSize().x, fr.height * view_window.getSize().y));
     r.setOutlineColor(sf::Color(255,255,255));

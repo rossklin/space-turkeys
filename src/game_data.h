@@ -106,7 +106,19 @@ namespace st3{
     void allocate_grid(); 
 
     /*! deallocate ship grid */
-    void deallocate_grid(); 
+    void deallocate_grid();
+
+    void move_ships();
+
+    void ship_solar_interactions();
+
+    void ship_ship_interactions();
+
+    void turret_interactions();
+
+    void waypoint_triggers();
+
+    void remove_units();
 
     /*! take one step in game mechanices */
     void increment(); 
