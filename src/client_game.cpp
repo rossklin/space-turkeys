@@ -263,11 +263,9 @@ bool game::simulation_step(){
 	return query_aborted;
       }else if (e.key.code == sf::Keyboard::Space){
         playing = !playing;
-	return 0;
       }
-    default:
-      return 0;
     }
+    return 0;
   };
 
   auto body = [&,this] () -> int {

@@ -11,12 +11,14 @@ using namespace st3::client;
 
 void st3::client::load_frames(socket_t *socket, vector<game_data> &g, int &loaded, int &done){
   sf::Packet pq;
+  int response = 0;
 
   sint i = 0;
   while (i < g.size() && !done){
     pq.clear();
     pq << protocol::frame << i;
-    query(socket, pq, done);
+    query(socket, pq, response);
+    if (response != query_accepted) done |= response;
     if (socket -> data >> g[i]){
       i++;
       loaded = i;
@@ -31,7 +33,8 @@ void st3::client::load_frames(socket_t *socket, vector<game_data> &g, int &loade
   i = -1;
   pq.clear();
   pq << protocol::frame << i;
-  query(socket, pq, done);
+  query(socket, pq, response);
+  if (response != query_accepted) done |= response;
 }
 
 void st3::client::query(socket_t *socket, 
