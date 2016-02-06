@@ -20,8 +20,10 @@ int main(int argc, char **argv){
   com c;
   game_data g;
 
-  c.connect(num_clients);
-  c.introduce();
+  if (!(c.connect(num_clients) && c.introduce())){
+    cout << "failed to build connections" << endl;
+    exit(-1);
+  }
 
   // build player data
   vector<sint> colbuf = utility::different_colors(num_clients);

@@ -1,5 +1,4 @@
 * currently working on
-** ships not showing on client since sockets redesign
 ** go through game_data::increment
 ** dead ships are not removed properly during simulation
    and after a fleet is spotted a secon time, old dead ships from this
@@ -128,6 +127,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** ships not showing on client since sockets redesign
 ** server socket mess
 *** client_t must deallocate it's TcpSocket on dtor
     ... so that check_protocol can remove dc clients

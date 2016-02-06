@@ -48,6 +48,7 @@ void st3::server::game_handler(com c, game_data g){
 
     // pre, expects: only query
     for (auto x : c.clients){
+      packets[x.first].clear();
       packets[x.first] << protocol::confirm;
       packets[x.first] << g.limit_to(x.first);
     }

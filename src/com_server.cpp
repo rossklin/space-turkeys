@@ -103,16 +103,17 @@ bool server::com::introduce(){
   hm_t<sint, sf::Packet> packets;
 
   for (auto c : clients)
-    packets[c.first] << protocol::confirm << c.second -> id;
+    packets[c.first] << protocol::confirm << c.first;
 
   check_protocol(protocol::connect, packets);
 
   for (auto c : clients){
     if (!(c.second -> data >> c.second -> name)){
       cout << "client " << c.first << " failed to provide name." << endl;
-      exit(-1);
+      return false;
     }
   }
+  return true;
 }
 
 void st3::server::com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &packets){
@@ -140,12 +141,15 @@ void st3::server::com::check_protocol(protocol_t query, sf::Packet &packet){
   check_protocol(query, v);
 }
 
-void distribute_frames_to(vector<game_data> buf, int &available_frames, client_t *c){
+void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_t *c){
   // debuging purpose, only 2 threads allowed!
-  static thread::id tid[2];
-  static int tidc = 0;
+  static thread::id tid;
+  static bool tidc = false;
 
-  tid[tidc++] = this_thread::get_id();
+  if (!tidc){
+    tid = this_thread::get_id();
+    tidc = true;
+  }
   
   int lim_start = 0;
   int lim_end;
@@ -153,7 +157,7 @@ void distribute_frames_to(vector<game_data> buf, int &available_frames, client_t
   int last_idx = g.size() - 1;
   int no_frame = -1;
   int idx = no_frame;
-  bool verbose = this_thread::get_id() == tid[0];
+  bool verbose = this_thread::get_id() == tid;
 
   cout << "distribute " << g.size() << " frames to " << c -> id << ": start" << endl;
   
