@@ -46,28 +46,19 @@ void st3::server::game_handler(com c, game_data g){
       return;
     }
 
-    if (c.clients.size() < 2){
-      cout << "Less than two clients remaining!" << endl;
-      packet.clear();
-      packet << protocol::complete;
-      packet << string("No clients left");
-      c.check_protocol(protocol::game_round, packet);
-      return;
-    }
-
     // pre, expects: only query
     for (auto x : c.clients){
       packets[x.first].clear();
       packets[x.first] << protocol::confirm;
       packets[x.first] << g.limit_to(x.first);
     }
-    c.check_protocol(protocol::game_round, packets);
+    if (!c.check_protocol(protocol::game_round, packets)) return;
 
     // idle the fleets and clear waypoints
     g.pre_step();
 
     // choices, expects: query + choice
-    c.check_protocol(protocol::choice, p_confirm);
+    if (!c.check_protocol(protocol::choice, p_confirm)) return;
 
     for (auto x : c.clients){
       choice::choice ch;

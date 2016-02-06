@@ -56,7 +56,7 @@ namespace st3{
        @param query query to expect
        @param packet packet to send
       */
-      void check_protocol(protocol_t query, sf::Packet &packet);
+      bool check_protocol(protocol_t query, sf::Packet &packet);
 
       /*! receive an expected query and send multiple packets
 	
@@ -66,7 +66,7 @@ namespace st3{
        @param query query to expect
        @param packets vector with one packet per client
       */
-      void check_protocol(protocol_t query, hm_t<sint, sf::Packet> &packets);
+      bool check_protocol(protocol_t query, hm_t<sint, sf::Packet> &packets);
 
       /*! distribute simulated game data to clients
 

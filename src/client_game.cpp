@@ -51,7 +51,7 @@ void game::clear_guis(){
   targui = 0;
 }
 
-void st3::client::game::run(){  
+void game::run(){  
   
   bool proceed = true;
   bool first = true;
@@ -83,9 +83,9 @@ void st3::client::game::run(){
       }
     }
 
-    choice_step();
+    if (!choice_step()) break;
 
-    simulation_step();
+    if (!simulation_step()) break;
   }
 
   delete interface::desktop;
@@ -96,7 +96,7 @@ void st3::client::game::run(){
 // PRE_STEP
 // ****************************************
 
-bool st3::client::game::pre_step(){
+bool game::pre_step(){
   int done = 0;
   sf::Packet pq;
   game_data data;
@@ -164,7 +164,7 @@ bool st3::client::game::pre_step(){
 // CHOICE STEP
 // ****************************************
 
-void st3::client::game::choice_step(){
+bool game::choice_step(){
   int done = 0;
   sf::Packet pq, pr;
   interface::desktop -> done = false;
@@ -198,9 +198,10 @@ void st3::client::game::choice_step(){
 
   if (done & (query_game_complete | query_aborted)){
     cout << "choice_step: finishded" << endl;
+    pq.clear();
     pq << protocol::leave;
     while (!socket -> send_packet(pq)) sf::sleep(sf::milliseconds(100));
-    exit(0);
+    return false;
   }
 
   // SEND THE CHOICE TO SERVER
@@ -223,8 +224,8 @@ void st3::client::game::choice_step(){
   done = window_loop(done, default_event_handler, default_body);
 
   if (done & query_game_complete){
-    cout << "choice send: finished" << endl;
-    exit(0);
+    cout << "choice send: server says game finished!" << endl;
+    return false;
   }
 
   clear_guis();
@@ -233,13 +234,15 @@ void st3::client::game::choice_step(){
   cout << "choice step: waiting for query thread" << endl;
   t.join();
   cout << "choice step: complete" << endl;
+
+  return true;
 }
 
 // ****************************************
 // SIMULATION STEP
 // ****************************************
 
-void st3::client::game::simulation_step(){
+bool game::simulation_step(){
   int done = 0;
   bool playing = true;
   int idx = -1;
@@ -248,7 +251,7 @@ void st3::client::game::simulation_step(){
 
   cout << "simluation: starting data loader" << endl;
   
-  thread t(load_frames, socket, ref(g), ref(loaded));
+  thread t(load_frames, socket, ref(g), ref(loaded), ref(done));
 
   auto event_handler = [this, &playing] (sf::Event e) -> int {
     switch (e.type){
@@ -256,10 +259,12 @@ void st3::client::game::simulation_step(){
       window.close();
       return query_aborted;
     case sf::Event::KeyPressed:
-      if (e.key.code == sf::Keyboard::Space){
+      if (e.key.code == sf::Keyboard::Escape){
+	return query_aborted;
+      }else if (e.key.code == sf::Keyboard::Space){
         playing = !playing;
+	return 0;
       }
-      return 0;
     default:
       return 0;
     }
@@ -312,14 +317,16 @@ void st3::client::game::simulation_step(){
   done = window_loop(done, event_handler, body);
 
   if (done & (query_game_complete | query_aborted)){
-    cout << "simulation step: exit" << endl;
-    exit(0);
+    cout << "simulation step: game aborted" << endl;
+    t.join();
+    return false;
   }
 
   cout << "simulation: waiting for thread join" << endl;
   t.join();
 
   cout << "simulation: finished." << endl;
+  return true;
 }
 
 // ****************************************
@@ -338,7 +345,7 @@ source_t game::add_waypoint(point p){
   return k;
 }
 
-command st3::client::game::build_command(idtype key){
+command game::build_command(idtype key){
   if (!command_selectors.count(key)){
     cout << "build_command: not found: " << key << endl;
     exit(-1);
@@ -347,7 +354,7 @@ command st3::client::game::build_command(idtype key){
   return (command)*command_selectors[key];
 }
 
- choice::choice st3::client::game::build_choice(choice::choice c){
+ choice::choice game::build_choice(choice::choice c){
   cout << "build choice:" << endl;
   for (auto x : entity_selectors){
     if (x.second -> isa(identifier::waypoint)){
@@ -390,7 +397,7 @@ list<idtype> game::incident_commands(source_t key){
   return res;
 }
 
-void st3::client::game::add_fixed_stars (point position, float vision) {
+void game::add_fixed_stars (point position, float vision) {
   float r = vision + grid_size;
   
   for (float p = -r; p < r; p += grid_size) {
@@ -431,7 +438,7 @@ void st3::client::game::add_fixed_stars (point position, float vision) {
   }
 }
 
-void st3::client::game::reload_data(game_data &g){
+void game::reload_data(game_data &g){
   cout << "reload data:" << endl;
   cout << " -> initial entities: " << endl;
   for (auto x : entity_selectors) cout << x.first << endl;
@@ -583,7 +590,7 @@ void st3::client::game::reload_data(game_data &g){
 // COMMAND MANIPULATION
 // ****************************************
 
-bool st3::client::game::command_exists(command c){
+bool game::command_exists(command c){
   cout << "command_exists: start" << endl;
   return command_id(c) > -1;
 }
@@ -597,7 +604,7 @@ idtype game::command_id(command c){
   return -1;
 }
 
-void st3::client::game::add_command(command c, point from, point to, bool fill_ships){
+void game::add_command(command c, point from, point to, bool fill_ships){
   if (command_exists(c)) {
     cout << "add_command: from " << c.source << " to " << c.target << " action " << c.action << ": already exists!" << endl;
     return;
@@ -697,7 +704,7 @@ bool game::waypoint_ancestor_of(source_t ancestor, source_t child){
 }
 
 // remove command selector and associated command
-void st3::client::game::remove_command(idtype key){
+void game::remove_command(idtype key){
   cout << "remove command: " << key << endl;
 
   if (command_selectors.count(key)){
@@ -736,7 +743,7 @@ void st3::client::game::remove_command(idtype key){
 // SELECTOR MANIPULATION
 // ****************************************
 
-void st3::client::game::clear_selectors(){
+void game::clear_selectors(){
   comid = 0;
 
   for (auto x : entity_selectors){
@@ -750,7 +757,7 @@ void st3::client::game::clear_selectors(){
   command_selectors.clear();
 }
 
-void st3::client::game::deselect_all(){
+void game::deselect_all(){
   for (auto x : entity_selectors) x.second -> selected = false;
   for (auto x : command_selectors) x.second -> selected = false;
 }
@@ -759,7 +766,7 @@ void st3::client::game::deselect_all(){
 // EVENT HANDLING
 // ****************************************
 
-void st3::client::game::area_select(){
+void game::area_select(){
   sf::FloatRect rect = fixrect(srect);
 
   if (!add2selection()) deselect_all();
@@ -771,7 +778,7 @@ void st3::client::game::area_select(){
   }
 }
 
-void st3::client::game::command2entity(source_t key, string act, list<source_t> selected_entities){
+void game::command2entity(source_t key, string act, list<source_t> selected_entities){
   if (!entity_selectors.count(key)){
     cout << "command2entity: invalid key: " << key << endl;
     exit(-1);
@@ -796,7 +803,7 @@ void st3::client::game::command2entity(source_t key, string act, list<source_t> 
   }
 }
 
-set<source_t> st3::client::game::entities_at(point p){
+set<source_t> game::entities_at(point p){
   float d;
   set<source_t> keys;
 
@@ -811,7 +818,7 @@ set<source_t> st3::client::game::entities_at(point p){
   return keys;
 }
 
-source_t st3::client::game::entity_at(point p, int *q){
+source_t game::entity_at(point p, int *q){
   float d;
   set<source_t> keys = entities_at(p);
   source_t key = "";
@@ -838,7 +845,7 @@ source_t st3::client::game::entity_at(point p, int *q){
 }
 
 
-idtype st3::client::game::command_at(point p, int *q){
+idtype game::command_at(point p, int *q){
   int qmin = selector_queue;
   float d;
   idtype key = -1;
@@ -858,7 +865,7 @@ idtype st3::client::game::command_at(point p, int *q){
   return key;
 }
 
-bool st3::client::game::select_at(point p){
+bool game::select_at(point p){
   cout << "select at: " << p.x << "," << p.y << endl;
   int qent, qcom;
   source_t key = entity_at(p, &qent);
@@ -890,7 +897,7 @@ bool st3::client::game::select_at(point p){
   return false;
 }
 
-bool st3::client::game::select_command(idtype key){
+bool game::select_command(idtype key){
   auto it = command_selectors.find(key);
  
   if (!add2selection()) deselect_all();
@@ -982,7 +989,7 @@ void game::run_solar_gui(source_t key){
 }
 
 // return true to signal choice step done
-int st3::client::game::choice_event(sf::Event e){
+int game::choice_event(sf::Event e){
   point p;
   list<source_t> ss;
 
@@ -1150,7 +1157,8 @@ int st3::client::game::choice_event(sf::Event e){
       view_game.zoom(1 / 1.2);
       break;
     case sf::Keyboard::Escape:
-      if(graphics::popup_query("Really quit?", window)){
+      window.setView(view_window);
+      if(popup_query("Really quit?")){
 	return query_aborted;
       }
     }
@@ -1160,7 +1168,7 @@ int st3::client::game::choice_event(sf::Event e){
   return 0;
 }
 
-void st3::client::game::controls(){
+void game::controls(){
   static point vel(0,0);
   if (!window.hasFocus()) {
     vel = point(0,0);
@@ -1188,6 +1196,72 @@ void st3::client::game::controls(){
 // GRAPHICS
 // ****************************************
 using namespace graphics;
+
+bool game::popup_query(string v){
+  sfg::Desktop d;
+  
+  sf::Clock clock;
+  float frame_time = 1/(float)20;
+  bool done = false;
+  bool accept = false;
+
+  auto w = sfg::Window::Create();
+  auto layout = sfg::Box::Create(sfg::Box::Orientation::VERTICAL, 10);
+  auto blayout = sfg::Box::Create(sfg::Box::Orientation::HORIZONTAL, 10);
+  auto header = sfg::Label::Create(v);
+  auto baccept = sfg::Button::Create("OK");
+  auto bcancel = sfg::Button::Create("Cancel");
+
+  baccept -> GetSignal(sfg::Widget::OnLeftClick).Connect([&] () {
+      accept = true;
+      done = true;
+    });
+
+  bcancel -> GetSignal(sfg::Widget::OnLeftClick).Connect([&] () {
+      done = true;
+      accept = false;
+    });
+
+  blayout -> Pack(bcancel);
+  blayout -> Pack(baccept);
+  layout -> Pack(header);
+  layout -> Pack(blayout);
+  w -> Add(layout);
+  d.Add(w);
+
+  w -> SetPosition(sf::Vector2f(window.getSize().x / 2 - w -> GetRequisition().x / 2, window.getSize().y / 2 - w -> GetRequisition().y / 2));
+
+  while (!done){
+    auto delta = clock.restart().asSeconds();
+
+    sf::Event event;
+    while (window.pollEvent(event)){
+      if (event.type == sf::Event::Closed) {
+	window.close();
+      }else{
+	d.HandleEvent(event);
+      }
+    }
+    
+    if (!window.isOpen()) done = true;
+
+    // update sfgui
+    d.Update(delta);
+
+    // draw sfgui
+    sfgui -> Display(window);
+
+    // display on screen
+    window.display();
+
+    sf::Time wait_for = sf::seconds(fmax(frame_time - clock.getElapsedTime().asSeconds(), 0));
+    sf::sleep(wait_for);
+  }
+  
+  cout << "popup: done: " << accept << endl;
+  return accept;
+}
+
 
 int game::window_loop(int &done, function<int(sf::Event)> event_handler, function<int(void)> body){
   sf::Clock clock;
@@ -1307,7 +1381,7 @@ void game::draw_interface_components(){
 
 }
 
-void st3::client::game::draw_universe(){
+void game::draw_universe(){
 
   for (auto star : fixed_stars) star.draw(window);
 

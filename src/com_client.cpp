@@ -9,12 +9,11 @@ using namespace std;
 using namespace st3;
 using namespace st3::client;
 
-void st3::client::load_frames(socket_t *socket, vector<game_data> &g, int &loaded){
+void st3::client::load_frames(socket_t *socket, vector<game_data> &g, int &loaded, int &done){
   sf::Packet pq;
-  int done = query_query;
 
   sint i = 0;
-  while (i < g.size()){
+  while (i < g.size() && !done){
     pq.clear();
     pq << protocol::frame << i;
     query(socket, pq, done);
@@ -25,6 +24,8 @@ void st3::client::load_frames(socket_t *socket, vector<game_data> &g, int &loade
       sf::sleep(sf::milliseconds(1));
     }
   }
+
+  if (done) return;
 
   // indicate done
   i = -1;
@@ -49,7 +50,16 @@ void st3::client::query(socket_t *socket,
       exit(-1);
     }else if (message == protocol::complete){
       cout << "query: server says complete" << endl;
+      string winner;
+      if (socket -> data >> winner){
+	cout << " -> winner is " << winner << endl;
+      }else{
+	cout << " -> no winner specified!" << endl;
+      }
       done = query_game_complete;
+    }else if (message == protocol::aborted){
+      cout << "query: server says game aborted" << endl;
+      done = query_aborted;
     }else {
       cout << "query: unknown response: " << message << endl;
       exit(-1);

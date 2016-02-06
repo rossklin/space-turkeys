@@ -23,7 +23,7 @@ bool st3::server::client_t::receive_query(protocol_t query){
 
   if (receive_packet()){
     if (data >> input){
-      if (input == query){
+      if (input == query || query == protocol::any){
 	return true;
       }else if (input == protocol::leave){
 	cout << "client " << id << " disconnected!" << endl;
@@ -105,7 +105,7 @@ bool server::com::introduce(){
   for (auto c : clients)
     packets[c.first] << protocol::confirm << c.first;
 
-  check_protocol(protocol::connect, packets);
+  if (!check_protocol(protocol::connect, packets)) return false;
 
   for (auto c : clients){
     if (!(c.second -> data >> c.second -> name)){
@@ -116,12 +116,12 @@ bool server::com::introduce(){
   return true;
 }
 
-void st3::server::com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &packets){
+bool st3::server::com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &packets){
   list<thread> ts;
 
   if (packets.size() < clients.size()){
     cout << "check_protocol: to few packets!" << endl;
-    return;
+    return false;
   }
 
   for (auto c : clients){
@@ -138,12 +138,24 @@ void st3::server::com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &
       i++;
     }
   }
+
+  if (clients.size() < 2){
+    sf::Packet packet;
+    cout << "Less than two clients remaining!" << endl;
+    if (!clients.empty()){
+      packet << protocol::aborted;
+      clients.begin() -> second -> check_protocol(protocol::any, packet);
+    }
+    return false;
+  }
+  
+  return true;
 }
 
-void st3::server::com::check_protocol(protocol_t query, sf::Packet &packet){
+bool st3::server::com::check_protocol(protocol_t query, sf::Packet &packet){
   hm_t<sint, sf::Packet> v;
   for (auto c : clients) v[c.first] = packet;
-  check_protocol(query, v);
+  return check_protocol(query, v);
 }
 
 void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_t *c){

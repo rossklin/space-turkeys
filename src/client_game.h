@@ -67,10 +67,10 @@ namespace st3{
       bool pre_step();
 
       /*! let user build a choice and send to server */
-      void choice_step();
+      bool choice_step();
 
       /*! load simulation frames from server and visualize */
-      void simulation_step();
+      bool simulation_step();
 
       // data handling
       /*! make a command from a command selector
@@ -267,6 +267,8 @@ namespace st3{
 
       std::function<int(sf::Event)> default_event_handler;
       std::function<int()> default_body;
+      
+      bool popup_query(std::string v);
 
       int window_loop(int &done, std::function<int(sf::Event)> event_handler, std::function<int(void)> body);
 

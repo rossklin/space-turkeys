@@ -95,7 +95,6 @@ namespace st3{
     */
     point inverse_scale(window_t &w);
 
-
     namespace interface{
 
       // base class for choice windows

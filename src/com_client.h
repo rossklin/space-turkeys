@@ -35,7 +35,7 @@ namespace st3{
       @param[out] g vector to store loaded game data in
       @param[out] loaded reference to update number of loaded frames
     */
-    void load_frames(socket_t *socket, std::vector<game_data> &g, int &loaded);
+    void load_frames(socket_t *socket, std::vector<game_data> &g, int &loaded, int &done);
   };
 };
 

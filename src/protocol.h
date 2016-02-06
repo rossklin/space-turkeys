@@ -16,6 +16,7 @@ namespace st3{
     const sint frame = 2; /*!< query to get a simulation frame */
     const sint connect = 3; /*!< query to connect */
     const sint leave = 4;
+    const sint any = 5;
 
     /* **************************************** */
     /* RESPONSES */
@@ -24,6 +25,7 @@ namespace st3{
     const sint confirm = 1000; /*!< confirm a query */
     const sint complete = 1001; /*!< tell the client the game is complete */
     const sint invalid = 1002; /*!< tell the client the query is invalid */
+    const sint aborted = 1003; /*!< tell the client the game was aborted */
   };
 };
 #endif
