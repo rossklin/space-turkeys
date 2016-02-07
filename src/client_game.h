@@ -48,6 +48,7 @@ namespace st3{
       sfg::SFGUI *sfgui;
       command_gui *comgui; /*!< gui for assigning ships to commands */
       target_gui *targui; /*!< gui for selecting command action */
+      bool chosen_quit;
 
       std::vector<fixed_star> fixed_stars;
       std::list<fixed_star> hidden_stars;
@@ -270,7 +271,9 @@ namespace st3{
       
       bool popup_query(std::string v);
 
-      int window_loop(int &done, std::function<int(sf::Event)> event_handler, std::function<int(void)> body);
+      void popup_message(std::string title, std::string text);
+
+      void window_loop(int &done, std::function<int(sf::Event)> event_handler, std::function<int(void)> body);
 
       /*! draw the gui
 	

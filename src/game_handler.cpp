@@ -15,7 +15,7 @@ using namespace std;
 using namespace st3;
 using namespace st3::server;
 
-void st3::server::game_handler(com c, game_data g){
+void server::game_handler(com &c, game_data g){
   sf::Packet packet, p_confirm;
   vector<game_data> frames(g.settings.frames_per_round);
   hm_t<sint, sf::Packet> packets;
@@ -41,7 +41,7 @@ void st3::server::game_handler(com c, game_data g){
       cout << "game complete" << endl;
       packet.clear();
       packet << protocol::complete;
-      packet << (psum == 1 ? c.clients[pid] -> name : string("tie"));
+      packet << (psum == 1 ? string("The winner is: ") + c.clients[pid] -> name : string("The game is a tie"));
       c.check_protocol(protocol::game_round, packet);
       return;
     }

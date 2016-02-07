@@ -17,13 +17,19 @@ void st3::client::load_frames(socket_t *socket, vector<game_data> &g, int &loade
   while (i < g.size() && !done){
     pq.clear();
     pq << protocol::frame << i;
+
     query(socket, pq, response);
-    if (response != query_accepted) done |= response;
+
+    if (response != query_accepted){
+      done |= response;
+      break;
+    }
+
     if (socket -> data >> g[i]){
       i++;
       loaded = i;
     }else{
-      sf::sleep(sf::milliseconds(1));
+      sf::sleep(sf::milliseconds(10));
     }
   }
 

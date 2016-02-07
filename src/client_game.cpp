@@ -28,6 +28,7 @@ game::game(){
   comgui = 0;
   targui = 0;
   selector_queue = 1;
+  chosen_quit = false;
 
   default_event_handler = [this](sf::Event e) -> int {
     if (e.type == sf::Event::Closed) {
@@ -79,6 +80,7 @@ void game::run(){
 	if (i.second -> isa(identifier::solar) && i.second -> owned){
 	  view_game.setCenter(i.second -> get_position());
 	  view_game.setSize(point(25 * settings.solar_maxrad, 25 * settings.solar_maxrad));
+	  break;
 	}
       }
     }
@@ -88,6 +90,12 @@ void game::run(){
     if (!simulation_step()) break;
   }
 
+  if (!chosen_quit){
+    string server_says;
+    socket -> data >> server_says;
+    popup_message("GAME OVER", server_says);
+  }
+  
   delete interface::desktop;
   interface::desktop = 0;
 }
@@ -112,39 +120,13 @@ bool game::pre_step(){
 	   ref(pq),
 	   ref(done));
 
-  done = window_loop(done, default_event_handler, default_body);
+  window_loop(done, default_event_handler, default_body);
 
   cout << "pre_step: waiting for com thread to finish..." << endl;
   t.join();
 
-  if (done & query_game_complete){
-    cout << "pre_step: finished" << endl;
-
-    string winner;
-    if (!(socket -> data >> winner)){
-      cout << "server does not declare winner!" << endl;
-      return false;
-    }
-
-    message = "winner: " + winner;
-
-    int i = 0;
-
-    auto body = [this, &i]() -> int {
-      if (i++ < 40 && window.isOpen()){
-	return 0;
-      }else{
-	return query_aborted;
-      }
-    };
-    
-    done = window_loop(done, default_event_handler, body);
-    
-    return false;
-  }
-
-  if (done & query_aborted){
-    cout << "pre step: aborted" << endl;
+  if (done & (query_game_complete | query_aborted)){
+    cout << "pre_step: finished/aborted" << endl;
     return false;
   }
 
@@ -194,7 +176,7 @@ bool game::choice_step(){
     return default_body();
   };
 
-  done = window_loop(done, event_handler, body);
+  window_loop(done, event_handler, body);
 
   if (done & (query_game_complete | query_aborted)){
     cout << "choice_step: finishded" << endl;
@@ -221,7 +203,7 @@ bool game::choice_step(){
 
   cout << "choice step: sending" << endl;
 
-  done = window_loop(done, default_event_handler, default_body);
+  window_loop(done, default_event_handler, default_body);
 
   if (done & query_game_complete){
     cout << "choice send: server says game finished!" << endl;
@@ -312,7 +294,7 @@ bool game::simulation_step(){
 
   cout << "simlulation: starting loop" << endl;
 
-  done = window_loop(done, event_handler, body);
+  window_loop(done, event_handler, body);
 
   if (done & (query_game_complete | query_aborted)){
     cout << "simulation step: game aborted" << endl;
@@ -1157,6 +1139,7 @@ int game::choice_event(sf::Event e){
     case sf::Keyboard::Escape:
       window.setView(view_window);
       if(popup_query("Really quit?")){
+	chosen_quit = true;
 	return query_aborted;
       }
     }
@@ -1195,12 +1178,32 @@ void game::controls(){
 // ****************************************
 using namespace graphics;
 
-bool game::popup_query(string v){
-  sfg::Desktop d;
+void game::popup_message(string title, string message){
+  int done = false;
+
+  auto w = sfg::Window::Create();
+  auto layout = sfg::Box::Create(sfg::Box::Orientation::VERTICAL, 10);
+  auto text = sfg::Label::Create(message);
+  auto baccept = sfg::Button::Create("OK");
+
+  baccept -> GetSignal(sfg::Widget::OnLeftClick).Connect([&] () {
+      done = true;
+    });
+
+  layout -> Pack(text);
+  layout -> Pack(baccept);
+  w -> SetTitle(title);
+  w -> Add(layout);
+  interface::desktop -> Add(w);
+  w -> SetPosition(sf::Vector2f(window.getSize().x / 2 - w -> GetRequisition().x / 2, window.getSize().y / 2 - w -> GetRequisition().y / 2));
+
+  window_loop(done, default_event_handler, default_body);
   
-  sf::Clock clock;
-  float frame_time = 1/(float)20;
-  bool done = false;
+  cout << "popup message: done" << endl;
+}
+
+bool game::popup_query(string v){  
+  int done = false;
   bool accept = false;
 
   auto w = sfg::Window::Create();
@@ -1225,43 +1228,18 @@ bool game::popup_query(string v){
   layout -> Pack(header);
   layout -> Pack(blayout);
   w -> Add(layout);
-  d.Add(w);
+  interface::desktop -> Add(w);
 
   w -> SetPosition(sf::Vector2f(window.getSize().x / 2 - w -> GetRequisition().x / 2, window.getSize().y / 2 - w -> GetRequisition().y / 2));
 
-  while (!done){
-    auto delta = clock.restart().asSeconds();
-
-    sf::Event event;
-    while (window.pollEvent(event)){
-      if (event.type == sf::Event::Closed) {
-	window.close();
-      }else{
-	d.HandleEvent(event);
-      }
-    }
-    
-    if (!window.isOpen()) done = true;
-
-    // update sfgui
-    d.Update(delta);
-
-    // draw sfgui
-    sfgui -> Display(window);
-
-    // display on screen
-    window.display();
-
-    sf::Time wait_for = sf::seconds(fmax(frame_time - clock.getElapsedTime().asSeconds(), 0));
-    sf::sleep(wait_for);
-  }
+  window_loop(done, default_event_handler, default_body);
   
   cout << "popup: done: " << accept << endl;
   return accept;
 }
 
 
-int game::window_loop(int &done, function<int(sf::Event)> event_handler, function<int(void)> body){
+void game::window_loop(int &done, function<int(sf::Event)> event_handler, function<int(void)> body){
   sf::Clock clock;
   float frame_time = 1/(float)20;
 
@@ -1302,8 +1280,6 @@ int game::window_loop(int &done, function<int(sf::Event)> event_handler, functio
   }
 
   cout << "window_loop: done: " << done << endl;
-
-  return done;
 }
 
 void game::draw_window(){

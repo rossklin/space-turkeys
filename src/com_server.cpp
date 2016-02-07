@@ -27,6 +27,7 @@ bool st3::server::client_t::receive_query(protocol_t query){
 	return true;
       }else if (input == protocol::leave){
 	cout << "client " << id << " disconnected!" << endl;
+	disconnect();
 	status = sf::Socket::Status::Disconnected;
       }else{
 	cout << "client_t::receive_query: input " << input << " does not match query " << query << endl;
@@ -116,6 +117,31 @@ bool server::com::introduce(){
   return true;
 }
 
+bool com::cleanup_clients(){
+
+  // remove disconnected clients
+  for (auto i = clients.begin(); i != clients.end();){
+    if (!i -> second -> is_connected()) {
+      delete i -> second;
+      clients.erase((i++) -> first);
+    }else{
+      i++;
+    }
+  }
+
+  if (clients.size() < 2){
+    sf::Packet packet;
+    cout << "Less than two clients remaining!" << endl;
+    if (!clients.empty()){
+      packet << protocol::aborted << string("You are the last player in the game!");
+      clients.begin() -> second -> check_protocol(protocol::any, packet);
+    }
+    return false;
+  }
+
+  return true;
+}
+
 bool st3::server::com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &packets){
   list<thread> ts;
 
@@ -129,27 +155,8 @@ bool st3::server::com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &
   }
 
   for (auto &t : ts) t.join();
-
-  // remove disconnected clients
-  for (auto i = clients.begin(); i != clients.end();){
-    if (!i -> second -> is_connected()) {
-      clients.erase((i++) -> first);
-    }else{
-      i++;
-    }
-  }
-
-  if (clients.size() < 2){
-    sf::Packet packet;
-    cout << "Less than two clients remaining!" << endl;
-    if (!clients.empty()){
-      packet << protocol::aborted;
-      clients.begin() -> second -> check_protocol(protocol::any, packet);
-    }
-    return false;
-  }
   
-  return true;
+  return cleanup_clients();
 }
 
 bool st3::server::com::check_protocol(protocol_t query, sf::Packet &packet){
@@ -202,6 +209,12 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
 	break;
       }
     }
+
+    // check disconnect
+    if (!c -> is_connected()) {
+      cout << "client " << c -> id << " disconnected during distribute!" << endl;
+      break;
+    }
     
     if (idx >= 0 && idx < lim_end){
       sf::Packet psend;
@@ -238,5 +251,6 @@ void st3::server::com::distribute_frames(vector<game_data> &g, int &frame_count)
 
   for (auto &x : ts) x.join();
 
+  cleanup_clients();
   cout << "com::distribute_frames: end" << endl;
 }

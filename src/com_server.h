@@ -48,6 +48,8 @@ namespace st3{
 
       void disconnect();
 
+      bool cleanup_clients();
+
       /*! receive an expected query and send a packet
 	
        For each client, try to receive a specified query and then send

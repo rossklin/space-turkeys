@@ -1,5 +1,4 @@
 * currently working on
-** end game status not displayed
 ** fix ship swarm movement
 ** sfg window does not resize on sfml window resize
 ** priority buttons unresponsive to first right click
@@ -120,6 +119,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** end game status not displayed
 ** After fixing leave game, server says invalid query on simulation
 ** lacking proper leave game functionality
 ** why does sending frames take so long?
