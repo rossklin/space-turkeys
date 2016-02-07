@@ -370,7 +370,14 @@ void game_data::move_ships(){
 	  delta = to - f.position;
 	}
 
-	s.angle = utility::point_angle(delta);
+	float target_angle = utility::point_angle(delta);
+	float angle_increment = 0.1;
+	float epsilon = 0.01;
+	float angle_sign = utility::signum(utility::angle_difference(target_angle, s.angle), epsilon);
+
+	cout << "shipmove: target: " << target_angle << ", current: " << s.angle << ", sign: " << angle_sign << endl;
+
+	s.angle += angle_increment * angle_sign;
 	s.position = s.position + utility::scale_point(utility::normv(s.angle), f.speed_limit);
 	ship_grid -> move(i, s.position);
       }

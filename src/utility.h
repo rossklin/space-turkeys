@@ -58,6 +58,8 @@ namespace st3{
     */
     float sproject(point a, point r);
 
+    float angle_difference(float a, float b);
+
     /*!
       computes the shortest distance between two angles on a circle
       @param a first angle
@@ -134,6 +136,8 @@ namespace st3{
       @return the point
     */
     point normv(float angle);
+
+    float signum(float x, float eps = 0);
 
     /* **************************************** */
     /* VECTOR MATHS */

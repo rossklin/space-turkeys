@@ -1,13 +1,54 @@
 * currently working on
-** fix ship swarm movement
+** segfault on colonize
+** invalid? allowed allocation from fleet and waypoint in parallel
+** consider neighbourhood trackers for ships
+   unnessecary to look up friendly neighbours for combat
 ** sfg window does not resize on sfml window resize
 ** priority buttons unresponsive to first right click
-** simulation progress bar
 ** move keywords and allocations to "types.h"
 ** move expansion costs to research?
 ** targui should only appear when multiple targets are available
 ** command selectors drawn on top of each other
 ** targui shows self as target (though this does not create a command)
+* basic goals
+** server game
+*** research structure
+**** hash table
+**** nodes with:
+     requirement list
+     cost
+     level
+     level-dependent modifier functions
+     allow list
+**** prioritized build_[ship|turret]
+    e.g. focus on any of stealth, damage, speed etc.
+*** decide what to do with clients without objects
+** client game
+*** new command gui and target gui
+**** available options
+     target space: "goto waypoint"
+     target waypoint: "goto waypoint"
+     target friendly fleet: "follow", "join"
+     target opponent fleet: "follow", "attack"
+     target friendly solar: "land"
+     target opponent solar: "attack"
+     target neutral solar: "attack", (if undefended) "colonize"
+*** clickable minimap
+*** choice/evolution: display ready players, autoplay when all ready
+*** command_gui should have option to allocate X ships of type T
+*** simulation: interpolate using ship velocity
+*** draw all ships in same size, have a ship.draw_scale
+    so that ships can be drawn in same size in command gui
+    but different sizes in universe
+*** events board
+    messages such as "your fleet was destroyed" or "your solar X
+    merged with Bla's solar Y; your population won the ensuing battle"
+** before game interface
+** distribution
+   cmake build in a build directory so one can clean
+   disable form_builder in tgui (check opts with ccmake)
+** structure
+*** consider making work sector into a graph node class
 * long term goals
 ** strategy
 *** different solars have different resources
@@ -76,49 +117,11 @@
      [low shields] risk damage
 *** moving solars
 *** barbarians
-* basic goals
-** server game
-*** research structure
-**** hash table
-**** nodes with:
-     requirement list
-     cost
-     level
-     level-dependent modifier functions
-     allow list
-**** prioritized build_[ship|turret]
-    e.g. focus on any of stealth, damage, speed etc.
-*** decide what to do with clients without objects
-** client game
-*** new command gui and target gui
-**** available options
-     target space: "goto waypoint"
-     target waypoint: "goto waypoint"
-     target friendly fleet: "follow", "join"
-     target opponent fleet: "follow", "attack"
-     target friendly solar: "land"
-     target opponent solar: "attack"
-     target neutral solar: "attack", (if undefended) "colonize"
-*** clickable minimap
-*** choice/evolution: display ready players, autoplay when all ready
-*** command_gui should have option to allocate X ships of type T
-*** simulation: interpolate using ship velocity
-*** draw all ships in same size, have a ship.draw_scale
-    so that ships can be drawn in same size in command gui
-    but different sizes in universe
-*** events board
-    messages such as "your fleet was destroyed" or "your solar X
-    merged with Bla's solar Y; your population won the ensuing battle"
-** before game interface
-** distribution
-   cmake build in a build directory so one can clean
-   disable form_builder in tgui (check opts with ccmake)
-** structure
-*** consider making work sector into a graph node class
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** fix ship swarm movement
 ** end game status not displayed
 ** After fixing leave game, server says invalid query on simulation
 ** lacking proper leave game functionality

@@ -14,6 +14,10 @@ boost::random::mt19937 rng;
 // POINT ARITHMETICS
 // ****************************************
 
+float utility::signum(float x, float eps){
+  return (x > eps) - (x < -eps);
+}
+
 // scalar product of points a and b
 float utility::scalar_mult(point a, point b){
   return a.x * b.x + a.y * b.y;
@@ -52,12 +56,14 @@ float utility::sproject(point a, point r){
   return scalar_mult(a,r) / scalar_mult(r,r);
 }
 
+
+float utility::angle_difference(float a, float b){
+  return modulus(a - b + M_PI, 2 * M_PI) - M_PI;
+}
+
 // shortest distance between angles a and b
 float utility::angle_distance(float a, float b){
-  float r;
-  r = modulus(b - a, 2 * M_PI);
-  if (r > M_PI) r = 2 * M_PI - r;
-  return r;
+  return fabs(angle_difference(a,b));
 }
 
 // shortest distance between p and line from a to b
