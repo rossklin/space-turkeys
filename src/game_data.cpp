@@ -570,6 +570,7 @@ void game_data::increment(){
 
   // update solar data
   for (auto &x : solars) solar_tick(x.first);
+  remove_units();
 
   cout << "pre move fleet count: " << fleets.size() << endl;
 

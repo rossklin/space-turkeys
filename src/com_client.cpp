@@ -59,12 +59,6 @@ void st3::client::query(socket_t *socket,
       exit(-1);
     }else if (message == protocol::complete){
       cout << "query: server says complete" << endl;
-      string winner;
-      if (socket -> data >> winner){
-	cout << " -> winner is " << winner << endl;
-      }else{
-	cout << " -> no winner specified!" << endl;
-      }
       done = query_game_complete;
     }else if (message == protocol::aborted){
       cout << "query: server says game aborted" << endl;

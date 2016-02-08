@@ -120,6 +120,8 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** fixed bug: ship not removed after colonize before ship_solar_int
+** fixed bug: com_client::query catches winner message
 * fixed
 ** fix ship swarm movement
 ** end game status not displayed
