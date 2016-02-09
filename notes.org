@@ -1,15 +1,35 @@
 * currently working on
-** segfault on colonize
-** invalid? allowed allocation from fleet and waypoint in parallel
-** consider neighbourhood trackers for ships
+** bugs & crashes
+*** simulation step hangs on key escape abort game
+    This was when client 1 aborts at frame -1, while client 2 is still
+    in choice step. Server exits with error 'disconnect' and other
+    client gets segfault. Perhaps the server failed to receive the
+    leave game request from client 1 while it was waiting for the
+    choice from client 2.
+** interface improvements
+*** no info about available resources in solar gui
+*** no way to get info about non-owned solars until colonizing
+*** military template sucks
+*** make minimap clickable
+*** targui defaults
+**** send all if from waypoint
+**** send colonizer if command is colonize
+**** only show gui if multiple targets
+**** don't show self as target
+*** solar gui has transparent background
+*** invalid? allowed allocation from fleet and waypoint in parallel
+*** sfg window does not resize on sfml window resize
+*** priority buttons unresponsive to first right click
+*** command selectors drawn on top of each other
+** game mechanics improvements
+*** need "unique" identifier for radar turrets
+    Or rather, need radar turret to be a unique building rather than a
+    turret.
+*** consider neighbourhood trackers for ships
    unnessecary to look up friendly neighbours for combat
-** sfg window does not resize on sfml window resize
-** priority buttons unresponsive to first right click
-** move keywords and allocations to "types.h"
-** move expansion costs to research?
-** targui should only appear when multiple targets are available
-** command selectors drawn on top of each other
-** targui shows self as target (though this does not create a command)
+** code design
+*** move keywords and allocations to "types.h"
+*** move expansion costs to research?
 * basic goals
 ** server game
 *** research structure
@@ -120,9 +140,9 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+* fixed
 ** fixed bug: ship not removed after colonize before ship_solar_int
 ** fixed bug: com_client::query catches winner message
-* fixed
 ** fix ship swarm movement
 ** end game status not displayed
 ** After fixing leave game, server says invalid query on simulation
