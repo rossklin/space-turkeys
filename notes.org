@@ -1,5 +1,7 @@
 * currently working on
 ** bugs & crashes
+*** c_solar::template_map: multiple calls to empty_choice() crashes
+    After second call, returned choice is *really* empty.
 *** simulation step hangs on key escape abort game
     This was when client 1 aborts at frame -1, while client 2 is still
     in choice step. Server exits with error 'disconnect' and other
@@ -8,7 +10,6 @@
     choice from client 2.
 ** interface improvements
 *** no way to get info about non-owned solars until colonizing
-*** military template sucks
 *** make minimap clickable
 *** targui defaults
 **** send all if from waypoint
@@ -138,9 +139,10 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** military template sucks
+* fixed
 ** solar gui has transparent background
 ** no info about available resources in solar gui
-* fixed
 ** fixed bug: ship not removed after colonize before ship_solar_int
 ** fixed bug: com_client::query catches winner message
 ** fix ship swarm movement

@@ -198,6 +198,10 @@ main_interface::main_interface(sf::Vector2u d, research::data &r) : research_lev
 
   // set display properties
   SetProperty("Window#" + string(main_window::sfg_id), "BackgroundColor", sf::Color(20, 30, 120, 100));
+  SetProperty("Button", "BackgroundColor", sf::Color(30, 180, 120, 140));
+  SetProperty("Button", "BorderColor", sf::Color(80, 180, 120, 200));
+
+  SetProperty("Widget", "Color", sf::Color(200, 170, 120));
 }
 
 void main_interface::reset_qw(Widget::Ptr w){
