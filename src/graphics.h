@@ -106,7 +106,7 @@ namespace st3{
       };
 
       // bottom panel
-      class bottom_panel : public query<sfg::Window, choice::choice>{
+      class bottom_panel : public sfg::Window{
       public:
 	typedef std::shared_ptr<bottom_panel> Ptr;
 	typedef std::shared_ptr<const bottom_panel> PtrConst;
@@ -155,6 +155,8 @@ namespace st3{
 	typedef std::shared_ptr<main_window> Ptr;
 	typedef std::shared_ptr<const main_window> PtrConst;
 
+	static constexpr char* sfg_id = "solar_query";
+
 	int solar_id;
 
 	static Ptr Create(int id, solar::solar s);
@@ -194,7 +196,6 @@ namespace st3{
 	main_interface(sf::Vector2u dims, research::data &r);
 	void reset_qw(sfg::Widget::Ptr p);
 	void clear_qw();
-	sf::Vector2f sub_dims();
       };
 
       extern main_interface *desktop;

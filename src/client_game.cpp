@@ -973,7 +973,12 @@ int game::choice_event(sf::Event e){
   point p;
   list<source_t> ss;
 
-  if (interface::desktop -> query_window) return 0;
+  if (interface::desktop -> query_window) {
+    if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape){
+      interface::desktop -> clear_qw();
+    }
+    return 0;
+  }
 
   window.setView(view_game);
   if (targui && targui -> handle_event(e)){

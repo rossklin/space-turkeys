@@ -165,7 +165,7 @@ main_window::Ptr main_window::Create(int id, solar::solar s){
   auto buf = Ptr(new main_window(id, s));
   buf -> Add(buf -> layout);
   buf -> SetAllocation(qw_allocation);
-  buf -> SetTitle("Customize solar choice for solar " + to_string(buf -> solar_id));
+  buf -> SetId(string(sfg_id));
 
   return buf;
 }
@@ -195,10 +195,9 @@ main_interface::main_interface(sf::Vector2u d, research::data &r) : research_lev
   
   auto bottom = bottom_panel::Create(done, accept);
   Add(bottom);
-}
 
-sf::Vector2f main_interface::sub_dims(){
-  return sf::Vector2f(qw_allocation.width/2, qw_allocation.height);
+  // set display properties
+  SetProperty("Window#" + string(main_window::sfg_id), "BackgroundColor", sf::Color(20, 30, 120, 100));
 }
 
 void main_interface::reset_qw(Widget::Ptr w){
@@ -214,7 +213,7 @@ void main_interface::clear_qw(){
   query_window = 0;
 }
 
-bottom_panel::bottom_panel() {
+bottom_panel::bottom_panel() : Window(Window::Style::BACKGROUND) {
 }
 
 top_panel::top_panel() : Window(Window::Style::BACKGROUND) {
@@ -257,18 +256,19 @@ Button::Ptr main_window::priority_button(string label, float &data, function<boo
 };
 
 // main window for solar choice
-main_window::main_window(idtype sid, solar::solar s) : sol(s), solar_id(sid){
+main_window::main_window(idtype sid, solar::solar s) : query<Window, choice::c_solar>(Window::Style::BACKGROUND), sol(s), solar_id(sid){
+  
   response = desktop -> response.solar_choices[solar_id];
 
   // main layout
   layout = Box::Create(Box::Orientation::VERTICAL, 10);
 
   layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
-  tooltip = Label::Create("...");
+  tooltip = Label::Create("Customize solar choice for solar " + to_string(solar_id));
   layout -> Pack(tooltip);
   layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
 
-  auto meta_layout = Box::Create(Box::Orientation::HORIZONTAL);
+  auto meta_layout = Box::Create(Box::Orientation::HORIZONTAL, 10);
   meta_layout -> Pack(choice_layout = Box::Create(Box::Orientation::VERTICAL));
   meta_layout -> Pack(sub_layout = Box::Create(Box::Orientation::VERTICAL));
   meta_layout -> Pack(info_layout = Box::Create(Box::Orientation::VERTICAL));
@@ -316,7 +316,6 @@ main_window::main_window(idtype sid, solar::solar s) : sol(s), solar_id(sid){
   l_response -> Pack(b_cancel);
 
   layout -> Pack(l_response);
-  layout -> SetRequisition(desktop -> sub_dims());
 }
 
 void main_window::build_choice(){
@@ -330,19 +329,18 @@ void main_window::build_choice(){
   for (auto v : cost::keywords::sector){
     auto b = priority_button(v, response.allocation[v], [this](){return response.allocation.count() < choice::max_allocation;}, tooltip);
 
+    auto l = Box::Create(Box::Orientation::HORIZONTAL);
+    l -> Pack(b);
+
     if (subq.count(v)){
       // sectors with sub interfaces
       auto sub = Button::Create(">");
       sub -> GetSignal(Widget::OnLeftClick).Connect([v,subq] () {subq.at(v)();});
       sub -> GetSignal(Widget::OnMouseEnter).Connect([this,v] () {tooltip -> SetText("Edit sub choices for " + v);});
-      auto l = Box::Create(Box::Orientation::HORIZONTAL);
-      l -> Pack(b);
       l -> Pack(sub);
-      layout -> Pack(l);
-    }else{
-      // sectors without sub interfaces
-      layout -> Pack(b);
     }
+    
+    layout -> Pack(l);
   }
 
   auto frame = Frame::Create("Sector priorities");
@@ -361,16 +359,38 @@ string format_float(float x){
 void main_window::build_info(){
   auto res = Box::Create(Box::Orientation::VERTICAL);
   choice::c_solar c = response;
+  int width = 50;
   c.normalize();
-
-  auto label_build = [this] (string v, float absolute, float delta) -> Label::Ptr{
-    auto a = Label::Create(v + ": " + format_float(absolute) + " [" + format_float(delta) + "]");
+  
+  auto patch_label = [this, width] (Label::Ptr a, string v){
     a -> SetAlignment(sf::Vector2f(0, 0));
     a -> GetSignal(Widget::OnMouseEnter).Connect([this, v] () {
 	tooltip -> SetText("Status for " + v + " (rate of change in parenthesis)");
       });
-    
+  };    
+
+  auto label_build = [this, patch_label] (string v, float absolute, float delta) -> Label::Ptr{
+    auto a = Label::Create(v + ": " + format_float(absolute) + " [" + format_float(delta) + "]");
+    patch_label(a, v);
     return a;
+  };
+
+  auto resource_label_build = [this, patch_label] (string v, float absolute, float delta, float avail) -> Label::Ptr{
+    auto a = Label::Create(v + ": " + format_float(absolute) + " [" + format_float(delta) + "] - " + format_float(avail));
+    patch_label(a, v);
+    return a;
+  };
+
+  auto frame = [width] (string title, sfg::Widget::Ptr content) {
+    // auto frame_buf = Frame::Create(title);
+    // frame_buf -> Add(content);
+    // return frame_buf;
+    auto buf = Box::Create(Box::Orientation::VERTICAL);
+    buf -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
+    buf -> Pack(Label::Create(title));
+    buf -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
+    buf -> Pack(content);
+    return buf;
   };
 
   auto buf = Box::Create(Box::Orientation::VERTICAL);
@@ -379,34 +399,29 @@ void main_window::build_info(){
   buf -> Pack(label_build("Ecology", sol.ecology, sol.ecology_increment()));
   buf -> Pack(label_build("Water", sol.water_status(), 0));
   buf -> Pack(label_build("Space", sol.space_status(), 0));
-  auto frame_buf = Frame::Create("Stats");
-  frame_buf -> Add(buf);
-  res -> Pack(frame_buf);
+
+  res -> Pack(frame("Stats", buf));
 
   buf = Box::Create(Box::Orientation::VERTICAL);
   for (auto v : cost::keywords::expansion)
     buf -> Pack(label_build(v, sol.sector[v], sol.expansion_increment(v, c)));
 
-  frame_buf = Frame::Create("Sectors");
-  frame_buf -> Add(buf);
-  res -> Pack(frame_buf);
+  res -> Pack(frame("Sectors", buf));
 
   buf = Box::Create(Box::Orientation::VERTICAL);
   for (auto v : cost::keywords::resource)
-    buf -> Pack(label_build(v, sol.resource[v].storage, sol.resource_increment(v, c)));
+    buf -> Pack(resource_label_build(v, sol.resource[v].storage, sol.resource_increment(v, c), sol.resource[v].available));
 
-  frame_buf = Frame::Create("Resources");
-  frame_buf -> Add(buf);
-  res -> Pack(frame_buf);
+  res -> Pack(frame("Resources", buf));
 
-  res -> Pack(label_build("Ships", sol.ships.size(), 0));
-  res -> Pack(label_build("Turrets", sol.turrets.size(), 0));
+  buf = Box::Create(Box::Orientation::VERTICAL);
+  buf -> Pack(label_build("Ships", sol.ships.size(), 0));
+  buf -> Pack(label_build("Turrets", sol.turrets.size(), 0));
 
-  auto frame = Frame::Create("Solar " + to_string(solar_id) + " info");
-  frame -> Add(res);
-
+  res -> Pack(frame("Military", buf));
+  
   info_layout -> RemoveAll();
-  info_layout -> Pack(frame);
+  info_layout -> Pack(frame("Solar " + to_string(solar_id) + " info", res), false, false);
 }
 
 Box::Ptr main_window::new_sub(string v){
