@@ -72,6 +72,8 @@ namespace st3{
 	@return set of ship ids
       */
       virtual std::set<idtype> get_ships() = 0;
+
+      virtual std::string hover_info() = 0;
     };
 
     /*! entity_selector representing a solar */
@@ -92,6 +94,7 @@ namespace st3{
       point get_position();
       bool isa(std::string t);
       std::set<idtype> get_ships();
+      std::string hover_info();
     };
 
     /*! entity_selector representing a fleet */
@@ -111,6 +114,7 @@ namespace st3{
       point get_position();
       bool isa(std::string t);
       std::set<idtype> get_ships();
+      std::string hover_info();
     };
 
     /*! entity_selector representing a waypoint */
@@ -132,6 +136,7 @@ namespace st3{
       point get_position();
       bool isa(std::string t);
       std::set<idtype> get_ships();
+      std::string hover_info();
     };
 
     /*! selector representing a command */

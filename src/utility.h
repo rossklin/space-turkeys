@@ -10,6 +10,9 @@
 namespace st3{
   /*! Arithmetics for points, vectors, sets and sfml objects. */
   namespace utility{
+
+    std::string format_float(float x);
+    
     /* **************************************** */
     /* POINT MATHS */
     /* **************************************** */
@@ -227,7 +230,6 @@ namespace st3{
     @return reference to stream
   */
   std::ostream & operator << (std::ostream &ss, point const &x);
-
 
   /* **************************************** */
   /* SET OPERATIONS */

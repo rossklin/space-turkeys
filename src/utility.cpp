@@ -1,3 +1,5 @@
+#include <iomanip>
+
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
 #include <boost/random/normal_distribution.hpp>
@@ -253,6 +255,13 @@ vector<sint> utility::different_colors(int n){
 float utility::modulus(float x, float p){
   int num = floor(x / p);
   return x - num * p;
+}
+
+// format a float as low prec. string
+string utility::format_float(float x){
+  stringstream stream;
+  stream << fixed << setprecision(2) << x;
+  return stream.str();
 }
 
 // output vector x to stream ss

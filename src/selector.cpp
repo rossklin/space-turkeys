@@ -113,6 +113,10 @@ set<idtype> solar_selector::get_ships(){
   return ships;
 }
 
+string solar_selector::hover_info(){
+  return "solar at " + utility::format_float(position.x) + "x" + utility::format_float(position.y) + "\nradius: " + utility::format_float(radius);
+}
+
 // ****************************************
 // FLEET SELECTOR
 // ****************************************
@@ -160,6 +164,10 @@ set<idtype> fleet_selector::get_ships(){
   return ships;
 }
 
+string fleet_selector::hover_info(){
+  return "fleet at " + utility::format_float(position.x) + "x" + utility::format_float(position.y) + " with " + to_string(ships.size()) + " ships.";
+}
+
 // ****************************************
 // WAYPOINT SELECTOR
 // ****************************************
@@ -192,6 +200,10 @@ bool waypoint_selector::isa(string t){
 
 set<idtype> waypoint_selector::get_ships(){
   return ships;
+}
+
+string waypoint_selector::hover_info(){
+  return "waypoint at " + utility::format_float(position.x) + "x" + utility::format_float(position.y) + " with " + to_string(ships.size()) + " ships.";
 }
 
 // ****************************************

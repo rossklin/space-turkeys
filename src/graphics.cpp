@@ -3,6 +3,7 @@
 
 #include "graphics.h"
 #include "types.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -138,8 +139,7 @@ bottom_panel::Ptr bottom_panel::Create(bool &done, bool &accept){
 
   layout -> Pack(b_proceed);
   buf -> Add(layout);
-
-  buf -> SetAllocation(sf::FloatRect(0, bottom_start, desktop_dims.x, desktop_dims.y - bottom_start));
+  buf -> SetAllocation(sf::FloatRect(0.3 * desktop_dims.x, bottom_start, 0.4 * desktop_dims.x, desktop_dims.y - bottom_start));
   return buf;
 }
 
@@ -196,9 +196,19 @@ main_interface::main_interface(sf::Vector2u d, research::data &r) : research_lev
   auto bottom = bottom_panel::Create(done, accept);
   Add(bottom);
 
+  // hover info label
+  hover_label = Label::Create("Empty space");
+  auto hl_window = Window::Create(Window::Style::BACKGROUND);
+  auto hl_box = Box::Create();
+  hl_box -> SetRequisition(hl_window -> GetRequisition());
+  hl_box -> Pack(hover_label);
+  hl_window -> Add(hl_box);
+  hl_window -> SetAllocation(sf::FloatRect(0.71 * desktop_dims.x, qw_bottom + 10, 0.28 * desktop_dims.x, desktop_dims.y - qw_bottom - 20));
+  Add(hl_window);
+
   // set display properties
   SetProperty("Window#" + string(main_window::sfg_id), "BackgroundColor", sf::Color(20, 30, 120, 100));
-  SetProperty("Button", "BackgroundColor", sf::Color(30, 180, 120, 140));
+  SetProperty("Button", "BackgroundColor", sf::Color(20, 120, 80, 140));
   SetProperty("Button", "BorderColor", sf::Color(80, 180, 120, 200));
 
   SetProperty("Widget", "Color", sf::Color(200, 170, 120));
@@ -354,12 +364,6 @@ void main_window::build_choice(){
   choice_layout -> Pack(frame);
 }
 
-string format_float(float x){
-  stringstream stream;
-  stream << fixed << setprecision(2) << x;
-  return stream.str();
-}
-
 void main_window::build_info(){
   auto res = Box::Create(Box::Orientation::VERTICAL);
   choice::c_solar c = response;
@@ -374,13 +378,13 @@ void main_window::build_info(){
   };    
 
   auto label_build = [this, patch_label] (string v, float absolute, float delta) -> Label::Ptr{
-    auto a = Label::Create(v + ": " + format_float(absolute) + " [" + format_float(delta) + "]");
+    auto a = Label::Create(v + ": " + utility::format_float(absolute) + " [" + utility::format_float(delta) + "]");
     patch_label(a, v);
     return a;
   };
 
   auto resource_label_build = [this, patch_label] (string v, float absolute, float delta, float avail) -> Label::Ptr{
-    auto a = Label::Create(v + ": " + format_float(absolute) + " [" + format_float(delta) + "] - " + format_float(avail));
+    auto a = Label::Create(v + ": " + utility::format_float(absolute) + " [" + utility::format_float(delta) + "] - " + utility::format_float(avail));
     patch_label(a, v);
     return a;
   };

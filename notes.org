@@ -9,8 +9,9 @@
     leave game request from client 1 while it was waiting for the
     choice from client 2.
 ** interface improvements
-*** no way to get info about non-owned solars until colonizing
+*** hover info should depend on ownership
 *** make minimap clickable
+*** more centralized desktop geometry info
 *** targui defaults
 **** send all if from waypoint
 **** send colonizer if command is colonize
@@ -139,8 +140,9 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-** military template sucks
+** added hover info
 * fixed
+** military template sucks
 ** solar gui has transparent background
 ** no info about available resources in solar gui
 ** fixed bug: ship not removed after colonize before ship_solar_int

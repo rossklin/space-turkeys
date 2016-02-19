@@ -182,6 +182,7 @@ namespace st3{
       class main_interface : public sfg::Desktop {
       public:
 	sfg::Widget::Ptr query_window;
+	sfg::Label::Ptr hover_label;
 
 	// research level used by interface components
 	research::data &research_level;

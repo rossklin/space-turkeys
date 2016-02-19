@@ -59,7 +59,7 @@ void game::run(){
   area_select_active = false;
   view_game = sf::View(sf::FloatRect(0, 0, settings.width, settings.height));
   view_minimap = view_game;
-  view_minimap.setViewport(sf::FloatRect(0.01, 0.61, 0.28, 0.28));
+  view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
   view_window = window.getDefaultView();
 
 
@@ -1105,11 +1105,31 @@ int game::choice_event(sf::Event e){
     srect = sf::FloatRect(0, 0, 0, 0);
     break;
   case sf::Event::MouseMoved:
+    p = window.mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
+    
     if (area_select_active){
-      p = window.mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
+      // update area selection
       srect.width = p.x - srect.left;
       srect.height = p.y - srect.top;
       cout << "update srect size at " << p.x << "x" << p.y << " to " << srect.width << "x" << srect.height << endl;
+    }else{
+      // update hover info
+      auto keys = entities_at(p);
+      string text = "Empty space";
+      
+      if (keys.size() == 1){
+	source_t k = *keys.begin();
+	if (!entity_selectors.count(k)) {
+	  cout << "update hover info: entity " << k << " not in table!" << endl;
+	  exit(-1);
+	}
+
+	text = entity_selectors[k] -> hover_info();
+      }else if (keys.size() > 1){
+	text = "Multiple entities here!";
+      }
+
+      interface::desktop -> hover_label -> SetText(text);
     }
     break;
   case sf::Event::MouseWheelMoved:
