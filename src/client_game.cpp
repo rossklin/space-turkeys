@@ -1219,10 +1219,25 @@ void game::popup_message(string title, string message){
   layout -> Pack(baccept);
   w -> SetTitle(title);
   w -> Add(layout);
-  interface::desktop -> Add(w);
   w -> SetPosition(sf::Vector2f(window.getSize().x / 2 - w -> GetRequisition().x / 2, window.getSize().y / 2 - w -> GetRequisition().y / 2));
 
-  window_loop(done, default_event_handler, default_body);
+  interface::desktop -> Add(w);
+
+  auto event_handler = [this] (sf::Event e) -> int {
+    if (e.type == sf::Event::KeyPressed){
+      if (e.key.code == sf::Keyboard::Escape){
+	return query_aborted;
+      }else if (e.key.code == sf::Keyboard::Return){
+	return query_accepted;
+      }
+    }
+    return default_event_handler(e);
+  };
+
+
+  window_loop(done, event_handler, default_body);
+
+  interface::desktop -> Remove(w);
   
   cout << "popup message: done" << endl;
 }
@@ -1230,6 +1245,8 @@ void game::popup_message(string title, string message){
 bool game::popup_query(string v){  
   int done = false;
   bool accept = false;
+
+  cout << "popup query: start" << endl;
 
   auto w = sfg::Window::Create();
   auto layout = sfg::Box::Create(sfg::Box::Orientation::VERTICAL, 10);
@@ -1257,7 +1274,22 @@ bool game::popup_query(string v){
 
   w -> SetPosition(sf::Vector2f(window.getSize().x / 2 - w -> GetRequisition().x / 2, window.getSize().y / 2 - w -> GetRequisition().y / 2));
 
-  window_loop(done, default_event_handler, default_body);
+  auto event_handler = [this, &accept] (sf::Event e) -> int {
+    if (e.type == sf::Event::KeyPressed){
+      if (e.key.code == sf::Keyboard::Escape){
+	accept = false;
+	return query_aborted;
+      }else if (e.key.code == sf::Keyboard::Return){
+	accept = true;
+	return query_accepted;
+      }
+    }
+    return default_event_handler(e);
+  };
+
+  window_loop(done, event_handler, default_body);
+
+  interface::desktop -> Remove(w);
   
   cout << "popup: done: " << accept << endl;
   return accept;

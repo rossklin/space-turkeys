@@ -367,10 +367,9 @@ void main_window::build_choice(){
 void main_window::build_info(){
   auto res = Box::Create(Box::Orientation::VERTICAL);
   choice::c_solar c = response;
-  int width = 50;
   c.normalize();
   
-  auto patch_label = [this, width] (Label::Ptr a, string v){
+  auto patch_label = [this] (Label::Ptr a, string v){
     a -> SetAlignment(sf::Vector2f(0, 0));
     a -> GetSignal(Widget::OnMouseEnter).Connect([this, v] () {
 	tooltip -> SetText("Status for " + v + " (rate of change in parenthesis)");
@@ -389,10 +388,7 @@ void main_window::build_info(){
     return a;
   };
 
-  auto frame = [width] (string title, sfg::Widget::Ptr content) {
-    // auto frame_buf = Frame::Create(title);
-    // frame_buf -> Add(content);
-    // return frame_buf;
+  auto frame = [] (string title, sfg::Widget::Ptr content) {
     auto buf = Box::Create(Box::Orientation::VERTICAL);
     buf -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
     buf -> Pack(Label::Create(title));

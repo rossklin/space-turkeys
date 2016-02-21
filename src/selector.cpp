@@ -114,7 +114,18 @@ set<idtype> solar_selector::get_ships(){
 }
 
 string solar_selector::hover_info(){
-  return "solar at " + utility::format_float(position.x) + "x" + utility::format_float(position.y) + "\nradius: " + utility::format_float(radius);
+  string res = "solar at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
+
+  for (auto k : cost::keywords::resource)
+    res += "\nres:" + k + ": " + to_string((int)resource[k].available);
+
+  if (owned){
+    res += "\npopulation: " + to_string((int)population);
+    res += "\nfleet: " + to_string(ships.size());
+    res += "\nturrets: " + to_string(turrets.size());
+  }
+
+  return res;
 }
 
 // ****************************************
@@ -165,7 +176,14 @@ set<idtype> fleet_selector::get_ships(){
 }
 
 string fleet_selector::hover_info(){
-  return "fleet at " + utility::format_float(position.x) + "x" + utility::format_float(position.y) + " with " + to_string(ships.size()) + " ships.";
+  string res = "fleet at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
+
+  if (owned){
+    res += "\nships: " + to_string(ships.size());
+    res += "\naction: " + com.action;
+  }
+
+  return res;
 }
 
 // ****************************************
@@ -203,7 +221,7 @@ set<idtype> waypoint_selector::get_ships(){
 }
 
 string waypoint_selector::hover_info(){
-  return "waypoint at " + utility::format_float(position.x) + "x" + utility::format_float(position.y) + " with " + to_string(ships.size()) + " ships.";
+  return "waypoint at " + utility::format_float(position.x) + "x" + utility::format_float(position.y) + "\nships: " + to_string(ships.size());
 }
 
 // ****************************************
