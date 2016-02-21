@@ -46,7 +46,7 @@ int main(int argc, char **argv){
 
   for (int i = 0; i < entities; i++){
     solar::solar s = build_solar();
-    choice::c_solar c = choice::c_solar::empty_choice();
+    choice::c_solar c;
     c.allocation[cost::keywords::key_culture] = 1;
     c.allocation[cost::keywords::key_expansion] = 1;
     c.allocation[cost::keywords::key_mining] = 1;
