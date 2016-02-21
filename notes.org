@@ -1,7 +1,5 @@
 * currently working on
 ** bugs & crashes
-*** c_solar::template_map: multiple calls to empty_choice() crashes
-    After second call, returned choice is *really* empty.
 *** simulation step hangs on key escape abort game
     This was when client 1 aborts at frame -1, while client 2 is still
     in choice step. Server exits with error 'disconnect' and other
@@ -26,12 +24,45 @@
     Or rather, need radar turret to be a unique building rather than a
     turret.
 *** consider neighbourhood trackers for ships
-   unnessecary to look up friendly neighbours for combat
+**** key the ship grid on player
+**** look up friendly neighbours for boost interaction
+**** look up opponent neighbours for fire interaction
 ** code design
 *** move keywords and allocations to "types.h"
 *** move expansion costs to research?
 * basic goals
 ** server game
+*** ship interactions
+**** structure
+***** let ship interactions be governed by interaction functions
+***** introduce a ship specific table keyed on [action, t_target]
+***** let the ship templates build the interaction function objects
+***** interactions require the game data context to be available
+***** may need an on-action-setup trigger for e.g. trade routes
+***** let ships define a list of valid interactions
+***** extension: let researched upgrades extend the interactions
+**** list of
+***** cargo ship, friendly solar: trade route (resource allocation?)
+***** colonizer, neutral solar: colonize
+***** fighter, enemy fleet: engage
+***** bomber, enemy solar: bombard
+*** fleet actions
+**** require that all, some or no ships have some action available
+**** available actions are extended by those defined by all ships
+**** action complete callback for e.g. resume action after combat
+**** also has reaction mode: engage on sight / focus target / flee
+***** engage on sight is conditioned on: some fight
+**** on interaction, run ship interaction functions if available
+**** list of
+***** none, friendly solar: land
+***** some bombard, enemy solar: bombard
+***** none, friendly fleet: join, follow
+***** some fight, friendly fleet: guard
+***** none, enemy fleet: follow
+***** some fight, enemy fleet: engage
+*** introduce cargo ships for mining colonies
+*** introduce priorities with cost multipliers for ships
+*** let ship build be conditioned on research and industry level
 *** research structure
 **** hash table
 **** nodes with:
@@ -40,8 +71,6 @@
      level
      level-dependent modifier functions
      allow list
-**** prioritized build_[ship|turret]
-    e.g. focus on any of stealth, damage, speed etc.
 *** decide what to do with clients without objects
 ** client game
 *** new command gui and target gui
@@ -142,6 +171,8 @@
 * git pending
 ** added hover info
 * fixed
+** c_solar::template_map: multiple calls to empty_choice() crashes
+    After second call, returned choice is *really* empty.
 ** military template sucks
 ** solar gui has transparent background
 ** no info about available resources in solar gui
