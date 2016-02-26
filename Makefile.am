@@ -1,1 +1,1 @@
-SUBDIRS = external/src/SFML docs src
+SUBDIRS=src docs

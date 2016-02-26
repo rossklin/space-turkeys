@@ -170,9 +170,9 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+* fixed
 ** hover info should depend on ownership
 ** exit query should listen to escape/return key events
-* fixed
 ** c_solar::template_map: multiple calls to empty_choice() crashes
     After second call, returned choice is *really* empty.
 ** military template sucks

@@ -12,31 +12,17 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
-AC_CHECK_TOOL([CMAKE], [cmake])
+# AC_CHECK_TOOL([CMAKE], [cmake])
 
 # check for doxygen
 AC_CHECK_PROGS([DOXYGEN], [doxygen])
 if test -z "$DOXYGEN";
    then AC_MSG_WARN([Doxygen not found - continuing without Doxygen support])
-fi
-
-# configure external sfml with cmake
-export wd=$(pwd)
-
-# sfml
-cd $wd/external/src/SFML
-cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .
-
-# tgui
-# cp $wd/tgui_makelists.txt $wd/external/src/TGUI/CMakeLists.txt
-# cd $wd/external/src/TGUI
-# cmake -DTGUI_BUILD_FORM_BUILDER=FALSE -DCMAKE_INSTALL_PREFIX:PATH=/usr/local -DSFML_INCLUDE_DIR=../SFML/include .
-
-cd $wd				 
+fi				 
 
 # Checks for libraries.
 AC_CHECK_LIB([pthread], [pthread_create])
-AC_CHECK_LIB([xcb-image], [xcb_image_annotate])
+AC_CHECK_LIB([sfml-graphics], [sfml-window], [sfml-system] [sfml-network] [sfgui])
 
 # Checks for header files.
 AC_PATH_X
@@ -65,13 +51,10 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([clock_gettime floor inet_ntoa memmove memset pow select socket sqrt strchr strstr strtol strtoul])
 
 # set include paths
-extdir=../external/src
-CXXFLAGS="$CXXFLAGS -O0 -std=c++11 -isystem $extdir/SFML/include -Wl,-rpath=/usr/local/lib"
-LDFLAGS="$LDFLAGS -L$extdir/SFML/lib"
+CXXFLAGS="$CXXFLAGS -O0 -std=c++11 -Wl,-rpath=/usr/local/lib"
 LIBS="$LIBS -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -lsfgui"
 
 AC_CONFIG_FILES([Makefile docs/Makefile src/Makefile])
-# AC_CONFIG_SUBDIRS([src])
 
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([docs/Doxyfile])])
