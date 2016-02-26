@@ -7,44 +7,16 @@ mode.
 BUILD ---------------------------------------- 
 
 In order to build Space Turkeys, you must first install the
-dependencies. Space Turkeys uses boost, plus SFML and TGUI which are
-submodules to this repository. Thus, either clone with '--recursive'
-or run 'git submodule init' and 'git submodule update' to get the
-submodule contents. Then you will need the following libraries which
-SFML depends on:
-
-pthread
-opengl
-xlib
-xrandr
-udev
-freetype
-glew
-jpeg
-sndfile
-openal
-xcb-image
-
-After they are installed, a simple './configure && make && make
-install' should in the future be sufficient to build both dependencies
-and the Space Turkeys executables. However, tgui cmakelists requires
-that sfml be built before tgui is configured, and I have not figured
-out how to get automake to generate a makefile where building tgui
-depends on configuring tgui. For now this means either run make twice
-so that the second time the condition is met, or comment out the dep
-check section in tgui cmakelists:
-
-# # FindSFML couldn't find SFML.
-# if( NOT SFML_FOUND )
-#     set( SFML_ROOT "" CACHE PATH "SFML root directory" )
-#     message( FATAL_ERROR "CMake couldn't find SFML. Set the SFML_ROOT entry to SFML's root directory (containing \"include\" and \"lib\" directories)." )
-# endif()
+dependencies. Space Turkeys uses boost's random libraries, plus SFML
+and SFGUI graphics libraries. Then use autotools, i.e. run autoreconf
+to get a configure script and then ./configure && make.
 
 RUN ----------------------------------------
 
 To start a game with N players, run 'st_server N' on one
 machine. Then, each player runs 'st_client server_ip_address'. The
-server should start the game once all N players have connected.
+server should start the game once all N players have connected (a more
+user friendly approach will probably be adopted later).
 
 CONTACT ----------------------------------------
 Ross: rossklin@gmail.com
