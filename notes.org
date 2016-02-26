@@ -8,7 +8,6 @@
     choice from client 2.
 ** interface improvements
 *** setting solar template removes build info separators
-*** make minimap clickable
 *** more centralized desktop geometry info
 *** targui defaults (depends on action design)
 **** send all if from waypoint
@@ -75,7 +74,7 @@
 *** decide what to do with clients without objects
 ** client game
 *** new command gui and target gui
-**** available options
+**** target options
      target space: "goto waypoint"
      target waypoint: "goto waypoint"
      target friendly fleet: "follow", "join"
@@ -83,10 +82,9 @@
      target friendly solar: "land"
      target opponent solar: "attack"
      target neutral solar: "attack", (if undefended) "colonize"
-*** clickable minimap
+**** command_gui should have option to allocate X ships of type T
 *** choice/evolution: display ready players, autoplay when all ready
-*** command_gui should have option to allocate X ships of type T
-*** simulation: interpolate using ship velocity
+*** simulation: ?interpolate using ship velocity?
 *** draw all ships in same size, have a ship.draw_scale
     so that ships can be drawn in same size in command gui
     but different sizes in universe
@@ -94,11 +92,6 @@
     messages such as "your fleet was destroyed" or "your solar X
     merged with Bla's solar Y; your population won the ensuing battle"
 ** before game interface
-** distribution
-   cmake build in a build directory so one can clean
-   disable form_builder in tgui (check opts with ccmake)
-** structure
-*** consider making work sector into a graph node class
 * long term goals
 ** strategy
 *** different solars have different resources
@@ -171,6 +164,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** make minimap clickable
 ** hover info should depend on ownership
 ** exit query should listen to escape/return key events
 ** c_solar::template_map: multiple calls to empty_choice() crashes

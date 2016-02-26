@@ -1026,6 +1026,11 @@ int game::choice_event(sf::Event e){
     return 0;
   }
 
+  sf::Vector2i mpos;
+  sf::FloatRect minirect;
+  point delta;
+  point target;
+	  
   window.setView(view_game);
   switch (e.type){
   case sf::Event::MouseButtonPressed:
@@ -1038,13 +1043,25 @@ int game::choice_event(sf::Event e){
     break;
   case sf::Event::MouseButtonReleased:
     clear_guis();
-
-    p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
+    mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
+    p = window.mapPixelToCoords(mpos);
+    
     if (e.mouseButton.button == sf::Mouse::Left){
       if (abs(srect.width) > 5 || abs(srect.height) > 5){
 	area_select();
       }else{
-	select_at(p);
+	// check if on minimap
+	minirect = minimap_rect();
+	if (minirect.contains(mpos.x, mpos.y)){
+	  delta = point(mpos.x - minirect.left, mpos.y - minirect.top);
+	  target = point(delta.x / minirect.width * settings.width, delta.y / minirect.height * settings.height);
+
+	  cout << "minimap clicked, setting center: " << target.x << "x" << target.y << endl;
+	  
+	  view_game.setCenter(target);
+	}else{
+	  select_at(p);
+	}
       }
     } else if (e.mouseButton.button == sf::Mouse::Right && count_selected()){
       // target_at(p);
@@ -1385,14 +1402,24 @@ void game::draw_window(){
     window.draw(text);
 
     // draw minimap bounds
-    sf::FloatRect fr = view_minimap.getViewport();
-    r.setPosition(fr.left * view_window.getSize().x, fr.top * view_window.getSize().y);
-    r.setSize(point(fr.width * view_window.getSize().x, fr.height * view_window.getSize().y));
+    sf::FloatRect fr = minimap_rect();
+    r.setPosition(fr.left, fr.top);
+    r.setSize(sf::Vector2f(fr.width, fr.height));
     r.setOutlineColor(sf::Color(255,255,255));
     r.setFillColor(sf::Color(0,0,25,100));
     r.setOutlineThickness(1);
     window.draw(r);
   }
+}
+
+sf::FloatRect game::minimap_rect(){
+  sf::FloatRect fr = view_minimap.getViewport();
+  sf::FloatRect r;
+  r.left = fr.left * view_window.getSize().x;
+  r.top = fr.top * view_window.getSize().y;
+  r.width = fr.width * view_window.getSize().x;
+  r.height = fr.height * view_window.getSize().y;
+  return r;
 }
 
 void game::draw_interface_components(){

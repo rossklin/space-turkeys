@@ -268,6 +268,8 @@ namespace st3{
 
       std::function<int(sf::Event)> default_event_handler;
       std::function<int()> default_body;
+
+      sf::FloatRect minimap_rect();
       
       bool popup_query(std::string v);
 
