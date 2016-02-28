@@ -12,8 +12,44 @@ cost::ship_allocation<ship>& research::ship_templates(){
   static bool init = false;
   static cost::ship_allocation<ship> buf;
 
-  if (!init){
+  if (!init){    
     init = true;
+
+    ship::target_condition tc_enemy_ship(identifier::ship, ship::target_condition::enemy);
+    ship::target_condition tc_enemy_solar(identifier::solar, ship::target_condition::enemy);
+
+    auto default_combat_ship = [] (float accuracy, float damage) -> ship::shipi_t{
+      ship::shipi_t res = [=] (ship *me, ship *target, game_data *context){
+	if (utility::random_uniform() < accuracy){
+	  target -> hp -= utility::random_uniform(0, damage);
+	  if (target -> hp <= 0){
+	    target -> remove = true;
+	  }
+	}
+      };
+      return res;
+    };
+
+    auto default_combat_solar = [] (float accuracy, float damage) -> ship::solari_t{
+      ship::shipi_t res = [=] (ship *me, solar *target, game_data *context){
+	// check if solar already captured
+	if (sol.owner == target -> owner){
+	  return;
+	}
+
+	// check if defenses already destroyed
+	if (sol.owner == -1 && !sol.has_defense()){
+	  cout << "ship_bombard: neutral: no defense!" << endl;
+	  return;
+	}
+
+	// deal damage
+	if (utility::random_uniform() < accuracy){
+	  sol.damage_taken[target -> owner] += utility::random_uniform(0, damage);
+	}
+      };
+      return res;
+    };
     
     ship s, a;
     s.speed = 1;
@@ -23,9 +59,6 @@ cost::ship_allocation<ship>& research::ship_templates(){
     s.fleet_id = -1;
     s.ship_class = "";
     s.remove = false;
-    s.damage_solar = 0;
-    s.damage_ship = 0;
-    s.accuracy = 0;
     s.load_time = 100;
     s.load = 0;
 
@@ -33,18 +66,19 @@ cost::ship_allocation<ship>& research::ship_templates(){
     a.speed = 2;
     a.vision = 100;
     a.ship_class = keywords::key_scout;
-    a.damage_ship = 0.2;
-    a.accuracy = 0.3;
+    a.interaction_list[tc_enemy_ship] = fleet::action::combat;
+    a.ship_interaction[fleet::action::combat] = default_combat(0.2, 0.3);
     buf[a.ship_class] = a;
 
     a = s;
     a.hp = 2;
     a.interaction_radius = 20;
     a.ship_class = keywords::key_fighter;
-    a.damage_solar = 1;
-    a.damage_ship = 2;
-    a.accuracy = 0.7;
     a.load_time = 30;
+    a.interaction_list[tc_enemy_ship] = fleet::action::combat;
+    a.interaction_list[tc_enemy_solar] = fleet::action::combat;
+    a.ship_interaction[fleet::action::combat] = default_combat(0.7, 2);
+    a.solar_interaction[fleet::action::combat] = default_combat(0.7, 1);
     buf[a.ship_class] = a;
 
     a = s;

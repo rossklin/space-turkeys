@@ -1,35 +1,37 @@
-* currently working on
-** bugs & crashes
+* current work
+** [J] removed ship combat stats
+** [J] added ship interaction definitions
+** reintroduce ship combat stats
+** finish ship templates and use ship::receive_damage
+** determine who is responsible for load time
+** fix calling ship interactions from game data
+** consider introducing a game_data::find_targets
+   Conditioned on a ship::target_condition and a radius
+** consider introducing a ship::tick function
+   It could be responsible for relating interactions to load time in a
+   dynamical way. This may be a tad more complex than nessecary.
+* [~] issues
+** [~] bugs & crashes
 *** simulation step hangs on key escape abort game
     This was when client 1 aborts at frame -1, while client 2 is still
     in choice step. Server exits with error 'disconnect' and other
     client gets segfault. Perhaps the server failed to receive the
     leave game request from client 1 while it was waiting for the
     choice from client 2.
-** interface improvements
+** [~] interface improvements
 *** setting solar template removes build info separators
 *** more centralized desktop geometry info
-*** targui defaults (depends on action design)
-**** send all if from waypoint
-**** send colonizer if command is colonize
-**** only show gui if multiple targets
-**** don't show self as target
 *** invalid? allowed allocation from fleet and waypoint in parallel
 *** sfg window does not resize on sfml window resize
 *** priority buttons unresponsive to first right click
 *** command selectors drawn on top of each other
-** game mechanics improvements
+** [~] game mechanics improvements
 *** need "unique" identifier for radar turrets
     Or rather, need radar turret to be a unique building rather than a
     turret.
-*** consider neighbourhood trackers for ships
-**** key the ship grid on player
-**** look up friendly neighbours for boost interaction
-**** look up opponent neighbours for fire interaction
-** code design
+** [~] code design
 *** move keywords and allocations to "types.h"
 *** move expansion costs to research?
-*** get rid of sfml sub repo?
 * basic goals
 ** server game
 *** ship interactions
@@ -46,6 +48,10 @@
 ***** colonizer, neutral solar: colonize
 ***** fighter, enemy fleet: engage
 ***** bomber, enemy solar: bombard
+*** consider neighbourhood trackers for ships
+**** key the ship grid on player
+**** look up friendly neighbours for boost interaction
+**** look up opponent neighbours for fire interaction
 *** fleet actions
 **** require that all, some or no ships have some action available
 **** available actions are extended by those defined by all ships
@@ -74,14 +80,12 @@
 *** decide what to do with clients without objects
 ** client game
 *** new command gui and target gui
-**** target options
-     target space: "goto waypoint"
-     target waypoint: "goto waypoint"
-     target friendly fleet: "follow", "join"
-     target opponent fleet: "follow", "attack"
-     target friendly solar: "land"
-     target opponent solar: "attack"
-     target neutral solar: "attack", (if undefended) "colonize"
+**** target options: based on fleet and ship actions
+**** targui defaults (depends on action design)
+***** send all if from waypoint
+***** send colonizer if command is colonize
+***** only show gui if multiple targets
+***** don't show self as target
 **** command_gui should have option to allocate X ships of type T
 *** choice/evolution: display ready players, autoplay when all ready
 *** simulation: ?interpolate using ship velocity?
@@ -165,6 +169,7 @@
 * git pending
 * fixed
 ** make minimap clickable
+** get rid of sfml sub repo?
 ** hover info should depend on ownership
 ** exit query should listen to escape/return key events
 ** c_solar::template_map: multiple calls to empty_choice() crashes

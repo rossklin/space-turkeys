@@ -135,6 +135,15 @@ sf::Packet& st3::operator >>(sf::Packet& packet, game_settings &g){
      >> g.dt;
 }
 
+// ship::target_condition
+sf::Packet& st3::operator <<(sf::packet& packet, const ship::target_condition &c){
+  return packet << c.what << c.status;
+}
+
+sf::Packet& st3::operator >>(sf::packet& packet, ship::target_condition &c){
+  return packet >> c.what >> c.status;
+}
+
 // ship
 sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
   return packet 
@@ -146,11 +155,9 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
     << g.owner
     << g.hp
     << g.interaction_radius
-    << g.damage_solar
-    << g.damage_ship
-    << g.accuracy
     << g.load_time
-    << g.load;
+    << g.load
+    << g.interaction_list;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
@@ -163,11 +170,9 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
     >> g.owner
     >> g.hp
     >> g.interaction_radius
-    >> g.damage_solar
-    >> g.damage_ship
-    >> g.accuracy
     >> g.load_time
-    >> g.load;
+    >> g.load
+    >> g.interaction_list;
 }
 
 // turret

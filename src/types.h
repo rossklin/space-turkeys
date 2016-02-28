@@ -37,6 +37,7 @@ namespace st3{
   /*! utilities for source and target identifiers */
   namespace identifier{
     const std::string solar = "solar";
+    const std::string solar = "ship";
     const std::string fleet = "fleet";
     const std::string waypoint = "waypoint";
     const std::string command = "command";

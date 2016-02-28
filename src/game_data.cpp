@@ -426,7 +426,6 @@ void game_data::ship_ship_interactions(){
       // ship interactions
       if (s.load >= s.load_time && s.damage_ship > 0){
 	cout << "ship " << i << " interactions..." << endl;
-	s.load = 0;
 
 	// find targetable ships
 	list<grid::iterator_type> res = ship_grid -> search(s.position, s.interaction_radius);
