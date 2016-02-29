@@ -74,6 +74,9 @@ namespace st3{
 
     /*! a tree handles grid nodes */
     struct tree{
+      typedef unique_ptr<tree> ptr;
+      static ptr create();
+      
       hm_t<key_type, node*> index; /*!< table over which node elements are listed in */
       int max_leaves; /*!< maximum number of leaves per node before split */
       node *root; /*!< root node */ 

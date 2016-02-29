@@ -8,115 +8,73 @@
 #include "types.h"
 #include "ship.h"
 #include "turret.h"
+#include "game_object.h"
 
 namespace st3{
+  class game_data;
+
   namespace choice{
     struct c_solar;
   };
 
-  /*! types and functions related to solars */
-  namespace solar{
-    extern idtype id_counter;
-    extern const float f_growth;
-    extern const float f_crowding;
-    extern const float f_minerate;
-    extern const float f_buildrate;
-
-    /*! data representing a solar system */
-    struct solar{
-      /*! ship growth per class */
-      cost::ship_allocation<sfloat> fleet_growth;
-
-      /*! turret growth per class */
-      cost::turret_allocation<sfloat> turret_growth;
-
-      /*! turrets in solar */
-      std::list<turret> turrets;
-
-      /*! amount of research produced */
-      sfloat research;
-
-      sfloat water;
-      sfloat space;
-      sfloat ecology;
+  /*! data representing a solar system */
+  class solar : public game_object{
+  public:
+    typedef std::shared_ptr<solar> ptr;
+    static ptr create();
+    
+    choice::c_solar c;
+    float dt;
       
-      /*! amount of each resource */
-      cost::resource_allocation<cost::resource_data> resource;
+    cost::ship_allocation<sfloat> fleet_growth;
+    cost::turret_allocation<sfloat> turret_growth;
+    std::list<turret> turrets;
+    std::set<ship::ptr> ships;
+    sfloat research;
+    sfloat water;
+    sfloat space;
+    sfloat ecology;
+    cost::resource_allocation<cost::resource_data> resource;
+    cost::sector_allocation<sfloat> sector;
+    sfloat population;
+    sfloat happiness;
+    hm_t<idtype, float> damage_taken;
+    hm_t<idtype, idtype> colonization_attempts;
 
-      /*! development of each sector */
-      cost::sector_allocation<sfloat> sector;
+    solar();
+    ~solar();
 
-      /*! number of inhabitants */
-      sfloat population;
+    void pre_phase(game_data *g);
+    void move(game_data *g);
+    void interact(game_data *g);
+    void post_phase(game_data *g);
 
-      /*! proportion of happy inhabitants */
-      sfloat happiness;
+    float space_status();
+    float water_status();
+    float compute_vision();
+    bool has_defense();
+    void damage_turrets(float d);
+    std::string get_info();
 
-      /*! ships landed at solar */
-      std::set<idtype> ships;
+    // increment functions
+    float poluation_increment();
+    float ecology_increment();
+    float happiness_increment(choice::c_solar &c);
+    float research_increment(choice::c_solar &c);
+    float resource_increment(std::string v, choice::c_solar &c);
+    float expansion_increment(std::string v, choice::c_solar &c);
+    float ship_increment(std::string v, choice::c_solar &c);
+    float turret_increment(std::string v, choice::c_solar &c);
 
-      /*! position of solar */
-      point position;
+  protected:
+    static const float f_growth = 4e-2;
+    static const float f_crowding = 2e-2;
+    static const float f_minerate = 1e-2;
+    static const float f_buildrate = 1e-1;
 
-      /*! id of the player that owns the solar */
-      sint owner;
-
-      /*! radius of the solar */
-      sfloat radius;
-
-      /*! damage taken from different players */
-      hm_t<idtype, float> damage_taken;
-
-      /*! colonization attempts from different ships */
-      hm_t<idtype, idtype> colonization_attempts;
-
-      /*! default constructor (data are set in game_data::build) */
-      solar();
-
-      solar dynamics(choice::c_solar &c, float dt);
-
-      void pay_resources(cost::resource_allocation<float> r);
-      
-      /*! compute how many units of a given resource cost can be built
-          from resources in storage
-
-	@param r resource cost per resource type
-	@return how many r there are stored resources for
-      */
-      float resource_constraint(cost::resource_allocation<sfloat> r);
-
-      /*! Compute degree of availability of space for natural habitat
-          on scale [0,1] */
-      float space_status();
-
-      /*! Compute degree of availability of clean water on scale
-          [0,1] */
-      float water_status();
-
-      /*! Compute the vision radius from turrets */
-      float compute_vision();
-
-      /*! Check whether any functioning turrets remain */
-      bool has_defense();
-
-      /*! have turrets take damage */
-      void damage_turrets(float d);
-
-      /*! compile a string describing the solar
-	@return the string 
-      */
-      std::string get_info();
-
-      float poluation_increment();
-      float ecology_increment();
-      float happiness_increment(choice::c_solar &c);
-      float research_increment(choice::c_solar &c);
-      float resource_increment(std::string v, choice::c_solar &c);
-      float expansion_increment(std::string v, choice::c_solar &c);
-      float ship_increment(std::string v, choice::c_solar &c);
-      float turret_increment(std::string v, choice::c_solar &c);
-      float compute_workers();
-    };
+    solar dynamics(); 
+    void pay_resources(cost::resource_allocation<float> r);
+    float resource_constraint(cost::resource_allocation<sfloat> r);
   };
 };
 #endif

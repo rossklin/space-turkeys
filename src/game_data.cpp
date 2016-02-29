@@ -11,150 +11,165 @@ using namespace std;
 using namespace st3;
 using namespace cost;
 
-idtype ship::id_counter = 0;
-idtype solar::id_counter = 0;
-idtype fleet::id_counter = 0;
-idtype waypoint::id_counter = 0;
-
-bool game_data::target_position(target_t t, point &p){
-  string type = identifier::get_type(t);
-  idtype id = identifier::get_id(t);
-  if ((!type.compare(identifier::solar)) && solars.count(id)){
-    p = solars[id].position;
-  }else if ((!type.compare(identifier::fleet)) && fleets.count(id)){
-    p = fleets[identifier::get_id(t)].position;
-  }else if ((!type.compare(identifier::waypoint)) && waypoints.count(identifier::get_string_id(t))){
-    p = waypoints[identifier::get_string_id(t)].position;
-  }else{
-    cout << "target_position: " << t << ": not found!" << endl;
-    return false;
+template<typename T>
+T attempt_cast(game_object::ptr p){
+  if (p == 0){
+    cout << "attempt_cast: null pointer!" << endl;
+    exit(-1);
   }
+  
+  T res = dynamic_cast<T>(p);
 
-  return true;
+  if (res){
+    return res;
+  }else{
+    cout << "Failed to downcast entity " << p -> id << endl;
+    exit(-1);
+  }
 }
 
-idtype game_data::solar_at(point p){
-  for (auto &x : solars){
+ship::ptr game_data::get_ship(combid i){
+  return attempt_cast<ship::ptr>(entity[i]);
+}
+
+fleet::ptr game_data::get_fleet(combid i){
+  return attempt_cast<fleet::ptr>(entity[i]);
+}
+
+solar::ptr game_data::get_solar(combid i){
+  return attempt_cast<solar::ptr>(entity[i]);
+}
+
+waypoint::ptr game_data::get_waypoint(combid i){
+  return attempt_cast<waypoint::ptr>(entity[i]);
+}
+
+bool game_data::target_position(combid t, point &p){
+  if (entity.count(t)) {
+    p = entity[t].position;
+    return true;
+  }else{
+    return false;
+  }
+}
+
+combid game_data::entity_at(point p){
+  for (auto &x : entity){
     if (utility::l2d2(p - x.second.position) < pow(x.second.radius, 2)){
       return x.first;
     }
   }
 
-  return -1;
+  return identifier::source_none;
 }
 
-void game_data::relocate_ships(command &c, set<idtype> &sh, idtype owner){
-  fleet f;
-  idtype sf;
-  set<idtype> fleet_buf;
-  idtype fid;
+// create a new fleet and add ships from command c
+void game_data::relocate_ships(command &c, set<combid> &sh, idtype owner){
+  fleet::ptr f;
+  combid source_id;
+  set<combid> fleet_buf;
 
   // check if ships fill exactly one fleet
-  for (auto i : sh) fleet_buf.insert(sf = ships[i].fleet_id);
-  bool reassign = fleet_buf.size() == 1 && fleets[sf].ships == sh;
+  for (auto i : sh) {
+    ship::ptr s = get_ship(i);
+    fleet_buf.insert(source_id = s -> fleet_id);
+  }
+  
+  bool reassign = false;
+  if (fleet_buf.size() == 1){
+    f = get_fleet(source_id);
+    reassign = f -> ships == sh;
+  }
 
   if (reassign){
     cout << "relocate: reassign" << endl;
-    fid = sf;
-    fleets[sf].com = c;
-    fleets[sf].com.source = identifier::make(identifier::fleet, fid);
+    c.source = f -> com.source;
+    f -> com = c;
   }else{
-    fid = fleet::id_counter++;
+    f = fleet::create();
 
-    f.com = c;
-    f.owner = owner;
-    f.update_counter = 0;
-    f.com.source = identifier::make(identifier::fleet, fid);
+    f -> com = c;
+    f -> owner = owner;
+    f -> update_counter = 0;
+    f -> com.source = f -> id;
 
     // clear ships from parent fleets
-    for (auto i : sh) fleets[ships[i].fleet_id].ships.erase(i);
-
-    // debug printout
-    if (fleet_buf.size() == 1){
-      cout << "relocate ship mismatch: " << endl << sf << ": ";
-      for (auto i : fleets[sf].ships) cout << i << ",";
-      cout << endl << "sh: ";
-      for (auto i : sh) cout << i << ",";
-      cout << endl;
+    for (auto i : sh) {
+      ship::ptr s = get_ship(i);
+      fleet:::ptr parent = get_fleet(s -> fleet_id);
+      parent -> ships.erase(i);
     }
 
     // set new fleet id
-    for (auto i : sh) ships[i].fleet_id = fid;
+    for (auto i : sh) {
+      ship::ptr s = get_ship(i);
+      s -> fleet_id = f -> id;
+    }
 
-    f.ships = sh;
-    fleets[fid] = f;
+    // add the ships
+    f -> ships = sh;
+
+    // add the fleet 
+    add_entity(f);
   }
 
-  update_fleet_data(fid);
-
+  f -> update_data();
   cout << "relocate ships: added fleet " << fid << endl;
 }
 
-void game_data::generate_fleet(point p, idtype owner, command &c, set<idtype> &sh){
+// generate a fleet with given ships, set owner and fleet_id of ships
+void game_data::generate_fleet(point p, idtype owner, command &c, set<ship::ptr> &sh){
   if (sh.empty()) return;
 
-  fleet f;
-  idtype fid = fleet::id_counter++;
-  f.com = c;
-  f.com.source = identifier::make(identifier::fleet, fid);
-  f.position = p;
-  f.radius = settings.fleet_default_radius;
-  f.owner = owner;
+  fleet::ptr f = fleet::create();
+  f -> com = c;
+  f -> com.source = f -> id;
+  f -> position = p;
+  f -> radius = settings.fleet_default_radius;
+  f -> owner = owner;
 
-  for (auto i : sh){
-    ship &s = ships[i];
-    point buf;
-    s.fleet_id = fid;
-    s.position = utility::random_point_polar(p, f.radius);
-    if (!target_position(c.target, buf)){
-      cout << "generate fleet: invalid target: " << c.target << endl;
-      exit(-1);
-    }
-    s.angle = utility::point_angle(buf - p);
-    s.owner = owner;
-    // s.was_killed = false;
-    cout << "generated ship " << i << " at " << s.position.x << "x" << s.position.y << endl;
-    f.ships.insert(i);
-    ship_grid -> insert(i, s.position);
+  for (auto s : sh){
+    f -> ships.insert(s -> id);
+    s -> owner = owner;
+    s -> fleet_id = f -> id;
   }
-
-  fleets[fid] = f;
-
-  update_fleet_data(fid);
+  
+  distribute_ships(sh, f -> position);
+  f -> update_data();
 }
 
 void game_data::set_fleet_commands(idtype id, list<command> commands){
-  fleet &s = fleets[id];
-  idtype fid;
+  fleet::ptr s = get_fleet(id);
 
   // split fleets
   // evaluate commands in random order
   vector<command> buf(commands.begin(), commands.end());
   random_shuffle(buf.begin(), buf.end());
+
   for (auto &x : buf){
-    if (x.ships == s.ships){
+    if (x.ships == s -> ships){
       // maintain id for trackability
-      s.com.target = x.target;
-      s.com.action = x.action;
       // if all ships were assigned, break.
+      s -> com.target = x.target;
+      s -> com.action = x.action;
       break;
     }else{
-      fid = fleet::id_counter++;
-      fleet f;
-      f.com = x;
-      f.com.source = identifier::make(identifier::fleet, fid);
-      f.position = s.position;
-      f.radius = s.radius;
-      f.owner = s.owner;
+      fleet::ptr f = fleet::create();
+      f -> com = x;
+      f -> com.source = f -> id;
+      f -> position = s -> position;
+      f -> radius = s -> radius;
+      f -> owner = s -> owner;
       for (auto i : x.ships){
-	if (s.ships.count(i)){
-	  ships[i].fleet_id = fid;
-	  s.ships.erase(i);
-	  f.ships.insert(i);
+	if (s -> ships.count(i)){
+	  ship::ptr buf = get_ship(i);
+	  buf -> fleet_id = f -> id;
+	  s -> ships.erase(i);
+	  f -> ships.insert(i);
 	}
       }
 
-      fleets[fid] = f;
+      add_entity(f);
     }
   }
 }
@@ -175,58 +190,56 @@ void game_data::set_solar_commands(idtype id, list<command> commands){
     generate_fleet(s.position, s.owner, x, x.ships);
   }
 }
- 
-void game_data::apply_choice(choice::choice c, idtype id){
-  cout << "game_data: running dummy apply choice" << endl;
 
-  // todo: security checks
-  cout << "apply_choice for player " << id << ": inserting " << c.waypoints.size() << " waypoints:" << endl;
+bool game_data::validate_choice(choice::choice c, idtype id){
+  cout << "game_data: validate choice" << endl;
 
-  // keep those waypoints which client sends
   for (auto &x : c.waypoints){
     if (identifier::get_waypoint_owner(x.first) != id){
       cout << "apply_choice: player " << id << " tried to insert waypoint owned by " << identifier::get_waypoint_owner(x.first) << endl;
-      exit(-1);
+      return false;
     }
-
-    waypoints[x.first] = x.second;
   }
 
   for (auto &x : c.solar_choices){
-    if (solars[x.first].owner != id){
-      cout << "apply_choice: error: solar choice by player " << id << " for solar " << x.first << " owned by " << solars[x.first].owner << endl;
+    if (entity[x.first] -> owner != id){
+      cout << "apply_choice: error: solar choice by player " << id << " for solar " << x.first << " owned by " << entity[x.first] -> owner << endl;
       exit(-1);
     }
-    solar_choices[x.first] = x.second;
   }
 
   for (auto x : c.commands){
     cout << "apply_choice: checking command key " << x.first << endl;
 
+    if (entity[x.first] -> owner != id){
+      cout << "apply_choice: error: solar choice by player " << id << " for solar " << x.first << " owned by " << entity[x.first] -> owner << endl;
+      return false;
+    }
+  }
+
+  return true;
+}
+ 
+void game_data::apply_choice(choice::choice c, idtype id){
+  cout << "game_data: running dummy apply choice" << endl;
+
+  if (!validate_choice(c)){
+    cout << "player " << id << " submitted an invalid choice!" << endl;
+    exit(-1);
+  }
+
+  cout << "apply_choice for player " << id << ": inserting " << c.waypoints.size() << " waypoints:" << endl;
+
+  for (auto &x : c.waypoints) waypoints[x.first] = make_shared(x.second);
+  for (auto &x : c.solar_choices) solar_choices[x.first] = x.second;
+
+  for (auto x : c.commands){
+    cout << "apply_choice: checking command key " << x.first << endl;
+
     if (identifier::get_type(x.first) == identifier::solar){
-      // commands for solar
-      idtype sid = identifier::get_id(x.first);
-
-      // check ownership
-      if (solars[sid].owner != id){
-	cout << "apply_choice: invalid owner: " << solars[sid].owner << ", should be " << id << endl;
-	exit(-1);
-      }
-
-      // apply the commands
-      set_solar_commands(sid, x.second);
+      set_solar_commands(x.first, x.second);
     }else if (identifier::get_type(x.first) == identifier::fleet){
-      // command for fleet
-      idtype fid = identifier::get_id(x.first);
-      
-      // check ownerships
-      if (fleets[fid].owner != id){
-	cout << "apply_choice: invalid owner: " << fleets[fid].owner << ", should be " << id << endl;
-	exit(-1);
-      }
-
-      // apply the commands
-      set_fleet_commands(fid, x.second);
+      set_fleet_commands(x.first, x.second);
     }else{
       cout << "apply_choice: invalid source: '" << x.first << "'" << endl;
       exit(-1);
@@ -235,329 +248,16 @@ void game_data::apply_choice(choice::choice c, idtype id){
 }
 
 void game_data::allocate_grid(){
-  ship_grid = new grid::tree();
-
-  for (auto &f : fleets){
-    for (auto i : f.second.ships){
-      ship_grid -> insert(i, ships[i].position);
-    }
-  }
-}
-
-void game_data::deallocate_grid(){
-  delete ship_grid;
-}
-
-void game_data::update_fleet_data(idtype fid){
-  fleet &f = fleets[fid];
-
-  // need to update fleet data?
-  if (((f.update_counter++) % fleet::update_period)) return;
-  float speed = INFINITY;
-  int count;
-
-  // position
-  point p(0,0);
-  count = 0;
-  for (auto k : f.ships){
-    ship &s = ships[k];
-    p = p + s.position;
-    if (++count > 20) break;
-  }
-  f.position = utility::scale_point(p, 1 / (float)count);
-
-  // radius, speed and vision
-  float r2 = 0;
-  f.vision = 0;
-  for (auto k : f.ships){
-    ship &s = ships[k];
-    speed = fmin(speed, s.speed);
-    r2 = fmax(r2, utility::l2d2(s.position - f.position));
-    f.vision = fmax(f.vision, s.vision);
-  }
-  f.radius = fmax(sqrt(r2), fleet::min_radius);
-  f.speed_limit = speed;
-
-  // have arrived?
-  if (!f.is_idle()){
-    point target;
-    if (target_position(f.com.target, target)){
-      bool reach = utility::l2d2(target - f.position) < fleet::interact_d2;
-
-      // set fleet converge status for appropriate actions
-      if (f.com.action == command::action_land
-	  || f.com.action == command::action_attack
-	  || f.com.action == command::action_colonize) {
-	f.converge = reach;
-      }
-
-      // set to idle and 'land' ships if converged to waypoint
-      if (reach && identifier::get_type(f.com.target) == identifier::waypoint && f.com.action == command::action_waypoint){
-	source_t wid = identifier::get_string_id(f.com.target);
-	f.com.target = identifier::make(identifier::idle, wid);
-	cout << "set fleet " << fid << " idle target: " << f.com.target << endl;
-      }else if (reach && identifier::get_type(f.com.target) == identifier::waypoint){
-	cout << "fleet " << fid << " converged to waypoint but invalid action: " << f.com.action << endl;
-	exit(-1);
-      }
-
-      // check fleet joins
-      if (f.com.action == command::action_join && reach){
-	if (identifier::get_type(f.com.target) != identifier::fleet){
-	  cout << "fleet " << fid << " trying to join non-fleet " << f.com.target << endl;
-	  exit(-1);
-	}
-
-	idtype target_id = identifier::get_id(f.com.target);
-	fleet &fleet_t = fleets[target_id];
-	for (auto i : f.ships){
-	  ships[i].fleet_id = target_id;
-	  fleet_t.ships.insert(i);
-	}
-	fleets[fid].remove = true;
-	return;
-      }
-    }else{
-      cout << "fleet " << fid << ": target " << f.com.target << " missing, setting idle:0" << endl;
-      f.com.target = identifier::target_idle;
-    }
-  }
-
-  // target left sight?
-  if ((!f.is_idle())
-      && (identifier::get_type(f.com.target) == identifier::fleet)
-      && (!fleet_seen_by(identifier::get_id(f.com.target), f.owner))){
-
-    cout << "fleet " << fid << " looses sight of " << f.com.target << endl;
-    // create a waypoint and reset target
-    waypoint w;
-    if (!target_position(f.com.target, w.position)){
-      cout << "unset fleet target: fleet position not found: " << f.com.target << endl;
-      exit(-1);
-    }
-
-    string wid = to_string(f.owner) + "#" + to_string(--waypoint::id_counter);
-    waypoints[wid] = w;
-    f.com.target = identifier::make(identifier::waypoint, wid);
-    f.com.action = command::action_waypoint;
-  }
-}
-
-void game_data::move_ships(){
-  // move ships
-  for (auto &x : fleets){
-    fleet &f = x.second;
-    cout << "running increment for fleet " << x.first << endl;
-    point to;
-    if (!(target_position(f.com.target, to) || f.is_idle())){
-      cout << "fleet " << x.first << ": target " << f.com.target << " missing and not idle, setting idle:0" << endl;
-      f.com.target = identifier::target_idle;
-    }
-
-    // ship arithmetics
-    for (auto i : f.ships){
-      ship &s = ships[i];
-
-      // load weapons
-      s.load = fmin(s.load + 1, s.load_time);
-
-      // check fleet is not idle
-      if (!f.is_idle()){
-	point delta;
-	if (f.converge){
-	  delta = to - s.position;
-	}else{
-	  delta = to - f.position;
-	}
-
-	float target_angle = utility::point_angle(delta);
-	float angle_increment = 0.1;
-	float epsilon = 0.01;
-	float angle_sign = utility::signum(utility::angle_difference(target_angle, s.angle), epsilon);
-
-	cout << "shipmove: target: " << target_angle << ", current: " << s.angle << ", sign: " << angle_sign << endl;
-
-	s.angle += angle_increment * angle_sign;
-	s.position = s.position + utility::scale_point(utility::normv(s.angle), f.speed_limit);
-	ship_grid -> move(i, s.position);
-      }
-    }
-  }
-}
-
-void game_data::ship_solar_interactions(){
-  for (auto &x : fleets){
-    fleet &f = x.second;
-    auto sids = f.ships;
-
-    for (auto i : sids){
-      ship &s = ships[i];
-
-      // check if ship s has reached a destination solar
-      if (identifier::get_type(f.com.target) == identifier::solar){
-	idtype sid = solar_at(s.position);
-	if (sid == identifier::get_id(f.com.target)){
-	  solar::solar &sol = solars[sid];
-	  if (utility::l2d2(sol.position - s.position) < pow(sol.radius, 2)){
-	    // ship interacts with solar
-	    if (f.com.action == command::action_land){
-	      ship_land(i, sid);
-	    }else if (f.com.action == command::action_attack){
-	      ship_bombard(i, sid);
-	    }else if (f.com.action == command::action_colonize){
-	      // non-colonizer ships will be sent to ship_bombard
-	      ship_colonize(i, sid);
-	    }
-	  }
-	}
-      }
-    }
-  }
-}
-
-void game_data::ship_ship_interactions(){
-  for (auto &x : fleets){
-    fleet &f = x.second;
-    auto sids = f.ships;
-
-    for (auto i : sids){
-      ship &s = ships[i];
-
-      // ship interactions
-      if (s.load >= s.load_time && s.damage_ship > 0){
-	cout << "ship " << i << " interactions..." << endl;
-
-	// find targetable ships
-	list<grid::iterator_type> res = ship_grid -> search(s.position, s.interaction_radius);
-	list<idtype> buf;
-	for (auto &x : res){
-	  if (ships[x.first].owner != s.owner) buf.push_back(x.first);
-	}
-
-	// fire at a random enemy
-	if (!buf.empty()){
-	  vector<idtype> targ(buf.begin(), buf.end());
-	  idtype k = targ[rand() % targ.size()];
-	  ship_fire(i, k); 
-	}
-      }
-    }
-  }
-}
-
-void game_data::turret_interactions(){
-
-  // solar turrets fire
-  for (auto &s : solars){
-    for (auto &t : s.second.turrets){
-      t.load = fmin(t.load + 1, t.load_time);
-      if (t.damage > 0 && t.load >= t.load_time){
-
-	// find targetable ships
-	list<grid::iterator_type> res = ship_grid -> search(s.second.position, t.range);
-	list<idtype> buf;
-	for (auto &x : res){
-	  if (ships[x.first].owner != s.second.owner) buf.push_back(x.first);
-	}
-
-	// fire at a random enemy
-	if (!buf.empty()){
-	  t.load = 0;
-	  vector<idtype> targ(buf.begin(), buf.end());
-	
-	  int tid = targ[rand() % targ.size()];
-	  cout << "turret from solar " << s.first << " fires at ship " << tid << endl;
-	  if (utility::random_uniform() < t.accuracy){
-	    ships[tid].hp -= utility::random_uniform(0, t.damage);
-	    if (ships[tid].hp <= 0) ships[tid].remove = true;
-	    cout << " -> hit" << endl;
-	  }else{
-	    cout << " -> miss" << endl;
-	  }
-	}else{
-	  cout << "solar " << s.first << ": turret: no enemies!" << endl;
-	}
-      }
-    }
-  }
-}
-
-void game_data::waypoint_triggers(){
-  
-  // waypoint triggers
-  for (auto &x : waypoints){
-    cout << "waypoint trigger: checking " << x.first << endl;
-    waypoint &w = x.second;
-
-    // trigger commands
-    bool check;
-    set<idtype> ready_ships, arrived_ships;
-    list<command> remove;
-
-    // compute landed ships
-    arrived_ships.clear();
-    for (auto &y : fleets){
-      if (y.second.is_idle() && !identifier::get_string_id(y.second.com.target).compare(x.first)){
-	arrived_ships += y.second.ships;
-      }
-    }
-    
-    remove.clear();
-
-    // evaluate commands in random order
-    vector<command> buf(w.pending_commands.begin(), w.pending_commands.end());
-    random_shuffle(buf.begin(), buf.end());
-    cout << "relocate from " << x.first << ": command order: " << endl;
-    for (auto &y : buf){
-      cout << " -> " << y.target << endl;
-      // check if all ships in command y are either landed or dead
-      check = true;
-      ready_ships.clear();
-      for (auto i : y.ships){
-	if (ships.count(i)){
-	  if (arrived_ships.count(i)){
-	    ready_ships.insert(i);
-	  }else{
-	    check = false;
-	  }
-	}
-      }
-
-      if (check){
-	cout << "waypoint trigger: command targeting " << y.target << "ready with " << ready_ships.size() << " ships!" << endl;
-	relocate_ships(y, ready_ships, identifier::get_waypoint_owner(x.first));
-	remove.push_back(y);
-	cout << "post trig fleet count: " << fleets.size() << endl;
-      }else {
-	cout << endl << "waypoint trigger: have ships: ";
-	for (auto z : arrived_ships) cout << z << ",";
-	cout << "need ships: ";
-	for (auto z : y.ships) cout << z << ",";
-	cout << endl;
-      }
-    }
-
-    for (auto y : remove){
-      w.pending_commands.remove(y);
-    }
-  }
+  entity_grid = grid::tree::create();
+  for (auto x : entity) entity_grid -> insert(x.first, x.second -> position);
 }
 
 void game_data::remove_units(){
-
-  // remove ships
-  for (auto i = ships.begin(); i != ships.end();){
-    if (i -> second.remove){
-      remove_ship((i++) -> first);
-    }else{
-      i++;
-    }
-  }
-
-  // remove fleets
-  for (auto i = fleets.begin(); i != fleets.end();){
-    if (i -> second.ships.empty() || i -> second.remove){
-      remove_fleet((i++) -> first);
+  // remove entity
+  for (auto i = entity.begin(); i != entity.end();){
+    if (i -> second -> remove){
+      i -> second -> on_remove();
+      entity.erase((i++) -> first);
     }else{
       i++;
     }
@@ -565,36 +265,12 @@ void game_data::remove_units(){
 }
 
 void game_data::increment(){
-  cout << "incr. begin fleet count: " << fleets.size() << endl;
+  for (auto x : entity) x.second -> pre_phase(this);
+  for (auto x : entity) x.second -> move(this);
+  for (auto x : entity) x.second -> interact(this);
 
-  // update solar data
-  for (auto &x : solars) solar_tick(x.first);
   remove_units();
-
-  cout << "pre move fleet count: " << fleets.size() << endl;
-
-  move_ships();
-  
-  cout << "pre ship interact fleet count: " << fleets.size() << endl;
-
-  ship_solar_interactions();
-  remove_units();
-
-  ship_ship_interactions();
-  remove_units();
-
-  cout << "post ship interact fleet count: " << fleets.size() << endl;
-
-  turret_interactions();
-  remove_units();
-
-  for (auto &f : fleets) update_fleet_data(f.first);
-
-  cout << "pre wp fleet count: " << fleets.size() << endl;
-  waypoint_triggers();
-
-  cout << "incr. end fleet count: " << fleets.size() << endl;
-  remove_units();
+  for (auto x : entity) x.second -> post_phase(this);
 }
 
 // ****************************************

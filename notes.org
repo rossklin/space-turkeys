@@ -1,15 +1,35 @@
 * current work
-** [J] removed ship combat stats
-** [J] added ship interaction definitions
-** reintroduce ship combat stats
-** finish ship templates and use ship::receive_damage
-** determine who is responsible for load time
-** fix calling ship interactions from game data
-** consider introducing a game_data::find_targets
+** upgrade / interaction / game object makeover
+*** introduce game object base class
+**** [J] created base class header
+**** [J] made game entity classes inherit game object
+**** [J] inherit pre/post phase functions in game object classes
+**** [J] define ptr classes (grid::tree should have a unique ptr?) and create functions
+**** change to virtual inheritance of game_object so entity_selector subclasses don't get duplicate inheritance
+**** add new files in build system: game_object, ship, waypoint
+**** go through game_data.cpp and move code to object classes
+     currently at beginning of 'ship interaction' section
+**** implement game object class functions
+**** add fleet action functions e.g. land (the fleet is responsible for changing it's action e.g. bombard -> land)
+**** fleets need to update data in pre phase and remember to update target position
+*** add an upgrade class
+*** let ships have reference to upgrades instead of interactions
+*** let upgrades have interactions and stat-mods
+*** let upgrades have an optional tick function
+*** let upgrades have description 
+*** let upgrades define exclusivity for certain terms
+*** let upgrades define ship class exclusivity conditions
+*** let ships have a compile_stats function, base and current stats
+*** let ships have a compile_interactions function
+*** let combat interactions use a ship::receive_damage function
+*** for each ship, check each interaction target condition for each target
+*** rebuild ship templates so they apply upgrades
+*** let the ship increment function be responsible for updating load time
+    the interaction functions will be responsible for activating load time
+*** consider introducing a game_data::find_targets
    Conditioned on a ship::target_condition and a radius
-** consider introducing a ship::tick function
-   It could be responsible for relating interactions to load time in a
-   dynamical way. This may be a tad more complex than nessecary.
+*** add fleet action definitions
+*** add a fleet::compile_valid_actions(target)
 * [~] issues
 ** [~] bugs & crashes
 *** simulation step hangs on key escape abort game

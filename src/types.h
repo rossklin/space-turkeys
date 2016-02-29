@@ -21,6 +21,10 @@ namespace st3{
   /*! serializable type used for client/server protocol */
   typedef sint protocol_t;
 
+  typedef std::string class_t;
+
+  typedef std::string combid;
+
   /*! hash map type used for different game objects */
   template <typename key, typename value>
     using hm_t = std::unordered_map<key,value>;
@@ -28,59 +32,55 @@ namespace st3{
   /*! type used to represent a point in coordinate space */
   typedef sf::Vector2f point;
 
-  /*! type used to identify a game object */
-  typedef std::string source_t;
-
-  /*! type used to identify a game object target */
-  typedef std::string target_t;
-
   /*! utilities for source and target identifiers */
   namespace identifier{
-    const std::string solar = "solar";
-    const std::string solar = "ship";
-    const std::string fleet = "fleet";
-    const std::string waypoint = "waypoint";
-    const std::string command = "command";
-    const std::string idle = "idle";
-    const std::string target_idle = "idle:0";
+    const class_t solar = "solar";
+    const class_t solar = "ship";
+    const class_t fleet = "fleet";
+    const class_t waypoint = "waypoint";
+    const class_t command = "command";
+    const class_t idle = "idle";
+    
+    const combid target_idle = "idle:0";
+    const combid source_none = "noclass:noentity";
 
     /*! make a source symbol
       @param t type identifier
       @param i id
       @return source symbol
     */
-    std::string make(std::string t, idtype i);
+    combid make(class_t t, idtype i);
 
     /*! make a source symbol with string id
       @param t type identifier
       @param k string id
       @return source symbol
     */
-    std::string make(std::string t, std::string k);
+    combid make(class_t t, class_t k);
 
     /*! get the type of a source symbol
       @param s source symbol
       @return type identifier
     */
-    std::string get_type(std::string s);
+    class_t get_type(combid s);
 
     /*! get the id of a source symbol
       @param s source symbol with id
       @return id
     */
-    st3::idtype get_id(std::string s);
+    idtype get_id(combid s);
 
     /*! get the string id of a source symbol
       @param s source symbol with string id
       @return string id
     */
-    source_t get_string_id(std::string s);
+    std::string get_string_id(combid s);
 
     /*! get the owner id from a waypoint source symbol string id
       @param v string id of a waypoint source symbol
       @return id of the owner of the waypoint
     */
-    st3::idtype get_waypoint_owner(source_t v);
+    idtype get_waypoint_owner(combid v);
   };
 };
 #endif

@@ -11,10 +11,36 @@ using namespace std;
 using namespace st3;
 using namespace solar;
 
-const float solar::f_growth = 4e-2;
-const float solar::f_crowding = 2e-2;
-const float solar::f_minerate = 1e-2;
-const float solar::f_buildrate = 1e-1;
+void solar::pre_phase(game_data *g){
+  for (auto &t : turrets) t.load = fmin(t.load + 1, t.load_time);
+}
+
+// so far, solars don't move
+void solar::move(game_data *g){}
+
+void solar::interact(game_data *g){
+  for (auto &t : turrets){
+    if (t.damage > 0 && t.load >= t.load_time){
+
+      // find targetable ships
+      list<combid> buf = g -> search_targets(position, t.range, interaction::target_condition::enemy_ship(owner));
+      
+      // fire at a random enemy
+      if (!buf.empty()){
+	t.load = 0;
+	
+	combid tid = utility::uniform_sample(buf);
+	ship::ptr s = g -> get_ship(tid);
+	
+	if (utility::random_uniform() < t.accuracy){
+	  s -> receive_damage(make_shared(this), s, utility::random_uniform(0, t.damage));
+	}
+      }
+    }
+  }
+}
+
+void solar::post_phase(game_data *g){}
 
 float solar::solar::resource_constraint(cost::resource_allocation<sfloat> r){
   float m = INFINITY;

@@ -5,18 +5,26 @@
 
 #include "types.h"
 #include "command.h"
+#include "game_object.h"
 
 namespace st3{
+  class game_data;
+  
   /*! Waypoints allow position based fleet joining and splitting.*/
-  struct waypoint{
-    /*! ID counter for waypoints*/
-    static idtype id_counter;
-
+  class waypoint : public game_object {
+  public:
+    typedef std::shared_ptr<waypoint> ptr;
+    static ptr create(idtype owner);
+    
     /*! List of commands waiting to trigger when all ships have arrived */
     std::list<command> pending_commands;
 
-    /*! Position of the waypoint */
-    point position;
+    waypoint();
+    ~waypoint();
+    void pre_phase(game_data *g);
+    void move(game_data *g);
+    void interact(game_data *g);
+    void post_phase(game_data *g);
   };
 };
 #endif
