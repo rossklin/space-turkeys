@@ -13,12 +13,21 @@ using namespace solar;
 
 void solar::pre_phase(game_data *g){
   for (auto &t : turrets) t.load = fmin(t.load + 1, t.load_time);
+  damage_taken.clear();
+  colonization_attempts.clear();
 }
 
 // so far, solars don't move
-void solar::move(game_data *g){}
+void solar::move(game_data *g){
+  if (owner < 0 || population <= 0) return;
+  
+  dynamics();
+
+  // todo: add ship and turret build
+}
 
 void solar::interact(game_data *g){
+  
   for (auto &t : turrets){
     if (t.damage > 0 && t.load >= t.load_time){
 
@@ -40,7 +49,66 @@ void solar::interact(game_data *g){
   }
 }
 
-void solar::post_phase(game_data *g){}
+void solar::post_phase(game_data *g){
+  float total_damage = 0;
+  float highest_id = -1;
+  float highest_sum = 0;
+
+  // analyse damage
+  for (auto x : damage_taken) {
+    total_damage += x.second;
+    if (x.second > highest_sum){
+      highest_sum = x.second;
+      highest_id = x.first;
+    }
+    cout << "solar_effects: " << x.second << " damage from player " << x.first << endl;
+  }
+
+  if (highest_id > -1){
+    // todo: add some random destruction to solar
+    damage_turrets(total_damage);
+    population = fmax(population - 10 * total_damage, 0);
+    happiness *= 0.9;
+
+    if (owner > -1 && !has_defense()){
+      owner = highest_id;
+      cout << "player " << owner << " conquers solar " << solar_id << endl;
+    }else{
+      cout << "resulting defense for solar " << solar_id << ": " << has_defense() << endl;
+    }
+  }
+
+  // colonization: randomize among attempts
+  float count = 0;
+  float num = colonization_attempts.size();
+  for (auto i : colonization_attempts){
+    if (utility::random_uniform() <= 1 / (num - count++)){
+      players[i.first].research_level.colonize(&sol);
+      owner = i.first;
+      cout << "player " << owner << " colonizes solar " << solar_id << endl;
+      ships[i.second].remove = true;
+    }
+  }
+}
+
+void solar::give_commands(list<command> c, game_data *g){
+  set<ship::ptr> buf;
+
+  // create fleets
+  for (auto &x : c){
+    buf.clear();
+    for (auto i : x.ships){
+      if (!ships.count(i)){
+	cout << "solar::give_commands: invalid ship id: " << i << endl;
+	exit(-1);
+      }
+      buf.insert(ships[i]);
+      ships.erase(i);
+    }
+
+    g -> generate_fleet(position, owner, x, buf);
+  }
+}
 
 float solar::solar::resource_constraint(cost::resource_allocation<sfloat> r){
   float m = INFINITY;
@@ -174,7 +242,8 @@ float solar::solar::compute_workers(){
   return happiness * population;
 }
 
-solar::solar solar::solar::dynamics(choice::c_solar &c, float dt){
+void solar::dynamics(){
+  choice::c_solar c = choice_data;
   c.normalize();
   auto buf = *this;
   float dw = sqrt(dt);
@@ -254,5 +323,5 @@ solar::solar solar::solar::dynamics(choice::c_solar &c, float dt){
     buf.pay_resources(total_cost);
   }
 
-  return buf;
+  *this = buf;
 }

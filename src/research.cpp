@@ -15,41 +15,64 @@ cost::ship_allocation<ship>& research::ship_templates(){
   if (!init){    
     init = true;
 
-    ship::target_condition tc_enemy_ship(identifier::ship, ship::target_condition::enemy);
-    ship::target_condition tc_enemy_solar(identifier::solar, ship::target_condition::enemy);
+    interaction space_combat;
+    space_combat.name = "space combat";
+    space_combat.condition = ineraction::target_condition(identifier::ship, interaction::target_condition::enemy);
+    space_combat.perform = [] (game_object::ptr self, game_object::ptr target, game_data *context){
+      ship::ptr s = utility::attempt_cast<ship::ptr>(self);
+      ship::ptr t = utility::attempt_cast<ship::ptr>(target);
 
-    auto default_combat_ship = [] (float accuracy, float damage) -> ship::shipi_t{
-      ship::shipi_t res = [=] (ship *me, ship *target, game_data *context){
-	if (utility::random_uniform() < accuracy){
-	  target -> hp -= utility::random_uniform(0, damage);
-	  if (target -> hp <= 0){
-	    target -> remove = true;
-	  }
-	}
-      };
-      return res;
+      if (s -> load < s -> load_time) return;
+
+      s -> load = 0;
+      if (utility::random_uniform() < s -> accuracy){
+	t -> receive_damage(s, t, utility::random_uniform(0, s -> ship_damage));
+      }
     };
 
-    auto default_combat_solar = [] (float accuracy, float damage) -> ship::solari_t{
-      ship::shipi_t res = [=] (ship *me, solar *target, game_data *context){
-	// check if solar already captured
-	if (sol.owner == target -> owner){
-	  return;
-	}
+    interaction bombard;
+    bombard.name = "bombard";
+    bombard.condition = ineraction::target_condition(identifier::solar, interaction::target_condition::enemy);
+    bombard.perform = [] (game_object::ptr self, game_object::ptr target, game_data *context){
+      ship::ptr s = utility::attempt_cast<ship::ptr>(self);
+      solar::ptr t = utility::attempt_cast<solar::ptr>(target);
 
-	// check if defenses already destroyed
-	if (sol.owner == -1 && !sol.has_defense()){
-	  cout << "ship_bombard: neutral: no defense!" << endl;
-	  return;
-	}
+      if (s -> load < s -> load_time) return;
+      
+      // check if solar already captured
+      if (t -> owner == s -> owner){
+	return;
+      }
 
-	// deal damage
-	if (utility::random_uniform() < accuracy){
-	  sol.damage_taken[target -> owner] += utility::random_uniform(0, damage);
-	}
-      };
-      return res;
+      // check if defenses already destroyed
+      if (t -> owner == -1 && !t -> has_defense()){
+	return;
+      }
+
+      // deal damage
+      s -> load = 0;
+      if (utility::random_uniform() < s -> accuracy){
+	t -> damage_taken[s -> owner] += utility::random_uniform(0, damage);
+      }
     };
+    
+    interaction colonize;
+    colonize.name = "colonize";
+    colonize.condition = interaction::target_condition(identifier::solar, interaction::target_condition::neutral);
+    colonize.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
+      ship::ptr s = utility::attempt_cast<ship::ptr>(self);
+      solar::ptr t = utility::attempt_cast<solar::ptr>(target);
+
+      // check if solar already colonized
+      if (t -> owner == s.owner){
+	return;
+      }
+
+      // check colonization
+      if (t -> owner == game_object::neutral_owner && !t -> has_defense()){
+	t -> colonization_attempts[s -> owner] = s -> id;
+      }
+    }
     
     ship s, a;
     s.speed = 1;

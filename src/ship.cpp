@@ -32,6 +32,19 @@ void ship::move(game_data *g){
 }
 
 void ship::interact(game_data *g){
+  fleet::ptr f = g -> get_fleet(fleet_id);
+  
+  // check land
+  if (f -> com.action == command::action_land && f -> converge){
+    solar::ptr s = g -> get_solar(f -> com.target);
+    if (utility::l2d2(s -> position - position) < pow(s -> radius, 2)){
+      s -> ships.push_back(make_shared(this));
+      remove = true;
+    }
+  }
+
+  // check registered interactions
+  game_object::interact(g);
 }
 
 void ship::post_phase(game_data *g){}

@@ -25,8 +25,6 @@ void server::game_handler(com &c, game_data g){
   p_confirm << protocol::confirm;
 
   while (true){
-    g.allocate_grid();
-
     // check end
     int pid = -1;
     int psum = 0;
@@ -69,8 +67,6 @@ void server::game_handler(com &c, game_data g){
       }
     }
 
-    g.remove_units();
-
     // simulation
     cout << "starting simulation ... " << endl;
     frame_count = 0;
@@ -89,7 +85,6 @@ void server::game_handler(com &c, game_data g){
 
     // cleanup
     g.end_step();
-    g.deallocate_grid();
     cout << "post cleanup size: " << g.ships.size() << endl;
   }
 }

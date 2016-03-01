@@ -6,10 +6,14 @@
 #include <set>
 
 #include "types.h"
+#include "game_object.h"
 
 namespace st3{
   /*! Arithmetics for points, vectors, sets and sfml objects. */
   namespace utility{
+
+    template<typename T>
+    T attempt_cast(game_object::ptr p);
 
     std::string format_float(float x);
     

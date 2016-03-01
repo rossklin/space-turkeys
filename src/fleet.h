@@ -10,7 +10,7 @@ namespace st3{
   class game_data;
 
   /*! a fleet controls a set of ships */
-  class fleet : public game_object{
+  class fleet : public virtual commandable_object{
   public:
     typedef std::shared_ptr<fleet> ptr;
     static ptr create();
@@ -22,7 +22,6 @@ namespace st3{
     // serialized components
     std::set<idtype> ships; /*!< ids of ships in fleet */
     command com; /*!< the fleet's command (currently this only holds the target) */
-    sfloat vision; /*!< current vision range */
     sbool converge; /*!< whether the fleet is converging on it's target */
 
     // mechanical components
@@ -37,6 +36,8 @@ namespace st3{
     void move(game_data *g);
     void interact(game_data *g);
     void post_phase(game_data *g);
+    float vision();
+    void give_commands(std::list<command> c, game_data *g);
 
     /*! whether the fleet is idle i.e. at a waypoint or missing it's target */
     bool is_idle();

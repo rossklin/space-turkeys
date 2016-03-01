@@ -11,7 +11,7 @@ namespace st3{
   class game_data;
 
   /*! ship game object */
-  class ship : public game_object{
+  class ship : public virtual game_object{
   public:
     typedef std::shared_ptr<ship> ptr;
     static ptr create();
@@ -49,6 +49,7 @@ namespace st3{
     void interact(game_data *g);
     void post_phase(game_data *g);
     stats compile_stats();
+    float vision();
 
   protected:
     // serialised variables

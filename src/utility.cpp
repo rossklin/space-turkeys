@@ -12,6 +12,23 @@ using namespace st3::utility;
 
 boost::random::mt19937 rng;
 
+template<typename T>
+T utility::attempt_cast(game_object::ptr p){
+  if (p == 0){
+    cout << "attempt_cast: null pointer!" << endl;
+    exit(-1);
+  }
+  
+  T res = dynamic_cast<T>(p);
+
+  if (res){
+    return res;
+  }else{
+    cout << "Failed to downcast entity " << p -> id << endl;
+    exit(-1);
+  }
+}
+
 // ****************************************
 // POINT ARITHMETICS
 // ****************************************

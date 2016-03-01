@@ -18,18 +18,18 @@ namespace st3{
   };
 
   /*! data representing a solar system */
-  class solar : public game_object{
+  class solar : public virtual commandable_object{
   public:
     typedef std::shared_ptr<solar> ptr;
     static ptr create();
     
-    choice::c_solar c;
+    choice::c_solar choice_data;
     float dt;
       
     cost::ship_allocation<sfloat> fleet_growth;
     cost::turret_allocation<sfloat> turret_growth;
     std::list<turret> turrets;
-    std::set<ship::ptr> ships;
+    hm_t<combid, ship::ptr> ships;
     sfloat research;
     sfloat water;
     sfloat space;
@@ -48,10 +48,11 @@ namespace st3{
     void move(game_data *g);
     void interact(game_data *g);
     void post_phase(game_data *g);
+    void give_commands(std::list<command> c, game_data *g);
 
     float space_status();
     float water_status();
-    float compute_vision();
+    float vision();
     bool has_defense();
     void damage_turrets(float d);
     std::string get_info();

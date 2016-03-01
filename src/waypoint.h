@@ -11,7 +11,7 @@ namespace st3{
   class game_data;
   
   /*! Waypoints allow position based fleet joining and splitting.*/
-  class waypoint : public game_object {
+  class waypoint : public virtual game_object {
   public:
     typedef std::shared_ptr<waypoint> ptr;
     static ptr create(idtype owner);

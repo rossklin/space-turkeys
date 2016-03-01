@@ -18,6 +18,10 @@ void game_object::interact(game_data *g){
   }
 }
 
+void game_object::on_add(game_data *g){
+  g -> entity_grid -> insert(id, position);
+}
+
 void game_object::on_remove(game_data *g){
   g -> entity_grid -> remove(id);
 }

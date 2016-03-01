@@ -5,12 +5,12 @@
 **** [J] made game entity classes inherit game object
 **** [J] inherit pre/post phase functions in game object classes
 **** [J] define ptr classes (grid::tree should have a unique ptr?) and create functions
-**** change to virtual inheritance of game_object so entity_selector subclasses don't get duplicate inheritance
-**** add new files in build system: game_object, ship, waypoint
-**** go through game_data.cpp and move code to object classes
-     currently at beginning of 'ship interaction' section
+**** [J] change to virtual inheritance of game_object so entity_selector subclasses don't get duplicate inheritance
+**** [J] add new files in build system: game_object, ship, waypoint
+**** [J] go through game_data.cpp and move code to object classes
 **** implement game object class functions
-**** add fleet action functions e.g. land (the fleet is responsible for changing it's action e.g. bombard -> land)
+**** add fleet action functions e.g. land 
+**** the fleet is responsible for tracking action validity when target status changes
 **** fleets need to update data in pre phase and remember to update target position
 *** add an upgrade class
 *** let ships have reference to upgrades instead of interactions

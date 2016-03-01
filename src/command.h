@@ -20,7 +20,7 @@ namespace st3{
     source_t source; /*!< key of entity holding the command */
     target_t target; /*!< key of target */
     std::string action;
-    std::set<idtype> ships; /*!< ids of ships allocated to the command */
+    std::set<combid> ships; /*!< ids of ships allocated to the command */
 
     /*! default constructor */
     command();

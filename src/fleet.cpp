@@ -14,6 +14,38 @@ bool st3::fleet::is_idle(){
   return !identifier::get_type(com.target).compare(identifier::idle);
 }
 
+void fleet::give_commands(list<command> c, game_data *g){
+  vector<command> buf(commands.begin(), commands.end());
+  random_shuffle(buf.begin(), buf.end());
+
+  for (auto &x : buf){
+    if (x.ships == ships){
+      // maintain id for trackability
+      // if all ships were assigned, break.
+      com.target = x.target;
+      com.action = x.action;
+      break;
+    }else{
+      ptr f = create();
+      f -> com = x;
+      f -> com.source = f -> id;
+      f -> position = position;
+      f -> radius = radius;
+      f -> owner = owner;
+      for (auto i : x.ships){
+	if (ships.count(i)){
+	  ship::ptr buf = get_ship(i);
+	  buf -> fleet_id = f -> id;
+	  ships.erase(i);
+	  f -> ships.insert(i);
+	}
+      }
+
+      g -> add_entity(f);
+    }
+  }
+}
+
 void fleet::update_data(game_data *g){
 
   // need to update fleet data?
