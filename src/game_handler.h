@@ -10,7 +10,7 @@ namespace st3{
       @param c com object with client data
       @param g game data
     */
-    void game_handler(com &c, game_data g);
+    void game_handler(com &c, game_data &g);
   };
 };
 

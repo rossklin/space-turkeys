@@ -314,15 +314,15 @@ bool game::simulation_step(){
 // ****************************************
 
 source_t game::add_waypoint(point p){
-  source_t k = identifier::make(identifier::waypoint, to_string(socket -> id) + "#" + to_string(waypoint::id_counter++));
   waypoint w;
   w.position = p;
+  w.id = identifier::make_waypoint_id(socket -> id, waypoint::id_counter++);
 
-  entity_selectors[k] = new waypoint_selector(w, sfcolor(players[socket -> id].color));
+  entity_selectors[w.id] = new waypoint_selector(w, sfcolor(players[socket -> id].color));
 
-  cout << "added waypoint " << k << endl;
+  cout << "added waypoint " << w.id << endl;
 
-  return k;
+  return w.id;
 }
 
 command game::build_command(idtype key){

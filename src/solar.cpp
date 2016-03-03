@@ -6,10 +6,11 @@
 #include "utility.h"
 #include "cost.h"
 #include "choice.h"
+#include "game_data.h"
+#include "interaction.h"
 
 using namespace std;
 using namespace st3;
-using namespace solar;
 
 void solar::pre_phase(game_data *g){
   for (auto &t : turrets) t.load = fmin(t.load + 1, t.load_time);
@@ -32,7 +33,7 @@ void solar::interact(game_data *g){
     if (t.damage > 0 && t.load >= t.load_time){
 
       // find targetable ships
-      list<combid> buf = g -> search_targets(position, t.range, interaction::target_condition::enemy_ship(owner));
+      list<combid> buf = g -> search_targets(position, t.range, interaction::target_condition(owner, interact::target_condition::enemy, identifier::ship));
       
       // fire at a random enemy
       if (!buf.empty()){

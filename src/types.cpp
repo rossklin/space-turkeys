@@ -55,3 +55,7 @@ idtype identifier::get_waypoint_owner(source_t v){
     exit(-1);
   }
 }
+
+combid identifier::make_waypoint_id(idtype owner, idtype id){
+  return identifier::make(identifier::waypoint, to_string(owner) + "#" + to_string(id));
+}

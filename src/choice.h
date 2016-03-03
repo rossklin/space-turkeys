@@ -5,7 +5,6 @@
 
 #include "types.h"
 #include "command.h"
-#include "solar.h"
 #include "waypoint.h"
 
 namespace st3{
@@ -42,9 +41,9 @@ namespace st3{
 
     struct choice{
       c_research research;
-      hm_t<source_t, std::list<command> > commands; /*!< table of commands for game entities */
-      hm_t<idtype, c_solar> solar_choices; /*!< table of choices for solar system evolution */ 
-      hm_t<source_t, waypoint> waypoints; /*!< table of generated waypoints */
+      hm_t<combid, std::list<command> > commands; /*!< table of commands for game entities */
+      hm_t<combid, c_solar> solar_choices; /*!< table of choices for solar system evolution */ 
+      hm_t<combid, waypoint> waypoints; /*!< table of generated waypoints */
     };
   };
 };

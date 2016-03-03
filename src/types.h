@@ -35,7 +35,7 @@ namespace st3{
   /*! utilities for source and target identifiers */
   namespace identifier{
     const class_t solar = "solar";
-    const class_t solar = "ship";
+    const class_t ship = "ship";
     const class_t fleet = "fleet";
     const class_t waypoint = "waypoint";
     const class_t command = "command";
@@ -81,6 +81,8 @@ namespace st3{
       @return id of the owner of the waypoint
     */
     idtype get_waypoint_owner(combid v);
+
+    combid make_waypoint_id(idtype owner, idtype id);
   };
 };
 #endif

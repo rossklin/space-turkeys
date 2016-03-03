@@ -17,8 +17,8 @@ namespace st3{
     static const std::string action_land;
     static const std::string action_colonize;
 
-    source_t source; /*!< key of entity holding the command */
-    target_t target; /*!< key of target */
+    combid source; /*!< key of entity holding the command */
+    combid target; /*!< key of target */
     std::string action;
     std::set<combid> ships; /*!< ids of ships allocated to the command */
 

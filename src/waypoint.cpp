@@ -3,6 +3,14 @@
 using namespace std;
 using namespace st3;
 
+void pre_phase(game_data *g){}
+void move(game_data *g){}
+void interact(game_data *g){}
+
+float vision(){
+  return 0;
+}
+
 void waypoint::post_phase(game_data *g){  
 
   // trigger commands

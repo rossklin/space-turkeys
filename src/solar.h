@@ -9,13 +9,10 @@
 #include "ship.h"
 #include "turret.h"
 #include "game_object.h"
+#include "choice.h"
 
 namespace st3{
   class game_data;
-
-  namespace choice{
-    struct c_solar;
-  };
 
   /*! data representing a solar system */
   class solar : public virtual commandable_object{
@@ -67,15 +64,18 @@ namespace st3{
     float ship_increment(std::string v, choice::c_solar &c);
     float turret_increment(std::string v, choice::c_solar &c);
 
+    ptr clone();
+
   protected:
-    static const float f_growth = 4e-2;
-    static const float f_crowding = 2e-2;
-    static const float f_minerate = 1e-2;
-    static const float f_buildrate = 1e-1;
+    static constexpr float f_growth = 4e-2;
+    static constexpr float f_crowding = 2e-2;
+    static constexpr float f_minerate = 1e-2;
+    static constexpr float f_buildrate = 1e-1;
 
     solar dynamics(); 
     void pay_resources(cost::resource_allocation<float> r);
     float resource_constraint(cost::resource_allocation<sfloat> r);
+    virtual game_object::ptr clone_impl();
   };
 };
 #endif

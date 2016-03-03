@@ -23,13 +23,18 @@ namespace st3{
     hm_t<combid, game_object::ptr> entity;
     hm_t<idtype, player> players; /*!< table of players */
     game_settings settings; /*! game settings */
+    std::list<combid> remove_entities; 
 
     game_data();
+    game_data(const game_data &g);
+    game_data &operator =(const game_data &g);
     void apply_choice(choice::choice c, idtype id);
     game_data limit_to(idtype pid);
     void increment();
-    void remove_units();
     bool entity_seen_by(combid id, idtype pid);
+    bool target_position(combid t, point &p);
+    combid entity_at(point p);
+    std::list<combid> search_targets(point p, float r, interaction::target_condition c);
 
     // access
     ship::ptr get_ship(combid i);
@@ -37,18 +42,29 @@ namespace st3{
     solar::ptr get_solar(combid i);
     waypoint::ptr get_waypoint(combid i);
 
-    combid entity_at(point p);
-    std::list<combid> search_targets(point p, float r, interaction::target_condition c);
+    std::list<ship::ptr> all_ships();
+    std::list<fleet::ptr> all_fleets();
+    std::list<solar::ptr> all_solars();
+    std::list<waypoint::ptr> all_waypoints();
+    std::list<game_object::ptr> all_owned_by(idtype pid);
+
+    void add_entity(game_object::ptr p);
+    void remove_units();
+
+    // game steps
+    void pre_step(); 
+    void end_step(); 
+    void build();
 
   protected:
-    std::list<combid> remove_entities; 
-    grid::tree::ptr object_grid;
+    grid::tree::ptr entity_grid;
 
-    bool target_position(combid t, point &p);
-    void generate_fleet(point p, idtype i, command &c, std::set<combid> &sh);
+    void generate_fleet(point p, idtype i, command &c, std::set<ship::ptr> &sh);
     void relocate_ships(command &c, std::set<combid> &sh, idtype owner);
     void set_solar_commands(combid id, std::list<command> coms);
     void set_fleet_commands(combid id, std::list<command> coms);
+    
+    bool validate_choice(choice::choice c, idtype id);
 
     // object iteration phases
     void pre_phase();
@@ -56,17 +72,9 @@ namespace st3{
     void post_phase();
 
     // add and remove entities
-    void add_entity(game_object::ptr p);
     void remove_entity(combid id);
-
-    // game steps
-    void pre_step(); 
-    void end_step(); 
-    void build();
-
-    // building universe
-    hm_t<idtype, solar::solar> random_solars();
-    float heuristic_homes(hm_t<idtype, solar::solar> solar_buf, hm_t<idtype, idtype> &start_solars);
+    void distribute_ships(std::set<ship::ptr> sh, point p);
+    void allocate_grid();
   };
 };
 #endif

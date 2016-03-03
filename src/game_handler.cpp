@@ -15,7 +15,7 @@ using namespace std;
 using namespace st3;
 using namespace st3::server;
 
-void server::game_handler(com &c, game_data g){
+void server::game_handler(com &c, game_data &g){
   sf::Packet packet, p_confirm;
   vector<game_data> frames(g.settings.frames_per_round);
   hm_t<sint, sf::Packet> packets;
@@ -28,9 +28,9 @@ void server::game_handler(com &c, game_data g){
     // check end
     int pid = -1;
     int psum = 0;
-    for (auto &x : g.solars){
-      if (x.second.owner > -1 && x.second.owner != pid){
-	pid = x.second.owner;
+    for (auto x : g.all_solars()){
+      if (x -> owner > -1 && x -> owner != pid){
+	pid = x -> owner;
 	psum++;
       }
     }
@@ -85,7 +85,7 @@ void server::game_handler(com &c, game_data g){
 
     // cleanup
     g.end_step();
-    cout << "post cleanup size: " << g.ships.size() << endl;
+    cout << "post cleanup size: " << g.entity.size() << endl;
   }
 }
 

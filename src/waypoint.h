@@ -25,6 +25,12 @@ namespace st3{
     void move(game_data *g);
     void interact(game_data *g);
     void post_phase(game_data *g);
+    float vision();
+
+    ptr clone();
+
+  protected:
+    virtual game_object::ptr clone_impl();
   };
 };
 #endif

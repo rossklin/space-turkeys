@@ -1,6 +1,7 @@
 #ifndef _STK_GRIDTREE
 #define _STK_GRIDTREE
 
+#include <memory>
 #include <list>
 #include <SFML/Graphics.hpp>
 #include "types.h"
@@ -8,7 +9,7 @@
 namespace st3{
   /*! functions for the 2d search tree */
   namespace grid{
-    typedef idtype key_type; /*!< key type */
+    typedef combid key_type; /*!< key type */
     typedef point value_type; /*!< value type */
     typedef std::pair<point, point> bound_type; /*!< type to hold lower and upper bounds */
     typedef std::pair<key_type, value_type> iterator_type; /*!< type representing an element in the tree */
@@ -74,7 +75,7 @@ namespace st3{
 
     /*! a tree handles grid nodes */
     struct tree{
-      typedef unique_ptr<tree> ptr;
+      typedef std::unique_ptr<tree> ptr;
       static ptr create();
       
       hm_t<key_type, node*> index; /*!< table over which node elements are listed in */

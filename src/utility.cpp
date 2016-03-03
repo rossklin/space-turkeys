@@ -13,7 +13,7 @@ using namespace st3::utility;
 boost::random::mt19937 rng;
 
 template<typename T>
-T utility::attempt_cast(game_object::ptr p){
+T utility::guaranteed_cast(game_object::ptr p){
   if (p == 0){
     cout << "attempt_cast: null pointer!" << endl;
     exit(-1);

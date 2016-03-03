@@ -1,35 +1,53 @@
 #include <algorithm>
 #include <iostream>
 #include <cmath>
+#include <memory>
 
 #include "types.h"
 #include "game_data.h"
 #include "utility.h"
 #include "research.h"
+#include "game_object.h"
+#include "build_universe.h"
 
 using namespace std;
 using namespace st3;
 using namespace cost;
 
+game_data::game_data(){}
+
+game_data::game_data(const game_data &g) {
+  *this = g;
+}
+
+game_data &game_data::operator =(const game_data &g){
+  allocate_grid();
+  for (auto x : g.entity) entity[x.first] = x.second -> clone();
+
+  players = g.players;
+  settings = g.settings;
+  remove_entities = g.remove_entities;
+}
+
 ship::ptr game_data::get_ship(combid i){
-  return attempt_cast<ship::ptr>(entity[i]);
+  return utility::guaranteed_cast<ship::ptr>(entity[i]);
 }
 
 fleet::ptr game_data::get_fleet(combid i){
-  return attempt_cast<fleet::ptr>(entity[i]);
+  return utility::guaranteed_cast<fleet::ptr>(entity[i]);
 }
 
 solar::ptr game_data::get_solar(combid i){
-  return attempt_cast<solar::ptr>(entity[i]);
+  return utility::guaranteed_cast<solar::ptr>(entity[i]);
 }
 
 waypoint::ptr game_data::get_waypoint(combid i){
-  return attempt_cast<waypoint::ptr>(entity[i]);
+  return utility::guaranteed_cast<waypoint::ptr>(entity[i]);
 }
 
 bool game_data::target_position(combid t, point &p){
   if (entity.count(t)) {
-    p = entity[t].position;
+    p = entity[t] -> position;
     return true;
   }else{
     return false;
@@ -38,7 +56,7 @@ bool game_data::target_position(combid t, point &p){
 
 combid game_data::entity_at(point p){
   for (auto &x : entity){
-    if (utility::l2d2(p - x.second.position) < pow(x.second.radius, 2)){
+    if (utility::l2d2(p - x.second -> position) < pow(x.second -> radius, 2)){
       return x.first;
     }
   }
@@ -79,7 +97,7 @@ void game_data::relocate_ships(command &c, set<combid> &sh, idtype owner){
     // clear ships from parent fleets
     for (auto i : sh) {
       ship::ptr s = get_ship(i);
-      fleet:::ptr parent = get_fleet(s -> fleet_id);
+      fleet::ptr parent = get_fleet(s -> fleet_id);
       parent -> ships.erase(i);
     }
 
@@ -96,8 +114,8 @@ void game_data::relocate_ships(command &c, set<combid> &sh, idtype owner){
     add_entity(f);
   }
 
-  f -> update_data();
-  cout << "relocate ships: added fleet " << fid << endl;
+  f -> update_data(this);
+  cout << "relocate ships: added fleet " << f -> id << endl;
 }
 
 // generate a fleet with given ships, set owner and fleet_id of ships
@@ -118,7 +136,7 @@ void game_data::generate_fleet(point p, idtype owner, command &c, set<ship::ptr>
   }
   
   distribute_ships(sh, f -> position);
-  f -> update_data();
+  f -> update_data(this);
 }
 
 bool game_data::validate_choice(choice::choice c, idtype id){
@@ -161,7 +179,7 @@ bool game_data::validate_choice(choice::choice c, idtype id){
 void game_data::apply_choice(choice::choice c, idtype id){
   cout << "game_data: running dummy apply choice" << endl;
 
-  if (!validate_choice(c)){
+  if (!validate_choice(c, id)){
     cout << "player " << id << " submitted an invalid choice!" << endl;
     exit(-1);
   }
@@ -169,7 +187,10 @@ void game_data::apply_choice(choice::choice c, idtype id){
   cout << "apply_choice for player " << id << ": inserting " << c.waypoints.size() << " waypoints:" << endl;
 
   // build waypoints
-  for (auto &x : c.waypoints) add_entity(make_shared(x.second));
+  for (auto &x : c.waypoints) {
+    waypoint::ptr w = make_shared<waypoint>(x.second);
+    add_entity(w);
+  }
 
   // set solar choices
   for (auto &x : c.solar_choices) {
@@ -180,7 +201,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
   // distribute commands
   for (auto x : c.commands){
     cout << "apply_choice: checking command key " << x.first << endl;
-    commandable_object::ptr v = utility::attempt_cast<commandable_object::ptr>(entity[x.first]);
+    commandable_object::ptr v = utility::guaranteed_cast<commandable_object::ptr>(entity[x.first]);
     v -> give_commands(x.second, this);
   }
 }
@@ -262,14 +283,14 @@ void game_data::build(){
       for (auto x : solar_buf) add_entity(x.second);
 
       for (auto x : test_homes){
-	solar::ptr s = solars[x.second];
+	solar::ptr s = get_solar(x.second);
 	s -> owner = x.first;
 	s -> resource = initial_resources;
 	s -> water = 1000;
 	s -> space = 1000;
 	s -> population = 100;
 	s -> happiness = 1;
-	s -> ships.insert(rbase.build_ship(cost::keywords::key_scout));
+	s -> ships[s -> id] = rbase.build_ship(cost::keywords::key_scout);
       }
     }
   }
@@ -307,17 +328,17 @@ void game_data::end_step(){
     
     // check for fleets targeting this waypoint
     for (auto j : all_fleets()){
-      check |= j -> com.target == i.first;
+      check |= j -> com.target == i -> id;
     }
 
     // check for waypoints with commands targeting this waypoint
     for (auto j : all_waypoints()){
       for (auto &k : j -> pending_commands){
-	check |= k.target == i.first;
+	check |= k.target == i -> id;
       }
     }
 
-    if (!check) remove.push_back(i.first);
+    if (!check) remove.push_back(i -> id);
   }
 
   for (auto i : remove) {
@@ -341,18 +362,19 @@ bool game_data::entity_seen_by(combid id, idtype pid){
     exit(-1);
   }
 
+  game_object::ptr x = entity[id];
+
   // always see owned entities
   if (x -> owner == pid) return true;
 
   // never see opponent waypoints
   if (identifier::get_type(id) == identifier::waypoint) return false;
 
-  game_object::ptr x = entity[id];
   auto buf = all_owned_by(pid);
   bool seen = false;
 
   for (auto i = buf.begin(); i != buf.end() && !seen; i++){
-    seen |= i -> owner == pid && utility::l2d2(x -> position - i -> position) < pow(i -> vision(), 2);
+    seen |= (*i) -> owner == pid && utility::l2d2(x -> position - (*i) -> position) < pow((*i) -> vision(), 2);
   }
 
   return seen;

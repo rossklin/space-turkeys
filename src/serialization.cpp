@@ -103,11 +103,17 @@ sf::Packet& st3::operator >>(sf::Packet& packet, cost::allocation<T> &g){
 
 // game_data
 sf::Packet& st3::operator <<(sf::Packet& packet, const game_data &g){
-  return packet << g.players << g.fleets << g.waypoints << g.ships << g.solars << g.settings << g.remove_entities;
+  packet << g.players << g.settings << g.remove_entities;
+  // polymorphic serialization
+  for (auto x : g -> entity) x.second -> serialize(packet);
+  return packet;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, game_data &g){
-  return packet >> g.players >> g.fleets >> g.waypoints >> g.ships >> g.solars >> g.settings >> g.remove_entities;
+  packet >> g.players >> g.settings >> g.remove_entities;
+  // polymorphic deserialization
+  for (auto x : g -> entity) x.second -> deserialize(packet);
+  return packet;
 }
 
 // game_settings

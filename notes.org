@@ -8,10 +8,13 @@
 **** [J] change to virtual inheritance of game_object so entity_selector subclasses don't get duplicate inheritance
 **** [J] add new files in build system: game_object, ship, waypoint
 **** [J] go through game_data.cpp and move code to object classes
-**** implement game object class functions
-**** add fleet action functions e.g. land 
-**** the fleet is responsible for tracking action validity when target status changes
-**** fleets need to update data in pre phase and remember to update target position
+**** [J] implement game object class functions
+**** [J] add fleet action functions e.g. land 
+**** [J] the fleet is responsible for tracking action validity when target status changes
+**** [J] fleets need to update data in pre phase and remember to update target position
+**** [J] add an interaction class declaration
+**** implement the interaction class
+**** decide how to distinguish between owned and non-owned target conditions
 *** add an upgrade class
 *** let ships have reference to upgrades instead of interactions
 *** let upgrades have interactions and stat-mods

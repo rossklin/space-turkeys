@@ -13,7 +13,7 @@ namespace st3{
   namespace utility{
 
     template<typename T>
-    T attempt_cast(game_object::ptr p);
+    T guaranteed_cast(game_object::ptr p);
 
     std::string format_float(float x);
     

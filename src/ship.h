@@ -6,6 +6,7 @@
 
 #include "types.h"
 #include "game_object.h"
+#include "interaction.h"
 
 namespace st3{
   class game_data;
@@ -28,14 +29,15 @@ namespace st3{
     };
     
     struct target_condition{
-      identifier::class_t what;
+      class_t what;
       sint status;
       const sint owned = 1;
       const sint neutral = 2;
       const sint enemy = 4;
     };
 
-    identifier::class_t ship_class; /*!< ship class */
+    class_t ship_class; /*!< ship class */
+    combid fleet_id; /*!< id of the ship's fleet */
     sfloat angle; /*!< ship's angle */
     sfloat load;
     stats base_stats;
@@ -48,13 +50,16 @@ namespace st3{
     void move(game_data *g);
     void interact(game_data *g);
     void post_phase(game_data *g);
-    stats compile_stats();
     float vision();
+    stats compile_stats();
+    virtual std::set<interaction> compile_interactions();
+
+    ptr clone();
 
   protected:
     // serialised variables
-    identifier::combid fleet_id; /*!< id of the ship's fleet */
     std::function<void(game_object::ptr from, ship::ptr self, float damage)> receive_damage;
+    virtual game_object::ptr clone_impl();
   };
 };
 #endif

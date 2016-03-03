@@ -17,7 +17,7 @@ cost::ship_allocation<ship>& research::ship_templates(){
 
     interaction space_combat;
     space_combat.name = "space combat";
-    space_combat.condition = ineraction::target_condition(identifier::ship, interaction::target_condition::enemy);
+    space_combat.condition = ineraction::target_condition(identifier::ship, target_condition::enemy);
     space_combat.perform = [] (game_object::ptr self, game_object::ptr target, game_data *context){
       ship::ptr s = utility::attempt_cast<ship::ptr>(self);
       ship::ptr t = utility::attempt_cast<ship::ptr>(target);
@@ -32,7 +32,7 @@ cost::ship_allocation<ship>& research::ship_templates(){
 
     interaction bombard;
     bombard.name = "bombard";
-    bombard.condition = ineraction::target_condition(identifier::solar, interaction::target_condition::enemy);
+    bombard.condition = ineraction::target_condition(identifier::solar, target_condition::enemy);
     bombard.perform = [] (game_object::ptr self, game_object::ptr target, game_data *context){
       ship::ptr s = utility::attempt_cast<ship::ptr>(self);
       solar::ptr t = utility::attempt_cast<solar::ptr>(target);
@@ -58,7 +58,7 @@ cost::ship_allocation<ship>& research::ship_templates(){
     
     interaction colonize;
     colonize.name = "colonize";
-    colonize.condition = interaction::target_condition(identifier::solar, interaction::target_condition::neutral);
+    colonize.condition = target_condition(identifier::solar, target_condition::neutral);
     colonize.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
       ship::ptr s = utility::attempt_cast<ship::ptr>(self);
       solar::ptr t = utility::attempt_cast<solar::ptr>(target);

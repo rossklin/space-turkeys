@@ -19,9 +19,9 @@ namespace st3{
       data();
 
       void develope(float x);
-      ship build_ship(std::string v);
+      ship::ptr build_ship(std::string v);
       turret build_turret(std::string v);
-      void colonize(solar::solar *s);
+      void colonize(solar::ptr s);
 
       // todo: move this to a ship sub class or ship data
       int colonizer_population();

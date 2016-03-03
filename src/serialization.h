@@ -142,8 +142,8 @@ namespace st3{
   */
   sf::Packet& operator >>(sf::Packet& packet, command &c);
 
-  sf::Packet& operator <<(sf::packet& packet, const ship::target_condition &c);
-  sf::Packet& operator >>(sf::packet& packet, ship::target_condition &c);
+  sf::Packet& operator <<(sf::Packet& packet, const interaction::target_condition &c);
+  sf::Packet& operator >>(sf::Packet& packet, interaction::target_condition &c);
 
   /*! stream a ship into packet
     @param packet the packet
@@ -178,14 +178,14 @@ namespace st3{
     @param g the object to stream
     @return reference to the resulting packet
   */
-  sf::Packet& operator <<(sf::Packet& packet, const solar::solar &g);
+  sf::Packet& operator <<(sf::Packet& packet, const solar &g);
 
   /*! stream a solar out of a packet
     @param packet the packet
     @param g the object to stream
     @return reference to the resulting packet
   */
-  sf::Packet& operator >>(sf::Packet& packet, solar::solar &g);
+  sf::Packet& operator >>(sf::Packet& packet, solar &g);
 
   /*! stream a solar choice into packet
     @param packet the packet
