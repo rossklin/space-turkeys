@@ -51,14 +51,15 @@ namespace st3{
     void interact(game_data *g);
     void post_phase(game_data *g);
     float vision();
+
     stats compile_stats();
     virtual std::set<interaction> compile_interactions();
+    std::function<void(game_object::ptr from, ship::ptr self, float damage)> receive_damage;
 
     ptr clone();
 
   protected:
     // serialised variables
-    std::function<void(game_object::ptr from, ship::ptr self, float damage)> receive_damage;
     virtual game_object::ptr clone_impl();
   };
 };

@@ -34,7 +34,7 @@ namespace st3{
     bool entity_seen_by(combid id, idtype pid);
     bool target_position(combid t, point &p);
     combid entity_at(point p);
-    std::list<combid> search_targets(point p, float r, interaction::target_condition c);
+    std::list<combid> search_targets(point p, float r, target_condition c);
 
     // access
     ship::ptr get_ship(combid i);
@@ -50,6 +50,7 @@ namespace st3{
 
     void add_entity(game_object::ptr p);
     void remove_units();
+    void generate_fleet(point p, idtype i, command &c, std::set<ship::ptr> &sh);
 
     // game steps
     void pre_step(); 
@@ -59,10 +60,7 @@ namespace st3{
   protected:
     grid::tree::ptr entity_grid;
 
-    void generate_fleet(point p, idtype i, command &c, std::set<ship::ptr> &sh);
     void relocate_ships(command &c, std::set<combid> &sh, idtype owner);
-    void set_solar_commands(combid id, std::list<command> coms);
-    void set_fleet_commands(combid id, std::list<command> coms);
     
     bool validate_choice(choice::choice c, idtype id);
 

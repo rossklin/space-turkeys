@@ -6,20 +6,29 @@
 namespace st3{
   class target_condition{
   public:
-    const sint neutral = 0;
-    const sint owned = 1;
-    const sint enemy = 2;
+    static const sint neutral = 0;
+    static const sint owned = 1;
+    static const sint enemy = 2;
       
     class_t what;
     sint alignment;
     idtype owner;
 
+    target_condition();
+    target_condition(sint a, class_t w);
     target_condition(idtype o, sint a, class_t w);
+    target_condition owned_by(idtype o);
   };
 
   class interaction{
   public:
+    typedef std::function<void(game_object::ptr self, game_object::ptr target, game_data *context)> perform_t;
     static bool valid(target_condition c, game_object::ptr t);
+
+    std::string name;
+    float radius;
+    target_condition condition;
+    perform_t perform;
   };
 };
 

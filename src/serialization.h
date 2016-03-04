@@ -142,8 +142,8 @@ namespace st3{
   */
   sf::Packet& operator >>(sf::Packet& packet, command &c);
 
-  sf::Packet& operator <<(sf::Packet& packet, const interaction::target_condition &c);
-  sf::Packet& operator >>(sf::Packet& packet, interaction::target_condition &c);
+  sf::Packet& operator <<(sf::Packet& packet, const target_condition &c);
+  sf::Packet& operator >>(sf::Packet& packet, target_condition &c);
 
   /*! stream a ship into packet
     @param packet the packet

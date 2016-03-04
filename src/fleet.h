@@ -16,7 +16,7 @@ namespace st3{
     typedef std::shared_ptr<fleet> ptr;
     static ptr create();
 
-    static interaction::target_condition action_condition_table(std::string a, idtype o);
+    static target_condition action_condition_table(std::string a, idtype o);
     
     static const int update_period = 1; /*!< number of increments between fleet data updates */
     static const int interact_d2 = 100; /*!< distance from target at which the fleet converges */

@@ -33,7 +33,7 @@ void solar::interact(game_data *g){
     if (t.damage > 0 && t.load >= t.load_time){
 
       // find targetable ships
-      list<combid> buf = g -> search_targets(position, t.range, interaction::target_condition(owner, interact::target_condition::enemy, identifier::ship));
+      list<combid> buf = g -> search_targets(position, t.range, target_condition(owner, target_condition::enemy, identifier::ship));
       
       // fire at a random enemy
       if (!buf.empty()){
@@ -43,7 +43,7 @@ void solar::interact(game_data *g){
 	ship::ptr s = g -> get_ship(tid);
 	
 	if (utility::random_uniform() < t.accuracy){
-	  s -> receive_damage(make_shared(this), s, utility::random_uniform(0, t.damage));
+	  s -> receive_damage(ptr(this), s, utility::random_uniform(0, t.damage));
 	}
       }
     }
@@ -73,9 +73,9 @@ void solar::post_phase(game_data *g){
 
     if (owner > -1 && !has_defense()){
       owner = highest_id;
-      cout << "player " << owner << " conquers solar " << solar_id << endl;
+      cout << "player " << owner << " conquers " << id << endl;
     }else{
-      cout << "resulting defense for solar " << solar_id << ": " << has_defense() << endl;
+      cout << "resulting defense for " << id << ": " << has_defense() << endl;
     }
   }
 
@@ -84,10 +84,10 @@ void solar::post_phase(game_data *g){
   float num = colonization_attempts.size();
   for (auto i : colonization_attempts){
     if (utility::random_uniform() <= 1 / (num - count++)){
-      players[i.first].research_level.colonize(&sol);
+      g -> players[i.first].research_level.colonize(ptr(this));
       owner = i.first;
-      cout << "player " << owner << " colonizes solar " << solar_id << endl;
-      ships[i.second].remove = true;
+      cout << "player " << owner << " colonizes " << id << endl;
+      g -> entity[i.second] -> remove = true;
     }
   }
 }
@@ -111,7 +111,7 @@ void solar::give_commands(list<command> c, game_data *g){
   }
 }
 
-float solar::solar::resource_constraint(cost::resource_allocation<sfloat> r){
+float solar::resource_constraint(cost::resource_allocation<sfloat> r){
   float m = INFINITY;
 
   for (auto v : cost::keywords::resource)
@@ -120,14 +120,14 @@ float solar::solar::resource_constraint(cost::resource_allocation<sfloat> r){
   return m;
 }
 
-void solar::solar::pay_resources(cost::resource_allocation<float> total){
+void solar::pay_resources(cost::resource_allocation<float> total){
   for (auto k : cost::keywords::resource)
     resource[k].storage = fmax(resource[k].storage - total[k], 0);
 }
 
-solar::solar::solar(){}
+solar::solar(){}
 
-string solar::solar::get_info(){
+string solar::get_info(){
   stringstream ss;
   // ss << "fleet_growth: " << fleet_growth << endl;
   // ss << "new_research: " << new_research << endl;
@@ -139,7 +139,7 @@ string solar::solar::get_info(){
   return ss.str();
 }
 
-sfloat solar::solar::compute_vision(){
+sfloat solar::vision(){
   sfloat res = 0;
 
   for (auto &x : turrets)
@@ -148,11 +148,11 @@ sfloat solar::solar::compute_vision(){
   return res;
 }
 
-bool solar::solar::has_defense(){
+bool solar::has_defense(){
   return turrets.size() > 0;
 }
 
-void solar::solar::damage_turrets(float d){
+void solar::damage_turrets(float d){
   float d0 = d;
   if (turrets.empty()) return;
 
@@ -171,7 +171,7 @@ void solar::solar::damage_turrets(float d){
 }
 
 // [0,1] evaluation of available free space
-float solar::solar::space_status(){
+float solar::space_status(){
   if (space <= 0) return 0;
   
   float used = 0;
@@ -187,7 +187,7 @@ float solar::solar::space_status(){
 }
 
 // [0,1] evaluation of available water
-float solar::solar::water_status(){
+float solar::water_status(){
   if (water <= 0) return 0;
   
   float used = 0;
@@ -202,44 +202,44 @@ float solar::solar::water_status(){
   return (water - used) / water;
 }
 
-float solar::solar::poluation_increment(){
+float solar::poluation_increment(){
   float base_growth = population * happiness * st3::solar::f_growth;
   float culture_growth = base_growth * sector[cost::keywords::key_culture];
   float crowding_death = population * st3::solar::f_crowding * population / (ecology * space * space_status() + 1);
   return base_growth + culture_growth - crowding_death;
 }
 
-float solar::solar::ecology_increment(){
+float solar::ecology_increment(){
   return 0.01 * ((space_status() * water_status() - ecology));
 }
 
-float solar::solar::happiness_increment(choice::c_solar &c){
+float solar::happiness_increment(choice::c_solar &c){
   return 0.01 * (sector[cost::keywords::key_culture] + c.allocation[cost::keywords::key_culture] - 0.1 * log(population) / (ecology + 1) - (happiness - 0.5));
 }
 
-float solar::solar::research_increment(choice::c_solar &c){
+float solar::research_increment(choice::c_solar &c){
   return c.allocation[cost::keywords::key_research] * population * sector[cost::keywords::key_research] * happiness;
 }
 
-float solar::solar::resource_increment(string v, choice::c_solar &c){
+float solar::resource_increment(string v, choice::c_solar &c){
   return st3::solar::f_minerate * c.allocation[cost::keywords::key_mining] * c.mining[v] * compute_workers();
 }
 
-float solar::solar::expansion_increment(string v, choice::c_solar &c){
+float solar::expansion_increment(string v, choice::c_solar &c){
   return st3::solar::f_buildrate * c.allocation[cost::keywords::key_expansion] * c.expansion[v] * compute_workers() / (cost::expansion_multiplier(sector[v]) * cost::sector_expansion()[v].time);
 }
 
-float solar::solar::ship_increment(string v, choice::c_solar &c){
+float solar::ship_increment(string v, choice::c_solar &c){
   auto build_cost = cost::ship_build()[v];
   return st3::solar::f_buildrate * c.allocation[cost::keywords::key_military] * c.military.c_ship[v] * compute_workers() / build_cost.time;
 }
 
-float solar::solar::turret_increment(string v, choice::c_solar &c){
+float solar::turret_increment(string v, choice::c_solar &c){
   auto build_cost = cost::turret_build()[v];
   return st3::solar::f_buildrate * c.allocation[cost::keywords::key_military] * c.military.c_turret[v] * compute_workers() / build_cost.time;
 }
 
-float solar::solar::compute_workers(){
+float solar::compute_workers(){
   return happiness * population;
 }
 

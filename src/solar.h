@@ -36,7 +36,7 @@ namespace st3{
     sfloat population;
     sfloat happiness;
     hm_t<idtype, float> damage_taken;
-    hm_t<idtype, idtype> colonization_attempts;
+    hm_t<idtype, combid> colonization_attempts;
 
     solar();
     ~solar();
@@ -63,6 +63,7 @@ namespace st3{
     float expansion_increment(std::string v, choice::c_solar &c);
     float ship_increment(std::string v, choice::c_solar &c);
     float turret_increment(std::string v, choice::c_solar &c);
+    float compute_workers();
 
     ptr clone();
 
@@ -72,7 +73,7 @@ namespace st3{
     static constexpr float f_minerate = 1e-2;
     static constexpr float f_buildrate = 1e-1;
 
-    solar dynamics(); 
+    void dynamics(); 
     void pay_resources(cost::resource_allocation<float> r);
     float resource_constraint(cost::resource_allocation<sfloat> r);
     virtual game_object::ptr clone_impl();

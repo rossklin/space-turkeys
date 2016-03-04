@@ -83,6 +83,9 @@ namespace st3{
     */
     float dpoint2line(point p, point a, point b);
 
+    template<typename T>
+    T uniform_sample(std::list<T> x);
+
     /*! 
       generates a random number normally distributed as (m, s)
       @return the random number

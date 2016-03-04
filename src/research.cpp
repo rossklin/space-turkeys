@@ -2,6 +2,7 @@
 
 #include "research.h"
 #include "cost.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -17,27 +18,27 @@ cost::ship_allocation<ship>& research::ship_templates(){
 
     interaction space_combat;
     space_combat.name = "space combat";
-    space_combat.condition = ineraction::target_condition(identifier::ship, target_condition::enemy);
+    space_combat.condition = target_condition(target_condition::enemy, identifier::ship);
     space_combat.perform = [] (game_object::ptr self, game_object::ptr target, game_data *context){
-      ship::ptr s = utility::attempt_cast<ship::ptr>(self);
-      ship::ptr t = utility::attempt_cast<ship::ptr>(target);
+      ship::ptr s = utility::guaranteed_cast<ship::ptr>(self);
+      ship::ptr t = utility::guaranteed_cast<ship::ptr>(target);
 
-      if (s -> load < s -> load_time) return;
+      if (s -> load < s -> current_stats.load_time) return;
 
       s -> load = 0;
-      if (utility::random_uniform() < s -> accuracy){
-	t -> receive_damage(s, t, utility::random_uniform(0, s -> ship_damage));
+      if (utility::random_uniform() < s -> current_stats.accuracy){
+	t -> receive_damage(s, t, utility::random_uniform(0, s -> current_stats.ship_damage));
       }
     };
 
     interaction bombard;
     bombard.name = "bombard";
-    bombard.condition = ineraction::target_condition(identifier::solar, target_condition::enemy);
+    bombard.condition = interaction::target_condition(identifier::solar, target_condition::enemy);
     bombard.perform = [] (game_object::ptr self, game_object::ptr target, game_data *context){
-      ship::ptr s = utility::attempt_cast<ship::ptr>(self);
-      solar::ptr t = utility::attempt_cast<solar::ptr>(target);
+      ship::ptr s = utility::guaranteed_cast<ship::ptr>(self);
+      solar::ptr t = utility::guaranteed_cast<solar::ptr>(target);
 
-      if (s -> load < s -> load_time) return;
+      if (s -> load < s -> current_stats.load_time) return;
       
       // check if solar already captured
       if (t -> owner == s -> owner){
@@ -51,8 +52,8 @@ cost::ship_allocation<ship>& research::ship_templates(){
 
       // deal damage
       s -> load = 0;
-      if (utility::random_uniform() < s -> accuracy){
-	t -> damage_taken[s -> owner] += utility::random_uniform(0, damage);
+      if (utility::random_uniform() < s -> current_stats.accuracy){
+	t -> damage_taken[s -> owner] += utility::random_uniform(0, s -> solar_damage);
       }
     };
     
@@ -60,8 +61,8 @@ cost::ship_allocation<ship>& research::ship_templates(){
     colonize.name = "colonize";
     colonize.condition = target_condition(identifier::solar, target_condition::neutral);
     colonize.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
-      ship::ptr s = utility::attempt_cast<ship::ptr>(self);
-      solar::ptr t = utility::attempt_cast<solar::ptr>(target);
+      ship::ptr s = utility::guaranteed_cast<ship::ptr>(self);
+      solar::ptr t = utility::guaranteed_cast<solar::ptr>(target);
 
       // check if solar already colonized
       if (t -> owner == s.owner){
