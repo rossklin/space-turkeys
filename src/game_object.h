@@ -15,6 +15,7 @@ namespace st3{
   class game_object{
   public:
     typedef std::shared_ptr<game_object> ptr;
+    static const sint neutral_owner = -1;
     
     point position;
     sfloat radius;

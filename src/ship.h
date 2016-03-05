@@ -27,14 +27,6 @@ namespace st3{
       sfloat vision; /*!< ship's sight radius */
       sfloat load_time;
     };
-    
-    struct target_condition{
-      class_t what;
-      sint status;
-      const sint owned = 1;
-      const sint neutral = 2;
-      const sint enemy = 4;
-    };
 
     class_t ship_class; /*!< ship class */
     combid fleet_id; /*!< id of the ship's fleet */
@@ -53,7 +45,8 @@ namespace st3{
     float vision();
 
     stats compile_stats();
-    virtual std::set<interaction> compile_interactions();
+    std::list<interaction> compile_interactions();
+    std::set<std::string> compile_action_names();
     std::function<void(game_object::ptr from, ship::ptr self, float damage)> receive_damage;
 
     ptr clone();

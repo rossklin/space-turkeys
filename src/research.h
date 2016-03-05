@@ -8,8 +8,8 @@
 
 namespace st3{
   namespace research{
-    cost::ship_allocation<ship> &ship_templates();
-    cost::turret_allocation<turret> &turret_templates();
+    ship ship_template(std::string k);
+    turret turret_template(std::string k);
     
     /*! struct representing the research level of a player */
     struct data{

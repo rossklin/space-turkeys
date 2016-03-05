@@ -3,127 +3,78 @@
 #include "research.h"
 #include "cost.h"
 #include "utility.h"
+#include "upgrade.h"
 
 using namespace std;
 using namespace st3;
 using namespace research;
 using namespace cost;
 
-cost::ship_allocation<ship>& research::ship_templates(){
+ship research::ship_template(string k){
   static bool init = false;
   static cost::ship_allocation<ship> buf;
 
   if (!init){    
     init = true;
 
-    interaction space_combat;
-    space_combat.name = "space combat";
-    space_combat.condition = target_condition(target_condition::enemy, identifier::ship);
-    space_combat.perform = [] (game_object::ptr self, game_object::ptr target, game_data *context){
-      ship::ptr s = utility::guaranteed_cast<ship::ptr>(self);
-      ship::ptr t = utility::guaranteed_cast<ship::ptr>(target);
-
-      if (s -> load < s -> current_stats.load_time) return;
-
-      s -> load = 0;
-      if (utility::random_uniform() < s -> current_stats.accuracy){
-	t -> receive_damage(s, t, utility::random_uniform(0, s -> current_stats.ship_damage));
-      }
-    };
-
-    interaction bombard;
-    bombard.name = "bombard";
-    bombard.condition = interaction::target_condition(identifier::solar, target_condition::enemy);
-    bombard.perform = [] (game_object::ptr self, game_object::ptr target, game_data *context){
-      ship::ptr s = utility::guaranteed_cast<ship::ptr>(self);
-      solar::ptr t = utility::guaranteed_cast<solar::ptr>(target);
-
-      if (s -> load < s -> current_stats.load_time) return;
-      
-      // check if solar already captured
-      if (t -> owner == s -> owner){
-	return;
-      }
-
-      // check if defenses already destroyed
-      if (t -> owner == -1 && !t -> has_defense()){
-	return;
-      }
-
-      // deal damage
-      s -> load = 0;
-      if (utility::random_uniform() < s -> current_stats.accuracy){
-	t -> damage_taken[s -> owner] += utility::random_uniform(0, s -> solar_damage);
-      }
-    };
-    
-    interaction colonize;
-    colonize.name = "colonize";
-    colonize.condition = target_condition(identifier::solar, target_condition::neutral);
-    colonize.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
-      ship::ptr s = utility::guaranteed_cast<ship::ptr>(self);
-      solar::ptr t = utility::guaranteed_cast<solar::ptr>(target);
-
-      // check if solar already colonized
-      if (t -> owner == s.owner){
-	return;
-      }
-
-      // check colonization
-      if (t -> owner == game_object::neutral_owner && !t -> has_defense()){
-	t -> colonization_attempts[s -> owner] = s -> id;
-      }
-    }
-    
     ship s, a;
-    s.speed = 1;
-    s.vision = 50;
-    s.hp = 1;
-    s.interaction_radius = 10;
+    s.base_stats.speed = 1;
+    s.base_stats.vision = 50;
+    s.base_stats.hp = 1;
+    s.base_stats.damage_ship = 0;
+    s.base_stats.damage_solar = 0;
+    s.base_stats.accuracy = 0;
+    s.base_stats.interaction_radius = 10;
     s.fleet_id = -1;
     s.ship_class = "";
     s.remove = false;
-    s.load_time = 100;
+    s.base_stats.load_time = 100;
     s.load = 0;
 
-    a = s;
-    a.speed = 2;
-    a.vision = 100;
-    a.ship_class = keywords::key_scout;
-    a.interaction_list[tc_enemy_ship] = fleet::action::combat;
-    a.ship_interaction[fleet::action::combat] = default_combat(0.2, 0.3);
-    buf[a.ship_class] = a;
+    auto add_with_class = [&buf] (ship s, string c){
+      s.current_stats = s.compile_stats();
+      s.ship_class = c;
+      buf[c] = s;
+    };
 
     a = s;
-    a.hp = 2;
-    a.interaction_radius = 20;
-    a.ship_class = keywords::key_fighter;
-    a.load_time = 30;
-    a.interaction_list[tc_enemy_ship] = fleet::action::combat;
-    a.interaction_list[tc_enemy_solar] = fleet::action::combat;
-    a.ship_interaction[fleet::action::combat] = default_combat(0.7, 2);
-    a.solar_interaction[fleet::action::combat] = default_combat(0.7, 1);
-    buf[a.ship_class] = a;
+    a.base_stats.speed = 2;
+    a.base_stats.vision = 100;
+    a.base_stats.damage_ship = 0.1;
+    a.base_stats.accuracy = 0.3;
+    a.upgrades.insert(upgrade::space_combat);
+    add_with_class(a, keywords::key_scout);
 
     a = s;
-    a.ship_class = keywords::key_bomber;
-    a.damage_solar = 5;
-    a.accuracy = 0.8;
-    buf[a.ship_class] = a;
+    a.base_stats.hp = 2;
+    a.base_stats.damage_ship = 1;
+    a.base_stats.damage_solar = 0.1;
+    a.base_stats.accuracy = 0.7;
+    a.base_stats.interaction_radius = 20;
+    a.base_stats.load_time = 30;
+    a.upgrades.insert(upgrade::space_combat);
+    a.upgrades.insert(upgrade::bombard);
+    add_with_class(a, keywords::key_fighter);
 
     a = s;
-    a.speed = 0.5;
-    a.hp = 2;
-    a.ship_class = keywords::key_colonizer;
-    buf[a.ship_class] = a;
+    a.base_stats.damage_solar = 5;
+    a.base_stats.accuracy = 0.8;
+    a.upgrades.insert(upgrade::bombard);
+    add_with_class(a, keywords::key_bomber);
+
+    a = s;
+    a.base_stats.speed = 0.5;
+    a.base_stats.hp = 2;
+    a.upgrades.insert(upgrade::colonize);
+    add_with_class(a, keywords::key_colonizer);
 
     buf.confirm_content(cost::keywords::ship);
   }
 
-  return buf;
+  return buf[k];
 }
 
-cost::turret_allocation<turret> &research::turret_templates(){
+turret research::turret_template(string k){
   static bool init = false;
   static cost::turret_allocation<turret> buf;
 
@@ -152,7 +103,7 @@ cost::turret_allocation<turret> &research::turret_templates(){
     buf.confirm_content(cost::keywords::turret);
   }
 
-  return buf;
+  return buf[k];
 }
 
 data::data(){

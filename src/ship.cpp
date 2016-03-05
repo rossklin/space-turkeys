@@ -38,7 +38,7 @@ void ship::interact(game_data *g){
   if (f -> com.action == command::action_land && f -> converge){
     solar::ptr s = g -> get_solar(f -> com.target);
     if (utility::l2d2(s -> position - position) < pow(s -> radius, 2)){
-      s -> ships.push_back(make_shared(this));
+      s -> ships.push_back(ptr(this));
       remove = true;
     }
   }

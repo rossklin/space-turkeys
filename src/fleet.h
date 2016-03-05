@@ -17,6 +17,12 @@ namespace st3{
     static ptr create();
 
     static target_condition action_condition_table(std::string a, idtype o);
+
+    class action{
+    public:
+      static constexpr std::string space_combat = "space combat";
+      static constexpr std::string bombard = "bombard";
+    };
     
     static const int update_period = 1; /*!< number of increments between fleet data updates */
     static const int interact_d2 = 100; /*!< distance from target at which the fleet converges */

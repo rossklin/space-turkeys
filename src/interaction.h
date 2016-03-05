@@ -26,7 +26,6 @@ namespace st3{
     static bool valid(target_condition c, game_object::ptr t);
 
     std::string name;
-    float radius;
     target_condition condition;
     perform_t perform;
   };
