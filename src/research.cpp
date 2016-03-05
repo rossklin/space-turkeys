@@ -3,7 +3,7 @@
 #include "research.h"
 #include "cost.h"
 #include "utility.h"
-#include "upgrade.h"
+#include "upgrades.h"
 
 using namespace std;
 using namespace st3;
@@ -21,8 +21,8 @@ ship research::ship_template(string k){
     s.base_stats.speed = 1;
     s.base_stats.vision = 50;
     s.base_stats.hp = 1;
-    s.base_stats.damage_ship = 0;
-    s.base_stats.damage_solar = 0;
+    s.base_stats.ship_damage = 0;
+    s.base_stats.solar_damage = 0;
     s.base_stats.accuracy = 0;
     s.base_stats.interaction_radius = 10;
     s.fleet_id = -1;
@@ -40,15 +40,15 @@ ship research::ship_template(string k){
     a = s;
     a.base_stats.speed = 2;
     a.base_stats.vision = 100;
-    a.base_stats.damage_ship = 0.1;
+    a.base_stats.ship_damage = 0.1;
     a.base_stats.accuracy = 0.3;
     a.upgrades.insert(upgrade::space_combat);
     add_with_class(a, keywords::key_scout);
 
     a = s;
     a.base_stats.hp = 2;
-    a.base_stats.damage_ship = 1;
-    a.base_stats.damage_solar = 0.1;
+    a.base_stats.ship_damage = 1;
+    a.base_stats.solar_damage = 0.1;
     a.base_stats.accuracy = 0.7;
     a.base_stats.interaction_radius = 20;
     a.base_stats.load_time = 30;
@@ -57,7 +57,7 @@ ship research::ship_template(string k){
     add_with_class(a, keywords::key_fighter);
 
     a = s;
-    a.base_stats.damage_solar = 5;
+    a.base_stats.solar_damage = 5;
     a.base_stats.accuracy = 0.8;
     a.upgrades.insert(upgrade::bombard);
     add_with_class(a, keywords::key_bomber);
@@ -111,7 +111,7 @@ data::data(){
 }
 
 ship data::build_ship(string c){
-  ship s = ship_templates()[c];
+  ship s = ship_template(c);
 
   // todo: apply research boosts
 
@@ -119,15 +119,15 @@ ship data::build_ship(string c){
 }
 
 turret data::build_turret(string v){
-  turret t = turret_templates()[v];
+  turret t = turret_template(v);
 
   // todo: apply research boosts
 
   return t;
 }
 
-void data::colonize(solar::solar *s){
-  s -> population = 100;
+void data::colonize(solar::ptr s){
+  s -> population = colonizer_population();
   s -> happiness = 1;
 }
 

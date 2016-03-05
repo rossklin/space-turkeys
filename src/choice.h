@@ -6,6 +6,7 @@
 #include "types.h"
 #include "command.h"
 #include "waypoint.h"
+#include "cost.h"
 
 namespace st3{
   /*! struct representing what a player can chose */

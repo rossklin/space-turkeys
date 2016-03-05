@@ -64,18 +64,6 @@ namespace st3{
     */
     class_t get_type(combid s);
 
-    /*! get the id of a source symbol
-      @param s source symbol with id
-      @return id
-    */
-    idtype get_id(combid s);
-
-    /*! get the string id of a source symbol
-      @param s source symbol with string id
-      @return string id
-    */
-    std::string get_string_id(combid s);
-
     /*! get the owner id from a waypoint source symbol string id
       @param v string id of a waypoint source symbol
       @return id of the owner of the waypoint

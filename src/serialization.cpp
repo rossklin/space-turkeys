@@ -105,14 +105,14 @@ sf::Packet& st3::operator >>(sf::Packet& packet, cost::allocation<T> &g){
 sf::Packet& st3::operator <<(sf::Packet& packet, const game_data &g){
   packet << g.players << g.settings << g.remove_entities;
   // polymorphic serialization
-  for (auto x : g -> entity) x.second -> serialize(packet);
+  for (auto x : g.entity) x.second -> serialize(packet);
   return packet;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, game_data &g){
   packet >> g.players >> g.settings >> g.remove_entities;
   // polymorphic deserialization
-  for (auto x : g -> entity) x.second -> deserialize(packet);
+  for (auto x : g.entity) x.second -> deserialize(packet);
   return packet;
 }
 
@@ -142,12 +142,38 @@ sf::Packet& st3::operator >>(sf::Packet& packet, game_settings &g){
 }
 
 // ship::target_condition
-sf::Packet& st3::operator <<(sf::packet& packet, const ship::target_condition &c){
-  return packet << c.what << c.status;
+sf::Packet& st3::operator <<(sf::Packet& packet, const target_condition &c){
+  return packet << c.what << c.alignment << c.owner;
 }
 
-sf::Packet& st3::operator >>(sf::packet& packet, ship::target_condition &c){
-  return packet >> c.what >> c.status;
+sf::Packet& st3::operator >>(sf::Packet& packet, target_condition &c){
+  return packet >> c.what >> c.alignment >> c.owner;
+}
+
+// ship stats
+sf::Packet& st3::operator <<(sf::Packet& packet, const ship::stats &g){
+  return packet 
+    << g.speed
+    << g.hp
+    << g.accuracy
+    << g.ship_damage
+    << g.solar_damage
+    << g.interaction_radius
+    << g.vision
+    << g.load_time;
+}
+
+// ship stats
+sf::Packet& st3::operator >>(sf::Packet& packet, ship::stats &g){
+  return packet 
+    >> g.speed
+    >> g.hp
+    >> g.accuracy
+    >> g.ship_damage
+    >> g.solar_damage
+    >> g.interaction_radius
+    >> g.vision
+    >> g.load_time;
 }
 
 // ship
@@ -155,30 +181,22 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
   return packet 
     << g.ship_class
     << g.fleet_id
-    << g.position
     << g.angle
-    << g.speed
-    << g.owner
-    << g.hp
-    << g.interaction_radius
-    << g.load_time
     << g.load
-    << g.interaction_list;
+    << g.base_stats
+    << g.current_stats
+    << g.upgrades;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
   return packet 
     >> g.ship_class
     >> g.fleet_id
-    >> g.position
     >> g.angle
-    >> g.speed
-    >> g.owner
-    >> g.hp
-    >> g.interaction_radius
-    >> g.load_time
     >> g.load
-    >> g.interaction_list;
+    >> g.base_stats
+    >> g.current_stats
+    >> g.upgrades;
 }
 
 // turret
@@ -207,7 +225,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, turret &g){
 }
 
 // solar
-sf::Packet& st3::operator <<(sf::Packet& packet, const solar::solar &g){
+sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
   return packet
     << g.fleet_growth
     << g.turret_growth
@@ -227,7 +245,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const solar::solar &g){
     << g.damage_taken;
 }
 
-sf::Packet& st3::operator >>(sf::Packet& packet, solar::solar &g){
+sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
   return packet
     >> g.fleet_growth
     >> g.turret_growth
@@ -268,20 +286,28 @@ sf::Packet& st3::operator >>(sf::Packet& packet, choice::c_solar &g){
 
 // fleet
 sf::Packet& st3::operator <<(sf::Packet& packet, const fleet &g){
-  return packet << g.com << g.position << g.radius << g.vision << g.owner << g.ships << g.converge;
+  return packet << g.com << g.position << g.radius << g.vision_buf << g.owner << g.ships << g.converge;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
-  return packet >> g.com >> g.position >> g.radius >> g.vision >> g.owner >> g.ships >> g.converge;
+  return packet >> g.com >> g.position >> g.radius >> g.vision_buf >> g.owner >> g.ships >> g.converge;
 }
 
 // choice
 sf::Packet& st3::operator <<(sf::Packet& packet, const choice::choice &c){
-  return packet << c.commands << c.solar_choices << c.waypoints;
+  return packet << c.commands << c.solar_choices << c.waypoints << c.research;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, choice::choice &c){
-  return packet >> c.commands >> c.solar_choices >> c.waypoints;
+  return packet >> c.commands >> c.solar_choices >> c.waypoints >> c.research;
+}
+
+sf::Packet& st3::operator <<(sf::Packet& packet, const choice::c_research &g){
+  return packet << g.identifier;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, choice::c_research &g){
+  return packet >> g.identifier;
 }
 
 // waypoint

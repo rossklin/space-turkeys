@@ -1,11 +1,14 @@
+#include "game_data.h"
 #include "ship.h"
+#include "fleet.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
 
 void ship::pre_phase(game_data *g){
   // load weapons
-  load = fmin(load + 1, load_time);
+  load = fmin(load + 1, current_stats.load_time);
 }
 
 void ship::move(game_data *g){
@@ -38,7 +41,7 @@ void ship::interact(game_data *g){
   if (f -> com.action == command::action_land && f -> converge){
     solar::ptr s = g -> get_solar(f -> com.target);
     if (utility::l2d2(s -> position - position) < pow(s -> radius, 2)){
-      s -> ships.push_back(ptr(this));
+      s -> ships[id] = *this;
       remove = true;
     }
   }
@@ -46,7 +49,7 @@ void ship::interact(game_data *g){
   // check registered interactions
   auto inter = compile_interactions();
   for (auto x : inter){
-    list<combid> valid_targets = g -> search_targets(position, x.radius, x.condition);
+    list<combid> valid_targets = g -> search_targets(position, current_stats.interaction_radius, x.condition);
     for (auto a : valid_targets){
       x.perform(ptr(this), g -> entity[a]);
     }

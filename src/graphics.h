@@ -143,6 +143,14 @@ namespace st3{
 
       // solar choice windows
       class main_window : public query<sfg::Window, choice::c_solar>{
+      public:
+	typedef std::shared_ptr<main_window> Ptr;
+	typedef std::shared_ptr<const main_window> PtrConst;
+
+	static const std::string sfg_id;
+
+	static Ptr Create(solar::ptr s);
+      protected:
 	// sub interface tracker
 	sfg::Box::Ptr layout;
 	sfg::Box::Ptr choice_layout;
@@ -150,18 +158,9 @@ namespace st3{
 	sfg::Box::Ptr info_layout;
 	sfg::Label::Ptr tooltip;
 
-	solar::solar sol;
-      public:
-	typedef std::shared_ptr<main_window> Ptr;
-	typedef std::shared_ptr<const main_window> PtrConst;
+	solar::ptr sol;
 
-	static constexpr char* sfg_id = "solar_query";
-
-	int solar_id;
-
-	static Ptr Create(int id, solar::solar s);
-      protected:
-	main_window(int id, solar::solar s);
+	main_window(solar::ptr s);
 	void build_info();
 	void build_choice();
 	sfg::Box::Ptr new_sub(std::string v);

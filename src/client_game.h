@@ -20,13 +20,20 @@
 namespace st3{
   namespace client{
 
+    struct data_frame{
+      game_settings settings; /*!< the game settings */
+      hm_t<idtype, player> players; /*!< data for players in the game */
+      hm_t<combid, entity_selector::ptr> entity_selectors; /*!< graphical representations for solars, fleets and waypoints */
+      std::list<combid> remove_entities;
+    };
+
     /*! Client game interface
 
       The game struct runs the client game interface. It stores the
       window, socket, game settings and selectors representing game
       objects, as well as sub guis. 
     */
-    struct game{
+    struct game : public data_frame{
       socket_t *socket; /*!< socket for server communication */
       window_t window; /*!< sfml window for drawing the interface */
       sf::View view_game; /*!< sfml view for game objects */
@@ -35,15 +42,10 @@ namespace st3{
       std::string message; /*!< game round progress message */
       bool area_select_active; /*!< whether area selection is active */
       sf::FloatRect srect; /*!< area selection rectangle */
-      idtype comid; /*!< id counter for commands */
-      game_settings settings; /*!< the game settings */
-
-      hm_t<idtype, player> players; /*!< data for players in the game */
-      hm_t<idtype, ship> ships; /*!< data for ships in the game */
-      hm_t<source_t, choice::c_solar> solar_choices; /*!< stored choices for solars */
-      hm_t<source_t, entity_selector*> entity_selectors; /*!< graphical representations for solars, fleets and waypoints */
-      hm_t<idtype, command_selector*> command_selectors; /*!< graphical representations for commands */
+      
+      hm_t<combid, command_selector::ptr> command_selectors; /*!< graphical representations for commands */
       int selector_queue; /*!< index for back end of selector queue */
+      idtype comid; /*!< id counter for commands */
 
       sfg::SFGUI *sfgui;
       command_gui *comgui; /*!< gui for assigning ships to commands */
@@ -88,7 +90,10 @@ namespace st3{
       /*! update gui with new game data
 	@param g the game data
       */
-      void reload_data(game_data &g);
+      void reload_data(data_frame &g);
+
+      // attempt to deserialize from socket -> data
+      data_frame deserialize();
 
       // event handling
       /*! update the choice generating gui with an sfml event
@@ -100,7 +105,7 @@ namespace st3{
       /*! start a solar gui for a solar
 	@param key the id of the solar selector representing the solar
       */
-      void run_solar_gui(source_t key);
+      void run_solar_gui(combid key);
 
       /*! select selectors in the selection rectangle */
       void area_select();
@@ -110,7 +115,7 @@ namespace st3{
 	@param p the point
 	@return set of keys of entities
       */
-      std::set<source_t> entities_at(point p);
+      std::set<combid> entities_at(point p);
 
       /*! get the key of the entity selector at a point
 
@@ -122,7 +127,7 @@ namespace st3{
 	@param[out] q set to queue level of found entity
 	@return the key, or "" if no entity was found
       */
-      source_t entity_at(point p, int *q = 0);
+      combid entity_at(point p, int *q = 0);
 
       /*! get the id of the command_selector at a point
 	@param p the point
@@ -162,7 +167,7 @@ namespace st3{
 	@param wid entity selector key of the waypoint
 	@param a set of ids of ships to remove
       */
-      void recursive_waypoint_deallocate(source_t wid, std::set<idtype> a);
+      void recursive_waypoint_deallocate(combid wid, std::set<idtype> a);
 
       /*! check whether a waypoint is an ancestor of another waypoint
 
@@ -173,7 +178,7 @@ namespace st3{
 	@param child key to check the ancestor of
 	@return whether waypoint ancestor is an ancestor of waypoint child
       */
-      bool waypoint_ancestor_of(source_t ancestor, source_t child);
+      bool waypoint_ancestor_of(combid ancestor, combid child);
 
       /* **************************************** */
       /* COMMAND HANDLING */
@@ -213,13 +218,13 @@ namespace st3{
 	@param action command action
 	@param list of selected entities
       */
-      void command2entity(source_t key, std::string action, std::list<std::string> sel);
+      void command2entity(combid key, std::string action, std::list<std::string> sel);
 
       /*! add a waypoint selector at a given point
 	@param p the point
 	@return key of the added waypoint selector
       */
-      source_t add_waypoint(point p);
+      combid add_waypoint(point p);
 
       /* **************************************** */
       /* SELECTION HANDLING */
@@ -235,7 +240,7 @@ namespace st3{
 	@param key key of the entity selector
 	@return list of ids of commands targeting the entity selector
       */
-      std::list<idtype> incident_commands(source_t key);
+      std::list<idtype> incident_commands(combid key);
 
       /*! count the number of selected entity selectors
 	@return the number of selected entity selectors
@@ -250,17 +255,17 @@ namespace st3{
 	@param key key of the entity selector
 	@return set of ship ids
       */
-      virtual std::set<idtype> get_ready_ships(source_t key);
+      virtual std::set<idtype> get_ready_ships(combid key);
 
       /*! get a list of keys of all selected solar selectors
 	@return list of keys of selected solar selectors
       */
-      std::list<source_t> selected_solars();
+      std::list<combid> selected_solars();
 
       /*! get a list of keys of all selected entity selectors
 	@return list of keys of selected entity selectors
       */
-      std::list<source_t> selected_entities();
+      std::list<combid> selected_entities();
 
       /* **************************************** */
       /* GRAPHICS */

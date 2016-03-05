@@ -13,10 +13,10 @@ namespace st3{
   class target_gui{
   public: 
     struct option_t{
-      source_t key;
+      combid key;
       std::string option;
 
-      option_t(source_t k, std::string v);
+      option_t(combid k, std::string v);
     };
 
     static const option_t option_cancel;
@@ -35,7 +35,7 @@ namespace st3{
   public:
     point position;
     option_t selected_option;
-    std::list<source_t> selected_entities;
+    std::list<combid> selected_entities;
     bool done;
 
     /*! construct a target gui
@@ -44,7 +44,7 @@ namespace st3{
       @param sel list of selected entities to set up commands for
       @param w pointer to window for coorinate transform and drawing
     */
-    target_gui(point p, std::list<option_t> options, std::list<source_t> sel, sf::RenderWindow *w);
+    target_gui(point p, std::list<option_t> options, std::list<combid> sel, sf::RenderWindow *w);
 
     /*! handle an event
       @param e the event

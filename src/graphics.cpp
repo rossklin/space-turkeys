@@ -161,8 +161,8 @@ top_panel::Ptr top_panel::Create(){
 
 research_window::Ptr research_window::Create(choice::c_research *c){return Ptr(new research_window(c));}
 
-main_window::Ptr main_window::Create(int id, solar::solar s){
-  auto buf = Ptr(new main_window(id, s));
+main_window::Ptr main_window::Create(solar::ptr s){
+  auto buf = Ptr(new main_window(s));
   buf -> Add(buf -> layout);
   buf -> SetAllocation(qw_allocation);
   buf -> SetId(string(sfg_id));
@@ -270,15 +270,15 @@ Button::Ptr main_window::priority_button(string label, float &data, function<boo
 };
 
 // main window for solar choice
-main_window::main_window(idtype sid, solar::solar s) : query<Window, choice::c_solar>(Window::Style::BACKGROUND), sol(s), solar_id(sid){
+main_window::main_window(solar::ptr s) : query<Window, choice::c_solar>(Window::Style::BACKGROUND), sol(s){
   
-  response = desktop -> response.solar_choices[solar_id];
+  response = desktop -> response.solar_choices[sol -> id];
 
   // main layout
   layout = Box::Create(Box::Orientation::VERTICAL, 10);
 
   layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
-  tooltip = Label::Create("Customize solar choice for solar " + to_string(solar_id));
+  tooltip = Label::Create("Customize solar choice for solar " + sol -> id);
   layout -> Pack(tooltip);
   layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
 
@@ -315,7 +315,7 @@ main_window::main_window(idtype sid, solar::solar s) : query<Window, choice::c_s
   auto b_accept = Button::Create("ACCEPT");
 
   b_accept -> GetSignal(Widget::OnLeftClick).Connect([=] () {
-      desktop -> response.solar_choices[solar_id] = response;
+      desktop -> response.solar_choices[sol -> id] = response;
       desktop -> clear_qw();
     });
   
@@ -398,34 +398,34 @@ void main_window::build_info(){
   };
 
   auto buf = Box::Create(Box::Orientation::VERTICAL);
-  buf -> Pack(label_build("Population", sol.population, sol.poluation_increment()));
-  buf -> Pack(label_build("Happiness", sol.happiness, sol.happiness_increment(c)));
-  buf -> Pack(label_build("Ecology", sol.ecology, sol.ecology_increment()));
-  buf -> Pack(label_build("Water", sol.water_status(), 0));
-  buf -> Pack(label_build("Space", sol.space_status(), 0));
+  buf -> Pack(label_build("Population", sol -> population, sol -> poluation_increment()));
+  buf -> Pack(label_build("Happiness", sol -> happiness, sol -> happiness_increment(c)));
+  buf -> Pack(label_build("Ecology", sol -> ecology, sol -> ecology_increment()));
+  buf -> Pack(label_build("Water", sol -> water_status(), 0));
+  buf -> Pack(label_build("Space", sol -> space_status(), 0));
 
   res -> Pack(frame("Stats", buf));
 
   buf = Box::Create(Box::Orientation::VERTICAL);
   for (auto v : cost::keywords::expansion)
-    buf -> Pack(label_build(v, sol.sector[v], sol.expansion_increment(v, c)));
+    buf -> Pack(label_build(v, sol -> sector[v], sol -> expansion_increment(v, c)));
 
   res -> Pack(frame("Sectors", buf));
 
   buf = Box::Create(Box::Orientation::VERTICAL);
   for (auto v : cost::keywords::resource)
-    buf -> Pack(resource_label_build(v, sol.resource[v].storage, sol.resource_increment(v, c), sol.resource[v].available));
+    buf -> Pack(resource_label_build(v, sol -> resource[v].storage, sol -> resource_increment(v, c), sol -> resource[v].available));
 
   res -> Pack(frame("Resources", buf));
 
   buf = Box::Create(Box::Orientation::VERTICAL);
-  buf -> Pack(label_build("Ships", sol.ships.size(), 0));
-  buf -> Pack(label_build("Turrets", sol.turrets.size(), 0));
+  buf -> Pack(label_build("Ships", sol -> ships.size(), 0));
+  buf -> Pack(label_build("Turrets", sol -> turrets.size(), 0));
 
   res -> Pack(frame("Military", buf));
   
   info_layout -> RemoveAll();
-  info_layout -> Pack(frame("Solar " + to_string(solar_id) + " info", res), false, false);
+  info_layout -> Pack(frame("Solar " + sol -> id + " info", res), false, false);
 }
 
 Box::Ptr main_window::new_sub(string v){

@@ -69,19 +69,7 @@ namespace st3{
   /* **************************************** */
   /*   GAME DATA OBJECTS */
   /* **************************************** */
-
-  /*! stream a hm_t into a packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
   sf::Packet& operator <<(sf::Packet& packet, const game_data &g);
-
-  /*! stream a hm_t out of a packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
   sf::Packet& operator >>(sf::Packet& packet, game_data &g);
 
   /*! stream a game_settings into a packet
@@ -145,6 +133,9 @@ namespace st3{
   sf::Packet& operator <<(sf::Packet& packet, const target_condition &c);
   sf::Packet& operator >>(sf::Packet& packet, target_condition &c);
 
+  sf::Packet& operator <<(sf::Packet& packet, const ship::stats &s);
+  sf::Packet& operator >>(sf::Packet& packet, ship::stats &s);
+
   /*! stream a ship into packet
     @param packet the packet
     @param g the object to stream
@@ -186,6 +177,9 @@ namespace st3{
     @return reference to the resulting packet
   */
   sf::Packet& operator >>(sf::Packet& packet, solar &g);
+
+  sf::Packet& operator <<(sf::Packet& packet, const choice::c_research &g);
+  sf::Packet& operator >>(sf::Packet& packet, choice::c_research &g);
 
   /*! stream a solar choice into packet
     @param packet the packet

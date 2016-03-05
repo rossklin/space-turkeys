@@ -19,7 +19,7 @@ namespace st3{
       data();
 
       void develope(float x);
-      ship::ptr build_ship(std::string v);
+      ship build_ship(std::string v);
       turret build_turret(std::string v);
       void colonize(solar::ptr s);
 

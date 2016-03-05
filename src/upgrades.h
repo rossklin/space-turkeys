@@ -13,11 +13,11 @@ namespace st3{
   public:
     typedef std::function<void(ship::ptr)> modify_t;
     
-    static constexpr std::string space_combat = "space combat";
-    static constexpr std::string bombard = "bombard";
-    static constexpr std::string colonize = "colonize";
+    static const std::string space_combat;
+    static const std::string bombard;
+    static const std::string colonize;
     
-    static upgrade table(string k);
+    static upgrade table(std::string k);
 
     std::list<interaction> inter;
     modify_t modify;

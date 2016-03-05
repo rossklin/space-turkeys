@@ -20,8 +20,8 @@ namespace st3{
 
     class action{
     public:
-      static constexpr std::string space_combat = "space combat";
-      static constexpr std::string bombard = "bombard";
+      static const std::string space_combat;
+      static const std::string bombard;
     };
     
     static const int update_period = 1; /*!< number of increments between fleet data updates */

@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <set>
+#include <memory>
 
 #include "graphics.h"
 #include "types.h"
@@ -17,6 +18,8 @@ namespace st3{
     class entity_selector{
       static const int max_click_distance = 20; /*!< greatest distance from entities at which clicks are handled */
     public:
+      typedef std::shared_ptr<entity_selector> ptr;
+      
       int queue_level; /*!< selection queue level: entities with lower level get priority */
       bool selected; /*!< is this entity selected? */
       bool owned; /*!< is the game object owned by the client? */
@@ -71,21 +74,23 @@ namespace st3{
       /*! get the ships associated to the selector
 	@return set of ship ids
       */
-      virtual std::set<idtype> get_ships() = 0;
+      virtual std::set<combid> get_ships() = 0;
 
       virtual std::string hover_info() = 0;
     };
 
     /*! entity_selector representing a solar */
-    class solar_selector : public entity_selector, public solar::solar{
+    class solar_selector : public entity_selector, public solar{
     public:
+      typedef std::shared_ptr<solar_selector> ptr;
+      static ptr create();
 
       /*! construct a solar_selector with given solar, color and ownerhsip
 	@param s the solar
 	@param c the color
 	@param o whether the selector is owned
       */
-      solar_selector(st3::solar::solar &s, sf::Color c, bool o);
+      solar_selector(solar &s, sf::Color c, bool o);
 
       /*! empty destructor */
       ~solar_selector();
@@ -93,7 +98,7 @@ namespace st3{
       void draw(window_t &w);
       point get_position();
       bool isa(std::string t);
-      std::set<idtype> get_ships();
+      std::set<combid> get_ships();
       std::string hover_info();
     };
 
@@ -113,7 +118,7 @@ namespace st3{
       void draw(window_t &w);
       point get_position();
       bool isa(std::string t);
-      std::set<idtype> get_ships();
+      std::set<combid> get_ships();
       std::string hover_info();
     };
 
@@ -121,7 +126,7 @@ namespace st3{
     class waypoint_selector : public entity_selector, public waypoint{
     public:
       static constexpr float radius = 10; /*!< grid size of waypoint representation */
-      std::set<idtype> ships; /*!< ids of ships available at this waypoint */
+      std::set<combid> ships; /*!< ids of ships available at this waypoint */
       
       /*! construct a waypoint selector with given waypoint and color
 	@param w the waypoint
@@ -135,13 +140,15 @@ namespace st3{
       void draw(window_t &w);
       point get_position();
       bool isa(std::string t);
-      std::set<idtype> get_ships();
+      std::set<combid> get_ships();
       std::string hover_info();
     };
 
     /*! selector representing a command */
     class command_selector : public command{
     public:
+      typedef std::shared_ptr<command_selector> ptr;
+      
       int queue_level; /*!< selection queue level: command selectors with lower level get priority */
       bool selected; /*!< whether the command_selector is selected */
       point from; /*!< source point */

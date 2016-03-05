@@ -119,7 +119,7 @@ void game_data::relocate_ships(command &c, set<combid> &sh, idtype owner){
 }
 
 // generate a fleet with given ships, set owner and fleet_id of ships
-void game_data::generate_fleet(point p, idtype owner, command &c, set<ship::ptr> &sh){
+void game_data::generate_fleet(point p, idtype owner, command &c, list<ship> &sh){
   if (sh.empty()) return;
 
   fleet::ptr f = fleet::create();
@@ -129,10 +129,10 @@ void game_data::generate_fleet(point p, idtype owner, command &c, set<ship::ptr>
   f -> radius = settings.fleet_default_radius;
   f -> owner = owner;
 
-  for (auto s : sh){
-    f -> ships.insert(s -> id);
-    s -> owner = owner;
-    s -> fleet_id = f -> id;
+  for (auto &s : sh){
+    f -> ships.insert(s.id);
+    s.owner = owner;
+    s.fleet_id = f -> id;
   }
   
   distribute_ships(sh, f -> position);

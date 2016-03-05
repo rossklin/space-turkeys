@@ -24,6 +24,7 @@ namespace st3{
     hm_t<idtype, player> players; /*!< table of players */
     game_settings settings; /*! game settings */
     std::list<combid> remove_entities; 
+    grid::tree::ptr entity_grid;
 
     game_data();
     game_data(const game_data &g);
@@ -50,18 +51,15 @@ namespace st3{
 
     void add_entity(game_object::ptr p);
     void remove_units();
-    void generate_fleet(point p, idtype i, command &c, std::set<ship::ptr> &sh);
+    void generate_fleet(point p, idtype i, command &c, std::list<ship> &sh);
+    void relocate_ships(command &c, std::set<combid> &sh, idtype owner);
 
     // game steps
     void pre_step(); 
     void end_step(); 
     void build();
 
-  protected:
-    grid::tree::ptr entity_grid;
-
-    void relocate_ships(command &c, std::set<combid> &sh, idtype owner);
-    
+  protected:    
     bool validate_choice(choice::choice c, idtype id);
 
     // object iteration phases
@@ -71,7 +69,8 @@ namespace st3{
 
     // add and remove entities
     void remove_entity(combid id);
-    void distribute_ships(std::set<ship::ptr> sh, point p);
+    // should set positions, update stats and add entities
+    void distribute_ships(std::list<ship> sh, point p);
     void allocate_grid();
   };
 };

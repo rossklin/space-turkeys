@@ -4,7 +4,6 @@
 using namespace st3;
 
 game_object::game_object(){
-  id = id_counter++;
   remove = false;
 }
 

@@ -42,6 +42,7 @@ namespace st3{
     void move(game_data *g);
     void interact(game_data *g);
     void post_phase(game_data *g);
+    void on_remove(game_data *g);
     float vision();
 
     stats compile_stats();
