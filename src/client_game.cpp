@@ -1,6 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <queue>
+#include <type_traits>
 
 #include <SFML/Graphics.hpp>
 
@@ -107,7 +108,7 @@ void game::run(){
 bool game::pre_step(){
   int done = 0;
   sf::Packet pq;
-  game_data data;
+  data_frame data;
 
   message = "loading game data...";
   pq << protocol::game_round;
@@ -128,7 +129,7 @@ bool game::pre_step(){
     return false;
   }
 
-  if (!(socket -> data >> data)){
+  if (!deserialize(data)){
     cout << "pre_step: failed to deserialize game_data" << endl;
     return false;
   }
@@ -331,7 +332,7 @@ command game::build_command(idtype key){
   cout << "build choice:" << endl;
   for (auto x : entity_selectors){
     if (x.second -> isa(identifier::waypoint)){
-      waypoint_selector *ws = (waypoint_selector*)x.second;
+      waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector::ptr>(x.second);
       waypoint w = (waypoint)*ws;
       w.pending_commands.clear();
       for (auto k : x.second -> commands) {
@@ -346,7 +347,7 @@ command game::build_command(idtype key){
 	}
 	cout << endl;
       }
-      c.waypoints[identifier::get_string_id(x.first)] = w;
+      c.waypoints[x.first] = w;
     }else{
       for (auto y : x.second -> commands){
 	c.commands[x.first].push_back(build_command(y));
@@ -362,7 +363,7 @@ list<idtype> game::incident_commands(combid key){
   list<idtype> res;
 
   for (auto x : command_selectors){
-    if (!x.second -> target.compare(key)){
+    if (x.second -> target == key){
       res.push_back(x.first);
     }
   }
@@ -370,6 +371,7 @@ list<idtype> game::incident_commands(combid key){
   return res;
 }
 
+// written by Johan Mattsson
 void game::add_fixed_stars (point position, float vision) {
   float r = vision + grid_size;
   
@@ -411,21 +413,48 @@ void game::add_fixed_stars (point position, float vision) {
   }
 }
 
-data_frame game::deserialize(){
-  data_frame f;
+template<typename T> 
+bool client::deserialize_object(client::data_frame &f, sf::Packet &p, sf::Color col, sint id){
+  // assure that T is a properly setup entity selector
+  static_assert(is_base_of<entity_selector, T>::value);
+  static_assert(is_base_of<T::base_object_t, game_object>::value);
+  
+  T::base_object_t s;
+  if (!(p >> s)){
+    cout << "deserialize object: package empty!" << endl;
+    return false;
+  }
+  f.entity_selectors[s.id] = T::create(s, col, s.owner == id);
+}
+
+bool client::deserialize(client::data_frame &f, client::socket_t socket, sf::Color col){
+  sint n;
   sf::Packet &p = socket -> data;
   
-  for (auto x : g.solars){
-    combid key = identifier::make(identifier::solar, x.first);
-    sf::Color col = x.second.owner > -1 ? sfcolor(players[x.second.owner].color) : solar_neutral;
-    if (entity_selectors.count(key)) delete entity_selectors[key];
-    entity_selectors[key] = new solar_selector(x.second, col, x.second.owner == socket -> id);
-    entity_selectors[key] -> seen = true;
-    if (x.second.owner == socket -> id) add_fixed_stars (x.second.position, x.second.compute_vision());
-
-    cout << " -> update solar " << x.first << endl;
+  if (!(p >> f.players >> f.settings >> f.remove_entities >> n)){
+    cout << "deserialize: package empty!" << endl;
+    return false;
   }
+  
+  f.entity_selectors.clear();
 
+  // "polymorphic" deserialization
+  for (int i = 0; i < n; i++){
+    class_t key;
+    p >> key;
+    if (key == identifier::ship){
+      if (!deserialize_object<ship_selector>(f, p, col, socket -> id)) return false;
+    }else if (key == identifier::fleet){
+      if (!deserialize_object<fleet_selector>(f, p, col, socket -> id)) return false;
+    }else if (key == identifier::solar){
+      if (!deserialize_object<solar_selector>(f, p, col, socket -> id)) return false;
+    }else if (key == identifier::waypoint){
+      if (!deserialize_object<waypoint_selector>(f, p, col, socket -> id)) return false;
+    }else{
+      cout << "deserialize: key " << key << " not recognized!" << endl;
+      exit(-1);
+    }
+  }
 }
 
 void game::reload_data(data_frame &g){

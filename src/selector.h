@@ -82,8 +82,9 @@ namespace st3{
     /*! entity_selector representing a solar */
     class solar_selector : public entity_selector, public solar{
     public:
+      typedef solar base_object_t;
       typedef std::shared_ptr<solar_selector> ptr;
-      static ptr create();
+      static ptr create(solar &s, sf::Color c, bool o);
 
       /*! construct a solar_selector with given solar, color and ownerhsip
 	@param s the solar
@@ -102,9 +103,37 @@ namespace st3{
       std::string hover_info();
     };
 
+    /*! entity_selector representing a solar */
+    class ship_selector : public entity_selector, public ship{
+    public:
+      typedef std::shared_ptr<ship_selector> ptr;
+      typedef ship base_object_t;
+      static ptr create(ship &s, sf::Color c, bool o);
+
+      /*! construct a ship_selector with given ship, color and ownerhsip
+	@param s the ship
+	@param c the color
+	@param o whether the selector is owned
+      */
+      ship_selector(ship &s, sf::Color c, bool o);
+
+      /*! empty destructor */
+      ~ship_selector();
+      bool contains_point(point p, float &d);
+      void draw(window_t &w);
+      point get_position();
+      bool isa(std::string t);
+      std::set<combid> get_ships();
+      std::string hover_info();
+    };
+
     /*! entity_selector representing a fleet */
     class fleet_selector : public entity_selector, public fleet{
     public:
+      typedef fleet base_object_t;
+      typedef std::shared_ptr<fleet> ptr;
+      static ptr create(fleet &f, sf::Color c, bool o);
+      
       /*! construct a fleet_selector with given fleet, color and ownership
 	@param f the fleet
 	@param c the color
@@ -125,6 +154,12 @@ namespace st3{
     /*! entity_selector representing a waypoint */
     class waypoint_selector : public entity_selector, public waypoint{
     public:
+      typedef waypoint base_object_t;
+      typedef std::shared_ptr<waypoint_selector> ptr;
+      static ptr create(waypoint &w, sf::Color c, bool o);
+      static ptr create(point p, sf::Color c);
+      
+      
       static constexpr float radius = 10; /*!< grid size of waypoint representation */
       std::set<combid> ships; /*!< ids of ships available at this waypoint */
       

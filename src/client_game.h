@@ -43,7 +43,7 @@ namespace st3{
       bool area_select_active; /*!< whether area selection is active */
       sf::FloatRect srect; /*!< area selection rectangle */
       
-      hm_t<combid, command_selector::ptr> command_selectors; /*!< graphical representations for commands */
+      hm_t<idtype, command_selector::ptr> command_selectors; /*!< graphical representations for commands */
       int selector_queue; /*!< index for back end of selector queue */
       idtype comid; /*!< id counter for commands */
 
@@ -93,7 +93,7 @@ namespace st3{
       void reload_data(data_frame &g);
 
       // attempt to deserialize from socket -> data
-      data_frame deserialize();
+      bool deserialize(data_frame &g);
 
       // event handling
       /*! update the choice generating gui with an sfml event

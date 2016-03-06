@@ -29,6 +29,7 @@
 *** [J] consider introducing a game_data::find_targets
    Conditioned on a ship::target_condition and a radius
 *** [J] add fleet action definitions
+*** finish implementing new serialization/deserialization
 *** fix client game reloading of waypoints
 *** implement client game deserialize of game data
 *** remove game_data deserialize operator

@@ -103,18 +103,13 @@ sf::Packet& st3::operator >>(sf::Packet& packet, cost::allocation<T> &g){
 
 // game_data
 sf::Packet& st3::operator <<(sf::Packet& packet, const game_data &g){
-  packet << g.players << g.settings << g.remove_entities;
+  sint n = g.entity.size();
+  packet << g.players << g.settings << g.remove_entities << n;
   // polymorphic serialization
   for (auto x : g.entity) x.second -> serialize(packet);
   return packet;
 }
 
-sf::Packet& st3::operator >>(sf::Packet& packet, game_data &g){
-  packet >> g.players >> g.settings >> g.remove_entities;
-  // polymorphic deserialization
-  for (auto x : g.entity) x.second -> deserialize(packet);
-  return packet;
-}
 
 // game_settings
 sf::Packet& st3::operator <<(sf::Packet& packet, const game_settings &g){
