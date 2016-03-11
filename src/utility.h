@@ -12,8 +12,8 @@ namespace st3{
   /*! Arithmetics for points, vectors, sets and sfml objects. */
   namespace utility{
 
-    template<typename T>
-    T guaranteed_cast(game_object::ptr p);
+    template<typename T, typename F = game_object::ptr>
+    T guaranteed_cast(F p);
 
     std::string format_float(float x);
     

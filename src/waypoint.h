@@ -18,6 +18,7 @@ namespace st3{
     
     /*! List of commands waiting to trigger when all ships have arrived */
     std::list<command> pending_commands;
+    std::set<combid> ships;
 
     waypoint();
     ~waypoint();

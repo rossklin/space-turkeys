@@ -12,9 +12,9 @@ namespace st3{
   /*! command sub gui for allocating a specific ship type */
   class command_table{
     // data
-    hm_t<idtype, ship> ships;
-    std::vector<idtype> cache_ids;
-    std::vector<idtype> alloc_ids;
+    hm_t<combid, ship> ships;
+    std::vector<combid> cache_ids;
+    std::vector<combid> alloc_ids;
     window_t *w;
 
     // geometry
@@ -34,7 +34,7 @@ namespace st3{
     /*! move a ship between cached and allocated
       @param id id of the ship to move 
     */
-    void move_ship(idtype id);
+    void move_ship(combid id);
 
     /*! compute the table positions of a point
       @param root ul corner of the (cache or alloc) table 
@@ -58,7 +58,7 @@ namespace st3{
   public:
 
     // choice
-    std::set<idtype> cached, allocated; /*!< ids of waiting and ready ships */
+    std::set<combid> cached, allocated; /*!< ids of waiting and ready ships */
     bool done; /*!< indicate when the interface is done */
 
     /*! construct a command table
@@ -68,7 +68,7 @@ namespace st3{
       @param p point where to draw the gui
       @param c color for drawing ships 
     */
-    command_table(window_t *w, hm_t<idtype, ship> s, std::set<idtype> prealloc, point p, sf::Color c);
+    command_table(window_t *w, hm_t<combid, ship> s, std::set<combid> prealloc, point p, sf::Color c);
 
     /*! default constructor */
     command_table();
@@ -98,7 +98,7 @@ namespace st3{
     static float table_width; /*!< width of tables */
     static float table_height; /*!< height of tables */
 
-    std::set<idtype> cached, allocated; /*!< sets of ids of waiting and allocated ships */
+    std::set<combid> cached, allocated; /*!< sets of ids of waiting and allocated ships */
     idtype comid; /*!< id of associated command selector */
 
     /*! construct a command_gui
@@ -110,7 +110,7 @@ namespace st3{
       @param c color for drawing ships
       @param hstring text for header
     */
-    command_gui(idtype id, window_t *w, hm_t<idtype, ship> s, std::set<idtype> prealloc, point dims, sf::Color c, std::string hstring);
+    command_gui(idtype id, window_t *w, hm_t<combid, ship> s, std::set<combid> prealloc, point dims, sf::Color c, std::string hstring);
 
     /*! handle an event
       @param e the event

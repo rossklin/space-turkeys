@@ -12,8 +12,8 @@ using namespace st3::utility;
 
 boost::random::mt19937 rng;
 
-template<typename T>
-T utility::guaranteed_cast(game_object::ptr p){
+template<typename T, typename F>
+T utility::guaranteed_cast(F p){
   if (p == 0){
     cout << "attempt_cast: null pointer!" << endl;
     exit(-1);
@@ -24,7 +24,7 @@ T utility::guaranteed_cast(game_object::ptr p){
   if (res){
     return res;
   }else{
-    cout << "Failed to downcast entity " << p -> id << endl;
+    cout << "Failed to downcast" << endl;
     exit(-1);
   }
 }

@@ -34,194 +34,204 @@ bool entity_selector::inside_rect(sf::FloatRect r){
 }
 
 // ****************************************
-// SOLAR SELECTOR
+// SPECIFIC SELECTOR
 // ****************************************
 
-solar_selector::solar_selector(solar &s, sf::Color c, bool o) : entity_selector(c,o), solar(s){}
+template<typename T>
+specific_selector<T>::specific_selector(T &s, sf::Color c, bool o) : entity_selector(c,o), T(s){}
 
-solar_selector::~solar_selector() {}
+template<typename T>
+specific_selector<T>::~specific_selector() {}
 
-bool solar_selector::contains_point(point p, float &d){
-  d = utility::l2norm(p - position);
-  return d < radius;
-}
-
-point solar_selector::get_position(){
+template<typename T>
+point specific_selector<T>::get_position(){
   return position;
 }
 
-void solar_selector::draw(window_t &w){
-  // setup text
-  sf::Text text;
-  text.setString(to_string(ships.size()));
-  text.setFont(graphics::default_font); 
-  text.setCharacterSize(24);
-  sf::FloatRect text_dims = text.getLocalBounds();
-  text.setOrigin(point(text_dims.left + text_dims.width/2, text_dims.top + text_dims.height / 2));
-  text.setPosition(position); 
-  text.setColor(sf::Color(200,200,200));
-  text.setScale(graphics::inverse_scale(w));
+// solar selector
 
-  sf::CircleShape sol(radius);
-  // compute fill color
-  sf::Color cfill;
-  cfill.r = 256 * utility::sigmoid(resource[cost::keywords::key_metals].available / 1000);
-  cfill.g = 256 * utility::sigmoid(resource[cost::keywords::key_organics].available / 1000);
-  cfill.b = 256 * utility::sigmoid(resource[cost::keywords::key_gases].available / 1000);
-  cfill.a = 100;
-  sol.setPointCount(radius / graphics::inverse_scale(w).x);
-  sol.setFillColor(cfill);
-  sol.setOutlineThickness(-1);
-  sol.setOutlineColor(get_color());
-  sol.setPosition(position.x - radius, position.y - radius);
-  w.draw(sol);
+namespace st3{
+  namespace client{
+    template<>
+    bool specific_selector<solar>::contains_point(point p, float &d){
+      d = utility::l2norm(p - position);
+      return d < radius;
+    }
+
+    template<>
+    void specific_selector<solar>::draw(window_t &w){
+      // setup text
+      sf::Text text;
+      text.setString(to_string(ships.size()));
+      text.setFont(graphics::default_font); 
+      text.setCharacterSize(24);
+      sf::FloatRect text_dims = text.getLocalBounds();
+      text.setOrigin(point(text_dims.left + text_dims.width/2, text_dims.top + text_dims.height / 2));
+      text.setPosition(position); 
+      text.setColor(sf::Color(200,200,200));
+      text.setScale(graphics::inverse_scale(w));
+
+      sf::CircleShape sol(radius);
+      // compute fill color
+      sf::Color cfill;
+      cfill.r = 256 * utility::sigmoid(resource[cost::keywords::key_metals].available / 1000);
+      cfill.g = 256 * utility::sigmoid(resource[cost::keywords::key_organics].available / 1000);
+      cfill.b = 256 * utility::sigmoid(resource[cost::keywords::key_gases].available / 1000);
+      cfill.a = 100;
+      sol.setPointCount(radius / graphics::inverse_scale(w).x);
+      sol.setFillColor(cfill);
+      sol.setOutlineThickness(-1);
+      sol.setOutlineColor(get_color());
+      sol.setPosition(position.x - radius, position.y - radius);
+      w.draw(sol);
   
-  if (selected){
-    sol.setFillColor(graphics::solar_selected_fill);
-    sol.setOutlineThickness(1);
-    sol.setOutlineColor(graphics::solar_selected);
-    w.draw(sol);
+      if (selected){
+	sol.setFillColor(graphics::solar_selected_fill);
+	sol.setOutlineThickness(1);
+	sol.setOutlineColor(graphics::solar_selected);
+	w.draw(sol);
+      }
+
+      if (owned){
+	sol.setRadius(vision());
+	sol.setPointCount(vision() / graphics::inverse_scale(w).x);
+	sol.setFillColor(sf::Color::Transparent);
+	sol.setOutlineThickness(-1);
+	sol.setOutlineColor(sf::Color(40, 200, 60, 100));
+	sol.setPosition(position - point(vision(), vision()));
+	w.draw(sol);
+	w.draw(text);
+      }
+
+      // draw defense indicator
+      float defrad = radius + 4; 
+      sol.setRadius(defrad);
+      sol.setPointCount(defrad / graphics::inverse_scale(w).x);
+      sol.setOutlineThickness(utility::sigmoid(turrets.size(), 100) / 20);
+      sol.setOutlineColor(sf::Color(100, 140, 200, 150));
+      sol.setFillColor(sf::Color::Transparent);
+      sol.setPosition(position - point(defrad, defrad));
+      w.draw(sol);
+    }
+
+    template<>
+    bool specific_selector<solar>::isa(string t){
+      return !t.compare(identifier::solar);
+    }
+
+    template<>
+    set<combid> specific_selector<solar>::get_ships(){
+      set<combid> res;
+      for (auto &x : ships) res.insert(x.first);
+      return res;
+    }
+
+    template<>
+    string specific_selector<solar>::hover_info(){
+      string res = "solar at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
+
+      for (auto k : cost::keywords::resource)
+	res += "\nres:" + k + ": " + to_string((int)resource[k].available);
+
+      if (owned){
+	res += "\npopulation: " + to_string((int)population);
+	res += "\nfleet: " + to_string(ships.size());
+	res += "\nturrets: " + to_string(turrets.size());
+      }
+
+      return res;
+    }
+
+    // ****************************************
+    // FLEET SELECTOR
+    // ****************************************
+
+    template<>
+    bool specific_selector<fleet>::contains_point(point p, float &d){
+      d = utility::l2norm(p - position);
+      return d < radius;
+    }
+
+    template<>
+    void specific_selector<fleet>::draw(window_t &w){
+      if (selected){
+	sf::CircleShape s(radius);
+	s.setPointCount(radius / graphics::inverse_scale(w).x);
+	s.setFillColor(graphics::fleet_fill);
+	s.setOutlineColor(graphics::fleet_outline);
+	s.setOutlineThickness(1);
+	s.setPosition(position - point(radius, radius));
+	w.draw(s);
+      }
+
+      if (owned){
+	sf::CircleShape s(vision());
+	s.setPointCount(vision() / graphics::inverse_scale(w).x);
+	s.setFillColor(sf::Color::Transparent);
+	s.setOutlineColor(sf::Color(40, 200, 60, 100));
+	s.setOutlineThickness(-1);
+	s.setPosition(position - point(vision(), vision()));
+	w.draw(s);
+      }
+    }
+
+    template<>
+    bool specific_selector<fleet>::isa(string t){
+      return !t.compare(identifier::fleet);
+    }
+
+    template<>
+    set<combid> specific_selector<fleet>::get_ships(){
+      return ships;
+    }
+
+    template<>
+    string specific_selector<fleet>::hover_info(){
+      string res = "fleet at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
+
+      if (owned){
+	res += "\nships: " + to_string(ships.size());
+	res += "\naction: " + com.action;
+      }
+
+      return res;
+    }
+
+    // ****************************************
+    // WAYPOINT SELECTOR
+    // ****************************************
+
+    template<>
+    bool specific_selector<waypoint>::contains_point(point p, float &d){
+      d = utility::l2norm(p - position);
+      return d < radius;
+    }
+
+    template<>
+    void specific_selector<waypoint>::draw(window_t &w){
+      sf::CircleShape s(radius);
+      s.setFillColor(selected ? sf::Color(255,255,255,100) : sf::Color(0,0,0,0));
+      s.setOutlineColor(get_color());
+      s.setOutlineThickness(1);
+      s.setPosition(position - point(radius, radius));
+      w.draw(s);
+    }
+
+    template<>
+    bool specific_selector<waypoint>::isa(string t){
+      return !t.compare(identifier::waypoint);
+    }
+
+    template<>
+    set<combid> specific_selector<waypoint>::get_ships(){
+      return ships;
+    }
+
+    template<>
+    string specific_selector<waypoint>::hover_info(){
+      return "waypoint at " + utility::format_float(position.x) + "x" + utility::format_float(position.y) + "\nships: " + to_string(ships.size());
+    }
   }
-
-  if (owned){
-    sol.setRadius(compute_vision());
-    sol.setPointCount(compute_vision() / graphics::inverse_scale(w).x);
-    sol.setFillColor(sf::Color::Transparent);
-    sol.setOutlineThickness(-1);
-    sol.setOutlineColor(sf::Color(40, 200, 60, 100));
-    sol.setPosition(position - point(compute_vision(), compute_vision()));
-    w.draw(sol);
-    w.draw(text);
-  }
-
-  // draw defense indicator
-  float defrad = radius + 4; 
-  sol.setRadius(defrad);
-  sol.setPointCount(defrad / graphics::inverse_scale(w).x);
-  sol.setOutlineThickness(utility::sigmoid(turrets.size(), 100) / 20);
-  sol.setOutlineColor(sf::Color(100, 140, 200, 150));
-  sol.setFillColor(sf::Color::Transparent);
-  sol.setPosition(position - point(defrad, defrad));
-  w.draw(sol);
-}
-
-bool solar_selector::isa(string t){
-  return !t.compare(identifier::solar);
-}
-
-set<idtype> solar_selector::get_ships(){
-  return ships;
-}
-
-string solar_selector::hover_info(){
-  string res = "solar at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
-
-  for (auto k : cost::keywords::resource)
-    res += "\nres:" + k + ": " + to_string((int)resource[k].available);
-
-  if (owned){
-    res += "\npopulation: " + to_string((int)population);
-    res += "\nfleet: " + to_string(ships.size());
-    res += "\nturrets: " + to_string(turrets.size());
-  }
-
-  return res;
-}
-
-// ****************************************
-// FLEET SELECTOR
-// ****************************************
-
-fleet_selector::fleet_selector(fleet &f, sf::Color c, bool o) : entity_selector(c, o), fleet(f){}
-
-fleet_selector::~fleet_selector(){}
-
-bool fleet_selector::contains_point(point p, float &d){
-  d = utility::l2norm(p - position);
-  return d < radius;
-}
-
-point fleet_selector::get_position(){
-  return position;
-}
-
-void fleet_selector::draw(window_t &w){
-  if (selected){
-    sf::CircleShape s(radius);
-    s.setPointCount(radius / graphics::inverse_scale(w).x);
-    s.setFillColor(graphics::fleet_fill);
-    s.setOutlineColor(graphics::fleet_outline);
-    s.setOutlineThickness(1);
-    s.setPosition(position - point(radius, radius));
-    w.draw(s);
-  }
-
-  if (owned){
-    sf::CircleShape s(vision);
-    s.setPointCount(vision / graphics::inverse_scale(w).x);
-    s.setFillColor(sf::Color::Transparent);
-    s.setOutlineColor(sf::Color(40, 200, 60, 100));
-    s.setOutlineThickness(-1);
-    s.setPosition(position - point(vision, vision));
-    w.draw(s);
-  }
-}
-
-bool fleet_selector::isa(string t){
-  return !t.compare(identifier::fleet);
-}
-
-set<idtype> fleet_selector::get_ships(){
-  return ships;
-}
-
-string fleet_selector::hover_info(){
-  string res = "fleet at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
-
-  if (owned){
-    res += "\nships: " + to_string(ships.size());
-    res += "\naction: " + com.action;
-  }
-
-  return res;
-}
-
-// ****************************************
-// WAYPOINT SELECTOR
-// ****************************************
-
-waypoint_selector::waypoint_selector(waypoint &f, sf::Color c) : entity_selector(c, true), waypoint(f){}
-
-waypoint_selector::~waypoint_selector(){}
-
-bool waypoint_selector::contains_point(point p, float &d){
-  d = utility::l2norm(p - position);
-  return d < radius;
-}
-
-point waypoint_selector::get_position(){
-  return position;
-}
-
-void waypoint_selector::draw(window_t &w){
-  sf::CircleShape s(radius);
-  s.setFillColor(selected ? sf::Color(255,255,255,100) : sf::Color(0,0,0,0));
-  s.setOutlineColor(get_color());
-  s.setOutlineThickness(1);
-  s.setPosition(position - point(radius, radius));
-  w.draw(s);
-}
-
-bool waypoint_selector::isa(string t){
-  return !t.compare(identifier::waypoint);
-}
-
-set<idtype> waypoint_selector::get_ships(){
-  return ships;
-}
-
-string waypoint_selector::hover_info(){
-  return "waypoint at " + utility::format_float(position.x) + "x" + utility::format_float(position.y) + "\nships: " + to_string(ships.size());
 }
 
 // ****************************************

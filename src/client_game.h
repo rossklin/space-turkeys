@@ -9,24 +9,17 @@
 #include "socket_t.h"
 #include "fixed_star.h"
 #include "graphics.h"
-#include "game_data.h"
 #include "choice.h"
 #include "types.h"
 #include "selector.h"
-#include "utility.h"
-#include "command_gui.h"
-#include "target_gui.h"
+#include "com_client.h"
 
 namespace st3{
+  class command_gui;
+  class target_gui;
+  
   namespace client{
-
-    struct data_frame{
-      game_settings settings; /*!< the game settings */
-      hm_t<idtype, player> players; /*!< data for players in the game */
-      hm_t<combid, entity_selector::ptr> entity_selectors; /*!< graphical representations for solars, fleets and waypoints */
-      std::list<combid> remove_entities;
-    };
-
+    
     /*! Client game interface
 
       The game struct runs the client game interface. It stores the
@@ -46,7 +39,8 @@ namespace st3{
       hm_t<idtype, command_selector::ptr> command_selectors; /*!< graphical representations for commands */
       int selector_queue; /*!< index for back end of selector queue */
       idtype comid; /*!< id counter for commands */
-
+      sf::Color col;
+      
       sfg::SFGUI *sfgui;
       command_gui *comgui; /*!< gui for assigning ships to commands */
       target_gui *targui; /*!< gui for selecting command action */
@@ -59,6 +53,11 @@ namespace st3{
 
       /*! default contsructor */
       game();
+
+      ship_selector::ptr get_ship(combid i);
+      fleet_selector::ptr get_fleet(combid i);
+      solar_selector::ptr get_solar(combid i);
+      waypoint_selector::ptr get_waypoint(combid i);
 
       // round sections
       /*! run the game user interface */
@@ -91,9 +90,6 @@ namespace st3{
 	@param g the game data
       */
       void reload_data(data_frame &g);
-
-      // attempt to deserialize from socket -> data
-      bool deserialize(data_frame &g);
 
       // event handling
       /*! update the choice generating gui with an sfml event
@@ -167,7 +163,7 @@ namespace st3{
 	@param wid entity selector key of the waypoint
 	@param a set of ids of ships to remove
       */
-      void recursive_waypoint_deallocate(combid wid, std::set<idtype> a);
+      void recursive_waypoint_deallocate(combid wid, std::set<combid> a);
 
       /*! check whether a waypoint is an ancestor of another waypoint
 
@@ -255,7 +251,7 @@ namespace st3{
 	@param key key of the entity selector
 	@return set of ship ids
       */
-      virtual std::set<idtype> get_ready_ships(combid key);
+      virtual std::set<combid> get_ready_ships(combid key);
 
       /*! get a list of keys of all selected solar selectors
 	@return list of keys of selected solar selectors
