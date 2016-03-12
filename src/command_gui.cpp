@@ -16,7 +16,7 @@ using namespace st3;
 float command_gui::table_width = 0;
 float command_gui::table_height = 0;
 
-command_gui::command_gui(idtype cid, window_t *window, hm_t<idtype, ship> s, set<idtype> prealloc, point dims, sf::Color c, string hstring){
+command_gui::command_gui(idtype cid, window_t *window, hm_t<combid, ship> s, set<combid> prealloc, point dims, sf::Color c, string hstring){
   float margin = 10;
   point p(margin, margin);
   w = window;
@@ -30,8 +30,8 @@ command_gui::command_gui(idtype cid, window_t *window, hm_t<idtype, ship> s, set
   int i = 0;
   for (auto v : cost::keywords::ship){
     // collect data for this ship class table
-    hm_t<idtype, ship> sbuf;
-    set<idtype> pbuf;
+    hm_t<combid, ship> sbuf;
+    set<combid> pbuf;
     for (auto x : s){
       if (x.second.ship_class == v) {
 	sbuf[x.first] = x.second;
@@ -91,7 +91,7 @@ void command_gui::draw(){
 
 command_table::command_table(){}
 
-command_table::command_table(window_t *window, hm_t<idtype, ship> s, set<idtype> prealloc, point p, sf::Color c){
+command_table::command_table(window_t *window, hm_t<combid, ship> s, set<combid> prealloc, point p, sf::Color c){
   point box_dims;
   inner_padding = 20;
   outer_padding = 5;
@@ -234,7 +234,7 @@ void command_table::draw(){
   }
 }
 
-void command_table::move_ship(idtype id){
+void command_table::move_ship(combid id){
   if (cached.count(id)){
     cached.erase(id);
     allocated.insert(id);

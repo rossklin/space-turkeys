@@ -1,6 +1,8 @@
 #include "interaction.h"
 #include "upgrades.h"
 #include "fleet.h"
+#include "utility.h"
+#include "solar.h"
 
 using namespace std;
 using namespace st3;

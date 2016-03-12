@@ -7,14 +7,14 @@
 using namespace std;
 using namespace st3;
 
-const target_gui::option_t target_gui::option_cancel("cancel", "");
-const target_gui::option_t target_gui::option_add_waypoint("add_waypoint", command::action_waypoint);
+const target_gui::option_t target_gui::option_cancel("", "cancel");
+const target_gui::option_t target_gui::option_add_waypoint("", command::action_waypoint);
 
 const point target_gui::option_size = point(200, 30);
 
-target_gui::option_t::option_t(source_t k, string v) : key(k), option(v){}
+target_gui::option_t::option_t(combid k, string v) : key(k), option(v){}
 
-st3::target_gui::target_gui(point p, list<target_gui::option_t> opts, list<source_t> sel, sf::RenderWindow *w) : 
+st3::target_gui::target_gui(point p, list<target_gui::option_t> opts, list<combid> sel, window_t *w) : 
   selected_option("",""), 
   selected_entities(sel),
   position(p){

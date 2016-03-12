@@ -7,6 +7,7 @@
 #include <functional>
 
 #include "interaction.h"
+#include "ship.h"
 
 namespace st3{
   class upgrade{

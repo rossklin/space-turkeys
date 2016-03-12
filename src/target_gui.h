@@ -26,7 +26,7 @@ namespace st3{
 
     std::vector<option_t> options;
     int highlight_index;
-    sf::RenderWindow *window;
+    window_t *window;
     sf::FloatRect bounds;
 
     static const point option_size;
@@ -44,7 +44,7 @@ namespace st3{
       @param sel list of selected entities to set up commands for
       @param w pointer to window for coorinate transform and drawing
     */
-    target_gui(point p, std::list<option_t> options, std::list<combid> sel, sf::RenderWindow *w);
+    target_gui(point p, std::list<option_t> options, std::list<combid> sel, window_t *w);
 
     /*! handle an event
       @param e the event
