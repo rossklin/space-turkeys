@@ -39,6 +39,7 @@
 *** add a fleet::compile_valid_actions(target)
 *** consider effects of client game data not containing all ships for contained entities
     though a client should always receive all their owned ships.
+*** change identifier::some_class_id to the_class::class_id
 * [~] issues
 ** [~] bugs & crashes
 *** simulation step hangs on key escape abort game

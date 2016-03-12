@@ -51,7 +51,7 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([clock_gettime floor inet_ntoa memmove memset pow select socket sqrt strchr strstr strtol strtoul])
 
 # set include paths
-CXXFLAGS="$CXXFLAGS -O0 -std=c++11 -Wl,-rpath=/usr/local/lib"
+CXXFLAGS="$CXXFLAGS -O0 -std=c++14 -Wl,-rpath=/usr/local/lib"
 LIBS="$LIBS -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -lsfgui"
 
 AC_CONFIG_FILES([Makefile docs/Makefile src/Makefile])

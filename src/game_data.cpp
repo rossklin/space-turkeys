@@ -45,6 +45,28 @@ waypoint::ptr game_data::get_waypoint(combid i){
   return utility::guaranteed_cast<waypoint>(entity[i]);
 }
 
+template<typename T>
+list<typename T::ptr> game_data::all(){
+  list<typename T::ptr> res;
+
+  for (auto p : entity){
+    if (identifier::get_type(p.first) == T::class_id){
+      res.push_back(utility::guaranteed_cast<T>(p.second));
+    }
+  }
+
+  return res;
+}
+
+list<game_object::ptr> game_data::all_owned_by(idtype id){
+  list<game_object::ptr> res;
+
+  for (auto p : entity)
+    if (p.second -> owner == id) res.push_back(p.second);
+
+  return res;
+}
+
 bool game_data::target_position(combid t, point &p){
   if (entity.count(t)) {
     p = entity[t] -> position;
@@ -284,49 +306,50 @@ void game_data::build(){
   int ntest = 100;
   float unfairness = INFINITY;
   hm_t<idtype, combid> test_homes;
+  hm_t<combid, solar> solar_data;
   int d_start = 10;
+  vector<idtype> player_ids;
+  utility::assign_keys(players, player_ids);
 
   for (int i = 0; i < ntest && unfairness > 0; i++){
-    hm_t<combid, solar::ptr> solar_buf = build_universe::random_solars(settings);
-    float u = build_universe::heuristic_homes(solar_buf, test_homes, settings);
+    hm_t<combid, solar> solar_buf = build_universe::random_solars(settings);
+    float u = build_universe::heuristic_homes(solar_buf, test_homes, settings, player_ids);
 
     if (u < unfairness){
       cout << "game_data::initialize: new best homes, u = " << u << endl;
       unfairness = u;
-      entity.clear();
-      allocate_grid();
-      for (auto x : solar_buf) add_entity(x.second);
+      solar_data = solar_buf;
 
       for (auto x : test_homes){
-	solar::ptr s = get_solar(x.second);
-	s -> owner = x.first;
-	s -> resource = initial_resources;
-	s -> water = 1000;
-	s -> space = 1000;
-	s -> population = 100;
-	s -> happiness = 1;
-	s -> ships[s -> id] = rbase.build_ship(cost::keywords::key_scout);
+	solar &s = solar_data[x.second];
+	s.owner = x.first;
+	s.resource = initial_resources;
+	s.water = 1000;
+	s.space = 1000;
+	s.population = 100;
+	s.happiness = 1;
+	ship sh = rbase.build_ship(cost::keywords::key_scout);
+	s.ships[sh.id] = sh;
       }
     }
   }
 
-  cout << "resulting universe:" << endl;
-  for (auto x : entity){
-    cout << x.first << ": p = " << x.second -> position.x << "x" << x.second -> position.y << ", r = " << x.second -> radius << endl;
-  }
+  allocate_grid();
+  for (auto &s : solar_data)
+    add_entity(solar::ptr(new solar(s.second)));    
 }
 
 // clean up things that will be reloaded from client
 void game_data::pre_step(){
   // idle all non-idle fleets
-  for (auto i : all_fleets()){
+  for (auto i : all<fleet>()){
     if (!i -> is_idle()){
       i -> com.target = identifier::target_idle;
     }
   }
 
   // clear waypoints, but don't list removals as client manages wp
-  for (auto i : all_waypoints()) i -> remove = true;
+  for (auto i : all<waypoint>()) i -> remove = true;
   remove_units();
   remove_entities.clear();
 }
@@ -338,16 +361,16 @@ void game_data::end_step(){
   bool check;
   list<combid> remove;
 
-  for (auto i : all_waypoints()){
+  for (auto i : all<waypoint>()){
     check = false;
     
     // check for fleets targeting this waypoint
-    for (auto j : all_fleets()){
+    for (auto j : all<fleet>()){
       check |= j -> com.target == i -> id;
     }
 
     // check for waypoints with commands targeting this waypoint
-    for (auto j : all_waypoints()){
+    for (auto j : all<waypoint>()){
       for (auto &k : j -> pending_commands){
 	check |= k.target == i -> id;
       }
@@ -363,7 +386,7 @@ void game_data::end_step(){
   }
 
   // pool research
-  for (auto i : all_solars()){
+  for (auto i : all<solar>()){
     if (i -> owner > -1){
       players[i -> owner].research_level.develope(i -> research);
       i -> research = 0;

@@ -12,7 +12,7 @@
 namespace st3{
   class upgrade{
   public:
-    typedef std::function<void(ship::ptr)> modify_t;
+    typedef std::function<void(ship::stats&)> modify_t;
     
     static const std::string space_combat;
     static const std::string bombard;

@@ -43,10 +43,8 @@ namespace st3{
     solar::ptr get_solar(combid i);
     waypoint::ptr get_waypoint(combid i);
 
-    std::list<ship::ptr> all_ships();
-    std::list<fleet::ptr> all_fleets();
-    std::list<solar::ptr> all_solars();
-    std::list<waypoint::ptr> all_waypoints();
+    template<typename T>
+    std::list<typename T::ptr> all();
     std::list<game_object::ptr> all_owned_by(idtype pid);
 
     void add_entity(game_object::ptr p);

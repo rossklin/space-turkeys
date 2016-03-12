@@ -19,6 +19,7 @@ namespace st3{
   public:
     typedef std::shared_ptr<solar> ptr;
     static ptr create();
+    static const std::string class_id;
     
     choice::c_solar choice_data;
     float dt;

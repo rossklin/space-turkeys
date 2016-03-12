@@ -16,6 +16,7 @@ namespace st3{
   public:
     typedef std::shared_ptr<ship> ptr;
     static ptr create();
+    static const std::string class_id;
     
     struct stats{
       sfloat speed; /*!< ship's speed */

@@ -15,6 +15,9 @@ namespace st3{
     template<typename T, typename F = game_object>
     typename T::ptr guaranteed_cast(typename F::ptr p);
 
+    template<typename M, typename C>
+    void assign_keys(M &m, C &data);
+
     std::string format_float(float x);
     
     /* **************************************** */
@@ -85,6 +88,8 @@ namespace st3{
 
     template<typename T>
     T uniform_sample(std::list<T> x);
+
+    unsigned int random_int(int limit);
 
     /*! 
       generates a random number normally distributed as (m, s)

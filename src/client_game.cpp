@@ -337,7 +337,7 @@ command game::build_command(idtype key){
   cout << "build choice:" << endl;
   for (auto x : entity){
     if (x.second -> isa(identifier::waypoint)){
-      waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector::ptr>(x.second);
+      waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(x.second);
       waypoint w = (waypoint)*ws;
       w.pending_commands.clear();
       for (auto k : x.second -> commands) {
@@ -498,7 +498,7 @@ void game::reload_data(data_frame &g){
 	
 	  // add new ships to target waypoint
 	  if (t -> isa(identifier::waypoint)){
-	    waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector::ptr>(t);
+	    waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(t);
 	    ws -> ships += cs -> ships;
 	  }
 	}else{
@@ -509,7 +509,7 @@ void game::reload_data(data_frame &g){
 	}
 
 	if (t -> isa(identifier::waypoint)){
-	  waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector::ptr>(t);
+	  waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(t);
 	  q.push(ws);
 	}
       }else{
@@ -571,7 +571,7 @@ void game::add_command(command c, point from, point to, bool fill_ships){
 
   // add ships to waypoint
   if (t -> isa(identifier::waypoint)){
-    waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector::ptr>(t);
+    waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(t);
     ws -> ships += cs -> ships;
   }
 
@@ -581,7 +581,7 @@ void game::add_command(command c, point from, point to, bool fill_ships){
 void game::recursive_waypoint_deallocate(combid wid, set<combid> a){
   entity_selector::ptr es = entity[wid];
   if (!es -> isa(identifier::waypoint)) return;
-  waypoint_selector::ptr s = utility::guaranteed_cast<waypoint_selector::ptr>(es);
+  waypoint_selector::ptr s = utility::guaranteed_cast<waypoint_selector>(es);
 
   cout << "RWD start" << endl;
   // check if there are still incoming commands
@@ -948,7 +948,7 @@ int game::choice_event(sf::Event e){
 
     // check if target is a waypoint
     if (t -> isa(identifier::waypoint)){
-      waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector::ptr>(t);
+      waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(t);
 
       // compute added or removed ships
       set<combid> removed = cs -> ships - comgui -> allocated;
@@ -1041,7 +1041,7 @@ int game::choice_event(sf::Event e){
 	      options.push_back(target_gui::option_t(x, command::action_land));
 	    }else{
 	      // non-owned solar
-	      solar_selector::ptr ss = utility::guaranteed_cast<solar_selector::ptr>(e);
+	      solar_selector::ptr ss = utility::guaranteed_cast<solar_selector>(e);
 	      options.push_back(target_gui::option_t(x, command::action_attack));
 	      if (ss -> owner == -1 
 		  && !ss -> has_defense()

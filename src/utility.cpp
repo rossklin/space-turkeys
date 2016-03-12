@@ -1,4 +1,6 @@
 #include <iomanip>
+#include <algorithm>
+#include <iterator>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
@@ -34,6 +36,15 @@ typename T::ptr utility::guaranteed_cast(typename F::ptr p){
     exit(-1);
   }
 }
+
+template<typename M, typename C>
+void utility::assign_keys(M &m, C &data){
+  transform(m.begin(), m.end(),
+	    inserter(data, data.end()),
+	    [](auto pair){ return pair.first; });
+}
+
+template void utility::assign_keys<hm_t<int, player>, vector<int> > (hm_t<int, player>&, vector<int>&);
 
 // ****************************************
 // POINT ARITHMETICS

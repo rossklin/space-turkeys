@@ -10,6 +10,8 @@ game_object::game_object(){
   remove = false;
 }
 
+game_object::~game_object(){}
+
 void game_object::on_add(game_data *g){
   g -> entity_grid -> insert(id, position);
 }

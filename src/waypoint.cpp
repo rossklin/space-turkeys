@@ -7,10 +7,17 @@
 using namespace std;
 using namespace st3;
 
+const string waypoint::class_id = "waypoint";
+
 waypoint::waypoint(){}
 waypoint::waypoint(idtype o){
+  static int idc = 0;
+  
   owner = o;
+  id = identifier::make(identifier::waypoint, to_string(o) + "#" + to_string(idc++));
 }
+
+waypoint::~waypoint(){}
 
 void pre_phase(game_data *g){}
 void move(game_data *g){}
@@ -28,7 +35,7 @@ void waypoint::post_phase(game_data *g){
 
   // compute landed ships
   arrived_ships.clear();
-  for (auto y : g -> all_fleets()){
+  for (auto y : g -> all<fleet>()){
     if (y -> is_idle() && y -> com.target == id){
       arrived_ships += y -> ships;
     }

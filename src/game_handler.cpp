@@ -28,7 +28,7 @@ void server::game_handler(com &c, game_data &g){
     // check end
     int pid = -1;
     int psum = 0;
-    for (auto x : g.all_solars()){
+    for (auto x : g.all<solar>()){
       if (x -> owner > -1 && x -> owner != pid){
 	pid = x -> owner;
 	psum++;

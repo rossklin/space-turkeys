@@ -15,6 +15,7 @@ namespace st3{
   public:
     typedef std::shared_ptr<waypoint> ptr;
     static ptr create(idtype owner);
+    static const std::string class_id;
     
     /*! List of commands waiting to trigger when all ships have arrived */
     std::list<command> pending_commands;

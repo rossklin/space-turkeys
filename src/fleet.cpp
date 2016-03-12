@@ -8,7 +8,12 @@
 using namespace std;
 using namespace st3;
 
+const string fleet::class_id = "fleet";
+
 fleet::fleet(){
+  static int idc = 0;
+  id = identifier::make(identifier::fleet, idc++);
+
   position = point(0,0);
   radius = 0;
   update_counter = 0;
@@ -17,6 +22,8 @@ fleet::fleet(){
   speed_limit = 0;
   remove = false;
 }
+
+fleet::~fleet(){}
 
 void fleet::pre_phase(game_data *g){
   update_data(g);

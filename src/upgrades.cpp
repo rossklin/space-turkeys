@@ -10,7 +10,7 @@ using namespace st3;
 upgrade compile_upgrade(interaction i) {
   upgrade u;
   u.inter.push_back(i);
-  u.modify = [] (ship::ptr) {};
+  u.modify = [] (ship::stats&) {};
   return u;
 }
 

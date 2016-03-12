@@ -15,6 +15,7 @@ namespace st3{
   public:
     typedef std::shared_ptr<fleet> ptr;
     static ptr create();
+    static const std::string class_id;
 
     static target_condition action_condition_table(std::string a, idtype o);
 

@@ -2,9 +2,19 @@
 #include "ship.h"
 #include "fleet.h"
 #include "utility.h"
+#include "upgrades.h"
 
 using namespace std;
 using namespace st3;
+
+const string ship::class_id = "ship";
+
+ship::ship(){
+  static int idc = 0;
+  id = identifier::make(identifier::ship, idc++);
+}
+
+ship::~ship(){}
 
 void ship::pre_phase(game_data *g){
   // load weapons
@@ -73,4 +83,15 @@ ship::ptr ship::clone(){
 
 game_object::ptr ship::clone_impl(){
   return ptr(new ship(*this));
+}
+
+ship::stats ship::compile_stats(){
+  stats s = base_stats;
+  
+  for (auto v : upgrades){
+    upgrade u = upgrade::table(v);
+    u.modify(s);
+  }
+
+  return s;
 }

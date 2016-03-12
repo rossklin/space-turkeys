@@ -12,6 +12,11 @@
 using namespace std;
 using namespace st3;
 
+const string solar::class_id = "solar";
+
+solar::solar(){}
+solar::~solar(){}
+
 void solar::pre_phase(game_data *g){
   for (auto &t : turrets) t.load = fmin(t.load + 1, t.load_time);
   damage_taken.clear();
@@ -124,8 +129,6 @@ void solar::pay_resources(cost::resource_allocation<float> total){
   for (auto k : cost::keywords::resource)
     resource[k].storage = fmax(resource[k].storage - total[k], 0);
 }
-
-solar::solar(){}
 
 string solar::get_info(){
   stringstream ss;
