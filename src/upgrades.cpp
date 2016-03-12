@@ -27,8 +27,8 @@ upgrade upgrade::table(string k){
     i.name = fleet::action::space_combat;
     i.condition = target_condition(target_condition::enemy, identifier::ship);
     i.perform = [] (game_object::ptr self, game_object::ptr target){
-      ship::ptr s = utility::guaranteed_cast<ship::ptr>(self);
-      ship::ptr t = utility::guaranteed_cast<ship::ptr>(target);
+      ship::ptr s = utility::guaranteed_cast<ship>(self);
+      ship::ptr t = utility::guaranteed_cast<ship>(target);
 
       if (s -> load < s -> current_stats.load_time) return;
 
@@ -43,8 +43,8 @@ upgrade upgrade::table(string k){
     i.name = fleet::action::bombard;
     i.condition = target_condition(target_condition::enemy, identifier::solar);
     i.perform = [] (game_object::ptr self, game_object::ptr target){
-      ship::ptr s = utility::guaranteed_cast<ship::ptr>(self);
-      solar::ptr t = utility::guaranteed_cast<solar::ptr>(target);
+      ship::ptr s = utility::guaranteed_cast<ship>(self);
+      solar::ptr t = utility::guaranteed_cast<solar>(target);
 
       if (s -> load < s -> current_stats.load_time) return;
       
@@ -70,8 +70,8 @@ upgrade upgrade::table(string k){
     i.name = "colonize";
     i.condition = target_condition(target_condition::neutral, identifier::solar);
     i.perform = [] (game_object::ptr self, game_object::ptr target){
-      ship::ptr s = utility::guaranteed_cast<ship::ptr>(self);
-      solar::ptr t = utility::guaranteed_cast<solar::ptr>(target);
+      ship::ptr s = utility::guaranteed_cast<ship>(self);
+      solar::ptr t = utility::guaranteed_cast<solar>(target);
 
       // check if solar already colonized
       if (t -> owner == s -> owner){

@@ -21,6 +21,7 @@ namespace st3{
     std::set<combid> ships;
 
     waypoint();
+    waypoint(idtype o);
     ~waypoint();
     void pre_phase(game_data *g);
     void move(game_data *g);

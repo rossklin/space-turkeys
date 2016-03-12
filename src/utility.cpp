@@ -5,6 +5,12 @@
 #include <boost/random/normal_distribution.hpp>
 
 #include "utility.h"
+#include "ship.h"
+#include "solar.h"
+#include "fleet.h"
+#include "waypoint.h"
+#include "game_object.h"
+#include "selector.h"
 
 using namespace std;
 using namespace st3;
@@ -13,13 +19,13 @@ using namespace st3::utility;
 boost::random::mt19937 rng;
 
 template<typename T, typename F>
-T utility::guaranteed_cast(F p){
+typename T::ptr utility::guaranteed_cast(typename F::ptr p){
   if (p == 0){
     cout << "attempt_cast: null pointer!" << endl;
     exit(-1);
   }
   
-  T res = dynamic_cast<T>(p);
+  typename T::ptr res = dynamic_pointer_cast<T>(p);
 
   if (res){
     return res;
@@ -341,3 +347,17 @@ template set<idtype> st3::operator -= (set<idtype> &a, const set<idtype> &b);
 template set<idtype> st3::operator + (const set<idtype> &a, const set<idtype> &b);
 template set<idtype> st3::operator += (set<idtype> &a, const set<idtype> &b);
 template set<idtype> st3::operator & (const set<idtype> &a, const set<idtype> &b);
+
+// shared pointer cast instantiation
+using namespace client;
+
+template ship::ptr utility::guaranteed_cast<ship>(game_object::ptr);
+template fleet::ptr utility::guaranteed_cast<fleet>(game_object::ptr);
+template solar::ptr utility::guaranteed_cast<solar>(game_object::ptr);
+template waypoint::ptr utility::guaranteed_cast<waypoint>(game_object::ptr);
+template commandable_object::ptr utility::guaranteed_cast<commandable_object>(game_object::ptr);
+
+template ship_selector::ptr utility::guaranteed_cast<ship_selector, entity_selector>(entity_selector::ptr);
+template fleet_selector::ptr utility::guaranteed_cast<fleet_selector, entity_selector>(entity_selector::ptr);
+template solar_selector::ptr utility::guaranteed_cast<solar_selector, entity_selector>(entity_selector::ptr);
+template waypoint_selector::ptr utility::guaranteed_cast<waypoint_selector, entity_selector>(entity_selector::ptr);

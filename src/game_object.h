@@ -45,6 +45,7 @@ namespace st3{
   class commandable_object : public virtual game_object{
   public:
     typedef std::shared_ptr<commandable_object> ptr;
+
     commandable_object();
     ~commandable_object();
     virtual void give_commands(std::list<command> c, game_data *g) = 0;

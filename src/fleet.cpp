@@ -38,6 +38,18 @@ float fleet::vision(){
   return vision_buf;
 }
 
+fleet::ptr fleet::create(){
+  return ptr(new fleet());
+}
+
+fleet::ptr fleet::clone(){
+  return dynamic_pointer_cast<fleet>(clone_impl());
+}
+
+game_object::ptr fleet::clone_impl(){
+  return ptr(new fleet(*this));
+}
+
 bool st3::fleet::is_idle(){
   return !identifier::get_type(com.target).compare(identifier::idle);
 }

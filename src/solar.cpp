@@ -148,6 +148,18 @@ sfloat solar::vision(){
   return res;
 }
 
+solar::ptr solar::create(){
+  return ptr(new solar());
+}
+
+solar::ptr solar::clone(){
+  return dynamic_pointer_cast<solar>(clone_impl());
+}
+
+game_object::ptr solar::clone_impl(){
+  return ptr(new solar(*this));
+}
+
 bool solar::has_defense(){
   return turrets.size() > 0;
 }

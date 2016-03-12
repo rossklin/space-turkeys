@@ -69,7 +69,6 @@ namespace st3{
 
     // add and remove entities
     void remove_entity(combid id);
-    // should set positions, update stats and add entities
     void distribute_ships(std::list<ship> sh, point p);
     void allocate_grid();
   };

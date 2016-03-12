@@ -17,6 +17,10 @@ tree::~tree(){
   delete root;
 }
 
+tree::ptr tree::create(){
+  return ptr(new tree());
+}
+
 void tree::insert(key_type k, value_type v){
   root -> insert(k, v);
 }

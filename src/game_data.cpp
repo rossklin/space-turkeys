@@ -30,19 +30,19 @@ game_data &game_data::operator =(const game_data &g){
 }
 
 ship::ptr game_data::get_ship(combid i){
-  return utility::guaranteed_cast<ship::ptr>(entity[i]);
+  return utility::guaranteed_cast<ship>(entity[i]);
 }
 
 fleet::ptr game_data::get_fleet(combid i){
-  return utility::guaranteed_cast<fleet::ptr>(entity[i]);
+  return utility::guaranteed_cast<fleet>(entity[i]);
 }
 
 solar::ptr game_data::get_solar(combid i){
-  return utility::guaranteed_cast<solar::ptr>(entity[i]);
+  return utility::guaranteed_cast<solar>(entity[i]);
 }
 
 waypoint::ptr game_data::get_waypoint(combid i){
-  return utility::guaranteed_cast<waypoint::ptr>(entity[i]);
+  return utility::guaranteed_cast<waypoint>(entity[i]);
 }
 
 bool game_data::target_position(combid t, point &p){
@@ -201,7 +201,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
   // distribute commands
   for (auto x : c.commands){
     cout << "apply_choice: checking command key " << x.first << endl;
-    commandable_object::ptr v = utility::guaranteed_cast<commandable_object::ptr>(entity[x.first]);
+    commandable_object::ptr v = utility::guaranteed_cast<commandable_object>(entity[x.first]);
     v -> give_commands(x.second, this);
   }
 }
@@ -238,6 +238,21 @@ void game_data::remove_units(){
     }else{
       i++;
     }
+  }
+}
+
+// should set positions, update stats and add entities
+void game_data::distribute_ships(list<ship> sh, point p){
+  float density = 0.01;
+  float area = sh.size() / density;
+  float radius = area / (2 * M_PI);
+  
+  for (auto x : sh){
+    ship::ptr s(new ship(x));
+    s -> position.x = utility::random_normal(p.x, radius);
+    s -> position.y = utility::random_normal(p.y, radius);
+    s -> current_stats = s -> compile_stats();
+    add_entity(s);
   }
 }
 

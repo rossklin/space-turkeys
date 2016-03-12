@@ -62,3 +62,15 @@ void ship::on_remove(game_data *g){
   g -> get_fleet(fleet_id) -> ships.erase(id);
   game_object::on_remove(g);
 }
+
+ship::ptr ship::create(){
+  return ptr(new ship());
+}
+
+ship::ptr ship::clone(){
+  return dynamic_pointer_cast<ship>(clone_impl());
+}
+
+game_object::ptr ship::clone_impl(){
+  return ptr(new ship(*this));
+}

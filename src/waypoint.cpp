@@ -7,6 +7,11 @@
 using namespace std;
 using namespace st3;
 
+waypoint::waypoint(){}
+waypoint::waypoint(idtype o){
+  owner = o;
+}
+
 void pre_phase(game_data *g){}
 void move(game_data *g){}
 void interact(game_data *g){}
@@ -49,4 +54,16 @@ void waypoint::post_phase(game_data *g){
       pending_commands.remove(y);
     }
   }
+}
+
+waypoint::ptr waypoint::create(idtype o){
+  return ptr(new waypoint(o));
+}
+
+waypoint::ptr waypoint::clone(){
+  return dynamic_pointer_cast<waypoint>(clone_impl());
+}
+
+game_object::ptr waypoint::clone_impl(){
+  return ptr(new waypoint(*this));
 }
