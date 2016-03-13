@@ -3,6 +3,8 @@
 using namespace std;
 using namespace st3;
 
+const class_t target_condition::no_target = "no target";
+
 // target condition
 target_condition::target_condition(){}
 

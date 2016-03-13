@@ -6,6 +6,7 @@
 using namespace std;
 using namespace st3;
 
+// game object
 game_object::game_object(){
   remove = false;
 }
@@ -24,6 +25,7 @@ game_object::ptr game_object::clone(){
   return clone_impl();
 }
 
+// commandable object
 commandable_object::commandable_object() {}
 commandable_object::~commandable_object() {}
 

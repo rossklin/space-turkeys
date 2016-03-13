@@ -10,50 +10,6 @@ using namespace std;
 using namespace st3;
 using namespace st3::client;
 
-template<typename T> 
-bool client::deserialize_object(client::data_frame &f, sf::Packet &p, sf::Color col, sint id){
-  // assure that T is a properly setup entity selector
-  static_assert(is_base_of<entity_selector, T>::value, "deserialize entity_selector");
-  static_assert(is_base_of<game_object, typename T::base_object_t>::value, "selector base object type must inherit game_object");
-  
-  typename T::base_object_t s;
-  if (!(p >> s)){
-    cout << "deserialize object: package empty!" << endl;
-    return false;
-  }
-  f.entity[s.id] = T::create(s, col, s.owner == id);
-}
-
-bool client::deserialize(client::data_frame &f, socket_t *socket, sf::Color col){
-  sint n;
-  sf::Packet &p = socket -> data;
-  
-  if (!(p >> f.players >> f.settings >> f.remove_entities >> n)){
-    cout << "deserialize: package empty!" << endl;
-    return false;
-  }
-  
-  f.entity.clear();
-
-  // "polymorphic" deserialization
-  for (int i = 0; i < n; i++){
-    class_t key;
-    p >> key;
-    if (key == identifier::ship){
-      if (!deserialize_object<ship_selector>(f, p, col, socket -> id)) return false;
-    }else if (key == identifier::fleet){
-      if (!deserialize_object<fleet_selector>(f, p, col, socket -> id)) return false;
-    }else if (key == identifier::solar){
-      if (!deserialize_object<solar_selector>(f, p, col, socket -> id)) return false;
-    }else if (key == identifier::waypoint){
-      if (!deserialize_object<waypoint_selector>(f, p, col, socket -> id)) return false;
-    }else{
-      cout << "deserialize: key " << key << " not recognized!" << endl;
-      exit(-1);
-    }
-  }
-}
-
 void st3::client::load_frames(socket_t *socket, vector<data_frame> &g, int &loaded, int &done, sf::Color col){
   sf::Packet pq;
   int response = 0;
@@ -70,7 +26,7 @@ void st3::client::load_frames(socket_t *socket, vector<data_frame> &g, int &load
       break;
     }
 
-    if (deserialize(g[i], socket, col)){
+    if (deserialize(g[i], socket -> data, col, socket -> id)){
       i++;
       loaded = i;
     }else{

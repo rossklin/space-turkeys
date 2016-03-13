@@ -21,19 +21,6 @@ namespace st3{
     const int query_aborted = 2; /*!< the query was aborted */
     const int query_game_complete = 4; /*!< the game is complete */
 
-    struct data_frame{
-      game_settings settings; /*!< the game settings */
-      hm_t<idtype, player> players; /*!< data for players in the game */
-      hm_t<combid, entity_selector::ptr> entity; /*!< graphical representations for solars, fleets and waypoints */
-      std::list<combid> remove_entities;
-    };
-    
-    template<typename T> 
-    bool deserialize_object(data_frame &f, sf::Packet &p, sf::Color col, sint id);
- 
-    // attempt to deserialize from socket -> data
-    bool deserialize(data_frame &f, socket_t *socket, sf::Color col);
-
     /*! send a query to the server and store the response
       @param socket socket to communicate on
       @param pq package with query

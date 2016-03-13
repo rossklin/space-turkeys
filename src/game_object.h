@@ -29,11 +29,11 @@ namespace st3{
     virtual void move(game_data *g) = 0;
     virtual void interact(game_data *g) = 0;
     virtual void post_phase(game_data *g) = 0;
+    virtual bool serialize(sf::Packet &p) = 0;
     virtual void on_add(game_data *g);
     virtual void on_remove(game_data *g);
     virtual float vision();
-    virtual void serialize(sf::Packet &p);
-    virtual void deserialize(sf::Packet &p);
+    
     ptr clone();
 
     void update_position(game_data *g);

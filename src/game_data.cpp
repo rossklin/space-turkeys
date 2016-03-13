@@ -29,6 +29,15 @@ game_data &game_data::operator =(const game_data &g){
   remove_entities = g.remove_entities;
 }
 
+game_object::ptr game_data::get_entity(combid i){
+  if (entity.count(i)){
+    return entity[i];
+  }else{
+    cout << "game_data::get_entity: not found: " << i << endl;
+    exit(-1);
+  }
+}
+
 ship::ptr game_data::get_ship(combid i){
   return utility::guaranteed_cast<ship>(entity[i]);
 }
@@ -406,7 +415,7 @@ bool game_data::entity_seen_by(combid id, idtype pid){
   if (x -> owner == pid) return true;
 
   // never see opponent waypoints
-  if (identifier::get_type(id) == identifier::waypoint) return false;
+  if (identifier::get_type(id) == waypoint::class_id) return false;
 
   auto buf = all_owned_by(pid);
   bool seen = false;

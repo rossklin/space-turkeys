@@ -3,6 +3,7 @@
 #include "fleet.h"
 #include "utility.h"
 #include "upgrades.h"
+#include "serialization.h"
 
 using namespace std;
 using namespace st3;
@@ -11,7 +12,7 @@ const string ship::class_id = "ship";
 
 ship::ship(){
   static int idc = 0;
-  id = identifier::make(identifier::ship, idc++);
+  id = identifier::make(class_id, idc++);
 }
 
 ship::~ship(){}
@@ -85,6 +86,10 @@ game_object::ptr ship::clone_impl(){
   return ptr(new ship(*this));
 }
 
+bool ship::serialize(sf::Packet &p){
+  p << class_id << *this;
+}
+
 ship::stats ship::compile_stats(){
   stats s = base_stats;
   
@@ -94,4 +99,15 @@ ship::stats ship::compile_stats(){
   }
 
   return s;
+}
+
+hm_t<string, interaction> ship::compile_interactions(){
+  hm_t<string, interaction> buf;
+
+  for (auto v : upgrades){
+    upgrade u = upgrade::table(v);
+    for (auto i : u.inter) buf[i.name] = i;
+  }
+
+  return buf;
 }

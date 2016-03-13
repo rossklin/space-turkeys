@@ -34,10 +34,6 @@ namespace st3{
 
   /*! utilities for source and target identifiers */
   namespace identifier{
-    const class_t solar = "solar";
-    const class_t ship = "ship";
-    const class_t fleet = "fleet";
-    const class_t waypoint = "waypoint";
     const class_t command = "command";
     const class_t idle = "idle";
     

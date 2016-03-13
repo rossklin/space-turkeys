@@ -1,6 +1,8 @@
 #include <sstream>
 #include <iostream>
+
 #include "types.h"
+#include "waypoint.h"
 
 using namespace std;
 using namespace st3;
@@ -38,5 +40,5 @@ idtype identifier::get_waypoint_owner(combid v){
 }
 
 combid identifier::make_waypoint_id(idtype owner, idtype id){
-  return identifier::make(identifier::waypoint, to_string(owner) + "#" + to_string(id));
+  return identifier::make(waypoint::class_id, to_string(owner) + "#" + to_string(id));
 }

@@ -45,6 +45,7 @@ namespace st3{
     void post_phase(game_data *g);
     void on_remove(game_data *g);
     float vision();
+    bool serialize(sf::Packet &p);
 
     stats compile_stats();
     hm_t<std::string, interaction> compile_interactions();

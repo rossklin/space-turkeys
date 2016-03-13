@@ -39,7 +39,7 @@ hm_t<string, target_condition> &fleet::action_condition_table(){
 
 fleet::fleet(){
   static int idc = 0;
-  id = identifier::make(identifier::fleet, idc++);
+  id = identifier::make(class_id, idc++);
 
   position = point(0,0);
   radius = 0;
@@ -184,7 +184,7 @@ void fleet::update_data(game_data *g){
 
 void fleet::check_waypoint(game_data *g){
   // set to idle and 'land' ships if converged to waypoint
-  if (converge && identifier::get_type(com.target) == identifier::waypoint && com.action == command::action_waypoint){
+  if (converge && identifier::get_type(com.target) == waypoint::class_id && com.action == command::action_waypoint){
     com.target = identifier::make(identifier::idle, com.target);
     cout << "set fleet " << id << " idle target: " << com.target << endl;
   }

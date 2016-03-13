@@ -2,6 +2,7 @@
 #define _STK_SERIALIZATION
 
 #include "game_data.h"
+#include "data_frame.h"
 #include "cost.h"
 
 namespace st3{
@@ -69,8 +70,12 @@ namespace st3{
   /* **************************************** */
   /*   GAME DATA OBJECTS */
   /* **************************************** */
+
+  template<typename T> 
+  bool deserialize_object(data_frame &f, sf::Packet &p, sf::Color col, sint id); 
+  bool deserialize(data_frame &f, sf::Packet &p, sf::Color col, sint id);
+
   sf::Packet& operator <<(sf::Packet& packet, const game_data &g);
-  sf::Packet& operator >>(sf::Packet& packet, game_data &g);
 
   /*! stream a game_settings into a packet
     @param packet the packet

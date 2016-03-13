@@ -46,6 +46,7 @@ namespace st3{
     void move(game_data *g);
     void interact(game_data *g);
     void post_phase(game_data *g);
+    bool serialize(sf::Packet &p);
     void give_commands(std::list<command> c, game_data *g);
 
     float space_status();
