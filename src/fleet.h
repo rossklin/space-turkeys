@@ -10,6 +10,15 @@
 namespace st3{
   class game_data;
 
+  namespace fleet_action{
+    const std::string space_combat;
+    const std::string bombard;
+    const std::string go_to;
+    const std::string join;
+    const std::string follow;
+    const std::string idle;
+  };
+
   /*! a fleet controls a set of ships */
   class fleet : public virtual commandable_object{
   public:
@@ -17,13 +26,7 @@ namespace st3{
     static ptr create();
     static const std::string class_id;
 
-    static target_condition action_condition_table(std::string a, idtype o);
-
-    class action{
-    public:
-      static const std::string space_combat;
-      static const std::string bombard;
-    };
+    static hm_t<std::string, target_condition> &action_condition_table();
     
     static const int update_period = 1; /*!< number of increments between fleet data updates */
     static const int interact_d2 = 100; /*!< distance from target at which the fleet converges */
@@ -43,15 +46,21 @@ namespace st3{
     /*! default constructor */
     fleet();
     ~fleet();
+
+    // game_object stuff
     void pre_phase(game_data *g);
     void move(game_data *g);
     void interact(game_data *g);
     void post_phase(game_data *g);
-
     float vision();
+
+    // commandable object stuff
     void give_commands(std::list<command> c, game_data *g);
+
+    // fleet stuff
     bool is_idle();
     void update_data(game_data *g);
+    target_condition current_target_condition(game_data *g);
     
     ptr clone();
 

@@ -42,6 +42,7 @@ namespace st3{
     fleet::ptr get_fleet(combid i);
     solar::ptr get_solar(combid i);
     waypoint::ptr get_waypoint(combid i);
+    game_object::ptr get_entity(combid i);
 
     template<typename T>
     std::list<typename T::ptr> all();

@@ -47,8 +47,7 @@ namespace st3{
     float vision();
 
     stats compile_stats();
-    std::list<interaction> compile_interactions();
-    std::set<std::string> compile_action_names();
+    hm_t<std::string, interaction> compile_interactions();
     std::function<void(game_object::ptr from, ship::ptr self, float damage)> receive_damage;
 
     ptr clone();

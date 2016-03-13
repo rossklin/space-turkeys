@@ -10,6 +10,33 @@ using namespace st3;
 
 const string fleet::class_id = "fleet";
 
+namespace fleet_action{
+  const string space_combat = "space combat";
+  const string bombard = "bombard";
+  const string go_to = "go to";
+  const string join = "join";
+  const string follow = "follow";
+  const string idle = "idle";
+};
+
+hm_t<string, target_condition> &fleet::action_condition_table(){
+  static hm_t<string, target_condition> data;
+  static bool init = false;
+
+  if (!init){
+    init = true;
+    data[fleet_action::space_combat] = target_condition(target_condition::enemy, ship::class_id);
+    data[fleet_action::bombard] = target_condition(target_condition::enemy, solar::class_id);
+    data[fleet_action::go_to] = target_condition(target_condition::any_alignment, target_condition::no_target);
+    data[fleet_action::join] = target_condition(target_condition::owned, fleet::class_id);
+    data[fleet_action::follow] = target_condition(target_condition::any_alignment, fleet::class_id);
+    data[fleet_action::idle] = target_condition(target_condition::any_alignment, target_condition::no_target);
+  }
+
+  return data;
+}
+
+
 fleet::fleet(){
   static int idc = 0;
   id = identifier::make(identifier::fleet, idc++);
@@ -93,6 +120,29 @@ void fleet::give_commands(list<command> c, game_data *g){
   }
 }
 
+target_condition fleet::current_target_condition(game_data *g){
+  target_condition t;
+
+  if (action_condition_table().count(com.action)){
+    // standard fleet action
+    t = action_condition_table()[com.action];
+    t.owner = owner;
+  }else{
+    // common specific ship action
+    ship::ptr s = g -> get_ship(*ships.begin());
+    hm_t<string, interaction> buf = s -> compile_interactions();
+    if (buf.count(com.action)){
+      t = buf[com.action].condition;
+      t.owner = owner;
+    }else{
+      cout << "fleet::current_target_condition: invalid action: " << com.action << endl;
+      exit(-1);
+    }
+  }
+
+  return t;
+}
+
 void fleet::update_data(game_data *g){
 
   // need to update fleet data?
@@ -118,9 +168,12 @@ void fleet::update_data(game_data *g){
   position = utility::scale_point(p, 1 / (float)ships.size());
 
   // check target status valid
-  if (!interaction::valid(fleet::action_condition_table(com.action, owner), g -> entity[com.target])){
+  if (current_target_condition(g).requires_target() &&
+      !interaction::valid(current_target_condition(g), g -> get_entity(com.target))){
+    
     cout << "target " << com.target << " no longer valid for " << id << endl;
     com.target = identifier::target_idle;
+    com.action = fleet_action::idle;
   }
 
   // have arrived?

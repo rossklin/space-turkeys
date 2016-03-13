@@ -24,7 +24,7 @@ upgrade upgrade::table(string k){
     interaction i;
 
     // space combat
-    i.name = fleet::action::space_combat;
+    i.name = fleet_action::space_combat;
     i.condition = target_condition(target_condition::enemy, identifier::ship);
     i.perform = [] (game_object::ptr self, game_object::ptr target){
       ship::ptr s = utility::guaranteed_cast<ship>(self);
@@ -40,7 +40,7 @@ upgrade upgrade::table(string k){
     data[space_combat] = compile_upgrade(i);
 
     // bombard
-    i.name = fleet::action::bombard;
+    i.name = fleet_action::bombard;
     i.condition = target_condition(target_condition::enemy, identifier::solar);
     i.perform = [] (game_object::ptr self, game_object::ptr target){
       ship::ptr s = utility::guaranteed_cast<ship>(self);

@@ -59,9 +59,9 @@ void ship::interact(game_data *g){
   // check registered interactions
   auto inter = compile_interactions();
   for (auto x : inter){
-    list<combid> valid_targets = g -> search_targets(position, current_stats.interaction_radius, x.condition);
+    list<combid> valid_targets = g -> search_targets(position, current_stats.interaction_radius, x.second.condition);
     for (auto a : valid_targets){
-      x.perform(ptr(this), g -> entity[a]);
+      x.second.perform(ptr(this), g -> entity[a]);
     }
   }
 }
