@@ -116,7 +116,7 @@ namespace st3{
 
     template<>
     bool specific_selector<solar>::isa(string t){
-      return !t.compare(identifier::solar);
+      return !t.compare(solar::class_id);
     }
 
     template<>
@@ -177,7 +177,7 @@ namespace st3{
 
     template<>
     bool specific_selector<fleet>::isa(string t){
-      return !t.compare(identifier::fleet);
+      return !t.compare(fleet::class_id);
     }
 
     template<>
@@ -219,7 +219,7 @@ namespace st3{
 
     template<>
     bool specific_selector<waypoint>::isa(string t){
-      return !t.compare(identifier::waypoint);
+      return !t.compare(waypoint::class_id);
     }
 
     template<>

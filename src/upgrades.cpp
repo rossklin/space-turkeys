@@ -25,7 +25,7 @@ upgrade upgrade::table(string k){
 
     // space combat
     i.name = fleet_action::space_combat;
-    i.condition = target_condition(target_condition::enemy, identifier::ship);
+    i.condition = target_condition(target_condition::enemy, ship::class_id);
     i.perform = [] (game_object::ptr self, game_object::ptr target){
       ship::ptr s = utility::guaranteed_cast<ship>(self);
       ship::ptr t = utility::guaranteed_cast<ship>(target);
@@ -41,7 +41,7 @@ upgrade upgrade::table(string k){
 
     // bombard
     i.name = fleet_action::bombard;
-    i.condition = target_condition(target_condition::enemy, identifier::solar);
+    i.condition = target_condition(target_condition::enemy, solar::class_id);
     i.perform = [] (game_object::ptr self, game_object::ptr target){
       ship::ptr s = utility::guaranteed_cast<ship>(self);
       solar::ptr t = utility::guaranteed_cast<solar>(target);
@@ -68,7 +68,7 @@ upgrade upgrade::table(string k){
 
     // colonize
     i.name = "colonize";
-    i.condition = target_condition(target_condition::neutral, identifier::solar);
+    i.condition = target_condition(target_condition::neutral, solar::class_id);
     i.perform = [] (game_object::ptr self, game_object::ptr target){
       ship::ptr s = utility::guaranteed_cast<ship>(self);
       solar::ptr t = utility::guaranteed_cast<solar>(target);

@@ -16,7 +16,7 @@ hm_t<combid, solar> build_universe::random_solars(game_settings settings){
 
   for (int i = 0; i < settings.num_solars; i++){
     solar s;
-    s.id = identifier::make(identifier::solar, i);
+    s.id = identifier::make(solar::class_id, i);
     idbuf[i] = s.id;
     
     s.radius = settings.solar_minrad + rand() % (int)(settings.solar_maxrad - settings.solar_minrad);

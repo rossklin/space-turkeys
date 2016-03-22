@@ -81,7 +81,7 @@ void game::run(){
       // initialize position at home solar
       first = false;
       for (auto i : entity){
-	if (i.second -> isa(identifier::solar) && i.second -> owned){
+	if (i.second -> isa(solar::class_id) && i.second -> owned){
 	  view_game.setCenter(i.second -> get_position());
 	  view_game.setSize(point(25 * settings.solar_maxrad, 25 * settings.solar_maxrad));
 	  break;
@@ -132,7 +132,7 @@ bool game::pre_step(){
     return false;
   }
 
-  if (!deserialize(data, socket, col)){
+  if (!deserialize(data, socket -> data, col, socket -> id)){
     cout << "pre_step: failed to deserialize game_data" << endl;
     return false;
   }
@@ -336,7 +336,7 @@ command game::build_command(idtype key){
  choice::choice game::build_choice(choice::choice c){
   cout << "build choice:" << endl;
   for (auto x : entity){
-    if (x.second -> isa(identifier::waypoint)){
+    if (x.second -> isa(waypoint::class_id)){
       waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(x.second);
       waypoint w = (waypoint)*ws;
       w.pending_commands.clear();
@@ -449,7 +449,7 @@ void game::reload_data(data_frame &g){
   // fleets are sources
   set<waypoint_selector::ptr> buf;
   for (auto x : entity){
-    if (x.second -> owned && x.second -> isa(identifier::fleet)){
+    if (x.second -> owned && x.second -> isa(fleet::class_id)){
       fleet_selector::ptr fs = get_fleet(x.first);
 
       if (fs -> is_idle()){
@@ -468,7 +468,7 @@ void game::reload_data(data_frame &g){
 	cout << " -> adding fleet fommand from " << c.source << " to " << c.target << " with " << c.ships.size() << " ships." << endl;
 
 	add_command(c, from, to, false);
-	if (entity[c.target] -> isa(identifier::waypoint)){
+	if (entity[c.target] -> isa(waypoint::class_id)){
 	  buf.insert(get_waypoint(c.target));
 	}
       }else{
@@ -497,7 +497,7 @@ void game::reload_data(data_frame &g){
 	  cout << "filling cs " << cid << " with " << cs -> ships.size() << " ships" << endl;
 	
 	  // add new ships to target waypoint
-	  if (t -> isa(identifier::waypoint)){
+	  if (t -> isa(waypoint::class_id)){
 	    waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(t);
 	    ws -> ships += cs -> ships;
 	  }
@@ -508,7 +508,7 @@ void game::reload_data(data_frame &g){
 	  add_command(c, from, to, false);
 	}
 
-	if (t -> isa(identifier::waypoint)){
+	if (t -> isa(waypoint::class_id)){
 	  waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(t);
 	  q.push(ws);
 	}
@@ -570,7 +570,7 @@ void game::add_command(command c, point from, point to, bool fill_ships){
   // s -> allocated_ships += cs -> ships;
 
   // add ships to waypoint
-  if (t -> isa(identifier::waypoint)){
+  if (t -> isa(waypoint::class_id)){
     waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(t);
     ws -> ships += cs -> ships;
   }
@@ -580,7 +580,7 @@ void game::add_command(command c, point from, point to, bool fill_ships){
 
 void game::recursive_waypoint_deallocate(combid wid, set<combid> a){
   entity_selector::ptr es = entity[wid];
-  if (!es -> isa(identifier::waypoint)) return;
+  if (!es -> isa(waypoint::class_id)) return;
   waypoint_selector::ptr s = utility::guaranteed_cast<waypoint_selector>(es);
 
   cout << "RWD start" << endl;
@@ -620,7 +620,7 @@ void game::recursive_waypoint_deallocate(combid wid, set<combid> a){
 
 bool game::waypoint_ancestor_of(combid ancestor, combid child){
   // only waypoints can have this relationship
-  if (identifier::get_type(ancestor).compare(identifier::waypoint) || identifier::get_type(child).compare(identifier::waypoint)){
+  if (identifier::get_type(ancestor).compare(waypoint::class_id) || identifier::get_type(child).compare(waypoint::class_id)){
     return false;
   }
 
@@ -890,7 +890,7 @@ set<combid> game::get_ready_ships(combid id){
 list<combid> game::selected_solars(){
   list<combid> res;
   for (auto &x : entity){
-    if (x.second -> isa(identifier::solar) && x.second -> selected){
+    if (x.second -> isa(solar::class_id) && x.second -> selected){
       res.push_back(x.first);
     }
   }
@@ -947,7 +947,7 @@ int game::choice_event(sf::Event e){
     entity_selector::ptr t = entity[cs -> target];
 
     // check if target is a waypoint
-    if (t -> isa(identifier::waypoint)){
+    if (t -> isa(waypoint::class_id)){
       waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(t);
 
       // compute added or removed ships
@@ -1025,9 +1025,9 @@ int game::choice_event(sf::Event e){
       }else{
 	for (auto x : keys){
 	  entity_selector::ptr e = entity[x];
-	  if (e -> isa(identifier::waypoint)){
+	  if (e -> isa(waypoint::class_id)){
 	    options.push_back(target_gui::option_t(x, command::action_waypoint));
-	  }else if (e -> isa(identifier::fleet)){
+	  }else if (e -> isa(fleet::class_id)){
 	    if (e -> owned){
 	      options.push_back(target_gui::option_t(x, command::action_follow));
 	      options.push_back(target_gui::option_t(x, command::action_join));
@@ -1035,7 +1035,7 @@ int game::choice_event(sf::Event e){
 	      options.push_back(target_gui::option_t(x, command::action_follow));
 	      options.push_back(target_gui::option_t(x, command::action_attack));
 	    }
-	  }else if (e -> isa(identifier::solar)){
+	  }else if (e -> isa(solar::class_id)){
 	    if (e -> owned){
 	      // owned solar
 	      options.push_back(target_gui::option_t(x, command::action_land));

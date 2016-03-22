@@ -9,6 +9,7 @@
 
 #include "types.h"
 #include "socket_t.h"
+#include "data_frame.h"
 
 namespace st3{
 

@@ -14,7 +14,7 @@ waypoint::waypoint(idtype o){
   static int idc = 0;
   
   owner = o;
-  id = identifier::make(identifier::waypoint, to_string(o) + "#" + to_string(idc++));
+  id = identifier::make(waypoint::class_id, to_string(o) + "#" + to_string(idc++));
 }
 
 waypoint::~waypoint(){}

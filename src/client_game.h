@@ -13,6 +13,7 @@
 #include "types.h"
 #include "selector.h"
 #include "com_client.h"
+#include "data_frame.h"
 
 namespace st3{
   class command_gui;
