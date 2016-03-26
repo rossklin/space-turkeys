@@ -95,6 +95,25 @@ combid game_data::entity_at(point p){
   return identifier::source_none;
 }
 
+// find all entities in ball(p, r) matching condition c
+list<combid> game_data::search_targets(point p, float r, target_condition c){
+  list<combid> res;
+    
+  for (auto i : entity_grid -> search(p, r)){
+    if (c.requires_target()){
+      game_object::ptr x = entity[i.first];
+      if (c.what == identifier::get_type(x -> id) && (c.alignment & target_condition::get_alignment(x -> owner, c.owner))){
+	res.push_back(i.first);
+      }
+    }else{
+      // return all entities if condition does not require target?
+      res.push_back(i.first);
+    }
+  }
+
+  return res;
+}
+
 // create a new fleet and add ships from command c
 void game_data::relocate_ships(command &c, set<combid> &sh, idtype owner){
   fleet::ptr f;

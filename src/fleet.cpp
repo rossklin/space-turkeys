@@ -4,6 +4,7 @@
 #include "ship.h"
 #include "utility.h"
 #include "game_data.h"
+#include "serialization.h"
 
 using namespace std;
 using namespace st3;
@@ -82,6 +83,10 @@ fleet::ptr fleet::clone(){
 
 game_object::ptr fleet::clone_impl(){
   return ptr(new fleet(*this));
+}
+
+bool fleet::serialize(sf::Packet &p){
+  return p << class_id << *this;
 }
 
 bool st3::fleet::is_idle(){

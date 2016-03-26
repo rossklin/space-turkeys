@@ -21,6 +21,8 @@ namespace st3{
     target_condition(idtype o, sint a, class_t w);
     target_condition owned_by(idtype o);
     bool requires_target();
+
+    static bool get_alignment(idtype t, idtype s);
   };
 
   class interaction{

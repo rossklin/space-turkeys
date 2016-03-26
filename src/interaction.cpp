@@ -5,6 +5,11 @@ using namespace st3;
 
 const class_t target_condition::no_target = "no target";
 
+bool target_condition::get_alignment(idtype t, idtype s){
+  if (t == game_object::neutral_owner) return target_condition::neutral;
+  return s == t ? target_condition::owned : target_condition::enemy;
+};
+
 // target condition
 target_condition::target_condition(){}
 

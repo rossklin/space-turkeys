@@ -87,7 +87,7 @@ game_object::ptr ship::clone_impl(){
 }
 
 bool ship::serialize(sf::Packet &p){
-  p << class_id << *this;
+  return p << class_id << *this;
 }
 
 ship::stats ship::compile_stats(){

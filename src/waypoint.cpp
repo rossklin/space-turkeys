@@ -3,6 +3,7 @@
 #include "game_data.h"
 #include "waypoint.h"
 #include "utility.h"
+#include "serialization.h"
 
 using namespace std;
 using namespace st3;
@@ -73,4 +74,8 @@ waypoint::ptr waypoint::clone(){
 
 game_object::ptr waypoint::clone_impl(){
   return ptr(new waypoint(*this));
+}
+
+bool waypoint::serialize(sf::Packet &p){
+  return p << class_id << *this;
 }

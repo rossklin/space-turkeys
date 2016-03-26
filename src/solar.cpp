@@ -8,6 +8,7 @@
 #include "choice.h"
 #include "game_data.h"
 #include "interaction.h"
+#include "serialization.h"
 
 using namespace std;
 using namespace st3;
@@ -161,6 +162,10 @@ solar::ptr solar::clone(){
 
 game_object::ptr solar::clone_impl(){
   return ptr(new solar(*this));
+}
+
+bool solar::serialize(sf::Packet &p){
+  return p << class_id << *this;
 }
 
 bool solar::has_defense(){
