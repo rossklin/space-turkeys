@@ -32,7 +32,7 @@ namespace st3{
     virtual bool serialize(sf::Packet &p) = 0;
     virtual void on_add(game_data *g);
     virtual void on_remove(game_data *g);
-    virtual float vision();
+    virtual float vision() = 0;
     
     ptr clone();
 

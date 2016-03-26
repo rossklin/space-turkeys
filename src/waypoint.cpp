@@ -20,11 +20,11 @@ waypoint::waypoint(idtype o){
 
 waypoint::~waypoint(){}
 
-void pre_phase(game_data *g){}
-void move(game_data *g){}
-void interact(game_data *g){}
+void waypoint::pre_phase(game_data *g){}
+void waypoint::move(game_data *g){}
+void waypoint::interact(game_data *g){}
 
-float vision(){
+float waypoint::vision(){
   return 0;
 }
 

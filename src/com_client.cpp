@@ -74,3 +74,47 @@ void st3::client::query(socket_t *socket,
   }
 }
 
+
+template<typename T> 
+bool client::deserialize_object(data_frame &f, sf::Packet &p, sf::Color col, sint id){
+  // assure that T is a properly setup entity selector
+  static_assert(is_base_of<client::entity_selector, T>::value, "deserialize entity_selector");
+  static_assert(is_base_of<game_object, typename T::base_object_t>::value, "selector base object type must inherit game_object");
+  
+  typename T::base_object_t s;
+  if (!(p >> s)){
+    cout << "deserialize object: package empty!" << endl;
+    return false;
+  }
+  f.entity[s.id] = T::create(s, col, s.owner == id);
+}
+
+bool client::deserialize(data_frame &f, sf::Packet &p, sf::Color col, sint id){
+  sint n;
+  
+  if (!(p >> f.players >> f.settings >> f.remove_entities >> n)){
+    cout << "deserialize: package empty!" << endl;
+    return false;
+  }
+  
+  f.entity.clear();
+
+  // "polymorphic" deserialization
+  for (int i = 0; i < n; i++){
+    class_t key;
+    p >> key;
+    if (key == ship::class_id){
+      if (!deserialize_object<client::ship_selector>(f, p, col, id)) return false;
+    }else if (key == fleet::class_id){
+      if (!deserialize_object<client::fleet_selector>(f, p, col, id)) return false;
+    }else if (key == solar::class_id){
+      if (!deserialize_object<client::solar_selector>(f, p, col, id)) return false;
+    }else if (key == waypoint::class_id){
+      if (!deserialize_object<client::waypoint_selector>(f, p, col, id)) return false;
+    }else{
+      cout << "deserialize: key " << key << " not recognized!" << endl;
+      exit(-1);
+    }
+  }
+}
+

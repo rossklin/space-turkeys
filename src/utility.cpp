@@ -4,6 +4,7 @@
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
 #include <boost/random/normal_distribution.hpp>
 
 #include "utility.h"
@@ -124,6 +125,18 @@ point st3::operator +(const point &a, const point &b){
   return point(a.x + b.x, a.y + b.y);
 }
 
+
+template<typename T>
+T utility::uniform_sample(std::list<T> &x){
+  int s = x.size();
+
+  for (auto &y : x){
+    if (random_uniform() <= 1 / (float)(s--)) return y;
+  }
+
+  return x.back();
+}
+
 // normal ~N(m,s)
 float utility::random_normal(float m, float s){
   boost::random::normal_distribution<float> dist(m,s);
@@ -133,6 +146,13 @@ float utility::random_normal(float m, float s){
 // random float ~U(a,b)
 float utility::random_uniform(float a, float b){
   boost::random::uniform_real_distribution<float> dist(a,b);
+  return dist(rng);
+}
+
+// random uniform int in [0, limit)
+unsigned int utility::random_int(int limit){
+  if (limit < 1) return 0;
+  boost::random::uniform_int_distribution<> dist(0, limit - 1);
   return dist(rng);
 }
 
@@ -352,12 +372,15 @@ set<T> st3::operator & (const set<T> &a, const set<T> &b){
   return res;
 }
 
+// random sample instantiation
+template combid st3::utility::uniform_sample(list<combid>&);
+
 // set operations instantiation
-template set<idtype> st3::operator - (const set<idtype> &a, const set<idtype> &b);
-template set<idtype> st3::operator -= (set<idtype> &a, const set<idtype> &b);
-template set<idtype> st3::operator + (const set<idtype> &a, const set<idtype> &b);
-template set<idtype> st3::operator += (set<idtype> &a, const set<idtype> &b);
-template set<idtype> st3::operator & (const set<idtype> &a, const set<idtype> &b);
+template set<combid> st3::operator - (const set<combid> &a, const set<combid> &b);
+template set<combid> st3::operator -= (set<combid> &a, const set<combid> &b);
+template set<combid> st3::operator + (const set<combid> &a, const set<combid> &b);
+template set<combid> st3::operator += (set<combid> &a, const set<combid> &b);
+template set<combid> st3::operator & (const set<combid> &a, const set<combid> &b);
 
 // shared pointer cast instantiation
 using namespace client;
@@ -367,8 +390,3 @@ template fleet::ptr utility::guaranteed_cast<fleet>(game_object::ptr);
 template solar::ptr utility::guaranteed_cast<solar>(game_object::ptr);
 template waypoint::ptr utility::guaranteed_cast<waypoint>(game_object::ptr);
 template commandable_object::ptr utility::guaranteed_cast<commandable_object>(game_object::ptr);
-
-template ship_selector::ptr utility::guaranteed_cast<ship_selector, entity_selector>(entity_selector::ptr);
-template fleet_selector::ptr utility::guaranteed_cast<fleet_selector, entity_selector>(entity_selector::ptr);
-template solar_selector::ptr utility::guaranteed_cast<solar_selector, entity_selector>(entity_selector::ptr);
-template waypoint_selector::ptr utility::guaranteed_cast<waypoint_selector, entity_selector>(entity_selector::ptr);

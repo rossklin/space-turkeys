@@ -87,7 +87,7 @@ namespace st3{
     float dpoint2line(point p, point a, point b);
 
     template<typename T>
-    T uniform_sample(std::list<T> x);
+    T uniform_sample(std::list<T> &x);
 
     unsigned int random_int(int limit);
 

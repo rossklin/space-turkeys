@@ -38,6 +38,12 @@ namespace st3{
       @param[out] loaded reference to update number of loaded frames
     */
     void load_frames(socket_t *socket, std::vector<data_frame> &g, int &loaded, int &done, sf::Color col);
+
+    template<typename T> 
+    bool deserialize_object(data_frame &f, sf::Packet &p, sf::Color col, sint id);
+    
+    bool deserialize(data_frame &f, sf::Packet &p, sf::Color col, sint id);
+
   };
 };
 

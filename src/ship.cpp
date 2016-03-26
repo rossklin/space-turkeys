@@ -90,6 +90,10 @@ bool ship::serialize(sf::Packet &p){
   return p << class_id << *this;
 }
 
+float ship::vision(){
+  return current_stats.vision;
+}
+
 ship::stats ship::compile_stats(){
   stats s = base_stats;
   

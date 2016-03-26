@@ -7,6 +7,10 @@
 using namespace std;
 using namespace st3;
 
+const string upgrade::space_combat = "space combat";
+const string upgrade::bombard = "bombard";
+const string upgrade::colonize = "colonize";
+
 upgrade compile_upgrade(interaction i) {
   upgrade u;
   u.inter.push_back(i);

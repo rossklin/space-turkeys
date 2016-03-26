@@ -48,10 +48,16 @@ point specific_selector<T>::get_position(){
   return position;
 }
 
+template<typename T>
+typename specific_selector<T>::ptr specific_selector<T>::create(T &s, sf::Color c, bool o){
+  return typename specific_selector<T>::ptr(new specific_selector<T>(s, c, o));
+}
+
 // solar selector
 
 namespace st3{
   namespace client{
+    
     template<>
     bool specific_selector<solar>::contains_point(point p, float &d){
       d = utility::l2norm(p - position);
@@ -233,6 +239,12 @@ namespace st3{
     }
   }
 }
+
+template class specific_selector<ship>;
+template class specific_selector<fleet>;
+template class specific_selector<solar>;
+template class specific_selector<waypoint>;
+
 
 // ****************************************
 // COMMAND SELECTOR
