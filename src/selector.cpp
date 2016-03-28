@@ -5,6 +5,7 @@
 #include "solar.h"
 #include "fleet.h"
 #include "utility.h"
+#include "graphics.h"
 
 using namespace std;
 using namespace st3;
@@ -122,7 +123,7 @@ namespace st3{
 
     template<>
     bool specific_selector<solar>::isa(string t){
-      return !t.compare(solar::class_id);
+      return t == solar::class_id;
     }
 
     template<>
@@ -183,7 +184,7 @@ namespace st3{
 
     template<>
     bool specific_selector<fleet>::isa(string t){
-      return !t.compare(fleet::class_id);
+      return t == fleet::class_id;
     }
 
     template<>
@@ -225,7 +226,7 @@ namespace st3{
 
     template<>
     bool specific_selector<waypoint>::isa(string t){
-      return !t.compare(waypoint::class_id);
+      return t == waypoint::class_id;
     }
 
     template<>
@@ -236,6 +237,37 @@ namespace st3{
     template<>
     string specific_selector<waypoint>::hover_info(){
       return "waypoint at " + utility::format_float(position.x) + "x" + utility::format_float(position.y) + "\nships: " + to_string(ships.size());
+    }
+
+    // ****************************************
+    // SHIP SELECTOR
+    // ****************************************
+
+    template<>
+    bool specific_selector<ship>::contains_point(point p, float &d){
+      static float rad = 10;
+      d = utility::l2norm(p - position);
+      return d < rad;
+    }
+
+    template<>
+    void specific_selector<ship>::draw(window_t &w){
+      graphics::draw_ship(w, (ship)*this, get_color());
+    }
+
+    template<>
+    bool specific_selector<ship>::isa(string t){
+      return t == ship::class_id;
+    }
+
+    template<>
+    set<combid> specific_selector<ship>::get_ships(){
+      return set<combid>();
+    }
+
+    template<>
+    string specific_selector<ship>::hover_info(){
+      return "ship at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
     }
   }
 }
@@ -249,6 +281,10 @@ template class specific_selector<waypoint>;
 // ****************************************
 // COMMAND SELECTOR
 // ****************************************
+
+command_selector::ptr command_selector::create(command c, point s, point d){
+  return ptr(new command_selector(c, s, d));
+}
 
 command_selector::command_selector(command &c, point s, point d) : command(c){
   from = s;

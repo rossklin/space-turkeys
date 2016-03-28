@@ -96,6 +96,9 @@ sf::Packet& st3::operator >>(sf::Packet& packet, cost::allocation<T> &g){
   return packet >> g.data;
 }
 
+// instantiation to support external extraction calls in com_client
+template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<int, player> &g);
+template sf::Packet& st3::operator >>(sf::Packet& packet, std::list<combid> &container);
 
 // ****************************************
 // SPECIFIC STRUCT STREAM OPS

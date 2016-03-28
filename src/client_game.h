@@ -55,10 +55,10 @@ namespace st3{
       /*! default contsructor */
       game();
 
-      ship_selector::ptr get_ship(combid i);
-      fleet_selector::ptr get_fleet(combid i);
-      solar_selector::ptr get_solar(combid i);
-      waypoint_selector::ptr get_waypoint(combid i);
+      entity_selector::ptr get_entity(combid i);
+
+      template<typename T>
+      typename specific_selector<T>::ptr get_specific(combid i);
 
       // round sections
       /*! run the game user interface */

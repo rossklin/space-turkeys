@@ -19,16 +19,14 @@ using namespace st3;
 using namespace client;
 using namespace graphics;
 
-// instantiate selector cast templates
-template ship_selector::ptr utility::guaranteed_cast<ship_selector, entity_selector>(entity_selector::ptr);
-template fleet_selector::ptr utility::guaranteed_cast<fleet_selector, entity_selector>(entity_selector::ptr);
-template solar_selector::ptr utility::guaranteed_cast<solar_selector, entity_selector>(entity_selector::ptr);
-template waypoint_selector::ptr utility::guaranteed_cast<waypoint_selector, entity_selector>(entity_selector::ptr);
-
 // local utility functions
 sf::FloatRect fixrect(sf::FloatRect r);
 bool add2selection();
 bool ctrlsel();
+
+waypoint_selector::ptr to_wps(entity_selector::ptr p){
+  return utility::guaranteed_cast<waypoint_selector, entity_selector>(p);
+}
 
 // ****************************************
 // GAME STEPS
@@ -53,6 +51,25 @@ game::game(){
   default_body = [this] () -> int {
     if (window.isOpen()) {return 0;} else {return query_aborted;}
   };
+}
+
+entity_selector::ptr game::get_entity(combid i){
+  if (entity.count(i)){
+    return entity[i];
+  }else{
+    cout << "client::game::get_entity: invalid id: " << i << endl;
+    exit(-1);
+  }
+}
+
+template<typename T>
+typename specific_selector<T>::ptr game::get_specific(combid i){
+  if (entity.count(i)){
+    return utility::guaranteed_cast<specific_selector<T>, entity_selector>(entity[i]);
+  }else{
+    cout << "client::game::get_specific: invalid id: " << i << endl;
+    exit(-1);
+  }
 }
 
 void game::clear_guis(){
@@ -340,11 +357,11 @@ command game::build_command(idtype key){
   return (command)*command_selectors[key];
 }
 
- choice::choice game::build_choice(choice::choice c){
+choice::choice game::build_choice(choice::choice c){
   cout << "build choice:" << endl;
   for (auto x : entity){
     if (x.second -> isa(waypoint::class_id)){
-      waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(x.second);
+      waypoint_selector::ptr ws = to_wps(x.second);
       waypoint w = (waypoint)*ws;
       w.pending_commands.clear();
       for (auto k : x.second -> commands) {
@@ -457,12 +474,12 @@ void game::reload_data(data_frame &g){
   set<waypoint_selector::ptr> buf;
   for (auto x : entity){
     if (x.second -> owned && x.second -> isa(fleet::class_id)){
-      fleet_selector::ptr fs = get_fleet(x.first);
+      fleet_selector::ptr fs = get_specific<fleet>(x.first);
 
       if (fs -> is_idle()){
 	combid wid = fs -> com.target;
 	if (entity.count(wid)){
-	  waypoint_selector::ptr wp = get_waypoint(wid);
+	  waypoint_selector::ptr wp = get_specific<waypoint>(wid);
 	  wp -> ships += fs -> ships;
 	  buf.insert(wp);
 	}
@@ -476,7 +493,7 @@ void game::reload_data(data_frame &g){
 
 	add_command(c, from, to, false);
 	if (entity[c.target] -> isa(waypoint::class_id)){
-	  buf.insert(get_waypoint(c.target));
+	  buf.insert(get_specific<waypoint>(c.target));
 	}
       }else{
 	cout << "client side target miss: " << fs -> com.target << endl;
@@ -505,7 +522,7 @@ void game::reload_data(data_frame &g){
 	
 	  // add new ships to target waypoint
 	  if (t -> isa(waypoint::class_id)){
-	    waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(t);
+	    waypoint_selector::ptr ws = to_wps(t);
 	    ws -> ships += cs -> ships;
 	  }
 	}else{
@@ -516,7 +533,7 @@ void game::reload_data(data_frame &g){
 	}
 
 	if (t -> isa(waypoint::class_id)){
-	  waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(t);
+	  waypoint_selector::ptr ws = to_wps(t);
 	  q.push(ws);
 	}
       }else{
@@ -578,7 +595,7 @@ void game::add_command(command c, point from, point to, bool fill_ships){
 
   // add ships to waypoint
   if (t -> isa(waypoint::class_id)){
-    waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(t);
+    waypoint_selector::ptr ws = to_wps(t);
     ws -> ships += cs -> ships;
   }
 
@@ -588,7 +605,7 @@ void game::add_command(command c, point from, point to, bool fill_ships){
 void game::recursive_waypoint_deallocate(combid wid, set<combid> a){
   entity_selector::ptr es = entity[wid];
   if (!es -> isa(waypoint::class_id)) return;
-  waypoint_selector::ptr s = utility::guaranteed_cast<waypoint_selector>(es);
+  waypoint_selector::ptr s = to_wps(es);
 
   cout << "RWD start" << endl;
   // check if there are still incoming commands
@@ -846,11 +863,11 @@ bool game::select_command(idtype key){
     hm_t<combid, ship> ready_ships;
     
     for (auto x : get_ready_ships(it -> second -> source)){
-      ready_ships[x] = (ship)*get_ship(x);
+      ready_ships[x] = (ship)*get_specific<ship>(x);
     }
     
     for (auto x : it -> second -> ships){
-      ready_ships[x] = (ship)*get_ship(x);
+      ready_ships[x] = (ship)*get_specific<ship>(x);
     }
 
     comgui = new command_gui(it -> first, 
@@ -913,7 +930,7 @@ list<combid> game::selected_entities(){
 }
 
 void game::run_solar_gui(combid key){
-  interface::desktop -> reset_qw(interface::main_window::Create(get_solar(key)));
+  interface::desktop -> reset_qw(interface::main_window::Create(get_specific<solar>(key)));
 }
 
 // return true to signal choice step done
@@ -955,7 +972,7 @@ int game::choice_event(sf::Event e){
 
     // check if target is a waypoint
     if (t -> isa(waypoint::class_id)){
-      waypoint_selector::ptr ws = utility::guaranteed_cast<waypoint_selector>(t);
+      waypoint_selector::ptr ws = to_wps(t);
 
       // compute added or removed ships
       set<combid> removed = cs -> ships - comgui -> allocated;
@@ -1022,7 +1039,7 @@ int game::choice_event(sf::Event e){
       for (auto x : entity){
 	if (x.second -> selected){
 	  for (auto i : x.second -> get_ships()){
-	    has_colonizer |= get_ship(i) -> ship_class == "colonizer";
+	    has_colonizer |= get_specific<ship>(i) -> ship_class == "colonizer";
 	  }
 	}
       }
@@ -1048,7 +1065,7 @@ int game::choice_event(sf::Event e){
 	      options.push_back(target_gui::option_t(x, command::action_land));
 	    }else{
 	      // non-owned solar
-	      solar_selector::ptr ss = utility::guaranteed_cast<solar_selector>(e);
+	      solar_selector::ptr ss = utility::guaranteed_cast<solar_selector, entity_selector>(e);
 	      options.push_back(target_gui::option_t(x, command::action_attack));
 	      if (ss -> owner == -1 
 		  && !ss -> has_defense()

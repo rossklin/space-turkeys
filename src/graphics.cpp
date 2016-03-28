@@ -161,6 +161,9 @@ top_panel::Ptr top_panel::Create(){
 
 research_window::Ptr research_window::Create(choice::c_research *c){return Ptr(new research_window(c));}
 
+
+const std::string main_window::sfg_id = "main window";
+
 main_window::Ptr main_window::Create(solar::ptr s){
   auto buf = Ptr(new main_window(s));
   buf -> Add(buf -> layout);

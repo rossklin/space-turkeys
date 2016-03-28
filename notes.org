@@ -29,18 +29,18 @@
 *** [J] consider introducing a game_data::find_targets
    Conditioned on a ship::target_condition and a radius
 *** [J] add fleet action definitions
-*** finish implementing new serialization/deserialization
+*** [J] finish implementing new serialization/deserialization
 *** fix client game reloading of waypoints
-*** implement client game deserialize of game data
-*** remove game_data deserialize operator
+*** [J] implement client game deserialize of game data
+*** [J] remove game_data deserialize operator
 *** let upgrades have an optional tick function
 *** let upgrades have description 
-*** let upgrades define ship class exclusivity conditions
+*** [J] let upgrades define ship class exclusivity conditions
 *** add a fleet::compile_valid_actions(target)
 *** consider effects of client game data not containing all ships for contained entities
     though a client should always receive all their owned ships.
 *** change identifier::some_class_id to the_class::class_id
-* [~] issues
+* [!] issues
 ** [~] bugs & crashes
 *** simulation step hangs on key escape abort game
     This was when client 1 aborts at frame -1, while client 2 is still
@@ -59,7 +59,10 @@
 *** need "unique" identifier for radar turrets
     Or rather, need radar turret to be a unique building rather than a
     turret.
-** [~] code design
+** [!] code design
+*** guaranteed_cast template for selectors instantiated in utility.cpp
+**** needed because definition must be avilable
+**** problematic because then utility depends on selector and graphics
 *** move keywords and allocations to "types.h"
 *** move expansion costs to research?
 * basic goals
@@ -197,11 +200,13 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** moved selector cast template instantiation back to utility
+** implemented specific_selector<ship>
+* fixed
 ** implemented specific selector create function
 ** ship vision
 ** utility::random_int
 ** moved deserialize to com_client to avoid excessive server deps
-* fixed
 ** make minimap clickable
 ** get rid of sfml sub repo?
 ** hover info should depend on ownership
