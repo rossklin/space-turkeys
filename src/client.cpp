@@ -10,7 +10,6 @@
 #include <SFML/Network.hpp>
 
 #include "socket_t.h"
-#include "game_data.h"
 #include "graphics.h"
 #include "client_game.h"
 #include "com_client.h"

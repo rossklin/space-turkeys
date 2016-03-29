@@ -3,7 +3,6 @@
 #include "selector.h"
 #include "com_client.h"
 #include "protocol.h"
-#include "game_data.h"
 #include "serialization.h"
 
 using namespace std;
