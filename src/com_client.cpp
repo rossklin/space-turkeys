@@ -86,6 +86,8 @@ bool client::deserialize_object(data_frame &f, sf::Packet &p, sf::Color col, sin
     return false;
   }
   f.entity[s.id] = T::create(s, col, s.owner == id);
+
+  return true;
 }
 
 bool client::deserialize(data_frame &f, sf::Packet &p, sf::Color col, sint id){
@@ -115,5 +117,7 @@ bool client::deserialize(data_frame &f, sf::Packet &p, sf::Color col, sint id){
       exit(-1);
     }
   }
+
+  return true;
 }
 

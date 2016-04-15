@@ -113,6 +113,22 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const game_data &g){
   return packet;
 }
 
+sf::Packet& st3::operator << (sf::Packet& packet, const commandable_object &g){
+  return packet << static_cast<const game_object&>(g);
+}
+
+sf::Packet& st3::operator >> (sf::Packet& packet, commandable_object &g){
+  return packet >> static_cast<game_object&>(g);
+}
+
+sf::Packet& st3::operator << (sf::Packet& packet, const game_object &g){
+  return packet << g.position << g.radius << g.owner << g.id;
+}
+
+sf::Packet& st3::operator >> (sf::Packet& packet, game_object &g){
+  return packet >> g.position >> g.radius >> g.owner >> g.id;
+}
+
 // game_settings
 sf::Packet& st3::operator <<(sf::Packet& packet, const game_settings &g){
   return packet 
@@ -175,7 +191,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship::stats &g){
 
 // ship
 sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
-  return packet 
+  return packet
+    << static_cast<const game_object &> (g)
     << g.ship_class
     << g.fleet_id
     << g.angle
@@ -186,7 +203,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
-  return packet 
+  return packet
+    >> static_cast<game_object &> (g)
     >> g.ship_class
     >> g.fleet_id
     >> g.angle
@@ -224,6 +242,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, turret &g){
 // solar
 sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
   return packet
+    << static_cast<const commandable_object &> (g)
     << g.fleet_growth
     << g.turret_growth
     << g.turrets
@@ -244,6 +263,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
 
 sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
   return packet
+    >> static_cast<commandable_object &> (g)
     >> g.fleet_growth
     >> g.turret_growth
     >> g.turrets
@@ -283,11 +303,27 @@ sf::Packet& st3::operator >>(sf::Packet& packet, choice::c_solar &g){
 
 // fleet
 sf::Packet& st3::operator <<(sf::Packet& packet, const fleet &g){
-  return packet << g.com << g.position << g.radius << g.vision_buf << g.owner << g.ships << g.converge;
+  return packet
+    << static_cast<const commandable_object &> (g)
+    << g.com
+    << g.position
+    << g.radius
+    << g.vision_buf
+    << g.owner
+    << g.ships
+    << g.converge;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
-  return packet >> g.com >> g.position >> g.radius >> g.vision_buf >> g.owner >> g.ships >> g.converge;
+  return packet
+    >> static_cast<commandable_object &> (g)
+    >> g.com
+    >> g.position
+    >> g.radius
+    >> g.vision_buf
+    >> g.owner
+    >> g.ships
+    >> g.converge;
 }
 
 // choice
@@ -309,11 +345,17 @@ sf::Packet& st3::operator >>(sf::Packet& packet, choice::c_research &g){
 
 // waypoint
 sf::Packet& st3::operator <<(sf::Packet& packet, const waypoint &c){
-  return packet << c.pending_commands << c.position;
+  return packet
+    << static_cast<const game_object &> (c)
+    << c.pending_commands
+    << c.position;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, waypoint &c){
-  return packet >> c.pending_commands >> c.position;
+  return packet
+    >> static_cast<game_object &> (c)
+    >> c.pending_commands
+    >> c.position;
 }
 
 // command

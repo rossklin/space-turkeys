@@ -72,6 +72,12 @@ namespace st3{
 
   sf::Packet& operator <<(sf::Packet& packet, const game_data &g);
 
+  sf::Packet& operator << (sf::Packet& packet, const commandable_object &g);
+  sf::Packet& operator >> (sf::Packet& packet, commandable_object &g);
+
+  sf::Packet& operator << (sf::Packet& packet, const game_object &g);
+  sf::Packet& operator >> (sf::Packet& packet, game_object &g);
+
   /*! stream a game_settings into a packet
     @param packet the packet
     @param g the object to stream
