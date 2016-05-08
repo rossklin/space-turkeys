@@ -140,7 +140,6 @@ bool game::pre_step(){
   message = "loading game data...";
   pq << protocol::game_round;
 
-  // todo: handle response: complete
   thread t(query, 
 	   socket, 
 	   ref(pq),

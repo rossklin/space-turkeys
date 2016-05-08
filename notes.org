@@ -1,5 +1,9 @@
 * current work
 ** upgrade / interaction / game object makeover
+*** add a fleet::compile_valid_actions(target)
+*** consider effects of client game data not containing all ships for contained entities
+    though a client should always receive all their owned ships.
+*** [J] change identifier::some_class_id to the_class::class_id
 *** [J] introduce game object base class
 **** [J] created base class header
 **** [J] made game entity classes inherit game object
@@ -36,12 +40,14 @@
 *** let upgrades have an optional tick function
 *** let upgrades have description 
 *** [J] let upgrades define ship class exclusivity conditions
-*** add a fleet::compile_valid_actions(target)
-*** consider effects of client game data not containing all ships for contained entities
-    though a client should always receive all their owned ships.
-*** change identifier::some_class_id to the_class::class_id
 * [!] issues
-** [~] bugs & crashes
+** [!] bugs & crashes
+*** BUG: client recieves distorted game object data
+**** game_object component correct so far as specific_selector::create
+**** for solar: c_military and beyond, data is scrambled
+**** when displayed, all data seems corrupted
+*** BUG: ship function recieve_damage() is not serialized
+    Need to externalize these functions.
 *** simulation step hangs on key escape abort game
     This was when client 1 aborts at frame -1, while client 2 is still
     in choice step. Server exits with error 'disconnect' and other

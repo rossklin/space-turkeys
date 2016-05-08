@@ -450,9 +450,15 @@ game_data game_data::limit_to(idtype id){
   // build limited game data object;
   game_data gc;
 
+  cout << "game data: limit to: " << id << endl;
+
   gc.allocate_grid();
-  for (auto i : entity)
-    if (entity_seen_by(i.first, id)) gc.add_entity(i.second);
+  for (auto i : entity){
+    if (entity_seen_by(i.first, id)){
+      gc.add_entity(i.second);
+      cout << " :: adding entity: " << i.first << endl;
+    }
+  }
 
   // load players and settings
   gc.players = players;

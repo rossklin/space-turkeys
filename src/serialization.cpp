@@ -2,6 +2,7 @@
 #include <set>
 
 #include "serialization.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -126,7 +127,8 @@ sf::Packet& st3::operator << (sf::Packet& packet, const game_object &g){
 }
 
 sf::Packet& st3::operator >> (sf::Packet& packet, game_object &g){
-  return packet >> g.position >> g.radius >> g.owner >> g.id;
+  packet >> g.position >> g.radius >> g.owner >> g.id;
+  return packet;
 }
 
 // game_settings
@@ -240,7 +242,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, turret &g){
 }
 
 // solar
-sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
+sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){  
   return packet
     << static_cast<const commandable_object &> (g)
     << g.fleet_growth
