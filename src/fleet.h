@@ -75,6 +75,7 @@ namespace st3{
     void check_join(game_data *g);
     void check_in_sight(game_data *g);
     virtual game_object::ptr clone_impl();
+    void copy_from(const fleet &s);
   };
 };
 #endif

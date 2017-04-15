@@ -39,7 +39,9 @@ bool entity_selector::inside_rect(sf::FloatRect r){
 // ****************************************
 
 template<typename T>
-specific_selector<T>::specific_selector(T &s, sf::Color c, bool o) : entity_selector(c,o), T(s){}
+specific_selector<T>::specific_selector(T &s, sf::Color c, bool o) : entity_selector(c,o), T(s) {
+  this->copy_from(s);
+}
 
 template<typename T>
 specific_selector<T>::~specific_selector() {}

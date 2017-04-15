@@ -242,3 +242,7 @@ void fleet::check_in_sight(game_data *g){
     g -> add_entity(w);
   }
 }
+
+void fleet::copy_from(const fleet &s){
+  (*this) = s;
+}

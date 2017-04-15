@@ -860,7 +860,10 @@ bool game::select_command(idtype key){
 
     // setup command gui
     hm_t<combid, ship> ready_ships;
-    
+
+    // TODO: this doesn't work for solars, since they contain ships
+    // which are not registered in 'entity'. Probably rewrite solar to
+    // store only ship ids.
     for (auto x : get_ready_ships(it -> second -> source)){
       ready_ships[x] = (ship)*get_specific<ship>(x);
     }

@@ -164,6 +164,10 @@ game_object::ptr solar::clone_impl(){
   return ptr(new solar(*this));
 }
 
+void solar::copy_from(const solar &s){
+  (*this) = s;
+}
+
 bool solar::serialize(sf::Packet &p){
   return p << class_id << *this;
 }

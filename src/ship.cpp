@@ -124,3 +124,7 @@ ship_stats::ship_stats(){
   vision = 0;
   load_time = 0;
 }
+
+void ship::copy_from(const ship &s){
+  (*this) = s;
+}

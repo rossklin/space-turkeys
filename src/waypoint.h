@@ -35,6 +35,7 @@ namespace st3{
 
   protected:
     virtual game_object::ptr clone_impl();
+    void copy_from(const waypoint &s);
   };
 };
 #endif

@@ -58,6 +58,7 @@ namespace st3{
   protected:
     // serialised variables
     virtual game_object::ptr clone_impl();
+    void copy_from(const ship &s);
   };
 };
 #endif

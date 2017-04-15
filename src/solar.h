@@ -79,6 +79,7 @@ namespace st3{
     void pay_resources(cost::resource_allocation<float> r);
     float resource_constraint(cost::resource_allocation<sfloat> r);
     virtual game_object::ptr clone_impl();
+    void copy_from(const solar &s);
   };
 };
 #endif

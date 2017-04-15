@@ -79,3 +79,7 @@ game_object::ptr waypoint::clone_impl(){
 bool waypoint::serialize(sf::Packet &p){
   return p << class_id << *this;
 }
+
+void waypoint::copy_from(const waypoint &s){
+  (*this) = s;
+}
