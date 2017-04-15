@@ -10,6 +10,20 @@
 
 namespace st3{
   class game_data;
+    
+  struct ship_stats{
+    sfloat speed; /*!< ship's speed */
+    sint hp; /*!< ship's hit points */
+    sfloat accuracy;
+    sfloat ship_damage;
+    sfloat solar_damage;
+    sfloat interaction_radius; /*!< radius in which the ship can fire */
+    sfloat vision; /*!< ship's sight radius */
+    sfloat load_time;
+
+    ship_stats operator += (const ship_stats &s);
+    ship_stats();
+  };
 
   /*! ship game object */
   class ship : public virtual game_object{
@@ -17,24 +31,13 @@ namespace st3{
     typedef std::shared_ptr<ship> ptr;
     static ptr create();
     static const std::string class_id;
-    
-    struct stats{
-      sfloat speed; /*!< ship's speed */
-      sint hp; /*!< ship's hit points */
-      sfloat accuracy;
-      sfloat ship_damage;
-      sfloat solar_damage;
-      sfloat interaction_radius; /*!< radius in which the ship can fire */
-      sfloat vision; /*!< ship's sight radius */
-      sfloat load_time;
-    };
 
     class_t ship_class; /*!< ship class */
     combid fleet_id; /*!< id of the ship's fleet */
     sfloat angle; /*!< ship's angle */
     sfloat load;
-    stats base_stats;
-    stats current_stats;
+    ship_stats base_stats;
+    ship_stats current_stats;
     std::set<std::string> upgrades;    
 
     ship();
@@ -47,8 +50,7 @@ namespace st3{
     float vision();
     bool serialize(sf::Packet &p);
 
-    stats compile_stats();
-    hm_t<std::string, interaction> compile_interactions();
+    std::set<std::string> compile_interactions();
     std::function<void(game_object::ptr from, ship::ptr self, float damage)> receive_damage;
 
     ptr clone();

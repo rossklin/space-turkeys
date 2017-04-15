@@ -10,13 +10,6 @@
 namespace st3{
   /*! struct representing a command */
   struct command{
-    static const std::string action_waypoint;
-    static const std::string action_follow;
-    static const std::string action_join;
-    static const std::string action_attack;
-    static const std::string action_land;
-    static const std::string action_colonize;
-
     combid source; /*!< key of entity holding the command */
     combid target; /*!< key of target */
     std::string action;

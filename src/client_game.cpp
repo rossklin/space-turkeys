@@ -88,12 +88,12 @@ void game::run(){
   view_minimap = view_game;
   view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
   view_window = window.getDefaultView();
-
+  self_id = socket -> id;
 
   // construct interface
   window.setView(view_window);
-  interface::desktop = new interface::main_interface(window.getSize(), players[socket -> id].research_level);
-  col = sfcolor(players[socket -> id].color);
+  interface::desktop = new interface::main_interface(window.getSize(), players[self_id].research_level);
+  col = sfcolor(players[self_id].color);
   
   // game loop
   while (true){
@@ -155,7 +155,7 @@ bool game::pre_step(){
     return false;
   }
 
-  if (!deserialize(data, socket -> data, col, socket -> id)){
+  if (!deserialize(data, socket -> data, col, self_id)){
     cout << "pre_step: failed to deserialize game_data" << endl;
     return false;
   }
@@ -457,7 +457,7 @@ void game::reload_data(data_frame &g){
     combid key = x.first;
     entity[x.first] = x.second;
     x.second -> seen = true;
-    if (x.second -> owner == socket -> id) add_fixed_stars (x.second -> position, x.second -> vision());
+    if (x.second -> owner == self_id) add_fixed_stars (x.second -> position, x.second -> vision());
   }
 
   // remove entities as server specifies
@@ -1028,57 +1028,37 @@ int game::choice_event(sf::Event e){
 	}
       }
     } else if (e.mouseButton.button == sf::Mouse::Right && count_selected()){
-      // target_at(p);
       // set up targui
-      set<combid> keys = entities_at(p);
+      auto keys_targeted = entities_at(p);
+      auto keys_selected = selected_entities();
       list<target_gui::option_t> options;
-      
-      // check if a colonizer is available
-      bool has_colonizer = false;
-      for (auto x : entity){
-	if (x.second -> selected){
-	  for (auto i : x.second -> get_ships()){
-	    has_colonizer |= get_specific<ship>(i) -> ship_class == "colonizer";
+      set<string> possible_actions = fleet::all_base_actions();
+
+      // add possible actions from available fleet interactions
+      for (auto k : keys_selected){
+	entity_selector::ptr e = entity[k];
+	if (e -> isa(fleet::class_id)){
+	  fleet_selector::ptr f = utility::guaranteed_cast<fleet_selector, entity_selector>(e);
+	  possible_actions += f -> interactions;
+	}
+      }
+
+      // check if actions are allowed per target
+      auto atab = fleet::action_condition_table();
+      for (auto a : possible_actions){
+	auto condition = atab[a].owned_by(self_id);
+	for (auto k : keys_targeted){
+	  if (interaction::valid(condition, entity[k])){
+	    options.push_back(target_gui::option_t(k, a));
 	  }
 	}
       }
 
-      if (keys.empty()){
-	options.push_back(target_gui::option_add_waypoint);
-      }else{
-	for (auto x : keys){
-	  entity_selector::ptr e = entity[x];
-	  if (e -> isa(waypoint::class_id)){
-	    options.push_back(target_gui::option_t(x, command::action_waypoint));
-	  }else if (e -> isa(fleet::class_id)){
-	    if (e -> owned){
-	      options.push_back(target_gui::option_t(x, command::action_follow));
-	      options.push_back(target_gui::option_t(x, command::action_join));
-	    }else{
-	      options.push_back(target_gui::option_t(x, command::action_follow));
-	      options.push_back(target_gui::option_t(x, command::action_attack));
-	    }
-	  }else if (e -> isa(solar::class_id)){
-	    if (e -> owned){
-	      // owned solar
-	      options.push_back(target_gui::option_t(x, command::action_land));
-	    }else{
-	      // non-owned solar
-	      solar_selector::ptr ss = utility::guaranteed_cast<solar_selector, entity_selector>(e);
-	      options.push_back(target_gui::option_t(x, command::action_attack));
-	      if (ss -> owner == -1 
-		  && !ss -> has_defense()
-		  && has_colonizer){
-		// undefended neutral solar
-		options.push_back(target_gui::option_t(x, command::action_colonize));
-	      }
-	    }
-	  }
-	}
-      }
-
+      // default options
+      options.push_back(target_gui::option_add_waypoint);
       options.push_back(target_gui::option_cancel);
-      targui = new target_gui(p, options, selected_entities(), &window);
+
+      targui = new target_gui(p, options, keys_selected, &window);
     }
 
     // clear selection rect

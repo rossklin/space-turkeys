@@ -4,6 +4,7 @@
 #include "cost.h"
 #include "utility.h"
 #include "upgrades.h"
+#include "fleet.h"
 
 using namespace std;
 using namespace st3;
@@ -32,7 +33,6 @@ ship research::ship_template(string k){
     s.load = 0;
 
     auto add_with_class = [&buf] (ship s, string c){
-      s.current_stats = s.compile_stats();
       s.ship_class = c;
       buf[c] = s;
     };
@@ -42,7 +42,7 @@ ship research::ship_template(string k){
     a.base_stats.vision = 100;
     a.base_stats.ship_damage = 0.1;
     a.base_stats.accuracy = 0.3;
-    a.upgrades.insert(upgrade::space_combat);
+    a.upgrades.insert(fleet_action::space_combat);
     add_with_class(a, keywords::key_scout);
 
     a = s;
@@ -52,20 +52,20 @@ ship research::ship_template(string k){
     a.base_stats.accuracy = 0.7;
     a.base_stats.interaction_radius = 20;
     a.base_stats.load_time = 30;
-    a.upgrades.insert(upgrade::space_combat);
-    a.upgrades.insert(upgrade::bombard);
+    a.upgrades.insert(fleet_action::space_combat);
+    a.upgrades.insert(fleet_action::bombard);
     add_with_class(a, keywords::key_fighter);
 
     a = s;
     a.base_stats.solar_damage = 5;
     a.base_stats.accuracy = 0.8;
-    a.upgrades.insert(upgrade::bombard);
+    a.upgrades.insert(fleet_action::bombard);
     add_with_class(a, keywords::key_bomber);
 
     a = s;
     a.base_stats.speed = 0.5;
     a.base_stats.hp = 2;
-    a.upgrades.insert(upgrade::colonize);
+    a.upgrades.insert(fleet_action::colonize);
     add_with_class(a, keywords::key_colonizer);
 
     buf.confirm_content(cost::keywords::ship);
@@ -114,6 +114,11 @@ ship data::build_ship(string c){
   ship s = ship_template(c);
 
   // todo: apply research boosts
+
+  // evaluate upgrades
+  auto utab = upgrade::table();
+  for (auto u : s.upgrades) s.base_stats += utab[u].modify;
+  s.current_stats = s.base_stats;
 
   return s;
 }

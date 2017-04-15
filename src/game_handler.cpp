@@ -21,11 +21,9 @@ void server::game_handler(com &c, game_data &g){
   hm_t<sint, sf::Packet> packets;
   int frame_count;
   unsigned int i;
-  
-  p_confirm << protocol::confirm;
 
-  while (true){
-    // check end
+  auto check_end = [&c, &g] () -> bool{
+    sf::Packet packet;
     int pid = -1;
     int psum = 0;
     for (auto x : g.all<solar>()){
@@ -41,8 +39,16 @@ void server::game_handler(com &c, game_data &g){
       packet << protocol::complete;
       packet << (psum == 1 ? string("The winner is: ") + c.clients[pid] -> name : string("The game is a tie"));
       c.check_protocol(protocol::game_round, packet);
-      return;
+      return true;
     }
+
+    return false;
+  };
+  
+  p_confirm << protocol::confirm;
+
+  while (true){
+    if (check_end()) return;
 
     // pre, expects: only query
     for (auto x : c.clients){

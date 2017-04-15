@@ -5,6 +5,7 @@
 #include "utility.h"
 #include "game_data.h"
 #include "serialization.h"
+#include "upgrades.h"
 
 using namespace std;
 using namespace st3;
@@ -14,11 +15,20 @@ const string fleet::class_id = "fleet";
 namespace fleet_action{
   const string space_combat = "space combat";
   const string bombard = "bombard";
+  const string colonize = "colonize";
   const string go_to = "go to";
   const string join = "join";
   const string follow = "follow";
   const string idle = "idle";
 };
+
+set<string> fleet::all_interactions(){
+  return set<string>({fleet_action::space_combat, fleet_action::bombard, fleet_action::colonize});
+}
+
+set<string> fleet::all_base_actions(){
+  return set<string>({fleet_action::go_to, fleet_action::join, fleet_action::follow, fleet_action::idle});
+}
 
 hm_t<string, target_condition> &fleet::action_condition_table(){
   static hm_t<string, target_condition> data;
@@ -26,8 +36,12 @@ hm_t<string, target_condition> &fleet::action_condition_table(){
 
   if (!init){
     init = true;
-    data[fleet_action::space_combat] = target_condition(target_condition::enemy, ship::class_id);
-    data[fleet_action::bombard] = target_condition(target_condition::enemy, solar::class_id);
+
+    // interaction actions
+    auto itab = interaction::table();
+    for (auto a : all_interactions()) data[a] = itab[a].condition;
+
+    // base actions
     data[fleet_action::go_to] = target_condition(target_condition::any_alignment, target_condition::no_target);
     data[fleet_action::join] = target_condition(target_condition::owned, fleet::class_id);
     data[fleet_action::follow] = target_condition(target_condition::any_alignment, fleet::class_id);
@@ -126,26 +140,7 @@ void fleet::give_commands(list<command> c, game_data *g){
 }
 
 target_condition fleet::current_target_condition(game_data *g){
-  target_condition t;
-
-  if (action_condition_table().count(com.action)){
-    // standard fleet action
-    t = action_condition_table()[com.action];
-    t.owner = owner;
-  }else{
-    // common specific ship action
-    ship::ptr s = g -> get_ship(*ships.begin());
-    hm_t<string, interaction> buf = s -> compile_interactions();
-    if (buf.count(com.action)){
-      t = buf[com.action].condition;
-      t.owner = owner;
-    }else{
-      cout << "fleet::current_target_condition: invalid action: " << com.action << endl;
-      exit(-1);
-    }
-  }
-
-  return t;
+  return action_condition_table()[com.action];
 }
 
 void fleet::update_data(game_data *g){
@@ -185,11 +180,22 @@ void fleet::update_data(game_data *g){
   if (!is_idle()){
     if (g -> target_position(com.target, target_position)) converge = utility::l2d2(target_position - position) < fleet::interact_d2;
   }
+
+  // available interactions
+  update_interactions(g);
+}
+
+void fleet::update_interactions(game_data *g){
+  interactions.clear();
+  for (auto k : ships){
+    ship::ptr s = g -> get_ship(k);
+    for (auto u : s -> upgrades) interactions += upgrade::table()[u].inter;
+  }
 }
 
 void fleet::check_waypoint(game_data *g){
   // set to idle and 'land' ships if converged to waypoint
-  if (converge && identifier::get_type(com.target) == waypoint::class_id && com.action == command::action_waypoint){
+  if (converge && identifier::get_type(com.target) == waypoint::class_id && com.action == fleet_action::go_to){
     com.target = identifier::make(identifier::idle, com.target);
     cout << "set fleet " << id << " idle target: " << com.target << endl;
   }
@@ -197,7 +203,7 @@ void fleet::check_waypoint(game_data *g){
 
 void fleet::check_join(game_data *g){
   // check fleet joins
-  if (com.action == command::action_join && converge){
+  if (com.action == fleet_action::join && converge){
 
     // check that the fleet exists
     if (!g -> entity.count(com.target)){
@@ -214,6 +220,7 @@ void fleet::check_join(game_data *g){
       f -> ships.insert(i);
       remove = true;
     }
+    f -> update_interactions(g);
   }
 }
 
@@ -231,7 +238,7 @@ void fleet::check_in_sight(game_data *g){
     }
 
     com.target = w -> id;
-    com.action = command::action_waypoint;
+    com.action = fleet_action::go_to;
     g -> add_entity(w);
   }
 }

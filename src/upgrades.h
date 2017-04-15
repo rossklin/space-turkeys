@@ -2,26 +2,18 @@
 #define _STK_UPGRADES
 
 #include <string>
-#include <list>
 #include <set>
-#include <functional>
 
 #include "interaction.h"
 #include "ship.h"
 
 namespace st3{
   class upgrade{
-  public:
-    typedef std::function<void(ship::stats&)> modify_t;
-    
-    static const std::string space_combat;
-    static const std::string bombard;
-    static const std::string colonize;
-    
-    static upgrade table(std::string k);
+  public:    
+    static hm_t<std::string, upgrade> &table();
 
-    std::list<interaction> inter;
-    modify_t modify;
+    std::set<std::string> inter;
+    ship_stats modify;
     std::set<std::string> exclusive;
   };
 };

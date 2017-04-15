@@ -29,6 +29,7 @@ namespace st3{
   public:
     typedef std::function<void(game_object::ptr self, game_object::ptr target)> perform_t;
     static bool valid(target_condition c, game_object::ptr t);
+    static hm_t<std::string, interaction> &table();
 
     std::string name;
     target_condition condition;

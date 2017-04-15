@@ -41,6 +41,7 @@ namespace st3{
       int selector_queue; /*!< index for back end of selector queue */
       idtype comid; /*!< id counter for commands */
       sf::Color col;
+      sint self_id;
       
       sfg::SFGUI *sfgui;
       command_gui *comgui; /*!< gui for assigning ships to commands */

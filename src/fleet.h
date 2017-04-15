@@ -13,6 +13,7 @@ namespace st3{
   namespace fleet_action{
     const std::string space_combat;
     const std::string bombard;
+    const std::string colonize;
     const std::string go_to;
     const std::string join;
     const std::string follow;
@@ -27,6 +28,8 @@ namespace st3{
     static const std::string class_id;
 
     static hm_t<std::string, target_condition> &action_condition_table();
+    static std::set<std::string> all_interactions();
+    static std::set<std::string> all_base_actions();
     
     static const int update_period = 1; /*!< number of increments between fleet data updates */
     static const int interact_d2 = 100; /*!< distance from target at which the fleet converges */
@@ -34,6 +37,7 @@ namespace st3{
 
     // serialized components
     std::set<combid> ships; /*!< ids of ships in fleet */
+    std::set<std::string> interactions; /*!< set of available interactions */
     command com; /*!< the fleet's command (currently this only holds the target) */
     sbool converge; /*!< whether the fleet is converging on it's target */
     sfloat vision_buf;
@@ -62,6 +66,7 @@ namespace st3{
     bool is_idle();
     void update_data(game_data *g);
     target_condition current_target_condition(game_data *g);
+    void update_interactions(game_data *g);
     
     ptr clone();
 

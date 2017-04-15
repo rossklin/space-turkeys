@@ -166,7 +166,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, target_condition &c){
 }
 
 // ship stats
-sf::Packet& st3::operator <<(sf::Packet& packet, const ship::stats &g){
+sf::Packet& st3::operator <<(sf::Packet& packet, const ship_stats &g){
   return packet 
     << g.speed
     << g.hp
@@ -179,7 +179,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship::stats &g){
 }
 
 // ship stats
-sf::Packet& st3::operator >>(sf::Packet& packet, ship::stats &g){
+sf::Packet& st3::operator >>(sf::Packet& packet, ship_stats &g){
   return packet 
     >> g.speed
     >> g.hp

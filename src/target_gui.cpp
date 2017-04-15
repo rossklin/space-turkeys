@@ -3,12 +3,13 @@
 #include "target_gui.h"
 #include "utility.h"
 #include "command.h"
+#include "fleet.h"
 
 using namespace std;
 using namespace st3;
 
 const target_gui::option_t target_gui::option_cancel("", "cancel");
-const target_gui::option_t target_gui::option_add_waypoint("", command::action_waypoint);
+const target_gui::option_t target_gui::option_add_waypoint("", fleet_action::go_to);
 
 const point target_gui::option_size = point(200, 30);
 

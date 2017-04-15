@@ -49,7 +49,7 @@ void ship::interact(game_data *g){
   fleet::ptr f = g -> get_fleet(fleet_id);
   
   // check land
-  if (f -> com.action == command::action_land && f -> converge){
+  if (identifier::get_type(f -> com.target) == solar::class_id && f -> com.action == fleet_action::go_to && f -> converge){
     solar::ptr s = g -> get_solar(f -> com.target);
     if (utility::l2d2(s -> position - position) < pow(s -> radius, 2)){
       s -> ships[id] = *this;
@@ -59,10 +59,12 @@ void ship::interact(game_data *g){
 
   // check registered interactions
   auto inter = compile_interactions();
+  auto itab = interaction::table();
   for (auto x : inter){
-    list<combid> valid_targets = g -> search_targets(position, current_stats.interaction_radius, x.second.condition);
+    interaction i = itab[x];
+    list<combid> valid_targets = g -> search_targets(position, current_stats.interaction_radius, i.condition.owned_by(f -> owner));
     for (auto a : valid_targets){
-      x.second.perform(ptr(this), g -> entity[a]);
+      i.perform(ptr(this), g -> entity[a]);
     }
   }
 }
@@ -94,24 +96,31 @@ float ship::vision(){
   return current_stats.vision;
 }
 
-ship::stats ship::compile_stats(){
-  stats s = base_stats;
-  
-  for (auto v : upgrades){
-    upgrade u = upgrade::table(v);
-    u.modify(s);
-  }
-
-  return s;
+set<string> ship::compile_interactions(){
+  set<string> res;
+  auto utab = upgrade::table();
+  for (auto v : upgrades) res += utab[v].inter;
+  return res;
 }
 
-hm_t<string, interaction> ship::compile_interactions(){
-  hm_t<string, interaction> buf;
+ship_stats ship_stats::operator+= (const ship_stats &b) {
+  speed += b.speed;
+  hp += b.hp;
+  accuracy += b.accuracy;
+  ship_damage += b.ship_damage;
+  solar_damage += b.solar_damage;
+  interaction_radius += b.interaction_radius;
+  vision += b.vision;
+  load_time += b.load_time;
+}
 
-  for (auto v : upgrades){
-    upgrade u = upgrade::table(v);
-    for (auto i : u.inter) buf[i.name] = i;
-  }
-
-  return buf;
+ship_stats::ship_stats(){
+  speed = 0;
+  hp = 0;
+  accuracy = 0;
+  ship_damage = 0;
+  solar_damage = 0;
+  interaction_radius = 0;
+  vision = 0;
+  load_time = 0;
 }

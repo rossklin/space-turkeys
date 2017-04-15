@@ -3,13 +3,6 @@
 using namespace std;
 using namespace st3;
 
-const string command::action_waypoint = "waypoint";
-const string command::action_follow = "follow";
-const string command::action_join = "join";
-const string command::action_attack = "attack";
-const string command::action_land = "land";
-const string command::action_colonize = "colonize";
-
 st3::command::command(){
   source = "";
   target = "";

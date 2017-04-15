@@ -301,7 +301,7 @@ void game_data::distribute_ships(list<ship> sh, point p){
     ship::ptr s(new ship(x));
     s -> position.x = utility::random_normal(p.x, radius);
     s -> position.y = utility::random_normal(p.y, radius);
-    s -> current_stats = s -> compile_stats();
+    s -> current_stats = s -> base_stats;
     add_entity(s);
   }
 }
