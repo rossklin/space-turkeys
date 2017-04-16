@@ -265,7 +265,7 @@ namespace st3{
 
     template<>
     string specific_selector<ship>::hover_info(){
-      return "ship at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
+      return ship_class + " ship at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
     }
   }
 }

@@ -21,6 +21,10 @@ void game_object::on_remove(game_data *g){
   g -> entity_grid -> remove(id);
 }
 
+bool game_object::is_commandable(){
+  return false;
+}
+
 game_object::ptr game_object::clone(){
   return clone_impl();
 }
@@ -28,6 +32,10 @@ game_object::ptr game_object::clone(){
 // commandable object
 commandable_object::commandable_object() {}
 commandable_object::~commandable_object() {}
+
+bool commandable_object::is_commandable() {
+  return true;
+}
 
 commandable_object::ptr commandable_object::clone(){
   return dynamic_pointer_cast<commandable_object>(clone_impl());

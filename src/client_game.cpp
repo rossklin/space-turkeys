@@ -733,19 +733,21 @@ void game::command2entity(combid key, string act, list<combid> selected_entities
 
   command c;
   point from, to;
-  entity_selector::ptr s = entity[key];
   c.target = key;
   c.action = act;
-  to = s -> get_position();
+  to = entity[key] -> get_position();
 
   cout << "command2entity: " << key << endl;
 
   for (auto x : selected_entities){
     if (entity.count(x) && x != key){
-      cout << "command2entity: adding " << x << endl;
-      c.source = x;
-      from = entity[x] -> get_position();
-      add_command(c, from, to);
+      entity_selector::ptr s = entity[x];
+      if (s -> is_commandable()){
+	cout << "command2entity: adding " << x << endl;
+	c.source = x;
+	from = s -> get_position();
+	add_command(c, from, to);
+      }
     }
   }
 }
@@ -773,7 +775,7 @@ combid game::entity_at(point p, int *q){
 
   cout << "entity_at:" << endl;
 
-  // find closest entity to p
+  // find closest entity to p which is not a ship
   for (auto x : keys){
     cout << "checking entity: " << x << endl;
     entity_selector::ptr e = entity[x];
@@ -858,9 +860,6 @@ bool game::select_command(idtype key){
     // setup command gui
     hm_t<combid, ship> ready_ships;
 
-    // TODO: this doesn't work for solars, since they contain ships
-    // which are not registered in 'entity'. Probably rewrite solar to
-    // store only ship ids.
     for (auto x : get_ready_ships(it -> second -> source)){
       ready_ships[x] = (ship)*get_specific<ship>(x);
     }

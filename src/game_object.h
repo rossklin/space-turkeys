@@ -33,6 +33,7 @@ namespace st3{
     virtual void on_add(game_data *g);
     virtual void on_remove(game_data *g);
     virtual float vision() = 0;
+    virtual bool is_commandable();
     
     ptr clone();
 
@@ -49,6 +50,7 @@ namespace st3{
     commandable_object();
     ~commandable_object();
     virtual void give_commands(std::list<command> c, game_data *g) = 0;
+    bool is_commandable();
     ptr clone();
     
   protected:
