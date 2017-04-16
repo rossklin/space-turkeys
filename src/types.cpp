@@ -29,12 +29,13 @@ class_t identifier::get_type(combid s){
 
 // get the owner id of waypoint symbol string id v
 idtype identifier::get_waypoint_owner(combid v){
-  size_t split = v.find('#');
-  string x = v.substr(0, split);
+  size_t split1 = v.find(':');
+  size_t split2 = v.find('#');
+  string x = v.substr(split1 + 1, split2);
   try{
     return stoi(x);
   }catch(...){
-    cout << "get wp onwer: invalid wp id: " << v << endl;
+    cout << "get wp owner: invalid wp id from " << v << ": " << x << endl;
     exit(-1);
   }
 }

@@ -29,7 +29,16 @@ namespace st3{
     };
     
     /* Templated string hash map which will complain when attempting
-       to access a non-initialized key. Use together with keywords. */
+       to access a non-initialized key. Use together with keywords. 
+       
+       Note that you can't trivially use std::move on these
+       allocations, since (gcc docs):
+
+       -Wno-virtual-move-assign
+           Suppress warnings about inheriting from a virtual base with a non-trivial C++11 move assignment operator.  This is dangerous because if
+           the virtual base is reachable along more than one path, it is moved multiple times, which can mean both objects end up in the moved-
+           from state.  If the move assignment operator is written to avoid moving from a moved-from object, this warning can be disabled.
+    */
     template<typename T>
     struct allocation{
       hm_t<std::string, T> data;

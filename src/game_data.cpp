@@ -460,7 +460,7 @@ bool game_data::entity_seen_by(combid id, idtype pid){
     // don't use ships to spot if they're not in a fleet
     game_object::ptr s = *i;
     if (landed_ship(s)) continue;
-    seen |= s -> owner == pid && utility::l2d2(x -> position - s -> position) < pow(s -> vision(), 2);
+    seen |= utility::l2d2(x -> position - s -> position) < pow(s -> vision(), 2);
   }
 
   return seen;

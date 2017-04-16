@@ -337,7 +337,7 @@ bool game::simulation_step(){
 // ****************************************
 
 combid game::add_waypoint(point p){
-  waypoint buf;
+  waypoint buf(self_id);
   buf.position = p;
   waypoint_selector::ptr w = waypoint_selector::create(buf, col, true);
   entity[w -> id] = w;
