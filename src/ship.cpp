@@ -15,11 +15,14 @@ ship::ship(){}
 ship::~ship(){}
 
 void ship::pre_phase(game_data *g){
+  if (fleet_id == identifier::source_none) return;
+  
   // load weapons
   load = fmin(load + 1, current_stats.load_time);
 }
 
 void ship::move(game_data *g){
+  if (fleet_id == identifier::source_none) return;
   fleet::ptr f = g -> get_fleet(fleet_id);
 
   // check fleet is not idle
@@ -43,6 +46,7 @@ void ship::move(game_data *g){
 }
 
 void ship::interact(game_data *g){
+  if (fleet_id == identifier::source_none) return;
   fleet::ptr f = g -> get_fleet(fleet_id);
   
   // check land

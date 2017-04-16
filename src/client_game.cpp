@@ -93,7 +93,6 @@ void game::run(){
   // construct interface
   window.setView(view_window);
   interface::desktop = new interface::main_interface(window.getSize(), players[self_id].research_level);
-  col = sfcolor(players[self_id].color);
   
   // game loop
   while (true){
@@ -102,8 +101,9 @@ void game::run(){
     if (!pre_step()) break;
 
     if (first){
-      // initialize position at home solar
+      // initialize color and position at home solar
       first = false;
+      col = sfcolor(players[self_id].color);
       for (auto i : entity){
 	if (i.second -> isa(solar::class_id) && i.second -> owned){
 	  view_game.setCenter(i.second -> get_position());
@@ -675,9 +675,6 @@ void game::remove_command(idtype key){
     // remove this command from it's source's list
     s -> commands.erase(key);
 
-    // deallocate ships from source
-    // s -> allocated_ships -= cships;
-
     cout << " .. calling RWD" << endl;
     // remove ships from waypoint
     recursive_waypoint_deallocate(target_key, cships);
@@ -1116,11 +1113,18 @@ int game::choice_event(sf::Event e){
       if (ss.size() == 1) run_solar_gui(ss.front());
       break;
     case sf::Keyboard::Delete:
-      for (auto i = command_selectors.begin(); i != command_selectors.end(); i++){
-	if (i -> second -> selected){
-	  remove_command((i++) -> first);
+
+      // stupid jump to case label syntax - wrap delete code in local
+      // environment
+      [this] () {
+	auto buf = command_selectors;
+	for (auto i = buf.begin(); i != buf.end(); i++){
+	  if (i -> second -> selected){
+	    remove_command(i -> first);
+	  }
 	}
-      }
+      }();
+      
       break;
     case sf::Keyboard::O:
       view_game.zoom(1.2);

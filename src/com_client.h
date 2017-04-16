@@ -10,6 +10,7 @@
 #include "types.h"
 #include "socket_t.h"
 #include "data_frame.h"
+#include "selector.h"
 
 namespace st3{
 
@@ -40,7 +41,7 @@ namespace st3{
     void load_frames(socket_t *socket, std::vector<data_frame> &g, int &loaded, int &done, sf::Color col);
 
     template<typename T> 
-    bool deserialize_object(data_frame &f, sf::Packet &p, sf::Color col, sint id);
+    entity_selector::ptr deserialize_object(sf::Packet &p, sint id);
     
     bool deserialize(data_frame &f, sf::Packet &p, sf::Color col, sint id);
 

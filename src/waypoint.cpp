@@ -16,6 +16,7 @@ waypoint::waypoint(idtype o){
   
   owner = o;
   id = identifier::make(waypoint::class_id, to_string(o) + "#" + to_string(idc++));
+  radius = 20;
 }
 
 waypoint::~waypoint(){}
@@ -57,7 +58,7 @@ void waypoint::post_phase(game_data *g){
     ready_ships = y.ships & arrived_ships;
 
     if (check){
-      cout << "waypoint trigger: command targeting " << y.target << "ready with " << ready_ships.size() << " ships!" << endl;
+      cout << "waypoint trigger: command targeting " << y.target << " ready with " << ready_ships.size() << " ships!" << endl;
       g -> relocate_ships(y, ready_ships, owner);
       pending_commands.remove(y);
     }
