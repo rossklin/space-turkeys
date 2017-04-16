@@ -10,10 +10,7 @@ using namespace st3;
 
 const string ship::class_id = "ship";
 
-ship::ship(){
-  static int idc = 0;
-  id = identifier::make(class_id, idc++);
-}
+ship::ship(){}
 
 ship::~ship(){}
 
@@ -52,8 +49,9 @@ void ship::interact(game_data *g){
   if (identifier::get_type(f -> com.target) == solar::class_id && f -> com.action == fleet_action::go_to && f -> converge){
     solar::ptr s = g -> get_solar(f -> com.target);
     if (utility::l2d2(s -> position - position) < pow(s -> radius, 2)){
-      s -> ships[id] = *this;
-      remove = true;
+      fleet_id = identifier::source_none;
+      s -> ships.insert(id);
+      f -> remove_ship(id);
     }
   }
 
@@ -72,7 +70,7 @@ void ship::interact(game_data *g){
 void ship::post_phase(game_data *g){}
 
 void ship::on_remove(game_data *g){
-  g -> get_fleet(fleet_id) -> ships.erase(id);
+  g -> get_fleet(fleet_id) -> remove_ship(id);
   game_object::on_remove(g);
 }
 

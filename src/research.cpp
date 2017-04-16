@@ -26,7 +26,7 @@ ship research::ship_template(string k){
     s.base_stats.solar_damage = 0;
     s.base_stats.accuracy = 0;
     s.base_stats.interaction_radius = 10;
-    s.fleet_id = -1;
+    s.fleet_id = identifier::source_none;
     s.ship_class = "";
     s.remove = false;
     s.base_stats.load_time = 100;
@@ -119,6 +119,10 @@ ship data::build_ship(string c){
   auto utab = upgrade::table();
   for (auto u : s.upgrades) s.base_stats += utab[u].modify;
   s.current_stats = s.base_stats;
+
+  // apply id  
+  static int idc = 0;
+  s.id = identifier::make(ship::class_id, idc++);
 
   return s;
 }

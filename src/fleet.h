@@ -67,6 +67,7 @@ namespace st3{
     void update_data(game_data *g);
     target_condition current_target_condition(game_data *g);
     void update_interactions(game_data *g);
+    void remove_ship(combid i);
     
     ptr clone();
 

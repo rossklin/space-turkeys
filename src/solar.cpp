@@ -99,7 +99,7 @@ void solar::post_phase(game_data *g){
 }
 
 void solar::give_commands(list<command> c, game_data *g){
-  list<ship> buf;
+  list<combid> buf;
 
   // create fleets
   for (auto &x : c){
@@ -109,7 +109,7 @@ void solar::give_commands(list<command> c, game_data *g){
 	cout << "solar::give_commands: invalid ship id: " << i << endl;
 	exit(-1);
       }
-      buf.push_back(ships[i]);
+      buf.push_back(i);
       ships.erase(i);
     }
 

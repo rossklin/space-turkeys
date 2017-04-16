@@ -50,7 +50,7 @@ namespace st3{
 
     void add_entity(game_object::ptr p);
     void remove_units();
-    void generate_fleet(point p, idtype i, command &c, std::list<ship> &sh);
+    void generate_fleet(point p, idtype i, command &c, std::list<combid> &sh);
     void relocate_ships(command &c, std::set<combid> &sh, idtype owner);
 
     // game steps
@@ -68,7 +68,7 @@ namespace st3{
 
     // add and remove entities
     void remove_entity(combid id);
-    void distribute_ships(std::list<ship> sh, point p);
+    void distribute_ships(std::list<combid> sh, point p);
     void allocate_grid();
   };
 };

@@ -27,7 +27,7 @@ namespace st3{
     cost::ship_allocation<sfloat> fleet_growth;
     cost::turret_allocation<sfloat> turret_growth;
     std::list<turret> turrets;
-    hm_t<combid, ship> ships;
+    std::set<combid> ships;
     sfloat research;
     sfloat water;
     sfloat space;

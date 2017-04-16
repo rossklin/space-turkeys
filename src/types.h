@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 namespace st3{
-  /*! 32 bit in for network serialization */
+  /*! 32 bit int for network serialization */
   typedef sf::Int32 sint;
 
   /*! this will later be a fixed size float for network serialization */

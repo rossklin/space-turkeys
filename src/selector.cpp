@@ -129,11 +129,7 @@ namespace st3{
     }
 
     template<>
-    set<combid> specific_selector<solar>::get_ships(){
-      set<combid> res;
-      for (auto &x : ships) res.insert(x.first);
-      return res;
-    }
+    set<combid> specific_selector<solar>::get_ships(){return ships;}
 
     template<>
     string specific_selector<solar>::hover_info(){

@@ -129,7 +129,7 @@ void fleet::give_commands(list<command> c, game_data *g){
 	if (ships.count(i)){
 	  ship::ptr buf = g -> get_ship(i);
 	  buf -> fleet_id = f -> id;
-	  ships.erase(i);
+	  remove_ship(i);
 	  f -> ships.insert(i);
 	}
       }
@@ -218,8 +218,8 @@ void fleet::check_join(game_data *g){
       ship::ptr s = g -> get_ship(i);
       s -> fleet_id = com.target;
       f -> ships.insert(i);
-      remove = true;
     }
+    remove = true;
     f -> update_interactions(g);
   }
 }
@@ -245,4 +245,9 @@ void fleet::check_in_sight(game_data *g){
 
 void fleet::copy_from(const fleet &s){
   (*this) = s;
+}
+
+void fleet::remove_ship(combid i){
+  ships.erase(i);
+  remove = ships.empty();
 }

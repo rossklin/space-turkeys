@@ -148,7 +148,7 @@ void game_data::relocate_ships(command &c, set<combid> &sh, idtype owner){
     for (auto i : sh) {
       ship::ptr s = get_ship(i);
       fleet::ptr parent = get_fleet(s -> fleet_id);
-      parent -> ships.erase(i);
+      parent -> remove_ship(i);
     }
 
     // set new fleet id
@@ -169,7 +169,7 @@ void game_data::relocate_ships(command &c, set<combid> &sh, idtype owner){
 }
 
 // generate a fleet with given ships, set owner and fleet_id of ships
-void game_data::generate_fleet(point p, idtype owner, command &c, list<ship> &sh){
+void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &sh){
   if (sh.empty()) return;
 
   fleet::ptr f = fleet::create();
@@ -180,13 +180,15 @@ void game_data::generate_fleet(point p, idtype owner, command &c, list<ship> &sh
   f -> owner = owner;
 
   for (auto &s : sh){
-    f -> ships.insert(s.id);
-    s.owner = owner;
-    s.fleet_id = f -> id;
+    auto sp = get_ship(s);
+    f -> ships.insert(s);
+    sp -> owner = owner;
+    sp -> fleet_id = f -> id;
   }
   
   distribute_ships(sh, f -> position);
   f -> update_data(this);
+  add_entity(f);
 }
 
 bool game_data::validate_choice(choice::choice c, idtype id){
@@ -266,6 +268,9 @@ void game_data::add_entity(game_object::ptr p){
     cout << "add_entity: " << p -> id << ": already exists!" << endl;
     exit(-1);
   }
+
+  cout << "add_entity: " << p -> id << " owned by " << p -> owner << endl;
+  
   entity[p -> id] = p;
   p -> on_add(this);
 }
@@ -292,17 +297,16 @@ void game_data::remove_units(){
 }
 
 // should set positions, update stats and add entities
-void game_data::distribute_ships(list<ship> sh, point p){
+void game_data::distribute_ships(list<combid> sh, point p){
   float density = 0.01;
   float area = sh.size() / density;
   float radius = area / (2 * M_PI);
   
   for (auto x : sh){
-    ship::ptr s(new ship(x));
+    ship::ptr s = get_ship(x);
     s -> position.x = utility::random_normal(p.x, radius);
     s -> position.y = utility::random_normal(p.y, radius);
     s -> current_stats = s -> base_stats;
-    add_entity(s);
   }
 }
 
@@ -335,6 +339,7 @@ void game_data::build(){
   float unfairness = INFINITY;
   hm_t<idtype, combid> test_homes;
   hm_t<combid, solar> solar_data;
+  hm_t<combid, ship> ship_data;
   int d_start = 10;
   vector<idtype> player_ids;
   utility::assign_keys(players, player_ids);
@@ -347,6 +352,7 @@ void game_data::build(){
       cout << "game_data::initialize: new best homes, u = " << u << endl;
       unfairness = u;
       solar_data = solar_buf;
+      ship_data.clear();
 
       for (auto x : test_homes){
 	solar &s = solar_data[x.second];
@@ -357,14 +363,18 @@ void game_data::build(){
 	s.population = 100;
 	s.happiness = 1;
 	ship sh = rbase.build_ship(cost::keywords::key_scout);
-	s.ships[sh.id] = sh;
+	sh.owner = x.first;
+	s.ships.insert(sh.id);
+	ship_data[sh.id] = sh;
       }
     }
   }
 
+  // TODO: both solars get the same ship-id, though only one player
+  // gets the ship
   allocate_grid();
-  for (auto &s : solar_data)
-    add_entity(solar::ptr(new solar(s.second)));    
+  for (auto &s : solar_data) add_entity(solar::ptr(new solar(s.second)));
+  for (auto &s : ship_data) add_entity(ship::ptr(new ship(s.second)));
 }
 
 // clean up things that will be reloaded from client
@@ -428,6 +438,10 @@ bool game_data::entity_seen_by(combid id, idtype pid){
     exit(-1);
   }
 
+  auto landed_ship = [this] (game_object::ptr s) -> bool{
+    return identifier::get_type(s -> id) == ship::class_id && get_ship(s -> id) -> fleet_id == identifier::source_none;
+  };
+  
   game_object::ptr x = entity[id];
 
   // always see owned entities
@@ -436,11 +450,17 @@ bool game_data::entity_seen_by(combid id, idtype pid){
   // never see opponent waypoints
   if (identifier::get_type(id) == waypoint::class_id) return false;
 
+  // don't see ships if they're not in a fleet
+  if (landed_ship(x)) return false;
+
   auto buf = all_owned_by(pid);
   bool seen = false;
 
   for (auto i = buf.begin(); i != buf.end() && !seen; i++){
-    seen |= (*i) -> owner == pid && utility::l2d2(x -> position - (*i) -> position) < pow((*i) -> vision(), 2);
+    // don't use ships to spot if they're not in a fleet
+    game_object::ptr s = *i;
+    if (landed_ship(s)) continue;
+    seen |= s -> owner == pid && utility::l2d2(x -> position - s -> position) < pow(s -> vision(), 2);
   }
 
   return seen;

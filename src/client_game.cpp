@@ -867,9 +867,12 @@ bool game::select_command(idtype key){
     for (auto x : get_ready_ships(it -> second -> source)){
       ready_ships[x] = (ship)*get_specific<ship>(x);
     }
-    
-    for (auto x : it -> second -> ships){
-      ready_ships[x] = (ship)*get_specific<ship>(x);
+
+    // if the command selector lists ships which are not listed as
+    // ready by the source, remove them
+    auto buf = it -> second -> ships;
+    for (auto x : buf){
+      if (!ready_ships.count(x)) it -> second -> ships.erase(x);
     }
 
     comgui = new command_gui(it -> first, 
