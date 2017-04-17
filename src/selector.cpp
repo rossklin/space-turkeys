@@ -6,61 +6,20 @@
 #include "fleet.h"
 #include "utility.h"
 #include "graphics.h"
+#include "client_game.h"
 
 using namespace std;
-using namespace st3;
-using namespace st3::client;
 
-// ****************************************
-// ENTITY SELECTOR
-// ****************************************
+st3::client::game *st3::client::entity_selector::g = 0;
 
-entity_selector::entity_selector(sf::Color c, bool o){
-  color = c;
-  owned = o;
-  seen = owned;
-  area_selectable = true;
-  selected = false;
-  queue_level = 0;
-}
-
-entity_selector::~entity_selector(){}
-
-sf::Color entity_selector::get_color(){
-  return seen ? color : graphics::fade_color(color, sf::Color(150,150,150,10), 0.6);
-}
-
-bool entity_selector::inside_rect(sf::FloatRect r){
-  return r.contains(get_position());
-}
-
-// ****************************************
-// SPECIFIC SELECTOR
-// ****************************************
-
-template<typename T>
-specific_selector<T>::specific_selector(T &s, sf::Color c, bool o) : entity_selector(c,o), T(s) {
-  this->copy_from(s);
-}
-
-template<typename T>
-specific_selector<T>::~specific_selector() {}
-
-template<typename T>
-point specific_selector<T>::get_position(){
-  return position;
-}
-
-template<typename T>
-typename specific_selector<T>::ptr specific_selector<T>::create(T &s, sf::Color c, bool o){
-  return typename specific_selector<T>::ptr(new specific_selector<T>(s, c, o));
-}
-
-// solar selector
-
-namespace st3{
+namespace st3{    
   namespace client{
-    
+    template class specific_selector<ship>;
+    template class specific_selector<fleet>;
+    template class specific_selector<solar>;
+    template class specific_selector<waypoint>;
+
+    // solar selector
     template<>
     bool specific_selector<solar>::contains_point(point p, float &d){
       d = utility::l2norm(p - position);
@@ -229,12 +188,16 @@ namespace st3{
 
     template<>
     set<combid> specific_selector<waypoint>::get_ships(){
-      return ships;
+      set<combid> s;
+      for (auto i : g -> incident_commands(id)) {
+	s += g -> entity[g -> command_selectors[i] -> source] -> get_ships();
+      }
+      return s;
     }
 
     template<>
     string specific_selector<waypoint>::hover_info(){
-      return "waypoint at " + utility::format_float(position.x) + "x" + utility::format_float(position.y) + "\nships: " + to_string(ships.size());
+      return "waypoint at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
     }
 
     // ****************************************
@@ -270,10 +233,53 @@ namespace st3{
   }
 }
 
-template class specific_selector<ship>;
-template class specific_selector<fleet>;
-template class specific_selector<solar>;
-template class specific_selector<waypoint>;
+using namespace st3;
+using namespace st3::client;
+
+// ****************************************
+// ENTITY SELECTOR
+// ****************************************
+
+entity_selector::entity_selector(sf::Color c, bool o){
+  color = c;
+  owned = o;
+  seen = owned;
+  area_selectable = true;
+  selected = false;
+  queue_level = 0;
+}
+
+entity_selector::~entity_selector(){}
+
+sf::Color entity_selector::get_color(){
+  return seen ? color : graphics::fade_color(color, sf::Color(150,150,150,10), 0.6);
+}
+
+bool entity_selector::inside_rect(sf::FloatRect r){
+  return r.contains(get_position());
+}
+
+// ****************************************
+// SPECIFIC SELECTOR
+// ****************************************
+
+template<typename T>
+specific_selector<T>::specific_selector(T &s, sf::Color c, bool o) : entity_selector(c,o), T(s) {
+  this->copy_from(s);
+}
+
+template<typename T>
+specific_selector<T>::~specific_selector() {}
+
+template<typename T>
+point specific_selector<T>::get_position(){
+  return position;
+}
+
+template<typename T>
+typename specific_selector<T>::ptr specific_selector<T>::create(T &s, sf::Color c, bool o){
+  return typename specific_selector<T>::ptr(new specific_selector<T>(s, c, o));
+}
 
 
 // ****************************************

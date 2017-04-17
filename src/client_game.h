@@ -61,9 +61,15 @@ namespace st3{
       template<typename T>
       typename specific_selector<T>::ptr get_specific(combid i);
 
+      template<typename T>
+      std::set<typename specific_selector<T>::ptr> get_all();
+
       // round sections
       /*! run the game user interface */
       void run();
+
+      /*! send a packet to query and wait for response */
+      bool wait_for_it(sf::Packet &p);
 
       /*! run the pre step: check with server and get game data
 	@return whether to continue the game round
@@ -76,17 +82,12 @@ namespace st3{
       /*! load simulation frames from server and visualize */
       bool simulation_step();
 
-      // data handling
-      /*! make a command from a command selector
-	@param key id of the command selector
-	@return the command 
-      */
-      command build_command(idtype key);
-
       /*! make a choice from the user interface
 	@return the choice
       */
       choice::choice build_choice(choice::choice c);
+
+      void clear_waypoint_commands();
 
       /*! update gui with new game data
 	@param g the game data
@@ -99,6 +100,8 @@ namespace st3{
 	@return client::query_status denoting whether to proceed to next step
       */
       int choice_event(sf::Event e);
+
+      std::function<int(sf::Event)> generate_event_handler(std::function<int(sf::Event)> task);
       
       /*! start a solar gui for a solar
 	@param key the id of the solar selector representing the solar
@@ -113,7 +116,7 @@ namespace st3{
 	@param p the point
 	@return set of keys of entities
       */
-      std::set<combid> entities_at(point p);
+      std::list<combid> entities_at(point p);
 
       /*! get the key of the entity selector at a point
 
@@ -125,14 +128,14 @@ namespace st3{
 	@param[out] q set to queue level of found entity
 	@return the key, or "" if no entity was found
       */
-      combid entity_at(point p, int *q = 0);
+      combid entity_at(point p, int &q);
 
       /*! get the id of the command_selector at a point
 	@param p the point
 	@param[out] q set to queue level of found command
 	@return the id
       */
-      idtype command_at(point p, int *q = 0);
+      idtype command_at(point p, int &q);
 
       /*! select the selector at a point if there is one
 	@param p the point
@@ -155,18 +158,6 @@ namespace st3{
       /*! remove the current command gui */
       void clear_guis();
       
-      /*! recursively remove ships from a waypoint graph
-
-	As the waypoints list any ships allocated to them from their
-	ancestors in the waypoint graph, when removing ships from a
-	waypoint they must also be removed recursively from this
-	waypoint's children.
-
-	@param wid entity selector key of the waypoint
-	@param a set of ids of ships to remove
-      */
-      void recursive_waypoint_deallocate(combid wid, std::set<combid> a);
-
       /*! check whether a waypoint is an ancestor of another waypoint
 
 	This is used to prevent the user from generating circular
@@ -181,22 +172,6 @@ namespace st3{
       /* **************************************** */
       /* COMMAND HANDLING */
       /* **************************************** */
-
-      /*! check whether there already exists a command selector between entities
-
-	@param c command to check source and target of
-	@return whether there exists a command selector with same source/target as c
-      */
-      bool command_exists(command c);
-
-      /*! get the id of a command selector matching a command
-
-	Checks only source and target of the command.
-
-	@param c the command
-	@return the id
-      */
-      idtype command_id(command c);
 
       /*! add a command selector representing a command
 	@param c the command
@@ -243,7 +218,7 @@ namespace st3{
       /*! count the number of selected entity selectors
 	@return the number of selected entity selectors
       */
-      int count_selected();
+      bool exists_selected();
 
       /*! get the ready ships of an entity selector
 	
@@ -253,7 +228,7 @@ namespace st3{
 	@param key key of the entity selector
 	@return set of ship ids
       */
-      virtual std::set<combid> get_ready_ships(combid key);
+      std::set<combid> get_ready_ships(combid key);
 
       /*! get a list of keys of all selected solar selectors
 	@return list of keys of selected solar selectors
@@ -279,6 +254,8 @@ namespace st3{
       void popup_message(std::string title, std::string text);
 
       void window_loop(int &done, std::function<int(sf::Event)> event_handler, std::function<int(void)> body);
+
+      void setup_targui(point p);
 
       /*! draw the gui
 	

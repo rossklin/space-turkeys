@@ -38,12 +38,12 @@ namespace st3{
       @param[out] g vector to store loaded game data in
       @param[out] loaded reference to update number of loaded frames
     */
-    void load_frames(socket_t *socket, std::vector<data_frame> &g, int &loaded, int &done, sf::Color col);
+    void load_frames(socket_t *socket, std::vector<data_frame> &g, int &loaded, int &done);
 
     template<typename T> 
     entity_selector::ptr deserialize_object(sf::Packet &p, sint id);
     
-    bool deserialize(data_frame &f, sf::Packet &p, sf::Color col, sint id);
+    bool deserialize(data_frame &f, sf::Packet &p, sint id);
 
   };
 };

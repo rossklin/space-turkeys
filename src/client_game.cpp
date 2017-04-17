@@ -2,6 +2,7 @@
 #include <thread>
 #include <queue>
 #include <type_traits>
+#include <stdexcept>
 
 #include <SFML/Graphics.hpp>
 
@@ -53,6 +54,33 @@ game::game(){
   };
 }
 
+function<int(sf::Event)> game::generate_event_handler(function<int(sf::Event)> task){
+  return [&task, this] (sf::Event e) {
+    // handle escape on query window
+    if (interface::desktop -> query_window) {
+      if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape){
+	interface::desktop -> clear_qw();
+      }
+      return 0;
+    }
+
+    if (e.type == sf::Event::Closed) {
+      // handle close event
+      window.close();
+      return query_aborted;
+    }else{
+      // handle custom task
+      int result = task(e);
+
+      // if custom task did not indicate finish, let desktop process
+      // the event
+      if (!result) interface::desktop -> HandleEvent(e);
+      
+      return result;
+    }
+  };
+}
+
 entity_selector::ptr game::get_entity(combid i){
   if (entity.count(i)){
     return entity[i];
@@ -65,11 +93,27 @@ entity_selector::ptr game::get_entity(combid i){
 template<typename T>
 typename specific_selector<T>::ptr game::get_specific(combid i){
   if (entity.count(i)){
-    return utility::guaranteed_cast<specific_selector<T>, entity_selector>(entity[i]);
+    if (entity[i] -> isa(T::class_id)){
+      return utility::guaranteed_cast<specific_selector<T>, entity_selector>(entity[i]);
+    }else{
+      return 0;
+    }
   }else{
     cout << "client::game::get_specific: invalid id: " << i << endl;
     exit(-1);
   }
+}
+
+template<typename T>
+set<typename specific_selector<T>::ptr> game::get_all(){
+  set<typename specific_selector<T>::ptr> s;
+  typename specific_selector<T>::ptr test;
+  
+  for (auto x : entity){
+    if (test = get_specific<T>(x.first)) s.insert(test);
+  }
+  
+  return s;
 }
 
 void game::clear_guis(){
@@ -79,6 +123,7 @@ void game::clear_guis(){
   targui = 0;
 }
 
+/* Main game entry point called after getting id from server */
 void game::run(){  
   
   bool proceed = true;
@@ -93,31 +138,35 @@ void game::run(){
   // construct interface
   window.setView(view_window);
   interface::desktop = new interface::main_interface(window.getSize(), players[self_id].research_level);
+
+  // map initializer to run after first data recieved
+  auto map_init = [this] () {
+    // initialize color and position at home solar
+    col = sfcolor(players[self_id].color);
+    for (auto i : entity){
+      if (i.second -> isa(solar::class_id) && i.second -> owned){
+	view_game.setCenter(i.second -> get_position());
+	view_game.setSize(point(25 * settings.solar_maxrad, 25 * settings.solar_maxrad));
+	break;
+      }
+    }
+  };
   
   // game loop
   while (true){
     clear_guis();
-
     if (!pre_step()) break;
 
     if (first){
-      // initialize color and position at home solar
+      map_init();
       first = false;
-      col = sfcolor(players[self_id].color);
-      for (auto i : entity){
-	if (i.second -> isa(solar::class_id) && i.second -> owned){
-	  view_game.setCenter(i.second -> get_position());
-	  view_game.setSize(point(25 * settings.solar_maxrad, 25 * settings.solar_maxrad));
-	  break;
-	}
-      }
     }
 
     if (!choice_step()) break;
-
     if (!simulation_step()) break;
   }
 
+  // message to user on involontary quit
   if (!chosen_quit){
     string server_says;
     socket -> data >> server_says;
@@ -128,35 +177,36 @@ void game::run(){
   interface::desktop = 0;
 }
 
-// ****************************************
-// PRE_STEP
-// ****************************************
+bool game::wait_for_it(sf::Packet &p){
+  int done = 0;
+  
+  thread t(query, socket, ref(p), ref(done));
+  window_loop(done, default_event_handler, default_body);
+
+  cout << "wait_for_it: waiting for com thread to finish..." << endl;
+  t.join();
+
+  if (done & (query_game_complete | query_aborted)){
+    cout << "wait_for_it: finished/aborted" << endl;
+    return false;
+  }
+
+  return true;
+}
+
+/**First step in game round.
+   Responsible for retrieving data from server and running reload_data.   
+*/
 
 bool game::pre_step(){
-  int done = 0;
   sf::Packet pq;
   data_frame data;
 
   message = "loading game data...";
   pq << protocol::game_round;
 
-  thread t(query, 
-	   socket, 
-	   ref(pq),
-	   ref(done));
-
-  window_loop(done, default_event_handler, default_body);
-
-  cout << "pre_step: waiting for com thread to finish..." << endl;
-  t.join();
-
-  if (done & (query_game_complete | query_aborted)){
-    cout << "pre_step: finished/aborted" << endl;
-    return false;
-  }
-
-  if (!deserialize(data, socket -> data, col, self_id)){
-    cout << "pre_step: failed to deserialize game_data" << endl;
+  if (!(wait_for_it(pq) && deserialize(data, socket -> data, self_id))) {
+    cout << "pre_step: failed to load/deserialize game_data" << endl;
     return false;
   }
 
@@ -165,12 +215,13 @@ bool game::pre_step(){
   return true;
 }
 
-// ****************************************
-// CHOICE STEP
-// ****************************************
+/** Second step in game round.
+
+    Responsible for running the choice gui, building a choice object
+    and sending it to the server.
+*/
 
 bool game::choice_step(){
-  int done = 0;
   sf::Packet pq, pr;
   interface::desktop -> done = false;
   interface::desktop -> accept = false;
@@ -179,19 +230,38 @@ bool game::choice_step(){
 
   message = "make your choice";
 
-  // CREATE THE CHOICE (USER INTERFACE)
+  // event handler that passes the event to choice_event()
+  auto event_handler = generate_event_handler([this](sf::Event e) -> int {
+      // check the target gui
+      window.setView(view_game);
+      if (targui && targui -> handle_event(e)){
+	if (targui -> done){
+	  if (targui -> selected_option.key != "cancel"){
+	    combid k = targui -> selected_option.key;
+	    if (k == "add_waypoint"){
+	      k = add_waypoint(targui -> position);
+	    }
 
-  auto event_handler = [this](sf::Event e) -> int {
-    int done = 0;
-    if (e.type == sf::Event::Closed){
-      window.close();
-    }else{
-      done |= choice_event(e);
-      if (!done) interface::desktop -> HandleEvent(e);
-    }
-    return done;
-  };
+	    command2entity(k, targui -> selected_option.option, targui -> selected_entities);
+	  }
+	  delete targui;
+	  targui = 0;
+	}
+	return 0;
+      }
 
+      // check the command gui
+      window.setView(view_window);
+      if (comgui && comgui -> handle_event(e)){
+	command_selectors[comgui -> comid] -> ships = comgui -> allocated;    
+	return 0;
+      }
+
+      // process choice event
+      return choice_event(e);
+    });
+
+  // gui loop body that handles return status from interface::desktop
   auto body = [this] () -> int {
     if (interface::desktop -> done) {
       return interface::desktop -> accept ? query_accepted : query_game_complete;
@@ -199,8 +269,10 @@ bool game::choice_step(){
     return default_body();
   };
 
+  int done = 0;
   window_loop(done, event_handler, body);
 
+  // client chose to leave the game
   if (done & (query_game_complete | query_aborted)){
     cout << "choice_step: finishded" << endl;
     pq.clear();
@@ -209,43 +281,32 @@ bool game::choice_step(){
     return false;
   }
 
-  // SEND THE CHOICE TO SERVER
+  // clear guis while sending choice
+  clear_guis();
+  deselect_all();
 
   message = "sending choice to server...";
 
   // add commands to choice
+  clear_waypoint_commands();
   choice::choice c = build_choice(interface::desktop -> response);
-  done = 0;
-  pq << protocol::choice;
-  pq << c;
-
-  thread t(query, 
-	   socket, 
-	   ref(pq),
-	   ref(done));
+  pq << protocol::choice << c;
 
   cout << "choice step: sending" << endl;
 
-  window_loop(done, default_event_handler, default_body);
-
-  if (done & query_game_complete){
+  if (!wait_for_it(pq)){
     cout << "choice send: server says game finished!" << endl;
     return false;
   }
-
-  clear_guis();
-  deselect_all();
-
-  cout << "choice step: waiting for query thread" << endl;
-  t.join();
+    
   cout << "choice step: complete" << endl;
-
   return true;
 }
 
-// ****************************************
-// SIMULATION STEP
-// ****************************************
+/** Third game step.
+
+    Responsible for visualizing game frames.
+*/
 
 bool game::simulation_step(){
   int done = 0;
@@ -255,24 +316,28 @@ bool game::simulation_step(){
   vector<data_frame> g(settings.frames_per_round);
 
   cout << "simluation: starting data loader" << endl;
-  
-  thread t(load_frames, socket, ref(g), ref(loaded), ref(done), col);
 
+  // start loading frames in background
+  thread t(load_frames, socket, ref(g), ref(loaded), ref(done));
+
+  // event handler which handles play/pause
   auto event_handler = [this, &playing] (sf::Event e) -> int {
     switch (e.type){
     case sf::Event::Closed:
-      window.close();
-      return query_aborted;
+    window.close();
+    return query_aborted;
     case sf::Event::KeyPressed:
-      if (e.key.code == sf::Keyboard::Escape){
-	return query_aborted;
-      }else if (e.key.code == sf::Keyboard::Space){
-        playing = !playing;
-      }
+    if (e.key.code == sf::Keyboard::Escape){
+      return query_aborted;
+    }else if (e.key.code == sf::Keyboard::Space){
+      playing = !playing;
+    }
     }
     return 0;
   };
 
+  // gui loop body that draws progress indicator and keeps track of
+  // the active frame
   auto body = [&,this] () -> int {
     if (!window.isOpen()){
       cout << "simulation: aborted by window close" << endl;
@@ -336,6 +401,13 @@ bool game::simulation_step(){
 // DATA HANDLING
 // ****************************************
 
+/** Add a waypoint
+    
+    Creates a waypoint_selector at a given point.
+
+    @param p the point
+    @return the waypoint id
+*/
 combid game::add_waypoint(point p){
   waypoint buf(self_id);
   buf.position = p;
@@ -347,39 +419,28 @@ combid game::add_waypoint(point p){
   return w -> id;
 }
 
-command game::build_command(idtype key){
-  if (!command_selectors.count(key)){
-    cout << "build_command: not found: " << key << endl;
-    exit(-1);
-  }
-
-  return (command)*command_selectors[key];
+/** Clear waypoint pending commands
+*/
+void game::clear_waypoint_commands(){
+  for (auto w : get_all<waypoint>()) w -> pending_commands.clear();
 }
 
+/** Fills a choice object with data.
+
+    Looks through the entity_selector data and adds commands and
+    waypoints to the choice.
+
+    @return the modified choice
+*/
 choice::choice game::build_choice(choice::choice c){
   cout << "build choice:" << endl;
+  
   for (auto x : entity){
-    if (x.second -> isa(waypoint::class_id)){
-      waypoint_selector::ptr ws = to_wps(x.second);
-      waypoint w = (waypoint)*ws;
-      w.pending_commands.clear();
-      for (auto k : x.second -> commands) {
-	if (!command_selectors.count(k)){
-	  cout << "build_choice: error: command_selector " << k << " is mising!" << endl;
-	}
-	w.pending_commands.push_back((command)*command_selectors[k]);
-	command com = w.pending_commands.back();
-	cout << x.first << ": command " << k << " from " << com.source << " to " << com.target << ": " << endl << "ships: ";
-	for (auto s : com.ships){
-	  cout << s << ", ";
-	}
-	cout << endl;
-      }
-      c.waypoints[x.first] = w;
-    }else{
-      for (auto y : x.second -> commands){
-	c.commands[x.first].push_back(build_command(y));
-	cout << "adding command " << y << " with key " << x.first << ", source " << c.commands[x.first].back().source << " and target " << c.commands[x.first].back().target << endl;
+    for (auto y : x.second -> commands){
+      if (command_selectors.count(y)){
+	c.commands[x.first].push_back(*command_selectors[y]);
+      }else{
+	throw runtime_error("Attempting to build invalid command: " + y);
       }
     }
   }
@@ -387,6 +448,8 @@ choice::choice game::build_choice(choice::choice c){
   return c;
 }
 
+/** List all commands incident to an entity by key.
+ */
 list<idtype> game::incident_commands(combid key){
   list<idtype> res;
 
@@ -411,21 +474,21 @@ void game::add_fixed_stars (point position, float vision) {
       pair<int, int> grid_index (grid_x, grid_y);
       
       for (int i = rand () % 3; i >= 0; i--) {
-        if (known_universe.count (grid_index) == 0) {
-          point star_position;
-          star_position.x = grid_index.first * grid_size + utility::random_uniform () * grid_size;
-          star_position.y = grid_index.second * grid_size + utility::random_uniform () * grid_size;
+	if (known_universe.count (grid_index) == 0) {
+	  point star_position;
+	  star_position.x = grid_index.first * grid_size + utility::random_uniform () * grid_size;
+	  star_position.y = grid_index.second * grid_size + utility::random_uniform () * grid_size;
           
-          fixed_star star(star_position);
+	  fixed_star star(star_position);
           
-          if (utility::l2norm(star_position - position) < vision) {
-            fixed_stars.push_back (star);
-          } else {
-            hidden_stars.push_back (star);
-          }
+	  if (utility::l2norm(star_position - position) < vision) {
+	    fixed_stars.push_back (star);
+	  } else {
+	    hidden_stars.push_back (star);
+	  }
           
-          known_universe.insert (grid_index);
-        }
+	  known_universe.insert (grid_index);
+	}
       }
     }
   }
@@ -441,6 +504,11 @@ void game::add_fixed_stars (point position, float vision) {
   }
 }
 
+/** Load new game data from a data_frame.
+
+    Adds and removes entity selectors given by the frame. Also adds
+    new command selectors representing fleet commands.
+*/
 void game::reload_data(data_frame &g){
   cout << "reload data:" << endl;
   cout << " -> initial entities: " << endl;
@@ -468,76 +536,18 @@ void game::reload_data(data_frame &g){
     }
   }
 
-  // propagate remaining ships through waypoints
-  // fleets are sources
-  set<waypoint_selector::ptr> buf;
-  for (auto x : entity){
-    if (x.second -> owned && x.second -> isa(fleet::class_id)){
-      fleet_selector::ptr fs = get_specific<fleet>(x.first);
-
-      if (fs -> is_idle()){
-	combid wid = fs -> com.target;
-	if (entity.count(wid)){
-	  waypoint_selector::ptr wp = get_specific<waypoint>(wid);
-	  wp -> ships += fs -> ships;
-	  buf.insert(wp);
-	}
-      }else if (entity.count(fs -> com.target)){
-	command c = fs -> com;
-	point from = fs -> position;
-	point to = entity[fs -> com.target] -> get_position();
-	// assure we don't assign ships which have been killed
-	c.ships = c.ships & fs -> ships;
-	cout << " -> adding fleet fommand from " << c.source << " to " << c.target << " with " << c.ships.size() << " ships." << endl;
-
-	add_command(c, from, to, false);
-	if (entity[c.target] -> isa(waypoint::class_id)){
-	  buf.insert(get_specific<waypoint>(c.target));
-	}
-      }else{
-	cout << "client side target miss: " << fs -> com.target << endl;
-      }
-    }
-  }
-
-  // move to queue for better propagation order
-  queue<waypoint_selector::ptr> q;
-  for (auto x : buf) q.push(x);
-
-  while(!q.empty()){
-    waypoint_selector::ptr s = q.front();
-    q.pop();
-    for (auto c : s -> pending_commands){
-      if (entity.count(c.target)){
-	entity_selector::ptr t = entity[c.target];
-	idtype cid = command_id(c);
-	if (cid > -1){
-	  // command selector already added
-	  command_selector::ptr cs = command_selectors[cid];
-	
-	  // add new ships to command selector
-	  cs -> ships += c.ships & s -> ships;
-	  cout << "filling cs " << cid << " with " << cs -> ships.size() << " ships" << endl;
-	
-	  // add new ships to target waypoint
-	  if (t -> isa(waypoint::class_id)){
-	    waypoint_selector::ptr ws = to_wps(t);
-	    ws -> ships += cs -> ships;
-	  }
-	}else{
-	  point from = s -> get_position();
-	  point to = t -> get_position();
-	  c.ships = c.ships & s -> ships;
-	  add_command(c, from, to, false);
-	}
-
-	if (t -> isa(waypoint::class_id)){
-	  waypoint_selector::ptr ws = to_wps(t);
-	  q.push(ws);
-	}
-      }else{
-	cout << "client side target miss: " << c.target << endl;
-      }
+  // update commands for fleets
+  for (auto f : get_all<fleet>()) {
+    if (entity.count(f -> com.target) && !f -> is_idle()){
+      command c = f -> com;
+      point to = entity[f -> com.target] -> get_position();
+      // assure we don't assign ships which have been killed
+      c.ships = c.ships & f -> ships;
+      cout << " -> adding fleet fommand from " << c.source << " to " << c.target << " with " << c.ships.size() << " ships." << endl;
+      add_command(c, f -> position, to, false);	
+    } else {
+      f -> com.target = identifier::target_idle;
+      f -> com.action = identifier::idle;
     }
   }
 }
@@ -546,24 +556,12 @@ void game::reload_data(data_frame &g){
 // COMMAND MANIPULATION
 // ****************************************
 
-bool game::command_exists(command c){
-  cout << "command_exists: start" << endl;
-  return command_id(c) > -1;
-}
-
-idtype game::command_id(command c){
-  for (auto x : command_selectors){
-    cout << " -> checking: " << x.first << endl;
-    if (c == (command)*x.second) return x.first;
-  }
-
-  return -1;
-}
-
+/** Add a command selector.
+ */
 void game::add_command(command c, point from, point to, bool fill_ships){
-  if (command_exists(c)) {
-    cout << "add_command: from " << c.source << " to " << c.target << " action " << c.action << ": already exists!" << endl;
-    return;
+  // check if command already exists
+  for (auto x : command_selectors){
+    if (c == (command)*x.second) return;
   }
 
   entity_selector::ptr s = entity[c.source];
@@ -583,62 +581,16 @@ void game::add_command(command c, point from, point to, bool fill_ships){
   // add command to command selectors
   command_selectors[id] = cs;
 
+  // add ships to command
+  if (fill_ships) {
+    set<combid> ready_ships = get_ready_ships(c.source);
+    cs -> ships = ready_ships;
+  }
+
   // add command selector key to list of the source entity's children
   s -> commands.insert(id);
 
-  // add ships to command
-  set<combid> ready_ships = get_ready_ships(c.source);
-  cout << "ready ships: " << ready_ships.size() << endl;
-  if (fill_ships) cs -> ships = ready_ships;
-  // s -> allocated_ships += cs -> ships;
-
-  // add ships to waypoint
-  if (t -> isa(waypoint::class_id)){
-    waypoint_selector::ptr ws = to_wps(t);
-    ws -> ships += cs -> ships;
-  }
-
   cout << "added command: " << id << endl;
-}
-
-void game::recursive_waypoint_deallocate(combid wid, set<combid> a){
-  entity_selector::ptr es = entity[wid];
-  if (!es -> isa(waypoint::class_id)) return;
-  waypoint_selector::ptr s = to_wps(es);
-
-  cout << "RWD start" << endl;
-  // check if there are still incoming commands
-
-  if (incident_commands(wid).empty()){
-    cout << "removing waypoint " << wid << endl;
-    // remove waypoint
-    auto buf = s -> commands;
-    for (auto c : buf){
-      cout << " .. remove command: " << c << endl;
-      remove_command(c);
-    }
-    entity.erase(wid);
-    return;
-  }
-
-  if (a.empty()) return;
-
-  s -> ships -= a;
-  // s -> allocated_ships -= a;
-
-  cout << "removing " << a.size() << " ships from waypoint " << wid << endl;
-  
-  for (auto c : s -> commands){
-    command_selector::ptr cs = command_selectors[c];
-    
-    cout << " .. removing ships from command " << c << endl;
-    // ships to remove from this command
-    set<combid> delta = cs -> ships & a;
-    cs -> ships -= delta;
-
-    cout << " .. recursive call RWD on " << cs -> target << endl;
-    recursive_waypoint_deallocate(cs -> target, delta);
-  }
 }
 
 bool game::waypoint_ancestor_of(combid ancestor, combid child){
@@ -658,15 +610,17 @@ bool game::waypoint_ancestor_of(combid ancestor, combid child){
   return false;
 }
 
-// remove command selector and associated command
+/** Remove a command.
+
+    Also recursively remove empty waypoints and their child commands.
+*/
 void game::remove_command(idtype key){
   cout << "remove command: " << key << endl;
 
   if (command_selectors.count(key)){
     command_selector::ptr cs = command_selectors[key];
     entity_selector::ptr s = entity[cs -> source];
-    set<combid> cships = cs -> ships;
-    combid target_key = cs -> target;
+    entity_selector::ptr t = entity[cs -> target];
 
     cout << " .. deleting; source = " << cs -> source << endl;
     // remove this command's selector
@@ -675,9 +629,14 @@ void game::remove_command(idtype key){
     // remove this command from it's source's list
     s -> commands.erase(key);
 
-    cout << " .. calling RWD" << endl;
-    // remove ships from waypoint
-    recursive_waypoint_deallocate(target_key, cships);
+    // if last command of waypoint, remove it
+    if (t -> isa(waypoint::class_id)){
+      if (incident_commands(t -> id).empty()){
+	auto buf = t -> commands;
+	for (auto c : buf) remove_command(c);
+	entity.erase(t -> id);
+      }
+    }
 
     // remove comgui
     if (comgui) delete comgui;
@@ -694,6 +653,7 @@ void game::remove_command(idtype key){
 // SELECTOR MANIPULATION
 // ****************************************
 
+/** Mark all selectors as not seen and clear command selectors. */
 void game::clear_selectors(){
   comid = 0;
 
@@ -704,6 +664,7 @@ void game::clear_selectors(){
   command_selectors.clear();
 }
 
+/** Mark all entity and command selectors as not selected. */
 void game::deselect_all(){
   for (auto x : entity) x.second -> selected = false;
   for (auto x : command_selectors) x.second -> selected = false;
@@ -713,6 +674,7 @@ void game::deselect_all(){
 // EVENT HANDLING
 // ****************************************
 
+/** Mark all area selectable entity selectors in selection rectangle as selected. */
 void game::area_select(){
   sf::FloatRect rect = fixrect(srect);
 
@@ -725,11 +687,14 @@ void game::area_select(){
   }
 }
 
+/** Create commands targeting an entity. 
+    
+    @param key target entity id
+    @param act command action
+    @param selected_entities selected entities
+*/
 void game::command2entity(combid key, string act, list<combid> selected_entities){
-  if (!entity.count(key)){
-    cout << "command2entity: invalid key: " << key << endl;
-    exit(-1);
-  }
+  if (!entity.count(key)) throw runtime_error("command2entity: invalid key: " + key);
 
   command c;
   point from, to;
@@ -752,54 +717,41 @@ void game::command2entity(combid key, string act, list<combid> selected_entities
   }
 }
 
-set<combid> game::entities_at(point p){
+/** List all entities at a point. */
+list<combid> game::entities_at(point p){
   float d;
-  set<combid> keys;
+  list<combid> keys;
 
   cout << "entities_at:" << endl;
 
   // find entities at p
   for (auto x : entity){
-    cout << "checking entity: " << x.first << endl;
-    if (x.second -> contains_point(p, d)) keys.insert(x.first);
+    if (x.second -> contains_point(p, d)) keys.push_back(x.first);
   }
 
   return keys;
 }
 
-combid game::entity_at(point p, int *q){
-  float d;
-  set<combid> keys = entities_at(p);
-  combid key = "";
-  int qmin = selector_queue;
+/** Get queued entity at a point. */ 
+combid game::entity_at(point p, int &q){
+  list<combid> keys = entities_at(p);
 
-  cout << "entity_at:" << endl;
+  keys.sort([this] (combid a, combid b) -> bool {
+    return entity[a] -> queue_level < entity[b] -> queue_level;
+  });
 
-  // find closest entity to p which is not a ship
-  for (auto x : keys){
-    cout << "checking entity: " << x << endl;
-    entity_selector::ptr e = entity[x];
-    if (e -> queue_level < qmin){
-      qmin = e -> queue_level;
-      key = x;
-      cout << "entity_at: k = " << key << ", qmin = " << e -> queue_level << endl;
-    }
-  }
-
-  cout << "entity at: " << p.x << "," << p.y << ": " << key << endl;
-
-  if (q) *q = qmin;
-
-  return key;
+  combid best = keys.front();
+  q = entity[best] -> queue_level;
+  return best;
 }
 
-
-idtype game::command_at(point p, int *q){
+/** Get queued command at a point. */
+idtype game::command_at(point p, int &q){
   int qmin = selector_queue;
   float d;
   idtype key = -1;
 
-  // find closest entity to p
+  // find next queued command near p
   for (auto x : command_selectors){
     if (x.second -> contains_point(p, d) && x.second -> queue_level < qmin){
       qmin = x.second -> queue_level;
@@ -808,17 +760,16 @@ idtype game::command_at(point p, int *q){
   }
 
   cout << "command at: " << p.x << "," << p.y << ": " << key << endl;
-
-  if (q) *q = qmin;
-
+  q = qmin;
   return key;
 }
 
+/** Select the next queued entity or command selector at a point. */
 bool game::select_at(point p){
   cout << "select at: " << p.x << "," << p.y << endl;
   int qent, qcom;
-  combid key = entity_at(p, &qent);
-  idtype cid = command_at(p, &qcom);
+  combid key = entity_at(p, qent);
+  idtype cid = command_at(p, qcom);
 
   if (qcom < qent) return select_command(cid);
 
@@ -829,23 +780,16 @@ bool game::select_at(point p){
   if (it != entity.end() && it -> second -> owned){
     it -> second -> selected = !(it -> second -> selected);
     it -> second -> queue_level = selector_queue++;
-
-    // debug printouts
-    cout << "selector found: " << it -> first << " -> " << it -> second -> selected << endl;
-
-    if (it -> second -> selected){
-      cout << "ships at " << it -> first << endl;
-      for (auto x : it -> second -> get_ships()){
-	cout << x << ", ";
-      }
-      cout << endl;
-    }
     return true;
   }
 
   return false;
 }
 
+/** Select a command. 
+    
+    Sets up the command gui.
+*/
 bool game::select_command(idtype key){
   auto it = command_selectors.find(key);
  
@@ -857,23 +801,17 @@ bool game::select_command(idtype key){
     
     cout << "command found: " << it -> first << " -> " << it -> second -> selected << endl;
 
-    // setup command gui
-    hm_t<combid, ship> ready_ships;
-
-    for (auto x : get_ready_ships(it -> second -> source)){
-      ready_ships[x] = (ship)*get_specific<ship>(x);
-    }
-
-    // if the command selector lists ships which are not listed as
-    // ready by the source, remove them
-    auto buf = it -> second -> ships;
-    for (auto x : buf){
-      if (!ready_ships.count(x)) it -> second -> ships.erase(x);
-    }
+    // setup command gui using ready ships from source plus ships
+    // already selected for this command (they will not be listed as
+    // ready)
+    hm_t<combid, ship> all_ships;
+    set<combid> ready_ships = get_ready_ships(it -> second -> source);
+    ready_ships += it -> second -> ships;    
+    for (auto x : ready_ships) all_ships[x] = *get_specific<ship>(x);
 
     comgui = new command_gui(it -> first, 
 			     &window, 
-			     ready_ships,
+			     all_ships,
 			     it -> second -> ships,
 			     view_window.getSize(),
 			     col,
@@ -887,41 +825,35 @@ bool game::select_command(idtype key){
   return false;
 }
 
-int game::count_selected(){
-  int sum = 0;
-  for (auto x : entity) sum += x.second -> selected;
-  return sum;
+/** At least one selected entity? */
+bool game::exists_selected(){
+  for (auto x : entity) if (x.second -> selected) return true;
+  return false;
 }
 
-// ids of non-allocated ships for entity selector
+/** Get ids of non-allocated ships for entity selector */
 set<combid> game::get_ready_ships(combid id){
-
-  if (!entity.count(id)) {
-    cout << "get ready ships: entity selector " << id << " not found!" << endl;
-    exit(-1);
-  }
+  if (!entity.count(id)) throw runtime_error("get ready ships: entity selector " + id + " not found!");
 
   entity_selector::ptr e = entity[id];
   set<combid> s = e -> get_ships();
-  for (auto c : e -> commands){
-    for (auto x : command_selectors[c] -> ships){
-      s.erase(x);
-    }
-  }
+  for (auto c : e -> commands) s -= command_selectors[c] -> ships;
 
   return s;
 }
 
+/** Get ids of selected solars */
 list<combid> game::selected_solars(){
   list<combid> res;
-  for (auto &x : entity){
-    if (x.second -> isa(solar::class_id) && x.second -> selected){
-      res.push_back(x.first);
+  for (auto s : get_all<solar>()){
+    if (s -> selected){
+      res.push_back(s -> id);
     }
   }
   return res;
 }
 
+/** Get ids of selected entities. */
 list<combid> game::selected_entities(){
   list<combid> res;
   for (auto &x : entity){
@@ -930,82 +862,100 @@ list<combid> game::selected_entities(){
   return res;
 }
 
+/** Start the solar gui. */
 void game::run_solar_gui(combid key){
   interface::desktop -> reset_qw(interface::main_window::Create(get_specific<solar>(key)));
 }
 
-// return true to signal choice step done
+void game::setup_targui(point p){
+  // set up targui
+  auto keys_targeted = entities_at(p);
+  auto keys_selected = selected_entities();
+  list<target_gui::option_t> options;
+  set<string> possible_actions = fleet::all_base_actions();
+
+  // add possible actions from available fleet interactions
+  for (auto k : keys_selected){
+    entity_selector::ptr e = entity[k];
+    if (e -> isa(fleet::class_id)){
+      fleet_selector::ptr f = utility::guaranteed_cast<fleet_selector, entity_selector>(e);
+      possible_actions += f -> interactions;
+    }
+  }
+
+  // check if actions are allowed per target
+  auto atab = fleet::action_condition_table();
+  for (auto a : possible_actions){
+    auto condition = atab[a].owned_by(self_id);
+    for (auto k : keys_targeted){
+      if (interaction::valid(condition, entity[k])){
+	options.push_back(target_gui::option_t(k, a));
+      }
+    }
+  }
+
+  // default options
+  options.push_back(target_gui::option_add_waypoint);
+  options.push_back(target_gui::option_cancel);
+
+  targui = new target_gui(p, options, keys_selected, &window);
+} 
+
+/** Event handler for the main choice interface.
+
+    Called by the event handler in choice_step.
+
+    @return true if client is finished
+*/
 int game::choice_event(sf::Event e){
   point p;
   list<combid> ss;
-
-  if (interface::desktop -> query_window) {
-    if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape){
-      interface::desktop -> clear_qw();
-    }
-    return 0;
-  }
-
-  window.setView(view_game);
-  if (targui && targui -> handle_event(e)){
-    if (targui -> done){
-      if (targui -> selected_option.key != "cancel"){
-	combid k = targui -> selected_option.key;
-	if (k == "add_waypoint"){
-	  k = add_waypoint(targui -> position);
-	}
-
-	command2entity(k, targui -> selected_option.option, targui -> selected_entities);
-      }
-      delete targui;
-      targui = 0;
-    }
-    return 0;
-  }
-
-  window.setView(view_window);
-  if (comgui && comgui -> handle_event(e)){
-    // handle comgui effects
-
-    command_selector::ptr cs = command_selectors[comgui -> comid];
-    entity_selector::ptr s = entity[cs -> source];
-    entity_selector::ptr t = entity[cs -> target];
-
-    // check if target is a waypoint
-    if (t -> isa(waypoint::class_id)){
-      waypoint_selector::ptr ws = to_wps(t);
-
-      // compute added or removed ships
-      set<combid> removed = cs -> ships - comgui -> allocated;
-      set<combid> added = comgui -> allocated - cs -> ships;
-
-      ws -> ships += added;
-
-      if (!removed.empty()){
-	recursive_waypoint_deallocate(cs -> target, removed);
-      }
-    }
-
-    // set command selector's ships
-    cs -> ships = comgui -> allocated;
-    
-    return 0;
-  }
 
   sf::Vector2i mpos;
   sf::FloatRect minirect;
   point delta;
   point target;
-	  
+
+  // event reaction functions
+  auto init_area_select = [this] (sf::Event e) {
+    point p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
+    area_select_active = true;
+    srect = sf::FloatRect(p.x, p.y, 0, 0);
+  };
+
+  auto update_hover_info = [this] (point p) {
+    auto keys = entities_at(p);
+    string text = "Empty space";
+      
+    if (keys.size() == 1){
+      combid k = *keys.begin();
+      if (!entity.count(k)) {
+	cout << "update hover info: entity " << k << " not in table!" << endl;
+	exit(-1);
+      }
+
+      text = entity[k] -> hover_info();
+    }else if (keys.size() > 1){
+      text = "Multiple entities here!";
+    }
+
+    interface::desktop -> hover_label -> SetText(text);
+  };
+
+  auto delete_selected_commands = [this] () {
+    auto buf = command_selectors;
+    for (auto i = buf.begin(); i != buf.end(); i++){
+      if (i -> second -> selected){
+	remove_command(i -> first);
+      }
+    }
+  };
+
+  // event switch
   window.setView(view_game);
   switch (e.type){
   case sf::Event::MouseButtonPressed:
-    if (e.mouseButton.button == sf::Mouse::Left){
-      point p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
-      area_select_active = true;
-      srect = sf::FloatRect(p.x, p.y, 0, 0);
-      cout << "set area UL to: " << srect.left << "x" << srect.top << endl;
-    }
+    if (e.mouseButton.button == sf::Mouse::Left) init_area_select(e);
     break;
   case sf::Event::MouseButtonReleased:
     clear_guis();
@@ -1029,38 +979,8 @@ int game::choice_event(sf::Event e){
 	  select_at(p);
 	}
       }
-    } else if (e.mouseButton.button == sf::Mouse::Right && count_selected()){
-      // set up targui
-      auto keys_targeted = entities_at(p);
-      auto keys_selected = selected_entities();
-      list<target_gui::option_t> options;
-      set<string> possible_actions = fleet::all_base_actions();
-
-      // add possible actions from available fleet interactions
-      for (auto k : keys_selected){
-	entity_selector::ptr e = entity[k];
-	if (e -> isa(fleet::class_id)){
-	  fleet_selector::ptr f = utility::guaranteed_cast<fleet_selector, entity_selector>(e);
-	  possible_actions += f -> interactions;
-	}
-      }
-
-      // check if actions are allowed per target
-      auto atab = fleet::action_condition_table();
-      for (auto a : possible_actions){
-	auto condition = atab[a].owned_by(self_id);
-	for (auto k : keys_targeted){
-	  if (interaction::valid(condition, entity[k])){
-	    options.push_back(target_gui::option_t(k, a));
-	  }
-	}
-      }
-
-      // default options
-      options.push_back(target_gui::option_add_waypoint);
-      options.push_back(target_gui::option_cancel);
-
-      targui = new target_gui(p, options, keys_selected, &window);
+    } else if (e.mouseButton.button == sf::Mouse::Right && exists_selected()){
+      setup_targui(p);
     }
 
     // clear selection rect
@@ -1076,23 +996,7 @@ int game::choice_event(sf::Event e){
       srect.height = p.y - srect.top;
       cout << "update srect size at " << p.x << "x" << p.y << " to " << srect.width << "x" << srect.height << endl;
     }else{
-      // update hover info
-      auto keys = entities_at(p);
-      string text = "Empty space";
-      
-      if (keys.size() == 1){
-	combid k = *keys.begin();
-	if (!entity.count(k)) {
-	  cout << "update hover info: entity " << k << " not in table!" << endl;
-	  exit(-1);
-	}
-
-	text = entity[k] -> hover_info();
-      }else if (keys.size() > 1){
-	text = "Multiple entities here!";
-      }
-
-      interface::desktop -> hover_label -> SetText(text);
+      update_hover_info(p);
     }
     break;
   case sf::Event::MouseWheelMoved:
@@ -1112,18 +1016,7 @@ int game::choice_event(sf::Event e){
       if (ss.size() == 1) run_solar_gui(ss.front());
       break;
     case sf::Keyboard::Delete:
-
-      // stupid jump to case label syntax - wrap delete code in local
-      // environment
-      [this] () {
-	auto buf = command_selectors;
-	for (auto i = buf.begin(); i != buf.end(); i++){
-	  if (i -> second -> selected){
-	    remove_command(i -> first);
-	  }
-	}
-      }();
-      
+      delete_selected_commands();
       break;
     case sf::Keyboard::O:
       view_game.zoom(1.2);
@@ -1144,6 +1037,7 @@ int game::choice_event(sf::Event e){
   return 0;
 }
 
+/** Update virtual camera based on key controls. */
 void game::controls(){
   static point vel(0,0);
   if (!window.hasFocus()) {
@@ -1173,6 +1067,7 @@ void game::controls(){
 // ****************************************
 using namespace graphics;
 
+/** Draw a box with a message and wait for ok. */
 void game::popup_message(string title, string message){
   int done = false;
 
@@ -1193,17 +1088,14 @@ void game::popup_message(string title, string message){
 
   interface::desktop -> Add(w);
 
-  auto event_handler = [this] (sf::Event e) -> int {
-    if (e.type == sf::Event::KeyPressed){
-      if (e.key.code == sf::Keyboard::Escape){
-	return query_aborted;
-      }else if (e.key.code == sf::Keyboard::Return){
-	return query_accepted;
+  auto event_handler = generate_event_handler([this] (sf::Event e) -> int {
+      if (e.type == sf::Event::KeyPressed){
+	if (e.key.code == sf::Keyboard::Return){
+	  return query_accepted;
+	}
       }
-    }
-    return default_event_handler(e);
-  };
-
+      return 0;
+    });
 
   window_loop(done, event_handler, default_body);
 
@@ -1212,6 +1104,7 @@ void game::popup_message(string title, string message){
   cout << "popup message: done" << endl;
 }
 
+/** Draw a box with a a query and options ok or cancel, wait for response. */
 bool game::popup_query(string v){  
   int done = false;
   bool accept = false;
@@ -1244,18 +1137,18 @@ bool game::popup_query(string v){
 
   w -> SetPosition(sf::Vector2f(window.getSize().x / 2 - w -> GetRequisition().x / 2, window.getSize().y / 2 - w -> GetRequisition().y / 2));
 
-  auto event_handler = [this, &accept] (sf::Event e) -> int {
-    if (e.type == sf::Event::KeyPressed){
-      if (e.key.code == sf::Keyboard::Escape){
-	accept = false;
-	return query_aborted;
-      }else if (e.key.code == sf::Keyboard::Return){
-	accept = true;
-	return query_accepted;
+  auto event_handler = generate_event_handler([this, &accept] (sf::Event e) -> int {
+      if (e.type == sf::Event::KeyPressed){
+	if (e.key.code == sf::Keyboard::Escape){
+	  accept = false;
+	  return query_aborted;
+	}else if (e.key.code == sf::Keyboard::Return){
+	  accept = true;
+	  return query_accepted;
+	}
       }
-    }
-    return default_event_handler(e);
-  };
+      return 0;
+    });
 
   window_loop(done, event_handler, default_body);
 
@@ -1265,7 +1158,7 @@ bool game::popup_query(string v){
   return accept;
 }
 
-
+/** Core loop for gui. */
 void game::window_loop(int &done, function<int(sf::Event)> event_handler, function<int(void)> body){
   sf::Clock clock;
   float frame_time = 1/(float)20;
@@ -1274,11 +1167,13 @@ void game::window_loop(int &done, function<int(sf::Event)> event_handler, functi
     auto delta = clock.restart().asSeconds();
 
     sf::Event event;
-    while (window.pollEvent(event)){
+    while (window.pollEvent(event) && !done){
       done |= event_handler(event);
     }
     
     if (!window.isOpen()) done |= query_aborted;
+
+    if (done) break;
 
     // update controls
     controls();
@@ -1288,6 +1183,8 @@ void game::window_loop(int &done, function<int(sf::Event)> event_handler, functi
 
     // main content callback
     done |= body();
+
+    if (done) break;
 
     window.setView(view_window);
     // todo: add a dummy draw here to ensure sfgui uses this view
@@ -1309,6 +1206,7 @@ void game::window_loop(int &done, function<int(sf::Event)> event_handler, functi
   cout << "window_loop: done: " << done << endl;
 }
 
+/** Draw universe and game objects on the window */
 void game::draw_window(){
   window.clear();
 
@@ -1326,7 +1224,8 @@ void game::draw_window(){
   if (comgui) {
     window.setView(view_window);
     comgui -> draw();
-  }else if (interface::desktop -> query_window == 0){
+  } else if (interface::desktop -> query_window == 0){
+    // Interface stuff that is only drawn if there is no query window
 
     // draw minimap contents
     window.setView(view_minimap);
@@ -1365,6 +1264,7 @@ void game::draw_window(){
   }
 }
 
+/** Get positional rectangle representing the minimap in the window. */
 sf::FloatRect game::minimap_rect(){
   sf::FloatRect fr = view_minimap.getViewport();
   sf::FloatRect r;
@@ -1375,6 +1275,7 @@ sf::FloatRect game::minimap_rect(){
   return r;
 }
 
+/** Draw command selectors and selection rectangle. */
 void game::draw_interface_components(){
   window.setView(view_game);
 
@@ -1392,6 +1293,7 @@ void game::draw_interface_components(){
 
 }
 
+/** Draw entities and stars. */
 void game::draw_universe(){
   for (auto star : fixed_stars) star.draw(window);
   for (auto x : entity) x.second -> draw(window);

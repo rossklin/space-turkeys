@@ -15,10 +15,13 @@
 
 namespace st3{
   namespace client{
+    struct game;
+    
     /*! base class for graphical representation of game objects */
     class entity_selector : public virtual game_object{
       static const int max_click_distance = 20; /*!< greatest distance from entities at which clicks are handled */
     public:
+      static game *g;
       typedef std::shared_ptr<entity_selector> ptr;
       
       int queue_level; /*!< selection queue level: entities with lower level get priority */

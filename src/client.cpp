@@ -16,6 +16,7 @@
 #include "protocol.h"
 #include "cost.h"
 #include "research.h"
+#include "selector.h"
 
 using namespace std;
 using namespace st3;
@@ -82,7 +83,8 @@ int main(int argc, char **argv){
   graphics::initialize();
   // todo: might need to g.window.setActive(), and might not even be
   // able to construct sfgui in g before g.window.create()
-  
+
+  entity_selector::g = &g;
   g.run();
 
   g.socket -> disconnect();

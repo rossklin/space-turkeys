@@ -65,6 +65,10 @@ void waypoint::post_phase(game_data *g){
   }
 }
 
+void waypoint::give_commands(list<command> c, game_data *g){
+  pending_commands.insert(pending_commands.end(), c.begin(), c.end());
+}
+
 waypoint::ptr waypoint::create(idtype o){
   return ptr(new waypoint(o));
 }

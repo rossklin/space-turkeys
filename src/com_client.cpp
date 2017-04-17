@@ -9,7 +9,7 @@ using namespace std;
 using namespace st3;
 using namespace st3::client;
 
-void st3::client::load_frames(socket_t *socket, vector<data_frame> &g, int &loaded, int &done, sf::Color col){
+void st3::client::load_frames(socket_t *socket, vector<data_frame> &g, int &loaded, int &done){
   sf::Packet pq;
   int response = 0;
 
@@ -25,7 +25,7 @@ void st3::client::load_frames(socket_t *socket, vector<data_frame> &g, int &load
       break;
     }
 
-    if (deserialize(g[i], socket -> data, col, socket -> id)){
+    if (deserialize(g[i], socket -> data, socket -> id)){
       i++;
       loaded = i;
     }else{
@@ -90,7 +90,7 @@ entity_selector::ptr client::deserialize_object(sf::Packet &p, sint id){
   return T::create(s, col, s.owner == id);
 }
 
-bool client::deserialize(data_frame &f, sf::Packet &p, sf::Color col, sint id){
+bool client::deserialize(data_frame &f, sf::Packet &p, sint id){
   sint n;
   
   if (!(p >> f.players >> f.settings >> f.remove_entities >> n)){

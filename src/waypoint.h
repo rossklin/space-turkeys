@@ -11,7 +11,7 @@ namespace st3{
   class game_data;
   
   /*! Waypoints allow position based fleet joining and splitting.*/
-  class waypoint : public virtual game_object {
+  class waypoint : public virtual commandable_object {
   public:
     typedef std::shared_ptr<waypoint> ptr;
     static ptr create(idtype owner);
@@ -19,7 +19,6 @@ namespace st3{
     
     /*! List of commands waiting to trigger when all ships have arrived */
     std::list<command> pending_commands;
-    std::set<combid> ships;
 
     waypoint();
     waypoint(idtype o);
@@ -30,6 +29,7 @@ namespace st3{
     void post_phase(game_data *g);
     float vision();
     bool serialize(sf::Packet &p);
+    void give_commands(std::list<command> c, game_data *g);
 
     ptr clone();
 
