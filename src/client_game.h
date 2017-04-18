@@ -71,6 +71,8 @@ namespace st3{
       /*! send a packet to query and wait for response */
       bool wait_for_it(sf::Packet &p);
 
+      bool init_data();
+
       /*! run the pre step: check with server and get game data
 	@return whether to continue the game round
       */

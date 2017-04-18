@@ -14,6 +14,7 @@
 #include "utility.h"
 #include "command_gui.h"
 #include "target_gui.h"
+#include "upgrades.h"
 
 using namespace std;
 using namespace st3;
@@ -139,29 +140,12 @@ void game::run(){
   window.setView(view_window);
   interface::desktop = new interface::main_interface(window.getSize(), players[self_id].research_level);
 
-  // map initializer to run after first data recieved
-  auto map_init = [this] () {
-    // initialize color and position at home solar
-    col = sfcolor(players[self_id].color);
-    for (auto i : entity){
-      if (i.second -> isa(solar::class_id) && i.second -> owned){
-	view_game.setCenter(i.second -> get_position());
-	view_game.setSize(point(25 * settings.solar_maxrad, 25 * settings.solar_maxrad));
-	break;
-      }
-    }
-  };
+  init_data();
   
   // game loop
   while (true){
     clear_guis();
     if (!pre_step()) break;
-
-    if (first){
-      map_init();
-      first = false;
-    }
-
     if (!choice_step()) break;
     if (!simulation_step()) break;
   }
@@ -189,6 +173,32 @@ bool game::wait_for_it(sf::Packet &p){
   if (done & (query_game_complete | query_aborted)){
     cout << "wait_for_it: finished/aborted" << endl;
     return false;
+  }
+
+  return true;
+}
+
+bool game::init_data(){
+  sf::Packet pq;
+  data_frame data;
+
+  message = "loading players...";
+  pq << protocol::load_init;
+
+  if (!(wait_for_it(pq) && deserialize(data, socket -> data, self_id))) {
+    throw runtime_error("pre_step: failed to load/deserialize init_data");
+  }
+
+  players = data.players;
+  settings = data.settings;
+  col = sf::Color(players[self_id].color);
+  
+  for (auto i : data.entity){
+    if (i.second -> isa(solar::class_id) && i.second -> owned){
+      view_game.setCenter(i.second -> get_position());
+      view_game.setSize(point(25 * settings.solar_maxrad, 25 * settings.solar_maxrad));
+      break;
+    }
   }
 
   return true;
@@ -443,6 +453,8 @@ choice::choice game::build_choice(choice::choice c){
 	throw runtime_error("Attempting to build invalid command: " + y);
       }
     }
+
+    if (x.second -> isa(waypoint::class_id)) c.waypoints[x.first] = *get_specific<waypoint>(x.first);
   }
 
   return c;
@@ -522,10 +534,11 @@ void game::reload_data(data_frame &g){
 
   // update entities: fleets, solars and waypoints
   for (auto x : g.entity){
+    entity_selector::ptr p = x.second;
     combid key = x.first;
-    entity[x.first] = x.second;
-    x.second -> seen = true;
-    if (x.second -> owner == self_id) add_fixed_stars (x.second -> position, x.second -> vision());
+    entity[x.first] = p;
+    p -> seen = true;
+    if (p -> owner == self_id && p -> is_active()) add_fixed_stars (p -> position, p -> vision());
   }
 
   // remove entities as server specifies
@@ -735,6 +748,7 @@ list<combid> game::entities_at(point p){
 /** Get queued entity at a point. */ 
 combid game::entity_at(point p, int &q){
   list<combid> keys = entities_at(p);
+  if (keys.empty()) return identifier::source_none;
 
   keys.sort([this] (combid a, combid b) -> bool {
     return entity[a] -> queue_level < entity[b] -> queue_level;
@@ -877,9 +891,9 @@ void game::setup_targui(point p){
   // add possible actions from available fleet interactions
   for (auto k : keys_selected){
     entity_selector::ptr e = entity[k];
-    if (e -> isa(fleet::class_id)){
-      fleet_selector::ptr f = utility::guaranteed_cast<fleet_selector, entity_selector>(e);
-      possible_actions += f -> interactions;
+    for (auto i : e -> get_ships()){
+      ship::ptr s = get_specific<ship>(i);
+      for (auto u : s -> upgrades) possible_actions += upgrade::table()[u].inter;
     }
   }
 

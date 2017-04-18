@@ -34,6 +34,7 @@ namespace st3{
     virtual void on_remove(game_data *g);
     virtual float vision() = 0;
     virtual bool is_commandable();
+    virtual bool is_active();
     
     ptr clone();
 

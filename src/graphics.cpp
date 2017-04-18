@@ -15,11 +15,6 @@ sf::FloatRect interface::qw_allocation;
 int interface::top_height;
 int interface::bottom_start;
 
-sf::Color graphics::sfcolor(sint c){
-  sint mask = 0xff;
-  return sf::Color(mask & (c >> 16), mask & (c >> 8), mask & c, mask & (c >> 24));
-}
-
 sf::Color graphics::fade_color(sf::Color from, sf::Color to, float r){
   return sf::Color(from.r + r * (to.r - from.r), 
 		   from.g + r * (to.g - from.g), 

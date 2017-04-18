@@ -25,6 +25,10 @@ bool game_object::is_commandable(){
   return false;
 }
 
+bool game_object::is_active(){
+  return true;
+}
+
 game_object::ptr game_object::clone(){
   return clone_impl();
 }

@@ -46,6 +46,14 @@ void server::game_handler(com &c, game_data &g){
   };
   
   p_confirm << protocol::confirm;
+  
+  // load_init, expects: only query
+  for (auto x : c.clients) {
+    packets[x.first].clear();
+    packets[x.first] << protocol::confirm;
+    packets[x.first] << g.limit_to(x.first);
+  }
+  if (!c.check_protocol(protocol::load_init, packets)) return;
 
   while (true){
     if (check_end()) return;

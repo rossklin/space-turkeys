@@ -29,6 +29,7 @@ namespace st3{
     void post_phase(game_data *g);
     float vision();
     bool serialize(sf::Packet &p);
+
     void give_commands(std::list<command> c, game_data *g);
 
     ptr clone();

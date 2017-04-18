@@ -36,8 +36,12 @@ int main(int argc, char **argv){
   }
 
   g.build();
-  
-  game_handler(c, g);
+
+  try {
+    game_handler(c, g);
+  } catch (...) {
+    c.disconnect();
+  }
 
   c.disconnect();
 

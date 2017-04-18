@@ -109,7 +109,7 @@ bool target_condition::requires_target(){
 
 // interaction
 bool interaction::valid(target_condition c, game_object::ptr p){
-  bool type_match = identifier::get_type(p -> id) == c.what;
+  bool type_match = !(c.requires_target() && identifier::get_type(p -> id) != c.what);
   sint aligned = 0;
   if (c.owner == p -> owner) {
     aligned = target_condition::owned;

@@ -259,7 +259,7 @@ float utility::sigmoid(float x, float s){
 // generate a vector of n different colors, which are also different
 // from black (background) and grey (neutral solar) colors
 vector<sint> utility::different_colors(int n){
-  int rep = 100;
+  int rep = 10;
   int ncheck = n+2;
   vector<vector<float> > buf(ncheck);
 
@@ -299,7 +299,7 @@ vector<sint> utility::different_colors(int n){
     sint red = buf[i][0] * 255;
     sint green = buf[i][1] * 255;
     sint blue = buf[i][2] * 255;
-    res[i] = (red << 16) | (green << 8) | blue | 0xff000000;
+    res[i] = (red << 24) | (green << 16) | (blue << 8) | 0xff;
   }
 
   return res;

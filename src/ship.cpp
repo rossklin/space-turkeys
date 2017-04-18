@@ -46,11 +46,11 @@ void ship::move(game_data *g){
 }
 
 void ship::interact(game_data *g){
-  if (fleet_id == identifier::source_none) return;
   fleet::ptr f = g -> get_fleet(fleet_id);
+  string action = f -> com.action;
   
   // check land
-  if (identifier::get_type(f -> com.target) == solar::class_id && f -> com.action == fleet_action::go_to && f -> converge){
+  if (identifier::get_type(f -> com.target) == solar::class_id && action == fleet_action::go_to && f -> converge){
     solar::ptr s = g -> get_solar(f -> com.target);
     if (utility::l2d2(s -> position - position) < pow(s -> radius, 2)){
       fleet_id = identifier::source_none;
@@ -59,11 +59,9 @@ void ship::interact(game_data *g){
     }
   }
 
-  // check registered interactions
-  auto inter = compile_interactions();
-  auto itab = interaction::table();
-  for (auto x : inter){
-    interaction i = itab[x];
+  // check if fleet action is available on this ship
+  if (compile_interactions().count(action)) {
+    interaction i = interaction::table()[action];
     list<combid> valid_targets = g -> search_targets(position, current_stats.interaction_radius, i.condition.owned_by(f -> owner));
     for (auto a : valid_targets){
       i.perform(ptr(this), g -> entity[a]);
@@ -103,6 +101,10 @@ set<string> ship::compile_interactions(){
   auto utab = upgrade::table();
   for (auto v : upgrades) res += utab[v].inter;
   return res;
+}
+
+bool ship::is_active(){
+  return fleet_id != identifier::source_none;
 }
 
 ship_stats ship_stats::operator+= (const ship_stats &b) {

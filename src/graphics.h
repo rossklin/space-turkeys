@@ -38,12 +38,6 @@ namespace st3{
     const sf::Color fleet_fill(200,200,200,50); /*!< color for fleet interior */
     const sf::Color fleet_outline(40,60,180,200); /*!< color for fleet border */
 
-    /*! make an sf::Color from an sint 
-      @param c 32 bit color representation
-      @return sf::Color representation
-    */
-    sf::Color sfcolor(sint c);
-
     /*! compute a linear interpolation between two colors
       @param from first color
       @param to second color

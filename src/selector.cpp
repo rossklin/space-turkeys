@@ -213,7 +213,7 @@ namespace st3{
 
     template<>
     void specific_selector<ship>::draw(window_t &w){
-      graphics::draw_ship(w, (ship)*this, get_color());
+      if (is_active()) graphics::draw_ship(w, *this, get_color());
     }
 
     template<>

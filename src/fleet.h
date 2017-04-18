@@ -11,13 +11,13 @@ namespace st3{
   class game_data;
 
   namespace fleet_action{
-    const std::string space_combat;
-    const std::string bombard;
-    const std::string colonize;
-    const std::string go_to;
-    const std::string join;
-    const std::string follow;
-    const std::string idle;
+    extern const std::string space_combat;
+    extern const std::string bombard;
+    extern const std::string colonize;
+    extern const std::string go_to;
+    extern const std::string join;
+    extern const std::string follow;
+    extern const std::string idle;
   };
 
   /*! a fleet controls a set of ships */
@@ -66,7 +66,6 @@ namespace st3{
     bool is_idle();
     void update_data(game_data *g);
     target_condition current_target_condition(game_data *g);
-    void update_interactions(game_data *g);
     void remove_ship(combid i);
     
     ptr clone();

@@ -194,13 +194,7 @@ void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &
 bool game_data::validate_choice(choice::choice c, idtype id){
   cout << "game_data: validate choice" << endl;
 
-  for (auto &x : c.waypoints){
-    if (identifier::get_waypoint_owner(x.first) != id){
-      cout << "apply_choice: player " << id << " tried to insert waypoint owned by " << identifier::get_waypoint_owner(x.first) << endl;
-      return false;
-    }
-  }
-
+  // solar choices
   for (auto &x : c.solar_choices){
     if (!entity.count(x.first)){
       cout << "entity " << x.first << " not found for solar choice!" << endl;
@@ -213,6 +207,7 @@ bool game_data::validate_choice(choice::choice c, idtype id){
     }
   }
 
+  // commands
   for (auto x : c.commands){
     if (!entity.count(x.first)){
       cout << "entity " << x.first << " not found for command!" << endl;
@@ -231,18 +226,18 @@ bool game_data::validate_choice(choice::choice c, idtype id){
 void game_data::apply_choice(choice::choice c, idtype id){
   cout << "game_data: running dummy apply choice" << endl;
 
-  if (!validate_choice(c, id)){
-    cout << "player " << id << " submitted an invalid choice!" << endl;
-    exit(-1);
+  // build waypoints before validating the choice, so that commands
+  // based at waypoints can be validated  
+  for (auto &x : c.waypoints){
+    if (identifier::get_waypoint_owner(x.first) != id){
+      throw runtime_error("apply_choice: player " + to_string(id) + " tried to insert waypoint owned by " + to_string(identifier::get_waypoint_owner(x.first)));
+    }
+    add_entity(make_shared<waypoint>(x.second));
   }
+
+  if (!validate_choice(c, id)) throw runtime_error("player " + to_string(id) + " submitted an invalid choice!");
 
   cout << "apply_choice for player " << id << ": inserting " << c.waypoints.size() << " waypoints:" << endl;
-
-  // build waypoints
-  for (auto &x : c.waypoints) {
-    waypoint::ptr w = make_shared<waypoint>(x.second);
-    add_entity(w);
-  }
 
   // set solar choices
   for (auto &x : c.solar_choices) {
@@ -276,24 +271,15 @@ void game_data::add_entity(game_object::ptr p){
 }
 
 void game_data::remove_entity(combid i){
-  if (!entity.count(i)){
-    cout << "remove_entity: " << i << ": doesn't exist!" << endl;
-    exit(-1);
-  }
+  if (!entity.count(i)) throw runtime_error("remove_entity: " + i + ": doesn't exist!");
   entity[i] -> on_remove(this);
   entity.erase(i);
   remove_entities.push_back(i);
 }
 
 void game_data::remove_units(){
-  // remove entity
-  for (auto i = entity.begin(); i != entity.end();){
-    if (i -> second -> remove){
-      remove_entity((i++) -> first);
-    }else{
-      i++;
-    }
-  }
+  auto buf = entity;
+  for (auto i : buf) if (i.second -> remove) remove_entity(i.first);
 }
 
 // should set positions, update stats and add entities
@@ -310,13 +296,13 @@ void game_data::distribute_ships(list<combid> sh, point p){
   }
 }
 
-void game_data::increment(){
-  for (auto x : entity) x.second -> pre_phase(this);
-  for (auto x : entity) x.second -> move(this);
-  for (auto x : entity) x.second -> interact(this);
+void game_data::increment(){  
+  for (auto x : entity) if (x.second -> is_active()) x.second -> pre_phase(this);
+  for (auto x : entity) if (x.second -> is_active()) x.second -> move(this);
+  for (auto x : entity) if (x.second -> is_active()) x.second -> interact(this);
 
   remove_units();
-  for (auto x : entity) x.second -> post_phase(this);
+  for (auto x : entity) if (x.second -> is_active()) x.second -> post_phase(this);
 }
 
 // players and settings should be set before build is called
@@ -433,15 +419,8 @@ void game_data::end_step(){
 }
 
 bool game_data::entity_seen_by(combid id, idtype pid){
-  if (!entity.count(id)){
-    cout << "entity seen by: not found: " << id << endl;
-    exit(-1);
-  }
+  if (!entity.count(id)) throw runtime_error("entity seen by: not found: " + id);
 
-  auto landed_ship = [this] (game_object::ptr s) -> bool{
-    return identifier::get_type(s -> id) == ship::class_id && get_ship(s -> id) -> fleet_id == identifier::source_none;
-  };
-  
   game_object::ptr x = entity[id];
 
   // always see owned entities
@@ -450,16 +429,15 @@ bool game_data::entity_seen_by(combid id, idtype pid){
   // never see opponent waypoints
   if (identifier::get_type(id) == waypoint::class_id) return false;
 
-  // don't see ships if they're not in a fleet
-  if (landed_ship(x)) return false;
+  // don't see entities that aren't active
+  if (!x -> is_active()) return false;
 
   auto buf = all_owned_by(pid);
   bool seen = false;
 
   for (auto i = buf.begin(); i != buf.end() && !seen; i++){
-    // don't use ships to spot if they're not in a fleet
     game_object::ptr s = *i;
-    if (landed_ship(s)) continue;
+    if (!s -> is_active()) continue;
     seen |= utility::l2d2(x -> position - s -> position) < pow(s -> vision(), 2);
   }
 

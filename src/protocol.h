@@ -16,7 +16,8 @@ namespace st3{
     const sint frame = 2; /*!< query to get a simulation frame */
     const sint connect = 3; /*!< query to connect */
     const sint leave = 4;
-    const sint any = 5;
+    const sint load_init = 5;
+    const sint any = 6;
 
     /* **************************************** */
     /* RESPONSES */

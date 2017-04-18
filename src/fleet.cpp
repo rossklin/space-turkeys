@@ -12,22 +12,20 @@ using namespace st3;
 
 const string fleet::class_id = "fleet";
 
-namespace fleet_action{
-  const string space_combat = "space combat";
-  const string bombard = "bombard";
-  const string colonize = "colonize";
-  const string go_to = "go to";
-  const string join = "join";
-  const string follow = "follow";
-  const string idle = "idle";
-};
+const string fleet_action::space_combat = "space combat";
+const string fleet_action::bombard = "bombard";
+const string fleet_action::colonize = "colonize";
+const string fleet_action::go_to = "go to";
+const string fleet_action::join = "join";
+const string fleet_action::follow = "follow";
+const string fleet_action::idle = "idle";
 
 set<string> fleet::all_interactions(){
-  return set<string>({fleet_action::space_combat, fleet_action::bombard, fleet_action::colonize});
+  return {fleet_action::space_combat, fleet_action::bombard, fleet_action::colonize};
 }
 
 set<string> fleet::all_base_actions(){
-  return set<string>({fleet_action::go_to, fleet_action::join, fleet_action::follow, fleet_action::idle});
+  return {fleet_action::go_to, fleet_action::join, fleet_action::follow, fleet_action::idle};
 }
 
 hm_t<string, target_condition> &fleet::action_condition_table(){
@@ -180,17 +178,6 @@ void fleet::update_data(game_data *g){
   if (!is_idle()){
     if (g -> target_position(com.target, target_position)) converge = utility::l2d2(target_position - position) < fleet::interact_d2;
   }
-
-  // available interactions
-  update_interactions(g);
-}
-
-void fleet::update_interactions(game_data *g){
-  interactions.clear();
-  for (auto k : ships){
-    ship::ptr s = g -> get_ship(k);
-    for (auto u : s -> upgrades) interactions += upgrade::table()[u].inter;
-  }
 }
 
 void fleet::check_waypoint(game_data *g){
@@ -220,7 +207,6 @@ void fleet::check_join(game_data *g){
       f -> ships.insert(i);
     }
     remove = true;
-    f -> update_interactions(g);
   }
 }
 

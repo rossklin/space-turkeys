@@ -46,18 +46,14 @@ void waypoint::post_phase(game_data *g){
   // evaluate commands in random order
   vector<command> buf(pending_commands.begin(), pending_commands.end());
   random_shuffle(buf.begin(), buf.end());
-  cout << "relocate from " << id << ": command order: " << endl;
   for (auto &y : buf){
-    cout << " -> " << y.target << endl;
-      
     // check if all ships in command y are either landed or dead
     check = true;
     set<combid> sbuf = y.ships - arrived_ships;
     for (auto i : sbuf) check &= !(g -> entity.count(i));
 
-    ready_ships = y.ships & arrived_ships;
-
     if (check){
+      ready_ships = y.ships & arrived_ships;
       cout << "waypoint trigger: command targeting " << y.target << " ready with " << ready_ships.size() << " ships!" << endl;
       g -> relocate_ships(y, ready_ships, owner);
       pending_commands.remove(y);
