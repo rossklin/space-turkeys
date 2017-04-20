@@ -82,11 +82,7 @@ entity_selector::ptr client::deserialize_object(sf::Packet &p, sint id){
 
   sf::Color col;
   typename T::base_object_t s;
-  if (!(p >> s)){
-    cout << "deserialize object: package empty!" << endl;
-    return false;
-  }
-
+  if (!(p >> s)) throw runtime_exception("deserialize_object: package empty!");
   return T::create(s, col, s.owner == id);
 }
 
@@ -99,6 +95,8 @@ bool client::deserialize(data_frame &f, sf::Packet &p, sint id){
   }
   
   f.entity.clear();
+
+  cout << "deserialize: recieving " << n << " entities." << endl;
 
   // "polymorphic" deserialization
   for (int i = 0; i < n; i++){
@@ -120,6 +118,7 @@ bool client::deserialize(data_frame &f, sf::Packet &p, sint id){
 
     obj -> color = sf::Color(f.players[obj -> owner].color);
     f.entity[obj -> id] = obj;
+    cout << "deserialize: " << obj -> id << endl;
   }
 
   return true;

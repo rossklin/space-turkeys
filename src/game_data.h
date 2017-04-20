@@ -51,7 +51,7 @@ namespace st3{
     void add_entity(game_object::ptr p);
     void remove_units();
     void generate_fleet(point p, idtype i, command &c, std::list<combid> &sh);
-    void relocate_ships(command &c, std::set<combid> &sh, idtype owner);
+    void relocate_ships(command c, std::set<combid> &sh, idtype owner);
 
     // game steps
     void pre_step(); 

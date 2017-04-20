@@ -22,6 +22,8 @@ game_data::game_data(const game_data &g) {
 
 game_data &game_data::operator =(const game_data &g){
   allocate_grid();
+  entity.clear();
+  
   for (auto x : g.entity) entity[x.first] = x.second -> clone();
 
   players = g.players;
@@ -115,7 +117,7 @@ list<combid> game_data::search_targets(point p, float r, target_condition c){
 }
 
 // create a new fleet and add ships from command c
-void game_data::relocate_ships(command &c, set<combid> &sh, idtype owner){
+void game_data::relocate_ships(command c, set<combid> &sh, idtype owner){
   fleet::ptr f;
   combid source_id;
   set<combid> fleet_buf;
@@ -233,11 +235,10 @@ void game_data::apply_choice(choice::choice c, idtype id){
       throw runtime_error("apply_choice: player " + to_string(id) + " tried to insert waypoint owned by " + to_string(identifier::get_waypoint_owner(x.first)));
     }
     add_entity(make_shared<waypoint>(x.second));
+    cout << "apply_choice: player " << id << ": added " << x.first << endl;
   }
 
   if (!validate_choice(c, id)) throw runtime_error("player " + to_string(id) + " submitted an invalid choice!");
-
-  cout << "apply_choice for player " << id << ": inserting " << c.waypoints.size() << " waypoints:" << endl;
 
   // set solar choices
   for (auto &x : c.solar_choices) {
@@ -247,7 +248,6 @@ void game_data::apply_choice(choice::choice c, idtype id){
 
   // distribute commands
   for (auto x : c.commands){
-    cout << "apply_choice: checking command key " << x.first << endl;
     commandable_object::ptr v = utility::guaranteed_cast<commandable_object>(entity[x.first]);
     v -> give_commands(x.second, this);
   }
@@ -259,13 +259,7 @@ void game_data::allocate_grid(){
 }
 
 void game_data::add_entity(game_object::ptr p){
-  if (entity.count(p -> id)){
-    cout << "add_entity: " << p -> id << ": already exists!" << endl;
-    exit(-1);
-  }
-
-  cout << "add_entity: " << p -> id << " owned by " << p -> owner << endl;
-  
+  if (entity.count(p -> id)) throw runtime_error("add_entity: already exists: " + p -> id);  
   entity[p -> id] = p;
   p -> on_add(this);
 }
@@ -356,8 +350,6 @@ void game_data::build(){
     }
   }
 
-  // TODO: both solars get the same ship-id, though only one player
-  // gets the ship
   allocate_grid();
   for (auto &s : solar_data) add_entity(solar::ptr(new solar(s.second)));
   for (auto &s : ship_data) add_entity(ship::ptr(new ship(s.second)));
@@ -366,11 +358,7 @@ void game_data::build(){
 // clean up things that will be reloaded from client
 void game_data::pre_step(){
   // idle all non-idle fleets
-  for (auto i : all<fleet>()){
-    if (!i -> is_idle()){
-      i -> com.target = identifier::target_idle;
-    }
-  }
+  for (auto i : all<fleet>()) i -> com.action = fleet_action::idle;
 
   // clear waypoints, but don't list removals as client manages wp
   for (auto i : all<waypoint>()) i -> remove = true;
@@ -405,7 +393,6 @@ void game_data::end_step(){
 
   for (auto i : remove) {
     remove_entity(i);
-    remove_entities.push_back(i);
     cout << "end_step: removed " << i << endl;
   }
 
@@ -448,13 +435,10 @@ game_data game_data::limit_to(idtype id){
   // build limited game data object;
   game_data gc;
 
-  cout << "game data: limit to: " << id << endl;
-
   gc.allocate_grid();
   for (auto i : entity){
     if (entity_seen_by(i.first, id)){
       gc.add_entity(i.second);
-      cout << " :: adding entity: " << i.first << endl;
     }
   }
 

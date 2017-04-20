@@ -181,14 +181,17 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
   int last_idx = g.size() - 1;
   int no_frame = -1;
   int idx = no_frame;
-  bool verbose = this_thread::get_id() == tid;
+  bool verbose = false;
+  // bool verbose = this_thread::get_id() == tid;
 
   cout << "distribute " << g.size() << " frames to " << c -> id << ": start" << endl;
   
   while (idx < last_idx){
     lim_end = available_frames;
-    for (int i = lim_start; i < lim_end; i++)
+    for (int i = lim_start; i < lim_end; i++) {
       g[i] = buf[i].limit_to(c -> id);
+    }
+    
     lim_start = lim_end;
     
     if (idx == no_frame && c -> receive_query(protocol::frame)){
@@ -246,7 +249,6 @@ void st3::server::com::distribute_frames(vector<game_data> &g, int &frame_count)
   cout << "com::distribute_frames: " << clients.size() << " clients:" << endl;
   for (auto c : clients){
     ts.push_back(thread(distribute_frames_to, ref(g), ref(frame_count), c.second));
-    cout << c.second -> name << endl;
   }
 
   for (auto &x : ts) x.join();

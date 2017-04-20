@@ -87,9 +87,9 @@ void server::game_handler(com &c, game_data &g){
     thread t(&com::distribute_frames, c, ref(frames), ref(frame_count));
 
     for (frame_count = 0; frame_count < g.settings.frames_per_round; frame_count++){
-      cout << "simulate: building frame " << frame_count << endl;
       g.increment();
       frames[frame_count] = g;
+      g.remove_entities.clear();
     }
     
     cout << "waiting for distribute_frames() ..." << endl;

@@ -9,5 +9,6 @@ st3::command::command(){
 }
 
 bool st3::operator ==(const command &a, const command &b){
-  return !(a.source.compare(b.source) || a.target.compare(b.target) || a.action.compare(b.action));
+  bool res = a.source == b.source && a.target == b.target && a.action == b.action;
+  return res;
 }
