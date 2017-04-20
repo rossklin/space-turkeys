@@ -298,7 +298,6 @@ bool game::choice_step(){
   message = "sending choice to server...";
 
   // add commands to choice
-  clear_waypoint_commands();
   choice::choice c = build_choice(interface::desktop -> response);
   pq << protocol::choice << c;
 
@@ -429,12 +428,6 @@ combid game::add_waypoint(point p){
   return w -> id;
 }
 
-/** Clear waypoint pending commands
-*/
-void game::clear_waypoint_commands(){
-  for (auto w : get_all<waypoint>()) w -> pending_commands.clear();
-}
-
 /** Fills a choice object with data.
 
     Looks through the entity_selector data and adds commands and
@@ -526,7 +519,7 @@ void game::reload_data(data_frame &g){
   cout << " -> initial entities: " << endl;
   for (auto x : entity) cout << x.first << endl;
 
-  // make selectors 'not seen' and clear commands
+  // make selectors 'not seen' and clear commands and waypoints
   clear_selectors();
   
   players = g.players;
@@ -551,17 +544,28 @@ void game::reload_data(data_frame &g){
 
   // update commands for fleets
   for (auto f : get_all<fleet>()) {
-    if (entity.count(f -> com.target) && !f -> is_idle()){
+    if (entity.count(f -> com.target)){
+      // include commands even if f is idle e.g. to waypoint
       command c = f -> com;
       point to = entity[f -> com.target] -> get_position();
       // assure we don't assign ships which have been killed
       c.ships = c.ships & f -> ships;
       cout << " -> adding fleet fommand from " << c.source << " to " << c.target << " with " << c.ships.size() << " ships." << endl;
-      add_command(c, f -> position, to, false);	
+      add_command(c, f -> position, to, false);
     } else {
       f -> com.target = identifier::target_idle;
-      f -> com.action = identifier::idle;
+      f -> com.action = fleet_action::idle;
     }
+  }
+
+  // update commands for waypoints
+  for (auto w : get_all<waypoint>()){
+    for (auto c : w -> pending_commands){
+      if (entity.count(c.target)){
+	add_command(c, w -> get_position(), entity[c.target] -> get_position(), false);
+      }
+    }
+    w -> pending_commands.clear();
   }
 }
 
@@ -666,15 +670,14 @@ void game::remove_command(idtype key){
 // SELECTOR MANIPULATION
 // ****************************************
 
-/** Mark all selectors as not seen and clear command selectors. */
+/** Mark all entity selectors as not seen and clear command selectors
+    and waypoints. */
 void game::clear_selectors(){
   comid = 0;
 
-  for (auto x : entity){
-    x.second -> seen = false;
-  }
-
+  for (auto x : entity) x.second -> seen = false;
   command_selectors.clear();
+  for (auto w : get_all<waypoint>()) entity.erase(w -> id);
 }
 
 /** Mark all entity and command selectors as not selected. */
@@ -734,8 +737,6 @@ void game::command2entity(combid key, string act, list<combid> selected_entities
 list<combid> game::entities_at(point p){
   float d;
   list<combid> keys;
-
-  cout << "entities_at:" << endl;
 
   // find entities at p
   for (auto x : entity){

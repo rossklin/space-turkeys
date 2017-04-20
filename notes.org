@@ -1,8 +1,10 @@
 * current work
 ** upgrade / interaction / game object makeover
-*** add a fleet::compile_valid_actions(target)
-*** consider effects of client game data not containing all ships for contained entities
-    though a client should always receive all their owned ships.
+*** [J] Figure out why commands dissapear 
+    ... from waypoints (or only from selectors) without passing the
+    trigger point
+
+    Command selectors were not being rebuilt for waypoints
 *** [J] change identifier::some_class_id to the_class::class_id
 *** [J] introduce game object base class
 **** [J] created base class header

@@ -30,13 +30,11 @@ float waypoint::vision(){
 }
 
 void waypoint::post_phase(game_data *g){  
-
   // trigger commands
   bool check;
   set<combid> ready_ships, arrived_ships;
 
   // compute landed ships
-  arrived_ships.clear();
   for (auto y : g -> all<fleet>()){
     if (y -> is_idle() && y -> com.target == id){
       arrived_ships += y -> ships;

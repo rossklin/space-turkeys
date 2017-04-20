@@ -89,8 +89,6 @@ namespace st3{
       */
       choice::choice build_choice(choice::choice c);
 
-      void clear_waypoint_commands();
-
       /*! update gui with new game data
 	@param g the game data
       */

@@ -102,7 +102,7 @@ bool fleet::serialize(sf::Packet &p){
 }
 
 bool st3::fleet::is_idle(){
-  return !identifier::get_type(com.target).compare(identifier::idle);
+  return com.action == fleet_action::idle;
 }
 
 void fleet::give_commands(list<command> c, game_data *g){
@@ -183,7 +183,7 @@ void fleet::update_data(game_data *g){
 void fleet::check_waypoint(game_data *g){
   // set to idle and 'land' ships if converged to waypoint
   if (converge && identifier::get_type(com.target) == waypoint::class_id && com.action == fleet_action::go_to){
-    com.target = identifier::make(identifier::idle, com.target);
+    com.action = fleet_action::idle;
     cout << "set fleet " << id << " idle target: " << com.target << endl;
   }
 }
@@ -196,6 +196,7 @@ void fleet::check_join(game_data *g){
     if (!g -> entity.count(com.target)){
       cout << "fleet " << id << ": target " << com.target << " missing, setting idle:0" << endl;
       com.target = identifier::target_idle;
+      com.action = fleet_action::idle;
       return;
     }
 
@@ -218,9 +219,8 @@ void fleet::check_in_sight(game_data *g){
     // create a waypoint and reset target
     waypoint::ptr w = waypoint::create(owner);
 
-    if (!g -> target_position(com.target, w -> position)){
-      cout << "unset fleet target: target position not found: " << com.target << endl;
-      exit(-1);
+    if (!g -> target_position(com.target, w -> position)) {
+      throw runtime_error("unset fleet target: target position not found: " + com.target);
     }
 
     com.target = w -> id;
