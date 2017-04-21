@@ -12,13 +12,13 @@ namespace st3{
     static constexpr sint any_alignment = -1;
     static const class_t no_target;
 
+    class_t macro_target;
     class_t what;
     sint alignment;
     idtype owner;
 
     target_condition();
-    target_condition(sint a, class_t w);
-    target_condition(idtype o, sint a, class_t w);
+    target_condition(sint a, class_t w, class_t m = "");
     target_condition owned_by(idtype o);
     bool requires_target();
 
@@ -29,6 +29,7 @@ namespace st3{
   public:
     typedef std::function<void(game_object::ptr self, game_object::ptr target)> perform_t;
     static bool valid(target_condition c, game_object::ptr t);
+    static bool macro_valid(target_condition c, game_object::ptr t);
     static hm_t<std::string, interaction> &table();
 
     std::string name;

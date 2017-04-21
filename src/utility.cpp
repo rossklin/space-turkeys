@@ -21,6 +21,10 @@ using namespace st3::utility;
 
 boost::random::mt19937 rng;
 
+void utility::init(){
+  rng.seed(time(NULL));
+}
+
 template<typename T, typename F>
 typename T::ptr utility::guaranteed_cast(typename F::ptr p){
   if (p == 0){

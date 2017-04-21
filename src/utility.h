@@ -19,6 +19,8 @@ namespace st3{
     void assign_keys(M &m, C &data);
 
     std::string format_float(float x);
+
+    void init();
     
     /* **************************************** */
     /* POINT MATHS */

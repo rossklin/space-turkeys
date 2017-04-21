@@ -57,7 +57,7 @@ void solar::interact(game_data *g){
     if (t.damage > 0 && t.load >= t.load_time){
 
       // find targetable ships
-      list<combid> buf = g -> search_targets(position, t.range, target_condition(owner, target_condition::enemy, ship::class_id));
+      list<combid> buf = g -> search_targets(position, t.range, target_condition(target_condition::enemy, ship::class_id).owned_by(owner));
       
       // fire at a random enemy
       if (!buf.empty()){
@@ -67,7 +67,7 @@ void solar::interact(game_data *g){
 	ship::ptr s = g -> get_ship(tid);
 	
 	if (utility::random_uniform() < t.accuracy){
-	  s -> receive_damage(ptr(this), s, utility::random_uniform(0, t.damage));
+	  s -> receive_damage(ptr(this), utility::random_uniform(0, t.damage));
 	}
       }
     }

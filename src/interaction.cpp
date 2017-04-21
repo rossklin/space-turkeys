@@ -20,7 +20,7 @@ hm_t<string, interaction> &interaction::table() {
 
     // space combat
     i.name = fleet_action::space_combat;
-    i.condition = target_condition(target_condition::enemy, ship::class_id);
+    i.condition = target_condition(target_condition::enemy, ship::class_id, fleet::class_id);
     i.perform = [] (game_object::ptr self, game_object::ptr target){
       ship::ptr s = utility::guaranteed_cast<ship>(self);
       ship::ptr t = utility::guaranteed_cast<ship>(target);
@@ -29,7 +29,7 @@ hm_t<string, interaction> &interaction::table() {
 
       s -> load = 0;
       if (utility::random_uniform() < s -> current_stats.accuracy){
-	t -> receive_damage(s, t, utility::random_uniform(0, s -> current_stats.ship_damage));
+	t -> receive_damage(s, utility::random_uniform(0, s -> current_stats.ship_damage));
       }
     };
     data[i.name] = i;
@@ -93,9 +93,9 @@ bool target_condition::get_alignment(idtype t, idtype s){
 // target condition
 target_condition::target_condition(){}
 
-target_condition::target_condition(sint a, class_t w) : alignment(a), what(w) {}
-
-target_condition::target_condition(idtype o, sint a, class_t w) : owner(o), alignment(a), what(w) {}
+target_condition::target_condition(sint a, class_t w, class_t m) : alignment(a), what(w), owner(game_object::neutral_owner) {
+  macro_target = m.empty() ? w : m;
+}
 
 target_condition target_condition::owned_by(idtype o){
   target_condition t = *this;
@@ -105,6 +105,11 @@ target_condition target_condition::owned_by(idtype o){
 
 bool target_condition::requires_target(){
   return what != no_target;
+}
+
+bool interaction::macro_valid(target_condition c, game_object::ptr p){
+  c.what = c.macro_target;
+  return valid(c, p);
 }
 
 // interaction

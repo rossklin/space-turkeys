@@ -57,6 +57,8 @@ game::game(){
 
 function<int(sf::Event)> game::generate_event_handler(function<int(sf::Event)> task){
   return [&task, this] (sf::Event e) {
+    interface::desktop -> HandleEvent(e);
+
     // handle escape on query window
     if (interface::desktop -> query_window) {
       if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape){
@@ -71,13 +73,7 @@ function<int(sf::Event)> game::generate_event_handler(function<int(sf::Event)> t
       return query_aborted;
     }else{
       // handle custom task
-      int result = task(e);
-
-      // if custom task did not indicate finish, let desktop process
-      // the event
-      if (!result) interface::desktop -> HandleEvent(e);
-      
-      return result;
+      return task(e);
     }
   };
 }
@@ -862,7 +858,7 @@ void game::setup_targui(point p){
   for (auto a : possible_actions){
     auto condition = atab[a].owned_by(self_id);
     for (auto k : keys_targeted){
-      if (interaction::valid(condition, entity[k])){
+      if (interaction::macro_valid(condition, entity[k])){
 	options.push_back(target_gui::option_t(k, a));
       }
     }

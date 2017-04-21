@@ -51,7 +51,7 @@ namespace st3{
     bool serialize(sf::Packet &p);
 
     std::set<std::string> compile_interactions();
-    std::function<void(game_object::ptr from, ship::ptr self, float damage)> receive_damage;
+    void receive_damage(game_object::ptr from, float damage);
     bool is_active();
 
     ptr clone();

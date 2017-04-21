@@ -15,14 +15,11 @@ ship::ship(){}
 ship::~ship(){}
 
 void ship::pre_phase(game_data *g){
-  if (fleet_id == identifier::source_none) return;
-  
   // load weapons
   load = fmin(load + 1, current_stats.load_time);
 }
 
 void ship::move(game_data *g){
-  if (fleet_id == identifier::source_none) return;
   fleet::ptr f = g -> get_fleet(fleet_id);
 
   // check fleet is not idle
@@ -59,17 +56,26 @@ void ship::interact(game_data *g){
     }
   }
 
-  // check if fleet action is available on this ship
-  if (compile_interactions().count(action)) {
-    interaction i = interaction::table()[action];
-    list<combid> valid_targets = g -> search_targets(position, current_stats.interaction_radius, i.condition.owned_by(f -> owner));
-    for (auto a : valid_targets){
-      i.perform(ptr(this), g -> entity[a]);
+  // check ship interactions
+  for (auto inter : compile_interactions()){
+    // let fleet behaviour decide whether to perform the action
+    if (f -> confirm_ship_interaction(inter)){
+      interaction i = interaction::table()[inter];
+      list<combid> buf = g -> search_targets(position, current_stats.interaction_radius, i.condition.owned_by(owner));
+      if (!buf.empty()){
+	combid target = utility::uniform_sample(buf);
+	i.perform(ptr(this), g -> entity[target]);
+      }
     }
   }
 }
 
 void ship::post_phase(game_data *g){}
+
+void ship::receive_damage(game_object::ptr from, float damage){
+  current_stats.hp -= damage;
+  remove = current_stats.hp <= 0;
+}
 
 void ship::on_remove(game_data *g){
   g -> get_fleet(fleet_id) -> remove_ship(id);

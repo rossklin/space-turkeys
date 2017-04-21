@@ -40,7 +40,7 @@ hm_t<string, target_condition> &fleet::action_condition_table(){
     for (auto a : all_interactions()) data[a] = itab[a].condition;
 
     // base actions
-    data[fleet_action::go_to] = target_condition(target_condition::any_alignment, target_condition::no_target);
+    data[fleet_action::go_to] = target_condition(target_condition::owned, target_condition::no_target);
     data[fleet_action::join] = target_condition(target_condition::owned, fleet::class_id);
     data[fleet_action::follow] = target_condition(target_condition::any_alignment, fleet::class_id);
     data[fleet_action::idle] = target_condition(target_condition::any_alignment, target_condition::no_target);
@@ -227,6 +227,10 @@ void fleet::check_in_sight(game_data *g){
     com.action = fleet_action::go_to;
     g -> add_entity(w);
   }
+}
+
+bool fleet::confirm_ship_interaction(string a){
+  return com.action == a;
 }
 
 void fleet::copy_from(const fleet &s){

@@ -31,7 +31,7 @@ ship research::ship_template(string k){
     s.remove = false;
     s.base_stats.load_time = 100;
     s.load = 0;
-
+    
     auto add_with_class = [&buf] (ship s, string c){
       s.ship_class = c;
       buf[c] = s;

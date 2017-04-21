@@ -10,6 +10,7 @@
 #include "com_server.h"
 #include "serialization.h"
 #include "game_handler.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -21,6 +22,8 @@ void server::game_handler(com &c, game_data &g){
   hm_t<sint, sf::Packet> packets;
   int frame_count;
   unsigned int i;
+
+  utility::init();
 
   auto check_end = [&c, &g] () -> bool{
     sf::Packet packet;

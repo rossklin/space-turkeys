@@ -67,6 +67,7 @@ namespace st3{
     void update_data(game_data *g);
     target_condition current_target_condition(game_data *g);
     void remove_ship(combid i);
+    bool confirm_ship_interaction(std::string a);
     
     ptr clone();
 

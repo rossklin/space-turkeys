@@ -1,6 +1,7 @@
 * current work
 ** upgrade / interaction / game object makeover
-*** Figure out why server sends old waypoints in [prestep?]
+*** Segfault in string constructor called from game_data.cpp:75 apparently
+*** [J] Figure out why server sends old waypoints in [prestep?]
 *** [J] Figure out why commands dissapear 
     ... from waypoints (or only from selectors) without passing the
     trigger point
