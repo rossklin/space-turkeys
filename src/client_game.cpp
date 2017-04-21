@@ -83,7 +83,7 @@ function<int(sf::Event)> game::generate_event_handler(function<int(sf::Event)> t
 }
 
 entity_selector::ptr game::get_entity(combid i){
-  if (!entity.count(i)) throw runtime_error("client::game::get_entity: invalid id: " i);
+  if (!entity.count(i)) throw runtime_error("client::game::get_entity: invalid id: " + i);
   return entity[i];
 }
 

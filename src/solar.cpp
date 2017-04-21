@@ -16,6 +16,7 @@ using namespace st3;
 const string solar::class_id = "solar";
 
 solar::solar(){}
+
 solar::~solar(){}
 
 void solar::pre_phase(game_data *g){
@@ -30,7 +31,24 @@ void solar::move(game_data *g){
   
   dynamics();
 
-  // todo: add ship and turret build
+  // build ships and turrets
+  research::data r = g -> players[owner].research_level;
+  for (auto v : cost::keywords::ship) {
+    while (fleet_growth[v] >= 1) {
+      fleet_growth[v]--;
+      ship sh = r.build_ship(v);
+      sh.owner = owner;
+      ships.insert(sh.id);
+      g -> add_entity(ship::ptr(new ship(sh)));
+    }
+  }
+
+  for (auto v : cost::keywords::turret) {
+    while (turret_growth[v] >= 1) {
+      turret_growth[v]--;
+      turrets.push_back(r.build_turret(v));
+    }
+  }
 }
 
 void solar::interact(game_data *g){
@@ -120,15 +138,17 @@ void solar::give_commands(list<command> c, game_data *g){
 float solar::resource_constraint(cost::resource_allocation<sfloat> r){
   float m = INFINITY;
 
-  for (auto v : cost::keywords::resource)
+  for (auto v : cost::keywords::resource) {
     if (r[v] > 0) m = fmin(m, resource[v].storage / r[v]);
+  }
 
   return m;
 }
 
 void solar::pay_resources(cost::resource_allocation<float> total){
-  for (auto k : cost::keywords::resource)
+  for (auto k : cost::keywords::resource) {
     resource[k].storage = fmax(resource[k].storage - total[k], 0);
+  }
 }
 
 string solar::get_info(){
@@ -145,10 +165,7 @@ string solar::get_info(){
 
 sfloat solar::vision(){
   sfloat res = 0;
-
-  for (auto &x : turrets)
-    res = fmax(res, x.vision);
-
+  for (auto &x : turrets) res = fmax(res, x.vision);
   return res;
 }
 
@@ -199,14 +216,11 @@ float solar::space_status(){
   if (space <= 0) return 0;
   
   float used = 0;
-  for (auto v : cost::keywords::expansion)
+  for (auto v : cost::keywords::expansion) {
     used += sector[v] * cost::sector_expansion()[v].space;
-
-  if (used > space){
-    cout << "space_status: used more than space" << endl;
-    exit(-1);
   }
 
+  if (used > space) throw runtime_error("space_status: used more than space");
   return (space - used) / space;
 }
 
@@ -215,14 +229,11 @@ float solar::water_status(){
   if (water <= 0) return 0;
   
   float used = 0;
-  for (auto v : cost::keywords::expansion)
+  for (auto v : cost::keywords::expansion) {
     used += sector[v] * cost::sector_expansion()[v].water;
-
-  if (used > water){
-    cout << "water status: used more than water!" << endl;
-    exit(-1);
   }
 
+  if (used > water) throw runtime_error("water status: used more than water!");
   return (water - used) / water;
 }
 
@@ -238,7 +249,7 @@ float solar::ecology_increment(){
 }
 
 float solar::happiness_increment(choice::c_solar &c){
-  return 0.01 * (sector[cost::keywords::key_culture] + c.allocation[cost::keywords::key_culture] - 0.1 * log(population) / (ecology + 1) - (happiness - 0.5));
+  return 0.01 * (0.2 * sector[cost::keywords::key_culture] + c.allocation[cost::keywords::key_culture] - c.allocation[cost::keywords::key_military] - 0.1 * log(population) / (ecology + 1) - (happiness - 0.5));
 }
 
 float solar::research_increment(choice::c_solar &c){
@@ -335,14 +346,17 @@ void solar::dynamics(){
 
     float allowed = fmin(1, resource_constraint(total_cost));
 
-    for (auto v : cost::keywords::ship)
+    for (auto v : cost::keywords::ship) {
       buf.fleet_growth[v] += allowed * weight_table[v];
+    }
 
-    for (auto v : cost::keywords::turret)
+    for (auto v : cost::keywords::turret) {
       buf.turret_growth[v] += allowed * weight_table[v];
+    }
 
-    for (auto v : cost::keywords::expansion)
+    for (auto v : cost::keywords::expansion) {
       buf.sector[v] += allowed * weight_table[v];
+    }
 
     total_cost.scale(allowed);
     buf.pay_resources(total_cost);

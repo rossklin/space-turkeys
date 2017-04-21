@@ -226,7 +226,8 @@ bool game_data::validate_choice(choice::choice c, idtype id){
 }
  
 void game_data::apply_choice(choice::choice c, idtype id){
-  cout << "game_data: running dummy apply choice" << endl;
+  cout << "apply_choice: player " << id << ": waypoints before: " << endl;
+  for (auto w : all<waypoint>()) cout << w -> id << endl;
 
   // build waypoints before validating the choice, so that commands
   // based at waypoints can be validated  
@@ -251,6 +252,9 @@ void game_data::apply_choice(choice::choice c, idtype id){
     commandable_object::ptr v = utility::guaranteed_cast<commandable_object>(entity[x.first]);
     v -> give_commands(x.second, this);
   }
+
+  cout << "apply_choice: player " << id << ": waypoints after: " << endl;
+  for (auto w : all<waypoint>()) cout << w -> id << endl;
 }
 
 void game_data::allocate_grid(){
@@ -342,6 +346,7 @@ void game_data::build(){
 	s.space = 1000;
 	s.population = 100;
 	s.happiness = 1;
+	s.dt = settings.dt;
 	ship sh = rbase.build_ship(cost::keywords::key_scout);
 	sh.owner = x.first;
 	s.ships.insert(sh.id);

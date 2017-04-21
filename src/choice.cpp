@@ -78,20 +78,20 @@ hm_t<string,c_solar> const &choice::c_solar::template_table(){
     x.allocation[keywords::key_culture] = 1;
     x.allocation[keywords::key_expansion] = 1;
     x.allocation[keywords::key_mining] = 1;
-    x.allocation[keywords::key_military] = 1;
+    x.allocation[keywords::key_military] = 3;
 
     x.mining[keywords::key_gases] = 1;
     x.mining[keywords::key_metals] = 1;
     x.mining[keywords::key_organics] = 1;
     
     x.expansion[keywords::key_culture] = 1;
-    x.expansion[keywords::key_mining] = 1;
-    x.expansion[keywords::key_military] = 1;
+    x.expansion[keywords::key_mining] = 2;
+    x.expansion[keywords::key_military] = 3;
     
     x.military.c_ship[keywords::key_scout] = 1;
-    x.military.c_ship[keywords::key_fighter] = 1;
+    x.military.c_ship[keywords::key_fighter] = 2;
     x.military.c_turret[keywords::key_radar_turret] = 1;
-    x.military.c_turret[keywords::key_rocket_turret] = 1;
+    x.military.c_turret[keywords::key_rocket_turret] = 2;
 
     data["military expansion"] = x;
   }

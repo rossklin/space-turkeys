@@ -55,18 +55,14 @@ T& allocation<T>::operator[](const string &v){
   if (data.count(v)){
     return data[v];
   }else{
-    cout << "allocation access: invalid index: " << v << endl;
-    exit(-1);
+    throw runtime_error("allocation access: invalid index: " + v);
   }
 }
 
 template<typename T>
 void allocation<T>::confirm_content(vector<string> x){
   for (auto v : x) {
-    if (!data.count(v)) {
-      cout << "allocation: unconfirmed content: " << v << endl;
-      exit(-1);
-    }
+    if (!data.count(v)) throw runtime_error("allocation: unconfirmed content: " + v);
   }
 }
 

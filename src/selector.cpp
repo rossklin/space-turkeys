@@ -190,7 +190,7 @@ namespace st3{
     set<combid> specific_selector<waypoint>::get_ships(){
       set<combid> s;
       for (auto i : g -> incident_commands(id)) {
-	s += g -> entity[g -> command_selectors[i] -> source] -> get_ships();
+	s += g -> command_selectors[i] -> ships;
       }
       return s;
     }

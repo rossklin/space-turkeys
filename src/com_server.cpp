@@ -184,7 +184,11 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
   bool verbose = false;
   // bool verbose = this_thread::get_id() == tid;
 
-  cout << "distribute " << g.size() << " frames to " << c -> id << ": start" << endl;
+  cout << "distribute " << g.size() << " frames to " << c -> id << ": waypoints in first frame:" << endl;
+
+  // debug: show waypoints in first frame
+  game_data test = buf[0].limit_to(c -> id);
+  for (auto w : test.all<waypoint>()) cout << w -> id << endl;
   
   while (idx < last_idx){
     lim_end = available_frames;
@@ -222,13 +226,8 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
     if (idx >= 0 && idx < lim_end){
       sf::Packet psend;
       psend << protocol::confirm;
-      if (!(psend << g[idx])){
-	cout << "failed to serialize frame!" << endl;
-	exit(-1);
-      }
-
+      if (!(psend << g[idx])) throw runtime_error("failed to serialize frame!");
       if (verbose) cout << "sending frame " << idx << " to client " << c -> id << endl;
-
       if (c -> send_packet(psend)) idx = no_frame;
     }else if (idx > last_idx){
       cout << "client " << c -> id << " required invalid frame " << idx << endl;

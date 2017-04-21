@@ -82,7 +82,7 @@ entity_selector::ptr client::deserialize_object(sf::Packet &p, sint id){
 
   sf::Color col;
   typename T::base_object_t s;
-  if (!(p >> s)) throw runtime_exception("deserialize_object: package empty!");
+  if (!(p >> s)) throw runtime_error("deserialize_object: package empty!");
   return T::create(s, col, s.owner == id);
 }
 
@@ -112,8 +112,7 @@ bool client::deserialize(data_frame &f, sf::Packet &p, sint id){
     }else if (key == waypoint::class_id){
       if (!(obj = deserialize_object<client::waypoint_selector>(p, id))) return false;
     }else{
-      cout << "deserialize: key " << key << " not recognized!" << endl;
-      exit(-1);
+      throw runtime_error("deserialize: key " + key + " not recognized!");
     }
 
     obj -> color = sf::Color(f.players[obj -> owner].color);

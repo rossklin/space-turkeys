@@ -67,6 +67,7 @@ namespace st3{
     float ship_increment(std::string v, choice::c_solar &c);
     float turret_increment(std::string v, choice::c_solar &c);
     float compute_workers();
+    void dynamics(); 
 
     ptr clone();
 
@@ -76,7 +77,6 @@ namespace st3{
     static constexpr float f_minerate = 1e-2;
     static constexpr float f_buildrate = 1e-1;
 
-    void dynamics(); 
     void pay_resources(cost::resource_allocation<float> r);
     float resource_constraint(cost::resource_allocation<sfloat> r);
     virtual game_object::ptr clone_impl();
