@@ -26,6 +26,7 @@ void tree::insert(key_type k, value_type v){
 }
 
 list<iterator_type> tree::search(point p, float r){
+  cout << "grid::tree::search: " << p.x << "x" << p.y << ": " << r << endl;
   return root -> search(p, r);
 }
 
@@ -118,19 +119,26 @@ void node::move(key_type k, value_type v){
 }
 
 list<iterator_type> node::search(value_type p, float r){
+  static int indent = 0;
   list<iterator_type> res;
 
   if (!(utility::point_above(p + point(r,r), bounds.first) && utility::point_below(p - point(r,r), bounds.second))){
     return res;
   }
 
+  indent++;
+  cout << string(indent, '-') << "> grid::node::search: " << bounds.first.x << ", "<< bounds.first.y << ", "<< bounds.second.x << ", "<< bounds.second.y << ", " << endl;
+
   if (is_leaf){
     // collect leaves
     float r2 = r * r;
+    cout << string(indent, '-') << "> grid::node::search: leaf!" << endl;
     for (auto x : leaves){
       point delta = x.second - p;
       float d2 = delta.x * delta.x + delta.y * delta.y;
+      cout << string(indent, '-') << "> grid::node::search: leaf: d2 = " << d2 << endl;
       if (d2 <= r2){
+	cout << string(indent, '-') << "> grid::node::search: leaf: selected: " << x.first << endl;
 	res.push_back(x);
       }
     }
@@ -142,6 +150,7 @@ list<iterator_type> node::search(value_type p, float r){
     }
   }
 
+  indent--;
   return res;
 }
 

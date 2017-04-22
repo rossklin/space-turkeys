@@ -72,8 +72,9 @@ list<typename T::ptr> game_data::all(){
 list<game_object::ptr> game_data::all_owned_by(idtype id){
   list<game_object::ptr> res;
 
-  for (auto p : entity)
+  for (auto p : entity) {
     if (p.second -> owner == id) res.push_back(p.second);
+  }
 
   return res;
 }
@@ -98,19 +99,12 @@ combid game_data::entity_at(point p){
 }
 
 // find all entities in ball(p, r) matching condition c
-list<combid> game_data::search_targets(point p, float r, target_condition c){
+list<combid> game_data::search_targets(combid self_id, point p, float r, target_condition c){
   list<combid> res;
     
   for (auto i : entity_grid -> search(p, r)){
-    if (c.requires_target()){
-      game_object::ptr x = entity[i.first];
-      if (c.what == identifier::get_type(x -> id) && (c.alignment & target_condition::get_alignment(x -> owner, c.owner))){
-	res.push_back(i.first);
-      }
-    }else{
-      // return all entities if condition does not require target?
-      res.push_back(i.first);
-    }
+    auto e = entity[i.first];
+    if (e -> is_active() && e -> id != self_id && interaction::valid(c, e)) res.push_back(e -> id);
   }
 
   return res;
@@ -299,7 +293,11 @@ void game_data::increment(){
   for (auto x : entity) if (x.second -> is_active()) x.second -> move(this);
   for (auto x : entity) if (x.second -> is_active()) x.second -> interact(this);
 
+  // remove units twice, since removing ships can cause fleets to set
+  // the remove flag
   remove_units();
+  remove_units();
+  
   for (auto x : entity) if (x.second -> is_active()) x.second -> post_phase(this);
 }
 

@@ -137,10 +137,6 @@ void fleet::give_commands(list<command> c, game_data *g){
   }
 }
 
-target_condition fleet::current_target_condition(game_data *g){
-  return action_condition_table()[com.action];
-}
-
 void fleet::update_data(game_data *g){
 
   // need to update fleet data?
@@ -166,9 +162,8 @@ void fleet::update_data(game_data *g){
   position = utility::scale_point(p, 1 / (float)ships.size());
 
   // check target status valid
-  if (current_target_condition(g).requires_target() &&
-      !interaction::valid(current_target_condition(g), g -> get_entity(com.target))){
-    
+  target_condition c = fleet::action_condition_table()[com.action];
+  if (c.requires_target() && !interaction::macro_valid(c, g -> get_entity(com.target))){
     cout << "target " << com.target << " no longer valid for " << id << endl;
     com.target = identifier::target_idle;
     com.action = fleet_action::idle;

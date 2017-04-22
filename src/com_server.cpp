@@ -184,11 +184,7 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
   bool verbose = false;
   // bool verbose = this_thread::get_id() == tid;
 
-  cout << "distribute " << g.size() << " frames to " << c -> id << ": waypoints in first frame:" << endl;
-
-  // debug: show waypoints in first frame
-  game_data test = buf[0].limit_to(c -> id);
-  for (auto w : test.all<waypoint>()) cout << w -> id << endl;
+  cout << "distribute " << g.size() << " frames to " << c -> id << endl;
   
   while (idx < last_idx){
     lim_end = available_frames;

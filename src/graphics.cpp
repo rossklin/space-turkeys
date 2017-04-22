@@ -269,8 +269,12 @@ Button::Ptr main_window::priority_button(string label, float &data, function<boo
 
 // main window for solar choice
 main_window::main_window(solar::ptr s) : query<Window, choice::c_solar>(Window::Style::BACKGROUND), sol(s){
-  
-  response = desktop -> response.solar_choices[sol -> id];
+  choice::c_solar buf;
+  if (desktop -> response.solar_choices.count(sol -> id)){
+    response = desktop -> response.solar_choices[sol -> id];
+  }else{
+    response = buf;
+  }
 
   // main layout
   layout = Box::Create(Box::Orientation::VERTICAL, 10);
@@ -315,6 +319,7 @@ main_window::main_window(solar::ptr s) : query<Window, choice::c_solar>(Window::
   b_accept -> GetSignal(Widget::OnLeftClick).Connect([=] () {
       desktop -> response.solar_choices[sol -> id] = response;
       desktop -> clear_qw();
+      cout << "Added solar choice for " << sol -> id << endl;
     });
   
   auto b_cancel = Button::Create("CANCEL");

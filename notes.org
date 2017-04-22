@@ -1,6 +1,7 @@
 * current work
 ** upgrade / interaction / game object makeover
-*** Segfault in string constructor called from game_data.cpp:75 apparently
+*** Segfault 
+    After finding an enemy ship in game_data::search_targets(), at game_data.cpp:296
 *** [J] Figure out why server sends old waypoints in [prestep?]
 *** [J] Figure out why commands dissapear 
     ... from waypoints (or only from selectors) without passing the
@@ -38,7 +39,7 @@
    Conditioned on a ship::target_condition and a radius
 *** [J] add fleet action definitions
 *** [J] finish implementing new serialization/deserialization
-*** fix client game reloading of waypoints
+*** [J] fix client game reloading of waypoints
 *** [J] implement client game deserialize of game data
 *** [J] remove game_data deserialize operator
 *** let upgrades have an optional tick function

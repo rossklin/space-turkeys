@@ -26,7 +26,7 @@ bool game_object::is_commandable(){
 }
 
 bool game_object::is_active(){
-  return true;
+  return !remove;
 }
 
 game_object::ptr game_object::clone(){

@@ -219,9 +219,12 @@ bool game::pre_step(){
 */
 
 bool game::choice_step(){
-  sf::Packet pq, pr;
+  choice::choice c;
+
+  // reset interface response parameters
   interface::desktop -> done = false;
   interface::desktop -> accept = false;
+  interface::desktop -> response = c;
 
   cout << "choice_step: start" << endl;
 
@@ -269,6 +272,8 @@ bool game::choice_step(){
   int done = 0;
   window_loop(done, event_handler, body);
 
+  sf::Packet pq;
+
   // client chose to leave the game
   if (done & (query_game_complete | query_aborted)){
     cout << "choice_step: finishded" << endl;
@@ -285,7 +290,7 @@ bool game::choice_step(){
   message = "sending choice to server...";
 
   // add commands to choice
-  choice::choice c = build_choice(interface::desktop -> response);
+  c = build_choice(interface::desktop -> response);
   pq << protocol::choice << c;
 
   if (!wait_for_it(pq)){
