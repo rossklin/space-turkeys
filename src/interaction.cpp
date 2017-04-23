@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "interaction.h"
 #include "fleet.h"
 #include "ship.h"
@@ -22,14 +24,22 @@ hm_t<string, interaction> &interaction::table() {
     i.name = fleet_action::space_combat;
     i.condition = target_condition(target_condition::enemy, ship::class_id, fleet::class_id);
     i.perform = [] (game_object::ptr self, game_object::ptr target){
+      cout << "interaction: space_combat: " << self -> id << " targeting " << target -> id << endl;
       ship::ptr s = utility::guaranteed_cast<ship>(self);
       ship::ptr t = utility::guaranteed_cast<ship>(target);
-
+      
+      // todo: if the function returns here, how does it manage to
+      // damage the vtable for game_object for self, but not for
+      // target?
       if (s -> load < s -> current_stats.load_time) return;
 
+      cout << "space_combat: loaded" << endl;
       s -> load = 0;
       if (utility::random_uniform() < s -> current_stats.accuracy){
+	cout << "space_combat: hit!" << endl;
 	t -> receive_damage(s, utility::random_uniform(0, s -> current_stats.ship_damage));
+      }else{
+	cout << "space_combat: miss!" << endl;
       }
     };
     data[i.name] = i;

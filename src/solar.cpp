@@ -75,21 +75,23 @@ void solar::interact(game_data *g){
 }
 
 void solar::post_phase(game_data *g){
+  cout << "solar::post_phase: " << id << endl;
   float total_damage = 0;
   float highest_id = -1;
   float highest_sum = 0;
 
   // analyse damage
   for (auto x : damage_taken) {
+    cout << "solar_effects: " << x.second << " damage from player " << x.first << endl;
     total_damage += x.second;
     if (x.second > highest_sum){
       highest_sum = x.second;
       highest_id = x.first;
     }
-    cout << "solar_effects: " << x.second << " damage from player " << x.first << endl;
   }
 
   if (highest_id > -1){
+    cout << "solar::post_phase: taking damage: " << total_damage << endl;
     // todo: add some random destruction to solar
     damage_turrets(total_damage);
     population = fmax(population - 10 * total_damage, 0);
@@ -108,12 +110,14 @@ void solar::post_phase(game_data *g){
   float num = colonization_attempts.size();
   for (auto i : colonization_attempts){
     if (utility::random_uniform() <= 1 / (num - count++)){
+      cout << "player " << i.first << " colonizes " << id << endl;
       g -> players[i.first].research_level.colonize(ptr(this));
       owner = i.first;
-      cout << "player " << owner << " colonizes " << id << endl;
-      g -> entity[i.second] -> remove = true;
+      g -> get_entity(i.second) -> remove = true;
     }
   }
+
+  cout << "solar::post_phase: " << id << " done" << endl;
 }
 
 void solar::give_commands(list<command> c, game_data *g){

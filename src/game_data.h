@@ -16,6 +16,9 @@
 #include "interaction.h"
 
 namespace st3{
+  namespace server {
+    struct client_t;
+  };
 
   /*! struct containing data for game objects */
   class game_data{
@@ -55,7 +58,8 @@ namespace st3{
 
     // game steps
     void pre_step(); 
-    void end_step(); 
+    void end_step();
+    void build_players(hm_t<int, server::client_t*> clients);
     void build();
 
   protected:    

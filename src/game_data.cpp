@@ -9,6 +9,7 @@
 #include "research.h"
 #include "game_object.h"
 #include "build_universe.h"
+#include "com_server.h"
 
 using namespace std;
 using namespace st3;
@@ -35,25 +36,24 @@ game_object::ptr game_data::get_entity(combid i){
   if (entity.count(i)){
     return entity[i];
   }else{
-    cout << "game_data::get_entity: not found: " << i << endl;
-    exit(-1);
+    throw runtime_error("game_data::get_entity: not found: " + i);
   }
 }
 
 ship::ptr game_data::get_ship(combid i){
-  return utility::guaranteed_cast<ship>(entity[i]);
+  return utility::guaranteed_cast<ship>(get_entity(i));
 }
 
 fleet::ptr game_data::get_fleet(combid i){
-  return utility::guaranteed_cast<fleet>(entity[i]);
+  return utility::guaranteed_cast<fleet>(get_entity(i));
 }
 
 solar::ptr game_data::get_solar(combid i){
-  return utility::guaranteed_cast<solar>(entity[i]);
+  return utility::guaranteed_cast<solar>(get_entity(i));
 }
 
 waypoint::ptr game_data::get_waypoint(combid i){
-  return utility::guaranteed_cast<waypoint>(entity[i]);
+  return utility::guaranteed_cast<waypoint>(get_entity(i));
 }
 
 template<typename T>
@@ -61,7 +61,7 @@ list<typename T::ptr> game_data::all(){
   list<typename T::ptr> res;
 
   for (auto p : entity){
-    if (identifier::get_type(p.first) == T::class_id){
+    if (p.second -> isa(T::class_id)){
       res.push_back(utility::guaranteed_cast<T>(p.second));
     }
   }
@@ -81,7 +81,7 @@ list<game_object::ptr> game_data::all_owned_by(idtype id){
 
 bool game_data::target_position(combid t, point &p){
   if (entity.count(t)) {
-    p = entity[t] -> position;
+    p = get_entity(t) -> position;
     return true;
   }else{
     return false;
@@ -103,7 +103,7 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
   list<combid> res;
     
   for (auto i : entity_grid -> search(p, r)){
-    auto e = entity[i.first];
+    auto e = get_entity(i.first);
     if (e -> is_active() && e -> id != self_id && interaction::valid(c, e)) res.push_back(e -> id);
   }
 
@@ -192,26 +192,25 @@ bool game_data::validate_choice(choice::choice c, idtype id){
 
   // solar choices
   for (auto &x : c.solar_choices){
-    if (!entity.count(x.first)){
-      cout << "entity " << x.first << " not found for solar choice!" << endl;
+    auto e = get_entity(x.first);
+    
+    if (e -> owner != id){
+      cout << "apply_choice: error: solar choice by player " << id << " for solar " << x.first << " owned by " << e -> owner << endl;
       return false;
     }
     
-    if (entity[x.first] -> owner != id){
-      cout << "apply_choice: error: solar choice by player " << id << " for solar " << x.first << " owned by " << entity[x.first] -> owner << endl;
+    if (!e -> isa(solar::class_id)){
+      cout << "apply_choice: error: solar choice by player " << id << " for " << x.first << ": not a solar!" << endl;
       return false;
     }
   }
 
   // commands
   for (auto x : c.commands){
-    if (!entity.count(x.first)){
-      cout << "entity " << x.first << " not found for command!" << endl;
-      return false;
-    }    
+    auto e = get_entity(x.first);
 
-    if (entity[x.first] -> owner != id){
-      cout << "apply_choice: error: solar choice by player " << id << " for solar " << x.first << " owned by " << entity[x.first] -> owner << endl;
+    if (e -> owner != id){
+      cout << "apply_choice: error: solar choice by player " << id << " for solar " << x.first << " owned by " << e -> owner << endl;
       return false;
     }
   }
@@ -243,7 +242,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
 
   // distribute commands
   for (auto x : c.commands){
-    commandable_object::ptr v = utility::guaranteed_cast<commandable_object>(entity[x.first]);
+    commandable_object::ptr v = utility::guaranteed_cast<commandable_object>(get_entity(x.first));
     v -> give_commands(x.second, this);
   }
 
@@ -264,14 +263,21 @@ void game_data::add_entity(game_object::ptr p){
 
 void game_data::remove_entity(combid i){
   if (!entity.count(i)) throw runtime_error("remove_entity: " + i + ": doesn't exist!");
-  entity[i] -> on_remove(this);
+  cout << "remove_entity: " << i << endl;
+  get_entity(i) -> on_remove(this);
   entity.erase(i);
   remove_entities.push_back(i);
 }
 
 void game_data::remove_units(){
+  cout << "remove_units: start" << endl;
   auto buf = entity;
-  for (auto i : buf) if (i.second -> remove) remove_entity(i.first);
+  for (auto i : buf) {
+    if (i.second -> remove) {
+      cout << "remove_units: remving: " << i.first << endl;
+      remove_entity(i.first);
+    }
+  }
 }
 
 // should set positions, update stats and add entities
@@ -299,6 +305,18 @@ void game_data::increment(){
   remove_units();
   
   for (auto x : entity) if (x.second -> is_active()) x.second -> post_phase(this);
+}
+
+void game_data::build_players(hm_t<int, server::client_t*> clients){
+  // build player data
+  vector<sint> colbuf = utility::different_colors(clients.size());
+  int i = 0;
+  for (auto x : clients){
+    player p;
+    p.name = x.second -> name;
+    p.color = colbuf[i++];
+    players[x.first] = p;
+  }
 }
 
 // players and settings should be set before build is called
@@ -411,13 +429,13 @@ void game_data::end_step(){
 bool game_data::entity_seen_by(combid id, idtype pid){
   if (!entity.count(id)) throw runtime_error("entity seen by: not found: " + id);
 
-  game_object::ptr x = entity[id];
+  game_object::ptr x = get_entity(id);
 
   // always see owned entities
   if (x -> owner == pid) return true;
 
   // never see opponent waypoints
-  if (identifier::get_type(id) == waypoint::class_id) return false;
+  if (x -> isa(waypoint::class_id)) return false;
 
   // don't see entities that aren't active
   if (!x -> is_active()) return false;
@@ -452,3 +470,5 @@ game_data game_data::limit_to(idtype id){
 
   return gc;
 }
+
+template list<ship::ptr> game_data::all<ship>();

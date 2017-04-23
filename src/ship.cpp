@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "game_data.h"
 #include "ship.h"
 #include "fleet.h"
@@ -50,6 +52,7 @@ void ship::interact(game_data *g){
   if (identifier::get_type(f -> com.target) == solar::class_id && action == fleet_action::go_to && f -> converge){
     solar::ptr s = g -> get_solar(f -> com.target);
     if (utility::l2d2(s -> position - position) < pow(s -> radius, 2)){
+      cout << id << " lands at " << s -> id << endl;
       fleet_id = identifier::source_none;
       s -> ships.insert(id);
       f -> remove_ship(id);
@@ -57,14 +60,18 @@ void ship::interact(game_data *g){
   }
 
   // check ship interactions
+  auto itab = interaction::table();
   for (auto inter : compile_interactions()){
     // let fleet behaviour decide whether to perform the action
     if (f -> confirm_ship_interaction(inter)){
-      interaction i = interaction::table()[inter];
+      interaction i = itab[inter];
       list<combid> buf = g -> search_targets(id, position, current_stats.interaction_radius, i.condition.owned_by(owner));
       if (!buf.empty()){
 	combid target = utility::uniform_sample(buf);
-	i.perform(ptr(this), g -> entity[target]);
+	cout << "ship " << id << ": interaction " << inter << " on  " << target << endl;
+	cout << "pre interaction active: " << g -> get_entity(id) -> is_active() << " - " << g -> get_entity(target) -> is_active() << endl;
+	i.perform(ptr(this), g -> get_entity(target));
+	cout << "post interaction active: " << g -> get_entity(id) -> is_active() << " - " << g -> get_entity(target) -> is_active() << endl;
       }
     }
   }
@@ -75,10 +82,15 @@ void ship::post_phase(game_data *g){}
 void ship::receive_damage(game_object::ptr from, float damage){
   current_stats.hp -= damage;
   remove = current_stats.hp <= 0;
+  cout << "ship::receive_damage: " << id << " takes " << damage << " damage from " << from -> id << " - remove = " << remove << endl;
 }
 
 void ship::on_remove(game_data *g){
-  g -> get_fleet(fleet_id) -> remove_ship(id);
+  cout << "ship::on_remove: " << id << endl;
+  if (fleet_id != identifier::source_none) {
+    cout << " -> removing from fleet " << fleet_id << endl;
+    g -> get_fleet(fleet_id) -> remove_ship(id);
+  }
   game_object::on_remove(g);
 }
 

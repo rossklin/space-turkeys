@@ -1,4 +1,5 @@
 #include <memory>
+#include <iostream>
 
 #include "game_object.h"
 #include "game_data.h"
@@ -18,6 +19,7 @@ void game_object::on_add(game_data *g){
 }
 
 void game_object::on_remove(game_data *g){
+  cout << "game_object::on_remove: " << id << endl;
   g -> entity_grid -> remove(id);
 }
 
@@ -27,6 +29,10 @@ bool game_object::is_commandable(){
 
 bool game_object::is_active(){
   return !remove;
+}
+
+bool game_object::isa(string c){
+  return identifier::get_type(id) == c;
 }
 
 game_object::ptr game_object::clone(){

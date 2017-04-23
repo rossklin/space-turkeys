@@ -29,7 +29,9 @@ float waypoint::vision(){
   return 0;
 }
 
-void waypoint::post_phase(game_data *g){  
+void waypoint::post_phase(game_data *g){
+  cout << "waypoint::post_phase: " << id << endl;
+  
   // trigger commands
   bool check;
   set<combid> ready_ships, arrived_ships;

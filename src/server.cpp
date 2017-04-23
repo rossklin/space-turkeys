@@ -25,16 +25,7 @@ int main(int argc, char **argv){
     exit(-1);
   }
 
-  // build player data
-  vector<sint> colbuf = utility::different_colors(num_clients);
-  int i = 0;
-  for (auto x : c.clients){
-    player p;
-    p.name = x.second -> name;
-    p.color = colbuf[i++];
-    g.players[x.first] = p;
-  }
-
+  g.build_players(c.clients);
   g.build();
 
   try {

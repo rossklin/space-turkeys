@@ -8,9 +8,9 @@
 
 #include "types.h"
 #include "socket_t.h"
-#include "game_data.h"
 
 namespace st3{
+  class game_data;
 
   /*! server side specifics */
   namespace server{

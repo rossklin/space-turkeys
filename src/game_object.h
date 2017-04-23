@@ -35,6 +35,7 @@ namespace st3{
     virtual float vision() = 0;
     virtual bool is_commandable();
     virtual bool is_active();
+    bool isa(std::string c);
     
     ptr clone();
 
