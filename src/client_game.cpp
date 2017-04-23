@@ -78,6 +78,11 @@ function<int(sf::Event)> game::generate_event_handler(function<int(sf::Event)> t
   };
 }
 
+command_selector::ptr game::get_command_selector(idtype i){
+  if (!command_selectors.count(i)) throw runtime_error("client::game::get_command_selectors: invalid id: " + to_string(i));
+  return command_selectors[i];
+}
+
 entity_selector::ptr game::get_entity(combid i){
   if (!entity.count(i)) throw runtime_error("client::game::get_entity: invalid id: " + i);
   return entity[i];
@@ -85,10 +90,10 @@ entity_selector::ptr game::get_entity(combid i){
 
 template<typename T>
 typename specific_selector<T>::ptr game::get_specific(combid i){
-  if (!entity.count(i)) throw runtime_error("client::game::get_specific: invalid id: " + i);
+  auto e = get_entity(i);
 
-  if (entity[i] -> isa(T::class_id)){
-    return utility::guaranteed_cast<specific_selector<T>, entity_selector>(entity[i]);
+  if (e -> isa(T::class_id)){
+    return utility::guaranteed_cast<specific_selector<T>, entity_selector>(e);
   }else{
     throw runtime_error("get_specific: " + T::class_id + ": wrong class id for: " + i);
   }
@@ -253,7 +258,7 @@ bool game::choice_step(){
       // check the command gui
       window.setView(view_window);
       if (comgui && comgui -> handle_event(e)){
-	command_selectors[comgui -> comid] -> ships = comgui -> allocated;    
+	get_command_selector(comgui -> comid) -> ships = comgui -> allocated;    
 	return 0;
       }
 
@@ -426,7 +431,7 @@ choice::choice game::build_choice(choice::choice c){
   for (auto x : entity){
     for (auto y : x.second -> commands){
       if (command_selectors.count(y)){
-	c.commands[x.first].push_back(*command_selectors[y]);
+	c.commands[x.first].push_back(*get_command_selector(y));
       }else{
 	throw runtime_error("Attempting to build invalid command: " + y);
       }
@@ -497,6 +502,16 @@ void game::add_fixed_stars (point position, float vision) {
   }
 }
 
+void game::remove_command_selector(idtype i){
+  delete get_command_selector(i);
+  command_selectors.erase(i);
+}
+
+void game::remove_entity(combid i){
+  delete get_entity(i);
+  entity.erase(i);
+}
+
 /** Load new game data from a data_frame.
 
     Adds and removes entity selectors given by the frame. Also adds
@@ -512,7 +527,8 @@ void game::reload_data(data_frame &g){
   for (auto x : g.entity){
     entity_selector::ptr p = x.second;
     combid key = x.first;
-    entity[x.first] = p;
+    if (entity.count(key)) remove_entity(key);
+    entity[key] = p;
     p -> seen = true;
     if (p -> owner == self_id && p -> is_active()) add_fixed_stars (p -> position, p -> vision());
   }
@@ -521,7 +537,7 @@ void game::reload_data(data_frame &g){
   for (auto x : g.remove_entities){
     if (entity.count(x)){
       cout << " -> remove entity " << x << endl;
-      entity.erase(x);
+      remove_entity(x);
     }
   }
 
@@ -530,7 +546,7 @@ void game::reload_data(data_frame &g){
     if (entity.count(f -> com.target)){
       // include commands even if f is idle e.g. to waypoint
       command c = f -> com;
-      point to = entity[f -> com.target] -> get_position();
+      point to = get_entity(f -> com.target) -> get_position();
       // assure we don't assign ships which have been killed
       c.ships = c.ships & f -> ships;
       add_command(c, f -> position, to, false);
@@ -544,7 +560,7 @@ void game::reload_data(data_frame &g){
   for (auto w : get_all<waypoint>()){
     for (auto c : w -> pending_commands){
       if (entity.count(c.target)){
-	add_command(c, w -> get_position(), entity[c.target] -> get_position(), false);
+	add_command(c, w -> get_position(), get_entity(c.target) -> get_position(), false);
       }
     }
     w -> pending_commands.clear();
@@ -563,8 +579,8 @@ void game::add_command(command c, point from, point to, bool fill_ships){
     if (c == (command)*x.second) return;
   }
 
-  entity_selector::ptr s = entity[c.source];
-  entity_selector::ptr t = entity[c.target];
+  entity_selector::ptr s = get_entity(c.source);
+  entity_selector::ptr t = get_entity(c.target);
 
   // check waypoint ancestors
   if (waypoint_ancestor_of(c.target, c.source)){
@@ -572,10 +588,10 @@ void game::add_command(command c, point from, point to, bool fill_ships){
     return;
   }
 
-  idtype id = comid++;
   command_selector::ptr cs = command_selector::create(c, from, to);
   
-  // add command to command selectors
+  // add command to command selectors 
+  idtype id = comid++;
   command_selectors[id] = cs;
 
   // add ships to command
@@ -599,7 +615,7 @@ bool game::waypoint_ancestor_of(combid ancestor, combid child){
 
   // if the ancestor is ancestor to a parent, it is ancestor to the child
   for (auto x : incident_commands(child)){
-    if (waypoint_ancestor_of(ancestor, command_selectors[x] -> source)) return true;
+    if (waypoint_ancestor_of(ancestor, get_command_selector(x) -> source)) return true;
   }
 
   return false;
@@ -612,11 +628,12 @@ bool game::waypoint_ancestor_of(combid ancestor, combid child){
 void game::remove_command(idtype key){
   if (!command_selectors.count(key)) throw runtime_error("remove_command: not found: " + key);
     
-  command_selector::ptr cs = command_selectors[key];
-  entity_selector::ptr s = entity[cs -> source];
-  entity_selector::ptr t = entity[cs -> target];
+  command_selector::ptr cs = get_command_selector(key);
+  entity_selector::ptr s = get_entity(cs -> source);
+  entity_selector::ptr t = get_entity(cs -> target);
 
   // remove this command's selector
+  delete cs;
   command_selectors.erase(key);
 
   // remove this command from it's source's list
@@ -627,7 +644,7 @@ void game::remove_command(idtype key){
     if (incident_commands(t -> id).empty()){
       auto buf = t -> commands;
       for (auto c : buf) remove_command(c);
-      entity.erase(t -> id);
+      remove_entity(t -> id);
     }
   }
 
@@ -646,8 +663,9 @@ void game::clear_selectors(){
   comid = 0;
 
   for (auto x : entity) x.second -> seen = false;
+  for (auto c : command_selectors) delete c.second;
   command_selectors.clear();
-  for (auto w : get_all<waypoint>()) entity.erase(w -> id);
+  for (auto w : get_all<waypoint>()) remove_entity(w -> id);
 }
 
 /** Mark all entity and command selectors as not selected. */
@@ -683,11 +701,11 @@ void game::command2entity(combid key, string act, list<combid> selected_entities
   point from, to;
   c.target = key;
   c.action = act;
-  to = entity[key] -> get_position();
+  to = get_entity(key) -> get_position();
 
   for (auto x : selected_entities){
     if (entity.count(x) && x != key){
-      entity_selector::ptr s = entity[x];
+      entity_selector::ptr s = get_entity(x);
       if (s -> is_commandable()){
 	c.source = x;
 	from = s -> get_position();
@@ -716,11 +734,11 @@ combid game::entity_at(point p, int &q){
   if (keys.empty()) return identifier::source_none;
 
   keys.sort([this] (combid a, combid b) -> bool {
-    return entity[a] -> queue_level < entity[b] -> queue_level;
+      return get_entity(a) -> queue_level < get_entity(b) -> queue_level;
   });
 
   combid best = keys.front();
-  q = entity[best] -> queue_level;
+  q = get_entity(best) -> queue_level;
   return best;
 }
 
@@ -767,37 +785,33 @@ bool game::select_at(point p){
     
     Sets up the command gui.
 */
-bool game::select_command(idtype key){
-  auto it = command_selectors.find(key);
- 
+bool game::select_command(idtype key){ 
   if (!add2selection()) deselect_all();
+  if (!command_selectors.count(key)) return false;
+  auto c = get_command_selector(key);
 
-  if (it != command_selectors.end()){
-    it -> second -> selected = !(it -> second -> selected);
-    it -> second -> queue_level = selector_queue++;
+  c -> selected = !(c -> selected);
+  c -> queue_level = selector_queue++;
     
-    // setup command gui using ready ships from source plus ships
-    // already selected for this command (they will not be listed as
-    // ready)
-    hm_t<combid, ship> all_ships;
-    set<combid> ready_ships = get_ready_ships(it -> second -> source);
-    ready_ships += it -> second -> ships;    
-    for (auto x : ready_ships) all_ships[x] = *get_specific<ship>(x);
+  // setup command gui using ready ships from source plus ships
+  // already selected for this command (they will not be listed as
+  // ready)
+  hm_t<combid, ship> all_ships;
+  set<combid> ready_ships = get_ready_ships(c -> source);
+  ready_ships += c -> ships;    
+  for (auto x : ready_ships) all_ships[x] = *get_specific<ship>(x);
 
-    comgui = new command_gui(it -> first, 
-			     &window, 
-			     all_ships,
-			     it -> second -> ships,
-			     view_window.getSize(),
-			     col,
-			     "source: " + it -> second -> source 
-			     + ", target: " + it -> second -> target 
-			     + ", action: " + it -> second -> action);
+  comgui = new command_gui(key, 
+			   &window, 
+			   all_ships,
+			   c -> ships,
+			   view_window.getSize(),
+			   col,
+			   "source: " + c -> source 
+			   + ", target: " + c -> target 
+			   + ", action: " + c -> action);
 
-    return true;
-  }
-
-  return false;
+  return true;
 }
 
 /** At least one selected entity? */
@@ -810,9 +824,9 @@ bool game::exists_selected(){
 set<combid> game::get_ready_ships(combid id){
   if (!entity.count(id)) throw runtime_error("get ready ships: entity selector " + id + " not found!");
 
-  entity_selector::ptr e = entity[id];
+  entity_selector::ptr e = get_entity(id);
   set<combid> s = e -> get_ships();
-  for (auto c : e -> commands) s -= command_selectors[c] -> ships;
+  for (auto c : e -> commands) s -= get_command_selector(c) -> ships;
 
   return s;
 }
@@ -851,7 +865,7 @@ void game::setup_targui(point p){
 
   // add possible actions from available fleet interactions
   for (auto k : keys_selected){
-    entity_selector::ptr e = entity[k];
+    entity_selector::ptr e = get_entity(k);
     for (auto i : e -> get_ships()){
       ship::ptr s = get_specific<ship>(i);
       for (auto u : s -> upgrades) possible_actions += upgrade::table()[u].inter;
@@ -863,7 +877,7 @@ void game::setup_targui(point p){
   for (auto a : possible_actions){
     auto condition = atab[a].owned_by(self_id);
     for (auto k : keys_targeted){
-      if (interaction::macro_valid(condition, entity[k])){
+      if (interaction::macro_valid(condition, get_entity(k))){
 	options.push_back(target_gui::option_t(k, a));
       }
     }
@@ -905,7 +919,7 @@ int game::choice_event(sf::Event e){
     if (keys.size() == 1){
       combid k = *keys.begin();
       if (!entity.count(k)) throw runtime_error("update hover info: entity not in table: " + k);
-      text = entity[k] -> hover_info();
+      text = get_entity(k) -> hover_info();
     }else if (keys.size() > 1){
       text = "Multiple entities here!";
     }

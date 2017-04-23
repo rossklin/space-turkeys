@@ -57,6 +57,10 @@ namespace st3{
       game();
 
       entity_selector::ptr get_entity(combid i);
+      void remove_entity(combid i);
+
+      command_selector::ptr get_command_selector(idtype i);
+      void remove_command_selector(idtype i);
 
       template<typename T>
       typename specific_selector<T>::ptr get_specific(combid i);

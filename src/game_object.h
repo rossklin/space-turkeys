@@ -14,7 +14,7 @@ namespace st3{
   
   class game_object{
   public:
-    typedef std::shared_ptr<game_object> ptr;
+    typedef game_object* ptr;
     static const sint neutral_owner = -1;
     
     point position;
@@ -47,7 +47,7 @@ namespace st3{
 
   class commandable_object : public virtual game_object{
   public:
-    typedef std::shared_ptr<commandable_object> ptr;
+    typedef commandable_object* ptr;
 
     commandable_object();
     ~commandable_object();

@@ -32,7 +32,7 @@ typename T::ptr utility::guaranteed_cast(typename F::ptr p){
     exit(-1);
   }
   
-  typename T::ptr res = dynamic_pointer_cast<T>(p);
+  typename T::ptr res = dynamic_cast<T*>(p);
 
   if (res){
     return res;

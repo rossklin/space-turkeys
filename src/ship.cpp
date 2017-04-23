@@ -70,7 +70,7 @@ void ship::interact(game_data *g){
 	combid target = utility::uniform_sample(buf);
 	cout << "ship " << id << ": interaction " << inter << " on  " << target << endl;
 	cout << "pre interaction active: " << g -> get_entity(id) -> is_active() << " - " << g -> get_entity(target) -> is_active() << endl;
-	i.perform(ptr(this), g -> get_entity(target));
+	i.perform(this, g -> get_entity(target));
 	cout << "post interaction active: " << g -> get_entity(id) -> is_active() << " - " << g -> get_entity(target) -> is_active() << endl;
       }
     }
@@ -79,7 +79,7 @@ void ship::interact(game_data *g){
 
 void ship::post_phase(game_data *g){}
 
-void ship::receive_damage(game_object::ptr from, float damage){
+void ship::receive_damage(game_object *from, float damage){
   current_stats.hp -= damage;
   remove = current_stats.hp <= 0;
   cout << "ship::receive_damage: " << id << " takes " << damage << " damage from " << from -> id << " - remove = " << remove << endl;
@@ -99,7 +99,7 @@ ship::ptr ship::create(){
 }
 
 ship::ptr ship::clone(){
-  return dynamic_pointer_cast<ship>(clone_impl());
+  return dynamic_cast<ship::ptr>(clone_impl());
 }
 
 game_object::ptr ship::clone_impl(){

@@ -48,5 +48,5 @@ bool commandable_object::is_commandable() {
 }
 
 commandable_object::ptr commandable_object::clone(){
-  return dynamic_pointer_cast<commandable_object>(clone_impl());
+  return dynamic_cast<commandable_object::ptr>(clone_impl());
 }

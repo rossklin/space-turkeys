@@ -25,7 +25,7 @@ ship research::ship_template(string k){
     s.base_stats.ship_damage = 0;
     s.base_stats.solar_damage = 0;
     s.base_stats.accuracy = 0;
-    s.base_stats.interaction_radius = 10;
+    s.base_stats.interaction_radius = 20;
     s.fleet_id = identifier::source_none;
     s.ship_class = "";
     s.remove = false;
@@ -50,7 +50,7 @@ ship research::ship_template(string k){
     a.base_stats.ship_damage = 1;
     a.base_stats.solar_damage = 0.1;
     a.base_stats.accuracy = 0.7;
-    a.base_stats.interaction_radius = 20;
+    a.base_stats.interaction_radius = 40;
     a.base_stats.load_time = 30;
     a.upgrades.insert(fleet_action::space_combat);
     a.upgrades.insert(fleet_action::bombard);

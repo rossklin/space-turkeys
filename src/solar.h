@@ -17,7 +17,7 @@ namespace st3{
   /*! data representing a solar system */
   class solar : public virtual commandable_object{
   public:
-    typedef std::shared_ptr<solar> ptr;
+    typedef solar* ptr;
     static ptr create();
     static const std::string class_id;
     

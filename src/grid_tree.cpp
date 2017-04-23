@@ -139,6 +139,8 @@ list<iterator_type> node::search(value_type p, float r){
       if (d2 <= r2){
 	cout << string(indent, '-') << "> grid::node::search: leaf: selected: " << x.first << endl;
 	res.push_back(x);
+      }else{
+	cout << string(indent, '-') << "> grid::node::search: leaf: missed (d2 = " << d2 << "): " << x.first << endl;
       }
     }
   }else{

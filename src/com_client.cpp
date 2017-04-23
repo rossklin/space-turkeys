@@ -93,9 +93,8 @@ bool client::deserialize(data_frame &f, sf::Packet &p, sint id){
     cout << "deserialize: package empty!" << endl;
     return false;
   }
-  
-  f.entity.clear();
 
+  if (f.entity.size()) throw runtime_error("client::deserialize: data frame contains entities!");
   cout << "deserialize: recieving " << n << " entities." << endl;
 
   // "polymorphic" deserialization

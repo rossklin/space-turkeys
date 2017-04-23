@@ -21,9 +21,17 @@ game_data::game_data(const game_data &g) {
   *this = g;
 }
 
+game_data::~game_data(){
+  clear_entities();
+}
+
+void game_data::clear_entities(){
+  for (auto x : entity) delete x.second;
+  entity.clear();
+}
+
 game_data &game_data::operator =(const game_data &g){
   allocate_grid();
-  entity.clear();
   
   for (auto x : g.entity) entity[x.first] = x.second -> clone();
 
@@ -228,7 +236,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
     if (identifier::get_waypoint_owner(x.first) != id){
       throw runtime_error("apply_choice: player " + to_string(id) + " tried to insert waypoint owned by " + to_string(identifier::get_waypoint_owner(x.first)));
     }
-    add_entity(make_shared<waypoint>(x.second));
+    add_entity(x.second.clone());
     cout << "apply_choice: player " << id << ": added " << x.first << endl;
   }
 
@@ -251,6 +259,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
 }
 
 void game_data::allocate_grid(){
+  clear_entities();
   entity_grid = grid::tree::create();
   for (auto x : entity) entity_grid -> insert(x.first, x.second -> position);
 }
@@ -265,6 +274,7 @@ void game_data::remove_entity(combid i){
   if (!entity.count(i)) throw runtime_error("remove_entity: " + i + ": doesn't exist!");
   cout << "remove_entity: " << i << endl;
   get_entity(i) -> on_remove(this);
+  delete get_entity(i);
   entity.erase(i);
   remove_entities.push_back(i);
 }
@@ -459,7 +469,7 @@ game_data game_data::limit_to(idtype id){
   gc.allocate_grid();
   for (auto i : entity){
     if (entity_seen_by(i.first, id)){
-      gc.add_entity(i.second);
+      gc.add_entity(i.second -> clone());
     }
   }
 

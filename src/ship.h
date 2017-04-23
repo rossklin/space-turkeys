@@ -28,7 +28,7 @@ namespace st3{
   /*! ship game object */
   class ship : public virtual game_object{
   public:
-    typedef std::shared_ptr<ship> ptr;
+    typedef ship* ptr;
     static ptr create();
     static const std::string class_id;
 
@@ -51,7 +51,7 @@ namespace st3{
     bool serialize(sf::Packet &p);
 
     std::set<std::string> compile_interactions();
-    void receive_damage(game_object::ptr from, float damage);
+    void receive_damage(game_object *from, float damage);
     bool is_active();
 
     ptr clone();

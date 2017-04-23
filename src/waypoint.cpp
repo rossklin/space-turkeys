@@ -70,7 +70,7 @@ waypoint::ptr waypoint::create(idtype o){
 }
 
 waypoint::ptr waypoint::clone(){
-  return dynamic_pointer_cast<waypoint>(clone_impl());
+  return dynamic_cast<waypoint::ptr>(clone_impl());
 }
 
 game_object::ptr waypoint::clone_impl(){

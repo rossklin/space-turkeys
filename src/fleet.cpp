@@ -90,7 +90,7 @@ fleet::ptr fleet::create(){
 }
 
 fleet::ptr fleet::clone(){
-  return dynamic_pointer_cast<fleet>(clone_impl());
+  return dynamic_cast<fleet::ptr>(clone_impl());
 }
 
 game_object::ptr fleet::clone_impl(){

@@ -67,7 +67,7 @@ void solar::interact(game_data *g){
 	ship::ptr s = g -> get_ship(tid);
 	
 	if (utility::random_uniform() < t.accuracy){
-	  s -> receive_damage(ptr(this), utility::random_uniform(0, t.damage));
+	  s -> receive_damage(this, utility::random_uniform(0, t.damage));
 	}
       }
     }
@@ -75,7 +75,6 @@ void solar::interact(game_data *g){
 }
 
 void solar::post_phase(game_data *g){
-  cout << "solar::post_phase: " << id << endl;
   float total_damage = 0;
   float highest_id = -1;
   float highest_sum = 0;
@@ -116,8 +115,6 @@ void solar::post_phase(game_data *g){
       g -> get_entity(i.second) -> remove = true;
     }
   }
-
-  cout << "solar::post_phase: " << id << " done" << endl;
 }
 
 void solar::give_commands(list<command> c, game_data *g){
@@ -178,7 +175,7 @@ solar::ptr solar::create(){
 }
 
 solar::ptr solar::clone(){
-  return dynamic_pointer_cast<solar>(clone_impl());
+  return dynamic_cast<solar::ptr>(clone_impl());
 }
 
 game_object::ptr solar::clone_impl(){

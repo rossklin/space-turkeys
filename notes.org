@@ -2,6 +2,13 @@
 ** upgrade / interaction / game object makeover
 *** Segfault 
     After finding an enemy ship in game_data::search_targets(), at game_data.cpp:296
+
+    Switched back to normal pointers, which helped in a simplified
+    case, but now there is instead a sigabrt in the thread destructor
+    of distribute_frames thread, right after ship fire.
+
+    Consider deleting game_data copy constructor and only doing
+    explicit assignment, possibly also explicit destruction.
 *** [J] Figure out why server sends old waypoints in [prestep?]
 *** [J] Figure out why commands dissapear 
     ... from waypoints (or only from selectors) without passing the

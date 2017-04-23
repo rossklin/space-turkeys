@@ -13,7 +13,7 @@ namespace st3{
   /*! Waypoints allow position based fleet joining and splitting.*/
   class waypoint : public virtual commandable_object {
   public:
-    typedef std::shared_ptr<waypoint> ptr;
+    typedef waypoint* ptr;
     static ptr create(idtype owner);
     static const std::string class_id;
     

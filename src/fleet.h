@@ -23,7 +23,7 @@ namespace st3{
   /*! a fleet controls a set of ships */
   class fleet : public virtual commandable_object{
   public:
-    typedef std::shared_ptr<fleet> ptr;
+    typedef fleet* ptr;
     static ptr create();
     static const std::string class_id;
 
