@@ -30,12 +30,10 @@ bool st3::server::client_t::receive_query(protocol_t query){
 	disconnect();
 	status = sf::Socket::Status::Disconnected;
       }else{
-	cout << "client_t::receive_query: input " << input << " does not match query " << query << endl;
-	exit(-1);
+	throw runtime_error("client_t::receive_query: input " + to_string(input) + " does not match query " + to_string(query));
       }
     }else{
-      cout << "client_t::receive_query: failed to unpack!" << endl;
-      exit(-1);
+      throw runtime_error("client_t::receive_query: failed to unpack!");
     }
   }
   return false;
@@ -46,15 +44,19 @@ bool server::client_t::is_connected(){
 }
 
 void server::client_t::check_protocol(protocol_t q, sf::Packet &p){
+  cout << "client " << name << ": checking protocol: " << q << endl;
   while (!receive_query(q)){
     if (!is_connected()) return;
     sf::sleep(sf::milliseconds(10));
   }
+  cout << "client " << name << ": received protocol: " << q << endl;
 
   while (!send_packet(p)){
     if (!is_connected()) return;
     sf::sleep(sf::milliseconds(10));
   }
+
+  cout << "client " << name << ": sent response to protocol" << endl;
 }
 
 void server::com::disconnect(){
@@ -120,12 +122,12 @@ bool server::com::introduce(){
 bool com::cleanup_clients(){
 
   // remove disconnected clients
-  for (auto i = clients.begin(); i != clients.end();){
+  auto buf = clients;
+  for (auto i = buf.begin(); i != buf.end(); i++){
     if (!i -> second -> is_connected()) {
       delete i -> second;
-      clients.erase((i++) -> first);
-    }else{
-      i++;
+      clients.erase(i -> first);
+      cout << "removed disconnected client: " << i -> first << endl;
     }
   }
 
@@ -189,7 +191,8 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
   while (idx < last_idx){
     lim_end = available_frames;
     for (int i = lim_start; i < lim_end; i++) {
-      g[i] = buf[i].limit_to(c -> id);
+      g[i].assign(buf[i]);
+      g[i].limit_to(c -> id);
     }
     
     lim_start = lim_end;
@@ -197,8 +200,7 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
     if (idx == no_frame && c -> receive_query(protocol::frame)){
       if (!(c -> data >> idx)){
 	c -> send_invalid();
-	idx = -1;
-	exit(-1);
+	throw runtime_error("distribute_frames_to: failed to load index!");
       }
 
       if (verbose) cout << "client " << c -> id << " requests frame " << idx << endl;
@@ -215,8 +217,7 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
 
     // check disconnect
     if (!c -> is_connected()) {
-      cout << "client " << c -> id << " disconnected during distribute!" << endl;
-      break;
+      throw runtime_error("client " + to_string(c -> id) + " disconnected during distribute!");
     }
     
     if (idx >= 0 && idx < lim_end){
@@ -226,10 +227,8 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
       if (verbose) cout << "sending frame " << idx << " to client " << c -> id << endl;
       if (c -> send_packet(psend)) idx = no_frame;
     }else if (idx > last_idx){
-      cout << "client " << c -> id << " required invalid frame " << idx << endl;
       c -> send_invalid();
-      idx = -1;
-      exit(-1);
+      throw runtime_error( "client " + to_string(c -> id) + " required invalid frame!");
     }
     
     sf::sleep(sf::milliseconds(1));
@@ -238,12 +237,22 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
   cout << "distributed " << idx << " of " << (g.size() - 1) << " frames to " << c -> id << ": end" << endl;
 }
 
+void try_distribute_frames_to(vector<game_data> &buf, int &available_frames, client_t *c){
+  try {
+    distribute_frames_to(buf, available_frames, c);
+  }catch (exception &e){
+    cout << "try distribute: exception: " << e.what() << endl;
+  }
+  
+  return;
+}
+
 void st3::server::com::distribute_frames(vector<game_data> &g, int &frame_count){
   list<thread> ts;
 
   cout << "com::distribute_frames: " << clients.size() << " clients:" << endl;
   for (auto c : clients){
-    ts.push_back(thread(distribute_frames_to, ref(g), ref(frame_count), c.second));
+    ts.push_back(thread(try_distribute_frames_to, ref(g), ref(frame_count), c.second));
   }
 
   for (auto &x : ts) x.join();

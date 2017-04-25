@@ -15,10 +15,8 @@ using namespace std;
 using namespace st3;
 using namespace cost;
 
-game_data::game_data(){}
-
-game_data::game_data(const game_data &g) {
-  *this = g;
+game_data::game_data(){
+  entity_grid = 0;
 }
 
 game_data::~game_data(){
@@ -30,11 +28,17 @@ void game_data::clear_entities(){
   entity.clear();
 }
 
-game_data &game_data::operator =(const game_data &g){
-  allocate_grid();
-  
-  for (auto x : g.entity) entity[x.first] = x.second -> clone();
+void game_data::allocate_grid(){
+  clear_entities();
+  entity_grid = grid::tree::create();
+  for (auto x : entity) entity_grid -> insert(x.first, x.second -> position);
+}
 
+void game_data::assign(const game_data &g){
+  if (entity_grid || entity.size()) throw runtime_error("Attempting to assign to game_data: already allcoated!");
+  
+  allocate_grid();  
+  for (auto x : g.entity) add_entity(x.second -> clone());
   players = g.players;
   settings = g.settings;
   remove_entities = g.remove_entities;
@@ -196,7 +200,7 @@ void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &
 }
 
 bool game_data::validate_choice(choice::choice c, idtype id){
-  cout << "game_data: validate choice" << endl;
+  cout << "game_data: validate choice: solar_choices: " << c.solar_choices.size() << endl;
 
   // solar choices
   for (auto &x : c.solar_choices){
@@ -218,7 +222,7 @@ bool game_data::validate_choice(choice::choice c, idtype id){
     auto e = get_entity(x.first);
 
     if (e -> owner != id){
-      cout << "apply_choice: error: solar choice by player " << id << " for solar " << x.first << " owned by " << e -> owner << endl;
+      cout << "apply_choice: error: command by player " << id << " for " << x.first << " owned by " << e -> owner << endl;
       return false;
     }
   }
@@ -233,8 +237,8 @@ void game_data::apply_choice(choice::choice c, idtype id){
   // build waypoints before validating the choice, so that commands
   // based at waypoints can be validated  
   for (auto &x : c.waypoints){
-    if (identifier::get_waypoint_owner(x.first) != id){
-      throw runtime_error("apply_choice: player " + to_string(id) + " tried to insert waypoint owned by " + to_string(identifier::get_waypoint_owner(x.first)));
+    if (identifier::get_waypoint_owner(x.second.id) != id){
+      throw runtime_error("apply_choice: player " + to_string(id) + " tried to insert waypoint owned by " + to_string(identifier::get_waypoint_owner(x.second.id)));
     }
     add_entity(x.second.clone());
     cout << "apply_choice: player " << id << ": added " << x.first << endl;
@@ -258,12 +262,6 @@ void game_data::apply_choice(choice::choice c, idtype id){
   for (auto w : all<waypoint>()) cout << w -> id << endl;
 }
 
-void game_data::allocate_grid(){
-  clear_entities();
-  entity_grid = grid::tree::create();
-  for (auto x : entity) entity_grid -> insert(x.first, x.second -> position);
-}
-
 void game_data::add_entity(game_object::ptr p){
   if (entity.count(p -> id)) throw runtime_error("add_entity: already exists: " + p -> id);  
   entity[p -> id] = p;
@@ -272,7 +270,6 @@ void game_data::add_entity(game_object::ptr p){
 
 void game_data::remove_entity(combid i){
   if (!entity.count(i)) throw runtime_error("remove_entity: " + i + ": doesn't exist!");
-  cout << "remove_entity: " << i << endl;
   get_entity(i) -> on_remove(this);
   delete get_entity(i);
   entity.erase(i);
@@ -280,11 +277,9 @@ void game_data::remove_entity(combid i){
 }
 
 void game_data::remove_units(){
-  cout << "remove_units: start" << endl;
   auto buf = entity;
   for (auto i : buf) {
     if (i.second -> remove) {
-      cout << "remove_units: remving: " << i.first << endl;
       remove_entity(i.first);
     }
   }
@@ -304,7 +299,8 @@ void game_data::distribute_ships(list<combid> sh, point p){
   }
 }
 
-void game_data::increment(){  
+void game_data::increment(){
+  remove_entities.clear();
   for (auto x : entity) if (x.second -> is_active()) x.second -> pre_phase(this);
   for (auto x : entity) if (x.second -> is_active()) x.second -> move(this);
   for (auto x : entity) if (x.second -> is_active()) x.second -> interact(this);
@@ -333,10 +329,7 @@ void game_data::build_players(hm_t<int, server::client_t*> clients){
 void game_data::build(){
   static research::data rbase;
   
-  if (players.empty()){
-    cout << "game_data: build: no players!" << endl;
-    exit(-1);
-  }
+  if (players.empty()) throw runtime_error("game_data: build: no players!");
 
   cout << "game_data: running dummy build" << endl;
 
@@ -437,7 +430,7 @@ void game_data::end_step(){
 }
 
 bool game_data::entity_seen_by(combid id, idtype pid){
-  if (!entity.count(id)) throw runtime_error("entity seen by: not found: " + id);
+  if (!entity.count(id)) return false;
 
   game_object::ptr x = get_entity(id);
 
@@ -462,23 +455,15 @@ bool game_data::entity_seen_by(combid id, idtype pid){
   return seen;
 }
 
-game_data game_data::limit_to(idtype id){
-  // build limited game data object;
-  game_data gc;
-
-  gc.allocate_grid();
-  for (auto i : entity){
-    if (entity_seen_by(i.first, id)){
-      gc.add_entity(i.second -> clone());
-    }
+void game_data::limit_to(idtype id){
+  auto re = remove_entities;
+  list<combid> remove_buf;
+  for (auto i : entity) {
+    if (!entity_seen_by(i.first, id)) remove_buf.push_back(i.first);
   }
 
-  // load players and settings
-  gc.players = players;
-  gc.settings = settings;
-  gc.remove_entities = remove_entities;
-
-  return gc;
+  for (auto i : remove_buf) remove_entity(i);
+  remove_entities = re;
 }
 
 template list<ship::ptr> game_data::all<ship>();

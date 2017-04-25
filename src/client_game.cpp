@@ -207,10 +207,12 @@ bool game::pre_step(){
   message = "loading game data...";
   pq << protocol::game_round;
 
+  cout << "client " << self_id << ": pre step: start" << endl;
   if (!(wait_for_it(pq) && deserialize(data, socket -> data, self_id))) {
     cout << "pre_step: failed to load/deserialize game_data" << endl;
     return false;
   }
+  cout << "client " << self_id << ": pre step: loaded" << endl;
 
   reload_data(data);
 
@@ -298,12 +300,13 @@ bool game::choice_step(){
   c = build_choice(interface::desktop -> response);
   pq << protocol::choice << c;
 
+  cout << "client " << self_id << ": choice step: start" << endl;
   if (!wait_for_it(pq)){
     cout << "choice send: server says game finished!" << endl;
     return false;
   }
-    
-  cout << "choice step: complete" << endl;
+
+  cout << "client " << self_id << ": choice step: loaded" << endl;
   return true;
 }
 
@@ -427,11 +430,13 @@ combid game::add_waypoint(point p){
 
     @return the modified choice
 */
-choice::choice game::build_choice(choice::choice c){  
+choice::choice game::build_choice(choice::choice c){
+  cout << "client " << self_id << ": build choice:" << endl;
   for (auto x : entity){
     for (auto y : x.second -> commands){
       if (command_selectors.count(y)){
 	c.commands[x.first].push_back(*get_command_selector(y));
+	cout << "Adding command for entity " << x.first << endl;
       }else{
 	throw runtime_error("Attempting to build invalid command: " + y);
       }
@@ -442,6 +447,9 @@ choice::choice game::build_choice(choice::choice c){
       cout << "build choice: " << x.first << endl;
     }
   }
+
+  cout << "client " << self_id << ": build_choice: solar_choices:" << endl;
+  for (auto x : c.solar_choices) cout << x.first << endl;
 
   return c;
 }
@@ -541,9 +549,9 @@ void game::reload_data(data_frame &g){
     }
   }
 
-  // update commands for fleets
+  // update commands for owned fleets
   for (auto f : get_all<fleet>()) {
-    if (entity.count(f -> com.target)){
+    if (entity.count(f -> com.target) && f -> owned){
       // include commands even if f is idle e.g. to waypoint
       command c = f -> com;
       point to = get_entity(f -> com.target) -> get_position();
@@ -722,7 +730,7 @@ list<combid> game::entities_at(point p){
 
   // find entities at p
   for (auto x : entity){
-    if (x.second -> contains_point(p, d)) keys.push_back(x.first);
+    if (x.second -> is_active() && x.second -> contains_point(p, d)) keys.push_back(x.first);
   }
 
   return keys;

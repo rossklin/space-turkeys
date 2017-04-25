@@ -23,16 +23,11 @@ hm_t<string, interaction> &interaction::table() {
     // space combat
     i.name = fleet_action::space_combat;
     i.condition = target_condition(target_condition::enemy, ship::class_id, fleet::class_id);
-    i.perform = [] (game_object *self, game_object *target){
+    i.perform = [] (game_object::ptr self, game_object::ptr target){
       cout << "interaction: space_combat: " << self -> id << " targeting " << target -> id << endl;
-      // ship::ptr s = utility::guaranteed_cast<ship>(self);
-      // ship::ptr t = utility::guaranteed_cast<ship>(target);
-      ship *s = dynamic_cast<ship*>(self);
-      ship *t = dynamic_cast<ship*>(target);
+      ship::ptr s = utility::guaranteed_cast<ship>(self);
+      ship::ptr t = utility::guaranteed_cast<ship>(target);
       
-      // todo: if the function returns here, how does it manage to
-      // damage the vtable for game_object for self, but not for
-      // target?
       if (s -> load < s -> current_stats.load_time) return;
 
       cout << "space_combat: loaded" << endl;
@@ -46,51 +41,51 @@ hm_t<string, interaction> &interaction::table() {
     };
     data[i.name] = i;
 
-  //   // bombard
-  //   i.name = fleet_action::bombard;
-  //   i.condition = target_condition(target_condition::enemy, solar::class_id);
-  //   i.perform = [] (game_object::ptr self, game_object::ptr target){
-  //     ship::ptr s = utility::guaranteed_cast<ship>(self);
-  //     solar::ptr t = utility::guaranteed_cast<solar>(target);
+    // bombard
+    i.name = fleet_action::bombard;
+    i.condition = target_condition(target_condition::enemy, solar::class_id);
+    i.perform = [] (game_object::ptr self, game_object::ptr target){
+      ship::ptr s = utility::guaranteed_cast<ship>(self);
+      solar::ptr t = utility::guaranteed_cast<solar>(target);
 
-  //     if (s -> load < s -> current_stats.load_time) return;
+      if (s -> load < s -> current_stats.load_time) return;
       
-  //     // check if solar already captured
-  //     if (t -> owner == s -> owner){
-  // 	return;
-  //     }
+      // check if solar already captured
+      if (t -> owner == s -> owner){
+  	return;
+      }
 
-  //     // check if defenses already destroyed
-  //     if (t -> owner == -1 && !t -> has_defense()){
-  // 	return;
-  //     }
+      // check if defenses already destroyed
+      if (t -> owner == -1 && !t -> has_defense()){
+  	return;
+      }
 
-  //     // deal damage
-  //     s -> load = 0;
-  //     if (utility::random_uniform() < s -> current_stats.accuracy){
-  // 	t -> damage_taken[s -> owner] += utility::random_uniform(0, s -> current_stats.solar_damage);
-  //     }
-  //   };
-  //   data[i.name] = i;
+      // deal damage
+      s -> load = 0;
+      if (utility::random_uniform() < s -> current_stats.accuracy){
+  	t -> damage_taken[s -> owner] += utility::random_uniform(0, s -> current_stats.solar_damage);
+      }
+    };
+    data[i.name] = i;
 
-  //   // colonize
-  //   i.name = "colonize";
-  //   i.condition = target_condition(target_condition::neutral, solar::class_id);
-  //   i.perform = [] (game_object::ptr self, game_object::ptr target){
-  //     ship::ptr s = utility::guaranteed_cast<ship>(self);
-  //     solar::ptr t = utility::guaranteed_cast<solar>(target);
+    // colonize
+    i.name = "colonize";
+    i.condition = target_condition(target_condition::neutral, solar::class_id);
+    i.perform = [] (game_object::ptr self, game_object::ptr target){
+      ship::ptr s = utility::guaranteed_cast<ship>(self);
+      solar::ptr t = utility::guaranteed_cast<solar>(target);
 
-  //     // check if solar already colonized
-  //     if (t -> owner == s -> owner){
-  // 	return;
-  //     }
+      // check if solar already colonized
+      if (t -> owner == s -> owner){
+  	return;
+      }
 
-  //     // check colonization
-  //     if (t -> owner == game_object::neutral_owner && !t -> has_defense()){
-  // 	t -> colonization_attempts[s -> owner] = s -> id;
-  //     }
-  //   };
-  //   data[i.name] = i;
+      // check colonization
+      if (t -> owner == game_object::neutral_owner && !t -> has_defense()){
+  	t -> colonization_attempts[s -> owner] = s -> id;
+      }
+    };
+    data[i.name] = i;
   }
 
   return data;

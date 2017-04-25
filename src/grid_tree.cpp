@@ -35,7 +35,6 @@ void tree::move(key_type k, value_type v){
 
 void tree::remove(key_type k){
   if (!index.count(k)) throw runtime_error("grid::tree: attempted to remove invalid index: " + k);
-  cout << "tree::remove: " << k << endl;
   index[k] -> remove(k);
   index.erase(k);
 }
@@ -48,7 +47,6 @@ node::node(tree *i, node *p){
 }
 
 node::~node(){
-  cout << "node::~node" << endl;
   if (!is_leaf){
     for (int i = 0; i < 4; i++) if (children[i]) delete children[i];
   }
@@ -107,10 +105,7 @@ void node::insert(key_type k, value_type v){
 }
 
 void node::move(key_type k, value_type v){
-  if (!leaves.count(k)){
-    cout << "node: missing leaf: " << k << endl;
-    exit(-1);
-  }
+  if (!leaves.count(k)) throw runtime_error("node: missing leaf: " + k);
 
   if (utility::point_between(v, bounds.first, bounds.second)){
     leaves[k] = v;
@@ -156,10 +151,6 @@ list<iterator_type> node::search(value_type p, float r){
 }
 
 void node::remove(key_type k){
-  if (!is_leaf){
-    cout << "node: remove called on non-leaf" << endl;
-    exit(-1);
-  }
-
+  if (!is_leaf) throw runtime_error("node: remove called on non-leaf");
   leaves.erase(k);
 }

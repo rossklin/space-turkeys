@@ -16,11 +16,31 @@ using namespace std;
 using namespace st3;
 using namespace st3::server;
 
+void simulation_step(com &c, game_data &g) {
+  vector<game_data> frames(g.settings.frames_per_round);
+  int frame_count;
+
+  cout << "starting simulation ... " << endl;
+  frame_count = 0;
+  thread t(&com::distribute_frames, c, ref(frames), ref(frame_count));
+
+  try {
+    for (frame_count = 0; frame_count < g.settings.frames_per_round; frame_count++){
+      g.increment();
+      frames[frame_count].assign(g);
+    }
+  }catch (exception &e){
+    cout << "Unhandled exception in simulation: " << e.what() << endl;
+    exit(-1);
+  }
+
+  cout << "waiting for distribute_frames() ..." << endl;
+  t.join();
+}
+
 void server::game_handler(com &c, game_data &g){
   sf::Packet packet, p_confirm;
-  vector<game_data> frames(g.settings.frames_per_round);
   hm_t<sint, sf::Packet> packets;
-  int frame_count;
   unsigned int i;
 
   utility::init();
@@ -47,26 +67,40 @@ void server::game_handler(com &c, game_data &g){
 
     return false;
   };
+
+  auto pack_g = [&g, &c, &packets] () {
+  
+    // load_init, expects: only query
+    for (auto x : c.clients) {
+      game_data buf;
+      buf.assign(g);
+      buf.limit_to(x.first);
+    
+      packets[x.first].clear();
+      packets[x.first] << protocol::confirm;
+      packets[x.first] << buf;
+    }
+    
+  };
+
+  auto load_client_choice = [&g] (client_t *client, idtype id) {
+    choice::choice ch;
+    if (client -> data >> ch){
+      g.apply_choice(ch, id);
+    }else{
+      cout << "choice for player " << client -> name << " failed to unpack!" << endl;
+    }
+  };
   
   p_confirm << protocol::confirm;
-  
-  // load_init, expects: only query
-  for (auto x : c.clients) {
-    packets[x.first].clear();
-    packets[x.first] << protocol::confirm;
-    packets[x.first] << g.limit_to(x.first);
-  }
+
+  pack_g();
   if (!c.check_protocol(protocol::load_init, packets)) return;
 
   while (true){
     if (check_end()) return;
 
-    // pre, expects: only query
-    for (auto x : c.clients){
-      packets[x.first].clear();
-      packets[x.first] << protocol::confirm;
-      packets[x.first] << g.limit_to(x.first);
-    }
+    pack_g();
     if (!c.check_protocol(protocol::game_round, packets)) return;
 
     // idle the fleets and clear waypoints
@@ -74,30 +108,10 @@ void server::game_handler(com &c, game_data &g){
 
     // choices, expects: query + choice
     if (!c.check_protocol(protocol::choice, p_confirm)) return;
-
-    for (auto x : c.clients){
-      choice::choice ch;
-      if (x.second -> data >> ch){
-	g.apply_choice(ch, x.first);
-      }else{
-	cout << "choice for player " << x.first << " failed to unpack!" << endl;
-      }
-    }
+    for (auto x : c.clients) load_client_choice(x.second, x.first);
 
     // simulation
-    cout << "starting simulation ... " << endl;
-    frame_count = 0;
-    thread t(&com::distribute_frames, c, ref(frames), ref(frame_count));
-
-    for (frame_count = 0; frame_count < g.settings.frames_per_round; frame_count++){
-      g.increment();
-      frames[frame_count] = g;
-      g.remove_entities.clear();
-    }
-    
-    cout << "waiting for distribute_frames() ..." << endl;
-    t.join();
-
+    simulation_step(c, g);
     cout << "cleaning up game_data..." << endl;
 
     // cleanup

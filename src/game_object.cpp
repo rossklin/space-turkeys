@@ -19,7 +19,6 @@ void game_object::on_add(game_data *g){
 }
 
 void game_object::on_remove(game_data *g){
-  cout << "game_object::on_remove: " << id << endl;
   g -> entity_grid -> remove(id);
 }
 
@@ -28,7 +27,7 @@ bool game_object::is_commandable(){
 }
 
 bool game_object::is_active(){
-  return !remove;
+  return true;
 }
 
 bool game_object::isa(string c){

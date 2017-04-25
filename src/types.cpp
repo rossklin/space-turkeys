@@ -35,8 +35,7 @@ idtype identifier::get_waypoint_owner(combid v){
   try{
     return stoi(x);
   }catch(...){
-    cout << "get wp owner: invalid wp id from " << v << ": " << x << endl;
-    exit(-1);
+    throw runtime_error("get wp owner: invalid wp id from " + v + ": " + x);
   }
 }
 

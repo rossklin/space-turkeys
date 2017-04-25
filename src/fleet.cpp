@@ -66,8 +66,8 @@ fleet::fleet(){
 fleet::~fleet(){}
 
 void fleet::pre_phase(game_data *g){
-  update_data(g);
   check_in_sight(g);
+  update_data(g);
   check_waypoint(g);
   check_join(g);
 }
@@ -207,20 +207,24 @@ void fleet::check_join(game_data *g){
 }
 
 void fleet::check_in_sight(game_data *g){
+  if (is_idle()) return;
+
+  bool seen = g -> entity_seen_by(com.target, owner);
+  bool solar = identifier::get_type(com.target) == solar::class_id;
+
   // target left sight?
-  if ((!is_idle()) && (!g -> entity_seen_by(com.target, owner))){
-
+  if (!(seen || solar)){
     cout << "fleet " << id << " looses sight of " << com.target << endl;
-    // create a waypoint and reset target
-    waypoint::ptr w = waypoint::create(owner);
 
-    if (!g -> target_position(com.target, w -> position)) {
-      throw runtime_error("unset fleet target: target position not found: " + com.target);
-    }
+    // // create a waypoint and reset target
+    // waypoint::ptr w = waypoint::create(owner);
 
-    com.target = w -> id;
-    com.action = fleet_action::go_to;
-    g -> add_entity(w);
+    // // if the target exists, set waypoint at  target position
+    // g -> target_position(com.target, w -> position);
+    // g -> add_entity(w);
+
+    com.target = identifier::target_idle;
+    com.action = fleet_action::idle;
   }
 }
 

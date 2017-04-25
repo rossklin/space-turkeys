@@ -67,8 +67,7 @@ float build_universe::heuristic_homes(hm_t<combid, solar> solar_buf, hm_t<idtype
   int count = 0;
   
   if (player_ids.size() > solar_buf.size()){
-    cout << "heuristic homes: to many players: " << player_ids.size() << " > " << solar_buf.size() << endl;
-    exit(-1);
+    throw runtime_error("heuristic homes: to many players");
   }
 
   float range = settings.ship_speed * settings.frames_per_round;

@@ -36,7 +36,7 @@ int main(int argc, char **argv){
 
   if (argc > 3){
     cout << "usage: " << argv[0] << " [ip_number] [name]" << endl;
-    exit(-1);
+    exit(0);
   }else if (argc == 3){
     ip = argv[1];
     name = argv[2];
@@ -65,8 +65,7 @@ int main(int argc, char **argv){
   query(g.socket, pq, done);
 
   if (!(g.socket -> data >> g.socket -> id)){
-    cout << "server failed to provide id" << endl;
-    exit(-1);
+    throw runtime_error("server failed to provide id");
   }
 
   cout << "received player id: " << g.socket -> id << endl;

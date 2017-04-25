@@ -30,12 +30,12 @@ namespace st3{
     grid::tree::ptr entity_grid;
 
     game_data();
-    game_data(const game_data &g);
     ~game_data();
-    game_data &operator =(const game_data &g);
+    game_data(const game_data &g) = delete;
+    void assign(const game_data &g);
     void clear_entities();
     void apply_choice(choice::choice c, idtype id);
-    game_data limit_to(idtype pid);
+    void limit_to(idtype pid);
     void increment();
     bool entity_seen_by(combid id, idtype pid);
     bool target_position(combid t, point &p);

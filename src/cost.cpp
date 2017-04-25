@@ -91,29 +91,17 @@ void countable_allocation<T>::normalize(){
 // specific allocations
 
 template<typename T> ship_allocation<T>::ship_allocation() {
-  if (keywords::ship.empty()){
-    cout << "ship_allocation(): no keywords!" << endl;
-    exit(-1);
-  }
-  
+  if (keywords::ship.empty()) throw runtime_error("ship_allocation(): no keywords!");  
   allocation<T>::setup(keywords::ship);
 }
 
 template<typename T> turret_allocation<T>::turret_allocation() {
-  if (keywords::turret.empty()){
-    cout << "turret_allocation(): no keywords!" << endl;
-    exit(-1);
-  }
-  
+  if (keywords::turret.empty()) throw runtime_error("turret_allocation(): no keywords!");
   allocation<T>::setup(keywords::turret);
 }
 
 template<typename T> resource_allocation<T>::resource_allocation() {
-  if (keywords::resource.empty()){
-    cout << "resource_allocation(): no keywords!" << endl;
-    exit(-1);
-  }
-  
+  if (keywords::resource.empty()) throw runtime_error("resource_allocation(): no keywords!");
   allocation<T>::setup(keywords::resource);
 }
 
@@ -133,11 +121,7 @@ void countable_allocation<T>::add(countable_allocation<T> a){
 }
 
 template<typename T> sector_allocation<T>::sector_allocation() {
-  if (keywords::sector.empty()){
-    cout << "sector_allocation(): no keywords!" << endl;
-    exit(-1);
-  }
-  
+  if (keywords::sector.empty()) throw runtime_error("sector_allocation(): no keywords!");
   allocation<T>::setup(keywords::sector);
 }
 

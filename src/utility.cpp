@@ -27,18 +27,14 @@ void utility::init(){
 
 template<typename T, typename F>
 typename T::ptr utility::guaranteed_cast(typename F::ptr p){
-  if (p == 0){
-    cout << "attempt_cast: null pointer!" << endl;
-    exit(-1);
-  }
+  if (p == 0) throw runtime_error("attempt_cast: null pointer!");
   
-  typename T::ptr res = dynamic_cast<T*>(p);
+  typename T::ptr res = dynamic_cast<typename T::ptr>(p);
 
   if (res){
     return res;
   }else{
-    cout << "Failed to downcast" << endl;
-    exit(-1);
+    throw runtime_error("Failed to downcast");
   }
 }
 
@@ -221,8 +217,7 @@ float utility::vl2norm(vector<float> const &x){
 // vector difference
 vector<float> utility::vdiff(vector<float> const &a, vector<float> const &b){
   if (a.size() != b.size()){
-    cout << "vdiff: dimension mismatch" << endl;
-    exit(-1);
+    throw runtime_error("vdiff: dimension mismatch");
   }
 
   vector<float> res = a;
@@ -236,8 +231,7 @@ vector<float> utility::vdiff(vector<float> const &a, vector<float> const &b){
 // vector addition
 vector<float> utility::vadd(vector<float> const &a, vector<float> const &b){
   if (a.size() != b.size()){
-    cout << "vdiff: dimension mismatch" << endl;
-    exit(-1);
+    throw runtime_error("vdiff: dimension mismatch");
   }
 
   vector<float> res = a;

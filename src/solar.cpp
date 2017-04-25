@@ -124,10 +124,7 @@ void solar::give_commands(list<command> c, game_data *g){
   for (auto &x : c){
     buf.clear();
     for (auto i : x.ships){
-      if (!ships.count(i)){
-	cout << "solar::give_commands: invalid ship id: " << i << endl;
-	exit(-1);
-      }
+      if (!ships.count(i)) throw runtime_error("solar::give_commands: invalid ship id: " + i);
       buf.push_back(i);
       ships.erase(i);
     }

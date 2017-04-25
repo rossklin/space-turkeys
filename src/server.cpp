@@ -1,4 +1,6 @@
 #include <iostream>
+#include <exception>
+#include <cstdlib>
 
 #include "game_handler.h"
 #include "com_server.h"
@@ -11,6 +13,10 @@ using namespace std;
 using namespace st3;
 using namespace st3::server;
 
+void on_terminate() {
+  abort();
+}
+
 int main(int argc, char **argv){
   sf::TcpListener listener;
   int num_clients = argc == 2 ? atoi(argv[1]) : 2;
@@ -21,16 +27,18 @@ int main(int argc, char **argv){
   game_data g;
 
   if (!(c.connect(num_clients) && c.introduce())){
-    cout << "failed to build connections" << endl;
-    exit(-1);
+    throw runtime_error("failed to build connections");
   }
 
+  set_terminate(on_terminate);
+  
   g.build_players(c.clients);
   g.build();
 
   try {
     game_handler(c, g);
-  } catch (...) {
+  } catch (exception &e) {
+    cout << "Exception in game_handler: " << e.what() << endl;
     c.disconnect();
   }
 

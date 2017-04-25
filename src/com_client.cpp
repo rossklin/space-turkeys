@@ -55,8 +55,7 @@ void st3::client::query(socket_t *socket,
     if (message == protocol::confirm){
       done = query_accepted;
     }else if (message == protocol::invalid){
-      cout << "query: server says invalid" << endl;
-      exit(-1);
+      throw runtime_error("query: server says invalid");
     }else if (message == protocol::complete){
       cout << "query: server says complete" << endl;
       done = query_game_complete;
@@ -64,12 +63,10 @@ void st3::client::query(socket_t *socket,
       cout << "query: server says game aborted" << endl;
       done = query_aborted;
     }else {
-      cout << "query: unknown response: " << message << endl;
-      exit(-1);
+      throw runtime_error("query: unknown response: " + message);
     }
   }else{
-    cout << "query: failed to unpack message" << endl;
-    exit(-1);
+    throw runtime_error("query: failed to unpack message");
   }
 }
 

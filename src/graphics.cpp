@@ -26,8 +26,7 @@ void graphics::initialize(){
   
   // setup load text
   if (!default_font.loadFromFile("fonts/AjarSans-Regular.ttf")){
-    cout << "error loading font" << endl;
-    exit(-1);
+    throw runtime_error("error loading font");
   }
 }
 
@@ -66,8 +65,7 @@ void graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){
     svert[3] = sf::Vertex(point(-2, 1), col);
     svert[4] = sf::Vertex(point(2, 1), col);
   }else{
-    cout << "invalid ship type: " << s.ship_class << endl;
-    exit(-1);
+    throw runtime_error("invalid ship type: " + s.ship_class);
   }
 
   sf::Transform t;

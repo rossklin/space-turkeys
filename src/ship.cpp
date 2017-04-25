@@ -69,9 +69,7 @@ void ship::interact(game_data *g){
       if (!buf.empty()){
 	combid target = utility::uniform_sample(buf);
 	cout << "ship " << id << ": interaction " << inter << " on  " << target << endl;
-	cout << "pre interaction active: " << g -> get_entity(id) -> is_active() << " - " << g -> get_entity(target) -> is_active() << endl;
 	i.perform(this, g -> get_entity(target));
-	cout << "post interaction active: " << g -> get_entity(id) -> is_active() << " - " << g -> get_entity(target) -> is_active() << endl;
       }
     }
   }
@@ -86,9 +84,7 @@ void ship::receive_damage(game_object *from, float damage){
 }
 
 void ship::on_remove(game_data *g){
-  cout << "ship::on_remove: " << id << endl;
-  if (fleet_id != identifier::source_none) {
-    cout << " -> removing from fleet " << fleet_id << endl;
+  if (g -> entity.count(fleet_id)) {
     g -> get_fleet(fleet_id) -> remove_ship(id);
   }
   game_object::on_remove(g);
@@ -122,7 +118,7 @@ set<string> ship::compile_interactions(){
 }
 
 bool ship::is_active(){
-  return fleet_id != identifier::source_none && !remove;
+  return fleet_id != identifier::source_none;
 }
 
 ship_stats ship_stats::operator+= (const ship_stats &b) {
