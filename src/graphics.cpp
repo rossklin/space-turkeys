@@ -267,11 +267,10 @@ Button::Ptr main_window::priority_button(string label, float &data, function<boo
 
 // main window for solar choice
 main_window::main_window(solar::ptr s) : query<Window, choice::c_solar>(Window::Style::BACKGROUND), sol(s){
-  choice::c_solar buf;
   if (desktop -> response.solar_choices.count(sol -> id)){
     response = desktop -> response.solar_choices[sol -> id];
   }else{
-    response = buf;
+    response = s -> choice_data;
   }
 
   // main layout

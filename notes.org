@@ -1,6 +1,16 @@
 * current work
 ** upgrade / interaction / game object makeover
-*** Segfault 
+*** insert + make_split loop in grid_tree causes segfault
+    After giving a waypoint with some units an empty command "space combat"
+*** Colonize and join fleet commands are abandoned
+*** Need to remove "unseen" units when the area becomes seen
+*** [J] Segfault 
+    Apparently had to do with fleets loosing sight of targets and
+    calling get_entity and stuff (and possibly passing shared_ptr to a
+    temporary lambda function), however the main lesson is that
+    unhandled exceptions from threads are not displayed properly in
+    the debugger.
+
     After finding an enemy ship in game_data::search_targets(), at game_data.cpp:296
 
     Switched back to normal pointers, which helped in a simplified
