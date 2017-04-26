@@ -244,12 +244,19 @@ entity_selector::entity_selector(sf::Color c, bool o){
   color = c;
   owned = o;
   seen = owned;
-  area_selectable = true;
   selected = false;
   queue_level = 0;
 }
 
 entity_selector::~entity_selector(){}
+
+bool entity_selector::is_selectable() {
+  return !this -> isa(ship::class_id);
+}
+
+bool entity_selector::is_area_selectable() {
+  return this -> is_selectable() && !this -> isa(waypoint::class_id);
+}
 
 sf::Color entity_selector::get_color(){
   return seen ? color : graphics::fade_color(color, sf::Color(150,150,150,10), 0.6);

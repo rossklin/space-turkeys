@@ -1,9 +1,22 @@
 * current work
 ** upgrade / interaction / game object makeover
-*** insert + make_split loop in grid_tree causes segfault
+*** solar choice for invalid player after conquering solar
+*** make fleet selectors for enemy fleets
+*** ships should auto-engage
+*** newly colonized solars' dynamics generate NaN in all fields
+*** idle shouldn't be an action
+*** join fleet shouldn't be an action - use waypoints
+*** [J?] ships shouldn't be selectable
+*** [J?] trouble selecting things under non-owned things
+*** [J] Colonize and join fleet commands are abandoned
+*** [J] solar choice resets
+*** [J] Need to remove "unseen" units when the area becomes seen
+*** [J] insert + make_split loop in grid_tree causes segfault
     After giving a waypoint with some units an empty command "space combat"
-*** Colonize and join fleet commands are abandoned
-*** Need to remove "unseen" units when the area becomes seen
+
+    Fixed make_split criteria using median instead of mean
+*** [J] distribute ships: way too spread out
+*** [J] fleet selector: way to big
 *** [J] Segfault 
     Apparently had to do with fleets loosing sight of targets and
     calling get_entity and stuff (and possibly passing shared_ptr to a

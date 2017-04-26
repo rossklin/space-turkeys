@@ -39,7 +39,6 @@ namespace st3{
     void increment();
     bool entity_seen_by(combid id, idtype pid);
     bool target_position(combid t, point &p);
-    combid entity_at(point p);
     std::list<combid> search_targets(combid self_id, point p, float r, target_condition c);
 
     // access

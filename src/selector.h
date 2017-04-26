@@ -28,21 +28,23 @@ namespace st3{
       bool selected; /*!< is this entity selected? */
       bool owned; /*!< is the game object owned by the client? */
       bool seen; /*!< is the game object in sight for the client? */
-      bool area_selectable; /*!< can this entity be area selected? */
       sf::Color color; /*!< the player color of this entity */
       std::set<idtype> commands; /*! the commands given to this entity */
       
       entity_selector(sf::Color c, bool o);
       virtual ~entity_selector();
 
-      sf::Color get_color();
       virtual bool contains_point(point p, float &d) = 0;
-      virtual bool inside_rect(sf::FloatRect r);
       virtual void draw(window_t &w) = 0;
       virtual point get_position() = 0;
       virtual bool isa(std::string t) = 0;
       virtual std::set<combid> get_ships() = 0;
       virtual std::string hover_info() = 0;
+
+      sf::Color get_color();
+      virtual bool inside_rect(sf::FloatRect r);
+      virtual bool is_selectable();
+      virtual bool is_area_selectable();
     };
 
     /*! entity_selector representing a specific object class */

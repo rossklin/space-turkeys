@@ -226,11 +226,16 @@ bool game::pre_step(){
 */
 
 bool game::choice_step(){
-  choice::choice c;
 
-  // reset interface response parameters
+  // reset interface response parameters and clear solar choices for
+  // solars which are no longer available.
   interface::desktop -> done = false;
   interface::desktop -> accept = false;
+
+  choice::choice c;
+  for (auto x : interface::desktop -> response.solar_choices){
+    if (entity.count(x.first) && get_entity(x.first) -> owned) c.solar_choices[x.first] = x.second;
+  }
   interface::desktop -> response = c;
 
   cout << "choice_step: start" << endl;
@@ -539,6 +544,7 @@ void game::reload_data(data_frame &g){
     entity[key] = p;
     p -> seen = true;
     if (p -> owner == self_id && p -> is_active()) add_fixed_stars (p -> position, p -> vision());
+    cout << "reload_data: loaded seen entity: " << p -> id << endl;
   }
 
   // remove entities as server specifies
@@ -548,6 +554,21 @@ void game::reload_data(data_frame &g){
       remove_entity(x);
     }
   }
+
+  // remove unseen ships that are in sight range
+  list<combid> rbuf;
+  for (auto s : get_all<ship>()){
+    if (!s -> seen){
+      for (auto x : entity){
+	if (x.second -> owned && utility::l2norm(s -> position - x.second -> position) < x.second -> vision()){
+	  rbuf.push_back(s -> id);
+	  cout << "reload_data: spotted unseen ship: " << s -> id << endl;
+	  break;
+	}
+      }
+    }
+  }
+  for (auto id : rbuf) remove_entity(id);
 
   // update commands for owned fleets
   for (auto f : get_all<fleet>()) {
@@ -692,7 +713,7 @@ void game::area_select(){
 
   if (!add2selection()) deselect_all();  
   for (auto x : entity){
-    x.second -> selected = x.second -> owned && x.second -> area_selectable && x.second -> inside_rect(rect);
+    x.second -> selected = x.second -> owned && x.second -> is_area_selectable() && x.second -> inside_rect(rect);
   }
 }
 
@@ -736,9 +757,17 @@ list<combid> game::entities_at(point p){
   return keys;
 }
 
-/** Get queued entity at a point. */ 
+/** Get queued owned entity at a point. */ 
 combid game::entity_at(point p, int &q){
-  list<combid> keys = entities_at(p);
+  list<combid> buf = entities_at(p);
+  list<combid> keys;
+  
+  // limit to owned selectable entities
+  for (auto id : buf) {
+    auto e = get_entity(id);
+    if (e -> owner == self_id && e -> is_selectable()) keys.push_back(id);
+  }
+
   if (keys.empty()) return identifier::source_none;
 
   keys.sort([this] (combid a, combid b) -> bool {

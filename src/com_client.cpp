@@ -92,7 +92,6 @@ bool client::deserialize(data_frame &f, sf::Packet &p, sint id){
   }
 
   if (f.entity.size()) throw runtime_error("client::deserialize: data frame contains entities!");
-  cout << "deserialize: recieving " << n << " entities." << endl;
 
   // "polymorphic" deserialization
   for (int i = 0; i < n; i++){
@@ -113,7 +112,6 @@ bool client::deserialize(data_frame &f, sf::Packet &p, sint id){
 
     obj -> color = sf::Color(f.players[obj -> owner].color);
     f.entity[obj -> id] = obj;
-    cout << "deserialize: " << obj -> id << endl;
   }
 
   return true;

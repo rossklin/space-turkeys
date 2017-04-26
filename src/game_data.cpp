@@ -100,16 +100,6 @@ bool game_data::target_position(combid t, point &p){
   }
 }
 
-combid game_data::entity_at(point p){
-  for (auto &x : entity){
-    if (utility::l2d2(p - x.second -> position) < pow(x.second -> radius, 2)){
-      return x.first;
-    }
-  }
-
-  return identifier::source_none;
-}
-
 // find all entities in ball(p, r) matching condition c
 list<combid> game_data::search_targets(combid self_id, point p, float r, target_condition c){
   list<combid> res;
@@ -289,13 +279,14 @@ void game_data::remove_units(){
 void game_data::distribute_ships(list<combid> sh, point p){
   float density = 0.01;
   float area = sh.size() / density;
-  float radius = area / (2 * M_PI);
+  float radius = sqrt(area / M_PI);
   
   for (auto x : sh){
     ship::ptr s = get_ship(x);
     s -> position.x = utility::random_normal(p.x, radius);
     s -> position.y = utility::random_normal(p.y, radius);
     s -> current_stats = s -> base_stats;
+    entity_grid -> insert(s -> id, s -> position);
   }
 }
 

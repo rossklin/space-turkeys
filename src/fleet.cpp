@@ -157,13 +157,14 @@ void fleet::update_data(game_data *g){
     p = p + s -> position;
   }
   
-  radius = fmax(sqrt(r2), fleet::min_radius);
+  // radius = fmax(sqrt(r2), fleet::min_radius);
+  radius = g -> settings.fleet_default_radius;
   speed_limit = speed;  
   position = utility::scale_point(p, 1 / (float)ships.size());
 
   // check target status valid
   target_condition c = fleet::action_condition_table()[com.action];
-  if (c.requires_target() && !interaction::macro_valid(c, g -> get_entity(com.target))){
+  if (c.requires_target() && !interaction::macro_valid(c.owned_by(owner), g -> get_entity(com.target))){
     cout << "target " << com.target << " no longer valid for " << id << endl;
     com.target = identifier::target_idle;
     com.action = fleet_action::idle;

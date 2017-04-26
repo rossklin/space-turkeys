@@ -15,7 +15,7 @@ game_object::game_object(){
 game_object::~game_object(){}
 
 void game_object::on_add(game_data *g){
-  g -> entity_grid -> insert(id, position);
+  if (this -> is_active()) g -> entity_grid -> insert(id, position);
 }
 
 void game_object::on_remove(game_data *g){

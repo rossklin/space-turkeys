@@ -330,14 +330,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
 
 // choice
 sf::Packet& st3::operator <<(sf::Packet& packet, const choice::choice &c){
-  cout << "Serialize choice: solar_choices: " << c.solar_choices.size() << endl;
   return packet << c.commands << c.solar_choices << c.waypoints << c.research;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, choice::choice &c){
-  sf::Packet &res = packet >> c.commands >> c.solar_choices >> c.waypoints >> c.research;
-  cout << "Deserialize choice: solar_choices: " << c.solar_choices.size() << endl;
-  return res;
+  return packet >> c.commands >> c.solar_choices >> c.waypoints >> c.research;
 }
 
 sf::Packet& st3::operator <<(sf::Packet& packet, const choice::c_research &g){

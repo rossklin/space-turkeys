@@ -22,7 +22,11 @@ tree::ptr tree::create(){
 }
 
 void tree::insert(key_type k, value_type v){
-  root -> insert(k, v);
+  if (index.count(k)){
+    index[k] -> move(k, v);
+  }else{
+    root -> insert(k, v);
+  }
 }
 
 list<iterator_type> tree::search(point p, float r){
@@ -30,11 +34,15 @@ list<iterator_type> tree::search(point p, float r){
 }
 
 void tree::move(key_type k, value_type v){
-  index[k] -> move(k, v);
+  insert(k, v);
 }
 
 void tree::remove(key_type k){
-  if (!index.count(k)) throw runtime_error("grid::tree: attempted to remove invalid index: " + k);
+  if (!index.count(k)) {
+    cout << "grid::tree: attempted to remove invalid index: " << k << endl;
+    return;
+  }
+  
   index[k] -> remove(k);
   index.erase(k);
 }
@@ -53,24 +61,31 @@ node::~node(){
 }
 
 void node::make_split(){
-  // compute mid point
-  split.x = split.y = 0;
+  int n = leaves.size();
+  if (n <= g -> max_leaves || !is_leaf) return;
 
-  for (auto x : leaves) split = split + x.second;
-  split = utility::scale_point(split, 1 / (float)leaves.size());
+  vector<int> xvalues(n);
+  vector<int> yvalues(n);
+  int i = 0;
+  for (auto x : leaves) {
+    xvalues[i] = x.second.x;
+    yvalues[i] = x.second.y;
+    i++;
+  }
 
-  float ul_norm = utility::l2norm(bounds.first - split);
-  float ur_norm = utility::l2norm(point(bounds.second.x, bounds.first.y) -
-				  split);
-  float ll_norm = utility::l2norm(point(bounds.first.x, bounds.second.y) -
-				  split);
-  float lr_norm = utility::l2norm(bounds.second - split);
+  sort(xvalues.begin(), xvalues.end());
+  sort(yvalues.begin(), yvalues.end());
 
-  float min_norm = fmin(ul_norm, fmin(ur_norm, fmin(ll_norm, lr_norm)));
+  // guarantee 3 distinct values
+  auto test_diverse = [] (vector<int> &data) {
+    int idx = data.size() / 2;
+    return data.front() != data[idx] && data.back() != data[idx];
+  };
 
-  if (min_norm < 10) return; // Leaves are to close to boundrary
-			     // corners, splitting is not useful.
-                             // TODO: replace magic number
+  if (!(test_diverse(xvalues) || test_diverse(yvalues))) return;
+
+  int idx = n / 2;
+  split = point(xvalues[idx], yvalues[idx]);
 
   // make child nodes
   for (int i = 0; i < 4; i++) children[i] = new node(g, this);
@@ -131,12 +146,7 @@ list<iterator_type> node::search(value_type p, float r){
     for (auto x : leaves){
       point delta = x.second - p;
       float d2 = delta.x * delta.x + delta.y * delta.y;
-      if (d2 <= r2){
-	cout << string(indent, '-') << "> grid::node::search: leaf: selected: " << x.first << endl;
-	res.push_back(x);
-      }else{
-	cout << string(indent, '-') << "> grid::node::search: leaf: missed (d2 = " << d2 << "): " << x.first << endl;
-      }
+      if (d2 <= r2) res.push_back(x);
     }
   }else{
     list<iterator_type> q;

@@ -99,6 +99,9 @@ void solar::post_phase(game_data *g){
     if (owner > -1 && !has_defense()){
       owner = highest_id;
       cout << "player " << owner << " conquers " << id << endl;
+
+      // switch owners for ships on solar
+      for (auto sid : ships) g -> get_ship(sid) -> owner = owner;
     }else{
       cout << "resulting defense for " << id << ": " << has_defense() << endl;
     }
@@ -196,15 +199,11 @@ void solar::damage_turrets(float d){
   if (turrets.empty()) return;
 
   while (d > 0 && turrets.size() > 0){
-    for (auto i = turrets.begin(); d > 0 && i != turrets.end();){
+    for (auto i = turrets.begin(); d > 0 && i != turrets.end(); i++){
       float k = fmin(utility::random_uniform(0, 0.1 * d0), d);
       i -> hp -= k;
       d -= k;
-      if (i -> hp <= 0) {
-	turrets.erase(i++);
-      }else{
-	i++;
-      }
+      if (i -> hp <= 0) turrets.erase(i--);
     }
   }
 }
