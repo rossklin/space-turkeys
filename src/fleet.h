@@ -64,6 +64,7 @@ namespace st3{
 
     // fleet stuff
     bool is_idle();
+    void set_idle();
     void update_data(game_data *g);
     void remove_ship(combid i);
     bool confirm_ship_interaction(std::string a);
@@ -72,7 +73,6 @@ namespace st3{
 
   protected:
     void check_waypoint(game_data *g);
-    void check_join(game_data *g);
     void check_in_sight(game_data *g);
     virtual game_object::ptr clone_impl();
     void copy_from(const fleet &s);

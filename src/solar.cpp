@@ -28,7 +28,8 @@ void solar::pre_phase(game_data *g){
 // so far, solars don't move
 void solar::move(game_data *g){
   if (owner < 0 || population <= 0) return;
-  
+
+  dt = g -> settings.dt;
   dynamics();
 
   // build ships and turrets

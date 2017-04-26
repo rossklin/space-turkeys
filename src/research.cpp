@@ -5,6 +5,7 @@
 #include "utility.h"
 #include "upgrades.h"
 #include "fleet.h"
+#include "choice.h"
 
 using namespace std;
 using namespace st3;
@@ -138,6 +139,9 @@ turret data::build_turret(string v){
 void data::colonize(solar::ptr s){
   s -> population = colonizer_population();
   s -> happiness = 1;
+
+  auto ctab = choice::c_solar::template_table();
+  s -> choice_data = ctab["culture growth"];
 }
 
 int data::colonizer_population(){

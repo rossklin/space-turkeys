@@ -16,7 +16,6 @@ const string fleet_action::space_combat = "space combat";
 const string fleet_action::bombard = "bombard";
 const string fleet_action::colonize = "colonize";
 const string fleet_action::go_to = "go to";
-const string fleet_action::join = "join";
 const string fleet_action::follow = "follow";
 const string fleet_action::idle = "idle";
 
@@ -25,7 +24,7 @@ set<string> fleet::all_interactions(){
 }
 
 set<string> fleet::all_base_actions(){
-  return {fleet_action::go_to, fleet_action::join, fleet_action::follow, fleet_action::idle};
+  return {fleet_action::go_to, fleet_action::follow};
 }
 
 hm_t<string, target_condition> &fleet::action_condition_table(){
@@ -41,7 +40,6 @@ hm_t<string, target_condition> &fleet::action_condition_table(){
 
     // base actions
     data[fleet_action::go_to] = target_condition(target_condition::owned, target_condition::no_target);
-    data[fleet_action::join] = target_condition(target_condition::owned, fleet::class_id);
     data[fleet_action::follow] = target_condition(target_condition::any_alignment, fleet::class_id);
     data[fleet_action::idle] = target_condition(target_condition::any_alignment, target_condition::no_target);
   }
@@ -69,7 +67,6 @@ void fleet::pre_phase(game_data *g){
   check_in_sight(g);
   update_data(g);
   check_waypoint(g);
-  check_join(g);
 }
 
 void fleet::move(game_data *g){
@@ -103,6 +100,11 @@ bool fleet::serialize(sf::Packet &p){
 
 bool st3::fleet::is_idle(){
   return com.action == fleet_action::idle;
+}
+
+void fleet::set_idle(){
+  com.target = identifier::target_idle;
+  com.action = fleet_action::idle;
 }
 
 void fleet::give_commands(list<command> c, game_data *g){
@@ -162,12 +164,14 @@ void fleet::update_data(game_data *g){
   speed_limit = speed;  
   position = utility::scale_point(p, 1 / (float)ships.size());
 
+  // the below only applies if the fleet has a target
+  if (com.target == identifier::target_idle) return;
+
   // check target status valid
   target_condition c = fleet::action_condition_table()[com.action];
   if (c.requires_target() && !interaction::macro_valid(c.owned_by(owner), g -> get_entity(com.target))){
     cout << "target " << com.target << " no longer valid for " << id << endl;
-    com.target = identifier::target_idle;
-    com.action = fleet_action::idle;
+    set_idle();
   }
 
   // have arrived?
@@ -184,31 +188,8 @@ void fleet::check_waypoint(game_data *g){
   }
 }
 
-void fleet::check_join(game_data *g){
-  // check fleet joins
-  if (com.action == fleet_action::join && converge){
-
-    // check that the fleet exists
-    if (!g -> entity.count(com.target)){
-      cout << "fleet " << id << ": target " << com.target << " missing, setting idle:0" << endl;
-      com.target = identifier::target_idle;
-      com.action = fleet_action::idle;
-      return;
-    }
-
-    fleet::ptr f = g -> get_fleet(com.target);
-
-    for (auto i : ships){
-      ship::ptr s = g -> get_ship(i);
-      s -> fleet_id = com.target;
-      f -> ships.insert(i);
-    }
-    remove = true;
-  }
-}
-
 void fleet::check_in_sight(game_data *g){
-  if (is_idle()) return;
+  if (com.target == identifier::target_idle) return;
 
   bool seen = g -> entity_seen_by(com.target, owner);
   bool solar = identifier::get_type(com.target) == solar::class_id;
@@ -217,6 +198,9 @@ void fleet::check_in_sight(game_data *g){
   if (!(seen || solar)){
     cout << "fleet " << id << " looses sight of " << com.target << endl;
 
+    // creating a waypoint here causes id collision with waypoints
+    // created on client side
+    
     // // create a waypoint and reset target
     // waypoint::ptr w = waypoint::create(owner);
 
@@ -224,8 +208,7 @@ void fleet::check_in_sight(game_data *g){
     // g -> target_position(com.target, w -> position);
     // g -> add_entity(w);
 
-    com.target = identifier::target_idle;
-    com.action = fleet_action::idle;
+    set_idle();
   }
 }
 

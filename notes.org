@@ -3,9 +3,9 @@
 *** solar choice for invalid player after conquering solar
 *** make fleet selectors for enemy fleets
 *** ships should auto-engage
-*** newly colonized solars' dynamics generate NaN in all fields
-*** idle shouldn't be an action
-*** join fleet shouldn't be an action - use waypoints
+*** [J?] newly colonized solars' dynamics generate NaN in all fields
+*** [J?] idle shouldn't be an action
+*** [J?] join fleet shouldn't be an action - use waypoints
 *** [J?] ships shouldn't be selectable
 *** [J?] trouble selecting things under non-owned things
 *** [J] Colonize and join fleet commands are abandoned
