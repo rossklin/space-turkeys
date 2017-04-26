@@ -1,8 +1,8 @@
 * current work
 ** upgrade / interaction / game object makeover
 *** solar choice for invalid player after conquering solar
-*** make fleet selectors for enemy fleets
-*** ships should auto-engage
+*** [J?] make fleet selectors for enemy fleets
+*** [J?] ships should auto-engage
 *** [J?] newly colonized solars' dynamics generate NaN in all fields
 *** [J?] idle shouldn't be an action
 *** [J?] join fleet shouldn't be an action - use waypoints

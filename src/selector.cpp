@@ -118,24 +118,23 @@ namespace st3{
 
     template<>
     void specific_selector<fleet>::draw(window_t &w){
-      if (selected){
-	sf::CircleShape s(radius);
-	s.setPointCount(radius / graphics::inverse_scale(w).x);
-	s.setFillColor(graphics::fleet_fill);
-	s.setOutlineColor(graphics::fleet_outline);
+      auto f = [this, &w] (float r, sf::Color cf, sf::Color co) {
+	sf::CircleShape s(r);
+	s.setPointCount(r / graphics::inverse_scale(w).x);
+	s.setFillColor(cf);
+	s.setOutlineColor(co);
 	s.setOutlineThickness(1);
-	s.setPosition(position - point(radius, radius));
+	s.setPosition(position - point(r, r));
 	w.draw(s);
-      }
+      };
 
-      if (owned){
-	sf::CircleShape s(vision());
-	s.setPointCount(vision() / graphics::inverse_scale(w).x);
-	s.setFillColor(sf::Color::Transparent);
-	s.setOutlineColor(sf::Color(40, 200, 60, 100));
-	s.setOutlineThickness(-1);
-	s.setPosition(position - point(vision(), vision()));
-	w.draw(s);
+      if (owned){      
+	if (selected){
+	  f(radius, graphics::fleet_fill, graphics::fleet_outline);
+	}
+	f(vision(), sf::Color::Transparent, sf::Color(40, 200, 60, 100));
+      }else{
+	f(radius, sf::Color::Transparent, sf::Color(200, 40, 60, 100));
       }
     }
 

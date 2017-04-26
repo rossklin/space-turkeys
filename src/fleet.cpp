@@ -212,7 +212,12 @@ void fleet::check_in_sight(game_data *g){
   }
 }
 
+// todo: more advanced fleet action policies
 bool fleet::confirm_ship_interaction(string a){
+  // always allow "space combat"
+  if (a == fleet_action::space_combat) return true;
+
+  // else, only allow the active fleet command action
   return com.action == a;
 }
 
