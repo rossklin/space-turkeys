@@ -555,9 +555,10 @@ void game::reload_data(data_frame &g){
     }
   }
 
-  // remove unseen ships that are in sight range
+  // remove unseen entities that are in sight range
   list<combid> rbuf;
-  for (auto s : get_all<ship>()){
+  for (auto y : entity){
+    entity_selector::ptr s = y.second;
     if (!s -> seen){
       for (auto x : entity){
 	if (x.second -> owned && utility::l2norm(s -> position - x.second -> position) < x.second -> vision()){
