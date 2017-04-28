@@ -531,7 +531,8 @@ void game::remove_entity(combid i){
     new command selectors representing fleet commands.
 */
 void game::reload_data(data_frame &g){
-  // make selectors 'not seen' and clear commands and waypoints
+  // make selectors 'not seen' and 'not owned' and clear commands and
+  // waypoints
   clear_selectors();  
   players = g.players;
   settings = g.settings;
@@ -687,14 +688,18 @@ void game::remove_command(idtype key){
 // SELECTOR MANIPULATION
 // ****************************************
 
-/** Mark all entity selectors as not seen and clear command selectors
-    and waypoints. */
+/** Mark all entity selectors as not seen/owned and clear command
+    selectors and waypoints. */
 void game::clear_selectors(){
+  for (auto x : entity) {
+    x.second -> seen = false;
+    x.second -> owned = false;
+  }
+  
   comid = 0;
-
-  for (auto x : entity) x.second -> seen = false;
   for (auto c : command_selectors) delete c.second;
   command_selectors.clear();
+
   for (auto w : get_all<waypoint>()) remove_entity(w -> id);
 }
 

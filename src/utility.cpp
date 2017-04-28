@@ -257,7 +257,7 @@ float utility::sigmoid(float x, float s){
 // generate a vector of n different colors, which are also different
 // from black (background) and grey (neutral solar) colors
 vector<sint> utility::different_colors(int n){
-  int rep = 10;
+  int rep = 40;
   int ncheck = n+2;
   vector<vector<float> > buf(ncheck);
 
@@ -285,7 +285,7 @@ vector<sint> utility::different_colors(int n){
       if (t > -1){
 	// move point j away from point t
 	vector<float> delta = utility::vdiff(buf[j], buf[t]);
-	buf[j] = utility::vadd(buf[j], utility::vscale(delta, 0.1));
+	buf[j] = utility::vadd(buf[j], utility::vscale(delta, 0.05));
 	for (int k = 0; k < 3; k++) buf[j][k] = fmin(fmax(buf[j][k], 0), 1);
       }
     }

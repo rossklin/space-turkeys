@@ -1,9 +1,9 @@
 * current work
 ** upgrade / interaction / game object makeover
-*** solar choice for invalid player after conquering solar
 *** when attacking solar: ends at: distributed -1 of 99 frames to 0: end
     Did send 99% of frames to client. Does not pass "client x is done".
 *** some colonized solars have trouble with population dying off (check water supply etc)
+*** [J] solar choice for invalid player after conquering solar
 *** [J] make fleet selectors for enemy fleets
 *** [J] ships should auto-engage
 *** [J] newly colonized solars' dynamics generate NaN in all fields

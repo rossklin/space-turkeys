@@ -43,8 +43,6 @@ void server::game_handler(com &c, game_data &g){
   hm_t<sint, sf::Packet> packets;
   unsigned int i;
 
-  utility::init();
-
   auto check_end = [&c, &g] () -> bool{
     sf::Packet packet;
     int pid = -1;

@@ -31,7 +31,8 @@ int main(int argc, char **argv){
   }
 
   set_terminate(on_terminate);
-  
+
+  utility::init();
   g.build_players(c.clients);
   g.build();
 

@@ -308,8 +308,8 @@ void game_data::build_players(hm_t<int, server::client_t*> clients){
   // build player data
   vector<sint> colbuf = utility::different_colors(clients.size());
   int i = 0;
+  player p;
   for (auto x : clients){
-    player p;
     p.name = x.second -> name;
     p.color = colbuf[i++];
     players[x.first] = p;

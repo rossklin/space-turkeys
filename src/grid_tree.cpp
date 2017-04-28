@@ -38,11 +38,7 @@ void tree::move(key_type k, value_type v){
 }
 
 void tree::remove(key_type k){
-  if (!index.count(k)) {
-    cout << "grid::tree: attempted to remove invalid index: " << k << endl;
-    return;
-  }
-  
+  if (!index.count(k)) return;  
   index[k] -> remove(k);
   index.erase(k);
 }
