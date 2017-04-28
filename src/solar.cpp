@@ -114,9 +114,16 @@ void solar::post_phase(game_data *g){
   for (auto i : colonization_attempts){
     if (utility::random_uniform() <= 1 / (num - count++)){
       cout << "player " << i.first << " colonizes " << id << endl;
-      g -> players[i.first].research_level.colonize(ptr(this));
+
+      // todo: let ships carry colonists
+      population = 100;
+      happiness = 1;
+      auto ctab = choice::c_solar::template_table();
+      choice_data = ctab["culture growth"];
+
       owner = i.first;
       g -> get_entity(i.second) -> remove = true;
+      break;
     }
   }
 }

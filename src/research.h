@@ -2,29 +2,39 @@
 #define _STK_RESEARCH
 
 #include <string>
+#include <set>
+#include <list>
+
 #include "ship.h"
 #include "turret.h"
 #include "solar.h"
 
 namespace st3{
   namespace research{
-    ship ship_template(std::string k);
-    turret turret_template(std::string k);
+
+    struct tech {
+      std::string name;
+
+      // requirements
+      sfloat cost;
+      sint req_facility_level;
+      std::set<std::string> depends;
+
+      //effects
+      hm_t<std::string, std::set<std::string> > ship_upgrades;
+    };
     
     /*! struct representing the research level of a player */
-    struct data{
-      std::string x;
+    struct data {
+      hm_t<std::string, tech> tree;
+      std::set<std::string> researched;
+      sfloat accumulated;
+      sint facility_level;
 
-      /*! default constructor */
       data();
-
-      void develope(float x);
+      std::list<std::string> available();
       ship build_ship(std::string v);
       turret build_turret(std::string v);
-      void colonize(solar::ptr s);
-
-      // todo: move this to a ship sub class or ship data
-      int colonizer_population();
     };    
   };
 };

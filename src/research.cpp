@@ -12,7 +12,7 @@ using namespace st3;
 using namespace research;
 using namespace cost;
 
-ship research::ship_template(string k){
+ship ship_template(string k){
   static bool init = false;
   static cost::ship_allocation<ship> buf;
 
@@ -75,7 +75,7 @@ ship research::ship_template(string k){
   return buf[k];
 }
 
-turret research::turret_template(string k){
+turret turret_template(string k){
   static bool init = false;
   static cost::turret_allocation<turret> buf;
 
@@ -108,13 +108,29 @@ turret research::turret_template(string k){
 }
 
 data::data(){
-  x = "research level 0";
+  // todo: build research tree
+}
+
+list<string> data::available() {
+  list<string> res;
+
+  for (auto x : tree){
+    tech t = x.second;
+    if (researched.count(t.name)) continue;
+    if (t.cost > accumulated) continue;
+    if (t.req_facility_level > facility_level) continue;
+    if ((t.depends - researched).size() > 0) continue;
+    res.push_back(t.name);
+  }
+
+  return res;
 }
 
 ship data::build_ship(string c){
   ship s = ship_template(c);
 
-  // todo: apply research boosts
+  // add upgrades from research tree
+  for (auto t : researched) s.upgrades += tree[t].ship_upgrades[c];
 
   // evaluate upgrades
   auto utab = upgrade::table();
@@ -134,20 +150,4 @@ turret data::build_turret(string v){
   // todo: apply research boosts
 
   return t;
-}
-
-void data::colonize(solar::ptr s){
-  s -> population = colonizer_population();
-  s -> happiness = 1;
-
-  auto ctab = choice::c_solar::template_table();
-  s -> choice_data = ctab["culture growth"];
-}
-
-int data::colonizer_population(){
-  return 100;
-}
-
-void data::develope(float d){
-  x = "research level " + to_string(d);
 }

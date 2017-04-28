@@ -1,91 +1,18 @@
 * current work
-** upgrade / interaction / game object makeover
-*** when attacking solar: ends at: distributed -1 of 99 frames to 0: end
-    Did send 99% of frames to client. Does not pass "client x is done".
-*** some colonized solars have trouble with population dying off (check water supply etc)
-*** [J] solar choice for invalid player after conquering solar
-*** [J] make fleet selectors for enemy fleets
-*** [J] ships should auto-engage
-*** [J] newly colonized solars' dynamics generate NaN in all fields
-*** [J] idle shouldn't be an action
-*** [J] join fleet shouldn't be an action - use waypoints
-*** [J] ships shouldn't be selectable
-*** [J] trouble selecting things under non-owned things
-*** [J] Colonize and join fleet commands are abandoned
-*** [J] solar choice resets
-*** [J] Need to remove "unseen" units when the area becomes seen
-*** [J] insert + make_split loop in grid_tree causes segfault
-    After giving a waypoint with some units an empty command "space combat"
-
-    Fixed make_split criteria using median instead of mean
-*** [J] distribute ships: way too spread out
-*** [J] fleet selector: way to big
-*** [J] Segfault 
-    Apparently had to do with fleets loosing sight of targets and
-    calling get_entity and stuff (and possibly passing shared_ptr to a
-    temporary lambda function), however the main lesson is that
-    unhandled exceptions from threads are not displayed properly in
-    the debugger.
-
-    After finding an enemy ship in game_data::search_targets(), at game_data.cpp:296
-
-    Switched back to normal pointers, which helped in a simplified
-    case, but now there is instead a sigabrt in the thread destructor
-    of distribute_frames thread, right after ship fire.
-
-    Consider deleting game_data copy constructor and only doing
-    explicit assignment, possibly also explicit destruction.
-*** [J] Figure out why server sends old waypoints in [prestep?]
-*** [J] Figure out why commands dissapear 
-    ... from waypoints (or only from selectors) without passing the
-    trigger point
-
-    Command selectors were not being rebuilt for waypoints
-*** [J] change identifier::some_class_id to the_class::class_id
-*** [J] introduce game object base class
-**** [J] created base class header
-**** [J] made game entity classes inherit game object
-**** [J] inherit pre/post phase functions in game object classes
-**** [J] define ptr classes (grid::tree should have a unique ptr?) and create functions
-**** [J] change to virtual inheritance of game_object so entity_selector subclasses don't get duplicate inheritance
-**** [J] add new files in build system: game_object, ship, waypoint
-**** [J] go through game_data.cpp and move code to object classes
-**** [J] implement game object class functions
-**** [J] add fleet action functions e.g. land 
-**** [J] the fleet is responsible for tracking action validity when target status changes
-**** [J] fleets need to update data in pre phase and remember to update target position
-**** [J] add an interaction class declaration
-**** [J] implement the interaction class
-**** decide how to distinguish between owned and non-owned target conditions
-*** [J] add an upgrade class
-*** [J] let ships have reference to upgrades instead of interactions
-*** [J] let upgrades have interactions and stat-mods
-*** [J] let upgrades define exclusivity for certain terms
-*** [J] let ships have a compile_stats function, base and current stats
-*** [J] let ships have a compile_interactions function
-*** [J] let combat interactions use a ship::receive_damage function
-*** [J] for each ship, check each interaction target condition for each target
-*** [J] rebuild ship templates so they apply upgrades
-*** [J] let the ship increment function be responsible for updating load time
-    the interaction functions will be responsible for activating load time
-*** [J] consider introducing a game_data::find_targets
-   Conditioned on a ship::target_condition and a radius
-*** [J] add fleet action definitions
-*** [J] finish implementing new serialization/deserialization
-*** [J] fix client game reloading of waypoints
-*** [J] implement client game deserialize of game data
-*** [J] remove game_data deserialize operator
-*** let upgrades have an optional tick function
-*** let upgrades have description 
-*** [J] let upgrades define ship class exclusivity conditions
+** research
+*** define choice::c_research
+*** research::data constructor
+*** research serialization
+*** research choice gui
+** system design
+*** make all interactions be buffered and then evaluated in post phase
+*** reduce fleet actions, replace with fleet response policies
 * [!] issues
 ** [!] bugs & crashes
-*** BUG: client recieves distorted game object data
-**** game_object component correct so far as specific_selector::create
-**** for solar: c_military and beyond, data is scrambled
-**** when displayed, all data seems corrupted
-*** BUG: ship function recieve_damage() is not serialized
-    Need to externalize these functions.
+*** when attacking solar: ends at: distributed -1 of 99 frames to 0: end
+    Did send 99% of frames to client. Does not pass "client x is done".
+
+    May be caused by breaking to long during load in debugger?
 *** simulation step hangs on key escape abort game
     This was when client 1 aborts at frame -1, while client 2 is still
     in choice step. Server exits with error 'disconnect' and other
@@ -93,21 +20,18 @@
     leave game request from client 1 while it was waiting for the
     choice from client 2.
 ** [~] interface improvements
-*** setting solar template removes build info separators
+*** ?setting solar template removes build info separators
 *** more centralized desktop geometry info
-*** invalid? allowed allocation from fleet and waypoint in parallel
 *** sfg window does not resize on sfml window resize
 *** priority buttons unresponsive to first right click
 *** command selectors drawn on top of each other
 ** [~] game mechanics improvements
+*** some colonized solars have trouble with population dying off (check water supply etc)
 *** need "unique" identifier for radar turrets
     Or rather, need radar turret to be a unique building rather than a
     turret.
 ** [!] code design
-*** guaranteed_cast template for selectors instantiated in utility.cpp
-**** needed because definition must be avilable
-**** problematic because then utility depends on selector and graphics
-*** move keywords and allocations to "types.h"
+*** ?move keywords and allocations to "types.h"
 *** move expansion costs to research?
 * basic goals
 ** server game
@@ -247,6 +171,95 @@
 ** moved selector cast template instantiation back to utility
 ** implemented specific_selector<ship>
 * fixed
+** upgrade / interaction / game object makeover
+*** [J] solar choice for invalid player after conquering solar
+*** [J] make fleet selectors for enemy fleets
+*** [J] ships should auto-engage
+*** [J] newly colonized solars' dynamics generate NaN in all fields
+*** [J] idle shouldn't be an action
+*** [J] join fleet shouldn't be an action - use waypoints
+*** [J] ships shouldn't be selectable
+*** [J] trouble selecting things under non-owned things
+*** [J] Colonize and join fleet commands are abandoned
+*** [J] solar choice resets
+*** [J] Need to remove "unseen" units when the area becomes seen
+*** [J] insert + make_split loop in grid_tree causes segfault
+    After giving a waypoint with some units an empty command "space combat"
+
+    Fixed make_split criteria using median instead of mean
+*** [J] distribute ships: way too spread out
+*** [J] fleet selector: way to big
+*** [J] Segfault 
+    Apparently had to do with fleets loosing sight of targets and
+    calling get_entity and stuff (and possibly passing shared_ptr to a
+    temporary lambda function), however the main lesson is that
+    unhandled exceptions from threads are not displayed properly in
+    the debugger.
+
+    After finding an enemy ship in game_data::search_targets(), at game_data.cpp:296
+
+    Switched back to normal pointers, which helped in a simplified
+    case, but now there is instead a sigabrt in the thread destructor
+    of distribute_frames thread, right after ship fire.
+
+    Consider deleting game_data copy constructor and only doing
+    explicit assignment, possibly also explicit destruction.
+*** [J] Figure out why server sends old waypoints in [prestep?]
+*** [J] Figure out why commands dissapear 
+    ... from waypoints (or only from selectors) without passing the
+    trigger point
+
+    Command selectors were not being rebuilt for waypoints
+*** [J] change identifier::some_class_id to the_class::class_id
+*** [J] introduce game object base class
+**** [J] created base class header
+**** [J] made game entity classes inherit game object
+**** [J] inherit pre/post phase functions in game object classes
+**** [J] define ptr classes (grid::tree should have a unique ptr?) and create functions
+**** [J] change to virtual inheritance of game_object so entity_selector subclasses don't get duplicate inheritance
+**** [J] add new files in build system: game_object, ship, waypoint
+**** [J] go through game_data.cpp and move code to object classes
+**** [J] implement game object class functions
+**** [J] add fleet action functions e.g. land 
+**** [J] the fleet is responsible for tracking action validity when target status changes
+**** [J] fleets need to update data in pre phase and remember to update target position
+**** [J] add an interaction class declaration
+**** [J] implement the interaction class
+**** decide how to distinguish between owned and non-owned target conditions
+*** [J] add an upgrade class
+*** [J] let ships have reference to upgrades instead of interactions
+*** [J] let upgrades have interactions and stat-mods
+*** [J] let upgrades define exclusivity for certain terms
+*** [J] let ships have a compile_stats function, base and current stats
+*** [J] let ships have a compile_interactions function
+*** [J] let combat interactions use a ship::receive_damage function
+*** [J] for each ship, check each interaction target condition for each target
+*** [J] rebuild ship templates so they apply upgrades
+*** [J] let the ship increment function be responsible for updating load time
+    the interaction functions will be responsible for activating load time
+*** [J] consider introducing a game_data::find_targets
+   Conditioned on a ship::target_condition and a radius
+*** [J] add fleet action definitions
+*** [J] finish implementing new serialization/deserialization
+*** [J] fix client game reloading of waypoints
+*** [J] implement client game deserialize of game data
+*** [J] remove game_data deserialize operator
+*** let upgrades have an optional tick function
+*** let upgrades have description 
+*** [J] let upgrades define ship class exclusivity conditions
+** invalid? allowed allocation from fleet and waypoint in parallel
+    FIX: fleet selectors at waypoints initially have a command
+    targeting the waypoint
+** guaranteed_cast template for selectors instantiated in utility.cpp
+**** needed because definition must be avilable
+**** problematic because then utility depends on selector and graphics
+**** FIX: moved to separate instantiation file
+** BUG: client recieves distorted game object data
+**** game_object component correct so far as specific_selector::create
+**** for solar: c_military and beyond, data is scrambled
+**** when displayed, all data seems corrupted
+** BUG: ship function recieve_damage() is not serialized
+    Need to externalize these functions.
 ** implemented specific selector create function
 ** ship vision
 ** utility::random_int
