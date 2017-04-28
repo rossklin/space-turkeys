@@ -192,6 +192,17 @@ void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &
 bool game_data::validate_choice(choice::choice c, idtype id){
   cout << "game_data: validate choice: solar_choices: " << c.solar_choices.size() << endl;
 
+  // research choice
+  if (c.research.identifier.length() > 0) {
+    list<string> available_techs = players[id].research_level.available();
+    bool ok = false;
+    for (auto t : available_techs) ok |= t == c.research.identifier;
+    if (!ok) {
+      cout << "Invalid research choice submitted by player " << id << ": " << c.research.identifier << endl;
+      return false;
+    }
+  }
+
   // solar choices
   for (auto &x : c.solar_choices){
     auto e = get_entity(x.first);
@@ -235,6 +246,13 @@ void game_data::apply_choice(choice::choice c, idtype id){
   }
 
   if (!validate_choice(c, id)) throw runtime_error("player " + to_string(id) + " submitted an invalid choice!");
+
+  // research choice
+  if (c.research.identifier.length() > 0){
+    research::tech t = players[id].research_level.tree[c.research.identifier];
+    players[id].research_level.accumulated -= t.cost;
+    players[id].research_level.researched.insert(t.name);
+  }
 
   // set solar choices
   for (auto &x : c.solar_choices) {
@@ -412,11 +430,20 @@ void game_data::end_step(){
   }
 
   // pool research
+  hm_t<idtype, float> pool;
+  hm_t<idtype, int> level;
   for (auto i : all<solar>()){
     if (i -> owner > -1){
-      players[i -> owner].research_level.develope(i -> research);
+      pool[i -> owner] += i -> research;
+      level[i -> owner] = max(level[i -> owner], (int)i -> sector[cost::keywords::key_research]);
       i -> research = 0;
     }
+  }
+
+  for (auto x : players) {
+    idtype id = x.first;
+    players[id].research_level.accumulated += pool[id];
+    players[id].research_level.facility_level = level[id];
   }
 }
 

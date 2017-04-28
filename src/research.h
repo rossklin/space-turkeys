@@ -11,6 +11,7 @@
 
 namespace st3{
   namespace research{
+    const std::string upgrade_all_ships = "upgrade all ships";
 
     struct tech {
       std::string name;
@@ -35,6 +36,7 @@ namespace st3{
       std::list<std::string> available();
       ship build_ship(std::string v);
       turret build_turret(std::string v);
+      void repair_ship(ship &s);
     };    
   };
 };

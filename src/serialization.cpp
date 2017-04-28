@@ -389,11 +389,19 @@ sf::Packet& st3::operator >>(sf::Packet& packet, player &c){
 
 // research
 sf::Packet& st3::operator <<(sf::Packet& packet, const research::data &c){
-  return packet << c.x;
+  return packet << c.tree << c.researched << c.accumulated << c.facility_level;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, research::data &c){
-  return packet >> c.x;
+  return packet >> c.tree >> c.researched >> c.accumulated >> c.facility_level;
+}
+
+sf::Packet& st3::operator <<(sf::Packet& packet, const research::tech &c){
+  return packet << c.name << c.cost << c.req_facility_level << c.depends << c.ship_upgrades;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, research::tech &c){
+  return packet >> c.name >> c.cost >> c.req_facility_level >> c.depends >> c.ship_upgrades;
 }
 
 sf::Packet& st3::operator <<(sf::Packet& packet, const cost::resource_data &g){

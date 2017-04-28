@@ -22,8 +22,14 @@ hm_t<string, upgrade> &upgrade::table(){
 
   if (!init){
     init = true;
-    // base upgrades for base fleet interactions
+    // upgrades for base fleet interactions
     for (auto a : fleet::all_interactions()) data[a] = compile_upgrade(a);
+
+    // tech upgrades
+    data["ship armor"].modify.hp = 1;
+    data["ship speed"].modify.speed = 1;
+    data["ship weapons"].modify.ship_damage = 1;
+    data["ship weapons"].modify.solar_damage = 1;
   }
   
   return data;

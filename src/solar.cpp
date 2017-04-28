@@ -286,7 +286,7 @@ float solar::compute_workers(){
 void solar::dynamics(){
   choice::c_solar c = choice_data;
   c.normalize();
-  auto buf = *this;
+  solar buf = *this;
   float dw = sqrt(dt);
 
   // ecological development

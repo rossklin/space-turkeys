@@ -257,6 +257,20 @@ namespace st3{
   */
   sf::Packet& operator >>(sf::Packet& packet, research::data &g);
 
+  /*! stream a research tech into a packet
+    @param packet the packet
+    @param g the object to stream
+    @return reference to the resulting packet
+  */
+  sf::Packet& operator <<(sf::Packet& packet, const research::tech &g);
+
+  /*! stream a research tech out of a packet
+    @param packet the packet
+    @param g the object to stream
+    @return reference to the resulting packet
+  */
+  sf::Packet& operator >>(sf::Packet& packet, research::tech &g);
+
   /*! stream a resource_data into a packet
     @param packet the packet
     @param g the object to stream

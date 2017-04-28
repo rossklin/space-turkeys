@@ -240,6 +240,12 @@ bool game::choice_step(){
 
   cout << "choice_step: start" << endl;
 
+  // check if we can select a technology
+  list<string> available_techs = players[self_id].research_level.available();
+  if (available_techs.size() > 0) {
+    interface::desktop -> response.research.identifier = popup_options("Select a tech:", available_techs);
+  }
+
   message = "make your choice";
 
   // event handler that passes the event to choice_event()
@@ -1126,29 +1132,31 @@ void game::popup_message(string title, string message){
 }
 
 /** Draw a box with a a query and options ok or cancel, wait for response. */
-bool game::popup_query(string v){  
+bool game::popup_query(string v){
+  list<string> options = {"Ok", "Cancel"};
+  return popup_options(v, options) == "Ok";
+}
+
+string game::popup_options(string header_text, list<string> options) {
   int done = false;
-  bool accept = false;
+  string response;
 
   auto w = sfg::Window::Create();
   auto layout = sfg::Box::Create(sfg::Box::Orientation::VERTICAL, 10);
   auto blayout = sfg::Box::Create(sfg::Box::Orientation::HORIZONTAL, 10);
-  auto header = sfg::Label::Create(v);
-  auto baccept = sfg::Button::Create("OK");
-  auto bcancel = sfg::Button::Create("Cancel");
+  auto header = sfg::Label::Create(header_text);
 
-  baccept -> GetSignal(sfg::Widget::OnLeftClick).Connect([&] () {
-      accept = true;
-      done = true;
-    });
+  sfg::Button::Ptr button;
 
-  bcancel -> GetSignal(sfg::Widget::OnLeftClick).Connect([&] () {
-      done = true;
-      accept = false;
-    });
+  for (auto v : options) {
+    button = sfg::Button::Create(v);
+    button -> GetSignal(sfg::Widget::OnLeftClick).Connect([&] () {
+	response = v;
+	done = true;
+      });
+    blayout -> Pack(button);
+  }
 
-  blayout -> Pack(bcancel);
-  blayout -> Pack(baccept);
   layout -> Pack(header);
   layout -> Pack(blayout);
   w -> Add(layout);
@@ -1156,14 +1164,11 @@ bool game::popup_query(string v){
 
   w -> SetPosition(sf::Vector2f(window.getSize().x / 2 - w -> GetRequisition().x / 2, window.getSize().y / 2 - w -> GetRequisition().y / 2));
 
-  auto event_handler = generate_event_handler([this, &accept] (sf::Event e) -> int {
+  auto event_handler = generate_event_handler([this, &response] (sf::Event e) -> int {
       if (e.type == sf::Event::KeyPressed){
 	if (e.key.code == sf::Keyboard::Escape){
-	  accept = false;
+	  response = "";
 	  return query_aborted;
-	}else if (e.key.code == sf::Keyboard::Return){
-	  accept = true;
-	  return query_accepted;
 	}
       }
       return 0;
@@ -1173,7 +1178,7 @@ bool game::popup_query(string v){
 
   interface::desktop -> Remove(w);
   
-  return accept;
+  return response;
 }
 
 /** Core loop for gui. */

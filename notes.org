@@ -1,12 +1,29 @@
 * current work
 ** research
-*** define choice::c_research
-*** research::data constructor
-*** research serialization
-*** research choice gui
-** system design
-*** make all interactions be buffered and then evaluated in post phase
-*** reduce fleet actions, replace with fleet response policies
+*** Invalid (scrambled) research choice submitted
+*** [I] define choice::c_research
+*** [I] research::data constructor
+*** [I] research::data + choice::c_research serialization
+*** [I] research choice gui
+* system design ideas
+** make all interactions be buffered and then evaluated in post phase (remove solar post phase stuff)
+** make landing be an interaction
+** reduce fleet actions, replace with fleet response policies
+** remove targeting of fleets 
+   enables removing interaction::macro_valid
+   fixes target tracking issues
+   allows client to reform fleets freely
+** add trigger system for e.g. upgrades, techs and solar facilities
+*** hm_t<string, function> on_interaction (and prevent_interaction)
+*** on_takeoff (for e.g. freighter ship)
+*** extra_solar_dynamics
+** ?add a "dynamic data" hash map to game object
+   For stuff like "has cargo x", "is jammed", "was scanned by player i" etc.
+
+   No particular reason to not put this i normal class members?
+** solar development tree
+   Just something a little bit more fun than "expansion[i]", e.g. move
+   turrets here.
 * [!] issues
 ** [!] bugs & crashes
 *** when attacking solar: ends at: distributed -1 of 99 frames to 0: end
@@ -33,143 +50,9 @@
 ** [!] code design
 *** ?move keywords and allocations to "types.h"
 *** move expansion costs to research?
-* basic goals
-** server game
-*** ship interactions
-**** structure
-***** let ship interactions be governed by interaction functions
-***** introduce a ship specific table keyed on [action, t_target]
-***** let the ship templates build the interaction function objects
-***** interactions require the game data context to be available
-***** may need an on-action-setup trigger for e.g. trade routes
-***** let ships define a list of valid interactions
-***** extension: let researched upgrades extend the interactions
-**** list of
-***** cargo ship, friendly solar: trade route (resource allocation?)
-***** colonizer, neutral solar: colonize
-***** fighter, enemy fleet: engage
-***** bomber, enemy solar: bombard
-*** consider neighbourhood trackers for ships
-**** key the ship grid on player
-**** look up friendly neighbours for boost interaction
-**** look up opponent neighbours for fire interaction
-*** fleet actions
-**** require that all, some or no ships have some action available
-**** available actions are extended by those defined by all ships
-**** action complete callback for e.g. resume action after combat
-**** also has reaction mode: engage on sight / focus target / flee
-***** engage on sight is conditioned on: some fight
-**** on interaction, run ship interaction functions if available
-**** list of
-***** none, friendly solar: land
-***** some bombard, enemy solar: bombard
-***** none, friendly fleet: join, follow
-***** some fight, friendly fleet: guard
-***** none, enemy fleet: follow
-***** some fight, enemy fleet: engage
-*** introduce cargo ships for mining colonies
-*** introduce priorities with cost multipliers for ships
-*** let ship build be conditioned on research and industry level
-*** research structure
-**** hash table
-**** nodes with:
-     requirement list
-     cost
-     level
-     level-dependent modifier functions
-     allow list
-*** decide what to do with clients without objects
-** client game
-*** new command gui and target gui
-**** target options: based on fleet and ship actions
-**** targui defaults (depends on action design)
-***** send all if from waypoint
-***** send colonizer if command is colonize
-***** only show gui if multiple targets
-***** don't show self as target
-**** command_gui should have option to allocate X ships of type T
-*** choice/evolution: display ready players, autoplay when all ready
-*** simulation: ?interpolate using ship velocity?
-*** draw all ships in same size, have a ship.draw_scale
-    so that ships can be drawn in same size in command gui
-    but different sizes in universe
-*** events board
-    messages such as "your fleet was destroyed" or "your solar X
-    merged with Bla's solar Y; your population won the ensuing battle"
-** before game interface
-* long term goals
-** strategy
-*** different solars have different resources
-    specific research projects
-    specific production
-*** research directions
-**** vision
-**** stealth
-**** espionage
-**** propulsion & navigation
-**** weapons
-**** shields
-**** infrastructure
-**** democracy
-*** diplomatic agreements
-**** cease fire
-**** peace
-**** military alliance
-**** trade agreement
-** tactics
-*** new ships with trigger functions
-**** make a solar build queue
-***** ship/turret designer interface
-***** ship design focus/priority
-*** resources on map to match with buildings?
-*** old ship model
-**** ship components
-    construct on grid with structure components? 
-    each component has a type, size, energy usage, cost...
-**** engine
-**** energy
-**** shield
-**** weapons
-**** hull
-**** life support
-**** cargo hold
-**** ship types
-***** bombers
-     good at bombing solars
-     bad at fighting any other ship
-***** fighters
-     good at fighting battleships
-     bad at bombing solars
-***** battleships
-     good at destroying bombers
-     bad at fighting fighters
-***** transport
-     automatically deployed ship for trade agreements
-**** ship experience and fleet commanders
-**** add ship rotation speed and ships can only fire forward
-** world
-*** generate map while exploring
-*** define discovered area for players
-*** treasures in space
-*** terrain types
-**** nebula
-     damaging area with low sight
-     find rare resources
-**** high temperospatial curvature
-     chance of worm-holes
-     low navigation: risk going off course
-     small ships risk falling in worm hole
-**** asteroids
-     slow travel speed
-     find resources
-     [low shields] risk damage
-*** moving solars
-*** barbarians
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-** moved selector cast template instantiation back to utility
-** implemented specific_selector<ship>
 * fixed
 ** upgrade / interaction / game object makeover
 *** [J] solar choice for invalid player after conquering solar
@@ -260,6 +143,8 @@
 **** when displayed, all data seems corrupted
 ** BUG: ship function recieve_damage() is not serialized
     Need to externalize these functions.
+** moved selector cast template instantiation back to utility
+** implemented specific_selector<ship>
 ** implemented specific selector create function
 ** ship vision
 ** utility::random_int
@@ -573,3 +458,135 @@
    
    
    
+* [old] basic goals
+** server game
+*** ship interactions
+**** structure
+***** let ship interactions be governed by interaction functions
+***** introduce a ship specific table keyed on [action, t_target]
+***** let the ship templates build the interaction function objects
+***** interactions require the game data context to be available
+***** may need an on-action-setup trigger for e.g. trade routes
+***** let ships define a list of valid interactions
+***** extension: let researched upgrades extend the interactions
+**** list of
+***** cargo ship, friendly solar: trade route (resource allocation?)
+***** colonizer, neutral solar: colonize
+***** fighter, enemy fleet: engage
+***** bomber, enemy solar: bombard
+*** consider neighbourhood trackers for ships
+**** key the ship grid on player
+**** look up friendly neighbours for boost interaction
+**** look up opponent neighbours for fire interaction
+*** fleet actions
+**** require that all, some or no ships have some action available
+**** available actions are extended by those defined by all ships
+**** action complete callback for e.g. resume action after combat
+**** also has reaction mode: engage on sight / focus target / flee
+***** engage on sight is conditioned on: some fight
+**** on interaction, run ship interaction functions if available
+**** list of
+***** none, friendly solar: land
+***** some bombard, enemy solar: bombard
+***** none, friendly fleet: join, follow
+***** some fight, friendly fleet: guard
+***** none, enemy fleet: follow
+***** some fight, enemy fleet: engage
+*** introduce cargo ships for mining colonies
+*** introduce priorities with cost multipliers for ships
+*** let ship build be conditioned on research and industry level
+*** research structure
+**** hash table
+**** nodes with:
+     requirement list
+     cost
+     level
+     level-dependent modifier functions
+     allow list
+*** decide what to do with clients without objects
+** client game
+*** new command gui and target gui
+**** target options: based on fleet and ship actions
+**** targui defaults (depends on action design)
+***** send all if from waypoint
+***** send colonizer if command is colonize
+***** only show gui if multiple targets
+***** don't show self as target
+**** command_gui should have option to allocate X ships of type T
+*** choice/evolution: display ready players, autoplay when all ready
+*** simulation: ?interpolate using ship velocity?
+*** draw all ships in same size, have a ship.draw_scale
+    so that ships can be drawn in same size in command gui
+    but different sizes in universe
+*** events board
+    messages such as "your fleet was destroyed" or "your solar X
+    merged with Bla's solar Y; your population won the ensuing battle"
+** before game interface
+* [old] long term goals
+** strategy
+*** different solars have different resources
+    specific research projects
+    specific production
+*** research directions
+**** vision
+**** stealth
+**** espionage
+**** propulsion & navigation
+**** weapons
+**** shields
+**** infrastructure
+**** democracy
+*** diplomatic agreements
+**** cease fire
+**** peace
+**** military alliance
+**** trade agreement
+** tactics
+*** new ships with trigger functions
+**** make a solar build queue
+***** ship/turret designer interface
+***** ship design focus/priority
+*** resources on map to match with buildings?
+*** old ship model
+**** ship components
+    construct on grid with structure components? 
+    each component has a type, size, energy usage, cost...
+**** engine
+**** energy
+**** shield
+**** weapons
+**** hull
+**** life support
+**** cargo hold
+**** ship types
+***** bombers
+     good at bombing solars
+     bad at fighting any other ship
+***** fighters
+     good at fighting battleships
+     bad at bombing solars
+***** battleships
+     good at destroying bombers
+     bad at fighting fighters
+***** transport
+     automatically deployed ship for trade agreements
+**** ship experience and fleet commanders
+**** add ship rotation speed and ships can only fire forward
+** world
+*** generate map while exploring
+*** define discovered area for players
+*** treasures in space
+*** terrain types
+**** nebula
+     damaging area with low sight
+     find rare resources
+**** high temperospatial curvature
+     chance of worm-holes
+     low navigation: risk going off course
+     small ships risk falling in worm hole
+**** asteroids
+     slow travel speed
+     find resources
+     [low shields] risk damage
+*** moving solars
+*** barbarians

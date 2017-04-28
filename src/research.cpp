@@ -108,7 +108,33 @@ turret turret_template(string k){
 }
 
 data::data(){
-  // todo: build research tree
+  accumulated = 0;
+  facility_level = 0;
+
+  tech t;
+
+  // upgrade "ship armor"
+  t.name = "ship armor";
+  t.cost = 1;
+  t.req_facility_level = 1;
+  t.ship_upgrades[research::upgrade_all_ships] = {"ship armor"};
+  tree[t.name] = t;
+
+  // upgrade "ship speed"
+  t.name = "ship speed";
+  t.cost = 1;
+  t.req_facility_level = 1;
+  t.ship_upgrades[research::upgrade_all_ships] = {"ship speed"};
+  tree[t.name] = t;
+
+  // upgrade "ship weapons"
+  t.name = "ship weapons";
+  t.cost = 2;
+  t.req_facility_level = 1;
+  t.depends = {"ship armor", "ship speed"};
+  t.ship_upgrades[research::upgrade_all_ships] = {"ship weapons"};
+  tree[t.name] = t;
+  
 }
 
 list<string> data::available() {
@@ -126,20 +152,33 @@ list<string> data::available() {
   return res;
 }
 
-ship data::build_ship(string c){
-  ship s = ship_template(c);
+void data::repair_ship(ship &s) {
+  ship ref = ship_template(s.ship_class);
 
+  s.angle = utility::random_uniform(0, 2 * M_PI);
+  
   // add upgrades from research tree
-  for (auto t : researched) s.upgrades += tree[t].ship_upgrades[c];
+  for (auto t : researched) {
+    s.upgrades += tree[t].ship_upgrades[s.class_id];
+    s.upgrades += tree[t].ship_upgrades[research::upgrade_all_ships];
+  }
 
   // evaluate upgrades
   auto utab = upgrade::table();
+  s.base_stats = ref.base_stats;
   for (auto u : s.upgrades) s.base_stats += utab[u].modify;
   s.current_stats = s.base_stats;
+}
+
+ship data::build_ship(string c){
+  ship s = ship_template(c);
 
   // apply id  
   static int idc = 0;
   s.id = identifier::make(ship::class_id, idc++);
+
+  // apply upgrades
+  repair_ship(s);
 
   return s;
 }

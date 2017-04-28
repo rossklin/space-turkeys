@@ -54,8 +54,9 @@ void ship::interact(game_data *g){
     if (utility::l2d2(s -> position - position) < pow(s -> radius, 2)){
       cout << id << " lands at " << s -> id << endl;
       fleet_id = identifier::source_none;
-      s -> ships.insert(id);
       f -> remove_ship(id);
+      s -> ships.insert(id);
+      g -> players[s -> owner].research_level.repair_ship(*this);
     }
   }
 
