@@ -183,12 +183,15 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
   int last_idx = g.size() - 1;
   int no_frame = -1;
   int idx = no_frame;
-  bool verbose = false;
+  bool verbose = true;
+  sf::Packet p;
   // bool verbose = this_thread::get_id() == tid;
 
   cout << "distribute " << g.size() << " frames to " << c -> id << endl;
   
-  while (idx < last_idx){
+  while (true){
+    p.clear();
+    
     lim_end = available_frames;
     for (int i = lim_start; i < lim_end; i++) {
       g[i].assign(buf[i]);
@@ -207,8 +210,6 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
 
       if (idx == no_frame){
 	if (verbose) cout << "client " << c -> id << " is done!" << endl;
-	// indicates done
-	sf::Packet p;
 	p << protocol::confirm;
 	c -> send_packet(p);
 	break;
@@ -221,11 +222,14 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
     }
     
     if (idx >= 0 && idx < lim_end){
-      sf::Packet psend;
-      psend << protocol::confirm;
-      if (!(psend << g[idx])) throw runtime_error("failed to serialize frame!");
+      p << protocol::confirm;
+      if (!(p << g[idx])) throw runtime_error("failed to serialize frame!");
       if (verbose) cout << "sending frame " << idx << " to client " << c -> id << endl;
-      if (c -> send_packet(psend)) idx = no_frame;
+      if (c -> send_packet(p)) {
+	idx = no_frame;
+      }else{
+	if (verbose) cout << "Failed to send packet with frame " << idx << " to client " << c -> id << " (retrying)" << endl;
+      }
     }else if (idx > last_idx){
       c -> send_invalid();
       throw runtime_error( "client " + to_string(c -> id) + " required invalid frame!");

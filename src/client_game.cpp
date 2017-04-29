@@ -926,7 +926,7 @@ void game::setup_targui(point p){
   for (auto a : possible_actions){
     auto condition = atab[a].owned_by(self_id);
     for (auto k : keys_targeted){
-      if (interaction::macro_valid(condition, get_entity(k))){
+      if (condition.valid_on(get_entity(k))){
 	options.push_back(target_gui::option_t(k, a));
       }
     }
@@ -1150,7 +1150,7 @@ string game::popup_options(string header_text, list<string> options) {
 
   for (auto v : options) {
     button = sfg::Button::Create(v);
-    button -> GetSignal(sfg::Widget::OnLeftClick).Connect([&] () {
+    button -> GetSignal(sfg::Widget::OnLeftClick).Connect([v, &done, &response] () {
 	response = v;
 	done = true;
       });

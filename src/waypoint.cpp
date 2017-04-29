@@ -23,7 +23,18 @@ waypoint::~waypoint(){}
 
 void waypoint::pre_phase(game_data *g){}
 void waypoint::move(game_data *g){}
-void waypoint::interact(game_data *g){}
+
+bool waypoint::confirm_interaction(string a, combid t, game_data *g) {
+  return false;
+}
+
+set<string> waypoint::compile_interactions(){
+  return {};
+}
+
+float waypoint::interaction_radius(){
+  return 0;
+}
 
 float waypoint::vision(){
   return 0;

@@ -44,41 +44,9 @@ void ship::move(game_data *g){
   }
 }
 
-void ship::interact(game_data *g){
-  fleet::ptr f = g -> get_fleet(fleet_id);
-  string action = f -> com.action;
-  
-  // check land
-  if (identifier::get_type(f -> com.target) == solar::class_id && action == fleet_action::go_to && f -> converge){
-    solar::ptr s = g -> get_solar(f -> com.target);
-    if (utility::l2d2(s -> position - position) < pow(s -> radius, 2)){
-      cout << id << " lands at " << s -> id << endl;
-      fleet_id = identifier::source_none;
-      f -> remove_ship(id);
-      s -> ships.insert(id);
-      g -> players[s -> owner].research_level.repair_ship(*this);
-    }
-  }
-
-  // check ship interactions
-  auto itab = interaction::table();
-  for (auto inter : compile_interactions()){
-    // let fleet behaviour decide whether to perform the action
-    if (f -> confirm_ship_interaction(inter)){
-      interaction i = itab[inter];
-      list<combid> buf = g -> search_targets(id, position, current_stats.interaction_radius, i.condition.owned_by(owner));
-      if (!buf.empty()){
-	combid target = utility::uniform_sample(buf);
-	cout << "ship " << id << ": interaction " << inter << " on  " << target << endl;
-	i.perform(this, g -> get_entity(target));
-      }
-    }
-  }
-}
-
 void ship::post_phase(game_data *g){}
 
-void ship::receive_damage(game_object *from, float damage){
+void ship::receive_damage(game_object::ptr from, float damage){
   current_stats.hp -= damage;
   remove = current_stats.hp <= 0;
   cout << "ship::receive_damage: " << id << " takes " << damage << " damage from " << from -> id << " - remove = " << remove << endl;
@@ -116,6 +84,14 @@ set<string> ship::compile_interactions(){
   auto utab = upgrade::table();
   for (auto v : upgrades) res += utab[v].inter;
   return res;
+}
+
+bool ship::confirm_interaction(string a, combid t, game_data *g) {
+  return g -> get_fleet(fleet_id) -> confirm_ship_interaction(a, t);
+}
+
+float ship::interaction_radius() {
+  return current_stats.interaction_radius;
 }
 
 bool ship::is_active(){

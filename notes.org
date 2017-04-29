@@ -1,10 +1,9 @@
 * current work
 ** research
-*** Invalid (scrambled) research choice submitted
-*** [I] define choice::c_research
-*** [I] research::data constructor
-*** [I] research::data + choice::c_research serialization
-*** [I] research choice gui
+*** [J] define choice::c_research
+*** [J] research::data constructor
+*** [J] research::data + choice::c_research serialization
+*** [J] research choice gui
 * system design ideas
 ** make all interactions be buffered and then evaluated in post phase (remove solar post phase stuff)
 ** make landing be an interaction
@@ -26,10 +25,10 @@
    turrets here.
 * [!] issues
 ** [!] bugs & crashes
-*** when attacking solar: ends at: distributed -1 of 99 frames to 0: end
+*** [J?] when attacking solar: ends at: distributed -1 of 99 frames to 0: end
     Did send 99% of frames to client. Does not pass "client x is done".
 
-    May be caused by breaking to long during load in debugger?
+    Caused by incorrect loop termination condition
 *** simulation step hangs on key escape abort game
     This was when client 1 aborts at frame -1, while client 2 is still
     in choice step. Server exits with error 'disconnect' and other
@@ -37,6 +36,7 @@
     leave game request from client 1 while it was waiting for the
     choice from client 2.
 ** [~] interface improvements
+*** Clicking interface response button also triggers click on minimap
 *** ?setting solar template removes build info separators
 *** more centralized desktop geometry info
 *** sfg window does not resize on sfml window resize
@@ -54,6 +54,8 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** Invalid (scrambled) research choice submitted
+   Temp name variable was passed byref to button handler
 ** upgrade / interaction / game object makeover
 *** [J] solar choice for invalid player after conquering solar
 *** [J] make fleet selectors for enemy fleets
@@ -453,11 +455,6 @@
 
    gets n=-9744, for some reason still enters push loop. Test run with
    &&res in loop condition. Check if n is wrong from start.
-   
-   
-   
-   
-   
 * [old] basic goals
 ** server game
 *** ship interactions

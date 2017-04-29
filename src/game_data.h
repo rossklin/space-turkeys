@@ -20,6 +20,12 @@ namespace st3{
     struct client_t;
   };
 
+  struct interaction_info {
+    combid source;
+    combid target;
+    std::string interaction;
+  };
+
   /*! struct containing data for game objects */
   class game_data{
   public:
@@ -28,6 +34,7 @@ namespace st3{
     game_settings settings; /*! game settings */
     std::list<combid> remove_entities; 
     grid::tree::ptr entity_grid;
+    std::vector<interaction_info> interaction_buffer;
 
     game_data();
     ~game_data();

@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "game_data.h"
 #include "interaction.h"
 #include "fleet.h"
 #include "ship.h"
@@ -20,10 +21,26 @@ hm_t<string, interaction> &interaction::table() {
 
     interaction i;
 
+    // land
+    i.name = fleet_action::land;
+    i.condition = target_condition(target_condition::owned, solar::class_id);
+    i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
+      cout << "interaction: land: " << self -> id << " targeting " << target -> id << endl;
+      ship::ptr s = utility::guaranteed_cast<ship>(self);
+      solar::ptr t = utility::guaranteed_cast<solar>(target);
+
+      cout << s -> id << " lands at " << t -> id << endl;
+      s -> fleet_id = identifier::source_none;
+      g -> get_fleet(s -> fleet_id) -> remove_ship(s -> id);
+      t -> ships.insert(s -> id);
+      g -> players[t -> owner].research_level.repair_ship(*s);
+    };
+    data[i.name] = i;
+
     // space combat
     i.name = fleet_action::space_combat;
-    i.condition = target_condition(target_condition::enemy, ship::class_id, fleet::class_id);
-    i.perform = [] (game_object::ptr self, game_object::ptr target){
+    i.condition = target_condition(target_condition::enemy, ship::class_id);
+    i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
       cout << "interaction: space_combat: " << self -> id << " targeting " << target -> id << endl;
       ship::ptr s = utility::guaranteed_cast<ship>(self);
       ship::ptr t = utility::guaranteed_cast<ship>(target);
@@ -41,29 +58,40 @@ hm_t<string, interaction> &interaction::table() {
     };
     data[i.name] = i;
 
+    // turret combat
+    i.name = fleet_action::turret_combat;
+    i.condition = target_condition(target_condition::enemy, ship::class_id);
+    i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
+      cout << "interaction: turret_combat: " << self -> id << " targeting " << target -> id << endl;
+      solar::ptr s = utility::guaranteed_cast<solar>(self);
+      ship::ptr x = utility::guaranteed_cast<ship>(target);
+      float d = utility::l2norm(s -> position - x -> position);
+
+      for (auto &t : s -> turrets){
+	if (t.damage > 0 && t.load >= t.load_time && d <= t.range){
+	  t.load = 0;
+	
+	  if (utility::random_uniform() < t.accuracy){
+	    x -> receive_damage(s, utility::random_uniform(0, t.damage));
+	  }
+	}
+      }
+    };
+    data[i.name] = i;
+
     // bombard
     i.name = fleet_action::bombard;
     i.condition = target_condition(target_condition::enemy, solar::class_id);
-    i.perform = [] (game_object::ptr self, game_object::ptr target){
+    i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
       ship::ptr s = utility::guaranteed_cast<ship>(self);
       solar::ptr t = utility::guaranteed_cast<solar>(target);
 
       if (s -> load < s -> current_stats.load_time) return;
-      
-      // check if solar already captured
-      if (t -> owner == s -> owner){
-  	return;
-      }
-
-      // check if defenses already destroyed
-      if (t -> owner == -1 && !t -> has_defense()){
-  	return;
-      }
 
       // deal damage
       s -> load = 0;
       if (utility::random_uniform() < s -> current_stats.accuracy){
-  	t -> damage_taken[s -> owner] += utility::random_uniform(0, s -> current_stats.solar_damage);
+  	t -> receive_damage(s, utility::random_uniform(0, s -> current_stats.solar_damage), g);
       }
     };
     data[i.name] = i;
@@ -71,19 +99,15 @@ hm_t<string, interaction> &interaction::table() {
     // colonize
     i.name = "colonize";
     i.condition = target_condition(target_condition::neutral, solar::class_id);
-    i.perform = [] (game_object::ptr self, game_object::ptr target){
+    i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
       ship::ptr s = utility::guaranteed_cast<ship>(self);
       solar::ptr t = utility::guaranteed_cast<solar>(target);
-
-      // check if solar already colonized
-      if (t -> owner == s -> owner){
-  	return;
-      }
-
-      // check colonization
-      if (t -> owner == game_object::neutral_owner && !t -> has_defense()){
-  	t -> colonization_attempts[s -> owner] = s -> id;
-      }
+      
+      // todo: let ships carry colonists
+      t -> population = 100;
+      t -> happiness = 1;
+      auto ctab = choice::c_solar::template_table();
+      t -> choice_data = ctab["culture growth"];
     };
     data[i.name] = i;
   }
@@ -99,9 +123,7 @@ bool target_condition::get_alignment(idtype t, idtype s){
 // target condition
 target_condition::target_condition(){}
 
-target_condition::target_condition(sint a, class_t w, class_t m) : alignment(a), what(w), owner(game_object::neutral_owner) {
-  macro_target = m.empty() ? w : m;
-}
+target_condition::target_condition(sint a, class_t w) : alignment(a), what(w), owner(game_object::neutral_owner) {}
 
 target_condition target_condition::owned_by(idtype o){
   target_condition t = *this;
@@ -113,23 +135,18 @@ bool target_condition::requires_target(){
   return what != no_target;
 }
 
-bool interaction::macro_valid(target_condition c, game_object::ptr p){
-  c.what = c.macro_target;
-  return valid(c, p);
-}
-
 // interaction
-bool interaction::valid(target_condition c, game_object::ptr p){
-  bool type_match = !(c.requires_target() && identifier::get_type(p -> id) != c.what);
+bool target_condition::valid_on(game_object::ptr p){
+  bool type_match = !(requires_target() && identifier::get_type(p -> id) != what);
   sint aligned = 0;
-  if (c.owner == p -> owner) {
+  if (owner == p -> owner) {
     aligned = target_condition::owned;
   }else if (p -> owner == game_object::neutral_owner) {
     aligned = target_condition::neutral;
   }else {
     aligned = target_condition::enemy;
   }
-  bool align_match = aligned & c.alignment;
+  bool align_match = aligned & alignment;
 
   return type_match && align_match;
 }

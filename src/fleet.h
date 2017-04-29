@@ -11,12 +11,13 @@ namespace st3{
   class game_data;
 
   namespace fleet_action{
+    extern const std::string land;
+    extern const std::string turret_combat;
     extern const std::string space_combat;
     extern const std::string bombard;
     extern const std::string colonize;
     extern const std::string go_to;
     extern const std::string join;
-    extern const std::string follow;
     extern const std::string idle;
   };
 
@@ -54,7 +55,8 @@ namespace st3{
     // game_object stuff
     void pre_phase(game_data *g);
     void move(game_data *g);
-    void interact(game_data *g);
+    bool confirm_interaction(std::string a, combid t, game_data *g);
+    std::set<std::string> compile_interactions();
     void post_phase(game_data *g);
     float vision();
     bool serialize(sf::Packet &p);
@@ -67,7 +69,8 @@ namespace st3{
     void set_idle();
     void update_data(game_data *g);
     void remove_ship(combid i);
-    bool confirm_ship_interaction(std::string a);
+    bool confirm_ship_interaction(std::string a, combid t);
+    float interaction_radius();
     
     ptr clone();
 

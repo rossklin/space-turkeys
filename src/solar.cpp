@@ -52,79 +52,40 @@ void solar::move(game_data *g){
   }
 }
 
-void solar::interact(game_data *g){
-  
-  for (auto &t : turrets){
-    if (t.damage > 0 && t.load >= t.load_time){
+bool solar::confirm_interaction(string a, combid t, game_data *g) {
+  return true;
+}
 
-      // find targetable ships
-      list<combid> buf = g -> search_targets(id, position, t.range, target_condition(target_condition::enemy, ship::class_id).owned_by(owner));
-      
-      // fire at a random enemy
-      if (!buf.empty()){
-	t.load = 0;
-	
-	combid tid = utility::uniform_sample(buf);
-	ship::ptr s = g -> get_ship(tid);
-	
-	if (utility::random_uniform() < t.accuracy){
-	  s -> receive_damage(this, utility::random_uniform(0, t.damage));
-	}
-      }
-    }
+set<string> solar::compile_interactions(){
+  return {fleet_action::turret_combat};
+}
+
+float solar::interaction_radius() {
+  float r = 0;
+  for (auto &t : turrets) r = max(r, t.range);
+  return r;
+}
+
+void solar::receive_damage(game_object::ptr s, float damage, game_data *g){
+  damage_turrets(damage);
+  population = fmax(population - 10 * damage, 0);
+  happiness *= 0.9;
+
+  if (owner != game_object::neutral_owner && !has_defense()){
+    owner = s -> owner;
+    cout << "player " << owner << " conquers " << id << endl;
+
+    // switch owners for ships on solar
+    for (auto sid : ships) g -> get_ship(sid) -> owner = owner;
+  }else{
+    cout << "resulting defense for " << id << ": " << has_defense() << endl;
   }
 }
 
 void solar::post_phase(game_data *g){
-  float total_damage = 0;
-  float highest_id = -1;
-  float highest_sum = 0;
-
-  // analyse damage
-  for (auto x : damage_taken) {
-    cout << "solar_effects: " << x.second << " damage from player " << x.first << endl;
-    total_damage += x.second;
-    if (x.second > highest_sum){
-      highest_sum = x.second;
-      highest_id = x.first;
-    }
-  }
-
-  if (highest_id > -1){
-    cout << "solar::post_phase: taking damage: " << total_damage << endl;
-    // todo: add some random destruction to solar
-    damage_turrets(total_damage);
-    population = fmax(population - 10 * total_damage, 0);
-    happiness *= 0.9;
-
-    if (owner > -1 && !has_defense()){
-      owner = highest_id;
-      cout << "player " << owner << " conquers " << id << endl;
-
-      // switch owners for ships on solar
-      for (auto sid : ships) g -> get_ship(sid) -> owner = owner;
-    }else{
-      cout << "resulting defense for " << id << ": " << has_defense() << endl;
-    }
-  }
-
-  // colonization: randomize among attempts
-  float count = 0;
-  float num = colonization_attempts.size();
-  for (auto i : colonization_attempts){
-    if (utility::random_uniform() <= 1 / (num - count++)){
-      cout << "player " << i.first << " colonizes " << id << endl;
-
-      // todo: let ships carry colonists
-      population = 100;
-      happiness = 1;
-      auto ctab = choice::c_solar::template_table();
-      choice_data = ctab["culture growth"];
-
-      owner = i.first;
-      g -> get_entity(i.second) -> remove = true;
-      break;
-    }
+  if (owner != game_object::neutral_owner && population == 0){
+    // everyone here is dead, this is now a neutral solar
+    owner = game_object::neutral_owner;
   }
 }
 
@@ -199,7 +160,7 @@ bool solar::serialize(sf::Packet &p){
 }
 
 bool solar::has_defense(){
-  return turrets.size() > 0;
+  return owner != game_object::neutral_owner && turrets.size() > 0;
 }
 
 void solar::damage_turrets(float d){

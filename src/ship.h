@@ -44,13 +44,14 @@ namespace st3{
     ~ship();
     void pre_phase(game_data *g);
     void move(game_data *g);
-    void interact(game_data *g);
+    bool confirm_interaction(std::string a, combid t, game_data *g);
+    std::set<std::string> compile_interactions();
+    float interaction_radius();
     void post_phase(game_data *g);
     void on_remove(game_data *g);
     float vision();
     bool serialize(sf::Packet &p);
 
-    std::set<std::string> compile_interactions();
     void receive_damage(game_object *from, float damage);
     bool is_active();
 

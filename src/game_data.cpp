@@ -106,7 +106,7 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
     
   for (auto i : entity_grid -> search(p, r)){
     auto e = get_entity(i.first);
-    if (e -> is_active() && e -> id != self_id && interaction::valid(c, e)) res.push_back(e -> id);
+    if (e -> is_active() && e -> id != self_id && c.valid_on(e)) res.push_back(e -> id);
   }
 
   return res;
@@ -310,9 +310,24 @@ void game_data::distribute_ships(list<combid> sh, point p){
 
 void game_data::increment(){
   remove_entities.clear();
+  interaction_buffer.clear();
+
+  // update entities and compile interactions
   for (auto x : entity) if (x.second -> is_active()) x.second -> pre_phase(this);
   for (auto x : entity) if (x.second -> is_active()) x.second -> move(this);
   for (auto x : entity) if (x.second -> is_active()) x.second -> interact(this);
+
+  // perform interactions
+  random_shuffle(interaction_buffer.begin(), interaction_buffer.end());
+  auto itab = interaction::table();
+  for (auto x : interaction_buffer) {
+    interaction i = itab[x.interaction];
+    game_object::ptr s = get_entity(x.source);
+    game_object::ptr t = get_entity(x.target);
+    if (i.condition.owned_by(s -> owner).valid_on(t)) {
+      i.perform(s, t, this);
+    }
+  }
 
   // remove units twice, since removing ships can cause fleets to set
   // the remove flag

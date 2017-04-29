@@ -27,9 +27,12 @@ namespace st3{
     virtual ~game_object();    
     virtual void pre_phase(game_data *g) = 0;
     virtual void move(game_data *g) = 0;
-    virtual void interact(game_data *g) = 0;
     virtual void post_phase(game_data *g) = 0;
     virtual bool serialize(sf::Packet &p) = 0;
+    virtual bool confirm_interaction(std::string a, combid t, game_data *g) = 0;
+    virtual std::set<std::string> compile_interactions() = 0;
+    virtual float interaction_radius() = 0;
+    virtual void interact(game_data *g);
     virtual void on_add(game_data *g);
     virtual void on_remove(game_data *g);
     virtual float vision() = 0;
