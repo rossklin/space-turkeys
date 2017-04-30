@@ -26,7 +26,7 @@ namespace st3{
   };
 
   /*! ship game object */
-  class ship : public virtual game_object{
+  class ship : public virtual physical_object{
   public:
     typedef ship* ptr;
     static ptr create();
@@ -40,22 +40,27 @@ namespace st3{
     ship_stats current_stats;
     std::set<std::string> upgrades;    
 
-    ship();
-    ~ship();
+    // game_object
     void pre_phase(game_data *g);
     void move(game_data *g);
-    bool confirm_interaction(std::string a, combid t, game_data *g);
-    std::set<std::string> compile_interactions();
-    float interaction_radius();
     void post_phase(game_data *g);
     void on_remove(game_data *g);
     float vision();
     bool serialize(sf::Packet &p);
+    bool is_active();
+    ptr clone();
+    bool isa(std::string c);
+  
+    // physical_object
+    bool confirm_interaction(std::string a, combid t, game_data *g);
+    std::set<std::string> compile_interactions();
+    float interaction_radius();
+
+    // ship
+    ship();
+    ~ship();
 
     void receive_damage(game_object *from, float damage);
-    bool is_active();
-
-    ptr clone();
 
   protected:
     // serialised variables

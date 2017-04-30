@@ -49,28 +49,26 @@ namespace st3{
     point target_position;
     
     /*! default constructor */
-    fleet();
-    ~fleet();
 
     // game_object stuff
     void pre_phase(game_data *g);
     void move(game_data *g);
-    bool confirm_interaction(std::string a, combid t, game_data *g);
-    std::set<std::string> compile_interactions();
     void post_phase(game_data *g);
     float vision();
     bool serialize(sf::Packet &p);
+    bool isa(std::string c);
 
     // commandable object stuff
     void give_commands(std::list<command> c, game_data *g);
 
     // fleet stuff
+    fleet();
+    ~fleet();
     bool is_idle();
     void set_idle();
     void update_data(game_data *g);
     void remove_ship(combid i);
     bool confirm_ship_interaction(std::string a, combid t);
-    float interaction_radius();
     
     ptr clone();
 

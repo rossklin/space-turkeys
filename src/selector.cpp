@@ -83,11 +83,6 @@ namespace st3{
     }
 
     template<>
-    bool specific_selector<solar>::isa(string t){
-      return t == solar::class_id;
-    }
-
-    template<>
     set<combid> specific_selector<solar>::get_ships(){return ships;}
 
     template<>
@@ -139,11 +134,6 @@ namespace st3{
     }
 
     template<>
-    bool specific_selector<fleet>::isa(string t){
-      return t == fleet::class_id;
-    }
-
-    template<>
     set<combid> specific_selector<fleet>::get_ships(){
       return ships;
     }
@@ -181,11 +171,6 @@ namespace st3{
     }
 
     template<>
-    bool specific_selector<waypoint>::isa(string t){
-      return t == waypoint::class_id;
-    }
-
-    template<>
     set<combid> specific_selector<waypoint>::get_ships(){
       set<combid> s;
       for (auto i : g -> incident_commands(id)) {
@@ -213,11 +198,6 @@ namespace st3{
     template<>
     void specific_selector<ship>::draw(window_t &w){
       if (is_active()) graphics::draw_ship(w, *this, get_color());
-    }
-
-    template<>
-    bool specific_selector<ship>::isa(string t){
-      return t == ship::class_id;
     }
 
     template<>

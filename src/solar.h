@@ -15,7 +15,7 @@ namespace st3{
   class game_data;
 
   /*! data representing a solar system */
-  class solar : public virtual commandable_object{
+  class solar : public virtual physical_object, public virtual commandable_object{
   public:
     typedef solar* ptr;
     static ptr create();
@@ -42,16 +42,23 @@ namespace st3{
     solar();
     ~solar();
 
+    // game_object
     void pre_phase(game_data *g);
     void move(game_data *g);
+    void post_phase(game_data *g);
+    bool serialize(sf::Packet &p);
+    ptr clone();
+    bool isa(std::string c);
+
+    // physical_object
     bool confirm_interaction(std::string a, combid t, game_data *g);
     std::set<std::string> compile_interactions();
     float interaction_radius();
-    void post_phase(game_data *g);
-    bool serialize(sf::Packet &p);
 
+    // commandable_object
     void give_commands(std::list<command> c, game_data *g);
 
+    // solar
     void receive_damage(game_object::ptr s, float damage, game_data *g);
     float space_status();
     float water_status();
@@ -60,7 +67,7 @@ namespace st3{
     void damage_turrets(float d);
     std::string get_info();
 
-    // increment functions
+    // solar: increment functions
     float poluation_increment();
     float ecology_increment();
     float happiness_increment(choice::c_solar &c);
@@ -71,8 +78,6 @@ namespace st3{
     float turret_increment(std::string v, choice::c_solar &c);
     float compute_workers();
     void dynamics(); 
-
-    ptr clone();
 
   protected:
     static constexpr float f_growth = 4e-2;

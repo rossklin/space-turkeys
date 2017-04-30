@@ -74,18 +74,6 @@ void fleet::move(game_data *g){
   position += speed_limit * utility::normv(utility::point_angle(target_position - position));
 }
 
-bool fleet::confirm_interaction(string a, combid t, game_data *g) {
-  return false;
-}
-
-set<string> fleet::compile_interactions(){
-  return {};
-}
-
-float fleet::interaction_radius() {
-  return 0;
-}
-
 void fleet::post_phase(game_data *g){}
 
 float fleet::vision(){
@@ -249,4 +237,8 @@ void fleet::copy_from(const fleet &s){
 void fleet::remove_ship(combid i){
   ships.erase(i);
   remove = ships.empty();
+}
+
+bool fleet::isa(string c) {
+  return c == fleet::class_id || c == commandable_object::class_id;
 }

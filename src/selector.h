@@ -37,7 +37,6 @@ namespace st3{
       virtual bool contains_point(point p, float &d) = 0;
       virtual void draw(window_t &w) = 0;
       virtual point get_position() = 0;
-      virtual bool isa(std::string t) = 0;
       virtual std::set<combid> get_ships() = 0;
       virtual std::string hover_info() = 0;
 
@@ -62,7 +61,6 @@ namespace st3{
       bool contains_point(point p, float &d);
       void draw(window_t &w);
       point get_position();
-      bool isa(std::string t);
       std::set<combid> get_ships();
       std::string hover_info();
     };

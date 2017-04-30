@@ -123,3 +123,7 @@ ship_stats::ship_stats(){
 void ship::copy_from(const ship &s){
   (*this) = s;
 }
+
+bool ship::isa(string c) {
+  return c == ship::class_id || c == physical_object::class_id;
+}

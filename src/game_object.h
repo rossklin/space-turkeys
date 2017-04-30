@@ -16,6 +16,7 @@ namespace st3{
   public:
     typedef game_object* ptr;
     static const sint neutral_owner = -1;
+    static const std::string class_id;
     
     point position;
     sfloat radius;
@@ -29,20 +30,15 @@ namespace st3{
     virtual void move(game_data *g) = 0;
     virtual void post_phase(game_data *g) = 0;
     virtual bool serialize(sf::Packet &p) = 0;
-    virtual bool confirm_interaction(std::string a, combid t, game_data *g) = 0;
-    virtual std::set<std::string> compile_interactions() = 0;
-    virtual float interaction_radius() = 0;
-    virtual void interact(game_data *g);
     virtual void on_add(game_data *g);
     virtual void on_remove(game_data *g);
     virtual float vision() = 0;
     virtual bool is_commandable();
+    virtual bool is_physical();
     virtual bool is_active();
-    bool isa(std::string c);
+    virtual bool isa(std::string c);
     
     ptr clone();
-
-    void update_position(game_data *g);
 
   protected:
     virtual ptr clone_impl() = 0;
@@ -50,12 +46,33 @@ namespace st3{
 
   class commandable_object : public virtual game_object{
   public:
+    static const std::string class_id;
     typedef commandable_object* ptr;
 
     commandable_object();
     ~commandable_object();
     virtual void give_commands(std::list<command> c, game_data *g) = 0;
     bool is_commandable();
+    ptr clone();
+    
+  protected:
+    virtual game_object::ptr clone_impl() = 0;
+  };
+
+  class physical_object : public virtual game_object{
+  public:
+    static const std::string class_id;
+    typedef physical_object* ptr;
+
+    physical_object();
+    ~physical_object();
+
+    virtual bool confirm_interaction(std::string a, combid t, game_data *g) = 0;
+    virtual std::set<std::string> compile_interactions() = 0;
+    virtual float interaction_radius() = 0;
+    virtual void interact(game_data *g);
+
+    bool is_physical();
     ptr clone();
     
   protected:

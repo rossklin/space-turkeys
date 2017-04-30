@@ -330,3 +330,7 @@ void solar::dynamics(){
 
   *this = buf;
 }
+
+bool solar::isa(string c) {
+  return c == solar::class_id || c == physical_object::class_id || c == commandable_object::class_id;
+}

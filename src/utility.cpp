@@ -386,3 +386,4 @@ template fleet::ptr utility::guaranteed_cast<fleet>(game_object::ptr);
 template solar::ptr utility::guaranteed_cast<solar>(game_object::ptr);
 template waypoint::ptr utility::guaranteed_cast<waypoint>(game_object::ptr);
 template commandable_object::ptr utility::guaranteed_cast<commandable_object>(game_object::ptr);
+template physical_object::ptr utility::guaranteed_cast<physical_object>(game_object::ptr);

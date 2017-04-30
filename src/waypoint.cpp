@@ -24,18 +24,6 @@ waypoint::~waypoint(){}
 void waypoint::pre_phase(game_data *g){}
 void waypoint::move(game_data *g){}
 
-bool waypoint::confirm_interaction(string a, combid t, game_data *g) {
-  return false;
-}
-
-set<string> waypoint::compile_interactions(){
-  return {};
-}
-
-float waypoint::interaction_radius(){
-  return 0;
-}
-
 float waypoint::vision(){
   return 0;
 }
@@ -92,4 +80,8 @@ bool waypoint::serialize(sf::Packet &p){
 
 void waypoint::copy_from(const waypoint &s){
   (*this) = s;
+}
+
+bool waypoint::isa(string c) {
+  return c == waypoint::class_id || c == commandable_object::class_id;
 }

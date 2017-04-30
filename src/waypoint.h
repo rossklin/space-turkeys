@@ -20,21 +20,22 @@ namespace st3{
     /*! List of commands waiting to trigger when all ships have arrived */
     std::list<command> pending_commands;
 
-    waypoint();
-    waypoint(idtype o);
-    ~waypoint();
+    // game_object
     void pre_phase(game_data *g);
     void move(game_data *g);
-    bool confirm_interaction(std::string a, combid t, game_data *g);
-    std::set<std::string> compile_interactions();
-    float interaction_radius();
     void post_phase(game_data *g);
     float vision();
     bool serialize(sf::Packet &p);
+    ptr clone();
+    bool isa(std::string c);
 
+    // commandable_object
     void give_commands(std::list<command> c, game_data *g);
 
-    ptr clone();
+    // waypoint
+    waypoint();
+    waypoint(idtype o);
+    ~waypoint();
 
   protected:
     virtual game_object::ptr clone_impl();

@@ -315,7 +315,7 @@ void game_data::increment(){
   // update entities and compile interactions
   for (auto x : entity) if (x.second -> is_active()) x.second -> pre_phase(this);
   for (auto x : entity) if (x.second -> is_active()) x.second -> move(this);
-  for (auto x : entity) if (x.second -> is_active()) x.second -> interact(this);
+  for (auto x : all<physical_object>()) if (x -> is_active()) x -> interact(this);
 
   // perform interactions
   random_shuffle(interaction_buffer.begin(), interaction_buffer.end());
