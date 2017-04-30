@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "interaction.h"
 #include "fleet.h"
 #include "ship.h"
 #include "utility.h"
@@ -12,41 +13,8 @@ using namespace st3;
 
 const string fleet::class_id = "fleet";
 
-const string fleet_action::land = "land";
-const string fleet_action::turret_combat = "turret combat";
-const string fleet_action::space_combat = "space combat";
-const string fleet_action::bombard = "bombard";
-const string fleet_action::colonize = "colonize";
 const string fleet_action::go_to = "go to";
 const string fleet_action::idle = "idle";
-
-set<string> fleet::all_interactions(){
-  return {fleet_action::land, fleet_action::turret_combat, fleet_action::space_combat, fleet_action::bombard, fleet_action::colonize};
-}
-
-set<string> fleet::all_base_actions(){
-  return {fleet_action::go_to};
-}
-
-hm_t<string, target_condition> &fleet::action_condition_table(){
-  static hm_t<string, target_condition> data;
-  static bool init = false;
-
-  if (!init){
-    init = true;
-
-    // interaction actions
-    auto itab = interaction::table();
-    for (auto a : all_interactions()) data[a] = itab[a].condition;
-
-    // base actions
-    data[fleet_action::go_to] = target_condition(target_condition::owned, waypoint::class_id);
-    data[fleet_action::idle] = target_condition(target_condition::any_alignment, target_condition::no_target);
-  }
-
-  return data;
-}
-
 
 fleet::fleet(){
   static int idc = 0;
@@ -165,16 +133,21 @@ void fleet::update_data(game_data *g){
   // the below only applies if the fleet has a target
   if (com.target == identifier::target_idle) return;
 
-  // check target status valid
-  target_condition c = fleet::action_condition_table()[com.action];
-  if (!c.owned_by(owner).valid_on(g -> get_entity(com.target))) {
-    cout << "target " << com.target << " no longer valid for " << id << endl;
-    set_idle();
+  // check target status valid if action is an interaction
+  auto itab = interaction::table();
+  if (itab.count(com.action)) {
+    target_condition c = itab[com.action].condition.owned_by(owner);
+    if (!c.valid_on(g -> get_entity(com.target))) {
+      cout << "target " << com.target << " no longer valid for " << id << endl;
+      set_idle();
+    }
   }
 
   // have arrived?
   if (!is_idle()){
-    if (g -> target_position(com.target, target_position)) converge = utility::l2d2(target_position - position) < fleet::interact_d2;
+    if (g -> target_position(com.target, target_position)) {
+      converge = utility::l2d2(target_position - position) < fleet::interact_d2;
+    }
   }
 }
 
@@ -213,16 +186,13 @@ void fleet::check_in_sight(game_data *g){
 // todo: more advanced fleet action policies
 bool fleet::confirm_ship_interaction(string a, combid t){
   // always allow "space combat"
-  if (a == fleet_action::space_combat) return true;
+  if (a == interaction::space_combat) return true;
 
   bool action_match = a == com.action;
   bool target_match = t == com.target;
 
-  // allow "land" on target solar if action is go_to
-  if (a == fleet_action::land && com.action == fleet_action::go_to) return target_match;
-
-  // allow colonize and bombard only on correct target
-  if (a == fleet_action::bombard || a == fleet_action::colonize) {
+  // allow land, colonize and bombard only on correct target
+  if (a == interaction::bombard || a == interaction::colonize || a == interaction::land) {
     return action_match && target_match;
   }
 

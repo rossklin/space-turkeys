@@ -32,6 +32,7 @@ ship ship_template(string k){
     s.remove = false;
     s.base_stats.load_time = 100;
     s.load = 0;
+    s.upgrades.insert(interaction::land);
     
     auto add_with_class = [&buf] (ship s, string c){
       s.ship_class = c;
@@ -43,7 +44,7 @@ ship ship_template(string k){
     a.base_stats.vision = 100;
     a.base_stats.ship_damage = 0.1;
     a.base_stats.accuracy = 0.3;
-    a.upgrades.insert(fleet_action::space_combat);
+    a.upgrades.insert(interaction::space_combat);
     add_with_class(a, keywords::key_scout);
 
     a = s;
@@ -53,20 +54,20 @@ ship ship_template(string k){
     a.base_stats.accuracy = 0.7;
     a.base_stats.interaction_radius = 40;
     a.base_stats.load_time = 30;
-    a.upgrades.insert(fleet_action::space_combat);
-    a.upgrades.insert(fleet_action::bombard);
+    a.upgrades.insert(interaction::space_combat);
+    a.upgrades.insert(interaction::bombard);
     add_with_class(a, keywords::key_fighter);
 
     a = s;
     a.base_stats.solar_damage = 5;
     a.base_stats.accuracy = 0.8;
-    a.upgrades.insert(fleet_action::bombard);
+    a.upgrades.insert(interaction::bombard);
     add_with_class(a, keywords::key_bomber);
 
     a = s;
     a.base_stats.speed = 0.5;
     a.base_stats.hp = 2;
-    a.upgrades.insert(fleet_action::colonize);
+    a.upgrades.insert(interaction::colonize);
     add_with_class(a, keywords::key_colonizer);
 
     buf.confirm_content(cost::keywords::ship);

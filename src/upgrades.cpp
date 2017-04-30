@@ -23,7 +23,7 @@ hm_t<string, upgrade> &upgrade::table(){
   if (!init){
     init = true;
     // upgrades for base fleet interactions
-    for (auto a : fleet::all_interactions()) data[a] = compile_upgrade(a);
+    for (auto a : interaction::table()) data[a.first] = compile_upgrade(a.first);
 
     // tech upgrades
     data["ship armor"].modify.hp = 1;

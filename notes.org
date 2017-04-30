@@ -1,6 +1,6 @@
 * current work
 * system design ideas
-** introduce physical_game_object for ship and solar
+** [J?] introduce physical_game_object for ship and solar
    This way, we can limit targeting to physical entities, and avoid
    the hassle with tracking fleets when they split. Also, non-physical
    entity classes don't need to implement interaction related

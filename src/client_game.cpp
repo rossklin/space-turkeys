@@ -910,7 +910,7 @@ void game::setup_targui(point p){
   auto keys_targeted = entities_at(p);
   auto keys_selected = selected_entities();
   list<target_gui::option_t> options;
-  set<string> possible_actions = fleet::all_base_actions();
+  set<string> possible_actions;
 
   // add possible actions from available fleet interactions
   for (auto k : keys_selected){
@@ -922,9 +922,9 @@ void game::setup_targui(point p){
   }
 
   // check if actions are allowed per target
-  auto atab = fleet::action_condition_table();
+  auto itab = interaction::table();
   for (auto a : possible_actions){
-    auto condition = atab[a].owned_by(self_id);
+    auto condition = itab[a].condition.owned_by(self_id);
     for (auto k : keys_targeted){
       if (condition.valid_on(get_entity(k))){
 	options.push_back(target_gui::option_t(k, a));
@@ -932,11 +932,17 @@ void game::setup_targui(point p){
     }
   }
 
-  // default options
-  options.push_back(target_gui::option_add_waypoint);
-  options.push_back(target_gui::option_cancel);
+  if (options.empty()){
+    // autoselect "add waypoint"
+    combid k = add_waypoint(p);
+    command2entity(k, fleet_action::go_to, keys_selected);
+  }else{
+    // default options
+    options.push_back(target_gui::option_add_waypoint);
+    options.push_back(target_gui::option_cancel);
 
-  targui = new target_gui(p, options, keys_selected, &window);
+    targui = new target_gui(p, options, keys_selected, &window);
+  }
 } 
 
 /** Event handler for the main choice interface.

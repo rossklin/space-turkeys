@@ -11,6 +11,11 @@ using namespace std;
 using namespace st3;
 
 const class_t target_condition::no_target = "no target";
+const string interaction::land = "land";
+const string interaction::turret_combat = "turret combat";
+const string interaction::space_combat = "space combat";
+const string interaction::bombard = "bombard";
+const string interaction::colonize = "colonize";
 
 hm_t<string, interaction> &interaction::table() {
   static bool init = false;
@@ -22,7 +27,7 @@ hm_t<string, interaction> &interaction::table() {
     interaction i;
 
     // land
-    i.name = fleet_action::land;
+    i.name = interaction::land;
     i.condition = target_condition(target_condition::owned, solar::class_id);
     i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
       cout << "interaction: land: " << self -> id << " targeting " << target -> id << endl;
@@ -38,7 +43,7 @@ hm_t<string, interaction> &interaction::table() {
     data[i.name] = i;
 
     // space combat
-    i.name = fleet_action::space_combat;
+    i.name = interaction::space_combat;
     i.condition = target_condition(target_condition::enemy, ship::class_id);
     i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
       cout << "interaction: space_combat: " << self -> id << " targeting " << target -> id << endl;
@@ -59,7 +64,7 @@ hm_t<string, interaction> &interaction::table() {
     data[i.name] = i;
 
     // turret combat
-    i.name = fleet_action::turret_combat;
+    i.name = interaction::turret_combat;
     i.condition = target_condition(target_condition::enemy, ship::class_id);
     i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
       cout << "interaction: turret_combat: " << self -> id << " targeting " << target -> id << endl;
@@ -80,7 +85,7 @@ hm_t<string, interaction> &interaction::table() {
     data[i.name] = i;
 
     // bombard
-    i.name = fleet_action::bombard;
+    i.name = interaction::bombard;
     i.condition = target_condition(target_condition::enemy, solar::class_id);
     i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
       ship::ptr s = utility::guaranteed_cast<ship>(self);
@@ -97,7 +102,7 @@ hm_t<string, interaction> &interaction::table() {
     data[i.name] = i;
 
     // colonize
-    i.name = "colonize";
+    i.name = interaction::colonize;
     i.condition = target_condition(target_condition::neutral, solar::class_id);
     i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
       ship::ptr s = utility::guaranteed_cast<ship>(self);

@@ -29,6 +29,12 @@ namespace st3{
 
   class interaction{
   public:
+    static const std::string land;
+    static const std::string turret_combat;
+    static const std::string space_combat;
+    static const std::string bombard;
+    static const std::string colonize;
+
     typedef std::function<void(game_object::ptr self, game_object::ptr target, game_data *g)> perform_t;
     static hm_t<std::string, interaction> &table();
 

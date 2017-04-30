@@ -11,13 +11,7 @@ namespace st3{
   class game_data;
 
   namespace fleet_action{
-    extern const std::string land;
-    extern const std::string turret_combat;
-    extern const std::string space_combat;
-    extern const std::string bombard;
-    extern const std::string colonize;
     extern const std::string go_to;
-    extern const std::string join;
     extern const std::string idle;
   };
 
@@ -27,10 +21,6 @@ namespace st3{
     typedef fleet* ptr;
     static ptr create();
     static const std::string class_id;
-
-    static hm_t<std::string, target_condition> &action_condition_table();
-    static std::set<std::string> all_interactions();
-    static std::set<std::string> all_base_actions();
     
     static const int update_period = 1; /*!< number of increments between fleet data updates */
     static const int interact_d2 = 100; /*!< distance from target at which the fleet converges */

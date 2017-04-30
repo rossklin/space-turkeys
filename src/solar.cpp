@@ -57,7 +57,7 @@ bool solar::confirm_interaction(string a, combid t, game_data *g) {
 }
 
 set<string> solar::compile_interactions(){
-  return {fleet_action::turret_combat};
+  return {interaction::turret_combat};
 }
 
 float solar::interaction_radius() {
