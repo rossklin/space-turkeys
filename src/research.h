@@ -37,6 +37,7 @@ namespace st3{
       ship build_ship(std::string v);
       turret build_turret(std::string v);
       void repair_ship(ship &s);
+      bool can_build_ship(std::string v, int facility);
     };    
   };
 };

@@ -398,7 +398,7 @@ void main_window::build_info(){
   };
 
   auto buf = Box::Create(Box::Orientation::VERTICAL);
-  buf -> Pack(label_build("Population", sol -> population, sol -> poluation_increment()));
+  buf -> Pack(label_build("Population", sol -> population, sol -> population_increment()));
   buf -> Pack(label_build("Happiness", sol -> happiness, sol -> happiness_increment(c)));
   buf -> Pack(label_build("Ecology", sol -> ecology, sol -> ecology_increment()));
   buf -> Pack(label_build("Water", sol -> water_status(), 0));
@@ -454,11 +454,16 @@ void main_window::build_military(){
   auto buf = new_sub("Military build priorities");
   
   // add buttons for expandable sectors
-  for (auto v : cost::keywords::ship)
-    buf -> Pack(priority_button(v, c.c_ship[v], [&c](){return c.c_ship.count() < choice::max_allocation;}, tooltip));
+  for (auto v : cost::keywords::ship) {
+    if (!desktop -> research_level.can_build_ship(v, sol -> sector[cost::keywords::key_military])) continue;
 
-  for (auto v : cost::keywords::turret)
+    // add ship priority button
+    buf -> Pack(priority_button(v, c.c_ship[v], [&c](){return c.c_ship.count() < choice::max_allocation;}, tooltip));
+  }
+
+  for (auto v : cost::keywords::turret) {
     buf -> Pack(priority_button(v, c.c_turret[v], [&c](){return c.c_turret.count() < choice::max_allocation;}, tooltip));
+  }
 };
 
 // sub window for mining choice

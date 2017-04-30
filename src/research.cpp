@@ -33,6 +33,8 @@ ship ship_template(string k){
     s.base_stats.load_time = 100;
     s.load = 0;
     s.upgrades.insert(interaction::land);
+    s.depends_tech = "";
+    s.depends_facility_level = 0;
     
     auto add_with_class = [&buf] (ship s, string c){
       s.ship_class = c;
@@ -56,18 +58,23 @@ ship ship_template(string k){
     a.base_stats.load_time = 30;
     a.upgrades.insert(interaction::space_combat);
     a.upgrades.insert(interaction::bombard);
+    a.depends_facility_level = 1;
+    a.depends_tech = "ship armor";
     add_with_class(a, keywords::key_fighter);
 
     a = s;
     a.base_stats.solar_damage = 5;
     a.base_stats.accuracy = 0.8;
     a.upgrades.insert(interaction::bombard);
+    a.depends_facility_level = 2;
+    a.depends_tech = "ship weapons";
     add_with_class(a, keywords::key_bomber);
 
     a = s;
     a.base_stats.speed = 0.5;
     a.base_stats.hp = 2;
     a.upgrades.insert(interaction::colonize);
+    a.depends_facility_level = 1;
     add_with_class(a, keywords::key_colonizer);
 
     buf.confirm_content(cost::keywords::ship);
@@ -190,4 +197,11 @@ turret data::build_turret(string v){
   // todo: apply research boosts
 
   return t;
+}
+
+bool data::can_build_ship(string v, int facility){
+  ship s = ship_template(v);
+  if (s.depends_facility_level > facility) return false;
+  if (s.depends_tech.length() > 0 && !researched.count(s.depends_tech)) return false;
+  return true;
 }

@@ -38,7 +38,9 @@ namespace st3{
     sfloat load;
     ship_stats base_stats;
     ship_stats current_stats;
-    std::set<std::string> upgrades;    
+    std::set<std::string> upgrades;
+    std::string depends_tech;
+    sint depends_facility_level;
 
     // game_object
     void pre_phase(game_data *g);
@@ -60,7 +62,7 @@ namespace st3{
     ship();
     ~ship();
 
-    void receive_damage(game_object *from, float damage);
+    void receive_damage(game_object::ptr from, float damage);
 
   protected:
     // serialised variables

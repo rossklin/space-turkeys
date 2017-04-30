@@ -35,8 +35,8 @@ hm_t<string, interaction> &interaction::table() {
       solar::ptr t = utility::guaranteed_cast<solar>(target);
 
       cout << s -> id << " lands at " << t -> id << endl;
-      s -> fleet_id = identifier::source_none;
       g -> get_fleet(s -> fleet_id) -> remove_ship(s -> id);
+      s -> fleet_id = identifier::source_none;
       t -> ships.insert(s -> id);
       g -> players[t -> owner].research_level.repair_ship(*s);
     };
@@ -113,6 +113,9 @@ hm_t<string, interaction> &interaction::table() {
       t -> happiness = 1;
       auto ctab = choice::c_solar::template_table();
       t -> choice_data = ctab["culture growth"];
+      t -> owner = s -> owner;
+
+      s -> remove = true;
     };
     data[i.name] = i;
   }

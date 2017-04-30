@@ -1,4 +1,7 @@
 * current work
+** targeting a waypoint should not create a new waypoint
+** military template needs to respect ship build dependencies
+** selecting research should add it to "researched"
 * system design ideas
 ** [J?] introduce physical_game_object for ship and solar
    This way, we can limit targeting to physical entities, and avoid
@@ -20,6 +23,10 @@
 ** solar development tree
    Just something a little bit more fun than "expansion[i]", e.g. move
    turrets here.
+* tweaks and fixes
+** use solar radius to indicate resource quantity
+** autocompute sufficient mining for solar
+** float hp for ships
 * [!] issues
 ** [!] bugs & crashes
 *** [J?] when attacking solar: ends at: distributed -1 of 99 frames to 0: end

@@ -68,7 +68,7 @@ namespace st3{
     std::string get_info();
 
     // solar: increment functions
-    float poluation_increment();
+    float population_increment();
     float ecology_increment();
     float happiness_increment(choice::c_solar &c);
     float research_increment(choice::c_solar &c);

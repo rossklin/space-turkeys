@@ -35,12 +35,14 @@ void solar::move(game_data *g){
   // build ships and turrets
   research::data r = g -> players[owner].research_level;
   for (auto v : cost::keywords::ship) {
-    while (fleet_growth[v] >= 1) {
-      fleet_growth[v]--;
-      ship sh = r.build_ship(v);
-      sh.owner = owner;
-      ships.insert(sh.id);
-      g -> add_entity(ship::ptr(new ship(sh)));
+    if (r.can_build_ship(v, sector[cost::keywords::key_military])){
+      while (fleet_growth[v] >= 1) {
+	fleet_growth[v]--;
+	ship sh = r.build_ship(v);
+	sh.owner = owner;
+	ships.insert(sh.id);
+	g -> add_entity(ship::ptr(new ship(sh)));
+      }
     }
   }
 
@@ -203,7 +205,7 @@ float solar::water_status(){
   return (water - used) / water;
 }
 
-float solar::poluation_increment(){
+float solar::population_increment(){
   float base_growth = population * happiness * st3::solar::f_growth;
   float culture_growth = base_growth * sector[cost::keywords::key_culture];
   float crowding_death = population * st3::solar::f_crowding * population / (ecology * space * space_status() + 1);
@@ -258,7 +260,7 @@ void solar::dynamics(){
     // population development
     
     float random_growth = population * st3::solar::f_growth * utility::random_normal(0, 1);
-    buf.population += poluation_increment() * dt + random_growth * dw;
+    buf.population += population_increment() * dt + random_growth * dw;
 
     // happiness development
     buf.happiness += happiness_increment(c) * dt + utility::random_normal(0, 0.01) * dw;
