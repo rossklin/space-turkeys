@@ -205,3 +205,52 @@ bool data::can_build_ship(string v, int facility){
   if (s.depends_tech.length() > 0 && !researched.count(s.depends_tech)) return false;
   return true;
 }
+
+hm_t<string,choice::c_solar> data::solar_template_table(solar::ptr sol){
+  static hm_t<string, choice::c_solar> data;
+  using namespace cost;
+
+  // basic pop growth
+  choice::c_solar empty;
+  choice::c_solar x = empty;
+  x.allocation[keywords::key_culture] = 1;
+  data["basic growth"] = x;
+
+  // culture growth
+  x = empty;
+  x.allocation[keywords::key_culture] = 1;
+  x.allocation[keywords::key_expansion] = 1;
+  x.allocation[keywords::key_mining] = 1;
+    
+  x.expansion[keywords::key_culture] = 1;
+
+  x.mining[keywords::key_organics] = 2;
+  x.mining[keywords::key_gases] = 1;
+  x.mining[keywords::key_metals] = 1;
+
+  data["culture growth"] = x;
+
+  x = empty;
+  x.allocation[keywords::key_culture] = 1;
+  x.allocation[keywords::key_expansion] = 1;
+  x.allocation[keywords::key_mining] = 1;
+  x.allocation[keywords::key_military] = 3;
+
+  x.mining[keywords::key_gases] = 1;
+  x.mining[keywords::key_metals] = 1;
+  x.mining[keywords::key_organics] = 1;
+    
+  x.expansion[keywords::key_culture] = 1;
+  x.expansion[keywords::key_mining] = 2;
+  x.expansion[keywords::key_military] = 3;
+
+  int military_facility = sol -> sector[keywords::key_military];
+  if (can_build_ship(keywords::key_scout, military_facility)) x.military.c_ship[keywords::key_scout] = 1;
+  if (can_build_ship(keywords::key_fighter, military_facility)) x.military.c_ship[keywords::key_fighter] = 2;
+  x.military.c_turret[keywords::key_radar_turret] = 1;
+  x.military.c_turret[keywords::key_rocket_turret] = 2;
+
+  data["military expansion"] = x;
+
+  return data;
+}

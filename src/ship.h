@@ -13,7 +13,7 @@ namespace st3{
     
   struct ship_stats{
     sfloat speed; /*!< ship's speed */
-    sint hp; /*!< ship's hit points */
+    sfloat hp; /*!< ship's hit points */
     sfloat accuracy;
     sfloat ship_damage;
     sfloat solar_damage;

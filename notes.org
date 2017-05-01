@@ -1,7 +1,4 @@
 * current work
-** targeting a waypoint should not create a new waypoint
-** military template needs to respect ship build dependencies
-** selecting research should add it to "researched"
 * system design ideas
 ** [J?] introduce physical_game_object for ship and solar
    This way, we can limit targeting to physical entities, and avoid
@@ -26,7 +23,6 @@
 * tweaks and fixes
 ** use solar radius to indicate resource quantity
 ** autocompute sufficient mining for solar
-** float hp for ships
 * [!] issues
 ** [!] bugs & crashes
 *** [J?] when attacking solar: ends at: distributed -1 of 99 frames to 0: end
@@ -57,6 +53,10 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** military template needs to respect ship build dependencies
+** targeting a waypoint should not create a new waypoint
+** float hp for ships
+** selecting research should add it to "researched"
 * fixed
 ** research
 *** [J] define choice::c_research

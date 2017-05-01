@@ -8,6 +8,7 @@
 #include "ship.h"
 #include "turret.h"
 #include "solar.h"
+#include "choice.h"
 
 namespace st3{
   namespace research{
@@ -38,6 +39,7 @@ namespace st3{
       turret build_turret(std::string v);
       void repair_ship(ship &s);
       bool can_build_ship(std::string v, int facility);
+      hm_t<std::string, choice::c_solar> solar_template_table(solar::ptr s);
     };    
   };
 };

@@ -111,9 +111,9 @@ hm_t<string, interaction> &interaction::table() {
       // todo: let ships carry colonists
       t -> population = 100;
       t -> happiness = 1;
-      auto ctab = choice::c_solar::template_table();
-      t -> choice_data = ctab["culture growth"];
       t -> owner = s -> owner;
+      auto ctab = g -> players[t -> owner].research_level.solar_template_table(t);
+      t -> choice_data = ctab["culture growth"];
 
       s -> remove = true;
     };

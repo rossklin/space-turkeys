@@ -244,6 +244,7 @@ bool game::choice_step(){
   list<string> available_techs = players[self_id].research_level.available();
   if (available_techs.size() > 0) {
     interface::desktop -> response.research.identifier = popup_options("Select a tech:", available_techs);
+    players[self_id].research_level.researched.insert(interface::desktop -> response.research.identifier);
   }
 
   message = "make your choice";
@@ -912,7 +913,7 @@ void game::setup_targui(point p){
   list<target_gui::option_t> options;
   set<string> possible_actions;
 
-  // add possible actions from available fleet interactions
+  // add possible actions from available ship interactions
   for (auto k : keys_selected){
     entity_selector::ptr e = get_entity(k);
     for (auto i : e -> get_ships()){
@@ -929,6 +930,13 @@ void game::setup_targui(point p){
       if (condition.valid_on(get_entity(k))){
 	options.push_back(target_gui::option_t(k, a));
       }
+    }
+  }
+
+  // check waypoint targets
+  for (auto k : keys_targeted){
+    if (identifier::get_type(k) == waypoint::class_id){
+      options.push_back(target_gui::option_t(k, fleet_action::go_to));
     }
   }
 

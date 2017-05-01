@@ -287,7 +287,7 @@ main_window::main_window(solar::ptr s) : query<Window, choice::c_solar>(Window::
   meta_layout -> Pack(info_layout = Box::Create(Box::Orientation::VERTICAL));
     
   // choice template buttons
-  auto template_map = choice::c_solar::template_table();
+  auto template_map = desktop -> research_level.solar_template_table(sol);
   auto template_layout = Box::Create(Box::Orientation::HORIZONTAL);
 
   for (auto &x : template_map){
