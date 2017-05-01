@@ -10,6 +10,7 @@
 
 namespace st3{
   class game_data;
+  class solar;
     
   struct ship_stats{
     sfloat speed; /*!< ship's speed */
@@ -63,6 +64,7 @@ namespace st3{
     ~ship();
 
     void receive_damage(game_object::ptr from, float damage);
+    void on_liftoff(solar *from, game_data *g);
 
   protected:
     // serialised variables

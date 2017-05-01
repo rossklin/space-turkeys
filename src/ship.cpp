@@ -98,6 +98,13 @@ bool ship::is_active(){
   return fleet_id != identifier::source_none;
 }
 
+void ship::on_liftoff(solar *from, game_data *g){
+  auto utab = upgrade::table();
+  for (auto u : upgrades) {
+    utab[u].on_liftoff(this, from, g);
+  }
+}
+
 ship_stats ship_stats::operator+= (const ship_stats &b) {
   speed += b.speed;
   hp += b.hp;

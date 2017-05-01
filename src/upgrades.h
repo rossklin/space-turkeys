@@ -3,11 +3,15 @@
 
 #include <string>
 #include <set>
+#include <functional>
 
 #include "interaction.h"
 #include "ship.h"
+#include "solar.h"
 
 namespace st3{
+  class game_data;
+  
   class upgrade{
   public:    
     static hm_t<std::string, upgrade> &table();
@@ -15,6 +19,7 @@ namespace st3{
     std::set<std::string> inter;
     ship_stats modify;
     std::set<std::string> exclusive;
+    std::function<void(ship::ptr self, solar::ptr from, game_data *g)> on_liftoff;
   };
 };
 

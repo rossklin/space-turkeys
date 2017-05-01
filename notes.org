@@ -8,6 +8,7 @@
    at will.
 ** [J?] make all interactions be buffered and then evaluated in post phase (remove solar post phase stuff)
 ** [J?] make landing be an interaction
+** add trade ships
 ** reduce fleet actions, replace with fleet response policies
 ** add trigger system for e.g. upgrades, techs and solar facilities
 *** hm_t<string, function> on_interaction (and prevent_interaction)
@@ -53,11 +54,11 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+* fixed
 ** military template needs to respect ship build dependencies
 ** targeting a waypoint should not create a new waypoint
 ** float hp for ships
 ** selecting research should add it to "researched"
-* fixed
 ** research
 *** [J] define choice::c_research
 *** [J] research::data constructor

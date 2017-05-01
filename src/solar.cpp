@@ -104,6 +104,8 @@ void solar::give_commands(list<command> c, game_data *g){
     }
 
     g -> generate_fleet(position, owner, x, buf);
+
+    for (auto i : x.ships) g -> get_ship(i) -> on_liftoff(this, g);
   }
 }
 
