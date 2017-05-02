@@ -1,14 +1,6 @@
 * current work
 * system design ideas
-** [J?] introduce physical_game_object for ship and solar
-   This way, we can limit targeting to physical entities, and avoid
-   the hassle with tracking fleets when they split. Also, non-physical
-   entity classes don't need to implement interaction related
-   functionality. Also, client can reconstruct non-physical entities
-   at will.
-** [J?] make all interactions be buffered and then evaluated in post phase (remove solar post phase stuff)
-** [J?] make landing be an interaction
-** add trade ships
+** [J?] add trade ships
 ** reduce fleet actions, replace with fleet response policies
 ** add trigger system for e.g. upgrades, techs and solar facilities
 *** hm_t<string, function> on_interaction (and prevent_interaction)
@@ -55,6 +47,14 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J?] introduce physical_game_object for ship and solar
+   This way, we can limit targeting to physical entities, and avoid
+   the hassle with tracking fleets when they split. Also, non-physical
+   entity classes don't need to implement interaction related
+   functionality. Also, client can reconstruct non-physical entities
+   at will.
+** [J?] make all interactions be buffered and then evaluated in post phase (remove solar post phase stuff)
+** [J?] make landing be an interaction
 ** military template needs to respect ship build dependencies
 ** targeting a waypoint should not create a new waypoint
 ** float hp for ships

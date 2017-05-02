@@ -4,6 +4,7 @@
 #include "graphics.h"
 #include "types.h"
 #include "utility.h"
+#include "cost.h"
 
 using namespace std;
 using namespace st3;
@@ -35,20 +36,20 @@ void graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){
 
   sf::Color cnose(255,200,180,200);
 
-  if (s.ship_class == "scout"){
+  if (s.ship_class == cost::keywords::key_scout){
     svert.resize(4);
     svert[0] = sf::Vertex(point(2, 0), col);
     svert[1] = sf::Vertex(point(-2, -1), col);
     svert[2] = sf::Vertex(point(-2, 1), col);
     svert[3] = sf::Vertex(point(2, 0), col);
-  }else if (s.ship_class == "fighter"){
+  }else if (s.ship_class == cost::keywords::key_fighter){
     svert.resize(5);
     svert[0] = sf::Vertex(point(2, 0), cnose);
     svert[1] = sf::Vertex(point(-2, -1), col);
     svert[2] = sf::Vertex(point(-3, 0), col);
     svert[3] = sf::Vertex(point(-2, 1), col);
     svert[4] = sf::Vertex(point(2, 0), cnose);
-  }else if (s.ship_class == "bomber"){
+  }else if (s.ship_class == cost::keywords::key_bomber){
     svert.resize(7);
     svert[0] = sf::Vertex(point(2, 0), col);
     svert[1] = sf::Vertex(point(0, -3), cnose);
@@ -57,12 +58,19 @@ void graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){
     svert[4] = sf::Vertex(point(-2, 3), cnose);
     svert[5] = sf::Vertex(point(0, 3), cnose);
     svert[6] = sf::Vertex(point(2, 0), col);
-  }else if (s.ship_class == "colonizer"){
+  }else if (s.ship_class == cost::keywords::key_colonizer){
     svert.resize(5);
     svert[0] = sf::Vertex(point(2, 1), col);
     svert[1] = sf::Vertex(point(2, -1), col);
     svert[2] = sf::Vertex(point(-2, -1), col);
     svert[3] = sf::Vertex(point(-2, 1), col);
+    svert[4] = sf::Vertex(point(2, 1), col);
+  }else if (s.ship_class == cost::keywords::key_freighter){
+    svert.resize(5);
+    svert[0] = sf::Vertex(point(2, 1), col);
+    svert[1] = sf::Vertex(point(2, -1), col);
+    svert[2] = sf::Vertex(point(-2, -2), col);
+    svert[3] = sf::Vertex(point(-2, 2), col);
     svert[4] = sf::Vertex(point(2, 1), col);
   }else{
     throw runtime_error("invalid ship type: " + s.ship_class);

@@ -24,6 +24,7 @@ namespace st3{
       const std::string key_fighter = "fighter";
       const std::string key_bomber = "bomber";
       const std::string key_colonizer = "colonizer";
+      const std::string key_freighter = "freighter";
       const std::string key_radar_turret = "radar turret";
       const std::string key_rocket_turret = "rocket turret";
     };

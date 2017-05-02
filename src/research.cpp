@@ -77,6 +77,14 @@ ship ship_template(string k){
     a.depends_facility_level = 1;
     add_with_class(a, keywords::key_colonizer);
 
+    a = s;
+    a.base_stats.speed = 1;
+    a.base_stats.hp = 1;
+    a.upgrades.insert(interaction::trade_to);
+    a.upgrades.insert(interaction::trade_from);
+    a.depends_facility_level = 1;
+    add_with_class(a, keywords::key_freighter);
+
     buf.confirm_content(cost::keywords::ship);
   }
 

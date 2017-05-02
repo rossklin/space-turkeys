@@ -34,7 +34,8 @@ const vector<string> keywords::ship = {
   keywords::key_scout,
   keywords::key_fighter,
   keywords::key_bomber,
-  keywords::key_colonizer
+  keywords::key_colonizer,
+  keywords::key_freighter
 };
   
 const vector<string> keywords::turret = {

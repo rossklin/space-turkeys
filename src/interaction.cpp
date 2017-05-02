@@ -11,6 +11,8 @@ using namespace std;
 using namespace st3;
 
 const class_t target_condition::no_target = "no target";
+const string interaction::trade_to = "trade to";
+const string interaction::trade_from = "trade from";
 const string interaction::land = "land";
 const string interaction::turret_combat = "turret combat";
 const string interaction::space_combat = "space combat";
@@ -116,6 +118,52 @@ hm_t<string, interaction> &interaction::table() {
       t -> choice_data = ctab["culture growth"];
 
       s -> remove = true;
+    };
+    data[i.name] = i;
+
+    // trade_to
+    i.name = interaction::trade_to;
+    i.condition = target_condition(target_condition::owned, solar::class_id);
+    i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
+      ship::ptr s = utility::guaranteed_cast<ship>(self);
+      solar::ptr t = utility::guaranteed_cast<solar>(target);
+
+      // load resources
+      for (auto v : cost::keywords::resource) {
+	t -> resource[v].storage += s -> cargo[v];
+      }
+      s -> cargo = cost::resource_allocation<float>();
+
+      // go back for more
+      fleet::ptr f = g -> get_fleet(s -> fleet_id);
+      f -> com.action = interaction::trade_from;
+      f -> com.target = f -> com.source;
+      f -> com.source = target -> id;
+    };
+    data[i.name] = i;
+
+    // trade_from
+    i.name = interaction::trade_from;
+    i.condition = target_condition(target_condition::owned, solar::class_id);
+    i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
+      ship::ptr s = utility::guaranteed_cast<ship>(self);
+      solar::ptr t = utility::guaranteed_cast<solar>(target);
+
+      // load resources
+      // todo: resource common capactiy
+      for (auto v : cost::keywords::resource) {
+	float available = t -> resource[v].storage;
+	float cap = s -> cargo_capacity - s -> cargo[v];
+	float move = fmin(available, cap);
+	s -> cargo[v] += move;
+	t -> resource[v].storage -= move;
+      }
+
+      // set target
+      fleet::ptr f = g -> get_fleet(s -> fleet_id);
+      f -> com.action = interaction::trade_to;
+      f -> com.target = f -> com.source;
+      f -> com.source = target -> id;
     };
     data[i.name] = i;
   }

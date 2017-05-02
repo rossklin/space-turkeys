@@ -7,6 +7,7 @@
 #include "types.h"
 #include "game_object.h"
 #include "interaction.h"
+#include "cost.h"
 
 namespace st3{
   class game_data;
@@ -33,15 +34,19 @@ namespace st3{
     static ptr create();
     static const std::string class_id;
 
+    // ship class info
     class_t ship_class; /*!< ship class */
+    std::string depends_tech;
+    sint depends_facility_level;
+
     combid fleet_id; /*!< id of the ship's fleet */
     sfloat angle; /*!< ship's angle */
     sfloat load;
     ship_stats base_stats;
     ship_stats current_stats;
     std::set<std::string> upgrades;
-    std::string depends_tech;
-    sint depends_facility_level;
+    cost::resource_allocation<float> cargo;
+    sfloat cargo_capacity;
 
     // game_object
     void pre_phase(game_data *g);
