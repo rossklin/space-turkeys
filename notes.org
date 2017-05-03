@@ -1,4 +1,7 @@
 * current work
+** ship production flipped out
+*** seems to be caused by expansion ..?
+*** with many ships active: exception: socket_t::send: unknown status: 2
 * system design ideas
 ** [J?] add trade ships
 ** reduce fleet actions, replace with fleet response policies

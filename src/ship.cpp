@@ -99,9 +99,11 @@ bool ship::is_active(){
 }
 
 void ship::on_liftoff(solar *from, game_data *g){
+  g -> players[owner].research_level.repair_ship(*this);
+
   auto utab = upgrade::table();
   for (auto u : upgrades) {
-    utab[u].on_liftoff(this, from, g);
+    if (utab[u].on_liftoff) utab[u].on_liftoff(this, from, g);
   }
 }
 

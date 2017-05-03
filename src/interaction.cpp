@@ -40,7 +40,6 @@ hm_t<string, interaction> &interaction::table() {
       g -> get_fleet(s -> fleet_id) -> remove_ship(s -> id);
       s -> fleet_id = identifier::source_none;
       t -> ships.insert(s -> id);
-      g -> players[t -> owner].research_level.repair_ship(*s);
     };
     data[i.name] = i;
 
