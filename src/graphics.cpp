@@ -5,6 +5,7 @@
 #include "types.h"
 #include "utility.h"
 #include "cost.h"
+#include "client_game.h"
 
 using namespace std;
 using namespace st3;
@@ -181,7 +182,7 @@ query<C,R>::query(char s) : Window(s) { }
 
 // main interface
 
-main_interface::main_interface(sf::Vector2u d, research::data &r) : research_level(r){
+main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   done = false;
   accept = false;
   desktop_dims = d;
@@ -216,6 +217,10 @@ main_interface::main_interface(sf::Vector2u d, research::data &r) : research_lev
   SetProperty("Button", "BorderColor", sf::Color(80, 180, 120, 200));
 
   SetProperty("Widget", "Color", sf::Color(200, 170, 120));
+}
+
+research::data main_interface::get_research(){
+  return g -> players[g -> self_id].research_level;
 }
 
 void main_interface::reset_qw(Widget::Ptr w){
@@ -295,7 +300,7 @@ main_window::main_window(solar::ptr s) : query<Window, choice::c_solar>(Window::
   meta_layout -> Pack(info_layout = Box::Create(Box::Orientation::VERTICAL));
     
   // choice template buttons
-  auto template_map = desktop -> research_level.solar_template_table(sol);
+  auto template_map = desktop -> get_research().solar_template_table(sol);
   auto template_layout = Box::Create(Box::Orientation::HORIZONTAL);
 
   for (auto &x : template_map){
@@ -463,7 +468,7 @@ void main_window::build_military(){
   
   // add buttons for expandable sectors
   for (auto v : cost::keywords::ship) {
-    if (!desktop -> research_level.can_build_ship(v, sol -> sector[cost::keywords::key_military])) continue;
+    if (!desktop -> get_research().can_build_ship(v, sol -> sector[cost::keywords::key_military])) continue;
 
     // add ship priority button
     buf -> Pack(priority_button(v, c.c_ship[v], [&c](){return c.c_ship.count() < choice::max_allocation;}, tooltip));

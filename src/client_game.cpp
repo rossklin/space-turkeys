@@ -132,7 +132,7 @@ void game::run(){
 
   // construct interface
   window.setView(view_window);
-  interface::desktop = new interface::main_interface(window.getSize(), players[self_id].research_level);
+  interface::desktop = new interface::main_interface(window.getSize(), this);
 
   init_data();
   
@@ -649,7 +649,7 @@ bool game::waypoint_ancestor_of(combid ancestor, combid child){
   }
 
   // if the child is the ancestor, it has been found!
-  if (!ancestor.compare(child)) return true;
+  if (ancestor == child) return true;
 
   // if the ancestor is ancestor to a parent, it is ancestor to the child
   for (auto x : incident_commands(child)){

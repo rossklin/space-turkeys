@@ -18,6 +18,10 @@ namespace st3{
   /*! type representing a window */
   typedef sf::RenderWindow window_t;
 
+  namespace client {
+    struct game;
+  };
+
   /*! graphics related code elements */
   namespace graphics{
     /*! a default font */
@@ -177,8 +181,7 @@ namespace st3{
 	sfg::Widget::Ptr query_window;
 	sfg::Label::Ptr hover_label;
 
-	// research level used by interface components
-	research::data &research_level;
+	client::game *g;
 
 	// data for generating the client's choice
 	choice::choice response;
@@ -187,9 +190,10 @@ namespace st3{
 	bool accept;
 	bool done;
 
-	main_interface(sf::Vector2u dims, research::data &r);
+	main_interface(sf::Vector2u dims, client::game *g);
 	void reset_qw(sfg::Widget::Ptr p);
 	void clear_qw();
+	research::data get_research();
       };
 
       extern main_interface *desktop;

@@ -20,6 +20,8 @@ bool st3::socket_t::send_packet(sf::Packet &packet){
   case sf::Socket::NotReady:
     // cout << "socket_t::send: not ready" << endl;
     return false;
+  case sf::Socket::Partial:
+    return false;
   default:
     throw runtime_error("socket_t::send: unknown status: " + to_string(status));
   }

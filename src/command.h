@@ -11,6 +11,7 @@ namespace st3{
   /*! struct representing a command */
   struct command{
     combid source; /*!< key of entity holding the command */
+    combid origin; /*!< key of the solar where the command was generated from */
     combid target; /*!< key of target */
     std::string action;
     std::set<combid> ships; /*!< ids of ships allocated to the command */

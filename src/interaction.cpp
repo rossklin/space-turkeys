@@ -136,8 +136,8 @@ hm_t<string, interaction> &interaction::table() {
       // go back for more
       fleet::ptr f = g -> get_fleet(s -> fleet_id);
       f -> com.action = interaction::trade_from;
-      f -> com.target = f -> com.source;
-      f -> com.source = target -> id;
+      f -> com.target = f -> com.origin;
+      f -> com.origin = target -> id;
     };
     data[i.name] = i;
 
@@ -161,8 +161,8 @@ hm_t<string, interaction> &interaction::table() {
       // set target
       fleet::ptr f = g -> get_fleet(s -> fleet_id);
       f -> com.action = interaction::trade_to;
-      f -> com.target = f -> com.source;
-      f -> com.source = target -> id;
+      f -> com.target = f -> com.origin;
+      f -> com.origin = target -> id;
     };
     data[i.name] = i;
   }

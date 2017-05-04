@@ -191,13 +191,7 @@ bool fleet::confirm_ship_interaction(string a, combid t){
   bool action_match = a == com.action;
   bool target_match = t == com.target;
 
-  // allow land, colonize and bombard only on correct target
-  if (a == interaction::bombard || a == interaction::colonize || a == interaction::land) {
-    return action_match && target_match;
-  }
-
-  // else, only allow the active fleet command action
-  return action_match;
+  return action_match && target_match;
 }
 
 void fleet::copy_from(const fleet &s){

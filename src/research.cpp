@@ -35,6 +35,7 @@ ship ship_template(string k){
     s.upgrades.insert(interaction::land);
     s.depends_tech = "";
     s.depends_facility_level = 0;
+    s.cargo_capacity = 0;
     
     auto add_with_class = [&buf] (ship s, string c){
       s.ship_class = c;
@@ -83,6 +84,7 @@ ship ship_template(string k){
     a.upgrades.insert(interaction::trade_to);
     a.upgrades.insert(interaction::trade_from);
     a.depends_facility_level = 1;
+    a.cargo_capacity = 10;
     add_with_class(a, keywords::key_freighter);
 
     buf.confirm_content(cost::keywords::ship);

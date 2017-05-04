@@ -200,6 +200,11 @@ ship_allocation<ship_cost>& cost::ship_build(){
     buf[key_colonizer].res[key_gases] = 2;
     buf[key_colonizer].res[key_organics] = 3;
     buf[key_colonizer].time = 6;
+
+    buf[key_freighter].res[key_metals] = 4;
+    buf[key_freighter].res[key_gases] = 2;
+    buf[key_freighter].res[key_organics] = 3;
+    buf[key_freighter].time = 6;
   }
 
   return buf;
