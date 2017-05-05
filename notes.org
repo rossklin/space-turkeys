@@ -1,7 +1,12 @@
 * current work
-** test freighter ships
+** do fleets check target seen when passing waypoints?
+** make colonizers consume people
 * system design ideas
-** [J?] add trade ships
+** allow "fortification" so units can block other units and hold a position?
+** allow client to control/restructure fleets
+*** allow ships to have no fleet
+*** clear fleets with no command on client side
+*** allow client to create fleets from ship clusters
 ** reduce fleet actions, replace with fleet response policies
 ** add trigger system for e.g. upgrades, techs and solar facilities
 *** hm_t<string, function> on_interaction (and prevent_interaction)
@@ -10,13 +15,17 @@
 ** ?add a "dynamic data" hash map to game object
    For stuff like "has cargo x", "is jammed", "was scanned by player i" etc.
 
-   No particular reason to not put this i normal class members?
+   No particular reason to not put this in normal class members?
 ** solar development tree
    Just something a little bit more fun than "expansion[i]", e.g. move
    turrets here.
 * tweaks and fixes
+** name and indicators for solars so you can tell them apart
+** template for mining that sets nessecary amount
+** increase build times for everything
+** increase ship fire rate
+** make ships in fleets group together
 ** use solar radius to indicate resource quantity
-** autocompute sufficient mining for solar
 * [!] issues
 ** [!] bugs & crashes
 *** [J?] when attacking solar: ends at: distributed -1 of 99 frames to 0: end
@@ -47,10 +56,11 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+* fixed
+** test freighter ships
 ** fixed handling of partial sending of sf::Package
 ** added command origin for use in trade interaction
 ** fixed: ship production flipped out (uninitialized ship cost)
-* fixed
 ** [J?] introduce physical_game_object for ship and solar
    This way, we can limit targeting to physical entities, and avoid
    the hassle with tracking fleets when they split. Also, non-physical
