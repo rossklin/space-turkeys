@@ -230,6 +230,17 @@ bool game_data::validate_choice(choice::choice c, idtype id){
     }
   }
 
+  // fleets
+  for (auto x : c.fleets) {
+    auto f = get_fleet(x.first);
+    for (auto sid : f -> ships) {
+      if (get_ship(sid) -> owner != id) {
+	cout << "apply_choice: error: command owned by player " << id << " for fleet " << f -> id << " containing non-owned ship!" << endl;
+	return false;
+      }
+    }
+  }
+
   return true;
 }
  
@@ -237,13 +248,35 @@ void game_data::apply_choice(choice::choice c, idtype id){
   cout << "apply_choice: player " << id << ": waypoints before: " << endl;
   for (auto w : all<waypoint>()) cout << w -> id << endl;
 
-  // build waypoints before validating the choice, so that commands
-  // based at waypoints can be validated  
+  // build waypoints and fleets before validating the choice, so that
+  // commands based there can be validated
   for (auto &x : c.waypoints){
-    if (identifier::get_waypoint_owner(x.second.id) != id){
-      throw runtime_error("apply_choice: player " + to_string(id) + " tried to insert waypoint owned by " + to_string(identifier::get_waypoint_owner(x.second.id)));
+    if (identifier::get_multid_owner(x.second.id) != id){
+      throw runtime_error("apply_choice: player " + to_string(id) + " tried to insert waypoint owned by " + to_string(identifier::get_multid_owner(x.second.id)));
     }
     add_entity(x.second.clone());
+    cout << "apply_choice: player " << id << ": added " << x.first << endl;
+  }
+
+  for (auto &x : c.fleets){
+    if (identifier::get_multid_owner(x.second.id) != id){
+      throw runtime_error("apply_choice: player " + to_string(id) + " tried to insert fleet owned by " + to_string(identifier::get_multid_owner(x.second.id)));
+    }
+    add_entity(x.second.clone());
+
+    auto f = get_fleet(x.first);
+    for (auto sid : f -> ships) {
+      ship::ptr s = get_ship(sid);
+      if (s -> owner == id) {
+	s -> fleet_id = f -> id;
+      }else{
+	throw runtime_error("apply_choice: player " + to_string(id) + " tried to construct a fleet with a non-owned ship!");
+      }
+    }
+
+    f -> update_counter = 0;
+    f -> update_data(this);
+
     cout << "apply_choice: player " << id << ": added " << x.first << endl;
   }
 
@@ -393,6 +426,7 @@ void game_data::build(){
 	s.happiness = 1;
 	s.dt = settings.dt;
 	ship sh = rbase.build_ship(cost::keywords::key_scout);
+	sh.is_landed = true;
 	sh.owner = x.first;
 	s.ships.insert(sh.id);
 	ship_data[sh.id] = sh;
@@ -474,22 +508,18 @@ bool game_data::entity_seen_by(combid id, idtype pid){
   // always see owned entities
   if (x -> owner == pid) return true;
 
-  // never see opponent waypoints
-  if (x -> isa(waypoint::class_id)) return false;
+  // never see opponent waypoints or fleets
+  if (x -> isa(waypoint::class_id) || x -> isa(fleet::class_id)) return false;
 
   // don't see entities that aren't active
   if (!x -> is_active()) return false;
 
-  auto buf = all_owned_by(pid);
-  bool seen = false;
-
-  for (auto i = buf.begin(); i != buf.end() && !seen; i++){
-    game_object::ptr s = *i;
+  for (auto s : all_owned_by(pid)) {
     if (!s -> is_active()) continue;
-    seen |= utility::l2d2(x -> position - s -> position) < pow(s -> vision(), 2);
+    if (utility::l2d2(x -> position - s -> position) < pow(s -> vision(), 2)) return true;
   }
 
-  return seen;
+  return false;
 }
 
 void game_data::limit_to(idtype id){

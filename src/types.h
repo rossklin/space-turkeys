@@ -64,7 +64,7 @@ namespace st3{
       @param v string id of a waypoint source symbol
       @return id of the owner of the waypoint
     */
-    idtype get_waypoint_owner(combid v);
+    idtype get_multid_owner(combid v);
 
     combid make_waypoint_id(idtype owner, idtype id);
   };

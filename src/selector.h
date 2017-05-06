@@ -42,7 +42,7 @@ namespace st3{
 
       sf::Color get_color();
       virtual bool inside_rect(sf::FloatRect r);
-      virtual bool is_selectable();
+      virtual bool is_selectable() = 0;
       virtual bool is_area_selectable();
     };
 
@@ -58,6 +58,7 @@ namespace st3{
 
       /*! empty destructor */
       ~specific_selector();
+      bool is_selectable();
       bool contains_point(point p, float &d);
       void draw(window_t &w);
       point get_position();

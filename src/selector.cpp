@@ -27,6 +27,11 @@ namespace st3{
     }
 
     template<>
+    bool specific_selector<solar>::is_selectable() {
+      return true;
+    }
+
+    template<>
     void specific_selector<solar>::draw(window_t &w){
       // setup text
       sf::Text text;
@@ -112,6 +117,11 @@ namespace st3{
     }
 
     template<>
+    bool specific_selector<fleet>::is_selectable() {
+      return true;
+    }
+
+    template<>
     void specific_selector<fleet>::draw(window_t &w){
       auto f = [this, &w] (float r, sf::Color cf, sf::Color co) {
 	sf::CircleShape s(r);
@@ -161,6 +171,11 @@ namespace st3{
     }
 
     template<>
+    bool specific_selector<waypoint>::is_selectable() {
+      return true;
+    }
+
+    template<>
     void specific_selector<waypoint>::draw(window_t &w){
       sf::CircleShape s(radius);
       s.setFillColor(selected ? sf::Color(255,255,255,100) : sf::Color(0,0,0,0));
@@ -196,8 +211,23 @@ namespace st3{
     }
 
     template<>
+    bool specific_selector<ship>::is_selectable() {
+      return !has_fleet();
+    }
+
+    template<>
     void specific_selector<ship>::draw(window_t &w){
-      if (is_active()) graphics::draw_ship(w, *this, get_color());
+      if (!is_active()) return;
+
+      if (selected) {
+	float rad = 5;
+	sf::CircleShape s(rad);
+	s.setFillColor(sf::Color(255,255,255,50));
+	s.setPosition(position - point(rad, rad));
+	w.draw(s);
+      }
+      
+      graphics::draw_ship(w, *this, get_color());
     }
 
     template<>
@@ -228,10 +258,6 @@ entity_selector::entity_selector(sf::Color c, bool o){
 }
 
 entity_selector::~entity_selector(){}
-
-bool entity_selector::is_selectable() {
-  return !this -> isa(ship::class_id);
-}
 
 bool entity_selector::is_area_selectable() {
   return this -> is_selectable() && !this -> isa(waypoint::class_id);

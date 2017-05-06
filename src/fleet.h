@@ -48,6 +48,7 @@ namespace st3{
     float vision();
     bool serialize(sf::Packet &p);
     bool isa(std::string c);
+    void on_remove(game_data *g);
 
     // commandable object stuff
     void give_commands(std::list<command> c, game_data *g);

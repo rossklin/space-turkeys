@@ -524,12 +524,10 @@ void game::add_fixed_stars (point position, float vision) {
   }
 }
 
-void game::remove_command_selector(idtype i){
-  delete get_command_selector(i);
-  command_selectors.erase(i);
-}
-
 void game::remove_entity(combid i){
+  auto e = get_entity(i);
+  auto buf = e -> commands;
+  for (auto c : buf) remove_command(c);
   delete get_entity(i);
   entity.erase(i);
 }
@@ -666,8 +664,8 @@ bool game::waypoint_ancestor_of(combid ancestor, combid child){
     Also recursively remove empty waypoints and their child commands.
 */
 void game::remove_command(idtype key){
-  if (!command_selectors.count(key)) throw runtime_error("remove_command: not found: " + key);
-    
+  if (!command_selectors.count(key)) return;
+  
   command_selector::ptr cs = get_command_selector(key);
   entity_selector::ptr s = get_entity(cs -> source);
   entity_selector::ptr t = get_entity(cs -> target);
@@ -682,8 +680,6 @@ void game::remove_command(idtype key){
   // if last command of waypoint, remove it
   if (t -> isa(waypoint::class_id)){
     if (incident_commands(t -> id).empty()){
-      auto buf = t -> commands;
-      for (auto c : buf) remove_command(c);
       remove_entity(t -> id);
     }
   }
@@ -884,9 +880,10 @@ set<combid> game::get_ready_ships(combid id){
 }
 
 /** Get ids of selected solars */
-list<combid> game::selected_solars(){
+template<typename T>
+list<combid> game::selected_specific(){
   list<combid> res;
-  for (auto s : get_all<solar>()){
+  for (auto s : get_all<T>()){
     if (s -> selected){
       res.push_back(s -> id);
     }
@@ -899,6 +896,14 @@ list<combid> game::selected_entities(){
   list<combid> res;
   for (auto &x : entity){
     if (x.second -> selected) res.push_back(x.first);
+  }
+  return res;
+}
+
+list<idtype> game::selected_commands(){
+  list<idtype> res;
+  for (auto i : command_selectors) {
+    if (i.second -> selected) res.push_back(i.first);
   }
   return res;
 }
@@ -992,14 +997,40 @@ int game::choice_event(sf::Event e){
     interface::desktop -> hover_label -> SetText(text);
   };
 
-  auto delete_selected_commands = [this] () {
-    auto buf = command_selectors;
-    for (auto i = buf.begin(); i != buf.end(); i++){
-      if (i -> second -> selected){
-	remove_command(i -> first);
-      }
+  // delete all selected fleets and commands
+  auto handle_delete = [this] () {
+    for (auto id : selected_commands()) remove_command(id);
+    for (auto id : selected_specific<fleet>()) {
+      fleet_selector::ptr f = get_specific<fleet>(id);
+      for (auto sid : f -> get_ships()) get_specific<ship>(sid) -> fleet_id = identifier::source_none;
+      remove_entity(id);
     }
   };
+
+  // make a fleet from selected ships
+  auto make_fleet = [this](){
+    auto buf = selected_specific<ship>();
+    if (!buf.empty()) {
+      fleet fb(self_id);
+      fleet_selector::ptr f = fleet_selector::create(fb, sf::Color(players[self_id].color), true);
+      f -> ships = set<combid>(buf.begin(), buf.end());
+      float vis = 0;
+      point pos(0,0);
+      for (auto sid : buf) {
+	ship_selector::ptr s = get_specific<ship>(sid);
+	s -> fleet_id = f -> id;
+	vis = fmax(vis, s -> vision());
+	pos += s -> position;
+      }
+
+      f -> radius = settings.fleet_default_radius;
+      f -> vision_buf = vis;
+      f -> position = utility::scale_point(pos, 1 / (float)buf.size());
+      
+      entity[f -> id] = f;
+    }
+  };
+
 
   // event switch
   window.setView(view_game);
@@ -1057,11 +1088,14 @@ int game::choice_event(sf::Event e){
       }
       break;
     case sf::Keyboard::Return:
-      ss = selected_solars();
+      ss = selected_specific<solar>();
       if (ss.size() == 1) run_solar_gui(ss.front());
       break;
     case sf::Keyboard::Delete:
-      delete_selected_commands();
+      handle_delete();
+      break;
+    case sf::Keyboard::F:
+      make_fleet();
       break;
     case sf::Keyboard::O:
       view_game.zoom(1.2);

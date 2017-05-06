@@ -60,7 +60,6 @@ namespace st3{
       void remove_entity(combid i);
 
       command_selector::ptr get_command_selector(idtype i);
-      void remove_command_selector(idtype i);
 
       template<typename T>
       typename specific_selector<T>::ptr get_specific(combid i);
@@ -233,16 +232,16 @@ namespace st3{
 	@return set of ship ids
       */
       std::set<combid> get_ready_ships(combid key);
-
-      /*! get a list of keys of all selected solar selectors
-	@return list of keys of selected solar selectors
-      */
-      std::list<combid> selected_solars();
+      
+      template<typename T>
+      std::list<combid> selected_specific();
 
       /*! get a list of keys of all selected entity selectors
 	@return list of keys of selected entity selectors
       */
       std::list<combid> selected_entities();
+
+      std::list<idtype> selected_commands();
 
       /* **************************************** */
       /* GRAPHICS */

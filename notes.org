@@ -1,8 +1,10 @@
 * current work
+** commands for fleets with id "owned" by server don't pass validation
+** ships aren't drawn because is_landed is not serialized
 ** [J?] make colonizers consume people
 * system design ideas
 ** allow "fortification" so units can block other units and hold a position?
-** allow client to control/restructure fleets
+** [J?] allow client to control/restructure fleets
 *** allow ships to have no fleet
 *** clear fleets with no command on client side
 *** allow client to create fleets from ship clusters
@@ -19,6 +21,7 @@
    Just something a little bit more fun than "expansion[i]", e.g. move
    turrets here.
 * tweaks and fixes
+** allow dragging waypoints
 ** name and indicators for solars so you can tell them apart
 ** template for mining that sets nessecary amount
 ** increase build times for everything

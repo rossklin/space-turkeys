@@ -39,6 +39,7 @@ void solar::move(game_data *g){
       while (fleet_growth[v] >= 1) {
 	fleet_growth[v]--;
 	ship sh = r.build_ship(v);
+	sh.is_landed = true;
 	sh.owner = owner;
 	ships.insert(sh.id);
 	g -> add_entity(ship::ptr(new ship(sh)));

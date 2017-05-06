@@ -33,9 +33,17 @@ fleet::fleet(idtype pid){
   converge = false;
   speed_limit = 0;
   remove = false;
+  com.action = fleet_action::idle;
 }
 
 fleet::~fleet(){}
+
+void fleet::on_remove(game_data *g) {
+  for (auto sid : ships) {
+    g -> get_ship(sid) -> fleet_id = identifier::source_none;
+  }
+  game_object::on_remove(g);
+}
 
 void fleet::pre_phase(game_data *g){
   check_in_sight(g);
