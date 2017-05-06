@@ -35,10 +35,12 @@ hm_t<string, interaction> &interaction::table() {
       cout << "interaction: land: " << self -> id << " targeting " << target -> id << endl;
       ship::ptr s = utility::guaranteed_cast<ship>(self);
       solar::ptr t = utility::guaranteed_cast<solar>(target);
+      if (!s -> has_fleet()) return;
 
       cout << s -> id << " lands at " << t -> id << endl;
       g -> get_fleet(s -> fleet_id) -> remove_ship(s -> id);
       s -> fleet_id = identifier::source_none;
+      s -> is_landed = true;
       t -> ships.insert(s -> id);
     };
     data[i.name] = i;
@@ -126,6 +128,7 @@ hm_t<string, interaction> &interaction::table() {
     i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
       ship::ptr s = utility::guaranteed_cast<ship>(self);
       solar::ptr t = utility::guaranteed_cast<solar>(target);
+      if (!s -> has_fleet()) return;
 
       // load resources
       for (auto v : cost::keywords::resource) {
@@ -147,6 +150,7 @@ hm_t<string, interaction> &interaction::table() {
     i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
       ship::ptr s = utility::guaranteed_cast<ship>(self);
       solar::ptr t = utility::guaranteed_cast<solar>(target);
+      if (!s -> has_fleet()) return;
 
       // load resources
       // todo: resource common capactiy

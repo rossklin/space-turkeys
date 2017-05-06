@@ -121,7 +121,7 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner){
   // check if ships fill exactly one fleet
   for (auto i : sh) {
     ship::ptr s = get_ship(i);
-    fleet_buf.insert(source_id = s -> fleet_id);
+    if (s -> has_fleet()) fleet_buf.insert(source_id = s -> fleet_id);
   }
   
   bool reassign = false;
@@ -135,7 +135,7 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner){
     c.source = f -> com.source;
     f -> com = c;
   }else{
-    f = fleet::create();
+    f = fleet::create(fleet::server_pid);
 
     f -> com = c;
     f -> owner = owner;
@@ -145,8 +145,10 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner){
     // clear ships from parent fleets
     for (auto i : sh) {
       ship::ptr s = get_ship(i);
-      fleet::ptr parent = get_fleet(s -> fleet_id);
-      parent -> remove_ship(i);
+      if (s -> has_fleet()){
+	fleet::ptr parent = get_fleet(s -> fleet_id);
+	parent -> remove_ship(i);
+      }
     }
 
     // set new fleet id
@@ -170,7 +172,7 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner){
 void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &sh){
   if (sh.empty()) return;
 
-  fleet::ptr f = fleet::create();
+  fleet::ptr f = fleet::create(fleet::server_pid);
   f -> com = c;
   f -> com.source = f -> id;
   f -> position = p;
@@ -405,11 +407,13 @@ void game_data::build(){
 
 // clean up things that will be reloaded from client
 void game_data::pre_step(){
-  // idle all non-idle fleets
-  for (auto i : all<fleet>()) i -> com.action = fleet_action::idle;
+  // // idle all non-idle fleets
+  // for (auto i : all<fleet>()) i -> com.action = fleet_action::idle;
 
-  // clear waypoints, but don't list removals as client manages wp
+  // clear waypoints and fleets, but don't list removals as client
+  // manages them
   for (auto i : all<waypoint>()) i -> remove = true;
+  for (auto i : all<fleet>()) i -> remove = true;
   remove_units();
   remove_entities.clear();
 }

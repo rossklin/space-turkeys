@@ -47,6 +47,7 @@ namespace st3{
     std::set<std::string> upgrades;
     cost::resource_allocation<float> cargo;
     sfloat cargo_capacity;
+    bool is_landed;
 
     // game_object
     void pre_phase(game_data *g);
@@ -70,6 +71,7 @@ namespace st3{
 
     void receive_damage(game_object::ptr from, float damage);
     void on_liftoff(solar *from, game_data *g);
+    bool has_fleet();
 
   protected:
     // serialised variables

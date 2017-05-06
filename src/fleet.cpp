@@ -16,9 +16,15 @@ const string fleet::class_id = "fleet";
 const string fleet_action::go_to = "go to";
 const string fleet_action::idle = "idle";
 
-fleet::fleet(){
+fleet::fleet(){}
+
+fleet::fleet(idtype pid){
   static int idc = 0;
-  id = identifier::make(class_id, idc++);
+  if (pid < 0){
+    id = identifier::make(class_id, "S#" + to_string(idc++));
+  }else{
+    id = identifier::make(class_id, to_string(pid) + "#" + to_string(idc++));
+  }
 
   position = point(0,0);
   radius = 0;
@@ -48,8 +54,8 @@ float fleet::vision(){
   return vision_buf;
 }
 
-fleet::ptr fleet::create(){
-  return ptr(new fleet());
+fleet::ptr fleet::create(idtype pid){
+  return ptr(new fleet(pid));
 }
 
 fleet::ptr fleet::clone(){
@@ -85,7 +91,7 @@ void fleet::give_commands(list<command> c, game_data *g){
       com.action = x.action;
       break;
     }else{
-      ptr f = create();
+      ptr f = create(fleet::server_pid);
       f -> com = x;
       f -> com.source = f -> id;
       f -> position = position;

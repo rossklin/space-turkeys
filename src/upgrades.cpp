@@ -25,6 +25,15 @@ hm_t<string, upgrade> &upgrade::table(){
     // upgrades for base fleet interactions
     for (auto a : interaction::table()) data[a.first] = compile_upgrade(a.first);
 
+    // make colonizers consume population
+    data[interaction::colonize].on_liftoff = [] (ship::ptr self, solar::ptr from, game_data *g) {
+      from -> population = fmax(0, from -> population - 100);
+    };
+
+    data[interaction::colonize].depends = [] (solar::ptr s){
+      return s -> population > 200;
+    };
+
     // tech upgrades
     data["ship armor"].modify.hp = 1;
     data["ship speed"].modify.speed = 1;

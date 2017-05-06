@@ -35,7 +35,7 @@ void solar::move(game_data *g){
   // build ships and turrets
   research::data r = g -> players[owner].research_level;
   for (auto v : cost::keywords::ship) {
-    if (r.can_build_ship(v, sector[cost::keywords::key_military])){
+    if (r.can_build_ship(v, ptr(this))){
       while (fleet_growth[v] >= 1) {
 	fleet_growth[v]--;
 	ship sh = r.build_ship(v);

@@ -209,10 +209,15 @@ turret data::build_turret(string v){
   return t;
 }
 
-bool data::can_build_ship(string v, int facility){
+bool data::can_build_ship(string v, solar::ptr sol){
+  int facility = sol -> sector[cost::keywords::key_military];
   ship s = ship_template(v);
   if (s.depends_facility_level > facility) return false;
   if (s.depends_tech.length() > 0 && !researched.count(s.depends_tech)) return false;
+  for (auto v : s.upgrades) {
+    upgrade u = upgrade::table()[v];
+    if (u.depends && !u.depends(sol)) return false;
+  }
   return true;
 }
 
@@ -254,9 +259,8 @@ hm_t<string,choice::c_solar> data::solar_template_table(solar::ptr sol){
   x.expansion[keywords::key_mining] = 2;
   x.expansion[keywords::key_military] = 3;
 
-  int military_facility = sol -> sector[keywords::key_military];
-  if (can_build_ship(keywords::key_scout, military_facility)) x.military.c_ship[keywords::key_scout] = 1;
-  if (can_build_ship(keywords::key_fighter, military_facility)) x.military.c_ship[keywords::key_fighter] = 2;
+  if (can_build_ship(keywords::key_scout, sol)) x.military.c_ship[keywords::key_scout] = 1;
+  if (can_build_ship(keywords::key_fighter, sol)) x.military.c_ship[keywords::key_fighter] = 2;
   x.military.c_turret[keywords::key_radar_turret] = 1;
   x.military.c_turret[keywords::key_rocket_turret] = 2;
 

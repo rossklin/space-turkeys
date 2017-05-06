@@ -1,6 +1,5 @@
 * current work
-** do fleets check target seen when passing waypoints?
-** make colonizers consume people
+** [J?] make colonizers consume people
 * system design ideas
 ** allow "fortification" so units can block other units and hold a position?
 ** allow client to control/restructure fleets
@@ -28,10 +27,7 @@
 ** use solar radius to indicate resource quantity
 * [!] issues
 ** [!] bugs & crashes
-*** [J?] when attacking solar: ends at: distributed -1 of 99 frames to 0: end
-    Did send 99% of frames to client. Does not pass "client x is done".
-
-    Caused by incorrect loop termination condition
+*** Ships validate their action using target information that the player can't see
 *** simulation step hangs on key escape abort game
     This was when client 1 aborts at frame -1, while client 2 is still
     in choice step. Server exits with error 'disconnect' and other

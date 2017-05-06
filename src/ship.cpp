@@ -22,6 +22,7 @@ void ship::pre_phase(game_data *g){
 }
 
 void ship::move(game_data *g){
+  if (!has_fleet()) return;
   fleet::ptr f = g -> get_fleet(fleet_id);
 
   // check fleet is not idle
@@ -87,7 +88,11 @@ set<string> ship::compile_interactions(){
 }
 
 bool ship::confirm_interaction(string a, combid t, game_data *g) {
-  return g -> get_fleet(fleet_id) -> confirm_ship_interaction(a, t);
+  if (has_fleet()){
+    return g -> get_fleet(fleet_id) -> confirm_ship_interaction(a, t);
+  }else{
+    return a == interaction::space_combat;
+  }
 }
 
 float ship::interaction_radius() {
@@ -95,6 +100,10 @@ float ship::interaction_radius() {
 }
 
 bool ship::is_active(){
+  return !is_landed;
+}
+
+bool ship::has_fleet() {
   return fleet_id != identifier::source_none;
 }
 
@@ -105,6 +114,8 @@ void ship::on_liftoff(solar *from, game_data *g){
   for (auto u : upgrades) {
     if (utab[u].on_liftoff) utab[u].on_liftoff(this, from, g);
   }
+
+  is_landed = false;
 }
 
 ship_stats ship_stats::operator+= (const ship_stats &b) {

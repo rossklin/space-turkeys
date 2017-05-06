@@ -20,6 +20,7 @@ namespace st3{
     ship_stats modify;
     std::set<std::string> exclusive;
     std::function<void(ship::ptr self, solar::ptr from, game_data *g)> on_liftoff;
+    std::function<bool(solar::ptr)> depends;
   };
 };
 

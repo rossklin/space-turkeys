@@ -19,9 +19,10 @@ namespace st3{
   class fleet : public virtual commandable_object{
   public:
     typedef fleet* ptr;
-    static ptr create();
+    static ptr create(idtype pid);
     static const std::string class_id;
-    
+
+    static const idtype server_pid = -1;
     static const int update_period = 1; /*!< number of increments between fleet data updates */
     static const int interact_d2 = 100; /*!< distance from target at which the fleet converges */
     static constexpr float min_radius = 10; /*!< smallest allowed fleet radius (for visibility) */
@@ -53,6 +54,7 @@ namespace st3{
 
     // fleet stuff
     fleet();
+    fleet(idtype pid);
     ~fleet();
     bool is_idle();
     void set_idle();

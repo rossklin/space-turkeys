@@ -468,7 +468,7 @@ void main_window::build_military(){
   
   // add buttons for expandable sectors
   for (auto v : cost::keywords::ship) {
-    if (!desktop -> get_research().can_build_ship(v, sol -> sector[cost::keywords::key_military])) continue;
+    if (!desktop -> get_research().can_build_ship(v, sol)) continue;
 
     // add ship priority button
     buf -> Pack(priority_button(v, c.c_ship[v], [&c](){return c.c_ship.count() < choice::max_allocation;}, tooltip));
