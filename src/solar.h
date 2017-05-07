@@ -66,6 +66,7 @@ namespace st3{
     bool has_defense();
     void damage_turrets(float d);
     std::string get_info();
+    void autofill_mining(choice::c_solar &c);
 
     // solar: increment functions
     float population_increment();

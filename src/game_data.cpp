@@ -230,17 +230,6 @@ bool game_data::validate_choice(choice::choice c, idtype id){
     }
   }
 
-  // fleets
-  for (auto x : c.fleets) {
-    auto f = get_fleet(x.first);
-    for (auto sid : f -> ships) {
-      if (get_ship(sid) -> owner != id) {
-	cout << "apply_choice: error: command owned by player " << id << " for fleet " << f -> id << " containing non-owned ship!" << endl;
-	return false;
-      }
-    }
-  }
-
   return true;
 }
  
@@ -262,6 +251,8 @@ void game_data::apply_choice(choice::choice c, idtype id){
     if (identifier::get_multid_owner(x.second.id) != id){
       throw runtime_error("apply_choice: player " + to_string(id) + " tried to insert fleet owned by " + to_string(identifier::get_multid_owner(x.second.id)));
     }
+    
+    x.second.owner = id;
     add_entity(x.second.clone());
 
     auto f = get_fleet(x.first);

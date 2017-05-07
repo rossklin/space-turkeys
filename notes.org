@@ -1,13 +1,6 @@
 * current work
-** commands for fleets with id "owned" by server don't pass validation
-** ships aren't drawn because is_landed is not serialized
-** [J?] make colonizers consume people
 * system design ideas
 ** allow "fortification" so units can block other units and hold a position?
-** [J?] allow client to control/restructure fleets
-*** allow ships to have no fleet
-*** clear fleets with no command on client side
-*** allow client to create fleets from ship clusters
 ** reduce fleet actions, replace with fleet response policies
 ** add trigger system for e.g. upgrades, techs and solar facilities
 *** hm_t<string, function> on_interaction (and prevent_interaction)
@@ -23,11 +16,20 @@
 * tweaks and fixes
 ** allow dragging waypoints
 ** name and indicators for solars so you can tell them apart
-** template for mining that sets nessecary amount
 ** increase build times for everything
 ** increase ship fire rate
 ** make ships in fleets group together
 ** use solar radius to indicate resource quantity
+* to be tested
+** template for mining that sets nessecary amount
+** add explosions
+** commands for fleets with id "owned" by server don't pass validation
+** ships aren't drawn because is_landed is not serialized
+** make colonizers consume people
+** allow client to control/restructure fleets
+*** allow ships to have no fleet
+*** clear fleets with no command on client side
+*** allow client to create fleets from ship clusters
 * [!] issues
 ** [!] bugs & crashes
 *** Ships validate their action using target information that the player can't see

@@ -47,7 +47,7 @@ namespace st3{
     std::set<std::string> upgrades;
     cost::resource_allocation<float> cargo;
     sfloat cargo_capacity;
-    bool is_landed;
+    sint is_landed;
 
     // game_object
     void pre_phase(game_data *g);

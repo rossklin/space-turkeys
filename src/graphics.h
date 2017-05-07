@@ -13,6 +13,7 @@
 #include "types.h"
 #include "ship.h"
 #include "research.h"
+#include "explosion.h"
 
 namespace st3{
   /*! type representing a window */
@@ -61,6 +62,7 @@ namespace st3{
     */
     void draw_ship(window_t &w, ship s, sf::Color c, float sc = 1);
 
+    void draw_explosion(window_t &w, explosion e);
     
     /* **************************************** */
     /* SFML STUFF */

@@ -27,17 +27,17 @@ ship ship_template(string k){
     s.base_stats.solar_damage = 0;
     s.base_stats.accuracy = 0;
     s.base_stats.interaction_radius = 20;
+    s.base_stats.load_time = 50;
     s.fleet_id = identifier::source_none;
     s.ship_class = "";
     s.remove = false;
-    s.base_stats.load_time = 100;
     s.load = 0;
     s.upgrades.insert(interaction::land);
     s.depends_tech = "";
     s.depends_facility_level = 0;
     s.cargo_capacity = 0;
     
-    auto add_with_class = [&buf] (ship s, string c){
+    auto add_with_class = [] (ship s, string c){
       s.ship_class = c;
       buf[c] = s;
     };
@@ -56,7 +56,7 @@ ship ship_template(string k){
     a.base_stats.solar_damage = 0.1;
     a.base_stats.accuracy = 0.7;
     a.base_stats.interaction_radius = 40;
-    a.base_stats.load_time = 30;
+    a.base_stats.load_time = 20;
     a.upgrades.insert(interaction::space_combat);
     a.upgrades.insert(interaction::bombard);
     a.depends_facility_level = 1;
@@ -106,7 +106,7 @@ turret turret_template(string k){
     x.vision = 100;
     x.damage = 1;
     x.accuracy = 0.5;
-    x.load_time = 100;
+    x.load_time = 30;
     x.load = 0;
 
     a = x;
@@ -221,7 +221,7 @@ bool data::can_build_ship(string v, solar::ptr sol){
   return true;
 }
 
-hm_t<string,choice::c_solar> data::solar_template_table(solar::ptr sol){
+hm_t<string,choice::c_solar> data::solar_template_table(solar sol){
   static hm_t<string, choice::c_solar> data;
   using namespace cost;
 
@@ -234,37 +234,48 @@ hm_t<string,choice::c_solar> data::solar_template_table(solar::ptr sol){
   // culture growth
   x = empty;
   x.allocation[keywords::key_culture] = 1;
-  x.allocation[keywords::key_expansion] = 1;
-  x.allocation[keywords::key_mining] = 1;
-    
+  x.allocation[keywords::key_expansion] = 1;    
   x.expansion[keywords::key_culture] = 1;
-
-  x.mining[keywords::key_organics] = 2;
-  x.mining[keywords::key_gases] = 1;
-  x.mining[keywords::key_metals] = 1;
-
+  sol.autofill_mining(x);
   data["culture growth"] = x;
 
+  // mining colony
   x = empty;
   x.allocation[keywords::key_culture] = 1;
   x.allocation[keywords::key_expansion] = 1;
-  x.allocation[keywords::key_mining] = 1;
-  x.allocation[keywords::key_military] = 3;
-
-  x.mining[keywords::key_gases] = 1;
+  x.allocation[keywords::key_mining] = 3;
+  x.expansion[keywords::key_mining] = 1;
   x.mining[keywords::key_metals] = 1;
+  x.mining[keywords::key_gases] = 1;
   x.mining[keywords::key_organics] = 1;
+  data["mining colony"] = x;
+
+  // military expansion
+  x = empty;
+  x.allocation[keywords::key_culture] = 1;
+  x.allocation[keywords::key_expansion] = 1;
+  x.allocation[keywords::key_military] = 3;
     
   x.expansion[keywords::key_culture] = 1;
-  x.expansion[keywords::key_mining] = 2;
+  x.expansion[keywords::key_mining] = 1;
   x.expansion[keywords::key_military] = 3;
 
-  if (can_build_ship(keywords::key_scout, sol)) x.military.c_ship[keywords::key_scout] = 1;
-  if (can_build_ship(keywords::key_fighter, sol)) x.military.c_ship[keywords::key_fighter] = 2;
-  x.military.c_turret[keywords::key_radar_turret] = 1;
+  if (can_build_ship(keywords::key_bomber, &sol)) x.military.c_ship[keywords::key_bomber] = 1;
+  if (can_build_ship(keywords::key_fighter, &sol)) x.military.c_ship[keywords::key_fighter] = 2;
   x.military.c_turret[keywords::key_rocket_turret] = 2;
 
+  sol.autofill_mining(x);
   data["military expansion"] = x;
 
+  // research & development
+  x = empty;
+  x.allocation[keywords::key_culture] = 1;
+  x.allocation[keywords::key_expansion] = 1;
+  x.allocation[keywords::key_research] = 2;
+  x.expansion[keywords::key_research] = 2;
+  x.expansion[keywords::key_culture] = 1;
+  sol.autofill_mining(x);
+  data["research"] = x;
+  
   return data;
 }

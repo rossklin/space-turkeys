@@ -39,7 +39,7 @@ namespace st3{
       turret build_turret(std::string v);
       void repair_ship(ship &s);
       bool can_build_ship(std::string v, solar::ptr s);
-      hm_t<std::string, choice::c_solar> solar_template_table(solar::ptr s);
+      hm_t<std::string, choice::c_solar> solar_template_table(solar s);
     };    
   };
 };

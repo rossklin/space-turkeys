@@ -14,13 +14,13 @@
 #include "selector.h"
 #include "com_client.h"
 #include "data_frame.h"
+#include "explosion.h"
 
 namespace st3{
   class command_gui;
   class target_gui;
   
-  namespace client{
-    
+  namespace client{    
     /*! Client game interface
 
       The game struct runs the client game interface. It stores the
@@ -48,10 +48,14 @@ namespace st3{
       target_gui *targui; /*!< gui for selecting command action */
       bool chosen_quit;
 
+      // stars
       std::vector<fixed_star> fixed_stars;
       std::list<fixed_star> hidden_stars;
       static constexpr float grid_size = 20;
       std::set<std::pair<int, int> > known_universe;
+
+      // explosions
+      std::list<explosion> explosions;
 
       /*! default contsructor */
       game();

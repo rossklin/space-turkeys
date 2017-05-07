@@ -558,6 +558,12 @@ void game::reload_data(data_frame &g){
   // remove entities as server specifies
   for (auto x : g.remove_entities){
     if (entity.count(x)){
+      // if ship, add explosion
+      auto p = get_entity(x);
+      if (p -> is_active() && p -> isa(ship::class_id)) {
+	explosions.push_back(explosion(p -> position));
+      }
+      
       cout << " -> remove entity " << x << endl;
       remove_entity(x);
     }
@@ -1364,9 +1370,17 @@ void game::draw_interface_components(){
 
 }
 
-/** Draw entities and stars. */
+/** Draw entities, explosions and stars. */
 void game::draw_universe(){
   for (auto star : fixed_stars) star.draw(window);
+
+  list<explosion> buf;
+  for (auto e : explosions) {
+    graphics::draw_explosion(window, e);
+    if (e.time_passed() < 4) buf.push_back(e);
+  }
+  explosions = buf;
+  
   for (auto x : entity) x.second -> draw(window);
 }
 

@@ -115,7 +115,7 @@ hm_t<string, interaction> &interaction::table() {
       t -> population = 100;
       t -> happiness = 1;
       t -> owner = s -> owner;
-      auto ctab = g -> players[t -> owner].research_level.solar_template_table(t);
+      auto ctab = g -> players[t -> owner].research_level.solar_template_table(*t);
       t -> choice_data = ctab["culture growth"];
 
       s -> remove = true;

@@ -229,7 +229,7 @@ float solar::research_increment(choice::c_solar &c){
 }
 
 float solar::resource_increment(string v, choice::c_solar &c){
-  return st3::solar::f_minerate * c.allocation[cost::keywords::key_mining] * c.mining[v] * compute_workers();
+  return st3::solar::f_minerate * (1 + sector[cost::keywords::key_mining]) * c.allocation[cost::keywords::key_mining] * c.mining[v] * compute_workers();
 }
 
 float solar::expansion_increment(string v, choice::c_solar &c){
@@ -340,3 +340,53 @@ void solar::dynamics(){
 bool solar::isa(string c) {
   return c == solar::class_id || c == physical_object::class_id || c == commandable_object::class_id;
 }
+
+using namespace cost;
+void solar::autofill_mining(choice::c_solar &c) {
+  typedef countable_resource_allocation<float> res_t;
+  res_t needed;
+  c.allocation[keywords::key_mining] = 0;
+  c.normalize();
+  choice_data = c;
+
+  auto calculate = [&needed, &c] (vector<string> k, function<res_t(string)> f, function<float(string)> inc) {
+    for (auto v : k) {
+      auto buf = f(v);
+      buf.scale(inc(v));
+      needed.add(buf);
+    }
+  };
+
+  auto get_expansion_cost = [this] (string v) -> res_t {
+    auto buf = cost::sector_expansion()[v].res;
+    buf.scale(cost::expansion_multiplier(sector[v]));
+    return buf;
+  };
+
+  calculate(keywords::ship, [](string v){return cost::ship_build()[v].res;}, [this, &c] (string v) {return ship_increment(v, c);});
+  calculate(keywords::turret, [](string v){return cost::turret_build()[v].res;}, [this, &c] (string v) {return turret_increment(v, c);});
+  calculate(keywords::expansion, get_expansion_cost, [this, &c] (string v) {return expansion_increment(v, c);});
+
+  // check that all resources can be mined
+  for (auto x : needed.data) if (x.second > 0 && resource[x.first].available == 0) return;
+
+  // convert needed resources to needed ratio
+  // mined = f_minerate * (1 + sec[mining]) * ratio * workers
+  needed.scale(1 / (st3::solar::f_minerate * (1 + sector[keywords::key_mining]) * compute_workers()));
+  float ratio = needed.count(); // required allocation factor
+
+  // don't allow more than 90% allocation
+  ratio = fmin(ratio, 0.9);
+
+  float other_allocation = c.allocation.count();
+
+  // x / (x + other) = ratio => x = ratio * other / (1 - ratio)
+  float proportion = ratio * other_allocation / (1 - ratio);
+  
+  c.allocation[keywords::key_mining] = proportion;
+
+  needed.normalize();
+  for (auto v : keywords::resource) c.mining[v] = needed[v];
+}
+
+

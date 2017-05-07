@@ -144,7 +144,7 @@ sector_allocation<sector_cost>& cost::sector_expansion(){
     buf[key_research].res[key_metals] = 1;
     buf[key_research].water = 1;
     buf[key_research].space = 1;
-    buf[key_research].time = 10;
+    buf[key_research].time = 100;
   
     // T culture;
     buf[key_culture].res[key_organics] = 8;
@@ -152,7 +152,7 @@ sector_allocation<sector_cost>& cost::sector_expansion(){
     buf[key_culture].res[key_metals] = 5;
     buf[key_culture].water = 10;
     buf[key_culture].space = 10;
-    buf[key_culture].time = 4;
+    buf[key_culture].time = 80;
 
     // T military;
     buf[key_military].res[key_organics] = 0;
@@ -160,7 +160,7 @@ sector_allocation<sector_cost>& cost::sector_expansion(){
     buf[key_military].res[key_metals] = 8;
     buf[key_military].water = 2;
     buf[key_military].space = 4;
-    buf[key_military].time = 6;
+    buf[key_military].time = 120;
 
     // T mining;
     buf[key_mining].res[key_organics] = 0;
@@ -168,7 +168,7 @@ sector_allocation<sector_cost>& cost::sector_expansion(){
     buf[key_mining].res[key_metals] = 4;
     buf[key_mining].water = 4;
     buf[key_mining].space = 4;
-    buf[key_mining].time = 6;
+    buf[key_mining].time = 120;
 
     buf.confirm_content(keywords::expansion);
   }
@@ -186,25 +186,25 @@ ship_allocation<ship_cost>& cost::ship_build(){
     // ship costs  
     buf[key_scout].res[key_metals] = 1;
     buf[key_scout].res[key_gases] = 1;
-    buf[key_scout].time = 1;
+    buf[key_scout].time = 10;
 
     buf[key_fighter].res[key_metals] = 2;
     buf[key_fighter].res[key_gases] = 1;
-    buf[key_fighter].time = 2;
+    buf[key_fighter].time = 20;
 
     buf[key_bomber].res[key_metals] = 4;
     buf[key_bomber].res[key_gases] = 3;
-    buf[key_bomber].time = 4;
+    buf[key_bomber].time = 40;
 
     buf[key_colonizer].res[key_metals] = 4;
     buf[key_colonizer].res[key_gases] = 2;
     buf[key_colonizer].res[key_organics] = 3;
-    buf[key_colonizer].time = 6;
+    buf[key_colonizer].time = 60;
 
     buf[key_freighter].res[key_metals] = 4;
     buf[key_freighter].res[key_gases] = 2;
     buf[key_freighter].res[key_organics] = 3;
-    buf[key_freighter].time = 6;
+    buf[key_freighter].time = 60;
   }
 
   return buf;
@@ -219,11 +219,11 @@ turret_allocation<turret_cost>& cost::turret_build(){
 
     buf[key_radar_turret].res[key_metals] = 1;
     buf[key_radar_turret].res[key_gases] = 1;
-    buf[key_radar_turret].time = 2;
+    buf[key_radar_turret].time = 20;
 
     buf[key_rocket_turret].res[key_metals] = 1;
     buf[key_rocket_turret].res[key_gases] = 2;
-    buf[key_rocket_turret].time = 2;
+    buf[key_rocket_turret].time = 20;
   }
 
   return buf;

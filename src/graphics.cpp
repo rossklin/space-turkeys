@@ -6,6 +6,7 @@
 #include "utility.h"
 #include "cost.h"
 #include "client_game.h"
+#include "explosion.h"
 
 using namespace std;
 using namespace st3;
@@ -300,7 +301,7 @@ main_window::main_window(solar::ptr s) : query<Window, choice::c_solar>(Window::
   meta_layout -> Pack(info_layout = Box::Create(Box::Orientation::VERTICAL));
     
   // choice template buttons
-  auto template_map = desktop -> get_research().solar_template_table(sol);
+  auto template_map = desktop -> get_research().solar_template_table(*sol);
   auto template_layout = Box::Create(Box::Orientation::HORIZONTAL);
 
   for (auto &x : template_map){
@@ -490,3 +491,12 @@ void main_window::build_mining(){
     buf -> Pack(b);
   }
 };
+
+void graphics::draw_explosion(window_t &w, explosion e){
+  float t = e.time_passed();
+  float rad = 20 * t * exp(-pow(t,2));
+  sf::CircleShape s(rad);
+  s.setFillColor(sf::Color(255,255,255,100));
+  s.setPosition(e.position - point(rad, rad));
+  w.draw(s);
+}

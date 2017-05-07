@@ -49,7 +49,7 @@ int main(int argc, char **argv){
   for (int i = 0; i < entities; i++){
     solar::ptr s = build_solar();
     
-    auto ctable = r.solar_template_table(s);
+    auto ctable = r.solar_template_table(*s);
     choice::c_solar c = ctable[sc];
 
     s -> choice_data = c;
