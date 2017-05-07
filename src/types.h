@@ -65,6 +65,7 @@ namespace st3{
       @return id of the owner of the waypoint
     */
     idtype get_multid_owner(combid v);
+    std::string get_multid_owner_symbol(combid v);
 
     combid make_waypoint_id(idtype owner, idtype id);
   };

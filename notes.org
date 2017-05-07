@@ -1,4 +1,5 @@
 * current work
+** when client-created fleet is returned to client, com.source is empty
 * system design ideas
 ** allow "fortification" so units can block other units and hold a position?
 ** reduce fleet actions, replace with fleet response policies
@@ -23,9 +24,6 @@
 * to be tested
 ** template for mining that sets nessecary amount
 ** add explosions
-** commands for fleets with id "owned" by server don't pass validation
-** ships aren't drawn because is_landed is not serialized
-** make colonizers consume people
 ** allow client to control/restructure fleets
 *** allow ships to have no fleet
 *** clear fleets with no command on client side
@@ -58,6 +56,9 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** ships aren't drawn because is_landed is not serialized
+** make colonizers consume people
+** commands for fleets with id "owned" by server don't pass validation
 ** test freighter ships
 ** fixed handling of partial sending of sf::Package
 ** added command origin for use in trade interaction

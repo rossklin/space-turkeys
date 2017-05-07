@@ -248,8 +248,9 @@ void game_data::apply_choice(choice::choice c, idtype id){
   }
 
   for (auto &x : c.fleets){
-    if (identifier::get_multid_owner(x.second.id) != id){
-      throw runtime_error("apply_choice: player " + to_string(id) + " tried to insert fleet owned by " + to_string(identifier::get_multid_owner(x.second.id)));
+    string sym = identifier::get_multid_owner_symbol(x.second.id);
+    if (sym != to_string(id) && sym != "S"){
+      throw runtime_error("apply_choice: player " + to_string(id) + " tried to insert fleet owned by " + sym);
     }
     
     x.second.owner = id;
@@ -415,6 +416,7 @@ void game_data::build(){
 	s.space = 1000;
 	s.population = 100;
 	s.happiness = 1;
+	s.ecology = 1;
 	s.dt = settings.dt;
 	ship sh = rbase.build_ship(cost::keywords::key_scout);
 	sh.is_landed = true;

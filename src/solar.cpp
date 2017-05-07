@@ -372,8 +372,16 @@ void solar::autofill_mining(choice::c_solar &c) {
 
   // convert needed resources to needed ratio
   // mined = f_minerate * (1 + sec[mining]) * ratio * workers
-  needed.scale(1 / (st3::solar::f_minerate * (1 + sector[keywords::key_mining]) * compute_workers()));
-  float ratio = needed.count(); // required allocation factor
+  // mined = needed * (1 - ratio)
+  // => 1 - ratio = f_minerate * (1 + sec) * ratio * workers / needed
+  // => 1 = (1 + f_minerate * (1 + sec) * workers / needed) * ratio
+  // => ratio = 1 / (1 + f_minerate * (1 + sec) * workers / needed)
+
+  res_t res_ratios;
+  for (auto v : keywords::resource) {
+    if (needed[v] > 0) res_ratios[v] = 1 / (1 + f_minerate * (1 + sector[keywords::key_mining]) * compute_workers() / needed[v]);
+  }
+  float ratio = res_ratios.count(); // required allocation factor
 
   // don't allow more than 90% allocation
   ratio = fmin(ratio, 0.9);
@@ -381,12 +389,12 @@ void solar::autofill_mining(choice::c_solar &c) {
   float other_allocation = c.allocation.count();
 
   // x / (x + other) = ratio => x = ratio * other / (1 - ratio)
-  float proportion = ratio * other_allocation / (1 - ratio);
+  float mining_allocation = ratio * other_allocation / (1 - ratio);
   
-  c.allocation[keywords::key_mining] = proportion;
+  c.allocation[keywords::key_mining] = mining_allocation;
 
-  needed.normalize();
-  for (auto v : keywords::resource) c.mining[v] = needed[v];
+  res_ratios.normalize();
+  for (auto v : keywords::resource) c.mining[v] = res_ratios[v];
 }
 
 
