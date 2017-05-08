@@ -1,5 +1,18 @@
 * current work
-** when client-created fleet is returned to client, com.source is empty
+** analyze what takes so long in late game
+*** node::make_split, 75%: sort
+** fleets don't seem to get cleared from client choice
+** client created fleets can't be click-selected
+** float priority values in solar gui can get negative value
+** ships remain selected after fleet is created
+** autofill_mining seems to high
+** ships built way to fast
+** tech researched to fast
+** template for culture growht should have more culture
+** explosions are too long
+** allow double-clicking ship to select all of same type
+** show fleet selector and dim vision radius
+** computational intensity of sending/receiving frames
 * system design ideas
 ** allow "fortification" so units can block other units and hold a position?
 ** reduce fleet actions, replace with fleet response policies
@@ -21,13 +34,11 @@
 ** increase ship fire rate
 ** make ships in fleets group together
 ** use solar radius to indicate resource quantity
+* content ideas
+** techs
+*** general: qualitative advantages that require high facility level
+*** stealth: give ships a stealth attribute that counters the vision attribute
 * to be tested
-** template for mining that sets nessecary amount
-** add explosions
-** allow client to control/restructure fleets
-*** allow ships to have no fleet
-*** clear fleets with no command on client side
-*** allow client to create fleets from ship clusters
 * [!] issues
 ** [!] bugs & crashes
 *** Ships validate their action using target information that the player can't see
@@ -56,6 +67,13 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** template for mining that sets nessecary amount
+** add explosions
+** allow client to control/restructure fleets
+*** allow ships to have no fleet
+*** clear fleets with no command on client side
+*** allow client to create fleets from ship clusters
+** when client-created fleet is returned to client, com.source is empty
 ** ships aren't drawn because is_landed is not serialized
 ** make colonizers consume people
 ** commands for fleets with id "owned" by server don't pass validation
