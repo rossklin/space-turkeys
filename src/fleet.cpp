@@ -92,30 +92,23 @@ void fleet::give_commands(list<command> c, game_data *g){
   random_shuffle(buf.begin(), buf.end());
 
   for (auto &x : buf){
-    if (x.ships == ships){
-      // maintain id for trackability
-      // if all ships were assigned, break.
-      com.target = x.target;
-      com.action = x.action;
-      break;
-    }else{
-      ptr f = create(fleet::server_pid);
-      f -> com = x;
-      f -> com.source = f -> id;
-      f -> position = position;
-      f -> radius = radius;
-      f -> owner = owner;
-      for (auto i : x.ships){
-	if (ships.count(i)){
-	  ship::ptr buf = g -> get_ship(i);
-	  buf -> fleet_id = f -> id;
-	  remove_ship(i);
-	  f -> ships.insert(i);
-	}
+    ptr f = create(fleet::server_pid);
+    f -> com = x;
+    f -> com.source = f -> id;
+    if (f -> com.origin.empty()) f -> com.origin = com.origin;
+    f -> position = position;
+    f -> radius = radius;
+    f -> owner = owner;
+    for (auto i : x.ships){
+      if (ships.count(i)){
+	ship::ptr buf = g -> get_ship(i);
+	buf -> fleet_id = f -> id;
+	remove_ship(i);
+	f -> ships.insert(i);
       }
-
-      g -> add_entity(f);
     }
+
+    g -> add_entity(f);
   }
 }
 
