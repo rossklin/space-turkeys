@@ -34,23 +34,15 @@ void game_data::allocate_grid(){
   for (auto x : entity) entity_grid -> insert(x.first, x.second -> position);
 }
 
-void game_data::assign(const game_data &g){
-  if (entity_grid || entity.size()) throw runtime_error("Attempting to assign to game_data: already allcoated!");
-  
-  allocate_grid();  
-  for (auto x : g.entity) add_entity(x.second -> clone());
-  players = g.players;
-  settings = g.settings;
-  remove_entities = g.remove_entities;
-}
+// void game_data::assign(const game_data &g){
+//   if (entity_grid || entity.size()) throw runtime_error("Attempting to assign to game_data: already allcoated!");
 
-game_object::ptr game_data::get_entity(combid i){
-  if (entity.count(i)){
-    return entity[i];
-  }else{
-    throw runtime_error("game_data::get_entity: not found: " + i);
-  }
-}
+//   entity_grid = g.entity_grid -> clone();
+//   for (auto x : g.entity) entity[x.first] = x.second -> clone();
+//   players = g.players;
+//   settings = g.settings;
+//   remove_entities = g.remove_entities;
+// }
 
 ship::ptr game_data::get_ship(combid i){
   return utility::guaranteed_cast<ship>(get_entity(i));
@@ -76,16 +68,6 @@ list<typename T::ptr> game_data::all(){
     if (p.second -> isa(T::class_id)){
       res.push_back(utility::guaranteed_cast<T>(p.second));
     }
-  }
-
-  return res;
-}
-
-list<game_object::ptr> game_data::all_owned_by(idtype id){
-  list<game_object::ptr> res;
-
-  for (auto p : entity) {
-    if (p.second -> owner == id) res.push_back(p.second);
   }
 
   return res;
@@ -493,9 +475,37 @@ void game_data::end_step(){
   }
 }
 
-bool game_data::entity_seen_by(combid id, idtype pid){
-  if (!entity.count(id)) return false;
+// void game_data::limit_to(idtype id){
+//   auto re = remove_entities;
+//   list<combid> remove_buf;
+//   for (auto i : entity) {
+//     if (!entity_seen_by(i.first, id)) remove_buf.push_back(i.first);
+//   }
 
+//   for (auto i : remove_buf) remove_entity(i);
+//   remove_entities = re;
+// }
+
+game_object::ptr entity_package::get_entity(combid i){
+  if (entity.count(i)){
+    return entity[i];
+  }else{
+    throw runtime_error("game_data::get_entity: not found: " + i);
+  }
+}
+
+list<game_object::ptr> entity_package::all_owned_by(idtype id){
+  list<game_object::ptr> res;
+
+  for (auto p : entity) {
+    if (p.second -> owner == id) res.push_back(p.second);
+  }
+
+  return res;
+}
+
+bool entity_package::entity_seen_by(combid id, idtype pid){
+  if (!entity.count(id)) return false;
   game_object::ptr x = get_entity(id);
 
   // always see owned entities
@@ -515,15 +525,13 @@ bool game_data::entity_seen_by(combid id, idtype pid){
   return false;
 }
 
-void game_data::limit_to(idtype id){
-  auto re = remove_entities;
+// limit_to without deallocating
+void entity_package::limit_to(idtype id){
   list<combid> remove_buf;
   for (auto i : entity) {
     if (!entity_seen_by(i.first, id)) remove_buf.push_back(i.first);
   }
-
-  for (auto i : remove_buf) remove_entity(i);
-  remove_entities = re;
+  for (auto i : remove_buf) entity.erase(i);
 }
 
 template list<ship::ptr> game_data::all<ship>();

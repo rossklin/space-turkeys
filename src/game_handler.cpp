@@ -17,7 +17,7 @@ using namespace st3;
 using namespace st3::server;
 
 void simulation_step(com &c, game_data &g) {
-  vector<game_data> frames(g.settings.frames_per_round);
+  vector<entity_package> frames(g.settings.frames_per_round);
   int frame_count;
 
   cout << "starting simulation ... " << endl;
@@ -27,7 +27,7 @@ void simulation_step(com &c, game_data &g) {
   try {
     for (frame_count = 0; frame_count < g.settings.frames_per_round; frame_count++){
       g.increment();
-      frames[frame_count].assign(g);
+      frames[frame_count].copy_from(g);
     }
   }catch (exception &e){
     cout << "Unhandled exception in simulation: " << e.what() << endl;
@@ -36,6 +36,8 @@ void simulation_step(com &c, game_data &g) {
 
   cout << "waiting for distribute_frames() ..." << endl;
   t.join();
+
+  for (auto f : frames) f.deallocate();
 }
 
 void server::game_handler(com &c, game_data &g){
@@ -67,18 +69,21 @@ void server::game_handler(com &c, game_data &g){
   };
 
   auto pack_g = [&g, &c, &packets] () {
+    entity_package ep;
+    ep.copy_from(g);
   
     // load_init, expects: only query
     for (auto x : c.clients) {
-      game_data buf;
-      buf.assign(g);
+      entity_package buf;
+      buf = ep;
       buf.limit_to(x.first);
     
       packets[x.first].clear();
       packets[x.first] << protocol::confirm;
       packets[x.first] << buf;
     }
-    
+
+    ep.deallocate();
   };
 
   auto load_client_choice = [&g] (client_t *client, idtype id) {

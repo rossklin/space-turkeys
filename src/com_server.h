@@ -10,7 +10,7 @@
 #include "socket_t.h"
 
 namespace st3{
-  class game_data;
+  class entity_package;
 
   /*! server side specifics */
   namespace server{
@@ -80,7 +80,7 @@ namespace st3{
 	@param g vector of game_data objects to distribute
 	@param frame_count frame limit parameter
       */
-      void distribute_frames(std::vector<game_data> &g, int &frame_count);
+      void distribute_frames(std::vector<entity_package> &g, int &frame_count);
     };
   };
 };

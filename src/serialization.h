@@ -70,7 +70,7 @@ namespace st3{
   /*   GAME DATA OBJECTS */
   /* **************************************** */
 
-  sf::Packet& operator <<(sf::Packet& packet, const game_data &g);
+  sf::Packet& operator <<(sf::Packet& packet, const entity_package &g);
 
   sf::Packet& operator << (sf::Packet& packet, const commandable_object &g);
   sf::Packet& operator >> (sf::Packet& packet, commandable_object &g);

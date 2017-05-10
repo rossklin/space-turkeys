@@ -78,7 +78,10 @@ void node::make_split(){
     return data.front() != data[idx] && data.back() != data[idx];
   };
 
-  if (!(test_diverse(xvalues) || test_diverse(yvalues))) return;
+  if (!(test_diverse(xvalues) || test_diverse(yvalues))) {
+    cout << "warning: non-diverse leaves in grid::node::make_split!" << endl;
+    return;
+  }
 
   int idx = n / 2;
   split = point(xvalues[idx], yvalues[idx]);

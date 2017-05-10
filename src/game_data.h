@@ -26,13 +26,24 @@ namespace st3{
     std::string interaction;
   };
 
-  /*! struct containing data for game objects */
-  class game_data{
-  public:
-    hm_t<combid, game_object::ptr> entity;
+  class entity_package {
+  public: 
     hm_t<idtype, player> players; /*!< table of players */
     game_settings settings; /*! game settings */
+    hm_t<combid, game_object::ptr> entity;
     std::list<combid> remove_entities; 
+
+    void deallocate();
+    game_object::ptr get_entity(combid i);
+    void limit_to(idtype pid);
+    bool entity_seen_by(combid id, idtype pid);
+    void copy_from(const game_data &g);
+    std::list<game_object::ptr> all_owned_by(idtype pid);
+  };
+
+  /*! struct containing data for game objects */
+  class game_data : public entity_package{
+  public:
     grid::tree::ptr entity_grid;
     std::vector<interaction_info> interaction_buffer;
 
@@ -42,9 +53,7 @@ namespace st3{
     void assign(const game_data &g);
     void clear_entities();
     void apply_choice(choice::choice c, idtype id);
-    void limit_to(idtype pid);
     void increment();
-    bool entity_seen_by(combid id, idtype pid);
     bool target_position(combid t, point &p);
     std::list<combid> search_targets(combid self_id, point p, float r, target_condition c);
 
@@ -53,11 +62,9 @@ namespace st3{
     fleet::ptr get_fleet(combid i);
     solar::ptr get_solar(combid i);
     waypoint::ptr get_waypoint(combid i);
-    game_object::ptr get_entity(combid i);
 
     template<typename T>
     std::list<typename T::ptr> all();
-    std::list<game_object::ptr> all_owned_by(idtype pid);
 
     void add_entity(game_object::ptr p);
     void remove_units();

@@ -1,7 +1,23 @@
 * current work
+** create a frame structure
+   Introduced class entity_package parent to game_data, with entities
+   and remove_entities. Then the distribution frame buffer can copy
+   entities only from the game_data object, and the client
+   distribution frame buffer can limit_to using only entities. This
+   will require entity_package to limit_to without deallocating.
+
+   Declared but not instantiated.
+
+   With instructions for updating and removing existing entities. Let
+   client request when new entities are needed. Then the server won't
+   need to copy all entities and rebuild the grid, and the client also
+   won't need to copy entities.
 ** analyze what takes so long in late game
 *** node::make_split, 75%: sort
-** fleets don't seem to get cleared from client choice
+** [confirm?] fleets don't seem to get cleared from client choice
+   Client seems to remove fleets when instructed, and c.fleets is
+   cleared. Server clears all fleets during pre step, and removes old
+   fleets when applying commands.
 ** client created fleets can't be click-selected
 ** float priority values in solar gui can get negative value
 ** ships remain selected after fleet is created

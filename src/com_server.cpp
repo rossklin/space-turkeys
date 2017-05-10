@@ -5,6 +5,7 @@
 #include "com_server.h"
 #include "protocol.h"
 #include "serialization.h"
+#include "game_data.h"
 
 using namespace std;
 using namespace st3;
@@ -167,7 +168,7 @@ bool st3::server::com::check_protocol(protocol_t query, sf::Packet &packet){
   return check_protocol(query, v);
 }
 
-void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_t *c){
+void distribute_frames_to(vector<entity_package> &buf, int &available_frames, client_t *c){
   // debuging purpose, only 2 threads allowed!
   static thread::id tid;
   static bool tidc = false;
@@ -179,7 +180,7 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
   
   int lim_start = 0;
   int lim_end;
-  vector<game_data> g(buf.size());
+  vector<entity_package> g(buf.size());
   int last_idx = g.size() - 1;
   int no_frame = -1;
   int idx = no_frame;
@@ -194,7 +195,7 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
     
     lim_end = available_frames;
     for (int i = lim_start; i < lim_end; i++) {
-      g[i].assign(buf[i]);
+      g[i] = buf[i];
       g[i].limit_to(c -> id);
     }
     
@@ -241,7 +242,7 @@ void distribute_frames_to(vector<game_data> &buf, int &available_frames, client_
   cout << "distributed " << idx << " of " << (g.size() - 1) << " frames to " << c -> id << ": end" << endl;
 }
 
-void try_distribute_frames_to(vector<game_data> &buf, int &available_frames, client_t *c){
+void try_distribute_frames_to(vector<entity_package> &buf, int &available_frames, client_t *c){
   try {
     distribute_frames_to(buf, available_frames, c);
   }catch (exception &e){
@@ -251,7 +252,7 @@ void try_distribute_frames_to(vector<game_data> &buf, int &available_frames, cli
   return;
 }
 
-void st3::server::com::distribute_frames(vector<game_data> &g, int &frame_count){
+void st3::server::com::distribute_frames(vector<entity_package> &g, int &frame_count){
   list<thread> ts;
 
   cout << "com::distribute_frames: " << clients.size() << " clients:" << endl;
