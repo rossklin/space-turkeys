@@ -23,11 +23,6 @@ game_data::~game_data(){
   clear_entities();
 }
 
-void game_data::clear_entities(){
-  for (auto x : entity) delete x.second;
-  entity.clear();
-}
-
 void game_data::allocate_grid(){
   clear_entities();
   entity_grid = grid::tree::create();
@@ -533,5 +528,20 @@ void entity_package::limit_to(idtype id){
   }
   for (auto i : remove_buf) entity.erase(i);
 }
+
+void entity_package::copy_from(const game_data &g){
+  if (entity.size()) throw runtime_error("Attempting to assign game_data: has entities!");
+
+  for (auto x : g.entity) entity[x.first] = x.second -> clone();
+  players = g.players;
+  settings = g.settings;
+  remove_entities = g.remove_entities;
+}
+
+void entity_package::clear_entities(){
+  for (auto x : entity) delete x.second;
+  entity.clear();
+}
+
 
 template list<ship::ptr> game_data::all<ship>();

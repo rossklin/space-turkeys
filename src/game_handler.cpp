@@ -37,7 +37,7 @@ void simulation_step(com &c, game_data &g) {
   cout << "waiting for distribute_frames() ..." << endl;
   t.join();
 
-  for (auto f : frames) f.deallocate();
+  for (auto f : frames) f.clear_entities();
 }
 
 void server::game_handler(com &c, game_data &g){
@@ -83,7 +83,7 @@ void server::game_handler(com &c, game_data &g){
       packets[x.first] << buf;
     }
 
-    ep.deallocate();
+    ep.clear_entities();
   };
 
   auto load_client_choice = [&g] (client_t *client, idtype id) {

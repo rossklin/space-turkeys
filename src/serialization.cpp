@@ -105,14 +105,14 @@ template sf::Packet& st3::operator >>(sf::Packet& packet, std::list<combid> &con
 // SPECIFIC STRUCT STREAM OPS
 // ****************************************
 
-// // game_data
-// sf::Packet& st3::operator <<(sf::Packet& packet, const game_data &g){
-//   sint n = g.entity.size();
-//   packet << g.players << g.settings << g.remove_entities << n;
-//   // polymorphic serialization
-//   for (auto x : g.entity) x.second -> serialize(packet);
-//   return packet;
-// }
+// entity_package
+sf::Packet& st3::operator <<(sf::Packet& packet, const entity_package &g){
+  sint n = g.entity.size();
+  packet << g.players << g.settings << g.remove_entities << n;
+  // polymorphic serialization
+  for (auto x : g.entity) x.second -> serialize(packet);
+  return packet;
+}
 
 sf::Packet& st3::operator << (sf::Packet& packet, const commandable_object &g){
   return packet << static_cast<const game_object&>(g);

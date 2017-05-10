@@ -33,7 +33,7 @@ namespace st3{
     hm_t<combid, game_object::ptr> entity;
     std::list<combid> remove_entities; 
 
-    void deallocate();
+    void clear_entities();
     game_object::ptr get_entity(combid i);
     void limit_to(idtype pid);
     bool entity_seen_by(combid id, idtype pid);
@@ -51,7 +51,6 @@ namespace st3{
     ~game_data();
     game_data(const game_data &g) = delete;
     void assign(const game_data &g);
-    void clear_entities();
     void apply_choice(choice::choice c, idtype id);
     void increment();
     bool target_position(combid t, point &p);

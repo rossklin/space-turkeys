@@ -1,34 +1,39 @@
 * current work
-** create a frame structure
-   Introduced class entity_package parent to game_data, with entities
-   and remove_entities. Then the distribution frame buffer can copy
-   entities only from the game_data object, and the client
-   distribution frame buffer can limit_to using only entities. This
-   will require entity_package to limit_to without deallocating.
-
-   Declared but not instantiated.
-
-   With instructions for updating and removing existing entities. Let
-   client request when new entities are needed. Then the server won't
-   need to copy all entities and rebuild the grid, and the client also
-   won't need to copy entities.
-** analyze what takes so long in late game
-*** node::make_split, 75%: sort
-** [confirm?] fleets don't seem to get cleared from client choice
+* [!] issues
+** [!] bugs & crashes
+*** [confirm?] fleets don't seem to get cleared from client choice
    Client seems to remove fleets when instructed, and c.fleets is
    cleared. Server clears all fleets during pre step, and removes old
    fleets when applying commands.
-** client created fleets can't be click-selected
-** float priority values in solar gui can get negative value
-** ships remain selected after fleet is created
-** autofill_mining seems to high
-** ships built way to fast
-** tech researched to fast
-** template for culture growht should have more culture
-** explosions are too long
-** allow double-clicking ship to select all of same type
-** show fleet selector and dim vision radius
-** computational intensity of sending/receiving frames
+*** Ships validate their action using target information that the player can't see
+*** simulation step hangs on key escape abort game
+    This was when client 1 aborts at frame -1, while client 2 is still
+    in choice step. Server exits with error 'disconnect' and other
+    client gets segfault. Perhaps the server failed to receive the
+    leave game request from client 1 while it was waiting for the
+    choice from client 2.
+** [~] gui
+*** show fleet selector and dim vision radius
+*** client created fleets can't be click-selected
+*** explosions are too long
+*** float priority values in solar gui can get negative value
+*** ships remain selected after fleet is created
+*** Clicking interface response button also triggers click on minimap
+*** sfg window does not resize on sfml window resize
+*** priority buttons unresponsive to first right click
+*** command selectors drawn on top of each other
+** [~] game mechanics improvements
+*** template for culture growht should have more culture
+*** autofill_mining seems to high
+*** ships built way to fast
+*** tech researched to fast
+*** some colonized solars have trouble with population dying off (check water supply etc)
+*** need "unique" identifier for radar turrets
+    Or rather, need radar turret to be a unique building rather than a
+    turret.
+** [!] code design
+*** ?move keywords and allocations to "types.h"
+*** move expansion costs to research?
 * system design ideas
 ** allow "fortification" so units can block other units and hold a position?
 ** reduce fleet actions, replace with fleet response policies
@@ -44,44 +49,36 @@
    Just something a little bit more fun than "expansion[i]", e.g. move
    turrets here.
 * tweaks and fixes
+** allow double-clicking ship to select all of same type
 ** allow dragging waypoints
 ** name and indicators for solars so you can tell them apart
 ** increase build times for everything
 ** increase ship fire rate
 ** make ships in fleets group together
 ** use solar radius to indicate resource quantity
+* optimization
+** fix grid tree so make_split takes less time
+** reduce sent data using an instruction based model
+   With instructions for updating and removing existing entities. Let
+   client request when new entities are needed. Then the server won't
+   need to copy all entities and rebuild the grid, and the client also
+   won't need to copy entities.
 * content ideas
 ** techs
 *** general: qualitative advantages that require high facility level
 *** stealth: give ships a stealth attribute that counters the vision attribute
 * to be tested
-* [!] issues
-** [!] bugs & crashes
-*** Ships validate their action using target information that the player can't see
-*** simulation step hangs on key escape abort game
-    This was when client 1 aborts at frame -1, while client 2 is still
-    in choice step. Server exits with error 'disconnect' and other
-    client gets segfault. Perhaps the server failed to receive the
-    leave game request from client 1 while it was waiting for the
-    choice from client 2.
-** [~] interface improvements
-*** Clicking interface response button also triggers click on minimap
-*** ?setting solar template removes build info separators
-*** more centralized desktop geometry info
-*** sfg window does not resize on sfml window resize
-*** priority buttons unresponsive to first right click
-*** command selectors drawn on top of each other
-** [~] game mechanics improvements
-*** some colonized solars have trouble with population dying off (check water supply etc)
-*** need "unique" identifier for radar turrets
-    Or rather, need radar turret to be a unique building rather than a
-    turret.
-** [!] code design
-*** ?move keywords and allocations to "types.h"
-*** move expansion costs to research?
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** create a frame structure
+   Introduced class entity_package parent to game_data, with entities
+   and remove_entities. Then the distribution frame buffer can copy
+   entities only from the game_data object, and the client
+   distribution frame buffer can limit_to using only entities. This
+   will require entity_package to limit_to without deallocating.
+
+   Declared but not instantiated.
 * fixed
 ** template for mining that sets nessecary amount
 ** add explosions
