@@ -259,13 +259,13 @@ Button::Ptr main_window::priority_button(string label, float &data, function<boo
   auto p = b.get();
 
   b -> GetSignal(Widget::OnLeftClick).Connect([this, &data, p, label, inc_val, label_builder](){
-      if (inc_val()) data++;
+      if (inc_val()) data = floor(data + 1);
       p -> SetLabel(label_builder(label, data));
       build_info();
     });
     
   b -> GetSignal(Widget::OnRightClick).Connect([this, &data, p, label, label_builder](){
-      if (data > 0) data--;
+      if (data > 0) data = fmax(data - 1, 0);
       p -> SetLabel(label_builder(label, data));
       build_info();
     });
@@ -494,9 +494,12 @@ void main_window::build_mining(){
 
 void graphics::draw_explosion(window_t &w, explosion e){
   float t = e.time_passed();
-  float rad = 20 * t * exp(-pow(t,2));
+  float rad = 20 * t * exp(-pow(3 * t,2));
+  sf::Color c = fade_color(c, sf::Color::White, 0.5);
+  c.a = 100;
+  
   sf::CircleShape s(rad);
-  s.setFillColor(sf::Color(255,255,255,100));
+  s.setFillColor(c);
   s.setPosition(e.position - point(rad, rad));
   w.draw(s);
 }

@@ -1,37 +1,27 @@
 * current work
 * [!] issues
 ** [!] bugs & crashes
-*** [confirm?] fleets don't seem to get cleared from client choice
+*** [!confirm?] fleets don't seem to get cleared from client choice
    Client seems to remove fleets when instructed, and c.fleets is
    cleared. Server clears all fleets during pre step, and removes old
    fleets when applying commands.
-*** Ships validate their action using target information that the player can't see
-*** simulation step hangs on key escape abort game
+*** [~] Ships validate their action using target information that the player can't see
+*** [~] simulation step hangs on key escape abort game
     This was when client 1 aborts at frame -1, while client 2 is still
     in choice step. Server exits with error 'disconnect' and other
     client gets segfault. Perhaps the server failed to receive the
     leave game request from client 1 while it was waiting for the
     choice from client 2.
 ** [~] gui
-*** show fleet selector and dim vision radius
-*** client created fleets can't be click-selected
-*** explosions are too long
-*** float priority values in solar gui can get negative value
-*** ships remain selected after fleet is created
-*** Clicking interface response button also triggers click on minimap
 *** sfg window does not resize on sfml window resize
-*** priority buttons unresponsive to first right click
 *** command selectors drawn on top of each other
 ** [~] game mechanics improvements
-*** template for culture growht should have more culture
 *** autofill_mining seems to high
-*** ships built way to fast
-*** tech researched to fast
 *** some colonized solars have trouble with population dying off (check water supply etc)
 *** need "unique" identifier for radar turrets
     Or rather, need radar turret to be a unique building rather than a
     turret.
-** [!] code design
+** [~] code design
 *** ?move keywords and allocations to "types.h"
 *** move expansion costs to research?
 * system design ideas
@@ -68,9 +58,25 @@
 *** general: qualitative advantages that require high facility level
 *** stealth: give ships a stealth attribute that counters the vision attribute
 * to be tested
+** confirm
+*** make turrets hit different targets
+*** give ships reduced accuracy when not firing forwards
+*** ships built way to fast
+*** tech researched to fast
+*** template for culture growth should have more culture
+*** priority buttons unresponsive to first right click
+*** Clicking interface response button also triggers click on minimap
+*** ships remain selected after fleet is created
+*** float priority values in solar gui can get negative value
+*** show fleet selector and dim vision radius
+*** explosions are too long
+** analyze
+*** client created fleets can't be click-selected
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+** moved target selection to specific class
+* fixed
 ** create a frame structure
    Introduced class entity_package parent to game_data, with entities
    and remove_entities. Then the distribution frame buffer can copy
@@ -79,7 +85,6 @@
    will require entity_package to limit_to without deallocating.
 
    Declared but not instantiated.
-* fixed
 ** template for mining that sets nessecary amount
 ** add explosions
 ** allow client to control/restructure fleets

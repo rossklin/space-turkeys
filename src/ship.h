@@ -61,7 +61,7 @@ namespace st3{
     bool isa(std::string c);
   
     // physical_object
-    bool confirm_interaction(std::string a, combid t, game_data *g);
+    std::list<combid> confirm_interaction(std::string a, std::list<combid> t, game_data *g);
     std::set<std::string> compile_interactions();
     float interaction_radius();
 
@@ -72,6 +72,7 @@ namespace st3{
     void receive_damage(game_object::ptr from, float damage);
     void on_liftoff(solar *from, game_data *g);
     bool has_fleet();
+    bool accuracy_check(float a, ship::ptr t);
 
   protected:
     // serialised variables

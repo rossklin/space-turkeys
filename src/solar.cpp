@@ -55,8 +55,10 @@ void solar::move(game_data *g){
   }
 }
 
-bool solar::confirm_interaction(string a, combid t, game_data *g) {
-  return true;
+list<combid> solar::confirm_interaction(string a, list<combid> t, game_data *g) {
+  list<combid> result;
+  result.push_back(utility::uniform_sample(t));
+  return result;
 }
 
 set<string> solar::compile_interactions(){
@@ -140,9 +142,9 @@ string solar::get_info(){
 }
 
 sfloat solar::vision(){
-  sfloat res = 0;
+  sfloat res = 5;
   for (auto &x : turrets) res = fmax(res, x.vision);
-  return res;
+  return res + radius;
 }
 
 solar::ptr solar::create(){

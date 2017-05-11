@@ -57,7 +57,9 @@ hm_t<string, interaction> &interaction::table() {
 
       cout << "space_combat: loaded" << endl;
       s -> load = 0;
-      if (utility::random_uniform() < s -> current_stats.accuracy){
+      float a = utility::point_angle(t -> position - s -> position);
+      a = utility::angle_difference(a, 0);
+      if (s -> accuracy_check(a, t)) {
       	cout << "space_combat: hit!" << endl;
       	t -> receive_damage(self, utility::random_uniform(0, s -> current_stats.ship_damage));
       }else{
@@ -76,6 +78,9 @@ hm_t<string, interaction> &interaction::table() {
       float d = utility::l2norm(s -> position - x -> position);
 
       for (auto &t : s -> turrets){
+	// don't overdo it
+	if (x -> remove) break;
+
 	if (t.damage > 0 && t.load >= t.load_time && d <= t.range){
 	  t.load = 0;
 	

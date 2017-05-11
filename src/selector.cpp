@@ -133,14 +133,10 @@ namespace st3{
 	w.draw(s);
       };
 
-      if (owned){      
-	if (selected){
-	  f(radius, graphics::fleet_fill, graphics::fleet_outline);
-	}
-	f(vision(), sf::Color::Transparent, sf::Color(40, 200, 60, 100));
-      }else{
-	f(radius, sf::Color::Transparent, sf::Color(200, 40, 60, 100));
-      }
+      sf::Color outline = graphics::fleet_outline;
+      if (selected) outline = graphics::fade_color(outline, sf::Color::White, 0.4);
+      f(radius, graphics::fleet_fill, outline);
+      f(vision(), sf::Color::Transparent, sf::Color(40, 200, 60, 30));
     }
 
     template<>

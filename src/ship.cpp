@@ -87,12 +87,28 @@ set<string> ship::compile_interactions(){
   return res;
 }
 
-bool ship::confirm_interaction(string a, combid t, game_data *g) {
+list<combid> ship::confirm_interaction(string a, list<combid> targets, game_data *g) {
+  list<combid> allowed;
   if (has_fleet()){
-    return g -> get_fleet(fleet_id) -> confirm_ship_interaction(a, t);
+    for (auto t : targets) {
+      if (g -> get_fleet(fleet_id) -> confirm_ship_interaction(a, t)){
+	allowed.push_back(t);
+      }
+    }
   }else{
-    return a == interaction::space_combat;
+    if (a == interaction::space_combat) {
+      allowed = targets;
+    }
   }
+
+  // chose at most one target
+  list<combid> result;
+  if (!allowed.empty()) result.push_back(utility::uniform_sample(allowed));
+  return result;
+}
+
+bool ship::accuracy_check(float a, ship::ptr t) {
+  return utility::random_uniform() < (cos(a) + 1) / 2;
 }
 
 float ship::interaction_radius() {

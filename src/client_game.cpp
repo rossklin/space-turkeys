@@ -57,10 +57,11 @@ game::game(){
 
 function<int(sf::Event)> game::generate_event_handler(function<int(sf::Event)> task){
   return [&task, this] (sf::Event e) {
+    bool had_qw = !!interface::desktop -> query_window;
     interface::desktop -> HandleEvent(e);
 
     // handle escape on query window
-    if (interface::desktop -> query_window) {
+    if (had_qw) {
       if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape){
 	interface::desktop -> clear_qw();
       }
@@ -561,7 +562,7 @@ void game::reload_data(data_frame &g){
       // if ship, add explosion
       auto p = get_entity(x);
       if (p -> is_active() && p -> isa(ship::class_id)) {
-	explosions.push_back(explosion(p -> position));
+	explosions.push_back(explosion(p -> position, players[p -> owner].color));
       }
       
       cout << " -> remove entity " << x << endl;
@@ -1015,6 +1016,8 @@ int game::choice_event(sf::Event e){
 
   // make a fleet from selected ships
   auto make_fleet = [this](){
+    deselect_all();
+    
     auto buf = selected_specific<ship>();
     if (!buf.empty()) {
       fleet fb(self_id);
@@ -1032,6 +1035,7 @@ int game::choice_event(sf::Event e){
       f -> radius = settings.fleet_default_radius;
       f -> vision_buf = vis;
       f -> position = utility::scale_point(pos, 1 / (float)buf.size());
+      f -> selected = true;
       
       entity[f -> id] = f;
     }

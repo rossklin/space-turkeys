@@ -51,7 +51,7 @@ namespace st3{
     bool isa(std::string c);
 
     // physical_object
-    bool confirm_interaction(std::string a, combid t, game_data *g);
+    std::list<combid> confirm_interaction(std::string a, std::list<combid> t, game_data *g);
     std::set<std::string> compile_interactions();
     float interaction_radius();
 

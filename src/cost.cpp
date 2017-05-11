@@ -186,25 +186,25 @@ ship_allocation<ship_cost>& cost::ship_build(){
     // ship costs  
     buf[key_scout].res[key_metals] = 1;
     buf[key_scout].res[key_gases] = 1;
-    buf[key_scout].time = 10;
+    buf[key_scout].time = 40;
 
     buf[key_fighter].res[key_metals] = 2;
     buf[key_fighter].res[key_gases] = 1;
-    buf[key_fighter].time = 20;
+    buf[key_fighter].time = 80;
 
     buf[key_bomber].res[key_metals] = 4;
     buf[key_bomber].res[key_gases] = 3;
-    buf[key_bomber].time = 40;
+    buf[key_bomber].time = 160;
 
     buf[key_colonizer].res[key_metals] = 4;
     buf[key_colonizer].res[key_gases] = 2;
     buf[key_colonizer].res[key_organics] = 3;
-    buf[key_colonizer].time = 60;
+    buf[key_colonizer].time = 240;
 
     buf[key_freighter].res[key_metals] = 4;
     buf[key_freighter].res[key_gases] = 2;
     buf[key_freighter].res[key_organics] = 3;
-    buf[key_freighter].time = 60;
+    buf[key_freighter].time = 240;
   }
 
   return buf;
@@ -219,11 +219,11 @@ turret_allocation<turret_cost>& cost::turret_build(){
 
     buf[key_radar_turret].res[key_metals] = 1;
     buf[key_radar_turret].res[key_gases] = 1;
-    buf[key_radar_turret].time = 20;
+    buf[key_radar_turret].time = 80;
 
     buf[key_rocket_turret].res[key_metals] = 1;
     buf[key_rocket_turret].res[key_gases] = 2;
-    buf[key_rocket_turret].time = 20;
+    buf[key_rocket_turret].time = 80;
   }
 
   return buf;

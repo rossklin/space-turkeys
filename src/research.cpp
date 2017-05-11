@@ -133,21 +133,21 @@ data::data(){
 
   // upgrade "ship armor"
   t.name = "ship armor";
-  t.cost = 1;
+  t.cost = 3;
   t.req_facility_level = 1;
   t.ship_upgrades[research::upgrade_all_ships] = {"ship armor"};
   tree[t.name] = t;
 
   // upgrade "ship speed"
   t.name = "ship speed";
-  t.cost = 1;
+  t.cost = 3;
   t.req_facility_level = 1;
   t.ship_upgrades[research::upgrade_all_ships] = {"ship speed"};
   tree[t.name] = t;
 
   // upgrade "ship weapons"
   t.name = "ship weapons";
-  t.cost = 2;
+  t.cost = 5;
   t.req_facility_level = 1;
   t.depends = {"ship armor", "ship speed"};
   t.ship_upgrades[research::upgrade_all_ships] = {"ship weapons"};
@@ -233,7 +233,7 @@ hm_t<string,choice::c_solar> data::solar_template_table(solar sol){
 
   // culture growth
   x = empty;
-  x.allocation[keywords::key_culture] = 1;
+  x.allocation[keywords::key_culture] = 3;
   x.allocation[keywords::key_expansion] = 1;    
   x.expansion[keywords::key_culture] = 1;
   sol.autofill_mining(x);
