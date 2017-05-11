@@ -26,14 +26,16 @@ hm_t<combid, solar> build_universe::random_solars(game_settings settings){
 
     s.population = 0;
     s.happiness = 1;
-    s.research = 0;
+    s.research_points = 0;
+    s.development_points = 0;
     
     s.water = 1000 * utility::random_uniform();
     s.space = 1000 * utility::random_uniform();
     s.ecology = utility::random_uniform();
 
-    for (auto v : cost::keywords::resource)
-      s.resource[v].available = 1000 * utility::random_uniform();
+    for (auto v : keywords::resource) {
+      s.available_resource[v] = 1000 * utility::random_uniform();
+    }
 
     buf[s.id] = s;
   }

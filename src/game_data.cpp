@@ -556,6 +556,7 @@ void game_data::confirm_data() {
     if (!s.second.depends_tech.empty()) assert(rtab.count(s.second.depends_tech));
     for (auto &u : s.second.upgrades) assert(utab.count(u));
   }
+  for (auto k : keywords::ship) assert(stab.count(k));
 
   // validate technologies
   for (auto &t : rtab) {

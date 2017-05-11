@@ -3,6 +3,9 @@
 ** new structure using JSON files for upgrades, ships and research
 *** rewrite json access loops using special MemberBegin and Begin
 *** look over serialization of all new types
+*** write solar_data.json
+*** replace ship_allocation with lookup keys in ship::table
+    This includes adding graphics info to ship_data.json?
 *** [J?] implement solar::development_tree::facility_tree()
 *** [J?] write game_data::confirm_data that loads data and validates references
 *** [J?] fix references to e.g. research::data::tree

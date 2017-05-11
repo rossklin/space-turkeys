@@ -173,9 +173,14 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship_stats &g){
     << g.accuracy
     << g.ship_damage
     << g.solar_damage
-    << g.interaction_radius
-    << g.vision
-    << g.load_time;
+    << g.interaction_radius_value
+    << g.vision_range
+    << g.load_time
+    << g.upgrades
+    << g.cargo_capacity
+    << g.depends_tech
+    << g.depends_facility_level
+    << g.ship_class;
 }
 
 // ship stats
@@ -186,22 +191,25 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship_stats &g){
     >> g.accuracy
     >> g.ship_damage
     >> g.solar_damage
-    >> g.interaction_radius
-    >> g.vision
-    >> g.load_time;
+    >> g.interaction_radius_value
+    >> g.vision_range
+    >> g.load_time
+    >> g.upgrades
+    >> g.cargo_capacity
+    >> g.depends_tech
+    >> g.depends_facility_level
+    >> g.ship_class;
 }
 
 // ship
 sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
   return packet
     << static_cast<const game_object &> (g)
-    << g.ship_class
+    << static_cast<const ship_stats &> (g)
     << g.fleet_id
     << g.angle
     << g.load
     << g.base_stats
-    << g.current_stats
-    << g.upgrades
     << g.cargo
     << g.is_landed;
 }
@@ -209,13 +217,11 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
 sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
   return packet
     >> static_cast<game_object &> (g)
-    >> g.ship_class
+    >> static_cast<ship_stats &> (g)
     >> g.fleet_id
     >> g.angle
     >> g.load
     >> g.base_stats
-    >> g.current_stats
-    >> g.upgrades
     >> g.cargo
     >> g.is_landed;
 }
@@ -229,7 +235,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const turret_t &g){
     << g.load;
 }
 
-sf::Packet& st3::operator >>(sf::Packet& packet, turret &g){
+sf::Packet& st3::operator >>(sf::Packet& packet, turret_t &g){
   return packet 
     >> g.range
     >> g.damage
@@ -242,61 +248,49 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
   return packet
     << static_cast<const commandable_object &> (g)
     << g.fleet_growth
-    << g.turret_growth
-    << g.turrets
-    << g.research
+    << g.research_points
+    << g.development_points
     << g.water
     << g.space
     << g.ecology
-    << g.resource
-    << g.sector
+    << g.available_resource
+    << g.resource_storage
     << g.population
     << g.happiness
-    << g.ships
-    << g.position
-    << g.owner
-    << g.radius
-    << g.damage_taken;
+    << g.ships;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
   return packet
     >> static_cast<commandable_object &> (g)
     >> g.fleet_growth
-    >> g.turret_growth
-    >> g.turrets
-    >> g.research
+    >> g.research_points
+    >> g.development_points
     >> g.water
     >> g.space
     >> g.ecology
-    >> g.resource
-    >> g.sector
+    >> g.available_resource
+    >> g.resource_storage
     >> g.population
     >> g.happiness
-    >> g.ships
-    >> g.position
-    >> g.owner
-    >> g.radius
-    >> g.damage_taken;
+    >> g.ships;
 }
 
 // solar choice
 sf::Packet& st3::operator <<(sf::Packet& packet, const choice::c_solar &g){
   return packet
     << g.allocation
-    << g.military.c_ship
-    << g.military.c_turret
+    << g.military
     << g.mining
-    << g.expansion;
+    << g.development;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, choice::c_solar &g){
   return packet
     >> g.allocation
-    >> g.military.c_ship
-    >> g.military.c_turret
+    >> g.military
     >> g.mining
-    >> g.expansion;
+    >> g.development;
 }
 
 // fleet

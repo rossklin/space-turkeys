@@ -23,7 +23,7 @@ solar::~solar(){}
 void solar::pre_phase(game_data *g){
   for (auto &t : development.facilities){
     if (t.second.is_turret){
-      t.second.turret.load++;
+      t.second.turret.load += 0.1;
     }
   }
 }
@@ -317,8 +317,8 @@ const hm_t<string, facility>& development_tree::table(){
   static bool init = false;
 
   if (init) return data;
-  rapidjson::Document doc = utility::get_json("solar");
-
+  rapidjson::Document *docp = utility::get_json("solar");
+  auto &doc = (*docp)["solar"];
   facility base, a;
   
   for (auto i = doc.MemberBegin(); i != doc.MemberEnd(); i++){
@@ -326,52 +326,56 @@ const hm_t<string, facility>& development_tree::table(){
     a.name = i -> name.GetString();
 
     if (i -> value.HasMember("sector boost")) {
-      for (auto &b : i -> value["sector boost"]) {
-	a.sector_boost[b.name.GetString()] = b.value.GetFloat();
+      auto &secboost = i -> value["sector boost"];
+      for (auto b = secboost.MemberBegin(); b != secboost.MemberEnd(); b++) {
+	a.sector_boost[b -> name.GetString()] = b -> value.GetDouble();
       }
     }
 
-    if (i -> value.HasMember("vision")) a.vision = i -> value["vision"].GetFloat();
-    if (i -> value.HasMember("hp")) a.hp = i -> value["hp"].GetFloat();
-    if (i -> value.HasMember("shield")) a.shield = i -> value["shield"].GetFloat();
+    if (i -> value.HasMember("vision")) a.vision = i -> value["vision"].GetDouble();
+    if (i -> value.HasMember("hp")) a.hp = i -> value["hp"].GetDouble();
+    if (i -> value.HasMember("shield")) a.shield = i -> value["shield"].GetDouble();
 
     if (i -> value.HasMember("turret")){
       a.is_turret = 1;
-      auto t = i -> value["turret"];
-      if (t.HasMember("damage")) a.turret.damage = t["damage"].GetFloat();
-      if (t.HasMember("range")) a.turret.range = t["range"].GetFloat();
-      if (t.HasMember("accuracy")) a.turret.accuracy = t["accuracy"].GetFloat();
-      if (t.HasMember("load")) a.turret.load = t["load"].GetFloat();
+      auto &t = i -> value["turret"];
+      if (t.HasMember("damage")) a.turret.damage = t["damage"].GetDouble();
+      if (t.HasMember("range")) a.turret.range = t["range"].GetDouble();
+      if (t.HasMember("accuracy")) a.turret.accuracy = t["accuracy"].GetDouble();
+      if (t.HasMember("load")) a.turret.load = t["load"].GetDouble();
     }
 
     if (i -> value.HasMember("ship upgrades")) {
-      for (auto &u : i -> value["ship upgrades"]) {
-	string ship_name = u.name.GetString();
-	for (auto &v : u.value) a.ship_upgrades[ship_name].insert(v.GetString());
+      auto &upgrades = i -> value["ship upgrades"];
+      for (auto u = upgrades.MemberBegin(); u != upgrades.MemberEnd(); u++) {
+	string ship_name = u -> name.GetString();
+	for (auto v = u -> value.Begin(); v != u -> value.End(); v++) a.ship_upgrades[ship_name].insert(v -> GetString());
       }
     }
 
     if (i -> value.HasMember("cost")) {
-      auto c = i -> value["cost"];
+      auto &c = i -> value["cost"];
       if (c.HasMember("resource")) {
-	auto r = c["resource"];
+	auto &r = c["resource"];
 	for (auto k : keywords::resource) {
-	  if (r.HasMember(k)) a.cost.res[k] = r[k].GetFloat();
+	  if (r.HasMember(k.c_str())) a.cost.res[k] = r[k.c_str()].GetDouble();
 	}
       }
-      if (c.HasMember("water")) a.cost.water = c["water"].GetFloat();
-      if (c.HasMember("space")) a.cost.space = c["space"].GetFloat();
-      if (c.HasMember("time")) a.cost.time = c["time"].GetFloat();
+      if (c.HasMember("water")) a.cost.water = c["water"].GetDouble();
+      if (c.HasMember("space")) a.cost.space = c["space"].GetDouble();
+      if (c.HasMember("time")) a.cost.time = c["time"].GetDouble();
     }
 
     if (i -> value.HasMember("depends facilities")) {
-      for (auto &d : i -> value["depends facilities"]) {
-	a.depends_facilities[d.name.GetString()] = d.value.GetFloat();
+      auto &dep = i -> value["depends facilities"];
+      for (auto d = dep.MemberBegin(); d != dep.MemberEnd(); d++) {
+	a.depends_facilities[d -> name.GetString()] = d -> value.GetDouble();
       }
     }
 
     if (i -> value.HasMember("depends technologies")) {
-      for (auto &d : i -> value["depends technologies"]) a.depends_techs.insert(d.GetFloat());
+      auto &dep = i -> value["depends technologies"];
+      for (auto d = dep.Begin(); d != dep.End(); d++) a.depends_techs.insert(d -> GetString());
     }
 
     data[a.name] = a;

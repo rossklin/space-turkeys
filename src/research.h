@@ -32,6 +32,7 @@ namespace st3{
       sfloat accumulated;
       sint facility_level;
 
+      data();
       std::list<std::string> available();
       ship build_ship(std::string v, solar::ptr sol);
       void repair_ship(ship &s, solar::ptr sol);

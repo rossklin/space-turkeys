@@ -9,39 +9,14 @@ c_solar::c_solar(){
 }
 
 void c_solar::set_zeros(){  
-  for (auto v : cost::keywords::sector)
-    allocation[v] = 0;
-
-  for (auto v : cost::keywords::ship)
-    military.c_ship[v] = 0;
-
-  for (auto v : cost::keywords::turret)
-    military.c_turret[v] = 0;
-
-  for (auto v : cost::keywords::resource)
-    mining[v] = 0;
-
-  for (auto v : cost::keywords::expansion)
-    expansion[v] = 0;
+  for (auto v : keywords::sector) allocation[v] = 0;
+  for (auto v : keywords::ship) military[v] = 0;
+  for (auto v : keywords::resource) mining[v] = 0;
+  development = "";
 }
 
 void choice::c_solar::normalize(){
   allocation.normalize();
-  
-  float sum = military.c_ship.count() + military.c_turret.count();
-  if (sum <= 0){
-    for (auto v : cost::keywords::ship)
-      military.c_ship[v] = 1;
-    for (auto v : cost::keywords::turret)
-      military.c_turret[v] = 1;
-    sum = military.c_ship.count() + military.c_turret.count();
-  }
-  
-  for (auto v : cost::keywords::ship)
-    military.c_ship[v] /= sum;
-  for (auto v : cost::keywords::turret)
-    military.c_turret[v] /= sum;
-  
+  military.normalize();
   mining.normalize();
-  expansion.normalize();
 }

@@ -16,24 +16,25 @@ namespace st3{
   struct ship_stats{
     static const hm_t<std::string, ship_stats>& table();
 
+    // ship class info
+    class_t ship_class; /*!< ship class */
+
     sfloat speed; /*!< ship's speed */
     sfloat hp; /*!< ship's hit points */
     sfloat accuracy;
     sfloat ship_damage;
     sfloat solar_damage;
-    sfloat interaction_radius; /*!< radius in which the ship can fire */
+    sfloat interaction_radius_value; /*!< radius in which the ship can fire */
     sfloat vision_range; /*!< ship's sight radius */
     sfloat load_time;
-    std::set<std::string> upgrades;
-    cost::resource_allocation<float> cargo;
     sfloat cargo_capacity;
+    std::set<std::string> upgrades;
 
     // cost and req
     std::string depends_tech;
     sint depends_facility_level;
-
-    // ship class info
-    class_t ship_class; /*!< ship class */
+    cost::res_t build_cost;
+    sfloat build_time;
 
     ship_stats operator += (const ship_stats &s);
     ship_stats();
@@ -50,8 +51,9 @@ namespace st3{
     sfloat angle; /*!< ship's angle */
     sfloat load;
     ship_stats base_stats;
-    sint passangers;
+    sint passengers;
     sint is_landed;
+    cost::res_t cargo;
 
     // game_object
     void pre_phase(game_data *g);
@@ -71,6 +73,7 @@ namespace st3{
 
     // ship
     ship();
+    ship(const ship_stats &s);
     ~ship();
 
     void set_stats(ship_stats s);

@@ -11,39 +11,41 @@
 using namespace std;
 using namespace st3;
 
-hm_t<string, upgrade> &upgrade::table(){
+const hm_t<string, upgrade> &upgrade::table(){
   static bool init = false;
   static hm_t<string, upgrade> data;
 
-  if (!init){
-    init = true;
+  if (init) return data;
     
-    auto doc = utility::get_json("upgrade");
+  auto pdoc = utility::get_json("upgrade");
+  auto &doc = (*pdoc)["upgrade"];
 
-    upgrade u, a;
-    for (auto &x : doc){
-      a = u;
-      string name = x.name.GetString()
-      if (x.value.HasMember("speed")) a.modify.speed = x.value["speed"].GetFloat();
-      if (x.value.HasMember("vision")) a.modify.vision = x.value["vision"].GetFloat();
-      if (x.value.HasMember("hp")) a.modify.hp = x.value["hp"].GetFloat();
-      if (x.value.HasMember("ship_damage")) a.modify.ship_damage = x.value["ship_damage"].GetFloat();
-      if (x.value.HasMember("solar_damage")) a.modify.solar_damage = x.value["solar_damage"].GetFloat();
-      if (x.value.HasMember("accuracy")) a.modify.accuracy = x.value["accuracy"].GetFloat();
-      if (x.value.HasMember("interaction_radius")) a.modify.interaction_radius = x.value["interaction_radius"].GetFloat();
-      if (x.value.HasMember("load_time")) a.modify.load_time = x.value["load_time"].GetFloat();
+  upgrade u, a;
+  for (auto i = doc.MemberBegin(); i != doc.MemberEnd(); i++) {
+    a = u;
+    string name = i -> name.GetString();
+    if (i -> value.HasMember("speed")) a.modify.speed = i -> value["speed"].GetDouble();
+    if (i -> value.HasMember("vision")) a.modify.vision_range = i -> value["vision"].GetDouble();
+    if (i -> value.HasMember("hp")) a.modify.hp = i -> value["hp"].GetDouble();
+    if (i -> value.HasMember("ship_damage")) a.modify.ship_damage = i -> value["ship_damage"].GetDouble();
+    if (i -> value.HasMember("solar_damage")) a.modify.solar_damage = i -> value["solar_damage"].GetDouble();
+    if (i -> value.HasMember("accuracy")) a.modify.accuracy = i -> value["accuracy"].GetDouble();
+    if (i -> value.HasMember("interaction_radius")) a.modify.interaction_radius_value = i -> value["interaction_radius"].GetDouble();
+    if (i -> value.HasMember("load_time")) a.modify.load_time = i -> value["load_time"].GetDouble();
 
-      if (x.value.HasMember("interactions")){
-	if (!x.value["interactions"].IsArray()) {
-	  throw runtime_error("Error: loading upgrades: interactions is not an array!");
-	}
-	
-	for (auto &i : x.value["interactions"]) a.inter.insert(i.GetString());
+    if (i -> value.HasMember("interactions")){
+      if (!i -> value["interactions"].IsArray()) {
+	throw runtime_error("Error: loading upgrades: interactions is not an array!");
       }
 
-      data[name] = a;
+      auto &interactions = i -> value["interactions"];
+      for (auto j = interactions.Begin(); j != interactions.End(); j++) a.inter.insert(j -> GetString());
     }
+
+    data[name] = a;
   }
-  
+
+  delete pdoc;
+  init = true;
   return data;
 }

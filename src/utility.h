@@ -23,7 +23,7 @@ namespace st3{
 
     void init();
 
-    rapidjson::Document get_json(std::string filename);
+    rapidjson::Document *get_json(std::string filename);
     
     /* **************************************** */
     /* POINT MATHS */

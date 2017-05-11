@@ -18,9 +18,9 @@ const string interaction::turret_combat = "turret combat";
 const string interaction::space_combat = "space combat";
 const string interaction::bombard = "bombard";
 const string interaction::colonize = "colonize";
-const stirng interaction::pickup = "pickup";
+const string interaction::pickup = "pickup";
 
-hm_t<string, interaction> &interaction::table() {
+const hm_t<string, interaction> &interaction::table() {
   static bool init = false;
   static hm_t<string, interaction> data;
 
@@ -52,7 +52,7 @@ hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     ship::ptr t = utility::guaranteed_cast<ship>(target);
       
-    if (s -> load < s -> current_stats.load_time) return;
+    if (s -> load < s -> load_time) return;
 
     cout << "space_combat: loaded" << endl;
     s -> load = 0;
@@ -60,7 +60,7 @@ hm_t<string, interaction> &interaction::table() {
     a = utility::angle_difference(a, 0);
     if (s -> accuracy_check(a, t)) {
       cout << "space_combat: hit!" << endl;
-      t -> receive_damage(self, utility::random_uniform(0, s -> current_stats.ship_damage));
+      t -> receive_damage(self, utility::random_uniform(0, s -> ship_damage));
     }else{
       cout << "space_combat: miss!" << endl;
     }
@@ -76,11 +76,15 @@ hm_t<string, interaction> &interaction::table() {
     ship::ptr x = utility::guaranteed_cast<ship>(target);
     float d = utility::l2norm(s -> position - x -> position);
 
-    for (auto &t : s -> turrets){
+    for (auto &buf : s -> development.facilities){
+      if (!buf.second.is_turret) continue;
+
+      turret_t &t = buf.second.turret;
+
       // don't overdo it
       if (x -> remove) break;
 
-      if (t.damage > 0 && t.load >= t.load_time && d <= t.range){
+      if (t.damage > 0 && t.load >= 1 && d <= t.range){
 	t.load = 0;
 	
 	if (utility::random_uniform() < t.accuracy){
@@ -98,12 +102,12 @@ hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
 
-    if (s -> load < s -> current_stats.load_time) return;
+    if (s -> load < s -> load_time) return;
 
     // deal damage
     s -> load = 0;
-    if (utility::random_uniform() < s -> current_stats.accuracy){
-      t -> receive_damage(s, utility::random_uniform(0, s -> current_stats.solar_damage), g);
+    if (utility::random_uniform() < s -> accuracy){
+      t -> receive_damage(s, utility::random_uniform(0, s -> solar_damage), g);
     }
   };
   data[i.name] = i;
@@ -120,7 +124,7 @@ hm_t<string, interaction> &interaction::table() {
     t -> population = s -> passengers;
     t -> happiness = 1;
     t -> owner = s -> owner;
-    auto ctab = g -> players[t -> owner].research_level.solar_template_table(*t);
+    auto ctab = g -> players[t -> owner].research_level.solar_template_table(t);
     t -> choice_data = ctab["culture growth"];
 
     s -> remove = true;
@@ -150,10 +154,10 @@ hm_t<string, interaction> &interaction::table() {
     if (!s -> has_fleet()) return;
 
     // load resources
-    for (auto v : cost::keywords::resource) {
-      t -> resource[v].storage += s -> cargo[v];
+    for (auto v : keywords::resource) {
+      t -> resource_storage[v] += s -> cargo[v];
     }
-    s -> cargo = cost::resource_allocation<float>();
+    s -> cargo = cost::res_t();
 
     // go back for more
     fleet::ptr f = g -> get_fleet(s -> fleet_id);
@@ -173,12 +177,12 @@ hm_t<string, interaction> &interaction::table() {
 
     // load resources
     // todo: resource common capactiy
-    for (auto v : cost::keywords::resource) {
-      float available = t -> resource[v].storage;
+    for (auto v : keywords::resource) {
+      float available = t -> resource_storage[v];
       float cap = s -> cargo_capacity - s -> cargo[v];
       float move = fmin(available, cap);
       s -> cargo[v] += move;
-      t -> resource[v].storage -= move;
+      t -> resource_storage[v] -= move;
     }
 
     // set target

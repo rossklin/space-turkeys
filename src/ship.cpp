@@ -12,13 +12,14 @@ using namespace st3;
 
 const string ship::class_id = "ship";
 
-hm_t<string, ship_stats>& ship_stats::table() const {
+const hm_t<string, ship_stats>& ship_stats::table(){
   static bool init = false;
-  static cost::ship_allocation<ship_stats> buf;
+  static hm_t<string, ship_stats> buf;
 
-  if (init) return;
+  if (init) return buf;
 
-  auto doc = utility::get_json("ship");
+  auto pdoc = utility::get_json("ship");
+  auto &doc = (*pdoc)["ship"];
 
   ship_stats s, a;
   s.speed = 1;
@@ -27,7 +28,7 @@ hm_t<string, ship_stats>& ship_stats::table() const {
   s.ship_damage = 0;
   s.solar_damage = 0;
   s.accuracy = 0;
-  s.interaction_radius = 20;
+  s.interaction_radius_value = 20;
   s.load_time = 50;
   s.ship_class = "";
   s.upgrades.insert(interaction::land);
@@ -36,42 +37,57 @@ hm_t<string, ship_stats>& ship_stats::table() const {
   s.cargo_capacity = 0;
 
   // read ships from json structure
-  for (auto &x : doc) {
+  for (auto i = doc.MemberBegin(); i != doc.MemberEnd(); i++) {
     a = s;
-    if (x.value.HasMember("speed")) a.speed = x.value["speed"].GetFloat();
-    if (x.value.HasMember("vision")) a.vision_range = x.value["vision"].GetFloat();
-    if (x.value.HasMember("hp")) a.hp = x.value["hp"].GetFloat();
-    if (x.value.HasMember("ship_damage")) a.ship_damage = x.value["ship_damage"].GetFloat();
-    if (x.value.HasMember("solar_damage")) a.solar_damage = x.value["solar_damage"].GetFloat();
-    if (x.value.HasMember("accuracy")) a.accuracy = x.value["accuracy"].GetFloat();
-    if (x.value.HasMember("interaction_radius")) a.interaction_radius = x.value["interaction_radius"].GetFloat();
-    if (x.value.HasMember("load_time")) a.load_time = x.value["load_time"].GetFloat();
-    if (x.value.HasMember("cargo_capacity")) a.cargo_capacity = x.value["cargo_capacity"].GetFloat();
-    if (x.value.HasMember("depends_tech")) a.depends_tech = x.value["depends_tech"].GetString();
-    if (x.value.HasMember("depends_facility_level")) a.depends_facility_level = x.value["depends_facility_level"].GetInt();
+    if (i -> value.HasMember("speed")) a.speed = i -> value["speed"].GetDouble();
+    if (i -> value.HasMember("vision")) a.vision_range = i -> value["vision"].GetDouble();
+    if (i -> value.HasMember("hp")) a.hp = i -> value["hp"].GetDouble();
+    if (i -> value.HasMember("ship_damage")) a.ship_damage = i -> value["ship_damage"].GetDouble();
+    if (i -> value.HasMember("solar_damage")) a.solar_damage = i -> value["solar_damage"].GetDouble();
+    if (i -> value.HasMember("accuracy")) a.accuracy = i -> value["accuracy"].GetDouble();
+    if (i -> value.HasMember("interaction_radius")) a.interaction_radius_value = i -> value["interaction_radius"].GetDouble();
+    if (i -> value.HasMember("load_time")) a.load_time = i -> value["load_time"].GetDouble();
+    if (i -> value.HasMember("cargo_capacity")) a.cargo_capacity = i -> value["cargo_capacity"].GetDouble();
+    if (i -> value.HasMember("depends_tech")) a.depends_tech = i -> value["depends_tech"].GetString();
+    if (i -> value.HasMember("depends_facility_level")) a.depends_facility_level = i -> value["depends_facility_level"].GetInt();
       
-    a.ship_class = x.name.GetString();
+    a.ship_class = i -> name.GetString();
 
-    if (x.value.HasMember("upgrades")) {
-      if (!x.value["upgrades"].IsArray()) {
+    if (i -> value.HasMember("upgrades")) {
+      if (!i -> value["upgrades"].IsArray()) {
 	throw runtime_error("Invalid upgrades array in ship_data.json!");
       }
-	
-      for (auto &u : x.value["upgrades"]) s.upgrades.insert(u.GetString());
+
+      auto &upgrades = i -> value["upgrades"];
+      for (auto u = upgrades.Begin(); u != upgrades.End(); u++) s.upgrades.insert(u -> GetString());
     }
-      
-    a.fleet_id = identifier::source_none;
-    a.remove = false;
-    a.load = 0;
+
+    if (i -> value.HasMember("cost")) {
+      auto &cost = i -> value["cost"];
+      for (auto k : keywords::resource) {
+	const char *c = k.c_str();
+	if (cost.HasMember(c)) s.build_cost[k] = cost[c].GetDouble();
+      }
+      if (cost.HasMember("time")) s.build_time = cost["time"].GetDouble();
+    }
+    
     buf[a.ship_class] = a;
   }
 
-  buf.confirm_content(cost::keywords::ship);
+  delete pdoc;
   init = true;
   return buf;
 }
 
 ship::ship(){}
+
+ship::ship(const ship_stats &s) : ship_stats(s) {
+  fleet_id = identifier::source_none;
+  remove = false;
+  load = 0;
+  passengers = 0;
+  is_landed = false;
+}
 
 ship::~ship(){}
 
@@ -175,7 +191,7 @@ bool ship::accuracy_check(float a, ship::ptr t) {
 }
 
 float ship::interaction_radius() {
-  return interaction_radius;
+  return interaction_radius_value;
 }
 
 bool ship::is_active(){
@@ -187,13 +203,7 @@ bool ship::has_fleet() {
 }
 
 void ship::on_liftoff(solar *from, game_data *g){
-  g -> players[owner].research_level.repair_ship(*this);
-
-  auto utab = upgrade::table();
-  for (auto u : upgrades) {
-    if (utab[u].on_liftoff) utab[u].on_liftoff(this, from, g);
-  }
-
+  g -> players[owner].research_level.repair_ship(*this, from);
   is_landed = false;
 }
 
@@ -203,9 +213,10 @@ ship_stats ship_stats::operator+= (const ship_stats &b) {
   accuracy += b.accuracy;
   ship_damage += b.ship_damage;
   solar_damage += b.solar_damage;
-  interaction_radius += b.interaction_radius;
+  interaction_radius_value += b.interaction_radius_value;
   vision_range += b.vision_range;
   load_time += b.load_time;
+  cargo_capacity += b.cargo_capacity;
 }
 
 ship_stats::ship_stats(){
@@ -214,9 +225,10 @@ ship_stats::ship_stats(){
   accuracy = 0;
   ship_damage = 0;
   solar_damage = 0;
-  interaction_radius = 0;
+  interaction_radius_value = 0;
   vision_range = 0;
   load_time = 0;
+  cargo_capacity = 0;
 }
 
 void ship::copy_from(const ship &s){

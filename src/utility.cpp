@@ -3,6 +3,7 @@
 #include <iterator>
 #include <fstream>
 #include <sstream>
+#include <rapidjson/document.h>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
@@ -33,16 +34,16 @@ string get_file(ifstream& in) {
     return sstr.str();
 }
 
-rapidjson::document get_json(string key) {
+rapidjson::Document *get_json(string key) {
   string filename = key + "_data.json";
   ifstream file(filename);
   string json_data = get_file(file);
-  rapidjson::Document doc;
-  doc.Parse(json_data);
-  if (doc.HasParseError()) throw runtime_error("Error parsing json in " + filename);
+  rapidjson::Document *doc = new rapidjson::Document();
+  doc -> Parse(json_data.c_str());
+  if (doc -> HasParseError()) throw runtime_error("Error parsing json in " + filename);
   
-  if (!(doc.HasMember(key) && doc[key].IsObject())) throw runtime_error("Invalid data in " + filename + "!");
-  return doc[key];
+  if (!(doc -> HasMember(key.c_str()) && (*doc)[key.c_str()].IsObject())) throw runtime_error("Invalid data in " + filename + "!");
+  return doc;
 }
 
 template<typename T, typename F>

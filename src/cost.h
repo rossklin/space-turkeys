@@ -77,7 +77,7 @@ namespace st3{
 
     /*! cost for ship */
     ship_allocation<ship_cost> &ship_build();
-    float cost_multiplier(float level);
+    float expansion_multiplier(float level);
   };
 };
 #endif
