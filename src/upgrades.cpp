@@ -1,5 +1,6 @@
 #include <list>
 #include <string>
+#include <rapidjson/document.h>
 
 #include "interaction.h"
 #include "upgrades.h"
@@ -10,35 +11,38 @@
 using namespace std;
 using namespace st3;
 
-upgrade compile_upgrade(string i) {
-  upgrade u;
-  u.inter.insert(i);
-  return u;
-}
-
 hm_t<string, upgrade> &upgrade::table(){
   static bool init = false;
   static hm_t<string, upgrade> data;
 
   if (!init){
     init = true;
-    // upgrades for base fleet interactions
-    for (auto a : interaction::table()) data[a.first] = compile_upgrade(a.first);
+    
+    auto doc = utility::get_json("upgrade");
 
-    // make colonizers consume population
-    data[interaction::colonize].on_liftoff = [] (ship::ptr self, solar::ptr from, game_data *g) {
-      from -> population = fmax(0, from -> population - 100);
-    };
+    upgrade u, a;
+    for (auto &x : doc){
+      a = u;
+      string name = x.name.GetString()
+      if (x.value.HasMember("speed")) a.modify.speed = x.value["speed"].GetFloat();
+      if (x.value.HasMember("vision")) a.modify.vision = x.value["vision"].GetFloat();
+      if (x.value.HasMember("hp")) a.modify.hp = x.value["hp"].GetFloat();
+      if (x.value.HasMember("ship_damage")) a.modify.ship_damage = x.value["ship_damage"].GetFloat();
+      if (x.value.HasMember("solar_damage")) a.modify.solar_damage = x.value["solar_damage"].GetFloat();
+      if (x.value.HasMember("accuracy")) a.modify.accuracy = x.value["accuracy"].GetFloat();
+      if (x.value.HasMember("interaction_radius")) a.modify.interaction_radius = x.value["interaction_radius"].GetFloat();
+      if (x.value.HasMember("load_time")) a.modify.load_time = x.value["load_time"].GetFloat();
 
-    data[interaction::colonize].depends = [] (solar::ptr s){
-      return s -> population > 200;
-    };
+      if (x.value.HasMember("interactions")){
+	if (!x.value["interactions"].IsArray()) {
+	  throw runtime_error("Error: loading upgrades: interactions is not an array!");
+	}
+	
+	for (auto &i : x.value["interactions"]) a.inter.insert(i.GetString());
+      }
 
-    // tech upgrades
-    data["ship armor"].modify.hp = 1;
-    data["ship speed"].modify.speed = 1;
-    data["ship weapons"].modify.ship_damage = 1;
-    data["ship weapons"].modify.solar_damage = 1;
+      data[name] = a;
+    }
   }
   
   return data;

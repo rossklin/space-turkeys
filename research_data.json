@@ -1,0 +1,27 @@
+{
+    "research" : {
+	"ship armor" : {
+	    "cost" : 3,
+	    "req_facility_level" : 1,
+	    "ship upgrades" : {
+		"upgrade all ships" : ["ship armor"],
+	    },
+	},
+
+	"ship speed" : {
+	    "cost" : 3,
+	    "req_facility_level" : 1,
+	    "ship upgardes" : {
+		"upgrade all ships" : ["ship speed"],
+	    },
+	},
+
+	"ship weapons" : {
+	    "cost" : 5,
+	    "req_facility_level" : 2,
+	    "ship upgrades" : {
+		"upgrade all ships" : ["ship weapons"],
+	    },
+	},
+    }
+}

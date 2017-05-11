@@ -1,0 +1,19 @@
+{
+    "upgrades" : {
+	"space combat" : {
+	    "interactions" : ["space combat"],
+	},
+	"bombard" : {
+	    "interactions" : ["bombard"],
+	},
+	"land" : {
+	    "interactions" : ["land"],
+	},
+	"colonize" : {
+	    "interactions" : ["colonize", "pickup"],
+	},
+	"trade" : {
+	    "interactions" : ["trade to", "trade from"],
+	},
+    }
+}

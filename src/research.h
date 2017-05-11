@@ -6,7 +6,6 @@
 #include <list>
 
 #include "ship.h"
-#include "turret.h"
 #include "solar.h"
 #include "choice.h"
 
@@ -28,18 +27,16 @@ namespace st3{
     
     /*! struct representing the research level of a player */
     struct data {
-      hm_t<std::string, tech> tree;
+      static const hm_t<std::string, tech> &get_tree();
       std::set<std::string> researched;
       sfloat accumulated;
       sint facility_level;
 
-      data();
       std::list<std::string> available();
-      ship build_ship(std::string v);
-      turret build_turret(std::string v);
-      void repair_ship(ship &s);
+      ship build_ship(std::string v, solar::ptr sol);
+      void repair_ship(ship &s, solar::ptr sol);
       bool can_build_ship(std::string v, solar::ptr s);
-      hm_t<std::string, choice::c_solar> solar_template_table(solar s);
+      hm_t<std::string, choice::c_solar> solar_template_table(solar::ptr s);
     };    
   };
 };

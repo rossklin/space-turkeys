@@ -20,9 +20,11 @@ solar::solar(){}
 solar::~solar(){}
 
 void solar::pre_phase(game_data *g){
-  for (auto &t : turrets) t.load = fmin(t.load + 1, t.load_time);
-  damage_taken.clear();
-  colonization_attempts.clear();
+  for (auto &t : development.facilities){
+    if (t.is_turret){
+      t.turret.load++;
+    }
+  }
 }
 
 // so far, solars don't move
@@ -32,7 +34,7 @@ void solar::move(game_data *g){
   dt = g -> settings.dt;
   dynamics();
 
-  // build ships and turrets
+  // build ships
   research::data r = g -> players[owner].research_level;
   for (auto v : cost::keywords::ship) {
     if (r.can_build_ship(v, ptr(this))){
@@ -44,13 +46,6 @@ void solar::move(game_data *g){
 	ships.insert(sh.id);
 	g -> add_entity(ship::ptr(new ship(sh)));
       }
-    }
-  }
-
-  for (auto v : cost::keywords::turret) {
-    while (turret_growth[v] >= 1) {
-      turret_growth[v]--;
-      turrets.push_back(r.build_turret(v));
     }
   }
 }
@@ -67,13 +62,20 @@ set<string> solar::compile_interactions(){
 
 float solar::interaction_radius() {
   float r = 0;
-  for (auto &t : turrets) r = max(r, t.range);
+
+  for (auto &t : development.facilities){
+    if (t.is_turret){
+      r = max(r, t.turret.range);
+    }
+  }
+  
   return r;
 }
 
 void solar::receive_damage(game_object::ptr s, float damage, game_data *g){
-  damage_turrets(damage);
-  population = fmax(population - 10 * damage, 0);
+  damate -= compute_shield_power();
+  damage_facilities(damage);
+  population *= 1 - 0.05 * damage;
   happiness *= 0.9;
 
   if (owner != game_object::neutral_owner && !has_defense()){
@@ -94,7 +96,7 @@ void solar::post_phase(game_data *g){
   }
 }
 
-void solar::give_commands(list<command> c, game_data *g){
+void solar::give_commands(list<command> c, game_data *g) {
   list<combid> buf;
 
   // create fleets
@@ -113,7 +115,7 @@ void solar::give_commands(list<command> c, game_data *g){
   }
 }
 
-float solar::resource_constraint(cost::resource_allocation<sfloat> r){
+float solar::resource_constraint(res_t r){
   float m = INFINITY;
 
   for (auto v : cost::keywords::resource) {
@@ -123,7 +125,7 @@ float solar::resource_constraint(cost::resource_allocation<sfloat> r){
   return m;
 }
 
-void solar::pay_resources(cost::resource_allocation<float> total){
+void solar::pay_resources(res_t total){
   for (auto k : cost::keywords::resource) {
     resource[k].storage = fmax(resource[k].storage - total[k], 0);
   }
@@ -143,7 +145,7 @@ string solar::get_info(){
 
 sfloat solar::vision(){
   sfloat res = 5;
-  for (auto &x : turrets) res = fmax(res, x.vision);
+  for (auto &x : development.facilities) res = fmax(res, x.vision);
   return res + radius;
 }
 
@@ -168,19 +170,20 @@ bool solar::serialize(sf::Packet &p){
 }
 
 bool solar::has_defense(){
-  return owner != game_object::neutral_owner && turrets.size() > 0;
+  if (owner == game_object::neutral_owner) return false;
+  for (auto &t : development.facilities) if (t.is_turret) return true;
 }
 
-void solar::damage_turrets(float d){
+void solar::damage_facilities(float d){
   float d0 = d;
-  if (turrets.empty()) return;
+  if (development.facilities.empty()) return;
 
-  while (d > 0 && turrets.size() > 0){
-    for (auto i = turrets.begin(); d > 0 && i != turrets.end(); i++){
+  while (d > 0 && development.facilities.size() > 0){
+    for (auto i = development.facilities.begin(); d > 0 && i != development.facilities.end(); i++){
       float k = fmin(utility::random_uniform(0, 0.1 * d0), d);
       i -> hp -= k;
       d -= k;
-      if (i -> hp <= 0) turrets.erase(i--);
+      if (i -> hp <= 0) development.facilities.erase(i--);
     }
   }
 }
@@ -190,9 +193,7 @@ float solar::space_status(){
   if (space <= 0) return 0;
   
   float used = 0;
-  for (auto v : cost::keywords::expansion) {
-    used += sector[v] * cost::sector_expansion()[v].space;
-  }
+  for (auto &t : development.facilities) used += t.cost.space;
 
   if (used > space) throw runtime_error("space_status: used more than space");
   return (space - used) / space;
@@ -203,18 +204,16 @@ float solar::water_status(){
   if (water <= 0) return 0;
   
   float used = 0;
-  for (auto v : cost::keywords::expansion) {
-    used += sector[v] * cost::sector_expansion()[v].water;
-  }
+  for (auto &t : development.facilities) used += t.cost.water;
 
   if (used > water) throw runtime_error("water status: used more than water!");
   return (water - used) / water;
 }
 
 float solar::population_increment(){
-  float base_growth = population * happiness * st3::solar::f_growth;
-  float culture_growth = base_growth * sector[cost::keywords::key_culture];
-  float crowding_death = population * st3::solar::f_crowding * population / (ecology * space * space_status() + 1);
+  float base_growth = population * happiness * f_growth;
+  float culture_growth = base_growth * compute_boost(cost::keywords::key_culture);
+  float crowding_death = population * f_crowding * population / (ecology * space * space_status() + 1);
   return base_growth + culture_growth - crowding_death;
 }
 
@@ -223,29 +222,24 @@ float solar::ecology_increment(){
 }
 
 float solar::happiness_increment(choice::c_solar &c){
-  return 0.01 * (0.2 * sector[cost::keywords::key_culture] + c.allocation[cost::keywords::key_culture] - c.allocation[cost::keywords::key_military] - 0.1 * log(population) / (ecology + 1) - (happiness - 0.5));
+  return 0.01 * (0.2 * compute_boost(cost::keywords::key_culture) + c.allocation[cost::keywords::key_culture] - c.allocation[cost::keywords::key_military] - 0.1 * log(population) / (ecology + 1) - (happiness - 0.5));
 }
 
 float solar::research_increment(choice::c_solar &c){
-  return c.allocation[cost::keywords::key_research] * population * sector[cost::keywords::key_research] * happiness;
+  return c.allocation[cost::keywords::key_research] * population * compute_boost(cost::keywords::key_research) * happiness;
 }
 
 float solar::resource_increment(string v, choice::c_solar &c){
-  return st3::solar::f_minerate * (1 + sector[cost::keywords::key_mining]) * c.allocation[cost::keywords::key_mining] * c.mining[v] * compute_workers();
+  return f_minerate * (1 + compute_boost(cost::keywords::key_mining)) * c.allocation[cost::keywords::key_mining] * c.mining[v] * compute_workers();
 }
 
-float solar::expansion_increment(string v, choice::c_solar &c){
-  return st3::solar::f_buildrate * c.allocation[cost::keywords::key_expansion] * c.expansion[v] * compute_workers() / (cost::expansion_multiplier(sector[v]) * cost::sector_expansion()[v].time);
+float solar::development_increment(choice::c_solar &c){
+  return f_buildrate * c.allocation[cost::keywords::key_development] * compute_workers();
 }
 
 float solar::ship_increment(string v, choice::c_solar &c){
   auto build_cost = cost::ship_build()[v];
-  return st3::solar::f_buildrate * c.allocation[cost::keywords::key_military] * c.military.c_ship[v] * compute_workers() / build_cost.time;
-}
-
-float solar::turret_increment(string v, choice::c_solar &c){
-  auto build_cost = cost::turret_build()[v];
-  return st3::solar::f_buildrate * c.allocation[cost::keywords::key_military] * c.military.c_turret[v] * compute_workers() / build_cost.time;
+  return f_buildrate * compute_boost(cost::keywords::key_military) * c.allocation[cost::keywords::key_military] * c.military.c_ship[v] * compute_workers() / build_cost.time;
 }
 
 float solar::compute_workers(){
@@ -265,15 +259,16 @@ void solar::dynamics(){
   if (population > 0){
     // population development
     
-    float random_growth = population * st3::solar::f_growth * utility::random_normal(0, 1);
+    float random_growth = population * f_growth * utility::random_normal(0, 1);
     buf.population += population_increment() * dt + random_growth * dw;
 
     // happiness development
     buf.happiness += happiness_increment(c) * dt + utility::random_normal(0, 0.01) * dw;
     buf.happiness = fmax(fmin(1, buf.happiness), 0);
 
-    // research development
-    buf.research += research_increment(c) * dt;
+    // research and development
+    buf.research_points += research_increment(c) * dt;
+    buf.development_points += research_increment(c) * dt;
 
     // mining
     for (auto v : cost::keywords::resource){
@@ -286,32 +281,11 @@ void solar::dynamics(){
     float total_quantity = 0;
     cost::countable_resource_allocation<float> total_cost;
     hm_t<string, float> weight_table;
-
-    // expansions
-    for (auto v : cost::keywords::expansion){
-      cost::countable_resource_allocation<float> effective_cost = cost::sector_expansion()[v].res;
-      effective_cost.scale(cost::expansion_multiplier(sector[v]));
-      float quantity = dt * expansion_increment(v, c);
-
-      total_quantity += quantity;
-      effective_cost.scale(quantity);
-      total_cost.add(effective_cost);
-      weight_table[v] = quantity;
-    }
     
     // military industry
     for (auto v : cost::keywords::ship){
       float quantity = dt * ship_increment(v, c);
       auto build_cost = cost::ship_build()[v];
-      total_quantity += quantity;
-      build_cost.res.scale(quantity);
-      total_cost.add(build_cost.res);
-      weight_table[v] = quantity;
-    }
-
-    for (auto v : cost::keywords::turret){
-      float quantity = dt * turret_increment(v, c);
-      auto build_cost = cost::turret_build()[v];
       total_quantity += quantity;
       build_cost.res.scale(quantity);
       total_cost.add(build_cost.res);
@@ -324,14 +298,6 @@ void solar::dynamics(){
       buf.fleet_growth[v] += allowed * weight_table[v];
     }
 
-    for (auto v : cost::keywords::turret) {
-      buf.turret_growth[v] += allowed * weight_table[v];
-    }
-
-    for (auto v : cost::keywords::expansion) {
-      buf.sector[v] += allowed * weight_table[v];
-    }
-
     total_cost.scale(allowed);
     buf.pay_resources(total_cost);
   }
@@ -342,61 +308,3 @@ void solar::dynamics(){
 bool solar::isa(string c) {
   return c == solar::class_id || c == physical_object::class_id || c == commandable_object::class_id;
 }
-
-using namespace cost;
-void solar::autofill_mining(choice::c_solar &c) {
-  typedef countable_resource_allocation<float> res_t;
-  res_t needed;
-  c.allocation[keywords::key_mining] = 0;
-  c.normalize();
-  choice_data = c;
-
-  auto calculate = [&needed, &c] (vector<string> k, function<res_t(string)> f, function<float(string)> inc) {
-    for (auto v : k) {
-      auto buf = f(v);
-      buf.scale(inc(v));
-      needed.add(buf);
-    }
-  };
-
-  auto get_expansion_cost = [this] (string v) -> res_t {
-    auto buf = cost::sector_expansion()[v].res;
-    buf.scale(cost::expansion_multiplier(sector[v]));
-    return buf;
-  };
-
-  calculate(keywords::ship, [](string v){return cost::ship_build()[v].res;}, [this, &c] (string v) {return ship_increment(v, c);});
-  calculate(keywords::turret, [](string v){return cost::turret_build()[v].res;}, [this, &c] (string v) {return turret_increment(v, c);});
-  calculate(keywords::expansion, get_expansion_cost, [this, &c] (string v) {return expansion_increment(v, c);});
-
-  // check that all resources can be mined
-  for (auto x : needed.data) if (x.second > 0 && resource[x.first].available == 0) return;
-
-  // convert needed resources to needed ratio
-  // mined = f_minerate * (1 + sec[mining]) * ratio * workers
-  // mined = needed * (1 - ratio)
-  // => 1 - ratio = f_minerate * (1 + sec) * ratio * workers / needed
-  // => 1 = (1 + f_minerate * (1 + sec) * workers / needed) * ratio
-  // => ratio = 1 / (1 + f_minerate * (1 + sec) * workers / needed)
-
-  res_t res_ratios;
-  for (auto v : keywords::resource) {
-    if (needed[v] > 0) res_ratios[v] = 1 / (1 + f_minerate * (1 + sector[keywords::key_mining]) * compute_workers() / needed[v]);
-  }
-  float ratio = res_ratios.count(); // required allocation factor
-
-  // don't allow more than 90% allocation
-  ratio = fmin(ratio, 0.9);
-
-  float other_allocation = c.allocation.count();
-
-  // x / (x + other) = ratio => x = ratio * other / (1 - ratio)
-  float mining_allocation = ratio * other_allocation / (1 - ratio);
-  
-  c.allocation[keywords::key_mining] = mining_allocation;
-
-  res_ratios.normalize();
-  for (auto v : keywords::resource) c.mining[v] = res_ratios[v];
-}
-
-

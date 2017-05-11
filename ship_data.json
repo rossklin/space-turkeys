@@ -1,0 +1,46 @@
+{
+    "ships" : {
+	"scout" : {
+	    "speed" : 2,
+	    "vision" : 100,
+	    "ship_damage" : 0.1,
+	    "accuracy" : 0.3,
+	    "upgrades" : ["space combat"]
+	},
+
+	"fighter" : {
+	    "hp" : 2,
+	    "ship_damage" : 1,
+	    "solar_damage" : 0.1,
+	    "accuracy" : 0.7,
+	    "interaction_radius" : 40,
+	    "load_time" : 20,
+	    "upgrades" : ["space combat", "bombard"],
+	    "depends_facility_level" : 1,
+	    "depends_tech" : "ship armor"
+	},
+
+	"bomber" : {
+	    "solar_damage" : 5,
+	    "accuracy" : 0.8,
+	    "upgrades" : ["bombard"],
+	    "depends_facility_level" : 2,
+	    "depends_tech" : "ship weapons",
+	},
+
+	"colonizer" : {
+	    "speed" : 0.5,
+	    "hp" : 2,
+	    "upgrades" : ["colonize"],
+	    "depends_facility_level" : 1,
+	},
+
+	"freighter" : {
+	    "speed" : 1,
+	    "hp" : 1,
+	    "upgrades" : ["trade"],
+	    "depends_facility_level" : 1,
+	    "cargo_capacity" : 10,
+	}
+    }
+}

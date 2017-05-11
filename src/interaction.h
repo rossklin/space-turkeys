@@ -36,6 +36,7 @@ namespace st3{
     static const std::string space_combat;
     static const std::string bombard;
     static const std::string colonize;
+    static const std::string pickup;
 
     typedef std::function<void(game_object::ptr self, game_object::ptr target, game_data *g)> perform_t;
     static hm_t<std::string, interaction> &table();

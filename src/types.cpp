@@ -7,6 +7,28 @@
 using namespace std;
 using namespace st3;
 
+const vector<string> keywords::resource = {
+  keywords::key_metals,
+  keywords::key_organics,
+  keywords::key_gases
+};
+
+const vector<string> keywords::sector = {
+  keywords::key_research,
+  keywords::key_culture,
+  keywords::key_military,
+  keywords::key_mining,
+  keywords::key_development
+};
+
+const vector<string> keywords::ship = {
+  keywords::key_scout,
+  keywords::key_fighter,
+  keywords::key_bomber,
+  keywords::key_colonizer,
+  keywords::key_freighter
+};
+
 // make a source symbol with type t and id i
 combid identifier::make(class_t t, idtype i){
   stringstream s;

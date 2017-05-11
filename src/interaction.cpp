@@ -18,6 +18,7 @@ const string interaction::turret_combat = "turret combat";
 const string interaction::space_combat = "space combat";
 const string interaction::bombard = "bombard";
 const string interaction::colonize = "colonize";
+const stirng interaction::pickup = "pickup";
 
 hm_t<string, interaction> &interaction::table() {
   static bool init = false;
@@ -115,15 +116,30 @@ hm_t<string, interaction> &interaction::table() {
     i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
       ship::ptr s = utility::guaranteed_cast<ship>(self);
       solar::ptr t = utility::guaranteed_cast<solar>(target);
+
+      if (s -> passengers  == 0) return;
       
-      // todo: let ships carry colonists
-      t -> population = 100;
+      t -> population = s -> passengers;
       t -> happiness = 1;
       t -> owner = s -> owner;
       auto ctab = g -> players[t -> owner].research_level.solar_template_table(*t);
       t -> choice_data = ctab["culture growth"];
 
       s -> remove = true;
+    };
+    data[i.name] = i;
+
+    // pickup
+    i.name = interaction::pickup;
+    i.condition = target_condition(target_condition::owned, solar::class_id);
+    i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
+      ship::ptr s = utility::guaranteed_cast<ship>(self);
+      solar::ptr t = utility::guaranteed_cast<solar>(target);
+
+      if (s -> passengers > 0) return;
+      
+      t -> population = fmax(t -> population - 100, 0);
+      s -> passengers = 100;
     };
     data[i.name] = i;
 

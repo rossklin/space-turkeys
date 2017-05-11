@@ -9,40 +9,6 @@ using namespace std;
 using namespace st3;
 using namespace cost;
 
-const vector<string> keywords::resource = {
-  keywords::key_metals,
-  keywords::key_organics,
-  keywords::key_gases
-};
-
-const vector<string> keywords::sector = {
-  keywords::key_research,
-  keywords::key_culture,
-  keywords::key_military,
-  keywords::key_mining,
-  keywords::key_expansion
-};
-
-const vector<string> keywords::expansion = {
-  keywords::key_research,
-  keywords::key_culture,
-  keywords::key_military,
-  keywords::key_mining
-};
-
-const vector<string> keywords::ship = {
-  keywords::key_scout,
-  keywords::key_fighter,
-  keywords::key_bomber,
-  keywords::key_colonizer,
-  keywords::key_freighter
-};
-  
-const vector<string> keywords::turret = {
-  keywords::key_radar_turret,
-  keywords::key_rocket_turret
-};
-
 // basic allocation
 template<typename T>
 void allocation<T>::setup(vector<string> x){

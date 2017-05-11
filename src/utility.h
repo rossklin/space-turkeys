@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <set>
+#include <rapidjson/document.h>
 
 #include "types.h"
 #include "game_object.h"
@@ -21,6 +22,8 @@ namespace st3{
     std::string format_float(float x);
 
     void init();
+
+    rapidjson::document utility::get_json(std::string filename);
     
     /* **************************************** */
     /* POINT MATHS */

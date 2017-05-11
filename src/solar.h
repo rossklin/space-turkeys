@@ -7,12 +7,51 @@
 
 #include "types.h"
 #include "ship.h"
-#include "turret.h"
 #include "game_object.h"
 #include "choice.h"
 
 namespace st3{
   class game_data;
+
+  struct turret_t {
+    sfloat range; /*!< radius in which the turret can fire */
+    sfloat damage; /*!< turret's damage */
+    sfloat accuracy;
+    sfloat load;
+  };
+
+  class facility {
+  public:
+    std::string name;
+    hm_t<std::string, sfloat> base_sector_boost;
+    sfloat vision;
+    sint is_turret;
+    turret_t turret;
+    sfloat hp;
+    sfloat provides_shield;
+    hm_t<std::string, std::set<std::string> > ship_upgrades;
+
+    // requirements
+    cost::facility_cost cost;
+    hm_t<std::string, int> depends_facilities;
+    std::set<std::string> depends_techs;
+  };
+
+  class facility_object : public facility {
+    facility base_info;
+    int level;
+
+    facility_object();
+  };
+
+  class development_tree {
+  public:
+    static hm_t<std::string, facility>& facility_tree();
+    hm_t<std::string, facility_object> facilities;
+
+    development_tree();
+    std::list<std::string> available();
+  };
 
   /*! data representing a solar system */
   class solar : public virtual physical_object, public virtual commandable_object{
@@ -23,21 +62,23 @@ namespace st3{
     
     choice::c_solar choice_data;
     float dt;
-      
-    cost::ship_allocation<sfloat> fleet_growth;
-    cost::turret_allocation<sfloat> turret_growth;
-    std::list<turret> turrets;
-    std::set<combid> ships;
-    sfloat research;
+
+    development_tree development;
+
+    // points to spend on development
+    sfloat research_points;
+    sfloat development_points;
+    
     sfloat water;
     sfloat space;
     sfloat ecology;
-    cost::resource_allocation<cost::resource_data> resource;
-    cost::sector_allocation<sfloat> sector;
     sfloat population;
     sfloat happiness;
-    hm_t<idtype, float> damage_taken;
-    hm_t<idtype, combid> colonization_attempts;
+
+    cost::res_t available_resource; 
+    cost::res_t resource_storage;
+    cost::ship_allocation<sfloat> fleet_growth;
+    std::set<combid> ships;
 
     solar();
     ~solar();
@@ -64,9 +105,8 @@ namespace st3{
     float water_status();
     float vision();
     bool has_defense();
-    void damage_turrets(float d);
     std::string get_info();
-    void autofill_mining(choice::c_solar &c);
+    float compute_boost(std::string sector);
 
     // solar: increment functions
     float population_increment();
@@ -74,9 +114,8 @@ namespace st3{
     float happiness_increment(choice::c_solar &c);
     float research_increment(choice::c_solar &c);
     float resource_increment(std::string v, choice::c_solar &c);
-    float expansion_increment(std::string v, choice::c_solar &c);
+    float development_increment(std::string v, choice::c_solar &c);
     float ship_increment(std::string v, choice::c_solar &c);
-    float turret_increment(std::string v, choice::c_solar &c);
     float compute_workers();
     void dynamics(); 
 
@@ -86,8 +125,8 @@ namespace st3{
     static constexpr float f_minerate = 1e-2;
     static constexpr float f_buildrate = 1e-1;
 
-    void pay_resources(cost::resource_allocation<float> r);
-    float resource_constraint(cost::resource_allocation<sfloat> r);
+    void pay_resources(cost::res_t r);
+    float resource_constraint(cost::res_t r);
     virtual game_object::ptr clone_impl();
     void copy_from(const solar &s);
   };

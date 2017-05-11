@@ -47,6 +47,7 @@ namespace st3{
     std::set<std::string> upgrades;
     cost::resource_allocation<float> cargo;
     sfloat cargo_capacity;
+    sint passangers;
     sint is_landed;
 
     // game_object

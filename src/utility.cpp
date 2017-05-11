@@ -1,6 +1,8 @@
 #include <iomanip>
 #include <algorithm>
 #include <iterator>
+#include <fstream>
+#include <sstream>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
@@ -23,6 +25,24 @@ boost::random::mt19937 rng;
 
 void utility::init(){
   rng.seed(time(NULL));
+}
+
+string get_file(ifstream& in) {
+    stringstream sstr;
+    sstr << in.rdbuf();
+    return sstr.str();
+}
+
+rapidjson::document get_json(string key) {
+  string filename = key + "_data.json";
+  ifstream file(filename);
+  string json_data = get_file(file);
+  rapidjson::Document doc;
+  doc.Parse(json_data);
+  if (doc.HasParseError()) throw runtime_error("Error parsing json in " + filename);
+  
+  if (!(doc.HasMember(key) && doc[key].IsObject())) throw runtime_error("Invalid data in " + filename + "!");
+  return doc[key];
 }
 
 template<typename T, typename F>

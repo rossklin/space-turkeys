@@ -1,4 +1,5 @@
 #include <vector>
+#include <rapidjson/document.h>
 
 #include "research.h"
 #include "cost.h"
@@ -12,12 +13,13 @@ using namespace st3;
 using namespace research;
 using namespace cost;
 
-ship ship_template(string k){
+ship ship_template(string k) {
   static bool init = false;
   static cost::ship_allocation<ship> buf;
 
   if (!init){    
     init = true;
+    auto doc = utility::get_json("ship");
 
     ship s, a;
     s.base_stats.speed = 1;
@@ -36,56 +38,38 @@ ship ship_template(string k){
     s.depends_tech = "";
     s.depends_facility_level = 0;
     s.cargo_capacity = 0;
-    
-    auto add_with_class = [] (ship s, string c){
-      s.ship_class = c;
-      buf[c] = s;
-    };
+    s.passengers = 0;
 
-    a = s;
-    a.base_stats.speed = 2;
-    a.base_stats.vision = 100;
-    a.base_stats.ship_damage = 0.1;
-    a.base_stats.accuracy = 0.3;
-    a.upgrades.insert(interaction::space_combat);
-    add_with_class(a, keywords::key_scout);
+    // read ships from json structure
+    for (auto &x : doc) {
+      a = s;
+      if (x.value.HasMember("speed")) a.speed = x.value["speed"].GetFloat();
+      if (x.value.HasMember("vision")) a.vision = x.value["vision"].GetFloat();
+      if (x.value.HasMember("hp")) a.hp = x.value["hp"].GetFloat();
+      if (x.value.HasMember("ship_damage")) a.ship_damage = x.value["ship_damage"].GetFloat();
+      if (x.value.HasMember("solar_damage")) a.solar_damage = x.value["solar_damage"].GetFloat();
+      if (x.value.HasMember("accuracy")) a.accuracy = x.value["accuracy"].GetFloat();
+      if (x.value.HasMember("interaction_radius")) a.interaction_radius = x.value["interaction_radius"].GetFloat();
+      if (x.value.HasMember("load_time")) a.load_time = x.value["load_time"].GetFloat();
+      if (x.value.HasMember("cargo_capacity")) a.cargo_capacity = x.value["cargo_capacity"].GetFloat();
+      if (x.value.HasMember("depends_tech")) a.depends_tech = x.value["depends_tech"].GetString();
+      if (x.value.HasMember("depends_facility_level")) a.depends_facility_level = x.value["depends_facility_level"].GetInt();
+      
+      a.ship_class = x.name.GetString();
 
-    a = s;
-    a.base_stats.hp = 2;
-    a.base_stats.ship_damage = 1;
-    a.base_stats.solar_damage = 0.1;
-    a.base_stats.accuracy = 0.7;
-    a.base_stats.interaction_radius = 40;
-    a.base_stats.load_time = 20;
-    a.upgrades.insert(interaction::space_combat);
-    a.upgrades.insert(interaction::bombard);
-    a.depends_facility_level = 1;
-    a.depends_tech = "ship armor";
-    add_with_class(a, keywords::key_fighter);
-
-    a = s;
-    a.base_stats.solar_damage = 5;
-    a.base_stats.accuracy = 0.8;
-    a.upgrades.insert(interaction::bombard);
-    a.depends_facility_level = 2;
-    a.depends_tech = "ship weapons";
-    add_with_class(a, keywords::key_bomber);
-
-    a = s;
-    a.base_stats.speed = 0.5;
-    a.base_stats.hp = 2;
-    a.upgrades.insert(interaction::colonize);
-    a.depends_facility_level = 1;
-    add_with_class(a, keywords::key_colonizer);
-
-    a = s;
-    a.base_stats.speed = 1;
-    a.base_stats.hp = 1;
-    a.upgrades.insert(interaction::trade_to);
-    a.upgrades.insert(interaction::trade_from);
-    a.depends_facility_level = 1;
-    a.cargo_capacity = 10;
-    add_with_class(a, keywords::key_freighter);
+      if (x.value.HasMember("upgrades")) {
+	if (!x.value["upgrades"].IsArray()) {
+	  throw runtime_error("Invalid upgrades array in ship_data.json!");
+	}
+	
+	for (auto &u : x.value["upgrades"]) s.upgrades.insert(u.GetString());
+      }
+      
+      a.fleet_id = identifier::source_none;
+      a.remove = false;
+      a.load = 0;
+      buf[a.ship_class] = a;
+    }
 
     buf.confirm_content(cost::keywords::ship);
   }
@@ -93,66 +77,50 @@ ship ship_template(string k){
   return buf[k];
 }
 
-turret turret_template(string k){
-  static bool init = false;
-  static cost::turret_allocation<turret> buf;
-
-  if (!init){
-    init = true;
-    turret x,a;
-
-    x.range = 50;
-    x.hp = 1;
-    x.vision = 100;
-    x.damage = 1;
-    x.accuracy = 0.5;
-    x.load_time = 30;
-    x.load = 0;
-
-    a = x;
-    a.turret_class = cost::keywords::key_rocket_turret;
-    buf[a.turret_class] = a;
-
-    a = x;
-    a.damage = 0;
-    a.vision = 200;
-    a.turret_class = cost::keywords::key_radar_turret;
-    buf[a.turret_class] = a;
-
-    buf.confirm_content(cost::keywords::turret);
-  }
-
-  return buf[k];
-}
-
-data::data(){
+data::data(){  
   accumulated = 0;
   facility_level = 0;
+}
 
-  tech t;
+hm_t<string, tech>& data::get_tree(){
+  static hm_t<std::string, tech> tree;
+  static bool init = false;
 
-  // upgrade "ship armor"
-  t.name = "ship armor";
-  t.cost = 3;
+  if (init) return tree;
+
+  tech t, a;
+  t.cost = 1;
   t.req_facility_level = 1;
-  t.ship_upgrades[research::upgrade_all_ships] = {"ship armor"};
-  tree[t.name] = t;
 
-  // upgrade "ship speed"
-  t.name = "ship speed";
-  t.cost = 3;
-  t.req_facility_level = 1;
-  t.ship_upgrades[research::upgrade_all_ships] = {"ship speed"};
-  tree[t.name] = t;
+  auto doc = utility::get_json("research");
 
-  // upgrade "ship weapons"
-  t.name = "ship weapons";
-  t.cost = 5;
-  t.req_facility_level = 1;
-  t.depends = {"ship armor", "ship speed"};
-  t.ship_upgrades[research::upgrade_all_ships] = {"ship weapons"};
-  tree[t.name] = t;
+  for (auto &x : doc) {
+    a = t;
+    a.name = x.name.GetString();
+
+    if (x.value.HasMember("cost")) a.cost = x.value["cost"].GetFloat();
+    if (x.value.HasMember("req_facility_level")) a.req_facility_level = x.value["req_facility_level"].GetFloat();
+
+    if (x.value.HasMember("depends")) {
+      if (!x.value["depends"].IsArray()) {
+	throw runtime_error("Error: load research data: depends: not an array!");
+      }
+      
+      for (auto &d : x.value["depends"]) {
+	a.depends.insert(d.GetString());
+      }
+    }
+
+    if (x.value.HasMember("ship upgrades")) {
+      for (auto &u : x.value["ship upgrades"]) {
+	string ship_class = u.name.GetString();
+	for (auto &v : u.value) a.ship_upgrades[ship_class].insert(v.GetString());
+      }
+    }
+  }
   
+  init = true;
+  return tree;
 }
 
 list<string> data::available() {
@@ -170,7 +138,7 @@ list<string> data::available() {
   return res;
 }
 
-void data::repair_ship(ship &s) {
+void data::repair_ship(ship &s, solar::ptr sol) {
   ship ref = ship_template(s.ship_class);
 
   s.angle = utility::random_uniform(0, 2 * M_PI);
@@ -181,6 +149,13 @@ void data::repair_ship(ship &s) {
     s.upgrades += tree[t].ship_upgrades[research::upgrade_all_ships];
   }
 
+  // add upgrades from solar facilities
+  for (auto x : sol -> development.facilities) {
+    facility_object t = x.second;
+    s.upgrades += t.ship_upgrades[s.class_id];
+    s.upgrades += t.ship_upgrades[research::upgrade_all_ships];
+  }
+
   // evaluate upgrades
   auto utab = upgrade::table();
   s.base_stats = ref.base_stats;
@@ -188,7 +163,7 @@ void data::repair_ship(ship &s) {
   s.current_stats = s.base_stats;
 }
 
-ship data::build_ship(string c){
+ship data::build_ship(string c, solar::ptr sol){
   ship s = ship_template(c);
 
   // apply id  
@@ -201,16 +176,8 @@ ship data::build_ship(string c){
   return s;
 }
 
-turret data::build_turret(string v){
-  turret t = turret_template(v);
-
-  // todo: apply research boosts
-
-  return t;
-}
-
 bool data::can_build_ship(string v, solar::ptr sol){
-  int facility = sol -> sector[cost::keywords::key_military];
+  int facility = sol -> development.facilities[keywords::key_military].level;
   ship s = ship_template(v);
   if (s.depends_facility_level > facility) return false;
   if (s.depends_tech.length() > 0 && !researched.count(s.depends_tech)) return false;
@@ -221,7 +188,7 @@ bool data::can_build_ship(string v, solar::ptr sol){
   return true;
 }
 
-hm_t<string,choice::c_solar> data::solar_template_table(solar sol){
+hm_t<string,choice::c_solar> data::solar_template_table(solar::ptr sol){
   static hm_t<string, choice::c_solar> data;
   using namespace cost;
 
@@ -234,9 +201,8 @@ hm_t<string,choice::c_solar> data::solar_template_table(solar sol){
   // culture growth
   x = empty;
   x.allocation[keywords::key_culture] = 3;
-  x.allocation[keywords::key_expansion] = 1;    
-  x.expansion[keywords::key_culture] = 1;
-  sol.autofill_mining(x);
+  x.allocation[keywords::key_expansion] = 1;
+  x.allocation[keywords::key_mining] = 1;
   data["culture growth"] = x;
 
   // mining colony
@@ -244,10 +210,6 @@ hm_t<string,choice::c_solar> data::solar_template_table(solar sol){
   x.allocation[keywords::key_culture] = 1;
   x.allocation[keywords::key_expansion] = 1;
   x.allocation[keywords::key_mining] = 3;
-  x.expansion[keywords::key_mining] = 1;
-  x.mining[keywords::key_metals] = 1;
-  x.mining[keywords::key_gases] = 1;
-  x.mining[keywords::key_organics] = 1;
   data["mining colony"] = x;
 
   // military expansion
@@ -255,26 +217,19 @@ hm_t<string,choice::c_solar> data::solar_template_table(solar sol){
   x.allocation[keywords::key_culture] = 1;
   x.allocation[keywords::key_expansion] = 1;
   x.allocation[keywords::key_military] = 3;
-    
-  x.expansion[keywords::key_culture] = 1;
-  x.expansion[keywords::key_mining] = 1;
-  x.expansion[keywords::key_military] = 3;
+  x.allocation[keywords::key_mining] = 3;
 
-  if (can_build_ship(keywords::key_bomber, &sol)) x.military.c_ship[keywords::key_bomber] = 1;
-  if (can_build_ship(keywords::key_fighter, &sol)) x.military.c_ship[keywords::key_fighter] = 2;
-  x.military.c_turret[keywords::key_rocket_turret] = 2;
+  if (can_build_ship(keywords::key_bomber, &sol)) x.military[keywords::key_bomber] = 1;
+  if (can_build_ship(keywords::key_fighter, &sol)) x.military[keywords::key_fighter] = 2;
 
-  sol.autofill_mining(x);
   data["military expansion"] = x;
 
   // research & development
   x = empty;
   x.allocation[keywords::key_culture] = 1;
   x.allocation[keywords::key_expansion] = 1;
-  x.allocation[keywords::key_research] = 2;
-  x.expansion[keywords::key_research] = 2;
-  x.expansion[keywords::key_culture] = 1;
-  sol.autofill_mining(x);
+  x.allocation[keywords::key_research] = 1;
+  x.allocation[keywords::key_mining] = 1;
   data["research"] = x;
   
   return data;
