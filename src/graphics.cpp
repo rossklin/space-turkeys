@@ -146,21 +146,21 @@ bottom_panel::Ptr bottom_panel::Create(bool &done, bool &accept){
   return buf;
 }
 
-top_panel::Ptr top_panel::Create(){
-  auto buf = Ptr(new top_panel());
+// top_panel::Ptr top_panel::Create(){
+//   auto buf = Ptr(new top_panel());
 
-  auto layout = Box::Create(Box::Orientation::HORIZONTAL);
-  auto b_research = Button::Create("RESEARCH");
+//   auto layout = Box::Create(Box::Orientation::HORIZONTAL);
+//   auto b_research = Button::Create("RESEARCH");
 
-  b_research -> GetSignal(Widget::OnLeftClick).Connect([](){
-      desktop -> reset_qw(research_window::Create(&desktop -> response.research));
-    });
+//   b_research -> GetSignal(Widget::OnLeftClick).Connect([](){
+//       desktop -> reset_qw(research_window::Create(&desktop -> response.research));
+//     });
 
-  layout -> Pack(b_research);
-  buf -> Add(layout);
-  buf -> SetAllocation(sf::FloatRect(0, 0, desktop_dims.x, top_height));
-  return buf;
-}
+//   layout -> Pack(b_research);
+//   buf -> Add(layout);
+//   buf -> SetAllocation(sf::FloatRect(0, 0, desktop_dims.x, top_height));
+//   return buf;
+// }
 
 research_window::Ptr research_window::Create(choice::c_research *c){return Ptr(new research_window(c));}
 
@@ -196,8 +196,8 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   int qw_bottom = 0.8 * d.y;
   qw_allocation = sf::FloatRect(10, qw_top, d.x - 20, qw_bottom - qw_top);
   
-  auto top = top_panel::Create();
-  Add(top);
+  // auto top = top_panel::Create();
+  // Add(top);
   
   auto bottom = bottom_panel::Create(done, accept);
   Add(bottom);
@@ -240,8 +240,8 @@ void main_interface::clear_qw(){
 bottom_panel::bottom_panel() : Window(Window::Style::BACKGROUND) {
 }
 
-top_panel::top_panel() : Window(Window::Style::BACKGROUND) {
-}
+// top_panel::top_panel() : Window(Window::Style::BACKGROUND) {
+// }
 
 // research window
 research_window::research_window(choice::c_research *c) {
@@ -352,7 +352,6 @@ void main_window::build_choice(){
   hm_t<string, function<void()> > subq;
   subq[cost::keywords::key_mining] = [this] () {build_mining();};
   subq[cost::keywords::key_military] = [this] () {build_military();};
-  subq[cost::keywords::key_expansion] = [this] () {build_expansion();};
 
   for (auto v : cost::keywords::sector){
     auto b = priority_button(v, response.allocation[v], [this](){return response.allocation.count() < choice::max_allocation;}, tooltip);
@@ -451,16 +450,16 @@ Box::Ptr main_window::new_sub(string v){
   return buf;
 }
  
-// sub window for expansion choice
-void main_window::build_expansion(){
-  choice::c_expansion &c = response.expansion;
-  auto buf = new_sub("Expansion priorities");
+// // sub window for expansion choice
+// void main_window::build_expansion(){
+//   choice::c_expansion &c = response.expansion;
+//   auto buf = new_sub("Expansion priorities");
   
-  // add buttons for expandable sectors
-  for (auto v : cost::keywords::expansion){
-    buf -> Pack(priority_button(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip));
-  }
-};
+//   // add buttons for expandable sectors
+//   for (auto v : cost::keywords::expansion){
+//     buf -> Pack(priority_button(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip));
+//   }
+// };
 
 // sub window for military choice
 void main_window::build_military(){

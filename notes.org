@@ -1,9 +1,11 @@
 * current work
-** fix solar gui to fit new solar choice
+** [J?] fix solar gui to fit new solar choice
 ** new structure using JSON files for upgrades, ships and research
-*** implement solar::development_tree::facility_tree()
-*** fix references to e.g. research::data::tree
-*** write game_data::confirm_data that loads data and validates references
+*** rewrite json access loops using special MemberBegin and Begin
+*** look over serialization of all new types
+*** [J?] implement solar::development_tree::facility_tree()
+*** [J?] write game_data::confirm_data that loads data and validates references
+*** [J?] fix references to e.g. research::data::tree
 * [!] issues
 ** [!] bugs & crashes
 *** [!confirm?] fleets don't seem to get cleared from client choice

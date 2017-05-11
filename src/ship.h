@@ -14,39 +14,42 @@ namespace st3{
   class solar;
     
   struct ship_stats{
+    static const hm_t<std::string, ship_stats>& table();
+
     sfloat speed; /*!< ship's speed */
     sfloat hp; /*!< ship's hit points */
     sfloat accuracy;
     sfloat ship_damage;
     sfloat solar_damage;
     sfloat interaction_radius; /*!< radius in which the ship can fire */
-    sfloat vision; /*!< ship's sight radius */
+    sfloat vision_range; /*!< ship's sight radius */
     sfloat load_time;
+    std::set<std::string> upgrades;
+    cost::resource_allocation<float> cargo;
+    sfloat cargo_capacity;
+
+    // cost and req
+    std::string depends_tech;
+    sint depends_facility_level;
+
+    // ship class info
+    class_t ship_class; /*!< ship class */
 
     ship_stats operator += (const ship_stats &s);
     ship_stats();
   };
 
   /*! ship game object */
-  class ship : public virtual physical_object{
+  class ship : public virtual physical_object, public ship_stats {
   public:
     typedef ship* ptr;
     static ptr create();
     static const std::string class_id;
 
-    // ship class info
-    class_t ship_class; /*!< ship class */
-    std::string depends_tech;
-    sint depends_facility_level;
-
     combid fleet_id; /*!< id of the ship's fleet */
     sfloat angle; /*!< ship's angle */
     sfloat load;
     ship_stats base_stats;
-    ship_stats current_stats;
-    std::set<std::string> upgrades;
-    cost::resource_allocation<float> cargo;
-    sfloat cargo_capacity;
     sint passangers;
     sint is_landed;
 
@@ -70,6 +73,7 @@ namespace st3{
     ship();
     ~ship();
 
+    void set_stats(ship_stats s);
     void receive_damage(game_object::ptr from, float damage);
     void on_liftoff(solar *from, game_data *g);
     bool has_fleet();

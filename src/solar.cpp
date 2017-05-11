@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <rapidjson/document.h>
 
 #include "research.h"
 #include "solar.h"
@@ -21,8 +22,8 @@ solar::~solar(){}
 
 void solar::pre_phase(game_data *g){
   for (auto &t : development.facilities){
-    if (t.is_turret){
-      t.turret.load++;
+    if (t.second.is_turret){
+      t.second.turret.load++;
     }
   }
 }
@@ -36,11 +37,11 @@ void solar::move(game_data *g){
 
   // build ships
   research::data r = g -> players[owner].research_level;
-  for (auto v : cost::keywords::ship) {
+  for (auto v : keywords::ship) {
     if (r.can_build_ship(v, ptr(this))){
       while (fleet_growth[v] >= 1) {
 	fleet_growth[v]--;
-	ship sh = r.build_ship(v);
+	ship sh = r.build_ship(v, ptr(this));
 	sh.is_landed = true;
 	sh.owner = owner;
 	ships.insert(sh.id);
@@ -64,8 +65,8 @@ float solar::interaction_radius() {
   float r = 0;
 
   for (auto &t : development.facilities){
-    if (t.is_turret){
-      r = max(r, t.turret.range);
+    if (t.second.is_turret){
+      r = max(r, t.second.turret.range);
     }
   }
   
@@ -73,7 +74,7 @@ float solar::interaction_radius() {
 }
 
 void solar::receive_damage(game_object::ptr s, float damage, game_data *g){
-  damate -= compute_shield_power();
+  damage -= compute_shield_power();
   damage_facilities(damage);
   population *= 1 - 0.05 * damage;
   happiness *= 0.9;
@@ -115,19 +116,19 @@ void solar::give_commands(list<command> c, game_data *g) {
   }
 }
 
-float solar::resource_constraint(res_t r){
+float solar::resource_constraint(cost::res_t r){
   float m = INFINITY;
 
-  for (auto v : cost::keywords::resource) {
-    if (r[v] > 0) m = fmin(m, resource[v].storage / r[v]);
+  for (auto v : keywords::resource) {
+    if (r[v] > 0) m = fmin(m, resource_storage[v] / r[v]);
   }
 
   return m;
 }
 
-void solar::pay_resources(res_t total){
-  for (auto k : cost::keywords::resource) {
-    resource[k].storage = fmax(resource[k].storage - total[k], 0);
+void solar::pay_resources(cost::res_t total){
+  for (auto k : keywords::resource) {
+    resource_storage[k] = fmax(resource_storage[k] - total[k], 0);
   }
 }
 
@@ -145,7 +146,7 @@ string solar::get_info(){
 
 sfloat solar::vision(){
   sfloat res = 5;
-  for (auto &x : development.facilities) res = fmax(res, x.vision);
+  for (auto &x : development.facilities) res = fmax(res, x.second.vision);
   return res + radius;
 }
 
@@ -171,7 +172,7 @@ bool solar::serialize(sf::Packet &p){
 
 bool solar::has_defense(){
   if (owner == game_object::neutral_owner) return false;
-  for (auto &t : development.facilities) if (t.is_turret) return true;
+  for (auto &t : development.facilities) if (t.second.is_turret) return true;
 }
 
 void solar::damage_facilities(float d){
@@ -179,12 +180,14 @@ void solar::damage_facilities(float d){
   if (development.facilities.empty()) return;
 
   while (d > 0 && development.facilities.size() > 0){
+    list<string> remove;
     for (auto i = development.facilities.begin(); d > 0 && i != development.facilities.end(); i++){
       float k = fmin(utility::random_uniform(0, 0.1 * d0), d);
-      i -> hp -= k;
+      i -> second.hp -= k;
       d -= k;
-      if (i -> hp <= 0) development.facilities.erase(i--);
+      if (i -> second.hp <= 0) remove.push_back(i -> first);
     }
+    for (auto r : remove) development.facilities.erase(r);
   }
 }
 
@@ -193,7 +196,7 @@ float solar::space_status(){
   if (space <= 0) return 0;
   
   float used = 0;
-  for (auto &t : development.facilities) used += t.cost.space;
+  for (auto &t : development.facilities) used += t.second.cost.space;
 
   if (used > space) throw runtime_error("space_status: used more than space");
   return (space - used) / space;
@@ -204,7 +207,7 @@ float solar::water_status(){
   if (water <= 0) return 0;
   
   float used = 0;
-  for (auto &t : development.facilities) used += t.cost.water;
+  for (auto &t : development.facilities) used += t.second.cost.water;
 
   if (used > water) throw runtime_error("water status: used more than water!");
   return (water - used) / water;
@@ -212,7 +215,7 @@ float solar::water_status(){
 
 float solar::population_increment(){
   float base_growth = population * happiness * f_growth;
-  float culture_growth = base_growth * compute_boost(cost::keywords::key_culture);
+  float culture_growth = base_growth * compute_boost(keywords::key_culture);
   float crowding_death = population * f_crowding * population / (ecology * space * space_status() + 1);
   return base_growth + culture_growth - crowding_death;
 }
@@ -222,24 +225,24 @@ float solar::ecology_increment(){
 }
 
 float solar::happiness_increment(choice::c_solar &c){
-  return 0.01 * (0.2 * compute_boost(cost::keywords::key_culture) + c.allocation[cost::keywords::key_culture] - c.allocation[cost::keywords::key_military] - 0.1 * log(population) / (ecology + 1) - (happiness - 0.5));
+  return 0.01 * (0.2 * compute_boost(keywords::key_culture) + c.allocation[keywords::key_culture] - c.allocation[keywords::key_military] - 0.1 * log(population) / (ecology + 1) - (happiness - 0.5));
 }
 
 float solar::research_increment(choice::c_solar &c){
-  return c.allocation[cost::keywords::key_research] * population * compute_boost(cost::keywords::key_research) * happiness;
+  return c.allocation[keywords::key_research] * population * compute_boost(keywords::key_research) * happiness;
 }
 
 float solar::resource_increment(string v, choice::c_solar &c){
-  return f_minerate * (1 + compute_boost(cost::keywords::key_mining)) * c.allocation[cost::keywords::key_mining] * c.mining[v] * compute_workers();
+  return f_minerate * (1 + compute_boost(keywords::key_mining)) * c.allocation[keywords::key_mining] * c.mining[v] * compute_workers();
 }
 
 float solar::development_increment(choice::c_solar &c){
-  return f_buildrate * c.allocation[cost::keywords::key_development] * compute_workers();
+  return f_buildrate * c.allocation[keywords::key_development] * compute_workers();
 }
 
 float solar::ship_increment(string v, choice::c_solar &c){
   auto build_cost = cost::ship_build()[v];
-  return f_buildrate * compute_boost(cost::keywords::key_military) * c.allocation[cost::keywords::key_military] * c.military.c_ship[v] * compute_workers() / build_cost.time;
+  return f_buildrate * compute_boost(keywords::key_military) * c.allocation[keywords::key_military] * c.military[v] * compute_workers() / build_cost.time;
 }
 
 float solar::compute_workers(){
@@ -271,19 +274,19 @@ void solar::dynamics(){
     buf.development_points += research_increment(c) * dt;
 
     // mining
-    for (auto v : cost::keywords::resource){
-      float move = fmin(resource[v].available, dt * resource_increment(v, c));
-      buf.resource[v].available -= move;
-      buf.resource[v].storage += move;
+    for (auto v : keywords::resource){
+      float move = fmin(available_resource[v], dt * resource_increment(v, c));
+      buf.available_resource[v] -= move;
+      buf.resource_storage[v] += move;
     }
 
     // for all costs, sum desired quantity and cost
     float total_quantity = 0;
-    cost::countable_resource_allocation<float> total_cost;
+    cost::res_t total_cost;
     hm_t<string, float> weight_table;
     
     // military industry
-    for (auto v : cost::keywords::ship){
+    for (auto v : keywords::ship){
       float quantity = dt * ship_increment(v, c);
       auto build_cost = cost::ship_build()[v];
       total_quantity += quantity;
@@ -294,7 +297,7 @@ void solar::dynamics(){
 
     float allowed = fmin(1, resource_constraint(total_cost));
 
-    for (auto v : cost::keywords::ship) {
+    for (auto v : keywords::ship) {
       buf.fleet_growth[v] += allowed * weight_table[v];
     }
 
@@ -307,4 +310,81 @@ void solar::dynamics(){
 
 bool solar::isa(string c) {
   return c == solar::class_id || c == physical_object::class_id || c == commandable_object::class_id;
+}
+
+const hm_t<string, facility>& development_tree::table(){
+  static hm_t<string, facility> data;
+  static bool init = false;
+
+  if (init) return data;
+  rapidjson::Document doc = utility::get_json("solar");
+
+  facility base, a;
+  
+  for (auto i = doc.MemberBegin(); i != doc.MemberEnd(); i++){
+    a = base;
+    a.name = i -> name.GetString();
+
+    if (i -> value.HasMember("sector boost")) {
+      for (auto &b : i -> value["sector boost"]) {
+	a.sector_boost[b.name.GetString()] = b.value.GetFloat();
+      }
+    }
+
+    if (i -> value.HasMember("vision")) a.vision = i -> value["vision"].GetFloat();
+    if (i -> value.HasMember("hp")) a.hp = i -> value["hp"].GetFloat();
+    if (i -> value.HasMember("shield")) a.shield = i -> value["shield"].GetFloat();
+
+    if (i -> value.HasMember("turret")){
+      a.is_turret = 1;
+      auto t = i -> value["turret"];
+      if (t.HasMember("damage")) a.turret.damage = t["damage"].GetFloat();
+      if (t.HasMember("range")) a.turret.range = t["range"].GetFloat();
+      if (t.HasMember("accuracy")) a.turret.accuracy = t["accuracy"].GetFloat();
+      if (t.HasMember("load")) a.turret.load = t["load"].GetFloat();
+    }
+
+    if (i -> value.HasMember("ship upgrades")) {
+      for (auto &u : i -> value["ship upgrades"]) {
+	string ship_name = u.name.GetString();
+	for (auto &v : u.value) a.ship_upgrades[ship_name].insert(v.GetString());
+      }
+    }
+
+    if (i -> value.HasMember("cost")) {
+      auto c = i -> value["cost"];
+      if (c.HasMember("resource")) {
+	auto r = c["resource"];
+	for (auto k : keywords::resource) {
+	  if (r.HasMember(k)) a.cost.res[k] = r[k].GetFloat();
+	}
+      }
+      if (c.HasMember("water")) a.cost.water = c["water"].GetFloat();
+      if (c.HasMember("space")) a.cost.space = c["space"].GetFloat();
+      if (c.HasMember("time")) a.cost.time = c["time"].GetFloat();
+    }
+
+    if (i -> value.HasMember("depends facilities")) {
+      for (auto &d : i -> value["depends facilities"]) {
+	a.depends_facilities[d.name.GetString()] = d.value.GetFloat();
+      }
+    }
+
+    if (i -> value.HasMember("depends technologies")) {
+      for (auto &d : i -> value["depends technologies"]) a.depends_techs.insert(d.GetFloat());
+    }
+
+    data[a.name] = a;
+  }
+
+  init = true;
+  return data;
+}
+    
+facility_object::facility_object(){
+  level = 0;
+}
+
+list<string> development_tree::available() {
+  throw exception();
 }

@@ -117,29 +117,29 @@ namespace st3{
 	bottom_panel();	
       };
 
-      // top panel
-      class top_panel : public sfg::Window{
-      public:
-	typedef std::shared_ptr<top_panel> Ptr;
-	typedef std::shared_ptr<const top_panel> PtrConst;
+      /* // top panel */
+      /* class top_panel : public sfg::Window{ */
+      /* public: */
+      /* 	typedef std::shared_ptr<top_panel> Ptr; */
+      /* 	typedef std::shared_ptr<const top_panel> PtrConst; */
 
-	static Ptr Create();
+      /* 	static Ptr Create(); */
 	
-      protected:
-	top_panel();	
-      };
+      /* protected: */
+      /* 	top_panel();	 */
+      /* }; */
 
-      // research window
-      class research_window : public query<sfg::Window, choice::c_research>{
-      public:
-	typedef std::shared_ptr<research_window> Ptr;
-	typedef std::shared_ptr<const research_window> PtrConst;
+      /* // research window */
+      /* class research_window : public query<sfg::Window, choice::c_research>{ */
+      /* public: */
+      /* 	typedef std::shared_ptr<research_window> Ptr; */
+      /* 	typedef std::shared_ptr<const research_window> PtrConst; */
 
-	static Ptr Create(choice::c_research *c);
+      /* 	static Ptr Create(choice::c_research *c); */
 	
-      protected:
-	research_window(choice::c_research *c);
-      };
+      /* protected: */
+      /* 	research_window(choice::c_research *c); */
+      /* }; */
 
       // solar choice windows
       class main_window : public query<sfg::Window, choice::c_solar>{
@@ -166,7 +166,6 @@ namespace st3{
 	sfg::Box::Ptr new_sub(std::string v);
 	void build_military();
 	void build_mining();
-	void build_expansion();
 
 	sfg::Button::Ptr priority_button(std::string label, float &data, std::function<bool()> inc_val, sfg::Label::Ptr tip = 0);
       };

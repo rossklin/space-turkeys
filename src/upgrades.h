@@ -14,7 +14,7 @@ namespace st3{
   
   class upgrade{
   public:    
-    static hm_t<std::string, upgrade> &table();
+    static const hm_t<std::string, upgrade> &table();
 
     std::set<std::string> inter;
     ship_stats modify;

@@ -44,6 +44,8 @@ namespace st3{
   /*! struct containing data for game objects */
   class game_data : public entity_package{
   public:
+    static void confirm_data();
+    
     grid::tree::ptr entity_grid;
     std::vector<interaction_info> interaction_buffer;
 

@@ -248,6 +248,17 @@ bool game::choice_step(){
     players[self_id].research_level.researched.insert(interface::desktop -> response.research.identifier);
   }
 
+  // check if we can select new solar facilities
+  list<string> available_facilities;
+  for (auto s : get_all<solar>()){
+    available_facilities = s -> development.get_available();
+    if (available_facilities.size()) {
+      string sel = popup_options("Select a development for " + s -> id, available_facilities);
+      interface::desktop -> response.solar_choices[s -> id].development = sel;
+      s -> development.facilities[sel].level++;
+    }
+  }
+
   message = "make your choice";
 
   // event handler that passes the event to choice_event()

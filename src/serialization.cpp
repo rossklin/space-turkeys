@@ -221,28 +221,20 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
 }
 
 // turret
-sf::Packet& st3::operator <<(sf::Packet& packet, const turret &g){
+sf::Packet& st3::operator <<(sf::Packet& packet, const turret_t &g){
   return packet 
-    << g.turret_class
     << g.range
-    << g.vision
     << g.damage
     << g.accuracy
-    << g.load_time
-    << g.load
-    << g.hp;
+    << g.load;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, turret &g){
   return packet 
-    >> g.turret_class
     >> g.range
-    >> g.vision
     >> g.damage
     >> g.accuracy
-    >> g.load_time
-    >> g.load
-    >> g.hp;
+    >> g.load;
 }
 
 // solar
@@ -341,14 +333,6 @@ sf::Packet& st3::operator >>(sf::Packet& packet, choice::choice &c){
   return packet >> c.commands >> c.solar_choices >> c.waypoints >> c.fleets >> c.research;
 }
 
-sf::Packet& st3::operator <<(sf::Packet& packet, const choice::c_research &g){
-  return packet << g.identifier;
-}
-
-sf::Packet& st3::operator >>(sf::Packet& packet, choice::c_research &g){
-  return packet >> g.identifier;
-}
-
 // waypoint
 sf::Packet& st3::operator <<(sf::Packet& packet, const waypoint &c){
   return packet
@@ -393,11 +377,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, player &c){
 
 // research
 sf::Packet& st3::operator <<(sf::Packet& packet, const research::data &c){
-  return packet << c.tree << c.researched << c.accumulated << c.facility_level;
+  return packet << c.researched << c.accumulated << c.facility_level;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, research::data &c){
-  return packet >> c.tree >> c.researched >> c.accumulated >> c.facility_level;
+  return packet >> c.researched >> c.accumulated >> c.facility_level;
 }
 
 sf::Packet& st3::operator <<(sf::Packet& packet, const research::tech &c){
@@ -406,12 +390,4 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const research::tech &c){
 
 sf::Packet& st3::operator >>(sf::Packet& packet, research::tech &c){
   return packet >> c.name >> c.cost >> c.req_facility_level >> c.depends >> c.ship_upgrades;
-}
-
-sf::Packet& st3::operator <<(sf::Packet& packet, const cost::resource_data &g){
-  return packet << g.available << g.storage;
-}
-
-sf::Packet& st3::operator >>(sf::Packet& packet, cost::resource_data &g){
-  return packet >> g.available >> g.storage;
 }

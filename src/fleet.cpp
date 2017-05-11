@@ -126,9 +126,9 @@ void fleet::update_data(game_data *g){
 
   for (auto k : ships){
     ship::ptr s = g -> get_ship(k);
-    speed = fmin(speed, s -> current_stats.speed);
+    speed = fmin(speed, s -> speed);
     r2 = fmax(r2, utility::l2d2(s -> position - position));
-    vision_buf = fmax(vision_buf, s -> current_stats.vision);
+    vision_buf = fmax(vision_buf, s -> vision());
     p = p + s -> position;
   }
   

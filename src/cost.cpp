@@ -176,25 +176,6 @@ ship_allocation<ship_cost>& cost::ship_build(){
   return buf;
 }
 
-turret_allocation<turret_cost>& cost::turret_build(){
-  static turret_allocation<turret_cost> buf;
-  static bool init = false;
-
-  if (!init){
-    init = true;
-
-    buf[key_radar_turret].res[key_metals] = 1;
-    buf[key_radar_turret].res[key_gases] = 1;
-    buf[key_radar_turret].time = 80;
-
-    buf[key_rocket_turret].res[key_metals] = 1;
-    buf[key_rocket_turret].res[key_gases] = 2;
-    buf[key_rocket_turret].time = 80;
-  }
-
-  return buf;
-}
-
 float cost::expansion_multiplier(float level){
   return pow(2, floor(level));
 }

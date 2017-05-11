@@ -27,7 +27,7 @@ namespace st3{
     
     /*! struct representing the research level of a player */
     struct data {
-      static const hm_t<std::string, tech> &get_tree();
+      static const hm_t<std::string, tech> &table();
       std::set<std::string> researched;
       sfloat accumulated;
       sint facility_level;

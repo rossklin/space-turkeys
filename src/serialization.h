@@ -161,14 +161,14 @@ namespace st3{
     @param g the object to stream
     @return reference to the resulting packet
   */
-  sf::Packet& operator <<(sf::Packet& packet, const turret &g);
+  sf::Packet& operator <<(sf::Packet& packet, const turret_t &g);
 
   /*! stream a turret out of a packet
     @param packet the packet
     @param g the object to stream
     @return reference to the resulting packet
   */
-  sf::Packet& operator >>(sf::Packet& packet, turret &g);
+  sf::Packet& operator >>(sf::Packet& packet, turret_t &g);
 
   /*! stream a solar into packet
     @param packet the packet
@@ -183,9 +183,6 @@ namespace st3{
     @return reference to the resulting packet
   */
   sf::Packet& operator >>(sf::Packet& packet, solar &g);
-
-  sf::Packet& operator <<(sf::Packet& packet, const choice::c_research &g);
-  sf::Packet& operator >>(sf::Packet& packet, choice::c_research &g);
 
   /*! stream a solar choice into packet
     @param packet the packet
@@ -270,19 +267,5 @@ namespace st3{
     @return reference to the resulting packet
   */
   sf::Packet& operator >>(sf::Packet& packet, research::tech &g);
-
-  /*! stream a resource_data into a packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
-  sf::Packet& operator <<(sf::Packet& packet, const cost::resource_data &g);
-
-  /*! stream a resource_data out of a packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
-  sf::Packet& operator >>(sf::Packet& packet, cost::resource_data &g);
 };
 #endif

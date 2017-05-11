@@ -39,7 +39,7 @@ namespace st3{
     static const std::string pickup;
 
     typedef std::function<void(game_object::ptr self, game_object::ptr target, game_data *g)> perform_t;
-    static hm_t<std::string, interaction> &table();
+    static const hm_t<std::string, interaction> &table();
 
     std::string name;
     target_condition condition;

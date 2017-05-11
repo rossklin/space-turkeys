@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <memory>
+#include <cassert>
 
 #include "types.h"
 #include "game_data.h"
@@ -10,6 +11,7 @@
 #include "game_object.h"
 #include "build_universe.h"
 #include "com_server.h"
+#include "upgrades.h"
 
 using namespace std;
 using namespace st3;
@@ -172,12 +174,12 @@ bool game_data::validate_choice(choice::choice c, idtype id){
   cout << "game_data: validate choice: solar_choices: " << c.solar_choices.size() << endl;
 
   // research choice
-  if (c.research.identifier.length() > 0) {
+  if (c.research.length() > 0) {
     list<string> available_techs = players[id].research_level.available();
     bool ok = false;
-    for (auto t : available_techs) ok |= t == c.research.identifier;
+    for (auto t : available_techs) ok |= t == c.research;
     if (!ok) {
-      cout << "Invalid research choice submitted by player " << id << ": " << c.research.identifier << endl;
+      cout << "Invalid research choice submitted by player " << id << ": " << c.research << endl;
       return false;
     }
   }
@@ -252,8 +254,8 @@ void game_data::apply_choice(choice::choice c, idtype id){
   if (!validate_choice(c, id)) throw runtime_error("player " + to_string(id) + " submitted an invalid choice!");
 
   // research choice
-  if (c.research.identifier.length() > 0){
-    research::tech t = players[id].research_level.tree[c.research.identifier];
+  if (c.research.length() > 0){
+    research::tech t = research::data::table().at(c.research);
     players[id].research_level.accumulated -= t.cost;
     players[id].research_level.researched.insert(t.name);
   }
@@ -307,7 +309,7 @@ void game_data::distribute_ships(list<combid> sh, point p){
     ship::ptr s = get_ship(x);
     s -> position.x = utility::random_normal(p.x, radius);
     s -> position.y = utility::random_normal(p.y, radius);
-    s -> current_stats = s -> base_stats;
+    s -> set_stats(s -> base_stats);
     entity_grid -> insert(s -> id, s -> position);
   }
 }
@@ -361,9 +363,8 @@ void game_data::build(){
 
   cout << "game_data: running dummy build" << endl;
 
-  resource_allocation<resource_data> initial_resources;
-  for (auto v : keywords::resource)
-    initial_resources[v].available = 1000;
+  cost::res_t initial_resources;
+  for (auto v : keywords::resource) initial_resources[v] = 1000;
   
   // build solars
   int ntest = 100;
@@ -388,14 +389,14 @@ void game_data::build(){
       for (auto x : test_homes){
 	solar &s = solar_data[x.second];
 	s.owner = x.first;
-	s.resource = initial_resources;
+	s.available_resource = initial_resources;
 	s.water = 1000;
 	s.space = 1000;
 	s.population = 100;
 	s.happiness = 1;
 	s.ecology = 1;
 	s.dt = settings.dt;
-	ship sh = rbase.build_ship(cost::keywords::key_scout);
+	ship sh = rbase.build_ship(keywords::key_scout, &s);
 	sh.is_landed = true;
 	sh.owner = x.first;
 	s.ships.insert(sh.id);
@@ -457,9 +458,9 @@ void game_data::end_step(){
   hm_t<idtype, int> level;
   for (auto i : all<solar>()){
     if (i -> owner > -1){
-      pool[i -> owner] += i -> research;
-      level[i -> owner] = max(level[i -> owner], (int)i -> sector[cost::keywords::key_research]);
-      i -> research = 0;
+      pool[i -> owner] += i -> research_points;
+      level[i -> owner] = max(level[i -> owner], (int)i -> development.facilities[keywords::key_research].level);
+      i -> research_points = 0;
     }
   }
 
@@ -469,17 +470,6 @@ void game_data::end_step(){
     players[id].research_level.facility_level = level[id];
   }
 }
-
-// void game_data::limit_to(idtype id){
-//   auto re = remove_entities;
-//   list<combid> remove_buf;
-//   for (auto i : entity) {
-//     if (!entity_seen_by(i.first, id)) remove_buf.push_back(i.first);
-//   }
-
-//   for (auto i : remove_buf) remove_entity(i);
-//   remove_entities = re;
-// }
 
 game_object::ptr entity_package::get_entity(combid i){
   if (entity.count(i)){
@@ -543,5 +533,42 @@ void entity_package::clear_entities(){
   entity.clear();
 }
 
+// load data tables and confirm data references
+void game_data::confirm_data() {
+  auto &itab = interaction::table();
+  auto &utab = upgrade::table();
+  auto &stab = ship::table();
+  auto &rtab = research::data::table();
+  auto &dtab = development_tree::table();
+
+  auto check_ship_upgrades = [&utab, &stab] (hm_t<string, set<string> > u) {
+    for (auto &x : u) {
+      assert(stab.count(x.first));
+      for (auto v : x.second) assert(utab.count(v));
+    }
+  };
+
+  // validate upgrades
+  for (auto &u : utab) for (auto i : u.second.inter) assert(itab.count(i));
+
+  // validate ships
+  for (auto &s : stab) {
+    if (!s.second.depends_tech.empty()) assert(rtab.count(s.second.depends_tech));
+    for (auto &u : s.second.upgrades) assert(utab.count(u));
+  }
+
+  // validate technologies
+  for (auto &t : rtab) {
+    for (auto v : t.second.depends) assert(rtab.count(v));
+    check_ship_upgrades(t.second.ship_upgrades);
+  }
+
+  // validate facilities
+  for (auto &f : dtab) {
+    check_ship_upgrades(f.second.ship_upgrades);
+    for (auto &d : f.second.depends_facilities) assert(dtab.count(d.first));
+    for (auto &d : f.second.depends_techs) assert(rtab.count(d));
+  }
+}
 
 template list<ship::ptr> game_data::all<ship>();

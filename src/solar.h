@@ -18,26 +18,31 @@ namespace st3{
     sfloat damage; /*!< turret's damage */
     sfloat accuracy;
     sfloat load;
+
+    turret_t();
   };
 
   class facility {
   public:
     std::string name;
-    hm_t<std::string, sfloat> base_sector_boost;
+    hm_t<std::string, sfloat> sector_boost;
     sfloat vision;
     sint is_turret;
     turret_t turret;
     sfloat hp;
-    sfloat provides_shield;
+    sfloat shield;
     hm_t<std::string, std::set<std::string> > ship_upgrades;
 
     // requirements
     cost::facility_cost cost;
     hm_t<std::string, int> depends_facilities;
     std::set<std::string> depends_techs;
+
+    facility();
   };
 
   class facility_object : public facility {
+  public:
     facility base_info;
     int level;
 
@@ -46,10 +51,9 @@ namespace st3{
 
   class development_tree {
   public:
-    static hm_t<std::string, facility>& facility_tree();
+    static const hm_t<std::string, facility>& table();
     hm_t<std::string, facility_object> facilities;
 
-    development_tree();
     std::list<std::string> available();
   };
 
@@ -101,12 +105,14 @@ namespace st3{
 
     // solar
     void receive_damage(game_object::ptr s, float damage, game_data *g);
+    void damage_facilities(float d);
     float space_status();
     float water_status();
     float vision();
     bool has_defense();
     std::string get_info();
     float compute_boost(std::string sector);
+    float compute_shield_power();
 
     // solar: increment functions
     float population_increment();
@@ -114,7 +120,7 @@ namespace st3{
     float happiness_increment(choice::c_solar &c);
     float research_increment(choice::c_solar &c);
     float resource_increment(std::string v, choice::c_solar &c);
-    float development_increment(std::string v, choice::c_solar &c);
+    float development_increment(choice::c_solar &c);
     float ship_increment(std::string v, choice::c_solar &c);
     float compute_workers();
     void dynamics(); 
