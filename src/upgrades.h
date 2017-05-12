@@ -17,6 +17,7 @@ namespace st3{
     static const hm_t<std::string, upgrade> &table();
 
     std::set<std::string> inter;
+    std::set<std::string> on_liftoff;
     ship_stats modify;
   };
 };

@@ -34,7 +34,7 @@ string get_file(ifstream& in) {
     return sstr.str();
 }
 
-rapidjson::Document *get_json(string key) {
+rapidjson::Document *utility::get_json(string key) {
   string filename = key + "_data.json";
   ifstream file(filename);
   string json_data = get_file(file);

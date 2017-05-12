@@ -93,8 +93,19 @@ float cost::expansion_multiplier(float level){
   return pow(2, floor(level));
 }
 
+cost::facility_cost::facility_cost() {
+  water = 0;
+  space = 0;
+  time = 0;
+}
+
+cost::ship_cost::ship_cost() {
+  time = 0;
+}
+
 // template instantiations
 template struct allocation<st3::ship>;
+template struct allocation<sfloat>;
 template struct resource_allocation<sfloat>;
 template struct ship_allocation<sfloat>;
 template struct ship_allocation<st3::ship>;

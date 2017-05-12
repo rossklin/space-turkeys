@@ -244,14 +244,14 @@ bool game::choice_step(){
   // check if we can select a technology
   list<string> available_techs = players[self_id].research_level.available();
   if (available_techs.size() > 0) {
-    interface::desktop -> response.research.identifier = popup_options("Select a tech:", available_techs);
-    players[self_id].research_level.researched.insert(interface::desktop -> response.research.identifier);
+    interface::desktop -> response.research = popup_options("Select a tech:", available_techs);
+    players[self_id].research_level.researched.insert(interface::desktop -> response.research);
   }
 
   // check if we can select new solar facilities
   list<string> available_facilities;
   for (auto s : get_all<solar>()){
-    available_facilities = s -> development.get_available();
+    available_facilities = s -> development.available();
     if (available_facilities.size()) {
       string sel = popup_options("Select a development for " + s -> id, available_facilities);
       interface::desktop -> response.solar_choices[s -> id].development = sel;
@@ -943,7 +943,7 @@ void game::setup_targui(point p){
     entity_selector::ptr e = get_entity(k);
     for (auto i : e -> get_ships()){
       ship::ptr s = get_specific<ship>(i);
-      for (auto u : s -> upgrades) possible_actions += upgrade::table()[u].inter;
+      for (auto u : s -> upgrades) possible_actions += upgrade::table().at(u).inter;
     }
   }
 

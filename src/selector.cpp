@@ -47,10 +47,10 @@ namespace st3{
       sf::CircleShape sol(radius);
       // compute fill color
       sf::Color cfill;
-      cfill.r = 256 * utility::sigmoid(resource[cost::keywords::key_metals].available / 1000);
-      cfill.g = 256 * utility::sigmoid(resource[cost::keywords::key_organics].available / 1000);
-      cfill.b = 256 * utility::sigmoid(resource[cost::keywords::key_gases].available / 1000);
-      cfill.a = 100;
+      cfill.r = 256 * utility::sigmoid(2 * available_resource[keywords::key_metals] / 1000);
+      cfill.g = 256 * utility::sigmoid(2 * available_resource[keywords::key_organics] / 1000);
+      cfill.b = 256 * utility::sigmoid(2 * available_resource[keywords::key_gases] / 1000);
+      cfill.a = 160;
       sol.setPointCount(radius / graphics::inverse_scale(w).x);
       sol.setFillColor(cfill);
       sol.setOutlineThickness(-1);
@@ -80,7 +80,7 @@ namespace st3{
       float defrad = radius + 4; 
       sol.setRadius(defrad);
       sol.setPointCount(defrad / graphics::inverse_scale(w).x);
-      sol.setOutlineThickness(utility::sigmoid(turrets.size(), 100) / 20);
+      sol.setOutlineThickness(utility::sigmoid(compute_shield_power(), 100) / 20);
       sol.setOutlineColor(sf::Color(100, 140, 200, 150));
       sol.setFillColor(sf::Color::Transparent);
       sol.setPosition(position - point(defrad, defrad));
@@ -94,13 +94,13 @@ namespace st3{
     string specific_selector<solar>::hover_info(){
       string res = "solar at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
 
-      for (auto k : cost::keywords::resource)
-	res += "\nres:" + k + ": " + to_string((int)resource[k].available);
+      for (auto k : keywords::resource)
+	res += "\nres:" + k + ": " + to_string((int)available_resource[k]);
 
       if (owned){
 	res += "\npopulation: " + to_string((int)population);
 	res += "\nfleet: " + to_string(ships.size());
-	res += "\nturrets: " + to_string(turrets.size());
+	res += "\nshield: " + to_string(compute_shield_power());
       }
 
       return res;

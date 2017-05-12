@@ -202,9 +202,14 @@ bool ship::has_fleet() {
   return fleet_id != identifier::source_none;
 }
 
-void ship::on_liftoff(solar *from, game_data *g){
+void ship::on_liftoff(solar::ptr from, game_data *g){
   g -> players[owner].research_level.repair_ship(*this, from);
   is_landed = false;
+
+  for (auto v : upgrades) {
+    upgrade u = upgrade::table().at(v);
+    for (auto i : u.on_liftoff) interaction::table().at(i).perform(this, from, g);
+  }
 }
 
 ship_stats ship_stats::operator+= (const ship_stats &b) {

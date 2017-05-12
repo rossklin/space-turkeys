@@ -42,6 +42,15 @@ const hm_t<string, upgrade> &upgrade::table(){
       for (auto j = interactions.Begin(); j != interactions.End(); j++) a.inter.insert(j -> GetString());
     }
 
+    if (i -> value.HasMember("on liftoff")){
+      if (!i -> value["on liftoff"].IsArray()) {
+	throw runtime_error("Error: loading upgrades: on liftoff is not an array!");
+      }
+
+      auto &on_liftoff = i -> value["on liftoff"];
+      for (auto j = on_liftoff.Begin(); j != on_liftoff.End(); j++) a.on_liftoff.insert(j -> GetString());
+    }
+
     data[name] = a;
   }
 

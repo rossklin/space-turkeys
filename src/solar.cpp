@@ -237,12 +237,12 @@ float solar::resource_increment(string v, choice::c_solar &c){
 }
 
 float solar::development_increment(choice::c_solar &c){
-  return f_buildrate * c.allocation[keywords::key_development] * compute_workers();
+  return f_buildrate * c.allocation[keywords::key_development] * compute_boost(keywords::key_development) * compute_workers();
 }
 
 float solar::ship_increment(string v, choice::c_solar &c){
-  auto build_cost = cost::ship_build()[v];
-  return f_buildrate * compute_boost(keywords::key_military) * c.allocation[keywords::key_military] * c.military[v] * compute_workers() / build_cost.time;
+  float build_time = ship::table().at(v).build_time;
+  return f_buildrate * compute_boost(keywords::key_military) * c.allocation[keywords::key_military] * c.military[v] * compute_workers() / build_time;
 }
 
 float solar::compute_workers(){
@@ -288,10 +288,10 @@ void solar::dynamics(){
     // military industry
     for (auto v : keywords::ship){
       float quantity = dt * ship_increment(v, c);
-      auto build_cost = cost::ship_build()[v];
+      cost::res_t build_cost = ship::table().at(v).build_cost;
       total_quantity += quantity;
-      build_cost.res.scale(quantity);
-      total_cost.add(build_cost.res);
+      build_cost.scale(quantity);
+      total_cost.add(build_cost);
       weight_table[v] = quantity;
     }
 
@@ -312,6 +312,18 @@ bool solar::isa(string c) {
   return c == solar::class_id || c == physical_object::class_id || c == commandable_object::class_id;
 }
 
+float solar::compute_shield_power() {
+  float sum = 0;
+  for (auto &f : development.facilities) sum += f.second.shield;
+  return log(sum + 1);
+}
+
+float solar::compute_boost(string v){
+  float sum = 1;
+  for (auto &f : development.facilities) if (f.second.sector_boost.count(v)) sum *= f.second.sector_boost[v];
+  return sum;
+}
+
 const hm_t<string, facility>& development_tree::table(){
   static hm_t<string, facility> data;
   static bool init = false;
@@ -327,8 +339,8 @@ const hm_t<string, facility>& development_tree::table(){
 
     if (i -> value.HasMember("sector boost")) {
       auto &secboost = i -> value["sector boost"];
-      for (auto b = secboost.MemberBegin(); b != secboost.MemberEnd(); b++) {
-	a.sector_boost[b -> name.GetString()] = b -> value.GetDouble();
+      for (auto k : keywords::sector) {
+	if (secboost.HasMember(k.c_str())) a.sector_boost[k] = secboost[k.c_str()].GetDouble();
       }
     }
 
@@ -369,7 +381,7 @@ const hm_t<string, facility>& development_tree::table(){
     if (i -> value.HasMember("depends facilities")) {
       auto &dep = i -> value["depends facilities"];
       for (auto d = dep.MemberBegin(); d != dep.MemberEnd(); d++) {
-	a.depends_facilities[d -> name.GetString()] = d -> value.GetDouble();
+	a.depends_facilities[d -> name.GetString()] = d -> value.GetInt();
       }
     }
 
@@ -387,6 +399,20 @@ const hm_t<string, facility>& development_tree::table(){
     
 facility_object::facility_object(){
   level = 0;
+}
+
+facility::facility() {
+  vision = 0;
+  is_turret = 0;
+  hp = 0;
+  shield = 0;
+}
+
+turret_t::turret_t(){
+  range = 0;
+  damage = 0;
+  accuracy = 0;
+  load = 0;
 }
 
 list<string> development_tree::available() {

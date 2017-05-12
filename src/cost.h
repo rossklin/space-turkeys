@@ -68,11 +68,15 @@ namespace st3{
       sfloat water;
       sfloat space;
       sfloat time;
+
+      facility_cost();
     };
 
     struct ship_cost{
       res_t res;
       sfloat time;
+
+      ship_cost();
     };
 
     /*! cost for ship */

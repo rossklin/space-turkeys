@@ -10,10 +10,14 @@
 	    "interactions" : ["land"],
 	},
 	"colonize" : {
-	    "interactions" : ["colonize", "pickup"],
+	    "interactions" : ["colonize"],
+	    "on liftoff" : ["pickup"],
 	},
 	"trade" : {
 	    "interactions" : ["trade to", "trade from"],
+	},
+	"extended radar" : {
+	    "vision" : 30,
 	},
     }
 }

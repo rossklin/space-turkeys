@@ -38,20 +38,20 @@ void graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){
 
   sf::Color cnose(255,200,180,200);
 
-  if (s.ship_class == cost::keywords::key_scout){
+  if (s.ship_class == keywords::key_scout){
     svert.resize(4);
     svert[0] = sf::Vertex(point(2, 0), col);
     svert[1] = sf::Vertex(point(-2, -1), col);
     svert[2] = sf::Vertex(point(-2, 1), col);
     svert[3] = sf::Vertex(point(2, 0), col);
-  }else if (s.ship_class == cost::keywords::key_fighter){
+  }else if (s.ship_class == keywords::key_fighter){
     svert.resize(5);
     svert[0] = sf::Vertex(point(2, 0), cnose);
     svert[1] = sf::Vertex(point(-2, -1), col);
     svert[2] = sf::Vertex(point(-3, 0), col);
     svert[3] = sf::Vertex(point(-2, 1), col);
     svert[4] = sf::Vertex(point(2, 0), cnose);
-  }else if (s.ship_class == cost::keywords::key_bomber){
+  }else if (s.ship_class == keywords::key_bomber){
     svert.resize(7);
     svert[0] = sf::Vertex(point(2, 0), col);
     svert[1] = sf::Vertex(point(0, -3), cnose);
@@ -60,14 +60,14 @@ void graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){
     svert[4] = sf::Vertex(point(-2, 3), cnose);
     svert[5] = sf::Vertex(point(0, 3), cnose);
     svert[6] = sf::Vertex(point(2, 0), col);
-  }else if (s.ship_class == cost::keywords::key_colonizer){
+  }else if (s.ship_class == keywords::key_colonizer){
     svert.resize(5);
     svert[0] = sf::Vertex(point(2, 1), col);
     svert[1] = sf::Vertex(point(2, -1), col);
     svert[2] = sf::Vertex(point(-2, -1), col);
     svert[3] = sf::Vertex(point(-2, 1), col);
     svert[4] = sf::Vertex(point(2, 1), col);
-  }else if (s.ship_class == cost::keywords::key_freighter){
+  }else if (s.ship_class == keywords::key_freighter){
     svert.resize(5);
     svert[0] = sf::Vertex(point(2, 1), col);
     svert[1] = sf::Vertex(point(2, -1), col);
@@ -162,7 +162,7 @@ bottom_panel::Ptr bottom_panel::Create(bool &done, bool &accept){
 //   return buf;
 // }
 
-research_window::Ptr research_window::Create(choice::c_research *c){return Ptr(new research_window(c));}
+// research_window::Ptr research_window::Create(choice::c_research *c){return Ptr(new research_window(c));}
 
 
 const std::string main_window::sfg_id = "main window";
@@ -243,10 +243,10 @@ bottom_panel::bottom_panel() : Window(Window::Style::BACKGROUND) {
 // top_panel::top_panel() : Window(Window::Style::BACKGROUND) {
 // }
 
-// research window
-research_window::research_window(choice::c_research *c) {
-  // todo: write me
-}
+// // research window
+// research_window::research_window(choice::c_research *c) {
+//   // todo: write me
+// }
 
 // build a labeled button to modify priority data
 Button::Ptr main_window::priority_button(string label, float &data, function<bool()> inc_val, Label::Ptr tip){
@@ -301,7 +301,7 @@ main_window::main_window(solar::ptr s) : query<Window, choice::c_solar>(Window::
   meta_layout -> Pack(info_layout = Box::Create(Box::Orientation::VERTICAL));
     
   // choice template buttons
-  auto template_map = desktop -> get_research().solar_template_table(*sol);
+  auto template_map = desktop -> get_research().solar_template_table(sol);
   auto template_layout = Box::Create(Box::Orientation::HORIZONTAL);
 
   for (auto &x : template_map){
@@ -350,10 +350,10 @@ void main_window::build_choice(){
   // sector allocation buttons
   auto layout = Box::Create(Box::Orientation::VERTICAL);
   hm_t<string, function<void()> > subq;
-  subq[cost::keywords::key_mining] = [this] () {build_mining();};
-  subq[cost::keywords::key_military] = [this] () {build_military();};
+  subq[keywords::key_mining] = [this] () {build_mining();};
+  subq[keywords::key_military] = [this] () {build_military();};
 
-  for (auto v : cost::keywords::sector){
+  for (auto v : keywords::sector){
     auto b = priority_button(v, response.allocation[v], [this](){return response.allocation.count() < choice::max_allocation;}, tooltip);
 
     auto l = Box::Create(Box::Orientation::HORIZONTAL);
@@ -420,20 +420,22 @@ void main_window::build_info(){
   res -> Pack(frame("Stats", buf));
 
   buf = Box::Create(Box::Orientation::VERTICAL);
-  for (auto v : cost::keywords::expansion)
-    buf -> Pack(label_build(v, sol -> sector[v], sol -> expansion_increment(v, c)));
+  for (auto &f : sol -> development.facilities) {
+    buf -> Pack(label_build(f.first, f.second.level, sol -> development_increment(c)));
+  }
 
   res -> Pack(frame("Sectors", buf));
 
   buf = Box::Create(Box::Orientation::VERTICAL);
-  for (auto v : cost::keywords::resource)
-    buf -> Pack(resource_label_build(v, sol -> resource[v].storage, sol -> resource_increment(v, c), sol -> resource[v].available));
+  for (auto v : keywords::resource) {
+    buf -> Pack(resource_label_build(v, sol -> resource_storage[v], sol -> resource_increment(v, c), sol -> available_resource[v]));
+  }
 
   res -> Pack(frame("Resources", buf));
 
   buf = Box::Create(Box::Orientation::VERTICAL);
   buf -> Pack(label_build("Ships", sol -> ships.size(), 0));
-  buf -> Pack(label_build("Turrets", sol -> turrets.size(), 0));
+  buf -> Pack(label_build("Shield power", sol -> compute_shield_power(), 0));
 
   res -> Pack(frame("Military", buf));
   
@@ -456,36 +458,32 @@ Box::Ptr main_window::new_sub(string v){
 //   auto buf = new_sub("Expansion priorities");
   
 //   // add buttons for expandable sectors
-//   for (auto v : cost::keywords::expansion){
+//   for (auto v : keywords::expansion){
 //     buf -> Pack(priority_button(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip));
 //   }
 // };
 
 // sub window for military choice
 void main_window::build_military(){
-  choice::c_military &c = response.military;
+  auto &c = response.military;
   auto buf = new_sub("Military build priorities");
   
   // add buttons for expandable sectors
-  for (auto v : cost::keywords::ship) {
+  for (auto v : keywords::ship) {
     if (!desktop -> get_research().can_build_ship(v, sol)) continue;
 
     // add ship priority button
-    buf -> Pack(priority_button(v, c.c_ship[v], [&c](){return c.c_ship.count() < choice::max_allocation;}, tooltip));
-  }
-
-  for (auto v : cost::keywords::turret) {
-    buf -> Pack(priority_button(v, c.c_turret[v], [&c](){return c.c_turret.count() < choice::max_allocation;}, tooltip));
+    buf -> Pack(priority_button(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip));
   }
 };
 
 // sub window for mining choice
 void main_window::build_mining(){
-  choice::c_mining &c = response.mining;
+  auto &c = response.mining;
   auto buf = new_sub("Mining resource priorities");
 
   // add buttons for expandable sectors
-  for (auto v : cost::keywords::resource){
+  for (auto v : keywords::resource){
     auto b = priority_button(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip);
     buf -> Pack(b);
   }

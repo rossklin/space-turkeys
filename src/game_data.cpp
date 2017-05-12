@@ -459,7 +459,7 @@ void game_data::end_step(){
   for (auto i : all<solar>()){
     if (i -> owner > -1){
       pool[i -> owner] += i -> research_points;
-      level[i -> owner] = max(level[i -> owner], (int)i -> development.facilities[keywords::key_research].level);
+      level[i -> owner] = max(level[i -> owner], i -> development.facilities[keywords::key_research].level);
       i -> research_points = 0;
     }
   }

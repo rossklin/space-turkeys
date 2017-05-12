@@ -23,5 +23,13 @@
 		"upgrade all ships" : ["ship weapons"],
 	    },
 	},
+
+	"radar" : {
+	    "cost" : 3,
+	    "depends" : ["ship speed"],
+	    "ship upgrades" : {
+		"scout" : "extended radar",
+	    },
+	},
     }
 }

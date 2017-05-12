@@ -16,19 +16,16 @@ solar::ptr build_solar(){
   s -> dt = 0.1;
   s -> population = 1000;
   s -> happiness = 1;
-  s -> research = 0;
+  s -> research_points = 0;
     
   s -> water = 1000;
   s -> space = 1000;
   s -> ecology = 1;
 
-  for (auto v : cost::keywords::resource){
-    s -> resource[v].available = 1000;
-    s -> resource[v].storage = 0;
+  for (auto v : keywords::resource){
+    s -> available_resource[v] = 1000;
+    s -> resource_storage[v] = 0;
   }
-
-  for (auto v : cost::keywords::sector)
-    s -> sector[v] = 0;
 
   return s;
 }
@@ -49,14 +46,14 @@ int main(int argc, char **argv){
   for (int i = 0; i < entities; i++){
     solar::ptr s = build_solar();
     
-    auto ctable = r.solar_template_table(*s);
+    auto ctable = r.solar_template_table(s);
     choice::c_solar c = ctable[sc];
 
     s -> choice_data = c;
     
     for (int j = 0; j < steps; j++){
       s -> dynamics();
-      cout << i << ", " << j << ", " << s -> population << ", " << s -> happiness << ", " << s -> ecology << ", " << s -> water_status() << ", " << s -> space_status() << ", " << s -> sector[cost::keywords::key_culture] << ", " << fmin(s -> resource["gases"].available, fmin(s -> resource["metals"].available, s -> resource["organics"].available)) << ", " << fmin(s -> resource["gases"].storage, fmin(s -> resource["metals"].storage, s -> resource["organics"].storage)) << ", " << s -> fleet_growth[cost::keywords::key_fighter] << "," << endl;
+      cout << i << ", " << j << ", " << s -> population << ", " << s -> happiness << ", " << s -> ecology << ", " << s -> water_status() << ", " << s -> space_status() << ", " << fmin(s -> available_resource["gases"], fmin(s -> available_resource["metals"], s -> available_resource["organics"])) << ", " << fmin(s -> resource_storage["gases"], fmin(s -> resource_storage["metals"], s -> resource_storage["organics"])) << ", " << s -> fleet_growth[keywords::key_fighter] << "," << endl;
     }
 
     delete s;
