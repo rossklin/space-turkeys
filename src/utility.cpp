@@ -40,7 +40,13 @@ rapidjson::Document *utility::get_json(string key) {
   string json_data = get_file(file);
   rapidjson::Document *doc = new rapidjson::Document();
   doc -> Parse(json_data.c_str());
-  if (doc -> HasParseError()) throw runtime_error("Error parsing json in " + filename);
+  if (doc -> HasParseError()) {
+    cout << "Error parsing json in " << filename << endl;
+    cout << "Code: " << doc -> GetParseError() << endl;
+    cout << "Offset: " << doc -> GetErrorOffset() << endl;
+    cout << "JSON data: " << endl << json_data << endl;
+    exit(-1);
+  }
   
   if (!(doc -> HasMember(key.c_str()) && (*doc)[key.c_str()].IsObject())) throw runtime_error("Invalid data in " + filename + "!");
   return doc;
@@ -58,6 +64,16 @@ typename T::ptr utility::guaranteed_cast(typename F::ptr p){
     throw runtime_error("Failed to downcast");
   }
 }
+
+template<typename K, typename V>
+list<K> utility::get_map_keys(const hm_t<K,V> &m) {
+  list<K> res;
+  for (auto &x : m) res.push_back(x.first);
+  return res;
+}
+
+template list<string> utility::get_map_keys<string, ship_stats>(const hm_t<string, ship_stats>&);
+
 
 template<typename M, typename C>
 void utility::assign_keys(M &m, C &data){

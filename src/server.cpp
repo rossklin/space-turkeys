@@ -21,7 +21,8 @@ int main(int argc, char **argv){
   sf::TcpListener listener;
   int num_clients = argc == 2 ? atoi(argv[1]) : 2;
 
-  srand(time(NULL));
+  game_data::confirm_data();
+  utility::init();
 
   com c;
   game_data g;
@@ -32,7 +33,6 @@ int main(int argc, char **argv){
 
   set_terminate(on_terminate);
 
-  utility::init();
   g.build_players(c.clients);
   g.build();
 

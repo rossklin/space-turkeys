@@ -21,14 +21,6 @@ const vector<string> keywords::sector = {
   keywords::key_development
 };
 
-const vector<string> keywords::ship = {
-  keywords::key_scout,
-  keywords::key_fighter,
-  keywords::key_bomber,
-  keywords::key_colonizer,
-  keywords::key_freighter
-};
-
 // make a source symbol with type t and id i
 combid identifier::make(class_t t, idtype i){
   stringstream s;

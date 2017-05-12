@@ -1,0 +1,104 @@
+{
+    "solar" : {
+
+	"military" : {
+	    "sector boost" : {
+		"military" : 1
+	    },
+	    "hp" : 2,
+	    "cost" : {
+		"metals" : 10,
+		"gases" : 3,
+		"organics" : 2,
+		"time" : 100,
+		"space" : 30,
+		"water" : 20
+	    }
+	},
+
+	"research" : {
+	    "sector boost" : {
+		"research" : 1
+	    },
+	    "cost" : {
+		"metals" : 3,
+		"gases" : 10,
+		"organics" : 5,
+		"time" : 100,
+		"space" : 10,
+		"water" : 10
+	    }
+	},
+
+	"local traditions" : {
+	    "sector boost" : {
+		"culture" : 1
+	    },
+	    "cost" : {
+		"time" : 200,
+		"space" : 10
+	    }
+	},
+
+	"automated mines" : {
+	    "sector boost" : {
+		"mining" : 1
+	    },
+	    "cost" : {
+		"metals" : 10,
+		"gases" : 10,
+		"organics" : 2,
+		"time" : 100,
+		"space" : 40,
+		"water" : 60
+	    }
+	},
+
+	"expansion factories" : {
+	    "sector boost" : {
+		"development" : 1
+	    },
+	    "cost" : {
+		"metals" : 10,
+		"gases" : 10,
+		"organics" : 10,
+		"time" : 100,
+		"space" : 60,
+		"water" : 40
+	    }
+	},
+
+	"missile turret" : {
+	    "vision" : 10,
+	    "hp" : 2,
+	    "turret" : {
+		"damage" : 1,
+		"range" : 50,
+		"accuracy" : 0.4,
+		"load" : 30
+	    },
+	    "cost" : {
+		"metals" : 5,
+		"gases" : 5,
+		"time" : 70,
+		"space" : 2,
+		"water" : 1
+	    },
+	    "depends facilities" : {
+		"military" : 1
+	    }
+	},
+
+	"radar tower" : {
+	    "vision" : 80,
+	    "cost" : {
+		"metals" : 5,
+		"gases" : 2,
+		"time" : 70,
+		"space" : 2,
+		"water" : 1
+	    },
+	    "depends technologies" : ["radar"]
+	}
+    }
+}

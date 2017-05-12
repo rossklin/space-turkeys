@@ -36,7 +36,10 @@ namespace st3{
     cost::res_t build_cost;
     sfloat build_time;
 
-    ship_stats operator += (const ship_stats &s);
+    // graphics
+    std::vector<std::pair<point, char> > shape;
+
+    void operator += (const ship_stats &s);
     ship_stats();
   };
 
@@ -46,6 +49,7 @@ namespace st3{
     typedef ship* ptr;
     static ptr create();
     static const std::string class_id;
+    static std::list<std::string> all_classes();
 
     combid fleet_id; /*!< id of the ship's fleet */
     sfloat angle; /*!< ship's angle */

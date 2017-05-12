@@ -396,7 +396,8 @@ void game_data::build(){
 	s.happiness = 1;
 	s.ecology = 1;
 	s.dt = settings.dt;
-	ship sh = rbase.build_ship(keywords::key_scout, &s);
+	s.radius = settings.solar_maxrad;
+	ship sh = rbase.build_ship(ship::all_classes().front(), &s);
 	sh.is_landed = true;
 	sh.owner = x.first;
 	s.ships.insert(sh.id);
@@ -543,6 +544,7 @@ void game_data::confirm_data() {
 
   auto check_ship_upgrades = [&utab, &stab] (hm_t<string, set<string> > u) {
     for (auto &x : u) {
+      if (x.first == research::upgrade_all_ships) continue;
       assert(stab.count(x.first));
       for (auto v : x.second) assert(utab.count(v));
     }
@@ -556,7 +558,6 @@ void game_data::confirm_data() {
     if (!s.second.depends_tech.empty()) assert(rtab.count(s.second.depends_tech));
     for (auto &u : s.second.upgrades) assert(utab.count(u));
   }
-  for (auto k : keywords::ship) assert(stab.count(k));
 
   // validate technologies
   for (auto &t : rtab) {

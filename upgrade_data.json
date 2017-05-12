@@ -1,23 +1,23 @@
 {
-    "upgrades" : {
+    "upgrade" : {
 	"space combat" : {
-	    "interactions" : ["space combat"],
+	    "interactions" : ["space combat"]
 	},
 	"bombard" : {
-	    "interactions" : ["bombard"],
+	    "interactions" : ["bombard"]
 	},
 	"land" : {
-	    "interactions" : ["land"],
+	    "interactions" : ["land"]
 	},
 	"colonize" : {
 	    "interactions" : ["colonize"],
-	    "on liftoff" : ["pickup"],
+	    "on liftoff" : ["pickup"]
 	},
 	"trade" : {
-	    "interactions" : ["trade to", "trade from"],
+	    "interactions" : ["trade to", "trade from"]
 	},
 	"extended radar" : {
-	    "vision" : 30,
-	},
+	    "vision" : 30
+	}
     }
 }

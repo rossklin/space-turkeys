@@ -57,8 +57,10 @@ void countable_allocation<T>::normalize(){
 // specific allocations
 
 template<typename T> ship_allocation<T>::ship_allocation() {
-  if (keywords::ship.empty()) throw runtime_error("ship_allocation(): no keywords!");  
-  allocation<T>::setup(keywords::ship);
+  if (ship::all_classes().empty()) throw runtime_error("ship_allocation(): no keywords!");
+  auto buf = ship::all_classes();
+  vector<string> classes(buf.begin(), buf.end());
+  allocation<T>::setup(classes);
 }
 
 template<typename T> resource_allocation<T>::resource_allocation() {

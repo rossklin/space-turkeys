@@ -53,7 +53,7 @@ int main(int argc, char **argv){
     
     for (int j = 0; j < steps; j++){
       s -> dynamics();
-      cout << i << ", " << j << ", " << s -> population << ", " << s -> happiness << ", " << s -> ecology << ", " << s -> water_status() << ", " << s -> space_status() << ", " << fmin(s -> available_resource["gases"], fmin(s -> available_resource["metals"], s -> available_resource["organics"])) << ", " << fmin(s -> resource_storage["gases"], fmin(s -> resource_storage["metals"], s -> resource_storage["organics"])) << ", " << s -> fleet_growth[keywords::key_fighter] << "," << endl;
+      cout << i << ", " << j << ", " << s -> population << ", " << s -> happiness << ", " << s -> ecology << ", " << s -> water_status() << ", " << s -> space_status() << ", " << fmin(s -> available_resource["gases"], fmin(s -> available_resource["metals"], s -> available_resource["organics"])) << ", " << fmin(s -> resource_storage["gases"], fmin(s -> resource_storage["metals"], s -> resource_storage["organics"])) << ", " << s -> fleet_growth["fighter"] << "," << endl;
     }
 
     delete s;

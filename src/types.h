@@ -35,7 +35,6 @@ namespace st3{
   namespace keywords{
     extern const std::vector<std::string> resource;
     extern const std::vector<std::string> sector;
-    extern const std::vector<std::string> ship;
 
     const std::string key_metals = "metals";
     const std::string key_organics = "organics";
@@ -45,11 +44,6 @@ namespace st3{
     const std::string key_culture = "culture";
     const std::string key_mining = "mining";
     const std::string key_military = "military";
-    const std::string key_scout = "scout";
-    const std::string key_fighter = "fighter";
-    const std::string key_bomber = "bomber";
-    const std::string key_colonizer = "colonizer";
-    const std::string key_freighter = "freighter";
   };
 
   /*! utilities for source and target identifiers */

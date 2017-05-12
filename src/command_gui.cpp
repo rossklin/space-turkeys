@@ -23,12 +23,12 @@ command_gui::command_gui(idtype cid, window_t *window, hm_t<combid, ship> s, set
   comid = cid;
   header_string = hstring;
   table_width = 0.4 * (dims.x - 2 * (padding + margin));
-  table_height = (dims.y - header_height - 2 * (padding + margin)) / keywords::ship.size();
+  table_height = (dims.y - header_height - 2 * (padding + margin)) / ship::all_classes().size();
   bounds = sf::FloatRect(p.x, p.y, table_width + 2 * padding, dims.y - 2 * margin);
 
-  tables.resize(keywords::ship.size());
+  tables.resize(ship::all_classes().size());
   int i = 0;
-  for (auto v : keywords::ship){
+  for (auto v : ship::all_classes()){
     // collect data for this ship class table
     hm_t<combid, ship> sbuf;
     set<combid> pbuf;

@@ -82,7 +82,7 @@ list<string> data::available() {
 }
 
 void data::repair_ship(ship &s, solar::ptr sol) {
-  ship ref(ship::table().at(s.ship_class));
+  ship_stats mod_stats = ship::table().at(s.ship_class);
 
   s.angle = utility::random_uniform(0, 2 * M_PI);
   
@@ -102,15 +102,18 @@ void data::repair_ship(ship &s, solar::ptr sol) {
 
   // evaluate upgrades
   auto &utab = upgrade::table();
-  s.base_stats = ref.base_stats;
-  for (auto u : s.upgrades) s.base_stats += utab.at(u).modify;
+  s.base_stats = mod_stats;
+  for (auto u : s.upgrades) {
+    mod_stats = utab.at(u).modify;
+    s.base_stats += mod_stats;
+  }
 
   // TODO: does assignment from parent class work?
   s = s.base_stats;
 }
 
 ship data::build_ship(string c, solar::ptr sol){
-  ship s = ship::table().at(c);
+  ship s(ship::table().at(c));
 
   // apply id  
   static int idc = 0;
@@ -123,6 +126,10 @@ ship data::build_ship(string c, solar::ptr sol){
 }
 
 bool data::can_build_ship(string v, solar::ptr sol){
+  if (!ship::table().count(v)) {
+    throw runtime_error("Military template: no such ship class: " + v);
+  }
+  
   int facility = sol -> development.facilities[keywords::key_military].level;
   ship s(ship::table().at(v));
   if (s.depends_facility_level > facility) return false;
@@ -161,8 +168,8 @@ hm_t<string,choice::c_solar> data::solar_template_table(solar::ptr sol){
   x.allocation[keywords::key_military] = 3;
   x.allocation[keywords::key_mining] = 3;
 
-  if (can_build_ship(keywords::key_bomber, sol)) x.military[keywords::key_bomber] = 1;
-  if (can_build_ship(keywords::key_fighter, sol)) x.military[keywords::key_fighter] = 2;
+  if (can_build_ship("bomber", sol)) x.military["bomber"] = 1;
+  if (can_build_ship("fighter", sol)) x.military["fighter"] = 2;
 
   data["military expansion"] = x;
 

@@ -1,5 +1,5 @@
 {
-    "ships" : {
+    "ship" : {
 	"scout" : {
 	    "speed" : 2,
 	    "vision" : 100,
@@ -9,8 +9,14 @@
 	    "cost" : {
 		"metals" : 1,
 		"gases" : 1,
-		"time" : 40,
+		"time" : 40
 	    },
+	    "shape" : [
+		{"x" : 2, "y" : 0, "c" : "p"},
+		{"x" : -2, "y" : -1, "c" : "p"},
+		{"x" : -2, "y" : 1, "c" : "p"},
+		{"x" : 2, "y" : 0, "c" : "p"}
+	    ]
 	},
 
 	"fighter" : {
@@ -22,12 +28,19 @@
 	    "load_time" : 20,
 	    "upgrades" : ["space combat", "bombard"],
 	    "depends_facility_level" : 1,
-	    "depends_tech" : "ship armor"
+	    "depends_tech" : "ship armor",
 	    "cost" : {
 		"metals" : 2,
 		"gases" : 1,
-		"time" : 80,
+		"time" : 80
 	    },
+	    "shape" : [
+		{"x" : 2, "y" : 0, "c" : "n"},
+		{"x" : -2, "y" : -1, "c" : "p"},
+		{"x" : -3, "y" : 0, "c" : "p"},
+		{"x" : -2, "y" : 1, "c" : "p"},
+		{"x" : 2, "y" : 0, "c" : "n"}
+	    ]
 	},
 
 	"bomber" : {
@@ -39,8 +52,17 @@
 	    "cost" : {
 		"metals" : 4,
 		"gases" : 3,
-		"time" : 160,
+		"time" : 160
 	    },
+	    "shape" : [
+		{"x" : 2, "y" : 0, "c" : "p"},
+		{"x" : 0, "y" : -3, "c" : "n"},
+		{"x" : -2, "y" : -3, "c" : "n"},
+		{"x" : -1, "y" : 0, "c" : "p"},
+		{"x" : -2, "y" : 3, "c" : "n"},
+		{"x" : 0, "y" : 3, "c" : "n"},
+		{"x" : 2, "y" : 0, "c" : "p"}
+	    ]
 	},
 
 	"colonizer" : {
@@ -52,8 +74,15 @@
 		"metals" : 4,
 		"gases" : 2,
 		"organics" : 3,
-		"time" : 240,
+		"time" : 240
 	    },
+	    "shape" : [
+		{"x" : 2, "y" : 1, "c" : "p"},
+		{"x" : 2, "y" : -1, "c" : "p"},
+		{"x" : -2, "y" : -1, "c" : "p"},
+		{"x" : -2, "y" : 1, "c" : "p"},
+		{"x" : 2, "y" : 1, "c" : "p"}
+	    ]
 	},
 
 	"freighter" : {
@@ -66,8 +95,15 @@
 		"metals" : 4,
 		"gases" : 3,
 		"organics" : 2,
-		"time" : 240,
+		"time" : 240
 	    },
+	    "shape" : [
+		{"x" : 2, "y" : 1, "c" : "p"},
+		{"x" : 2, "y" : -1, "c" : "p"},
+		{"x" : -2, "y" : -2, "c" : "p"},
+		{"x" : -2, "y" : 2, "c" : "p"},
+		{"x" : 2, "y" : 1, "c" : "p"}
+	    ]
 	}
     }
 }

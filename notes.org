@@ -1,14 +1,8 @@
 * current work
 ** [J?] fix solar gui to fit new solar choice
 ** new structure using JSON files for upgrades, ships and research
-*** [J?] rewrite json access loops using special MemberBegin and Begin
+*** implement development_tree::available
 *** look over serialization of all new types
-*** [J?] write solar_data.json
-*** replace ship_allocation with lookup keys in ship::table
-    This includes adding graphics info to ship_data.json?
-*** [J?] implement solar::development_tree::facility_tree()
-*** [J?] write game_data::confirm_data that loads data and validates references
-*** [J?] fix references to e.g. research::data::tree
 * [!] issues
 ** [!] bugs & crashes
 *** [!confirm?] fleets don't seem to get cleared from client choice
@@ -85,8 +79,18 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
-** moved target selection to specific class
+** [J] rewrite json access loops using special MemberBegin and Begin
+** [J] write solar_data.json
+** [J] replace ship_allocation with lookup keys in ship::table
+    This includes adding graphics info to ship_data.json?
+** [J] implement solar::development_tree::facility_tree()
+** [J] write game_data::confirm_data that loads data and validates references
+** [J] fix references to e.g. research::data::tree
+** [J] ship::ship(ship_stats) must assign base_stats
+** [J] data loader functions are accumulating sets e.g. upgrades
+** [J] fill out ship_stats constructor
 * fixed
+** moved target selection to specific class
 ** create a frame structure
    Introduced class entity_package parent to game_data, with entities
    and remove_entities. Then the distribution frame buffer can copy

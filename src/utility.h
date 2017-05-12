@@ -19,6 +19,9 @@ namespace st3{
     template<typename M, typename C>
     void assign_keys(M &m, C &data);
 
+    template<typename K, typename V>
+    std::list<K> get_map_keys(const hm_t<K,V> &m);
+
     std::string format_float(float x);
 
     void init();

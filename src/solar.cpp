@@ -37,7 +37,7 @@ void solar::move(game_data *g){
 
   // build ships
   research::data r = g -> players[owner].research_level;
-  for (auto v : keywords::ship) {
+  for (auto v : ship::all_classes()) {
     if (r.can_build_ship(v, ptr(this))){
       while (fleet_growth[v] >= 1) {
 	fleet_growth[v]--;
@@ -286,7 +286,7 @@ void solar::dynamics(){
     hm_t<string, float> weight_table;
     
     // military industry
-    for (auto v : keywords::ship){
+    for (auto v : ship::all_classes()){
       float quantity = dt * ship_increment(v, c);
       cost::res_t build_cost = ship::table().at(v).build_cost;
       total_quantity += quantity;
@@ -297,7 +297,7 @@ void solar::dynamics(){
 
     float allowed = fmin(1, resource_constraint(total_cost));
 
-    for (auto v : keywords::ship) {
+    for (auto v : ship::all_classes()) {
       buf.fleet_growth[v] += allowed * weight_table[v];
     }
 

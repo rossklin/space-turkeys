@@ -59,16 +59,27 @@ const hm_t<string, ship_stats>& ship_stats::table(){
       }
 
       auto &upgrades = i -> value["upgrades"];
-      for (auto u = upgrades.Begin(); u != upgrades.End(); u++) s.upgrades.insert(u -> GetString());
+      for (auto u = upgrades.Begin(); u != upgrades.End(); u++) a.upgrades.insert(u -> GetString());
     }
 
     if (i -> value.HasMember("cost")) {
       auto &cost = i -> value["cost"];
       for (auto k : keywords::resource) {
 	const char *c = k.c_str();
-	if (cost.HasMember(c)) s.build_cost[k] = cost[c].GetDouble();
+	if (cost.HasMember(c)) a.build_cost[k] = cost[c].GetDouble();
       }
-      if (cost.HasMember("time")) s.build_time = cost["time"].GetDouble();
+      if (cost.HasMember("time")) a.build_time = cost["time"].GetDouble();
+    }
+
+    if (i -> value.HasMember("shape")) {
+      auto &shape = i -> value["shape"];
+      pair<point, char> v;
+      for (auto j = shape.Begin(); j != shape.End(); j++) {
+	v.first.x = (*j)["x"].GetDouble();
+	v.first.y = (*j)["y"].GetDouble();
+	v.second = (*j)["c"].GetString()[0];
+	a.shape.push_back(v);
+      }
     }
     
     buf[a.ship_class] = a;
@@ -82,6 +93,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
 ship::ship(){}
 
 ship::ship(const ship_stats &s) : ship_stats(s) {
+  base_stats = s;
   fleet_id = identifier::source_none;
   remove = false;
   load = 0;
@@ -90,6 +102,10 @@ ship::ship(const ship_stats &s) : ship_stats(s) {
 }
 
 ship::~ship(){}
+
+list<string> ship::all_classes() {
+  return utility::get_map_keys(table());
+}
 
 void ship::set_stats(ship_stats s){
   static_cast<ship_stats&>(*this) = s;
@@ -212,7 +228,7 @@ void ship::on_liftoff(solar::ptr from, game_data *g){
   }
 }
 
-ship_stats ship_stats::operator+= (const ship_stats &b) {
+void ship_stats::operator+= (const ship_stats &b) {
   speed += b.speed;
   hp += b.hp;
   accuracy += b.accuracy;
@@ -222,6 +238,9 @@ ship_stats ship_stats::operator+= (const ship_stats &b) {
   vision_range += b.vision_range;
   load_time += b.load_time;
   cargo_capacity += b.cargo_capacity;
+  upgrades += b.upgrades;
+  build_cost.add(b.build_cost);
+  build_time += b.build_time;
 }
 
 ship_stats::ship_stats(){
@@ -234,6 +253,8 @@ ship_stats::ship_stats(){
   vision_range = 0;
   load_time = 0;
   cargo_capacity = 0;
+  depends_facility_level = 0;
+  build_time = 0;
 }
 
 void ship::copy_from(const ship &s){

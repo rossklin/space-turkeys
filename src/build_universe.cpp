@@ -19,9 +19,8 @@ hm_t<combid, solar> build_universe::random_solars(game_settings settings){
     s.id = identifier::make(solar::class_id, i);
     idbuf[i] = s.id;
     
-    s.radius = settings.solar_minrad + rand() % (int)(settings.solar_maxrad - settings.solar_minrad);
-    s.position.x = s.radius + rand() % (int)(settings.width - 2 * s.radius);
-    s.position.y = s.radius + rand() % (int)(settings.height - 2 * s.radius);
+    s.position.x = utility::random_uniform(s.radius, settings.width - 2 * s.radius);
+    s.position.y = utility::random_uniform(s.radius, settings.height - 2 * s.radius);
     s.owner = -1;
 
     s.population = 0;
@@ -33,9 +32,14 @@ hm_t<combid, solar> build_universe::random_solars(game_settings settings){
     s.space = 1000 * utility::random_uniform();
     s.ecology = utility::random_uniform();
 
+    float rsum = 0;
     for (auto v : keywords::resource) {
       s.available_resource[v] = 1000 * utility::random_uniform();
+      rsum += s.available_resource[v];
     }
+
+    // set radius to indicate resources
+    s.radius = settings.solar_minrad + rsum * (settings.solar_maxrad - settings.solar_minrad) / 3000;
 
     buf[s.id] = s;
   }
@@ -80,7 +84,7 @@ float build_universe::heuristic_homes(hm_t<combid, solar> solar_buf, hm_t<idtype
   for (int i = 0; i < ntest; i++){
     // random test setup
     for (auto j : player_ids){
-      test_solars[j] = solar_ids[rand() % solar_ids.size()];
+      test_solars[j] = solar_ids[utility::random_int(solar_ids.size())];
     }
 
     // compute number of owned solars in reach of at least one other

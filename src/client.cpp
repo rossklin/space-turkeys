@@ -17,6 +17,7 @@
 #include "cost.h"
 #include "research.h"
 #include "selector.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -28,11 +29,12 @@ int main(int argc, char **argv){
   string ip = "127.0.0.1";
   string name = "Name_blabla";
 
-  srand(time(NULL));
+  game_data::confirm_data();
+  utility::init();
 
-  name[rand()%name.length()] = rand() % 256;
-  name[rand()%name.length()] = rand() % 256;
-  name[rand()%name.length()] = rand() % 256;
+  name[utility::random_int(name.length())] = utility::random_int(256);
+  name[utility::random_int(name.length())] = utility::random_int(256);
+  name[utility::random_int(name.length())] = utility::random_int(256);
 
   if (argc > 3){
     cout << "usage: " << argv[0] << " [ip_number] [name]" << endl;
