@@ -257,7 +257,7 @@ namespace st3{
       sf::FloatRect minimap_rect();
       
       bool popup_query(std::string v);
-      std::string popup_options(std::string v, std::list<std::string> opts);
+      std::string popup_options(std::string v, hm_t<std::string, std::string> opts);
 
       void popup_message(std::string title, std::string text);
 

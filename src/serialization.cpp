@@ -87,13 +87,11 @@ template<typename T>
 sf::Packet& st3::operator >>(sf::Packet& packet, std::set<T> &container){return inner_iterated_extract(packet, container);}
 
 // packet stream ops for cost::allocation
-template<typename T>
-sf::Packet& st3::operator <<(sf::Packet& packet, const cost::allocation<T> &g){
+sf::Packet& st3::operator <<(sf::Packet& packet, const cost::allocation &g){
   return packet << g.data;
 }
 
-template<typename T>
-sf::Packet& st3::operator >>(sf::Packet& packet, cost::allocation<T> &g){
+sf::Packet& st3::operator >>(sf::Packet& packet, cost::allocation &g){
   return packet >> g.data;
 }
 

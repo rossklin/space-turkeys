@@ -234,15 +234,15 @@ float solar::happiness_increment(choice::c_solar &c){
 }
 
 float solar::research_increment(choice::c_solar &c){
-  return c.allocation[keywords::key_research] * population * compute_boost(keywords::key_research) * happiness;
+  return f_resrate * c.allocation[keywords::key_research] * population * compute_boost(keywords::key_research) * happiness;
 }
 
 float solar::resource_increment(string v, choice::c_solar &c){
-  return f_minerate * (1 + compute_boost(keywords::key_mining)) * c.allocation[keywords::key_mining] * c.mining[v] * compute_workers();
+  return f_minerate * compute_boost(keywords::key_mining) * c.allocation[keywords::key_mining] * c.mining[v] * compute_workers();
 }
 
 float solar::development_increment(choice::c_solar &c){
-  return f_buildrate * c.allocation[keywords::key_development] * compute_boost(keywords::key_development) * compute_workers();
+  return f_devrate * c.allocation[keywords::key_development] * compute_boost(keywords::key_development) * compute_workers();
 }
 
 float solar::ship_increment(string v, choice::c_solar &c){
@@ -276,7 +276,7 @@ void solar::dynamics(){
 
     // research and development
     buf.research_points += research_increment(c) * dt;
-    buf.development_points += research_increment(c) * dt;
+    buf.development_points += development_increment(c) * dt;
 
     // mining
     for (auto v : keywords::resource){
@@ -330,10 +330,18 @@ float solar::compute_boost(string v){
 }
 
 void solar::develop(string fac) {
+  // initialize
   if (!development.count(fac)) {
     development[fac] = facility_table().at(fac);
   }
-  
+
+  // pay
+  cost::res_t pay = development[fac].cost.res;
+  pay.scale(cost::expansion_multiplier(development[fac].level));
+  pay_resources(pay);
+  development_points -= development[fac].cost.time;
+
+  // level up and repair
   development[fac].level++;
   development[fac].hp = development[fac].base_hp;
 }
@@ -389,11 +397,8 @@ const hm_t<string, facility>& solar::facility_table(){
 
     if (i -> value.HasMember("cost")) {
       auto &c = i -> value["cost"];
-      if (c.HasMember("resource")) {
-	auto &r = c["resource"];
-	for (auto k : keywords::resource) {
-	  if (r.HasMember(k.c_str())) a.cost.res[k] = r[k.c_str()].GetDouble();
-	}
+      for (auto k : keywords::resource) {
+	if (c.HasMember(k.c_str())) a.cost.res[k] = c[k.c_str()].GetDouble();
       }
       if (c.HasMember("water")) a.cost.water = c["water"].GetDouble();
       if (c.HasMember("space")) a.cost.space = c["space"].GetDouble();

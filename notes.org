@@ -1,5 +1,4 @@
 * current work
-** ships are drawn in color cnose only
 * [!] issues
 ** [!] bugs & crashes
 *** [!confirm?] fleets don't seem to get cleared from client choice
@@ -78,6 +77,14 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] development points aren't spent
+** [J] set research points to same speed as development
+** [J] client submitted invalid development: radar tower
+** [J] too high production of development points
+** [J] ships are drawn in color cnose only
+** [J] infobox off screen
+** [J] make solars show research and development points + level
+** [J] solar development not paying resources
 ** [J?] fix solar gui to fit new solar choice
 ** [J?] new structure using JSON files for upgrades, ships and research
 *** [J?] implement development_tree::available

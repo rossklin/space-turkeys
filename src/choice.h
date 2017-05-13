@@ -16,9 +16,9 @@ namespace st3{
 
     /*! choice of priorities for solar system */
     struct c_solar{
-      cost::countable_sector_allocation<sfloat> allocation;
-      cost::countable_ship_allocation<sfloat> military;
-      cost::countable_resource_allocation<sfloat> mining;
+      cost::sector_allocation allocation;
+      cost::ship_allocation military;
+      cost::resource_allocation mining;
       std::string development;
 
       c_solar();

@@ -1,7 +1,7 @@
 {
     "research" : {
 	"ship armor" : {
-	    "cost" : 3,
+	    "cost" : 150,
 	    "req_facility_level" : 1,
 	    "ship upgrades" : {
 		"upgrade all ships" : ["ship armor"]
@@ -9,7 +9,7 @@
 	},
 
 	"ship speed" : {
-	    "cost" : 3,
+	    "cost" : 150,
 	    "req_facility_level" : 1,
 	    "ship upgardes" : {
 		"upgrade all ships" : ["ship speed"]
@@ -17,7 +17,7 @@
 	},
 
 	"ship weapons" : {
-	    "cost" : 5,
+	    "cost" : 400,
 	    "req_facility_level" : 2,
 	    "ship upgrades" : {
 		"upgrade all ships" : ["ship weapons"]
@@ -25,7 +25,7 @@
 	},
 
 	"radar" : {
-	    "cost" : 3,
+	    "cost" : 200,
 	    "depends" : ["ship speed"],
 	    "ship upgrades" : {
 		"scout" : ["extended radar"]

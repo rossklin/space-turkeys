@@ -79,7 +79,7 @@ namespace st3{
 
     cost::res_t available_resource; 
     cost::res_t resource_storage;
-    cost::ship_allocation<sfloat> fleet_growth;
+    cost::ship_allocation fleet_growth;
     std::set<combid> ships;
 
     solar();
@@ -130,7 +130,9 @@ namespace st3{
     static constexpr float f_growth = 4e-2;
     static constexpr float f_crowding = 2e-2;
     static constexpr float f_minerate = 1e-2;
-    static constexpr float f_buildrate = 1e-1;
+    static constexpr float f_buildrate = 1e-2;
+    static constexpr float f_devrate = 1e-2;
+    static constexpr float f_resrate = 1e-2;
 
     void pay_resources(cost::res_t r);
     float resource_constraint(cost::res_t r);

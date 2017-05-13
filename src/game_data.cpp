@@ -170,59 +170,8 @@ void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &
   add_entity(f);
 }
 
-bool game_data::validate_choice(choice::choice c, idtype id){
-  cout << "game_data: validate choice: solar_choices: " << c.solar_choices.size() << endl;
-
-  // research choice
-  if (c.research.length() > 0) {
-    list<string> available_techs = players[id].research_level.available();
-    bool ok = false;
-    for (auto t : available_techs) ok |= t == c.research;
-    if (!ok) {
-      cout << "Invalid research choice submitted by player " << id << ": " << c.research << endl;
-      return false;
-    }
-  }
-
-  // solar choices
-  for (auto &x : c.solar_choices){
-    auto e = get_entity(x.first);
-    
-    if (e -> owner != id){
-      cout << "validate_choice: error: solar choice by player " << id << " for solar " << x.first << " owned by " << e -> owner << endl;
-      return false;
-    }
-    
-    if (!e -> isa(solar::class_id)){
-      cout << "validate_choice: error: solar choice by player " << id << " for " << x.first << ": not a solar!" << endl;
-      return false;
-    }
-
-    if (!x.second.development.empty()){
-      list<string> av = get_solar(x.first) -> available_facilities(players[id].research_level);
-      if (find(av.begin(), av.end(), x.second.development) == av.end()) {
-	cout << "validate_choice: error: solar choice contained invalid development: " << x.second.development << endl;
-	return false;
-      }
-    }
-  }
-
-  // commands
-  for (auto x : c.commands){
-    auto e = get_entity(x.first);
-
-    if (e -> owner != id){
-      cout << "validate_choice: error: command by player " << id << " for " << x.first << " owned by " << e -> owner << endl;
-      return false;
-    }
-  }
-
-  return true;
-}
- 
 void game_data::apply_choice(choice::choice c, idtype id){
-  cout << "apply_choice: player " << id << ": waypoints before: " << endl;
-  for (auto w : all<waypoint>()) cout << w -> id << endl;
+  cout << "apply_choice: player " << id << endl;
 
   // build waypoints and fleets before validating the choice, so that
   // commands based there can be validated
@@ -259,17 +208,47 @@ void game_data::apply_choice(choice::choice c, idtype id){
     cout << "apply_choice: player " << id << ": added " << x.first << endl;
   }
 
-  if (!validate_choice(c, id)) throw runtime_error("player " + to_string(id) + " submitted an invalid choice!");
+  // research choice: evaluated before solar choice so dependencies
+  // match those on client side
+  
+  // validate
+  if (c.research.length() > 0) {
+    list<string> available_techs = players[id].research_level.available();
+    bool ok = false;
+    for (auto t : available_techs) ok |= t == c.research;
+    if (!ok) {
+      throw runtime_error("Invalid research choice submitted by player " + to_string(id) + ": " + c.research);
+    }
+  }
 
-  // research choice
+  // apply
   if (c.research.length() > 0){
     research::tech t = research::data::table().at(c.research);
     players[id].research_level.accumulated -= t.cost;
     players[id].research_level.researched.insert(t.name);
   }
 
-  // set solar choices
-  for (auto &x : c.solar_choices) {
+  // solar choices: require research to be applied
+  for (auto &x : c.solar_choices){
+    // validate
+    auto e = get_entity(x.first);
+    
+    if (e -> owner != id){
+      throw runtime_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + x.first + " owned by " + to_string(e -> owner));
+    }
+    
+    if (!e -> isa(solar::class_id)){
+      throw runtime_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + x.first + ": not a solar!");
+    }
+
+    if (!x.second.development.empty()){
+      list<string> av = get_solar(x.first) -> available_facilities(players[id].research_level);
+      if (find(av.begin(), av.end(), x.second.development) == av.end()) {
+	throw runtime_error("validate_choice: error: solar choice contained invalid development: " + x.second.development);
+      }
+    }
+
+    // apply
     solar::ptr s = get_solar(x.first);
     s -> choice_data = x.second;
 
@@ -278,14 +257,19 @@ void game_data::apply_choice(choice::choice c, idtype id){
     }
   }
 
-  // distribute commands
+  // commands: validate
+  for (auto x : c.commands){
+    auto e = get_entity(x.first);
+    if (e -> owner != id){
+      throw runtime_error("validate_choice: error: command by player " + to_string(id) + " for " + x.first + " owned by " + to_string(e -> owner));
+    }
+  }
+
+  // apply
   for (auto x : c.commands){
     commandable_object::ptr v = utility::guaranteed_cast<commandable_object>(get_entity(x.first));
     v -> give_commands(x.second, this);
   }
-
-  cout << "apply_choice: player " << id << ": waypoints after: " << endl;
-  for (auto w : all<waypoint>()) cout << w -> id << endl;
 }
 
 void game_data::add_entity(game_object::ptr p){

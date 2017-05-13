@@ -244,16 +244,21 @@ bool game::choice_step(){
   // check if we can select a technology
   list<string> available_techs = players[self_id].research_level.available();
   if (available_techs.size() > 0) {
-    interface::desktop -> response.research = popup_options("Select a tech:", available_techs);
+    hm_t<string, string> options;
+    for (auto v : available_techs) options[v] = v;
+    interface::desktop -> response.research = popup_options("Select a tech:", options);
     players[self_id].research_level.researched.insert(interface::desktop -> response.research);
   }
 
   // check if we can select new solar facilities
   list<string> available_facilities;
   for (auto s : get_all<solar>()){
+    if (!s -> owned) continue;
     available_facilities = s -> available_facilities(players[self_id].research_level);
     if (available_facilities.size()) {
-      string sel = popup_options("Select a development for " + s -> id, available_facilities);
+      hm_t<string, string> options;
+      for (auto v : available_facilities) options[v] = v + " level " + to_string(s -> get_facility_level(v));
+      string sel = popup_options("Select a development for " + s -> id, options);
       interface::desktop -> response.solar_choices[s -> id].development = sel;
       s -> develop(sel);
     }
@@ -1204,11 +1209,13 @@ void game::popup_message(string title, string message){
 
 /** Draw a box with a a query and options ok or cancel, wait for response. */
 bool game::popup_query(string v){
-  list<string> options = {"Ok", "Cancel"};
-  return popup_options(v, options) == "Ok";
+  hm_t<string, string> options;
+  options["ok"] = "Ok";
+  options["cancel"] = "Cancel";
+  return popup_options(v, options) == "ok";
 }
 
-string game::popup_options(string header_text, list<string> options) {
+string game::popup_options(string header_text, hm_t<string, string> options) {
   int done = false;
   string response;
 
@@ -1220,9 +1227,9 @@ string game::popup_options(string header_text, list<string> options) {
   sfg::Button::Ptr button;
 
   for (auto v : options) {
-    button = sfg::Button::Create(v);
+    button = sfg::Button::Create(v.second);
     button -> GetSignal(sfg::Widget::OnLeftClick).Connect([v, &done, &response] () {
-	response = v;
+	response = v.first;
 	done = true;
       });
     blayout -> Pack(button);

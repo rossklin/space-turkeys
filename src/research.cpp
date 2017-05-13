@@ -85,19 +85,27 @@ void data::repair_ship(ship &s, solar::ptr sol) {
   ship_stats mod_stats = ship::table().at(s.ship_class);
 
   s.angle = utility::random_uniform(0, 2 * M_PI);
+
+  auto maybe_asu = [](const hm_t<string, set<string> > &map, string sc) -> set<string> {
+    if (map.count(sc)) {
+      return map.at(sc);
+    }else{
+      return set<string>();
+    }
+  };
   
   // add upgrades from research tree
   auto &rtab = table();
   for (auto t : researched) {
-    s.upgrades += rtab.at(t).ship_upgrades.at(s.class_id);
-    s.upgrades += rtab.at(t).ship_upgrades.at(research::upgrade_all_ships);
+    s.upgrades += maybe_asu(rtab.at(t).ship_upgrades, s.ship_class);
+    s.upgrades += maybe_asu(rtab.at(t).ship_upgrades, research::upgrade_all_ships);
   }
 
   // add upgrades from solar facilities
   for (auto &x : sol -> development) {
     facility_object t = x.second;
-    s.upgrades += t.ship_upgrades.at(s.class_id);
-    s.upgrades += t.ship_upgrades.at(research::upgrade_all_ships);
+    s.upgrades += maybe_asu(t.ship_upgrades, s.ship_class);
+    s.upgrades += maybe_asu(t.ship_upgrades, research::upgrade_all_ships);
   }
 
   // evaluate upgrades

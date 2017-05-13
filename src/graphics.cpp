@@ -41,7 +41,7 @@ void graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){
   svert.resize(s.shape.size());
   for (int i = 0; i < s.shape.size(); i++) {
     svert[i].position = s.shape[i].first;
-    svert[i].color = s.shape[i].second == 'c' ? col : cnose;
+    svert[i].color = s.shape[i].second == 'p' ? col : cnose;
   }
 
   sf::Transform t;
@@ -155,11 +155,10 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   desktop_dims = d;
   
   // build geometric data
-  top_height = 0.1 * d.y;
   bottom_start = 0.9 * d.y;
   int bottom_height = d.y - bottom_start - 1;
-  int qw_top = 0.1 * d.y + 10;
-  int qw_bottom = 0.8 * d.y;
+  int qw_top = 10;
+  int qw_bottom = 0.85 * d.y;
   qw_allocation = sf::FloatRect(10, qw_top, d.x - 20, qw_bottom - qw_top);
   
   // auto top = top_panel::Create();
@@ -175,7 +174,7 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   hl_box -> SetRequisition(hl_window -> GetRequisition());
   hl_box -> Pack(hover_label);
   hl_window -> Add(hl_box);
-  hl_window -> SetAllocation(sf::FloatRect(0.71 * desktop_dims.x, qw_bottom + 10, 0.28 * desktop_dims.x, desktop_dims.y - qw_bottom - 20));
+  hl_window -> SetAllocation(sf::FloatRect(0.71 * desktop_dims.x, 0.8 * desktop_dims.y, 0.28 * desktop_dims.x, 0.2 * desktop_dims.y - 20));
   Add(hl_window);
 
   // set display properties
@@ -271,7 +270,7 @@ main_window::main_window(solar::ptr s) : query<Window, choice::c_solar>(Window::
   auto template_layout = Box::Create(Box::Orientation::HORIZONTAL);
 
   for (auto &x : template_map){
-    auto b = Button::Create("Template: " + x.first);
+    auto b = Button::Create(x.first);
     b -> GetSignal(Widget::OnLeftClick).Connect([this, x] () {
 	response = x.second;
 	build_choice();
@@ -382,6 +381,8 @@ void main_window::build_info(){
   buf -> Pack(label_build("Ecology", sol -> ecology, sol -> ecology_increment()));
   buf -> Pack(label_build("Water", sol -> water_status(), 0));
   buf -> Pack(label_build("Space", sol -> space_status(), 0));
+  buf -> Pack(label_build("Research rate", sol -> research_increment(c), 0));
+  buf -> Pack(label_build("Development points", sol -> development_points, sol -> development_increment(c)));
 
   res -> Pack(frame("Stats", buf));
 

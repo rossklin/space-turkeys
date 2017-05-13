@@ -76,7 +76,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
 
     if (i -> value.HasMember("shape")) {
       auto &shape = i -> value["shape"];
-      pair<point, char> v;
+      pair<point, unsigned char> v;
       for (auto j = shape.Begin(); j != shape.End(); j++) {
 	v.first.x = (*j)["x"].GetDouble();
 	v.first.y = (*j)["y"].GetDouble();

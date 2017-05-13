@@ -78,9 +78,7 @@ namespace st3{
     void build_players(hm_t<int, server::client_t*> clients);
     void build();
 
-  protected:    
-    bool validate_choice(choice::choice c, idtype id);
-
+  protected:
     // object iteration phases
     void pre_phase();
     void update();

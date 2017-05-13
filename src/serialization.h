@@ -69,11 +69,8 @@ namespace st3{
   /*   GAME DATA OBJECTS */
   /* **************************************** */
 
-  template<typename T>
-  sf::Packet& operator <<(sf::Packet& packet, const cost::allocation<T> &g);
-
-  template<typename T>
-  sf::Packet& operator >>(sf::Packet& packet, cost::allocation<T> &g);
+  sf::Packet& operator <<(sf::Packet& packet, const cost::allocation &g);
+  sf::Packet& operator >>(sf::Packet& packet, cost::allocation &g);
 
   sf::Packet& operator <<(sf::Packet& packet, const cost::facility_cost &g);
   sf::Packet& operator >>(sf::Packet& packet, cost::facility_cost &g);
