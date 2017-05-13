@@ -76,7 +76,7 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr x = utility::guaranteed_cast<ship>(target);
     float d = utility::l2norm(s -> position - x -> position);
 
-    for (auto &buf : s -> development.facilities){
+    for (auto &buf : s -> development){
       if (!buf.second.is_turret) continue;
 
       turret_t &t = buf.second.turret;

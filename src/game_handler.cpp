@@ -24,14 +24,9 @@ void simulation_step(com &c, game_data &g) {
   frame_count = 0;
   thread t(&com::distribute_frames, c, ref(frames), ref(frame_count));
 
-  try {
-    for (frame_count = 0; frame_count < g.settings.frames_per_round; frame_count++){
-      g.increment();
-      frames[frame_count].copy_from(g);
-    }
-  }catch (exception &e){
-    cout << "Unhandled exception in simulation: " << e.what() << endl;
-    exit(-1);
+  for (frame_count = 0; frame_count < g.settings.frames_per_round; frame_count++){
+    g.increment();
+    frames[frame_count].copy_from(g);
   }
 
   cout << "waiting for distribute_frames() ..." << endl;

@@ -97,9 +97,28 @@ sf::Packet& st3::operator >>(sf::Packet& packet, cost::allocation<T> &g){
   return packet >> g.data;
 }
 
+sf::Packet& st3::operator <<(sf::Packet& packet, const cost::facility_cost &g) {
+  return packet << g.res << g.water << g.space << g.time;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, cost::facility_cost &g){
+  return packet >> g.res >> g.water >> g.space >> g.time;
+}
+
+
+template<typename F, typename S>
+sf::Packet& st3::operator <<(sf::Packet& packet, const pair<F,S> &g){
+  return packet << g.first << g.second;
+}
+
+template<typename F, typename S>
+sf::Packet& st3::operator >>(sf::Packet& packet, pair<F,S> &g){
+  return packet >> g.first >> g.second;
+}
+
 // instantiation to support external extraction calls in com_client
 template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<int, player> &g);
-template sf::Packet& st3::operator >>(sf::Packet& packet, std::list<combid> &container);
+template sf::Packet& st3::operator >>(sf::Packet& packet, list<combid> &container);
 
 // ****************************************
 // SPECIFIC STRUCT STREAM OPS
@@ -180,6 +199,9 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship_stats &g){
     << g.cargo_capacity
     << g.depends_tech
     << g.depends_facility_level
+    << g.build_cost
+    << g.build_time
+    << g.shape
     << g.ship_class;
 }
 
@@ -198,6 +220,9 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship_stats &g){
     >> g.cargo_capacity
     >> g.depends_tech
     >> g.depends_facility_level
+    >> g.build_cost
+    >> g.build_time
+    >> g.shape
     >> g.ship_class;
 }
 
@@ -243,6 +268,50 @@ sf::Packet& st3::operator >>(sf::Packet& packet, turret_t &g){
     >> g.load;
 }
 
+sf::Packet& st3::operator <<(sf::Packet& packet, const facility &g){
+  return packet
+    << g.name
+    << g.sector_boost
+    << g.vision
+    << g.base_hp
+    << g.shield
+    << g.is_turret
+    << g.turret
+    << g.ship_upgrades
+    << g.cost
+    << g.depends_facilities
+    << g.depends_techs;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, facility &g){
+  return packet
+    >> g.name
+    >> g.sector_boost
+    >> g.vision
+    >> g.base_hp
+    >> g.shield
+    >> g.is_turret
+    >> g.turret
+    >> g.ship_upgrades
+    >> g.cost
+    >> g.depends_facilities
+    >> g.depends_techs;
+}
+
+sf::Packet& st3::operator <<(sf::Packet& packet, const facility_object &g){
+  return packet
+    << static_cast<const facility&> (g)
+    << g.hp
+    << g.level;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, facility_object &g){
+  return packet
+    >> static_cast<facility&> (g)
+    >> g.hp
+    >> g.level;
+}
+
 // solar
 sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){  
   return packet
@@ -257,7 +326,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
     << g.resource_storage
     << g.population
     << g.happiness
-    << g.ships;
+    << g.ships
+    << g.development;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
@@ -273,7 +343,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
     >> g.resource_storage
     >> g.population
     >> g.happiness
-    >> g.ships;
+    >> g.ships
+    >> g.development;
 }
 
 // solar choice

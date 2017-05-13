@@ -59,16 +59,24 @@ namespace st3{
   template<typename ID, typename T>
   sf::Packet& operator >>(sf::Packet& packet, hm_t<ID, T> &g);
 
+  template<typename F, typename S>
+  sf::Packet& operator <<(sf::Packet& packet, const std::pair<F,S> &g);
+  
+  template<typename F, typename S>
+  sf::Packet& operator >>(sf::Packet& packet, std::pair<F,S> &g);
+
+  /* **************************************** */
+  /*   GAME DATA OBJECTS */
+  /* **************************************** */
+
   template<typename T>
   sf::Packet& operator <<(sf::Packet& packet, const cost::allocation<T> &g);
 
   template<typename T>
   sf::Packet& operator >>(sf::Packet& packet, cost::allocation<T> &g);
 
-
-  /* **************************************** */
-  /*   GAME DATA OBJECTS */
-  /* **************************************** */
+  sf::Packet& operator <<(sf::Packet& packet, const cost::facility_cost &g);
+  sf::Packet& operator >>(sf::Packet& packet, cost::facility_cost &g);
 
   sf::Packet& operator <<(sf::Packet& packet, const entity_package &g);
 
@@ -169,6 +177,12 @@ namespace st3{
     @return reference to the resulting packet
   */
   sf::Packet& operator >>(sf::Packet& packet, turret_t &g);
+
+  sf::Packet& operator <<(sf::Packet& packet, const facility &g);
+  sf::Packet& operator >>(sf::Packet& packet, facility &g);
+
+  sf::Packet& operator <<(sf::Packet& packet, const facility_object &g);
+  sf::Packet& operator >>(sf::Packet& packet, facility_object &g);
 
   /*! stream a solar into packet
     @param packet the packet

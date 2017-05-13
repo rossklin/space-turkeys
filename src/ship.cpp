@@ -11,6 +11,7 @@ using namespace std;
 using namespace st3;
 
 const string ship::class_id = "ship";
+string ship::starting_ship;
 
 const hm_t<string, ship_stats>& ship_stats::table(){
   static bool init = false;
@@ -53,6 +54,8 @@ const hm_t<string, ship_stats>& ship_stats::table(){
       
     a.ship_class = i -> name.GetString();
 
+    if (i -> value.HasMember("is starting ship")) ship::starting_ship = a.ship_class;
+
     if (i -> value.HasMember("upgrades")) {
       if (!i -> value["upgrades"].IsArray()) {
 	throw runtime_error("Invalid upgrades array in ship_data.json!");
@@ -92,7 +95,11 @@ const hm_t<string, ship_stats>& ship_stats::table(){
 
 ship::ship(){}
 
-ship::ship(const ship_stats &s) : ship_stats(s) {
+ship::ship(const ship &s) {
+  copy_from(s);
+}
+
+ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   base_stats = s;
   fleet_id = identifier::source_none;
   remove = false;

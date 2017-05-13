@@ -189,13 +189,21 @@ bool game_data::validate_choice(choice::choice c, idtype id){
     auto e = get_entity(x.first);
     
     if (e -> owner != id){
-      cout << "apply_choice: error: solar choice by player " << id << " for solar " << x.first << " owned by " << e -> owner << endl;
+      cout << "validate_choice: error: solar choice by player " << id << " for solar " << x.first << " owned by " << e -> owner << endl;
       return false;
     }
     
     if (!e -> isa(solar::class_id)){
-      cout << "apply_choice: error: solar choice by player " << id << " for " << x.first << ": not a solar!" << endl;
+      cout << "validate_choice: error: solar choice by player " << id << " for " << x.first << ": not a solar!" << endl;
       return false;
+    }
+
+    if (!x.second.development.empty()){
+      list<string> av = get_solar(x.first) -> available_facilities(players[id].research_level);
+      if (find(av.begin(), av.end(), x.second.development) == av.end()) {
+	cout << "validate_choice: error: solar choice contained invalid development: " << x.second.development << endl;
+	return false;
+      }
     }
   }
 
@@ -204,7 +212,7 @@ bool game_data::validate_choice(choice::choice c, idtype id){
     auto e = get_entity(x.first);
 
     if (e -> owner != id){
-      cout << "apply_choice: error: command by player " << id << " for " << x.first << " owned by " << e -> owner << endl;
+      cout << "validate_choice: error: command by player " << id << " for " << x.first << " owned by " << e -> owner << endl;
       return false;
     }
   }
@@ -264,6 +272,10 @@ void game_data::apply_choice(choice::choice c, idtype id){
   for (auto &x : c.solar_choices) {
     solar::ptr s = get_solar(x.first);
     s -> choice_data = x.second;
+
+    if (!x.second.development.empty()) {
+      s -> develop(x.second.development);
+    }
   }
 
   // distribute commands
@@ -397,7 +409,7 @@ void game_data::build(){
 	s.ecology = 1;
 	s.dt = settings.dt;
 	s.radius = settings.solar_maxrad;
-	ship sh = rbase.build_ship(ship::all_classes().front(), &s);
+	ship sh = rbase.build_ship(ship::starting_ship, &s);
 	sh.is_landed = true;
 	sh.owner = x.first;
 	s.ships.insert(sh.id);
@@ -460,7 +472,7 @@ void game_data::end_step(){
   for (auto i : all<solar>()){
     if (i -> owner > -1){
       pool[i -> owner] += i -> research_points;
-      level[i -> owner] = max(level[i -> owner], i -> development.facilities[keywords::key_research].level);
+      level[i -> owner] = max(level[i -> owner], i -> get_facility_level(keywords::key_research));
       i -> research_points = 0;
     }
   }
@@ -540,7 +552,7 @@ void game_data::confirm_data() {
   auto &utab = upgrade::table();
   auto &stab = ship::table();
   auto &rtab = research::data::table();
-  auto &dtab = development_tree::table();
+  auto &dtab = solar::facility_table();
 
   auto check_ship_upgrades = [&utab, &stab] (hm_t<string, set<string> > u) {
     for (auto &x : u) {
@@ -558,6 +570,7 @@ void game_data::confirm_data() {
     if (!s.second.depends_tech.empty()) assert(rtab.count(s.second.depends_tech));
     for (auto &u : s.second.upgrades) assert(utab.count(u));
   }
+  assert(stab.count(ship::starting_ship));
 
   // validate technologies
   for (auto &t : rtab) {

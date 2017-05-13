@@ -1,6 +1,7 @@
 {
     "ship" : {
 	"scout" : {
+	    "is starting ship" : 1,
 	    "speed" : 2,
 	    "vision" : 100,
 	    "ship_damage" : 0.1,

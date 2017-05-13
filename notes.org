@@ -1,8 +1,5 @@
 * current work
-** [J?] fix solar gui to fit new solar choice
-** new structure using JSON files for upgrades, ships and research
-*** implement development_tree::available
-*** look over serialization of all new types
+** ships are drawn in color cnose only
 * [!] issues
 ** [!] bugs & crashes
 *** [!confirm?] fleets don't seem to get cleared from client choice
@@ -63,6 +60,7 @@
 *** stealth: give ships a stealth attribute that counters the vision attribute
 * to be tested
 ** confirm
+*** somewhere, solar development["military"] is being initialized
 *** make turrets hit different targets
 *** give ships reduced accuracy when not firing forwards
 *** ships built way to fast
@@ -79,6 +77,11 @@
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
+* fixed
+** [J?] fix solar gui to fit new solar choice
+** [J?] new structure using JSON files for upgrades, ships and research
+*** [J?] implement development_tree::available
+*** [J?] look over serialization of all new types, eg newly added stuff in ship_stats
 ** [J] rewrite json access loops using special MemberBegin and Begin
 ** [J] write solar_data.json
 ** [J] replace ship_allocation with lookup keys in ship::table
@@ -89,7 +92,6 @@
 ** [J] ship::ship(ship_stats) must assign base_stats
 ** [J] data loader functions are accumulating sets e.g. upgrades
 ** [J] fill out ship_stats constructor
-* fixed
 ** moved target selection to specific class
 ** create a frame structure
    Introduced class entity_package parent to game_data, with entities

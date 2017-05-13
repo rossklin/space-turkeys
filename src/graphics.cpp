@@ -386,7 +386,7 @@ void main_window::build_info(){
   res -> Pack(frame("Stats", buf));
 
   buf = Box::Create(Box::Orientation::VERTICAL);
-  for (auto &f : sol -> development.facilities) {
+  for (auto &f : sol -> development) {
     buf -> Pack(label_build(f.first, f.second.level, sol -> development_increment(c)));
   }
 

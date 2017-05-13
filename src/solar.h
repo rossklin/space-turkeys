@@ -13,6 +13,10 @@
 namespace st3{
   class game_data;
 
+  namespace research {
+    struct data;
+  };
+
   struct turret_t {
     sfloat range; /*!< radius in which the turret can fire */
     sfloat damage; /*!< turret's damage */
@@ -29,13 +33,13 @@ namespace st3{
     sfloat vision;
     sint is_turret;
     turret_t turret;
-    sfloat hp;
+    sfloat base_hp;
     sfloat shield;
     hm_t<std::string, std::set<std::string> > ship_upgrades;
 
     // requirements
     cost::facility_cost cost;
-    hm_t<std::string, int> depends_facilities;
+    hm_t<std::string, sint> depends_facilities;
     std::set<std::string> depends_techs;
 
     facility();
@@ -43,18 +47,11 @@ namespace st3{
 
   class facility_object : public facility {
   public:
-    facility base_info;
-    int level;
+    sfloat hp;
+    sint level;
 
     facility_object();
-  };
-
-  class development_tree {
-  public:
-    static const hm_t<std::string, facility>& table();
-    hm_t<std::string, facility_object> facilities;
-
-    std::list<std::string> available();
+    facility_object(const facility &f);
   };
 
   /*! data representing a solar system */
@@ -63,11 +60,12 @@ namespace st3{
     typedef solar* ptr;
     static ptr create();
     static const std::string class_id;
+    static const hm_t<std::string, facility>& facility_table();
     
     choice::c_solar choice_data;
     float dt;
 
-    development_tree development;
+    hm_t<std::string, facility_object> development;
 
     // points to spend on development
     sfloat research_points;
@@ -113,6 +111,9 @@ namespace st3{
     std::string get_info();
     float compute_boost(std::string sector);
     float compute_shield_power();
+    std::list<std::string> available_facilities(const research::data &r);
+    void develop(std::string fac);
+    int get_facility_level(std::string fac);
 
     // solar: increment functions
     float population_increment();

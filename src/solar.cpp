@@ -21,7 +21,7 @@ solar::solar(){}
 solar::~solar(){}
 
 void solar::pre_phase(game_data *g){
-  for (auto &t : development.facilities){
+  for (auto &t : development){
     if (t.second.is_turret){
       t.second.turret.load += 0.1;
     }
@@ -53,7 +53,7 @@ void solar::move(game_data *g){
 
 list<combid> solar::confirm_interaction(string a, list<combid> t, game_data *g) {
   list<combid> result;
-  result.push_back(utility::uniform_sample(t));
+  if (!t.empty()) result.push_back(utility::uniform_sample(t));
   return result;
 }
 
@@ -64,7 +64,7 @@ set<string> solar::compile_interactions(){
 float solar::interaction_radius() {
   float r = 0;
 
-  for (auto &t : development.facilities){
+  for (auto &t : development){
     if (t.second.is_turret){
       r = max(r, t.second.turret.range);
     }
@@ -94,6 +94,13 @@ void solar::post_phase(game_data *g){
   if (owner != game_object::neutral_owner && population == 0){
     // everyone here is dead, this is now a neutral solar
     owner = game_object::neutral_owner;
+  }
+
+  // repair facilities
+  if (owner != game_object::neutral_owner) {
+    for (auto &f : development) {
+      if (f.second.hp < f.second.base_hp) f.second.hp += 0.01;
+    }
   }
 }
 
@@ -146,7 +153,7 @@ string solar::get_info(){
 
 sfloat solar::vision(){
   sfloat res = 5;
-  for (auto &x : development.facilities) res = fmax(res, x.second.vision);
+  for (auto &x : development) res = fmax(res, x.second.vision);
   return res + radius;
 }
 
@@ -172,22 +179,20 @@ bool solar::serialize(sf::Packet &p){
 
 bool solar::has_defense(){
   if (owner == game_object::neutral_owner) return false;
-  for (auto &t : development.facilities) if (t.second.is_turret) return true;
+  for (auto &t : development) if (t.second.is_turret) return true;
 }
 
 void solar::damage_facilities(float d){
   float d0 = d;
-  if (development.facilities.empty()) return;
-
-  while (d > 0 && development.facilities.size() > 0){
+  while (d > 0 && development.size() > 0){
     list<string> remove;
-    for (auto i = development.facilities.begin(); d > 0 && i != development.facilities.end(); i++){
+    for (auto i = development.begin(); d > 0 && i != development.end(); i++){
       float k = fmin(utility::random_uniform(0, 0.1 * d0), d);
       i -> second.hp -= k;
       d -= k;
       if (i -> second.hp <= 0) remove.push_back(i -> first);
     }
-    for (auto r : remove) development.facilities.erase(r);
+    for (auto r : remove) development.erase(r);
   }
 }
 
@@ -196,7 +201,7 @@ float solar::space_status(){
   if (space <= 0) return 0;
   
   float used = 0;
-  for (auto &t : development.facilities) used += t.second.cost.space;
+  for (auto &t : development) used += cost::expansion_multiplier(t.second.level) * t.second.cost.space;
 
   if (used > space) throw runtime_error("space_status: used more than space");
   return (space - used) / space;
@@ -207,7 +212,7 @@ float solar::water_status(){
   if (water <= 0) return 0;
   
   float used = 0;
-  for (auto &t : development.facilities) used += t.second.cost.water;
+  for (auto &t : development) used += cost::expansion_multiplier(t.second.level) * t.second.cost.water;
 
   if (used > water) throw runtime_error("water status: used more than water!");
   return (water - used) / water;
@@ -314,17 +319,34 @@ bool solar::isa(string c) {
 
 float solar::compute_shield_power() {
   float sum = 0;
-  for (auto &f : development.facilities) sum += f.second.shield;
+  for (auto &f : development) sum += f.second.shield;
   return log(sum + 1);
 }
 
 float solar::compute_boost(string v){
   float sum = 1;
-  for (auto &f : development.facilities) if (f.second.sector_boost.count(v)) sum *= f.second.sector_boost[v];
+  for (auto &f : development) if (f.second.sector_boost.count(v)) sum *= f.second.sector_boost[v];
   return sum;
 }
 
-const hm_t<string, facility>& development_tree::table(){
+void solar::develop(string fac) {
+  if (!development.count(fac)) {
+    development[fac] = facility_table().at(fac);
+  }
+  
+  development[fac].level++;
+  development[fac].hp = development[fac].base_hp;
+}
+
+int solar::get_facility_level(string fac) {
+  if (development.count(fac)) {
+    return development[fac].level;
+  }else{
+    return 0;
+  }
+}
+
+const hm_t<string, facility>& solar::facility_table(){
   static hm_t<string, facility> data;
   static bool init = false;
 
@@ -345,7 +367,7 @@ const hm_t<string, facility>& development_tree::table(){
     }
 
     if (i -> value.HasMember("vision")) a.vision = i -> value["vision"].GetDouble();
-    if (i -> value.HasMember("hp")) a.hp = i -> value["hp"].GetDouble();
+    if (i -> value.HasMember("hp")) a.base_hp = i -> value["hp"].GetDouble();
     if (i -> value.HasMember("shield")) a.shield = i -> value["shield"].GetDouble();
 
     if (i -> value.HasMember("turret")){
@@ -399,12 +421,18 @@ const hm_t<string, facility>& development_tree::table(){
     
 facility_object::facility_object(){
   level = 0;
+  hp = 0;
+}
+    
+facility_object::facility_object(const facility &f) : facility(f) {
+  level = 0;
+  hp = base_hp;
 }
 
 facility::facility() {
   vision = 0;
   is_turret = 0;
-  hp = 0;
+  base_hp = 0;
   shield = 0;
 }
 
@@ -415,6 +443,30 @@ turret_t::turret_t(){
   load = 0;
 }
 
-list<string> development_tree::available() {
-  throw exception();
+list<string> solar::available_facilities(const research::data &r_level) {
+  list<string> r;
+  auto &t = facility_table();
+
+  for (auto &x : t){
+    facility f = x.second;
+    bool pass = true;
+    bool has_facility = development.count(x.first);
+    float level_multiplier = cost::expansion_multiplier(get_facility_level(x.first));
+
+    // check cost
+    cost::res_t res_buf = f.cost.res;
+    res_buf.scale(level_multiplier);
+    pass &= resource_constraint(res_buf) >= 1;
+    pass &= development_points >= level_multiplier * f.cost.time;
+    pass &= water * water_status() >= level_multiplier * f.cost.water;
+    pass &= space * space_status() >= level_multiplier * f.cost.space;
+
+    // check dependencies
+    for (auto &y : f.depends_facilities) pass &= get_facility_level(y.first) >= y.second;
+    for (auto &y : f.depends_techs) pass &= r_level.researched.count(y);
+    
+    if (pass) r.push_back(x.first);
+  }
+
+  return r;
 }

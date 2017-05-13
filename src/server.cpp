@@ -13,10 +13,6 @@ using namespace std;
 using namespace st3;
 using namespace st3::server;
 
-void on_terminate() {
-  abort();
-}
-
 int main(int argc, char **argv){
   sf::TcpListener listener;
   int num_clients = argc == 2 ? atoi(argv[1]) : 2;
@@ -30,8 +26,6 @@ int main(int argc, char **argv){
   if (!(c.connect(num_clients) && c.introduce())){
     throw runtime_error("failed to build connections");
   }
-
-  set_terminate(on_terminate);
 
   g.build_players(c.clients);
   g.build();

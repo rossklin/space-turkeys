@@ -146,7 +146,7 @@ bool com::cleanup_clients(){
 }
 
 bool st3::server::com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &packets){
-  list<thread> ts;
+  list<thread*> ts;
 
   if (packets.size() < clients.size()){
     cout << "check_protocol: to few packets!" << endl;
@@ -154,10 +154,13 @@ bool st3::server::com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &
   }
 
   for (auto c : clients){
-    ts.push_back(thread(&server::client_t::check_protocol, c.second, query, ref(packets[c.first])));
+    ts.push_back(new thread(&server::client_t::check_protocol, c.second, query, ref(packets[c.first])));
   }
 
-  for (auto &t : ts) t.join();
+  for (auto &t : ts){
+    t -> join();
+    delete t;
+  }
   
   return cleanup_clients();
 }
@@ -253,14 +256,17 @@ void try_distribute_frames_to(vector<entity_package> &buf, int &available_frames
 }
 
 void st3::server::com::distribute_frames(vector<entity_package> &g, int &frame_count){
-  list<thread> ts;
+  list<thread*> ts;
 
   cout << "com::distribute_frames: " << clients.size() << " clients:" << endl;
   for (auto c : clients){
-    ts.push_back(thread(try_distribute_frames_to, ref(g), ref(frame_count), c.second));
+    ts.push_back(new thread(try_distribute_frames_to, ref(g), ref(frame_count), c.second));
   }
 
-  for (auto &x : ts) x.join();
+  for (auto &x : ts) {
+    x -> join();
+    delete x;
+  }
 
   cleanup_clients();
   cout << "com::distribute_frames: end" << endl;
