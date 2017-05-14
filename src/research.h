@@ -8,21 +8,13 @@
 #include "ship.h"
 #include "solar.h"
 #include "choice.h"
+#include "development.h"
 
 namespace st3{
   namespace research{
     const std::string upgrade_all_ships = "upgrade all ships";
-
-    struct tech {
-      std::string name;
-
-      // requirements
-      sfloat cost;
-      sint req_facility_level;
-      std::set<std::string> depends;
-
-      //effects
-      hm_t<std::string, std::set<std::string> > ship_upgrades;
+    class tech : public virtual development::node {
+      bool can_develop(const hm_t<std::string, T> &map, int points, std::set<std::string> techs, hm_t<std::string, sint> facilities);
     };
     
     /*! struct representing the research level of a player */
@@ -30,7 +22,7 @@ namespace st3{
       static const hm_t<std::string, tech> &table();
       std::set<std::string> researched;
       sfloat accumulated;
-      sint facility_level;
+      hm_t<std::string, sint> facility_level;
 
       data();
       std::list<std::string> available();

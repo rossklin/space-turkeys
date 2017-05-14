@@ -452,11 +452,13 @@ void game_data::end_step(){
 
   // pool research
   hm_t<idtype, float> pool;
-  hm_t<idtype, int> level;
+  hm_t<idtype, hm_t<string, int> > level;
   for (auto i : all<solar>()){
     if (i -> owner > -1){
       pool[i -> owner] += i -> research_points;
-      level[i -> owner] = max(level[i -> owner], i -> get_facility_level(keywords::key_research));
+      for (auto &f : i -> development) {
+	level[i -> owner][f.name] = max(level[i -> owner][f.name], f.level);
+      }
       i -> research_points = 0;
     }
   }

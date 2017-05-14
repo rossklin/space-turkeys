@@ -1,4 +1,6 @@
 * current work
+** generalizing development tree
+*** update serialization with development::node and subclasses
 * [!] issues
 ** [!] bugs & crashes
 *** [!confirm?] fleets don't seem to get cleared from client choice

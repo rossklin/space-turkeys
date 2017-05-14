@@ -16,7 +16,6 @@ using namespace cost;
 
 data::data(){  
   accumulated = 0;
-  facility_level = 0;
 }
 
 const hm_t<string, tech>& data::table(){
@@ -25,42 +24,11 @@ const hm_t<string, tech>& data::table(){
 
   if (init) return tree;
 
-  tech t, a;
-  t.cost = 1;
-  t.req_facility_level = 1;
+  tech t_init;
+  // todo: set cost and facility level
 
   rapidjson::Document *docp = utility::get_json("research");
-  auto &doc = (*docp)["research"];
-  
-  for (auto i = doc.MemberBegin(); i != doc.MemberEnd(); i++) {
-    a = t;
-    a.name = i -> name.GetString();
-
-    if (i -> value.HasMember("cost")) a.cost = i -> value["cost"].GetDouble();
-    if (i -> value.HasMember("req_facility_level")) a.req_facility_level = i -> value["req_facility_level"].GetDouble();
-
-    if (i -> value.HasMember("depends")) {
-      if (!i -> value["depends"].IsArray()) {
-	throw runtime_error("Error: load research data: depends: not an array!");
-      }
-
-      auto &depends = i -> value["depends"];
-      for (auto d = depends.Begin(); d != depends.End(); d++) {
-	a.depends.insert(d -> GetString());
-      }
-    }
-
-    if (i -> value.HasMember("ship upgrades")) {
-      auto &upgrades = i -> value["ship upgrades"];
-      for (auto u = upgrades.MemberBegin(); u != upgrades.MemberEnd(); u++) {
-	string ship_class = u -> name.GetString();
-	for (auto v = u -> value.Begin(); v != u -> value.End(); v++) a.ship_upgrades[ship_class].insert(v -> GetString());
-      }
-    }
-
-    tree[a.name] = a;
-  }
-
+  tree = development::read_from_json<tech>((*docp)["research"], t_init);
   delete docp;
   init = true;
   return tree;
@@ -69,13 +37,13 @@ const hm_t<string, tech>& data::table(){
 list<string> data::available() {
   list<string> res;
 
-  for (auto &x : table()){
-    tech t = x.second;
-    if (researched.count(t.name)) continue;
-    if (t.cost > accumulated) continue;
-    if (t.req_facility_level > facility_level) continue;
-    if ((t.depends - researched).size() > 0) continue;
-    res.push_back(t.name);
+  auto &map = table();
+  for (auto &x : map) {
+    if (researched.count(x.first)) continue;
+    if (cost_time > accumulated) return false;
+    if ((depends_techs - researched).size() > 0) return false;
+    for (auto &f : depends_facilities) if (f.second > facility_level[f.first]) return false;
+    res.push_back(x.first);
   }
 
   return res;
@@ -86,27 +54,17 @@ void data::repair_ship(ship &s, solar::ptr sol) {
 
   s.angle = utility::random_uniform(0, 2 * M_PI);
 
-  auto maybe_asu = [](const hm_t<string, set<string> > &map, string sc) -> set<string> {
-    if (map.count(sc)) {
-      return map.at(sc);
-    }else{
-      return set<string>();
-    }
+  auto maybe_asu = [](const development::node &n, string sc) -> set<string> {
+    set<string> sum;
+    if (n.ship_upgrades.count(sc)) sum += n.ship_upgrades.at(sc);
+    if (n.ship_upgrades.count(research::upgrade_all_ships)) sum += n.ship_upgrades.at(research::upgrade_all_ships);
+    return sum;
   };
   
-  // add upgrades from research tree
+  // add upgrades from research and facilities
   auto &rtab = table();
-  for (auto t : researched) {
-    s.upgrades += maybe_asu(rtab.at(t).ship_upgrades, s.ship_class);
-    s.upgrades += maybe_asu(rtab.at(t).ship_upgrades, research::upgrade_all_ships);
-  }
-
-  // add upgrades from solar facilities
-  for (auto &x : sol -> development) {
-    facility_object t = x.second;
-    s.upgrades += maybe_asu(t.ship_upgrades, s.ship_class);
-    s.upgrades += maybe_asu(t.ship_upgrades, research::upgrade_all_ships);
-  }
+  for (auto t : researched) s.upgrades += maybe_asu(rtab.at(t), s.ship_class);
+  for (auto &x : sol -> development) s.upgrades += maybe_asu(x.second, s.ship_class);
 
   // evaluate upgrades
   auto &utab = upgrade::table();
@@ -116,7 +74,6 @@ void data::repair_ship(ship &s, solar::ptr sol) {
     s.base_stats += mod_stats;
   }
 
-  // TODO: does assignment from parent class work?
   static_cast<ship_stats&>(s) = s.base_stats;
 }
 

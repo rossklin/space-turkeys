@@ -4,11 +4,13 @@
 #include <set>
 #include <vector>
 #include <list>
+#include <rapidjson/document.h>
 
 #include "types.h"
 #include "ship.h"
 #include "game_object.h"
 #include "choice.h"
+#include "development.h"
 
 namespace st3{
   class game_data;
@@ -26,23 +28,20 @@ namespace st3{
     turret_t();
   };
 
-  class facility {
+  class facility : public virtual development::node{
   public:
-    std::string name;
-    hm_t<std::string, sfloat> sector_boost;
     sfloat vision;
     sint is_turret;
     turret_t turret;
     sfloat base_hp;
     sfloat shield;
-    hm_t<std::string, std::set<std::string> > ship_upgrades;
-
-    // requirements
-    cost::facility_cost cost;
-    hm_t<std::string, sint> depends_facilities;
-    std::set<std::string> depends_techs;
+    sfloat water_usage;
+    sfloat space_usage;
+    cost::res_t cost_resources;
 
     facility();
+    void read_from_json(const rapidjson::GenericValue &v);
+    bool can_develop(const hm_t<std::string, T> &map, int points, std::set<std::string> techs, hm_t<std::string, sint> facilities);
   };
 
   class facility_object : public facility {

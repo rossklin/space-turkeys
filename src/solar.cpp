@@ -201,7 +201,7 @@ float solar::space_status(){
   if (space <= 0) return 0;
   
   float used = 0;
-  for (auto &t : development) used += cost::expansion_multiplier(t.second.level) * t.second.cost.space;
+  for (auto &t : development) used += cost::expansion_multiplier(t.second.level) * t.second.space_usage;
 
   if (used > space) throw runtime_error("space_status: used more than space");
   return (space - used) / space;
@@ -212,7 +212,7 @@ float solar::water_status(){
   if (water <= 0) return 0;
   
   float used = 0;
-  for (auto &t : development) used += cost::expansion_multiplier(t.second.level) * t.second.cost.water;
+  for (auto &t : development) used += cost::expansion_multiplier(t.second.level) * t.second.water_usage;
 
   if (used > water) throw runtime_error("water status: used more than water!");
   return (water - used) / water;
@@ -354,72 +354,37 @@ int solar::get_facility_level(string fac) {
   }
 }
 
+void facility::read_from_json(const rapidjson::GenericValue &x) {
+  development::node::read_from_json(x);
+  
+  if (x.HasMember("vision")) vision = x["vision"].GetDouble();
+  if (x.HasMember("hp")) base_hp = x["hp"].GetDouble();
+  if (x.HasMember("shield")) shield = x["shield"].GetDouble();
+
+  if (x.HasMember("turret")){
+    is_turret = 1;
+    auto &t = x["turret"];
+    if (t.HasMember("damage")) turret.damage = t["damage"].GetDouble();
+    if (t.HasMember("range")) turret.range = t["range"].GetDouble();
+    if (t.HasMember("accuracy")) turret.accuracy = t["accuracy"].GetDouble();
+    if (t.HasMember("load")) turret.load = t["load"].GetDouble();
+  }
+  
+  if (c.HasMember("water")) water_usage = c["water"].GetDouble();
+  if (c.HasMember("space")) space_usage = c["space"].GetDouble();
+}
+
 const hm_t<string, facility>& solar::facility_table(){
   static hm_t<string, facility> data;
   static bool init = false;
 
   if (init) return data;
-  rapidjson::Document *docp = utility::get_json("solar");
-  auto &doc = (*docp)["solar"];
-  facility base, a;
   
-  for (auto i = doc.MemberBegin(); i != doc.MemberEnd(); i++){
-    a = base;
-    a.name = i -> name.GetString();
-
-    if (i -> value.HasMember("sector boost")) {
-      auto &secboost = i -> value["sector boost"];
-      for (auto k : keywords::sector) {
-	if (secboost.HasMember(k.c_str())) a.sector_boost[k] = secboost[k.c_str()].GetDouble();
-      }
-    }
-
-    if (i -> value.HasMember("vision")) a.vision = i -> value["vision"].GetDouble();
-    if (i -> value.HasMember("hp")) a.base_hp = i -> value["hp"].GetDouble();
-    if (i -> value.HasMember("shield")) a.shield = i -> value["shield"].GetDouble();
-
-    if (i -> value.HasMember("turret")){
-      a.is_turret = 1;
-      auto &t = i -> value["turret"];
-      if (t.HasMember("damage")) a.turret.damage = t["damage"].GetDouble();
-      if (t.HasMember("range")) a.turret.range = t["range"].GetDouble();
-      if (t.HasMember("accuracy")) a.turret.accuracy = t["accuracy"].GetDouble();
-      if (t.HasMember("load")) a.turret.load = t["load"].GetDouble();
-    }
-
-    if (i -> value.HasMember("ship upgrades")) {
-      auto &upgrades = i -> value["ship upgrades"];
-      for (auto u = upgrades.MemberBegin(); u != upgrades.MemberEnd(); u++) {
-	string ship_name = u -> name.GetString();
-	for (auto v = u -> value.Begin(); v != u -> value.End(); v++) a.ship_upgrades[ship_name].insert(v -> GetString());
-      }
-    }
-
-    if (i -> value.HasMember("cost")) {
-      auto &c = i -> value["cost"];
-      for (auto k : keywords::resource) {
-	if (c.HasMember(k.c_str())) a.cost.res[k] = c[k.c_str()].GetDouble();
-      }
-      if (c.HasMember("water")) a.cost.water = c["water"].GetDouble();
-      if (c.HasMember("space")) a.cost.space = c["space"].GetDouble();
-      if (c.HasMember("time")) a.cost.time = c["time"].GetDouble();
-    }
-
-    if (i -> value.HasMember("depends facilities")) {
-      auto &dep = i -> value["depends facilities"];
-      for (auto d = dep.MemberBegin(); d != dep.MemberEnd(); d++) {
-	a.depends_facilities[d -> name.GetString()] = d -> value.GetInt();
-      }
-    }
-
-    if (i -> value.HasMember("depends technologies")) {
-      auto &dep = i -> value["depends technologies"];
-      for (auto d = dep.Begin(); d != dep.End(); d++) a.depends_techs.insert(d -> GetString());
-    }
-
-    data[a.name] = a;
-  }
-
+  rapidjson::Document *docp = utility::get_json("solar");
+  facility f_init;
+  // TODO: set basic facility stats
+  data = development::read_from_json<facility>((*docp)["solar"], f_init);
+  delete docp;
   init = true;
   return data;
 }
@@ -455,16 +420,15 @@ list<string> solar::available_facilities(const research::data &r_level) {
   for (auto &x : t){
     facility f = x.second;
     bool pass = true;
-    bool has_facility = development.count(x.first);
     float level_multiplier = cost::expansion_multiplier(get_facility_level(x.first));
 
     // check cost
-    cost::res_t res_buf = f.cost.res;
+    cost::res_t res_buf = f.cost_resources;
     res_buf.scale(level_multiplier);
     pass &= resource_constraint(res_buf) >= 1;
     pass &= development_points >= level_multiplier * f.cost.time;
-    pass &= water * water_status() >= level_multiplier * f.cost.water;
-    pass &= space * space_status() >= level_multiplier * f.cost.space;
+    pass &= water * water_status() >= level_multiplier * f.water_usage;
+    pass &= space * space_status() >= level_multiplier * f.space_usage;
 
     // check dependencies
     for (auto &y : f.depends_facilities) pass &= get_facility_level(y.first) >= y.second;

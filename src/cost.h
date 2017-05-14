@@ -33,13 +33,11 @@ namespace st3{
 
     typedef resource_allocation res_t;
 
-    struct facility_cost{
+    struct dev_cost{
       res_t res;
-      sfloat water;
-      sfloat space;
       sfloat time;
 
-      facility_cost();
+      dev_cost();
     };
 
     float expansion_multiplier(float level);
