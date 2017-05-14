@@ -224,7 +224,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
   // apply
   if (c.research.length() > 0){
     research::tech t = research::data::table().at(c.research);
-    players[id].research_level.accumulated -= t.cost;
+    players[id].research_level.accumulated -= t.cost_time;
     players[id].research_level.researched.insert(t.name);
   }
 
@@ -457,7 +457,7 @@ void game_data::end_step(){
     if (i -> owner > -1){
       pool[i -> owner] += i -> research_points;
       for (auto &f : i -> development) {
-	level[i -> owner][f.name] = max(level[i -> owner][f.name], f.level);
+	level[i -> owner][f.first] = max(level[i -> owner][f.first], f.second.level);
       }
       i -> research_points = 0;
     }
@@ -560,7 +560,7 @@ void game_data::confirm_data() {
 
   // validate technologies
   for (auto &t : rtab) {
-    for (auto v : t.second.depends) assert(rtab.count(v));
+    for (auto v : t.second.depends_techs) assert(rtab.count(v));
     check_ship_upgrades(t.second.ship_upgrades);
   }
 

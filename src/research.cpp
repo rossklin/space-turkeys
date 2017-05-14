@@ -40,9 +40,9 @@ list<string> data::available() {
   auto &map = table();
   for (auto &x : map) {
     if (researched.count(x.first)) continue;
-    if (cost_time > accumulated) return false;
-    if ((depends_techs - researched).size() > 0) return false;
-    for (auto &f : depends_facilities) if (f.second > facility_level[f.first]) return false;
+    if (x.second.cost_time > accumulated) continue;
+    if ((x.second.depends_techs - researched).size() > 0) continue;
+    for (auto &f : x.second.depends_facilities) if (f.second > facility_level[f.first]) continue;
     res.push_back(x.first);
   }
 

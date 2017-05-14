@@ -33,13 +33,6 @@ namespace st3{
 
     typedef resource_allocation res_t;
 
-    struct dev_cost{
-      res_t res;
-      sfloat time;
-
-      dev_cost();
-    };
-
     float expansion_multiplier(float level);
   };
 };

@@ -81,9 +81,3 @@ using namespace keywords;
 float cost::expansion_multiplier(float level){
   return pow(2, floor(level));
 }
-
-cost::facility_cost::facility_cost() {
-  water = 0;
-  space = 0;
-  time = 0;
-}

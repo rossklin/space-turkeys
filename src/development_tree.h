@@ -8,7 +8,7 @@
 #include "types.h"
 #include "cost.h"
 
-namespace st3 {
+namespace st3 {  
   namespace development {
     class node {
     public:
@@ -22,11 +22,11 @@ namespace st3 {
       std::set<std::string> depends_techs;
 
       node();
-      virtual void read_from_json(const rapidjson::GenericValue &v);
+      virtual void read_from_json(const rapidjson::Value &v);
     };
 
     template<typename T>
-    hm_t<std::string, T> read_from_json(const rapidjson::GenericValue &v, T init);
+    hm_t<std::string, T> read_from_json(const rapidjson::Value &v, T init);
   };
 };
 

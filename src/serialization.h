@@ -1,6 +1,8 @@
 #ifndef _STK_SERIALIZATION
 #define _STK_SERIALIZATION
 
+#include "research.h"
+#include "development_tree.h"
 #include "game_data.h"
 #include "cost.h"
 
@@ -71,9 +73,6 @@ namespace st3{
 
   sf::Packet& operator <<(sf::Packet& packet, const cost::allocation &g);
   sf::Packet& operator >>(sf::Packet& packet, cost::allocation &g);
-
-  sf::Packet& operator <<(sf::Packet& packet, const cost::facility_cost &g);
-  sf::Packet& operator >>(sf::Packet& packet, cost::facility_cost &g);
 
   sf::Packet& operator <<(sf::Packet& packet, const entity_package &g);
 
@@ -180,6 +179,9 @@ namespace st3{
 
   sf::Packet& operator <<(sf::Packet& packet, const facility_object &g);
   sf::Packet& operator >>(sf::Packet& packet, facility_object &g);
+
+  sf::Packet& operator <<(sf::Packet& packet, const development::node &g);
+  sf::Packet& operator >>(sf::Packet& packet, development::node &g);
 
   /*! stream a solar into packet
     @param packet the packet

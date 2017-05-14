@@ -18,6 +18,7 @@ namespace st3{
 
     // ship class info
     class_t ship_class; /*!< ship class */
+    std::set<std::string> tags;
 
     sfloat speed; /*!< ship's speed */
     sfloat hp; /*!< ship's hit points */

@@ -95,15 +95,6 @@ sf::Packet& st3::operator >>(sf::Packet& packet, cost::allocation &g){
   return packet >> g.data;
 }
 
-sf::Packet& st3::operator <<(sf::Packet& packet, const cost::facility_cost &g) {
-  return packet << g.res << g.water << g.space << g.time;
-}
-
-sf::Packet& st3::operator >>(sf::Packet& packet, cost::facility_cost &g){
-  return packet >> g.res >> g.water >> g.space >> g.time;
-}
-
-
 template<typename F, typename S>
 sf::Packet& st3::operator <<(sf::Packet& packet, const pair<F,S> &g){
   return packet << g.first << g.second;
@@ -200,7 +191,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship_stats &g){
     << g.build_cost
     << g.build_time
     << g.shape
-    << g.ship_class;
+    << g.ship_class
+    << g.tags;
 }
 
 // ship stats
@@ -221,7 +213,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship_stats &g){
     >> g.build_cost
     >> g.build_time
     >> g.shape
-    >> g.ship_class;
+    >> g.ship_class
+    >> g.tags;
 }
 
 // ship
@@ -266,34 +259,50 @@ sf::Packet& st3::operator >>(sf::Packet& packet, turret_t &g){
     >> g.load;
 }
 
-sf::Packet& st3::operator <<(sf::Packet& packet, const facility &g){
+sf::Packet& st3::operator <<(sf::Packet &packet, const development::node &g) {
   return packet
     << g.name
     << g.sector_boost
+    << g.ship_upgrades
+    << g.depends_facilities
+    << g.depends_techs
+    << g.cost_time;
+}
+
+sf::Packet& st3::operator >>(sf::Packet &packet, development::node &g) {
+  return packet
+    >> g.name
+    >> g.sector_boost
+    >> g.ship_upgrades
+    >> g.depends_facilities
+    >> g.depends_techs
+    >> g.cost_time;
+}
+
+sf::Packet& st3::operator <<(sf::Packet& packet, const facility &g){
+  return packet
+    << static_cast<const development::node&>(g)
     << g.vision
     << g.base_hp
     << g.shield
     << g.is_turret
     << g.turret
-    << g.ship_upgrades
-    << g.cost
-    << g.depends_facilities
-    << g.depends_techs;
+    << g.cost_resources
+    << g.water_usage
+    << g.space_usage;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, facility &g){
   return packet
-    >> g.name
-    >> g.sector_boost
+    >> static_cast<development::node&>(g)
     >> g.vision
     >> g.base_hp
     >> g.shield
     >> g.is_turret
     >> g.turret
-    >> g.ship_upgrades
-    >> g.cost
-    >> g.depends_facilities
-    >> g.depends_techs;
+    >> g.cost_resources
+    >> g.water_usage
+    >> g.space_usage;
 }
 
 sf::Packet& st3::operator <<(sf::Packet& packet, const facility_object &g){
@@ -445,12 +454,4 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const research::data &c){
 
 sf::Packet& st3::operator >>(sf::Packet& packet, research::data &c){
   return packet >> c.researched >> c.accumulated >> c.facility_level;
-}
-
-sf::Packet& st3::operator <<(sf::Packet& packet, const research::tech &c){
-  return packet << c.name << c.cost << c.req_facility_level << c.depends << c.ship_upgrades;
-}
-
-sf::Packet& st3::operator >>(sf::Packet& packet, research::tech &c){
-  return packet >> c.name >> c.cost >> c.req_facility_level >> c.depends >> c.ship_upgrades;
 }

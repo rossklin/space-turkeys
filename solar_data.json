@@ -1,33 +1,50 @@
 {
     "solar" : {
 
-	"military" : {
+	"shipyard" : {
 	    "sector boost" : {
-		"military" : 1
+		"military" : 2
 	    },
 	    "hp" : 2,
 	    "cost" : {
 		"metals" : 10,
 		"gases" : 3,
 		"organics" : 2,
-		"time" : 100,
-		"space" : 30,
-		"water" : 20
 	    }
+	    "build time" : 100,
+	    "space usage" : 30,
+	    "water usage" : 20
 	},
 
-	"research" : {
+	"research facility" : {
 	    "sector boost" : {
-		"research" : 1
+		"research" : 2
 	    },
 	    "cost" : {
 		"metals" : 3,
 		"gases" : 10,
-		"organics" : 5,
-		"time" : 100,
-		"space" : 10,
-		"water" : 10
-	    }
+		"organics" : 5
+	    },
+	    "build time" : 100,
+	    "space usage" : 10,
+	    "water usage" : 10
+	},
+
+	"biomechanics facility" : {
+	    "sector boost" : {
+		"research" : 1.5
+	    },
+	    "cost" : {
+		"metals" : 3,
+		"gases" : 10,
+		"organics" : 5
+	    },
+	    "depends technologies" : ["biomechanics"],
+	    "depends facilities" : {"research facility" : 3},
+	    "build time" : 100,
+	    "space usage" : 10,
+	    "water usage" : 10,
+	    "ship upgrades" : {"#combat" : "bio-hull"}
 	},
 
 	"local traditions" : {
@@ -35,8 +52,8 @@
 		"culture" : 1
 	    },
 	    "cost" : {
-		"time" : 200,
-		"space" : 10
+		"build time" : 200,
+		"space usage" : 10
 	    }
 	},
 
@@ -47,11 +64,11 @@
 	    "cost" : {
 		"metals" : 10,
 		"gases" : 10,
-		"organics" : 2,
-		"time" : 100,
-		"space" : 40,
-		"water" : 60
-	    }
+		"organics" : 2
+	    },
+	    "build time" : 100,
+	    "space usage" : 40,
+	    "water usage" : 60
 	},
 
 	"expansion factories" : {
@@ -61,11 +78,11 @@
 	    "cost" : {
 		"metals" : 10,
 		"gases" : 10,
-		"organics" : 10,
-		"time" : 100,
-		"space" : 60,
-		"water" : 40
-	    }
+		"organics" : 10
+	    },
+	    "build time" : 100,
+	    "space usage" : 60,
+	    "water usage" : 40
 	},
 
 	"missile turret" : {
@@ -79,11 +96,11 @@
 	    },
 	    "cost" : {
 		"metals" : 5,
-		"gases" : 5,
-		"time" : 70,
-		"space" : 2,
-		"water" : 1
+		"gases" : 5
 	    },
+	    "build time" : 70,
+	    "space usage" : 2,
+	    "water usage" : 1,
 	    "depends facilities" : {
 		"military" : 1
 	    }
@@ -93,11 +110,11 @@
 	    "vision" : 80,
 	    "cost" : {
 		"metals" : 5,
-		"gases" : 2,
-		"time" : 70,
-		"space" : 2,
-		"water" : 1
+		"gases" : 2
 	    },
+	    "build time" : 70,
+	    "space usage" : 2,
+	    "water usage" : 1,
 	    "depends technologies" : ["radar"]
 	}
     }

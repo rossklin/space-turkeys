@@ -1,35 +1,171 @@
 {
     "research" : {
-	"ship armor" : {
-	    "cost" : 150,
-	    "req_facility_level" : 1,
+	"warp technology" : {
+	    "build time" : 200,
+	    "depends facilities" : {"research facility" : 2},
 	    "ship upgrades" : {
-		"upgrade all ships" : ["ship armor"]
+		"!small:!tiny" : ["warp drive"]
 	    }
 	},
 
-	"ship speed" : {
-	    "cost" : 150,
-	    "req_facility_level" : 1,
-	    "ship upgardes" : {
-		"upgrade all ships" : ["ship speed"]
+	"AI" : {
+	    "build time" : 150,
+	    "depends facilities" : {"research facility" : 1},
+	    "sector boost" : {
+		"military" : 1.1
+	    }
+	    "ship upgrades" : {"upgrade all ships" : ["intelligent"]}
+	},
+
+	"bio technology" : {
+	    "build time" : 150,
+	    "depends facilities" : {"research facility" : 1},
+	    "sector boost" : {"culture" : 1.1},
+	},
+
+	"nano technology" : {
+	    "build time" : 200,
+	    "depends facilities" : {"research facility" : 2},
+	    "ship upgrades" : {"scout" : ["nano scout"]}
+	},
+
+	"control systems" : {
+	    "build time" : 400,
+	    "depends facilities" : {"research facility" : 3},
+	    "depends technologies" : ["AI"],
+	    "ship upgrades" : {"#combat" : ["targeting systems"]}
+	},
+
+	"cyborgs" : {
+	    "build time" : 450,
+	    "depends facilities" : {"research facility" : 4},
+	    "depends technologies" : ["AI", "bio technology"],
+	    "sector boost" : {
+		"military" : 1.1,
+		"development" : 1.1
 	    }
 	},
 
-	"ship weapons" : {
-	    "cost" : 400,
-	    "req_facility_level" : 2,
+	"detection" : {
+	    "build time" : 400,
+	    "depends facilities" : {"research facility" : 4},
+	    "depends technologies" : ["warp technology"],
 	    "ship upgrades" : {
-		"upgrade all ships" : ["ship weapons"]
+		"#scout" : ["detection"]
 	    }
 	},
 
-	"radar" : {
-	    "cost" : 200,
-	    "depends" : ["ship speed"],
+	"stealth" : {
+	    "build time" : 600,
+	    "depends facilities" : {"research facility" : 5},
+	    "depends technologies" : ["warp technology", "AI"],
 	    "ship upgrades" : {
-		"scout" : ["extended radar"]
+		"#small:#medium" : ["stealth"]
 	    }
-	}
+	},
+
+	"shields" : {
+	    "build time" : 400,
+	    "depends facilities" : {"research facility" : 4},
+	    "depends technologies" : ["warp technology"],
+	    "ship upgrades" : {
+		"!large:!huge" : ["shield"],
+	    }
+	},
+
+	"nano construction" : {
+	    "build time" : 400,
+	    "depends facilities" : {"research facility" : 4},
+	    "depends technologies" : ["nano technology"],
+	},
+	
+	"nano construction" : {
+	    "build time" : 400,
+	    "depends facilities" : {"research facility" : 4},
+	    "depends technologies" : ["nano technology"],
+	},
+
+	"nano plating" : {
+	    "build time" : 800,
+	    "depends facilities" : {
+		"research facility" : 6,
+		"shipyard" : 4
+	    },
+	    "depends technologies" : ["nano construction"],
+	    "ship upgrades" : {"#combat" : "nano hull"}
+	},
+
+	"nano weapons" : {
+	    "build time" : 700,
+	    "depends facilities" : {
+		"research facility" : 6,
+		"shipyard" : 4
+	    },
+	    "depends technologies" : ["nano technology"],
+	    "ship upgrades" : {"#combat" : "nano torpedos"}
+	},
+
+	"nano shields" : {
+	    "build time" : 1200,
+	    "depends facilities" : {
+		"research facility" : 8
+	    },
+	    "depends technologies" : ["nano weapons", "shields"],
+	    "ship upgrades" : {"#combat" : "nano shield"}
+	},
+
+	"biomechanics" : {
+	    "build time" : 800,
+	    "depends facilities" : {
+		"research facility" : 6
+	    },
+	    "depends technologies" : ["nano technology", "bio technology"]
+	},
+
+	"warp plasma" : {
+	    "build time" : 900,
+	    "depends facilities" : {
+		"research facility" : 7
+	    },
+	    "depends technologies" : ["warp technology"],
+	    "ship upgrades" : {"#combat" : "plasma laser"}
+	},
+
+	"hive fleet" : {
+	    "build time" : 700,
+	    "depends facilities" : {
+		"research facility" : 5
+	    },
+	    "depends technologies" : ["cyborgs", "control systems"],
+	    "ship upgrades" : {"#combat:!huge:!large" : "hive communication"}
+	},
+
+	"terraforming" : {
+	    "build time" : 2000,
+	    "depends facilities" : {
+		"research facility" : 8,
+		"biomechanics facility" : 2
+	    },
+	    "depends technologies" : ["biomechanics"],
+	    "ship upgrades" : {"colonizer" : ["terraform"]}
+	},
+
+	"subspace technology" : {
+	    "build time" : 2500,
+	    "depends facilities" : {
+		"research facility" : 9
+	    },
+	    "depends technologies" : ["warp plasma", "stealth"]
+	},
+
+	"bioinformatics" : {
+	    "build time" : 2500,
+	    "depends facilities" : {
+		"research facility" : 9,
+		"biomechanics facility" : 5
+	    },
+	    "depends technologies" : ["cyborgs"]
+	    "sector boost" : {"research" : 1.5}
+	},
     }
 }

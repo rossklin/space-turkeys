@@ -336,10 +336,10 @@ void solar::develop(string fac) {
   }
 
   // pay
-  cost::res_t pay = development[fac].cost.res;
+  cost::res_t pay = development[fac].cost_resources;
   pay.scale(cost::expansion_multiplier(development[fac].level));
   pay_resources(pay);
-  development_points -= development[fac].cost.time;
+  development_points -= development[fac].cost_time;
 
   // level up and repair
   development[fac].level++;
@@ -354,7 +354,7 @@ int solar::get_facility_level(string fac) {
   }
 }
 
-void facility::read_from_json(const rapidjson::GenericValue &x) {
+void facility::read_from_json(const rapidjson::Value &x) {
   development::node::read_from_json(x);
   
   if (x.HasMember("vision")) vision = x["vision"].GetDouble();
@@ -369,9 +369,16 @@ void facility::read_from_json(const rapidjson::GenericValue &x) {
     if (t.HasMember("accuracy")) turret.accuracy = t["accuracy"].GetDouble();
     if (t.HasMember("load")) turret.load = t["load"].GetDouble();
   }
+
+  if (x.HasMember("cost")) {
+    auto &c = x["cost"];
+    for (auto k : keywords::resource) {
+      if (c.HasMember(k.c_str())) cost_resources[k] = c[k.c_str()].GetDouble();
+    }
+  }
   
-  if (c.HasMember("water")) water_usage = c["water"].GetDouble();
-  if (c.HasMember("space")) space_usage = c["space"].GetDouble();
+  if (x.HasMember("water usage")) water_usage = x["water usage"].GetDouble();
+  if (x.HasMember("space usage")) space_usage = x["space usage"].GetDouble();
 }
 
 const hm_t<string, facility>& solar::facility_table(){
@@ -426,7 +433,7 @@ list<string> solar::available_facilities(const research::data &r_level) {
     cost::res_t res_buf = f.cost_resources;
     res_buf.scale(level_multiplier);
     pass &= resource_constraint(res_buf) >= 1;
-    pass &= development_points >= level_multiplier * f.cost.time;
+    pass &= development_points >= level_multiplier * f.cost_time;
     pass &= water * water_status() >= level_multiplier * f.water_usage;
     pass &= space * space_status() >= level_multiplier * f.space_usage;
 

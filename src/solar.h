@@ -10,7 +10,7 @@
 #include "ship.h"
 #include "game_object.h"
 #include "choice.h"
-#include "development.h"
+#include "development_tree.h"
 
 namespace st3{
   class game_data;
@@ -40,8 +40,7 @@ namespace st3{
     cost::res_t cost_resources;
 
     facility();
-    void read_from_json(const rapidjson::GenericValue &v);
-    bool can_develop(const hm_t<std::string, T> &map, int points, std::set<std::string> techs, hm_t<std::string, sint> facilities);
+    void read_from_json(const rapidjson::Value &v);
   };
 
   class facility_object : public facility {

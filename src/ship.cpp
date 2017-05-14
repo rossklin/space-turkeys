@@ -84,6 +84,11 @@ const hm_t<string, ship_stats>& ship_stats::table(){
 	a.shape.push_back(v);
       }
     }
+
+    if (i -> value.HasMember("tags")) {
+      auto &tags = i -> value["tags"];
+      for (auto j = tags.Begin(); j != tags.End(); j++) a.tags.insert(j -> GetString());
+    }
     
     buf[a.ship_class] = a;
   }
@@ -205,7 +210,12 @@ list<combid> ship::confirm_interaction(string a, list<combid> targets, game_data
 
   // chose at most one target
   list<combid> result;
-  if (!allowed.empty()) result.push_back(utility::uniform_sample(allowed));
+  if (a == "hive support"){
+    result = allowed;
+  }else{
+    if (!allowed.empty()) result.push_back(utility::uniform_sample(allowed));
+  }
+  
   return result;
 }
 
@@ -243,7 +253,7 @@ void ship_stats::operator+= (const ship_stats &b) {
   solar_damage += b.solar_damage;
   interaction_radius_value += b.interaction_radius_value;
   vision_range += b.vision_range;
-  load_time += b.load_time;
+  load_time = fmax(load_time + b.load_time, 0);
   cargo_capacity += b.cargo_capacity;
   upgrades += b.upgrades;
   build_cost.add(b.build_cost);

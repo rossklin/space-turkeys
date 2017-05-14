@@ -193,6 +193,31 @@ const hm_t<string, interaction> &interaction::table() {
   };
   data[i.name] = i;
 
+  // terraform
+  i.name = "terraform";
+  i.condition = target_condition(target_condition::neutral, solar::class_id);
+  i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
+    ship::ptr s = utility::guaranteed_cast<ship>(self);
+    solar::ptr t = utility::guaranteed_cast<solar>(target);
+
+    if (s -> load < s -> load_time) return;
+    s -> load = 0;
+
+    t -> water = 1000;
+    t -> space = 1000;
+    t -> ecology = 1;
+  };
+  data[i.name] = i;
+
+  // terraform
+  i.name = "hive support";
+  i.condition = target_condition(target_condition::owned, ship::class_id);
+  i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
+    ship::ptr s = utility::guaranteed_cast<ship>(target);
+    if (s -> upgrades.count("hive communication")) s -> load++;
+  };
+  data[i.name] = i;
+
   init = true;
   return data;
 }

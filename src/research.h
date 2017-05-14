@@ -8,14 +8,12 @@
 #include "ship.h"
 #include "solar.h"
 #include "choice.h"
-#include "development.h"
+#include "development_tree.h"
 
 namespace st3{
   namespace research{
     const std::string upgrade_all_ships = "upgrade all ships";
-    class tech : public virtual development::node {
-      bool can_develop(const hm_t<std::string, T> &map, int points, std::set<std::string> techs, hm_t<std::string, sint> facilities);
-    };
+    typedef development::node tech;
     
     /*! struct representing the research level of a player */
     struct data {
