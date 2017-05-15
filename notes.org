@@ -1,4 +1,6 @@
 * current work
+** continue splitting up interfaces
+** make new "development" interface that can be used for research and facilities
 ** allow selecting not to develop solar facilities
 ** look through all copy constructors to make sure they explicitly call parents
 * [!] issues
