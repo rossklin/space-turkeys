@@ -626,6 +626,9 @@ void game::reload_data(data_frame &g){
     }
     w -> pending_commands.clear();
   }
+
+  // update research level ref for solars
+  for (auto s : get_all<solar>()) s -> research_level = &players[s -> owner].research_level;
 }
 
 // ****************************************

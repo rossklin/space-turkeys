@@ -26,7 +26,7 @@ namespace st3{
       std::list<std::string> available();
       ship build_ship(std::string v, solar::ptr sol);
       void repair_ship(ship &s, solar::ptr sol);
-      bool can_build_ship(std::string v, solar::ptr s);
+      bool can_build_ship(std::string v, solar::ptr s, std::list<std::string> *data = 0);
       hm_t<std::string, choice::c_solar> solar_template_table(solar::ptr s);
     };    
   };

@@ -90,16 +90,28 @@ ship data::build_ship(string c, solar::ptr sol){
   return s;
 }
 
-bool data::can_build_ship(string v, solar::ptr sol){
+bool data::can_build_ship(string v, solar::ptr sol, list<string> *data){
   if (!ship::table().count(v)) {
     throw runtime_error("Military template: no such ship class: " + v);
   }
   
-  int facility = sol -> get_facility_level(keywords::key_military);
-  ship s(ship::table().at(v));
-  if (s.depends_facility_level > facility) return false;
-  if (s.depends_tech.length() > 0 && !researched.count(s.depends_tech)) return false;
-  return true;
+  int facility = sol -> get_facility_level("shipyard");
+  ship_stats s = ship::table().at(v);
+  bool success = true;
+
+  if (data) data -> clear();
+  
+  if (s.depends_facility_level > facility) {
+    success = false;
+    if (data) data -> push_back("shipyard level " + to_string(s.depends_facility_level));
+  }
+  
+  if (s.depends_tech.length() > 0 && !researched.count(s.depends_tech)) {
+    success = false;
+    if (data) data -> push_back("research " + s.depends_tech);
+  }
+  
+  return success;
 }
 
 hm_t<string,choice::c_solar> data::solar_template_table(solar::ptr sol){

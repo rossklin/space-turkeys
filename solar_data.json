@@ -52,9 +52,9 @@
 		"culture" : 2
 	    },
 	    "cost" : {
-		"build time" : 200,
 		"space usage" : 10
-	    }
+	    },
+	    "build time" : 200
 	},
 
 	"automated mines" : {

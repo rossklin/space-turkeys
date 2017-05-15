@@ -1,14 +1,6 @@
 * current work
-** solar_selector doesn't seem to receive proper research_level pointer
-** [J?] apply sector boost from research in solar
-** [J?] tag ships as e.g. small, large, bio, mech etc.
-    This will allow techs applying upgrades to ships by type
-** [J?] add ship attributes stealth, detection, regen and shield
-** [J?] go through solar data
-** [J] update serialization with development::node and subclasses
-** [J] add development tree to makefile
-** make ship cost scale with upgrades
-** add development::node::list_requirements
+** allow selecting not to develop solar facilities
+** look through all copy constructors to make sure they explicitly call parents
 * [!] issues
 ** [!] bugs & crashes
 *** [!confirm?] fleets don't seem to get cleared from client choice
@@ -35,6 +27,7 @@
 *** ?move keywords and allocations to "types.h"
 *** move expansion costs to research?
 * system design ideas
+** make ship cost scale with upgrades
 ** allow "fortification" so units can block other units and hold a position?
 ** reduce fleet actions, replace with fleet response policies
 ** add trigger system for e.g. upgrades, techs and solar facilities
@@ -49,6 +42,7 @@
    Just something a little bit more fun than "expansion[i]", e.g. move
    turrets here.
 * tweaks and fixes
+** add development::node::list_requirements + gui
 ** allow double-clicking ship to select all of same type
 ** allow dragging waypoints
 ** name and indicators for solars so you can tell them apart
@@ -69,12 +63,10 @@
 *** stealth: give ships a stealth attribute that counters the vision attribute
 * to be tested
 ** confirm
-*** somewhere, solar development["military"] is being initialized
-*** make turrets hit different targets
-*** give ships reduced accuracy when not firing forwards
-*** ships built way to fast
-*** tech researched to fast
-*** template for culture growth should have more culture
+*** [J?] apply sector boost from research in solar
+*** [J?] tag ships as e.g. small, large, bio, mech etc.
+    This will allow techs applying upgrades to ships by type
+*** [J?] add ship attributes stealth, detection, regen and shield
 *** priority buttons unresponsive to first right click
 *** Clicking interface response button also triggers click on minimap
 *** ships remain selected after fleet is created
@@ -87,6 +79,17 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** fixed a bug where facility copy constructor didn't call development::node::node
+** solar_selector doesn't seem to receive proper research_level pointer
+** [J?] go through solar data
+** [J] update serialization with development::node and subclasses
+** [J] add development tree to makefile
+** somewhere, solar development["military"] is being initialized
+** make turrets hit different targets
+** give ships reduced accuracy when not firing forwards
+** ships built way to fast
+** tech researched to fast
+** template for culture growth should have more culture
 ** [J] development points aren't spent
 ** [J] set research points to same speed as development
 ** [J] client submitted invalid development: radar tower

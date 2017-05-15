@@ -40,6 +40,7 @@ namespace st3{
     cost::res_t cost_resources;
 
     facility();
+    facility(const facility &f);
     void read_from_json(const rapidjson::Value &v);
   };
 

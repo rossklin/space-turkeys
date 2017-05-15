@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <boost/algorithm/string/join.hpp>
 
 #include "graphics.h"
 #include "types.h"
@@ -419,28 +420,30 @@ Box::Ptr main_window::new_sub(string v){
   return buf;
 }
  
-// // sub window for expansion choice
-// void main_window::build_expansion(){
-//   choice::c_expansion &c = response.expansion;
-//   auto buf = new_sub("Expansion priorities");
-  
-//   // add buttons for expandable sectors
-//   for (auto v : keywords::expansion){
-//     buf -> Pack(priority_button(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip));
-//   }
-// };
-
 // sub window for military choice
 void main_window::build_military(){
   auto &c = response.military;
   auto buf = new_sub("Military build priorities");
+  list<string> req;
+  hm_t<string, list<string> > unqualified;
   
   // add buttons for expandable sectors
   for (auto v : ship::all_classes()) {
-    if (!desktop -> get_research().can_build_ship(v, sol)) continue;
+    if (desktop -> get_research().can_build_ship(v, sol, &req)) {
+      buf -> Pack(priority_button(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip));
+    }else{
+      unqualified[v] = req;
+    }
+  }
 
-    // add ship priority button
-    buf -> Pack(priority_button(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip));
+  for (auto &x : unqualified) {
+    buf -> Pack(Label::Create(x.first));
+    auto r = Label::Create(boost::algorithm::join(x.second, ", "));
+    string id = "req#" + x.first;
+    r -> SetId(id);
+    buf -> Pack(r);
+    desktop -> SetProperty(id, "Color", sf::Color::Red);
+    buf -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
   }
 };
 

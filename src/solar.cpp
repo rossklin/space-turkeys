@@ -361,9 +361,10 @@ void solar::develop(string fac) {
 
   // pay
   cost::res_t pay = development[fac].cost_resources;
-  pay.scale(cost::expansion_multiplier(development[fac].level));
+  float multiplier = cost::expansion_multiplier(development[fac].level);
+  pay.scale(multiplier);
   pay_resources(pay);
-  development_points -= development[fac].cost_time;
+  development_points -= multiplier * development[fac].cost_time;
 
   // level up and repair
   development[fac].level++;
@@ -420,21 +421,25 @@ const hm_t<string, facility>& solar::facility_table(){
   return data;
 }
     
-facility_object::facility_object(){
+facility_object::facility_object() : facility() {
   level = 0;
   hp = 0;
 }
     
 facility_object::facility_object(const facility &f) : facility(f) {
   level = 0;
-  hp = base_hp;
+  hp = 0;
 }
 
-facility::facility() {
+facility::facility() : development::node() {
   vision = 0;
   is_turret = 0;
   base_hp = 0;
   shield = 0;
+}
+
+facility::facility(const facility &f) : development::node(f) {
+  *this = f;
 }
 
 turret_t::turret_t(){
