@@ -29,6 +29,10 @@ namespace st3{
     sfloat vision_range; /*!< ship's sight radius */
     sfloat load_time;
     sfloat cargo_capacity;
+    sfloat regeneration;
+    sfloat shield;
+    sfloat detection;
+    sfloat stealth;
     std::set<std::string> upgrades;
 
     // cost and req
@@ -76,6 +80,7 @@ namespace st3{
     std::list<combid> confirm_interaction(std::string a, std::list<combid> t, game_data *g);
     std::set<std::string> compile_interactions();
     float interaction_radius();
+    bool can_see(game_object::ptr x);
 
     // ship
     ship();

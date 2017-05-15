@@ -4,6 +4,7 @@
 #include "com_client.h"
 #include "protocol.h"
 #include "serialization.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -104,6 +105,8 @@ bool client::deserialize(data_frame &f, sf::Packet &p, sint id){
       if (!(obj = deserialize_object<client::fleet_selector>(p, id))) return false;
     }else if (key == solar::class_id){
       if (!(obj = deserialize_object<client::solar_selector>(p, id))) return false;
+      solar_selector::ptr s = utility::guaranteed_cast<solar_selector, entity_selector>(obj);
+      s -> research_level = &f.players[s -> owner].research_level;
     }else if (key == waypoint::class_id){
       if (!(obj = deserialize_object<client::waypoint_selector>(p, id))) return false;
     }else{

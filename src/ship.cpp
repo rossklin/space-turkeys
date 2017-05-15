@@ -23,7 +23,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
   auto &doc = (*pdoc)["ship"];
 
   ship_stats s, a;
-  s.speed = 1;
+  s.speed = 0.5;
   s.vision_range = 50;
   s.hp = 1;
   s.ship_damage = 0;
@@ -124,8 +124,10 @@ void ship::set_stats(ship_stats s){
 }
 
 void ship::pre_phase(game_data *g){
-  // load weapons
+  // load stuff
   load = fmin(load + 1, base_stats.load_time);
+  hp = fmin(hp + regeneration, base_stats.hp);
+  shield = fmin(shield + 0.01, base_stats.shield);
 }
 
 void ship::move(game_data *g){
@@ -154,7 +156,9 @@ void ship::move(game_data *g){
 
 void ship::post_phase(game_data *g){}
 
-void ship::receive_damage(game_object::ptr from, float damage){
+void ship::receive_damage(game_object::ptr from, float damage) {
+  damage -= shield;
+  shield = fmax(shield - 0.1 * damage, 0);
   hp -= damage;
   remove = hp <= 0;
   cout << "ship::receive_damage: " << id << " takes " << damage << " damage from " << from -> id << " - remove = " << remove << endl;
@@ -245,6 +249,26 @@ void ship::on_liftoff(solar::ptr from, game_data *g){
   }
 }
 
+void ship::copy_from(const ship &s){
+  (*this) = s;
+}
+
+bool ship::isa(string c) {
+  return c == ship::class_id || c == physical_object::class_id;
+}
+
+bool ship::can_see(game_object::ptr x) {
+  float r = 1;
+
+  if (x -> isa(ship::class_id)) {
+    ship::ptr s = utility::guaranteed_cast<ship>(x);
+    r = vision() * fmin((detection + 1) / (s -> stealth + 1), 1);
+  }
+  
+  float d = utility::l2norm(x -> position - position);
+  return d < r;
+}
+
 void ship_stats::operator+= (const ship_stats &b) {
   speed += b.speed;
   hp += b.hp;
@@ -258,6 +282,10 @@ void ship_stats::operator+= (const ship_stats &b) {
   upgrades += b.upgrades;
   build_cost.add(b.build_cost);
   build_time += b.build_time;
+  regeneration += b.regeneration;
+  shield += b.shield;
+  detection += b.detection;
+  stealth += b.stealth;
 }
 
 ship_stats::ship_stats(){
@@ -272,12 +300,8 @@ ship_stats::ship_stats(){
   cargo_capacity = 0;
   depends_facility_level = 0;
   build_time = 0;
-}
-
-void ship::copy_from(const ship &s){
-  (*this) = s;
-}
-
-bool ship::isa(string c) {
-  return c == ship::class_id || c == physical_object::class_id;
+  regeneration = 0;
+  shield = 0;
+  detection = 0;
+  stealth = 0;
 }

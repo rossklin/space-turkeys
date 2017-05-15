@@ -192,7 +192,11 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship_stats &g){
     << g.build_time
     << g.shape
     << g.ship_class
-    << g.tags;
+    << g.tags
+    << g.regeneration
+    << g.shield
+    << g.stealth
+    << g.detection;
 }
 
 // ship stats
@@ -214,7 +218,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship_stats &g){
     >> g.build_time
     >> g.shape
     >> g.ship_class
-    >> g.tags;
+    >> g.tags
+    >> g.regeneration
+    >> g.shield
+    >> g.stealth
+    >> g.detection;
 }
 
 // ship

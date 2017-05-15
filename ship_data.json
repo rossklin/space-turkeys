@@ -2,7 +2,7 @@
     "ship" : {
 	"scout" : {
 	    "is starting ship" : 1,
-	    "speed" : 2,
+	    "speed" : 1,
 	    "vision" : 100,
 	    "ship_damage" : 0.1,
 	    "accuracy" : 0.3,
@@ -30,7 +30,7 @@
 	    "load_time" : 20,
 	    "upgrades" : ["space combat", "bombard"],
 	    "depends_facility_level" : 1,
-	    "depends_tech" : "ship armor",
+	    "depends_tech" : "warp technology",
 	    "cost" : {
 		"metals" : 2,
 		"gases" : 1,
@@ -51,7 +51,7 @@
 	    "accuracy" : 0.8,
 	    "upgrades" : ["bombard"],
 	    "depends_facility_level" : 2,
-	    "depends_tech" : "ship weapons",
+	    "depends_tech" : "warp plasma",
 	    "cost" : {
 		"metals" : 4,
 		"gases" : 3,
@@ -70,7 +70,7 @@
 	},
 
 	"colonizer" : {
-	    "speed" : 0.5,
+	    "speed" : 0.3,
 	    "hp" : 2,
 	    "upgrades" : ["colonize"],
 	    "depends_facility_level" : 1,
@@ -91,7 +91,7 @@
 	},
 
 	"freighter" : {
-	    "speed" : 1,
+	    "speed" : 0.5,
 	    "hp" : 1,
 	    "upgrades" : ["trade"],
 	    "depends_facility_level" : 1,

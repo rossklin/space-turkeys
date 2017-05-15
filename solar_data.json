@@ -9,8 +9,8 @@
 	    "cost" : {
 		"metals" : 10,
 		"gases" : 3,
-		"organics" : 2,
-	    }
+		"organics" : 2
+	    },
 	    "build time" : 100,
 	    "space usage" : 30,
 	    "water usage" : 20
@@ -44,12 +44,12 @@
 	    "build time" : 100,
 	    "space usage" : 10,
 	    "water usage" : 10,
-	    "ship upgrades" : {"#combat" : "bio-hull"}
+	    "ship upgrades" : {"#combat" : ["bio-hull"]}
 	},
 
 	"local traditions" : {
 	    "sector boost" : {
-		"culture" : 1
+		"culture" : 2
 	    },
 	    "cost" : {
 		"build time" : 200,
@@ -59,7 +59,7 @@
 
 	"automated mines" : {
 	    "sector boost" : {
-		"mining" : 1
+		"mining" : 2
 	    },
 	    "cost" : {
 		"metals" : 10,
@@ -73,7 +73,7 @@
 
 	"expansion factories" : {
 	    "sector boost" : {
-		"development" : 1
+		"development" : 2
 	    },
 	    "cost" : {
 		"metals" : 10,
@@ -92,7 +92,7 @@
 		"damage" : 1,
 		"range" : 50,
 		"accuracy" : 0.4,
-		"load" : 30
+		"load" : 10
 	    },
 	    "cost" : {
 		"metals" : 5,
@@ -102,7 +102,7 @@
 	    "space usage" : 2,
 	    "water usage" : 1,
 	    "depends facilities" : {
-		"military" : 1
+		"shipyard" : 1
 	    }
 	},
 
@@ -114,8 +114,7 @@
 	    },
 	    "build time" : 70,
 	    "space usage" : 2,
-	    "water usage" : 1,
-	    "depends technologies" : ["radar"]
+	    "water usage" : 1
 	}
     }
 }

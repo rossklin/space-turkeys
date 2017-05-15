@@ -21,6 +21,7 @@ solar::solar(){}
 solar::~solar(){}
 
 void solar::pre_phase(game_data *g){
+  research_level = &g -> players[owner].research_level;
   for (auto &t : development){
     if (t.second.is_turret){
       t.second.turret.load += 0.1;
@@ -317,6 +318,18 @@ bool solar::isa(string c) {
   return c == solar::class_id || c == physical_object::class_id || c == commandable_object::class_id;
 }
 
+bool solar::can_see(game_object::ptr x) {
+  float r = 1;
+
+  if (x -> isa(ship::class_id)) {
+    ship::ptr s = utility::guaranteed_cast<ship>(x);
+    r = vision() / (s -> stealth + 1);
+  }
+  
+  float d = utility::l2norm(x -> position - position);
+  return d < r;
+}
+
 float solar::compute_shield_power() {
   float sum = 0;
   for (auto &f : development) sum += f.second.shield;
@@ -325,7 +338,18 @@ float solar::compute_shield_power() {
 
 float solar::compute_boost(string v){
   float sum = 1;
-  for (auto &f : development) if (f.second.sector_boost.count(v)) sum *= f.second.sector_boost[v];
+  for (auto &f : development) {
+    if (f.second.sector_boost.count(v)) {
+      sum *= f.second.sector_boost[v] * f.second.level;
+    }
+  }
+
+  auto &rtab = research::data::table();
+  for (auto r : research_level -> researched) {
+    research::tech t = rtab.at(r);
+    if (t.sector_boost.count(v)) sum *= t.sector_boost[v];
+  }
+  
   return sum;
 }
 

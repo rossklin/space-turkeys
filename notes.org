@@ -1,13 +1,14 @@
 * current work
-** generalizing development tree
-*** [J] update serialization with development::node and subclasses
-*** [J] add development tree to makefile
-*** add development::node::list_requirements
-*** apply sector boost from research in solar
-*** [J?] tag ships as e.g. small, large, bio, mech etc.
+** solar_selector doesn't seem to receive proper research_level pointer
+** [J?] apply sector boost from research in solar
+** [J?] tag ships as e.g. small, large, bio, mech etc.
     This will allow techs applying upgrades to ships by type
-*** add ship attributes stealth, detection, regen and shield
-*** go through solar data
+** [J?] add ship attributes stealth, detection, regen and shield
+** [J?] go through solar data
+** [J] update serialization with development::node and subclasses
+** [J] add development tree to makefile
+** make ship cost scale with upgrades
+** add development::node::list_requirements
 * [!] issues
 ** [!] bugs & crashes
 *** [!confirm?] fleets don't seem to get cleared from client choice

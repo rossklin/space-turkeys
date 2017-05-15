@@ -74,7 +74,7 @@ void data::repair_ship(ship &s, solar::ptr sol) {
     s.base_stats += mod_stats;
   }
 
-  static_cast<ship_stats&>(s) = s.base_stats;
+  s.set_stats(s.base_stats);
 }
 
 ship data::build_ship(string c, solar::ptr sol){

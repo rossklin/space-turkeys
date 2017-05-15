@@ -542,9 +542,10 @@ void game_data::confirm_data() {
 
   auto check_ship_upgrades = [&utab, &stab] (hm_t<string, set<string> > u) {
     for (auto &x : u) {
-      if (x.first == research::upgrade_all_ships) continue;
-      assert(stab.count(x.first));
       for (auto v : x.second) assert(utab.count(v));
+      if (x.first == research::upgrade_all_ships) continue;
+      if (x.first[0] == '!' || x.first[0] == '#') continue;
+      assert(stab.count(x.first));
     }
   };
 

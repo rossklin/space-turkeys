@@ -13,14 +13,14 @@
 	    "depends facilities" : {"research facility" : 1},
 	    "sector boost" : {
 		"military" : 1.1
-	    }
+	    },
 	    "ship upgrades" : {"upgrade all ships" : ["intelligent"]}
 	},
 
 	"bio technology" : {
 	    "build time" : 150,
 	    "depends facilities" : {"research facility" : 1},
-	    "sector boost" : {"culture" : 1.1},
+	    "sector boost" : {"culture" : 1.1}
 	},
 
 	"nano technology" : {
@@ -69,20 +69,20 @@
 	    "depends facilities" : {"research facility" : 4},
 	    "depends technologies" : ["warp technology"],
 	    "ship upgrades" : {
-		"!large:!huge" : ["shield"],
+		"!large:!huge" : ["shield"]
 	    }
 	},
 
 	"nano construction" : {
 	    "build time" : 400,
 	    "depends facilities" : {"research facility" : 4},
-	    "depends technologies" : ["nano technology"],
+	    "depends technologies" : ["nano technology"]
 	},
 	
 	"nano construction" : {
 	    "build time" : 400,
 	    "depends facilities" : {"research facility" : 4},
-	    "depends technologies" : ["nano technology"],
+	    "depends technologies" : ["nano technology"]
 	},
 
 	"nano plating" : {
@@ -92,7 +92,7 @@
 		"shipyard" : 4
 	    },
 	    "depends technologies" : ["nano construction"],
-	    "ship upgrades" : {"#combat" : "nano hull"}
+	    "ship upgrades" : {"#combat" : ["nano hull"]}
 	},
 
 	"nano weapons" : {
@@ -102,7 +102,7 @@
 		"shipyard" : 4
 	    },
 	    "depends technologies" : ["nano technology"],
-	    "ship upgrades" : {"#combat" : "nano torpedos"}
+	    "ship upgrades" : {"#combat" : ["nano torpedos"]}
 	},
 
 	"nano shields" : {
@@ -111,7 +111,7 @@
 		"research facility" : 8
 	    },
 	    "depends technologies" : ["nano weapons", "shields"],
-	    "ship upgrades" : {"#combat" : "nano shield"}
+	    "ship upgrades" : {"#combat" : ["nano shield"]}
 	},
 
 	"biomechanics" : {
@@ -128,7 +128,7 @@
 		"research facility" : 7
 	    },
 	    "depends technologies" : ["warp technology"],
-	    "ship upgrades" : {"#combat" : "plasma laser"}
+	    "ship upgrades" : {"#combat" : ["plasma laser"]}
 	},
 
 	"hive fleet" : {
@@ -137,7 +137,7 @@
 		"research facility" : 5
 	    },
 	    "depends technologies" : ["cyborgs", "control systems"],
-	    "ship upgrades" : {"#combat:!huge:!large" : "hive communication"}
+	    "ship upgrades" : {"#combat:!huge:!large" : ["hive communication"]}
 	},
 
 	"terraforming" : {
@@ -164,8 +164,8 @@
 		"research facility" : 9,
 		"biomechanics facility" : 5
 	    },
-	    "depends technologies" : ["cyborgs"]
+	    "depends technologies" : ["cyborgs"],
 	    "sector boost" : {"research" : 1.5}
-	},
+	}
     }
 }

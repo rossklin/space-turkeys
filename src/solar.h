@@ -62,6 +62,7 @@ namespace st3{
     
     choice::c_solar choice_data;
     float dt;
+    research::data *research_level;
 
     hm_t<std::string, facility_object> development;
 
@@ -95,7 +96,8 @@ namespace st3{
     std::list<combid> confirm_interaction(std::string a, std::list<combid> t, game_data *g);
     std::set<std::string> compile_interactions();
     float interaction_radius();
-
+    bool can_see(game_object::ptr x);
+    
     // commandable_object
     void give_commands(std::list<command> c, game_data *g);
 
