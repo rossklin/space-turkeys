@@ -1,6 +1,5 @@
 #include <cmath>
 #include <iostream>
-#include <boost/algorithm/string/join.hpp>
 
 #include "graphics.h"
 #include "types.h"
@@ -80,51 +79,6 @@ point graphics::inverse_scale(window_t &w){
   sf::View v = w.getView();
   return point(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
 }
-
-/* **************************************** */
-/* INTERFACES */
-/* **************************************** */
-
-using namespace sfg;
-using namespace interface;
-
-// build and wrap in shared ptr
-
-bottom_panel::Ptr bottom_panel::Create(bool &done, bool &accept){
-  auto buf = Ptr(new bottom_panel());
-  
-  auto layout = Box::Create(Box::Orientation::HORIZONTAL);
-  auto b_proceed = Button::Create("PROCEED");
-
-  b_proceed -> GetSignal(Widget::OnLeftClick).Connect([&done, &accept](){
-      done = true;
-      accept = true;
-    });
-
-  layout -> Pack(b_proceed);
-  buf -> Add(layout);
-  buf -> SetAllocation(sf::FloatRect(0.3 * desktop_dims.x, bottom_start, 0.4 * desktop_dims.x, desktop_dims.y - bottom_start));
-  return buf;
-}
-
-// top_panel::Ptr top_panel::Create(){
-//   auto buf = Ptr(new top_panel());
-
-//   auto layout = Box::Create(Box::Orientation::HORIZONTAL);
-//   auto b_research = Button::Create("RESEARCH");
-
-//   b_research -> GetSignal(Widget::OnLeftClick).Connect([](){
-//       desktop -> reset_qw(research_window::Create(&desktop -> response.research));
-//     });
-
-//   layout -> Pack(b_research);
-//   buf -> Add(layout);
-//   buf -> SetAllocation(sf::FloatRect(0, 0, desktop_dims.x, top_height));
-//   return buf;
-// }
-
-// research_window::Ptr research_window::Create(choice::c_research *c){return Ptr(new research_window(c));}
-
 
 void graphics::draw_explosion(window_t &w, explosion e){
   float t = e.time_passed();

@@ -34,18 +34,22 @@ const hm_t<string, tech>& data::table(){
   return tree;
 }
 
+list<string> data::list_tech_requirements(string v) {
+  list<string> req;
+  tech t = table().at(v);
+  if (researched.count(v)) {
+    req.push_back("already researched");
+  }else{
+    if (t.cost_time > accumulated) req.push_back("research points");
+    for (auto d : t.depends_techs) if (!researched.count(d)) req.push_back("technology " + d);
+    for (auto f : t.depends_facilities) if (f.second > facility_level[f.first]) req.push_back(f.first + " level " + to_string(f.second));
+  }
+  return req;
+}
+
 list<string> data::available() {
   list<string> res;
-
-  auto &map = table();
-  for (auto &x : map) {
-    if (researched.count(x.first)) continue;
-    if (x.second.cost_time > accumulated) continue;
-    if ((x.second.depends_techs - researched).size() > 0) continue;
-    for (auto &f : x.second.depends_facilities) if (f.second > facility_level[f.first]) continue;
-    res.push_back(x.first);
-  }
-
+  for (auto &x : table()) if (list_tech_requirements(x.first).empty()) res.push_back(x.first);
   return res;
 }
 

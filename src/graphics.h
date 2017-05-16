@@ -3,9 +3,6 @@
 
 #include <string>
 #include <functional>
-
-#include <SFGUI/SFGUI.hpp>
-#include <SFGUI/Widgets.hpp>
 #include <SFML/Graphics.hpp>
 
 #include "game_data.h"
@@ -18,10 +15,6 @@
 namespace st3{
   /*! type representing a window */
   typedef sf::RenderWindow window_t;
-
-  namespace client {
-    struct game;
-  };
 
   /*! graphics related code elements */
   namespace graphics{

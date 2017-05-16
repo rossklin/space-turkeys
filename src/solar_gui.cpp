@@ -1,4 +1,11 @@
+#include <boost/algorithm/string/join.hpp>
+
+#include "development_tree.h"
+#include "development_gui.h"
 #include "solar_gui.h"
+#include "desktop.h"
+#include "research.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -8,13 +15,15 @@ using namespace interface;
 const std::string solar_gui::sfg_id = "solar gui";
 
 solar_gui::Ptr solar_gui::Create(solar::ptr s){
-  auto buf = Ptr(new solar_gui(s));
-
-  return buf;
+  Ptr self(new solar_gui(s));
+  self -> Add(self -> layout);
+  self -> SetAllocation(main_interface::qw_allocation);
+  self -> SetId(sfg_id);
+  return self;
 }
 
 // main window for solar choice
-solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s){
+solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
   if (desktop -> response.solar_choices.count(sol -> id)){
     response = desktop -> response.solar_choices[sol -> id];
   }else{
@@ -78,10 +87,6 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s){
   l_response -> Pack(b_cancel);
 
   layout -> Pack(l_response);
-
-  Add(layout);
-  SetAllocation(main_interface::qw_allocation);
-  SetId(sfg_id);
 }
 
 // build a labeled button to modify priority data
@@ -122,6 +127,34 @@ void solar_gui::build_choice(){
   subq[keywords::key_mining] = [this] () {build_mining();};
   subq[keywords::key_military] = [this] () {build_military();};
 
+  // allow opening facility development interface if there are
+  // available developments
+  if (sol -> available_facilities(desktop -> get_research()).size()) {
+    subq[keywords::key_development] = [this] () {
+      // copy variables for use in callback functions after this
+      // solar_gui has been destroyed
+      solar::ptr s(new solar(*sol));
+      choice::c_solar c = response;
+      
+      development_gui::f_req_t f_req = [s] (string v) -> list<string> {return s -> list_facility_requirements(v, desktop -> get_research());};
+
+      development_gui::f_complete_t on_complete = [s, c] (bool accepted, string r) {
+	choice::c_solar b = c;
+	if (accepted) {
+	  b.development = r;
+	  desktop -> response.solar_choices[s -> id] = b;
+	  s -> develop(r);
+	}
+      
+	desktop -> reset_qw(Create(s));
+      };
+
+      hm_t<string, development::node> map;
+      for (auto &f : solar::facility_table()) map[f.first] = f.second;
+      desktop -> reset_qw(development_gui::Create(map, f_req, on_complete, true));
+    };
+  }
+
   for (auto v : keywords::sector){
     auto b = priority_button(v, response.allocation[v], [this](){return response.allocation.count() < choice::max_allocation;}, tooltip);
 
@@ -154,7 +187,7 @@ void solar_gui::build_info(){
   auto patch_label = [this] (Label::Ptr a, string v){
     a -> SetAlignment(sf::Vector2f(0, 0));
     a -> GetSignal(Widget::OnMouseEnter).Connect([this, v] () {
-	tooltip -> SetText("Status for " + v + " (rate of change in parenthesis)");
+	tooltip -> SetText("Status for " + v + " [rate of change in brackets]");
       });
   };    
 

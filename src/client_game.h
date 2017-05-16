@@ -5,6 +5,7 @@
 #include <string>
 #include <functional>
 #include <SFML/Graphics.hpp>
+#include <SFGUI/SFGUI.hpp>
 
 #include "socket_t.h"
 #include "fixed_star.h"

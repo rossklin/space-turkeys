@@ -23,6 +23,7 @@ namespace st3{
       hm_t<std::string, sint> facility_level;
 
       data();
+      std::list<std::string> list_tech_requirements(std::string v);
       std::list<std::string> available();
       ship build_ship(std::string v, solar::ptr sol);
       void repair_ship(ship &s, solar::ptr sol);

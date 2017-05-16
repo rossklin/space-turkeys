@@ -1,14 +1,17 @@
-#ifnded _STK_SOLAR_GUI
+#ifndef _STK_SOLAR_GUI
 #define _STK_SOLAR_GUI
 
+#include <string>
+#include <functional>
 #include <SFGUI/SFGUI.hpp>
 #include <SFGUI/Widgets.hpp>
 
 #include "choice.h"
+#include "solar.h"
 
 namespace st3 {
-  namespace graphics {
-      
+  namespace interface {
+
     // solar choice window
     class solar_gui : public sfg::Window {
     public:

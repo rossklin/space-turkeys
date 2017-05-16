@@ -112,6 +112,7 @@ namespace st3{
     std::string get_info();
     float compute_boost(std::string sector);
     float compute_shield_power();
+    std::list<std::string> list_facility_requirements(std::string v, const research::data &r);
     std::list<std::string> available_facilities(const research::data &r);
     void develop(std::string fac);
     int get_facility_level(std::string fac);

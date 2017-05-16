@@ -449,29 +449,28 @@ turret_t::turret_t(){
   load = 0;
 }
 
+list<string> solar::list_facility_requirements(string v, const research::data &r_level) {
+  list<string> req;
+  facility f = facility_table().at(v);
+  float level_multiplier = cost::expansion_multiplier(get_facility_level(v));
+
+  // check cost
+  cost::res_t res_buf = f.cost_resources;
+  res_buf.scale(level_multiplier);
+  if (resource_constraint(res_buf) < 1) req.push_back("resources");
+  if (development_points < level_multiplier * f.cost_time) req.push_back("development points");
+  if (water * water_status() < level_multiplier * f.water_usage) req.push_back("water");
+  if (space * space_status() < level_multiplier * f.space_usage) req.push_back("space");
+
+  // check dependencies
+  for (auto &y : f.depends_facilities) if (get_facility_level(y.first) < y.second) req.push_back(y.first + " level " + to_string(y.second));
+  for (auto &y : f.depends_techs) if (!r_level.researched.count(y)) req.push_back("technology " + y);
+
+  return req;
+}
+
 list<string> solar::available_facilities(const research::data &r_level) {
   list<string> r;
-  auto &t = facility_table();
-
-  for (auto &x : t){
-    facility f = x.second;
-    bool pass = true;
-    float level_multiplier = cost::expansion_multiplier(get_facility_level(x.first));
-
-    // check cost
-    cost::res_t res_buf = f.cost_resources;
-    res_buf.scale(level_multiplier);
-    pass &= resource_constraint(res_buf) >= 1;
-    pass &= development_points >= level_multiplier * f.cost_time;
-    pass &= water * water_status() >= level_multiplier * f.water_usage;
-    pass &= space * space_status() >= level_multiplier * f.space_usage;
-
-    // check dependencies
-    for (auto &y : f.depends_facilities) pass &= get_facility_level(y.first) >= y.second;
-    for (auto &y : f.depends_techs) pass &= r_level.researched.count(y);
-    
-    if (pass) r.push_back(x.first);
-  }
-
+  for (auto &x : facility_table()) if (list_facility_requirements(x.first, r_level).empty()) r.push_back(x.first);
   return r;
 }

@@ -5,23 +5,24 @@
 #include <SFGUI/Widgets.hpp>
 
 #include "choice.h"
+#include "research.h"
 
 namespace st3 {
   namespace client{
     class game;
   };
   
-  namespace graphics {
+  namespace interface {
 
     // main interface
-    class main_interface : public sfg::Desktop {
+    class main_interface : public sfg::Desktop {	
+    public:
       // desktop geometry data
       static sf::Vector2u desktop_dims;
       static sf::FloatRect qw_allocation;
       static int top_height;
       static int bottom_start;
-	
-    public:
+
       sfg::Widget::Ptr query_window;
       sfg::Label::Ptr hover_label;
 
@@ -40,7 +41,7 @@ namespace st3 {
       research::data get_research();
     };
 
-    static main_interface *desktop;
+    extern main_interface *desktop;
   };
 };
 

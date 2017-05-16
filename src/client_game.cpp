@@ -15,11 +15,14 @@
 #include "command_gui.h"
 #include "target_gui.h"
 #include "upgrades.h"
+#include "research.h"
+#include "desktop.h"
+#include "development_gui.h"
+#include "solar_gui.h"
 
 using namespace std;
 using namespace st3;
 using namespace client;
-using namespace graphics;
 
 // local utility functions
 sf::FloatRect fixrect(sf::FloatRect r);
@@ -235,33 +238,31 @@ bool game::choice_step(){
 
   choice::choice c;
   for (auto x : interface::desktop -> response.solar_choices){
-    if (entity.count(x.first) && get_entity(x.first) -> owned) c.solar_choices[x.first] = x.second;
+    if (entity.count(x.first) && get_entity(x.first) -> owned) {
+      x.second.development = "";
+      c.solar_choices[x.first] = x.second;
+    }
   }
   interface::desktop -> response = c;
 
   cout << "choice_step: start" << endl;
 
   // check if we can select a technology
-  list<string> available_techs = players[self_id].research_level.available();
-  if (available_techs.size() > 0) {
-    hm_t<string, string> options;
-    for (auto v : available_techs) options[v] = v;
-    interface::desktop -> response.research = popup_options("Select a tech:", options);
-    players[self_id].research_level.researched.insert(interface::desktop -> response.research);
-  }
+  if (!players[self_id].research_level.available().empty()) {
+    interface::development_gui::f_req_t f_req = [this] (string v) -> list<string> {
+      return players[self_id].research_level.list_tech_requirements(v);
+    };
 
-  // check if we can select new solar facilities
-  list<string> available_facilities;
-  for (auto s : get_all<solar>()){
-    if (!s -> owned) continue;
-    available_facilities = s -> available_facilities(players[self_id].research_level);
-    if (available_facilities.size()) {
-      hm_t<string, string> options;
-      for (auto v : available_facilities) options[v] = v + " level " + to_string(s -> get_facility_level(v));
-      string sel = popup_options("Select a development for " + s -> id, options);
-      interface::desktop -> response.solar_choices[s -> id].development = sel;
-      s -> develop(sel);
-    }
+    interface::development_gui::f_complete_t on_complete = [this] (bool accepted, string result) {
+      if (accepted) {
+	interface::desktop -> response.research = result;
+	players[self_id].research_level.researched.insert(interface::desktop -> response.research);
+      }
+      
+      interface::desktop -> clear_qw();
+    };
+    
+    interface::desktop -> reset_qw(interface::development_gui::Create(research::data::table(), f_req, on_complete, false));
   }
 
   message = "make your choice";
@@ -389,8 +390,8 @@ bool game::simulation_step(){
     window.setView(view_window);
 
     auto colored_rect = [] (sf::Color c, float r) -> sf::RectangleShape{
-      float w = interface::desktop_dims.x - 20;
-      auto rect = graphics::build_rect(sf::FloatRect(10, interface::top_height + 10, r * w, 20));
+      float w = interface::main_interface::desktop_dims.x - 20;
+      auto rect = graphics::build_rect(sf::FloatRect(10, interface::main_interface::top_height + 10, r * w, 20));
       c.a = 150;
       rect.setFillColor(c);
       rect.setOutlineColor(sf::Color::White);
@@ -936,7 +937,7 @@ list<idtype> game::selected_commands(){
 
 /** Start the solar gui. */
 void game::run_solar_gui(combid key){
-  interface::desktop -> reset_qw(interface::main_window::Create(get_specific<solar>(key)));
+  interface::desktop -> reset_qw(interface::solar_gui::Create(get_specific<solar>(key)));
 }
 
 void game::setup_targui(point p){
@@ -1352,7 +1353,7 @@ void game::draw_window(){
     text.setCharacterSize(24);
     text.setColor(sf::Color(200,200,200));
     text.setString(message);
-    text.setPosition(point(10, 0.2 * (interface::desktop_dims.y)));
+    text.setPosition(point(10, 0.2 * (interface::main_interface::desktop_dims.y)));
     window.draw(text);
 
     // draw minimap bounds
