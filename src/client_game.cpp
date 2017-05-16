@@ -220,6 +220,13 @@ bool game::pre_step(){
 
   reload_data(data);
 
+  for (auto x : entity) {
+    if (x.second -> isa(solar::class_id)) {
+      solar_selector::ptr s = get_specific<solar>(x.first);
+      s -> flag = !s -> available_facilities(players[s -> owner].research_level).empty();
+    }
+  }
+
   return true;
 }
 

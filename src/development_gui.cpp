@@ -29,9 +29,9 @@ development_gui::development_gui(hm_t<std::string, development::node> map, f_req
   for (auto &x : map) {
     if (!available.count(x.first)) {
       if (is_facility) {
-	for (auto f : x.second.depends_facilities) if (available.count(f.first)) dependent.insert(f.first);
+	for (auto f : x.second.depends_facilities) if (available.count(f.first)) dependent.insert(x.first);
       } else {
-	for (auto f : x.second.depends_techs) if (available.count(f)) dependent.insert(f);	
+	for (auto f : x.second.depends_techs) if (available.count(f)) dependent.insert(x.first);	
       }
     }
   }
@@ -51,7 +51,7 @@ development_gui::development_gui(hm_t<std::string, development::node> map, f_req
     Box::Ptr l = Box::Create(Box::Orientation::VERTICAL);
     Frame::Ptr f = Frame::Create(v);
 
-    for (auto b : n.sector_boost) l -> Pack(Label::Create(b.first + " + " + to_string(100 * (b.second - 1)) + "%"));
+    for (auto b : n.sector_boost) l -> Pack(Label::Create(b.first + " + " + to_string((int)(100 * (b.second - 1))) + "%"));
     for (auto su : n.ship_upgrades) l -> Pack(Label::Create(su.first + " gains: " + boost::algorithm::join(su.second, ", ")));
     
     f -> Add(l);

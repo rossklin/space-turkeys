@@ -50,7 +50,9 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
   for (auto &x : template_map){
     auto b = Button::Create(x.first);
     b -> GetSignal(Widget::OnLeftClick).Connect([this, x] () {
+	string dev = response.development;
 	response = x.second;
+	response.development = dev;
 	build_choice();
 	build_info();
 	new_sub("(chose sub edit)");
@@ -133,7 +135,7 @@ void solar_gui::build_choice(){
     subq[keywords::key_development] = [this] () {
       // copy variables for use in callback functions after this
       // solar_gui has been destroyed
-      solar::ptr s(new solar(*sol));
+      solar::ptr s = sol;
       choice::c_solar c = response;
       
       development_gui::f_req_t f_req = [s] (string v) -> list<string> {return s -> list_facility_requirements(v, desktop -> get_research());};

@@ -24,7 +24,7 @@ void solar::pre_phase(game_data *g){
   research_level = &g -> players[owner].research_level;
   for (auto &t : development){
     if (t.second.is_turret){
-      t.second.turret.load += 0.1;
+      t.second.turret.load += 0.02 * t.second.level;
     }
   }
 }
@@ -189,9 +189,13 @@ void solar::damage_facilities(float d){
     list<string> remove;
     for (auto i = development.begin(); d > 0 && i != development.end(); i++){
       float k = fmin(utility::random_uniform(0, 0.1 * d0), d);
-      i -> second.hp -= k;
       d -= k;
-      if (i -> second.hp <= 0) remove.push_back(i -> first);
+      if (i -> second.hp > 0) {
+	i -> second.hp -= k;
+	if (i -> second.hp <= 0) remove.push_back(i -> first);
+      } else {
+	if (utility::random_uniform(-(i -> second.level), k) > 0) remove.push_back(i -> first);
+      }
     }
     for (auto r : remove) development.erase(r);
   }
@@ -436,6 +440,8 @@ facility::facility() : development::node() {
   is_turret = 0;
   base_hp = 0;
   shield = 0;
+  water_usage = 0;
+  space_usage = 0;
 }
 
 facility::facility(const facility &f) : development::node(f) {

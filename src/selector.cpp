@@ -74,6 +74,19 @@ namespace st3{
 	sol.setPosition(position - point(vision(), vision()));
 	w.draw(sol);
 	w.draw(text);
+
+	if (flag) {
+	  // can build flag
+	  text.setString("*");
+	  text.setFont(graphics::default_font); 
+	  text.setCharacterSize(14);
+	  text_dims = text.getLocalBounds();
+	  text.setOrigin(point(text_dims.left + text_dims.width/2, text_dims.top + text_dims.height / 2));
+	  text.setPosition(position + point(radius, -radius)); 
+	  text.setColor(sf::Color(200,200,200));
+	  text.setScale(graphics::inverse_scale(w));
+	  w.draw(text);
+	}
       }
 
       // draw defense indicator
@@ -251,6 +264,7 @@ entity_selector::entity_selector(sf::Color c, bool o){
   seen = owned;
   selected = false;
   queue_level = 0;
+  flag = 0;
 }
 
 entity_selector::~entity_selector(){}

@@ -50,7 +50,7 @@ void development::node::read_from_json(const rapidjson::Value &v) {
       
       for (auto sc : ship_classes) {
 	for (auto v = u -> value.Begin(); v != u -> value.End(); v++) {
-	  ship_upgrades[ship_name].insert(v -> GetString());
+	  ship_upgrades[sc].insert(v -> GetString());
 	}
       }
     }

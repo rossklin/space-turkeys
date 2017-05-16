@@ -503,7 +503,10 @@ bool entity_package::entity_seen_by(combid id, idtype pid){
 
   for (auto s : all_owned_by(pid)) {
     if (!s -> is_active()) continue;
-    if (utility::l2d2(x -> position - s -> position) < pow(s -> vision(), 2)) return true;
+    if (s -> isa(physical_object::class_id)) {
+      physical_object::ptr obj = utility::guaranteed_cast<physical_object>(s);
+      if (obj -> can_see(x)) return true;
+    }
   }
 
   return false;

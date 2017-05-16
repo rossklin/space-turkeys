@@ -1,7 +1,21 @@
 * current work
-** continue splitting up interfaces
-** make new "development" interface that can be used for research and facilities
-** allow selecting not to develop solar facilities
+** add some heavier ship classes
+** show unmet requirements for development::nodes with no dependencies
+** add a vision map, build in client on reload_data
+** add a list of animations to send to client rather than add explosion on ship removal
+** add a battle-log to send to client
+** add some tech/facility for "medicine" that population crowding coefficient
+** form fleet with F doesn't work
+** right click with selected ships creates waypoint with no incident commands
+** ship upgrades e.g. warp drive do not respect e.g. !small for scout
+** [J] upgrade nano scout does not seem to reduce enemy sight range
+** [J] make solars indicate when they can build
+** ?? solar choice not saved when opening development gui
+** [J] check that turrets apply level
+** [J] setting a solar template should preserve the development choice
+** [J] continue splitting up interfaces
+** [J] make new "development" interface that can be used for research and facilities
+** [J] allow selecting not to develop solar facilities
 ** look through all copy constructors to make sure they explicitly call parents
 * [!] issues
 ** [!] bugs & crashes

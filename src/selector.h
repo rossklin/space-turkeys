@@ -30,6 +30,7 @@ namespace st3{
       bool seen; /*!< is the game object in sight for the client? */
       sf::Color color; /*!< the player color of this entity */
       std::set<idtype> commands; /*! the commands given to this entity */
+      int flag;
       
       entity_selector(sf::Color c, bool o);
       virtual ~entity_selector();
