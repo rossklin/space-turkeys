@@ -72,7 +72,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
 	  for (auto j = i -> value.Begin(); j != i -> value.End(); j++) a.tags.insert(j -> GetString());
 	  success = true;
 	}
-      }else if (j -> IsObject()) {
+      }else if (j -> value.IsObject()) {
 	if (name == "cost") {
 	  for (auto k = j -> value.MemberBegin(); k != j -> value.MemberEnd(); k++) {
 	    string res_name = k -> name.GetString();
@@ -145,25 +145,117 @@ void ship::pre_phase(game_data *g){
 void ship::move(game_data *g){
   if (!has_fleet()) return;
   fleet::ptr f = g -> get_fleet(fleet_id);
+  fleet::suggestion suggest = f -> suggest(id, g);
 
-  // check fleet is not idle
-  if (!f -> is_idle()){
-    point delta;
-    if (f -> converge){
-      delta = f -> target_position - position;
-    }else{
-      delta = f -> target_position - f -> position;
+  bool summon = suggest.id & fleet::suggestion::summon;
+  bool engage = suggest.id & fleet::suggestion::engage;
+  bool scatter = suggest.id & fleet::suggestion::scatter;
+  bool travel = suggest.id & fleet::suggestion::travel;
+  bool activate = suggest.id & fleet::suggestion::activate;
+  bool hold = suggest.id & fleet::suggestion::hold;
+
+  point target_position = f -> stats.target_position;
+  float fleet_target_angle = utility::point_angle(target_position - f -> position);
+  point fleet_delta = f -> position - position;
+  float fleet_angle = utility::point_angle(fleet_delta);
+  float target_angle = fleet_target_angle;
+  point target_delta = target_position - position;
+
+  // use the local temporary target when available
+  if (engage || scatter || travel || activate) {
+    target_position = suggest.p;
+    target_delta = target_position - position;
+    target_angle = utility::point_angle(target_delta);
+  }
+
+  float target_speed = f -> speed_limit;
+
+  float nrad = interaction_radius();
+  list<combid> neighbours = g -> search_targets(id, position, nrad, target_condition(target_condition::owned, ship::class_id).owned_by(owner));
+  list<combid> local_enemies = g -> search_targets(id, position, interaction_radius(), target_condition(target_condition::enemy, ship::class_id).owned_by(owner));
+
+  if (summon) target_angle = fleet_angle;
+
+  if (summon && travel) {
+    float test = utility::angle_difference(fleet_target_angle, fleet_angle);
+    if (test > 2 * M_PI / 3) {
+      // in front of fleet
+      if (check_space(fleet_target_angle + M_PI)) {
+	// slow down
+	target_speed = 0.8 * f -> speed_limit;
+      }
+    } else if (test > M_PI / 3) {
+      // side of fleet
+      if (check_space(fleet_angle)) {
+	target_angle += 0.1 * utility::angle_difference(fleet_angle, target_angle);
+      }
+    } else {
+      // back of fleet
+      if (check_space(fleet_target_angle)) {
+	target_speed = stats[key::speed];
+      }
+    }
+  }
+
+  if (engage) {
+    combid target_id;
+    float best = -1;
+
+    for (auto sid : local_enemies) {
+      point delta = g -> get_ship(sid) -> position - position;
+      float value = cos(utility::angle_difference(utility::point_angle(delta), angle));
+      if (value > best) {
+	best = value;
+	target_id = sid;
+      }
     }
 
-    float target_angle = utility::point_angle(delta);
-    float angle_increment = 0.1;
-    float epsilon = 0.01;
-    float angle_sign = utility::signum(utility::angle_difference(target_angle, angle), epsilon);
+    if (best > 0.7) {
+      // I've got a shot!
+      interaction_info info;
+      info.source = id;
+      info.target = target_id;
+      info.interaction = interaction::space_combat;
+      g -> interaction_buffer.push_back(info);
+    }
 
-    angle += angle_increment * angle_sign;
-    position = position + utility::scale_point(utility::normv(angle), f -> speed_limit);
-    g -> entity_grid -> move(id, position);
+    if (utility::l2norm(target_delta) > 10) {
+      target_speed = stats[key::speed];
+    } else {
+      target_speed = 0;
+    }
   }
+
+  if (scatter) {
+    // todo
+  }
+
+  if (hold) {
+    target_speed = 0;
+  }
+
+  if (activate) {
+    if (f -> com.target != identifier::target_idle && compile_interactions().count(f -> com.action)) {
+      game_object::ptr e = get_entity(f -> com.target);
+      if (can_see(e) && utility::l2norm(e -> position - position) <= interaction_radius()) {
+	interaction_info info;
+	info.source = id;
+	info.target = e -> id;
+	info.interaction = f -> com.action;
+	g -> interaction_buffer.push_back(info);
+      }
+    }
+  }
+
+  // todo
+  float angle_increment = 0.1;
+  float epsilon = 0.01;
+  float angle_sign = utility::signum(utility::angle_difference(target_angle, angle), epsilon);
+
+  angle += angle_increment * angle_sign;
+  position = position + utility::scale_point(utility::normv(angle), f -> speed_limit);
+
+  g -> entity_grid -> move(id, position);
 }
 
 void ship::post_phase(game_data *g){}

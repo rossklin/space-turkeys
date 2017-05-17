@@ -176,7 +176,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, target_condition &c){
 // ship stats
 sf::Packet& st3::operator <<(sf::Packet& packet, const ship_stats &g){
   return packet
-    << stats
+    << g.stats
     << g.upgrades
     << g.depends_tech
     << g.depends_facility_level
@@ -190,7 +190,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship_stats &g){
 // ship stats
 sf::Packet& st3::operator >>(sf::Packet& packet, ship_stats &g){
   return packet 
-    >> stats
+    >> g.stats
     >> g.upgrades
     >> g.depends_tech
     >> g.depends_facility_level
@@ -359,25 +359,23 @@ sf::Packet& st3::operator >>(sf::Packet& packet, choice::c_solar &g){
 sf::Packet& st3::operator <<(sf::Packet& packet, const fleet &g){
   return packet
     << static_cast<const commandable_object &> (g)
+    << g.stats
     << g.com
     << g.position
     << g.radius
-    << g.vision_buf
     << g.owner
-    << g.ships
-    << g.converge;
+    << g.ships;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
   return packet
     >> static_cast<commandable_object &> (g)
+    >> g.stats
     >> g.com
     >> g.position
     >> g.radius
-    >> g.vision_buf
     >> g.owner
-    >> g.ships
-    >> g.converge;
+    >> g.ships;
 }
 
 // choice

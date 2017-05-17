@@ -5,8 +5,12 @@
 ** implement remaining ship_stats functions
 ** remove physical_object::interact, call interactions in move phase
 ** make solar call interactions in move phase
+** make fleet analytics use ship size to determine enemy strength
+** make fleet::suggest use enemy strength factor
 ** implement ship::move using fleet::suggest
+** consider letting fleet suggestion contain an angle?
 ** update ship data with regard to accuracy/mass/evasion interaction
+** make angular acceleration an attribute
 * [!] issues
 ** [!] bugs & crashes
 *** Ships validate their action using target information that the player can't see
@@ -25,9 +29,11 @@
 ** system
 *** need a way to handle conflicting upgrade stats e.g. mass for nano scout
 * system design ideas
-** reduce fleet actions, replace with fleet response policies
 ** add a list of animations to send to client rather than add explosion on ship removal
 ** add a battle-log to send to client
+** add terrain
+   For starters: impassable areas. This requires fleets to do path
+   finding.
 ** make ship cost scale with upgrades
 ** allow "fortification" so units can block other units and hold a position?
 ** add trigger system for e.g. upgrades, techs and solar facilities

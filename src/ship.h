@@ -37,12 +37,14 @@ namespace st3{
 
   class ssmod_t : public modifiable_ship_stats<ship_stats_modifier> {
   public:
+    ssmod_t();
     ssmod_t(const ssmod_t &s);
     void combine(const ssmod_t &b);
     bool parse(std::string key, std::string value);
   };
 
   class ssfloat_t : public modifiable_ship_stats<sfloat> {
+  public:
     ssfloat_t();
     ssfloat_t(const ssfloat_t &s);
     bool insert(std::string key, sfloat value);

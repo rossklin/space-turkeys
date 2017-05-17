@@ -37,6 +37,7 @@ namespace st3{
 
       suggestion();
       suggestion(sint i);
+      suggestion(sint i, point p);
     };
 
     struct analytics {
@@ -47,6 +48,9 @@ namespace st3{
       point target_position;
       float spread_radius;
       float spread_density;
+      point scatter_target;
+
+      analytics();
     };
 
     static const idtype server_pid = -1;
@@ -55,8 +59,8 @@ namespace st3{
     static constexpr float min_radius = 10; /*!< smallest allowed fleet radius (for visibility) */
 
     // fleet policies
-    static const sint policy_aggresive = 1;
-    static const sint policy_defensive = 2;
+    static const sint policy_aggressive = 1;
+    static const sint policy_reasonable = 2;
     static const sint policy_evasive = 4;
     static const sint policy_maintain_course = 8;
 

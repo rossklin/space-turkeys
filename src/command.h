@@ -14,6 +14,7 @@ namespace st3{
     combid origin; /*!< key of the solar where the command was generated from */
     combid target; /*!< key of target */
     std::string action;
+    sint policy;
     std::set<combid> ships; /*!< ids of ships allocated to the command */
 
     /*! default constructor */

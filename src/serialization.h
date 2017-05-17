@@ -225,6 +225,9 @@ namespace st3{
   */
   sf::Packet& operator >>(sf::Packet& packet, fleet &g);
 
+  sf::Packet& operator <<(sf::Packet& packet, const fleet::analytics &g);
+  sf::Packet& operator >>(sf::Packet& packet, fleet::analytics &g);
+
   /*! stream a point into packet
     @param packet the packet
     @param g the object to stream

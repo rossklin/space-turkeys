@@ -26,12 +26,10 @@ fleet::fleet(idtype pid){
     id = identifier::make(class_id, to_string(pid) + "#" + to_string(idc++));
   }
 
-  position = point(0,0);
   radius = 0;
+  position = point(0,0);
   update_counter = 0;
   owner = -1;
-  converge = false;
-  speed_limit = 0;
   remove = false;
   com.action = fleet_action::idle;
 }
@@ -53,13 +51,13 @@ void fleet::pre_phase(game_data *g){
 
 void fleet::move(game_data *g){
   // linear extrapolation of position estimate
-  position += speed_limit * utility::normv(utility::point_angle(target_position - position));
+  position += stats.speed_limit * utility::normv(utility::point_angle(stats.target_position - position));
 }
 
 void fleet::post_phase(game_data *g){}
 
 float fleet::vision(){
-  return vision_buf;
+  return stats.vision_buf;
 }
 
 fleet::ptr fleet::create(idtype pid){
@@ -119,30 +117,34 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
   
   if (stats.enemies.size()) {
     if (com.policy & policy_maintain_course) {
-      return suggestion::travel;
+      return suggestion(suggestion::travel, stats.target_position);
     }else if (com.policy & policy_evasive) {
-      return suggestion::scatter;
+      return suggestion(suggestion::scatter, stats.scatter_target);
     }else{    
       if (s -> tags.count("combat")) {
 	if (com.policy & policy_aggressive) {
-	  return suggestion(suggestion::engage, stats.enemies.fron().first);
+	  return suggestion(suggestion::engage, stats.enemies.front().first);
 	}else{
-	  return suggestion(suggesetion::engage, s -> position);
+	  return suggestion(suggestion::engage, s -> position);
 	}
       }else{
-	return suggestion::scatter;
+	return suggestion(suggestion::scatter, stats.scatter_target);
       }
     }
   }else{
     // peaceful times
     if (utility::l2norm(s -> position - position) > pref_maxrad) {
-      return suggestion::summon;
+      if (is_idle()) {
+	return suggestion::summon;
+      } else {
+	return suggestion(suggestion::summon | suggestion::travel, stats.target_position);
+      }
     }else if (is_idle()) {
       return suggestion::hold;
-    }else if (converge) {
-      return suggestion::activate;
+    }else if (stats.converge) {
+      return suggestion(suggestion::activate, stats.target_position);
     }else{
-      return suggestion::travel;
+      return suggestion(suggestion::travel, stats.target_position);
     }
   }
 }
@@ -171,9 +173,9 @@ void fleet::analyze_enemies(game_data *g) {
 
     // move points towards s
     for (int j = 0; j < x.size(); j++){
-      float d = s -> position - x[j];
+      point d = s -> position - x[j];
       float f = exp(-utility::l2norm(d)) / (i + 1);
-      x[j] = x[j] + scale_point(d, f);
+      x[j] = x[j] + utility::scale_point(d, f);
     }
 
     // join adjacent points
@@ -233,7 +235,7 @@ void fleet::update_data(game_data *g){
     ship::ptr s = g -> get_ship(k);
     speed = fmin(speed, s -> speed);
     r2 = fmax(r2, utility::l2d2(s -> position - position));
-    stats.vision_buf = fmax(vision_buf, s -> vision());
+    stats.vision_buf = fmax(stats.vision_buf, s -> vision());
   }
   
   stats.spread_radius = fmax(sqrt(r2), fleet::min_radius);
@@ -257,15 +259,15 @@ void fleet::update_data(game_data *g){
 
   // have arrived?
   if (!is_idle()){
-    if (g -> target_position(com.target, target_position)) {
-      converge = utility::l2d2(target_position - position) < fleet::interact_d2;
+    if (g -> target_position(com.target, stats.target_position)) {
+      stats.converge = utility::l2d2(stats.target_position - position) < fleet::interact_d2;
     }
   }
 }
 
 void fleet::check_waypoint(game_data *g){
   // set to idle and 'land' ships if converged to waypoint
-  if (converge && identifier::get_type(com.target) == waypoint::class_id && com.action == fleet_action::go_to){
+  if (stats.converge && identifier::get_type(com.target) == waypoint::class_id && com.action == fleet_action::go_to){
     com.action = fleet_action::idle;
     cout << "set fleet " << id << " idle target: " << com.target << endl;
   }
@@ -317,4 +319,12 @@ void fleet::remove_ship(combid i){
 
 bool fleet::isa(string c) {
   return c == fleet::class_id || c == commandable_object::class_id;
+}
+
+fleet::analytics::analytics() {
+  converge = false;
+  speed_limit = 0;
+  spread_radius = 0;
+  spread_density = 0;
+  target_position = point(0,0);
 }
