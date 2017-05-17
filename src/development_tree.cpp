@@ -38,11 +38,12 @@ void development::node::read_from_json(const rapidjson::Value &v) {
 	boost::split(conditions, ship_name, [](char c) {return c == ':';});
 	
 	for (auto &s : stab) {
+	  bool pass = true;
 	  for (auto cond : conditions) {
-	    if (cond[0] == '#' && !s.second.tags.count(cond.substr(1))) continue;
-	    if (cond[0] == '!' && s.second.tags.count(cond.substr(1))) continue;
-	    ship_classes.push_back(s.first);
+	    if (cond[0] == '#' && !s.second.tags.count(cond.substr(1))) pass = false;
+	    if (cond[0] == '!' && s.second.tags.count(cond.substr(1))) pass = false;
 	  }
+	  if (pass) ship_classes.push_back(s.first);
 	}
       } else {
 	ship_classes.push_back(ship_name);

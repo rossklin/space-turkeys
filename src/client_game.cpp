@@ -768,7 +768,7 @@ void game::area_select(){
     @param act command action
     @param selected_entities selected entities
 */
-void game::command2entity(combid key, string act, list<combid> selected_entities){
+void game::command2entity(combid key, string act, list<combid> e_selected){
   if (!entity.count(key)) throw runtime_error("command2entity: invalid key: " + key);
 
   command c;
@@ -777,7 +777,7 @@ void game::command2entity(combid key, string act, list<combid> selected_entities
   c.action = act;
   to = get_entity(key) -> get_position();
 
-  for (auto x : selected_entities){
+  for (auto x : e_selected){
     if (entity.count(x) && x != key){
       entity_selector::ptr s = get_entity(x);
       if (s -> is_commandable()){
@@ -951,6 +951,12 @@ void game::setup_targui(point p){
   // set up targui
   auto keys_targeted = entities_at(p);
   auto keys_selected = selected_entities();
+  auto ships_selected = selected_specific<ship>();
+
+  // remove ships from selection
+  for (auto sid : ships_selected) keys_selected.remove(sid);
+  if (keys_selected.empty()) return;
+  
   list<target_gui::option_t> options;
   set<string> possible_actions;
 
@@ -1043,9 +1049,9 @@ int game::choice_event(sf::Event e){
 
   // make a fleet from selected ships
   auto make_fleet = [this](){
+    auto buf = selected_specific<ship>();
     deselect_all();
     
-    auto buf = selected_specific<ship>();
     if (!buf.empty()) {
       fleet fb(self_id);
       fleet_selector::ptr f = fleet_selector::create(fb, sf::Color(players[self_id].color), true);

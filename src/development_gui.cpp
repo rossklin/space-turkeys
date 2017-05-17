@@ -28,11 +28,13 @@ development_gui::development_gui(hm_t<std::string, development::node> map, f_req
   set<string> dependent;
   for (auto &x : map) {
     if (!available.count(x.first)) {
+      bool pass = true;
       if (is_facility) {
-	for (auto f : x.second.depends_facilities) if (available.count(f.first)) dependent.insert(x.first);
+	for (auto f : x.second.depends_facilities) if (!available.count(f.first)) pass = false;
       } else {
 	for (auto f : x.second.depends_techs) if (available.count(f)) dependent.insert(x.first);	
       }
+      if (pass) dependent.insert(x.first);
     }
   }
 

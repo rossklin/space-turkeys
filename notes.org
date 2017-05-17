@@ -1,51 +1,25 @@
 * current work
-** add some heavier ship classes
-** show unmet requirements for development::nodes with no dependencies
-** add a vision map, build in client on reload_data
-** add a list of animations to send to client rather than add explosion on ship removal
-** add a battle-log to send to client
-** add some tech/facility for "medicine" that population crowding coefficient
-** form fleet with F doesn't work
-** right click with selected ships creates waypoint with no incident commands
-** ship upgrades e.g. warp drive do not respect e.g. !small for scout
-** [J] upgrade nano scout does not seem to reduce enemy sight range
-** [J] make solars indicate when they can build
-** ?? solar choice not saved when opening development gui
-** [J] check that turrets apply level
-** [J] setting a solar template should preserve the development choice
-** [J] continue splitting up interfaces
-** [J] make new "development" interface that can be used for research and facilities
-** [J] allow selecting not to develop solar facilities
-** look through all copy constructors to make sure they explicitly call parents
 * [!] issues
 ** [!] bugs & crashes
-*** [!confirm?] fleets don't seem to get cleared from client choice
-   Client seems to remove fleets when instructed, and c.fleets is
-   cleared. Server clears all fleets during pre step, and removes old
-   fleets when applying commands.
-*** [~] Ships validate their action using target information that the player can't see
-*** [~] simulation step hangs on key escape abort game
+*** Ships validate their action using target information that the player can't see
+*** look through all copy constructors to make sure they explicitly call parents
+** [~] gui 
+*** priority buttons unresponsive to first right click
+*** Clicking interface response button also triggers click on minimap
+*** sfg window does not resize on sfml window resize
+*** command selectors drawn on top of each other
+*** simulation step hangs on key escape abort game
     This was when client 1 aborts at frame -1, while client 2 is still
     in choice step. Server exits with error 'disconnect' and other
     client gets segfault. Perhaps the server failed to receive the
     leave game request from client 1 while it was waiting for the
     choice from client 2.
-** [~] gui
-*** sfg window does not resize on sfml window resize
-*** command selectors drawn on top of each other
-** [~] game mechanics improvements
-*** autofill_mining seems to high
-*** some colonized solars have trouble with population dying off (check water supply etc)
-*** need "unique" identifier for radar turrets
-    Or rather, need radar turret to be a unique building rather than a
-    turret.
-** [~] code design
-*** ?move keywords and allocations to "types.h"
-*** move expansion costs to research?
 * system design ideas
+** reduce fleet actions, replace with fleet response policies
+** add a list of animations to send to client rather than add explosion on ship removal
+** add a battle-log to send to client
 ** make ship cost scale with upgrades
 ** allow "fortification" so units can block other units and hold a position?
-** reduce fleet actions, replace with fleet response policies
 ** add trigger system for e.g. upgrades, techs and solar facilities
 *** hm_t<string, function> on_interaction (and prevent_interaction)
 *** on_takeoff (for e.g. freighter ship)
@@ -54,11 +28,8 @@
    For stuff like "has cargo x", "is jammed", "was scanned by player i" etc.
 
    No particular reason to not put this in normal class members?
-** solar development tree
-   Just something a little bit more fun than "expansion[i]", e.g. move
-   turrets here.
+** add a vision map, build in client on reload_data
 * tweaks and fixes
-** add development::node::list_requirements + gui
 ** allow double-clicking ship to select all of same type
 ** allow dragging waypoints
 ** name and indicators for solars so you can tell them apart
@@ -74,27 +45,44 @@
    need to copy all entities and rebuild the grid, and the client also
    won't need to copy entities.
 * content ideas
-** techs
-*** general: qualitative advantages that require high facility level
-*** stealth: give ships a stealth attribute that counters the vision attribute
+** add some heavier ship classes
+** add some tech/facility for "medicine" that population crowding coefficient
 * to be tested
 ** confirm
+*** [J?] show unmet requirements for development::nodes with no dependencies
+*** [J?] right click with selected ships creates waypoint with no incident commands
+*** [J?] form fleet with F doesn't work
+*** [J?] ship upgrades e.g. warp drive do not respect e.g. !small for scout
 *** [J?] apply sector boost from research in solar
 *** [J?] tag ships as e.g. small, large, bio, mech etc.
     This will allow techs applying upgrades to ships by type
 *** [J?] add ship attributes stealth, detection, regen and shield
-*** priority buttons unresponsive to first right click
-*** Clicking interface response button also triggers click on minimap
 *** ships remain selected after fleet is created
-*** float priority values in solar gui can get negative value
-*** show fleet selector and dim vision radius
 *** explosions are too long
 ** analyze
+*** [!confirm?] fleets don't seem to get cleared from client choice
+   Client seems to remove fleets when instructed, and c.fleets is
+   cleared. Server clears all fleets during pre step, and removes old
+   fleets when applying commands.
+*** ?? solar choice not saved when opening development gui
 *** client created fleets can't be click-selected
 * remember
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** solar development tree
+   Just something a little bit more fun than "expansion[i]", e.g. move
+   turrets here.
+** [J] upgrade nano scout does not seem to reduce enemy sight range
+** [J] make solars indicate when they can build
+** [J] check that turrets apply level
+** [J] setting a solar template should preserve the development choice
+** [J] continue splitting up interfaces
+** [J] make new "development" interface that can be used for research and facilities
+** [J] allow selecting not to develop solar facilities
+** add development::node::list_requirements + gui
+** float priority values in solar gui can get negative value
+** show fleet selector and dim vision radius
 ** fixed a bug where facility copy constructor didn't call development::node::node
 ** solar_selector doesn't seem to receive proper research_level pointer
 ** [J?] go through solar data
