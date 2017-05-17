@@ -1,4 +1,12 @@
 * current work
+** replace references to ship stats
+** implement use of mass stat for detection, accuracy and graphics scale
+** implement use of evasion stat to counter accuracy
+** implement remaining ship_stats functions
+** remove physical_object::interact, call interactions in move phase
+** make solar call interactions in move phase
+** implement ship::move using fleet::suggest
+** update ship data with regard to accuracy/mass/evasion interaction
 * [!] issues
 ** [!] bugs & crashes
 *** Ships validate their action using target information that the player can't see
@@ -14,6 +22,8 @@
     client gets segfault. Perhaps the server failed to receive the
     leave game request from client 1 while it was waiting for the
     choice from client 2.
+** system
+*** need a way to handle conflicting upgrade stats e.g. mass for nano scout
 * system design ideas
 ** reduce fleet actions, replace with fleet response policies
 ** add a list of animations to send to client rather than add explosion on ship removal
@@ -49,6 +59,7 @@
 ** add some tech/facility for "medicine" that population crowding coefficient
 * to be tested
 ** confirm
+*** new modified ship stats
 *** [J?] show unmet requirements for development::nodes with no dependencies
 *** [J?] right click with selected ships creates waypoint with no incident commands
 *** [J?] form fleet with F doesn't work

@@ -54,7 +54,7 @@ list<string> data::available() {
 }
 
 void data::repair_ship(ship &s, solar::ptr sol) {
-  ship_stats mod_stats = ship::table().at(s.ship_class);
+  ship_stats base_stats = ship::table().at(s.ship_class);
 
   s.angle = utility::random_uniform(0, 2 * M_PI);
 
@@ -72,11 +72,10 @@ void data::repair_ship(ship &s, solar::ptr sol) {
 
   // evaluate upgrades
   auto &utab = upgrade::table();
-  s.base_stats = mod_stats;
-  for (auto u : s.upgrades) {
-    mod_stats = utab.at(u).modify;
-    s.base_stats += mod_stats;
-  }
+  s.base_stats = base_stats;
+  ssmod_t mod_stats;
+  for (auto u : s.upgrades) mod_stats.combine(utab.at(u).modify);
+  s.base_stats.modify_with(mod_stats);
 
   s.set_stats(s.base_stats);
 }

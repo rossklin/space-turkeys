@@ -7,6 +7,7 @@
 	    "ship_damage" : 0.1,
 	    "accuracy" : 0.3,
 	    "upgrades" : ["space combat"],
+	    "mass" : 1,
 	    "cost" : {
 		"metals" : 1,
 		"gases" : 1,
@@ -18,11 +19,12 @@
 		{"x" : -2, "y" : 1, "c" : "p"},
 		{"x" : 2, "y" : 0, "c" : "p"}
 	    ],
-	    "tags" : ["small", "scout"]
+	    "tags" : ["scout"]
 	},
 
 	"fighter" : {
 	    "hp" : 2,
+	    "mass" : 3,
 	    "ship_damage" : 1,
 	    "solar_damage" : 0.1,
 	    "accuracy" : 0.7,
@@ -43,10 +45,12 @@
 		{"x" : -2, "y" : 1, "c" : "p"},
 		{"x" : 2, "y" : 0, "c" : "n"}
 	    ],
-	    "tags" : ["medium", "combat"]
+	    "tags" : ["combat"]
 	},
 
 	"bomber" : {
+	    "hp" : 3,
+	    "mass" : 10,
 	    "solar_damage" : 5,
 	    "accuracy" : 0.8,
 	    "upgrades" : ["bombard"],
@@ -66,12 +70,13 @@
 		{"x" : 0, "y" : 3, "c" : "n"},
 		{"x" : 2, "y" : 0, "c" : "p"}
 	    ],
-	    "tags" : ["large", "combat"]
+	    "tags" : ["combat"]
 	},
 
 	"colonizer" : {
 	    "speed" : 0.3,
-	    "hp" : 2,
+	    "hp" : 10,
+	    "mass" : 30,
 	    "upgrades" : ["colonize"],
 	    "depends_facility_level" : 1,
 	    "cost" : {
@@ -86,13 +91,13 @@
 		{"x" : -2, "y" : -1, "c" : "p"},
 		{"x" : -2, "y" : 1, "c" : "p"},
 		{"x" : 2, "y" : 1, "c" : "p"}
-	    ],
-	    "tags" : ["large"]
+	    ]
 	},
 
 	"freighter" : {
 	    "speed" : 0.5,
-	    "hp" : 1,
+	    "hp" : 5,
+	    "mass" : 30,
 	    "upgrades" : ["trade"],
 	    "depends_facility_level" : 1,
 	    "cargo_capacity" : 10,
@@ -108,8 +113,7 @@
 		{"x" : -2, "y" : -2, "c" : "p"},
 		{"x" : -2, "y" : 2, "c" : "p"},
 		{"x" : 2, "y" : 1, "c" : "p"}
-	    ],
-	    "tags" : ["large"]
+	    ]
 	}
     }
 }

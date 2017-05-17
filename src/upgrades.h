@@ -13,12 +13,13 @@ namespace st3{
   class game_data;
   
   class upgrade{
-  public:    
+  public:
+    
     static const hm_t<std::string, upgrade> &table();
 
     std::set<std::string> inter;
     std::set<std::string> on_liftoff;
-    ship_stats modify;
+    ssmod_t modify;
   };
 };
 

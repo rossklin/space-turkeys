@@ -23,71 +23,82 @@ const hm_t<string, ship_stats>& ship_stats::table(){
   auto &doc = (*pdoc)["ship"];
 
   ship_stats s, a;
-  s.speed = 0.5;
-  s.vision_range = 50;
-  s.hp = 1;
-  s.ship_damage = 0;
-  s.solar_damage = 0;
-  s.accuracy = 0;
-  s.interaction_radius_value = 20;
-  s.load_time = 50;
-  s.ship_class = "";
+  bool success;
+  s.stats[ssfloat_t::key::speed] = 0.5;
+  s.stats[ssfloat_t::key::vision_range] = 50;
+  s.stats[ssfloat_t::key::hp] = 1;
+  s.stats[ssfloat_t::key::interaction_radius_value] = 20;
+  s.stats[ssfloat_t::key::load_time] = 50;
   s.upgrades.insert(interaction::land);
-  s.depends_tech = "";
-  s.depends_facility_level = 0;
-  s.cargo_capacity = 0;
 
   // read ships from json structure
   for (auto i = doc.MemberBegin(); i != doc.MemberEnd(); i++) {
     a = s;
-    if (i -> value.HasMember("speed")) a.speed = i -> value["speed"].GetDouble();
-    if (i -> value.HasMember("vision")) a.vision_range = i -> value["vision"].GetDouble();
-    if (i -> value.HasMember("hp")) a.hp = i -> value["hp"].GetDouble();
-    if (i -> value.HasMember("ship_damage")) a.ship_damage = i -> value["ship_damage"].GetDouble();
-    if (i -> value.HasMember("solar_damage")) a.solar_damage = i -> value["solar_damage"].GetDouble();
-    if (i -> value.HasMember("accuracy")) a.accuracy = i -> value["accuracy"].GetDouble();
-    if (i -> value.HasMember("interaction_radius")) a.interaction_radius_value = i -> value["interaction_radius"].GetDouble();
-    if (i -> value.HasMember("load_time")) a.load_time = i -> value["load_time"].GetDouble();
-    if (i -> value.HasMember("cargo_capacity")) a.cargo_capacity = i -> value["cargo_capacity"].GetDouble();
-    if (i -> value.HasMember("depends_tech")) a.depends_tech = i -> value["depends_tech"].GetString();
-    if (i -> value.HasMember("depends_facility_level")) a.depends_facility_level = i -> value["depends_facility_level"].GetInt();
-      
     a.ship_class = i -> name.GetString();
 
-    if (i -> value.HasMember("is starting ship")) ship::starting_ship = a.ship_class;
+    for (auto j = i -> value.MemberBegin(); j != i -> value.MemberEnd(); j++) {
+      success = false;
+      string name = j -> name.GetString();
+      if (j -> value.IsDouble()) {
+	float value = j -> value.GetDouble();
+	success |= a.insert(name, value);
 
-    if (i -> value.HasMember("upgrades")) {
-      if (!i -> value["upgrades"].IsArray()) {
-	throw runtime_error("Invalid upgrades array in ship_data.json!");
+	if (name == "is starting ship") {
+	  ship::starting_ship = a.ship_class;
+	  success = true;
+	} else if (name == "depends facility level") {
+	  a.depends_facility_level = value;
+	  success = true;
+	}
+      }else if (j -> value.IsString()) {
+	if (name == "depends tech") {
+	  a.depends_tech = j -> value.GetString();
+	  success = true;
+	}
+      }else if (j -> value.IsArray()) {
+	if (name == "upgrades") {
+	  for (auto u = j -> value.Begin(); u != j -> value.End(); u++) a.upgrades.insert(u -> GetString());
+	  success = true;
+	} else if (name == "shape") {
+	  pair<point, unsigned char> v;
+	  for (auto j = i -> value.Begin(); j != i -> value.End(); j++) {
+	    v.first.x = (*j)["x"].GetDouble();
+	    v.first.y = (*j)["y"].GetDouble();
+	    v.second = (*j)["c"].GetString()[0];
+	    a.shape.push_back(v);
+	  }
+	  success = true;
+	} else if (name == "tags") {
+	  for (auto j = i -> value.Begin(); j != i -> value.End(); j++) a.tags.insert(j -> GetString());
+	  success = true;
+	}
+      }else if (j -> IsObject()) {
+	if (name == "cost") {
+	  for (auto k = j -> value.MemberBegin(); k != j -> value.MemberEnd(); k++) {
+	    string res_name = k -> name.GetString();
+	    bool sub_success = false;
+	    for (auto r : keywords::resource) {
+	      if (res_name == r) {
+		a.build_cost[r] = k -> value.GetDouble();
+		sub_success = true;
+	      }
+	    }
+	    if (name == "time") {
+	      a.build_time = k -> value.GetDouble();
+	      sub_success = true;
+	    }
+
+	    if (!sub_success) {
+	      throw runtime_error("Invalid cost specification for ship " + a.ship_class + " in: " + res_name);
+	    }
+	  }
+	  success = true;
+	}
       }
 
-      auto &upgrades = i -> value["upgrades"];
-      for (auto u = upgrades.Begin(); u != upgrades.End(); u++) a.upgrades.insert(u -> GetString());
-    }
-
-    if (i -> value.HasMember("cost")) {
-      auto &cost = i -> value["cost"];
-      for (auto k : keywords::resource) {
-	const char *c = k.c_str();
-	if (cost.HasMember(c)) a.build_cost[k] = cost[c].GetDouble();
+      if (!success) {
+	throw runtime_error("Invalid ship term: " + name);
       }
-      if (cost.HasMember("time")) a.build_time = cost["time"].GetDouble();
-    }
-
-    if (i -> value.HasMember("shape")) {
-      auto &shape = i -> value["shape"];
-      pair<point, unsigned char> v;
-      for (auto j = shape.Begin(); j != shape.End(); j++) {
-	v.first.x = (*j)["x"].GetDouble();
-	v.first.y = (*j)["y"].GetDouble();
-	v.second = (*j)["c"].GetString()[0];
-	a.shape.push_back(v);
-      }
-    }
-
-    if (i -> value.HasMember("tags")) {
-      auto &tags = i -> value["tags"];
-      for (auto j = tags.Begin(); j != tags.End(); j++) a.tags.insert(j -> GetString());
     }
     
     buf[a.ship_class] = a;
@@ -125,11 +136,12 @@ void ship::set_stats(ship_stats s){
 
 void ship::pre_phase(game_data *g){
   // load stuff
-  load = fmin(load + 1, base_stats.load_time);
-  hp = fmin(hp + regeneration, base_stats.hp);
-  shield = fmin(shield + 0.01, base_stats.shield);
+  load = fmin(load + 1, base_stats.stats[key::load_time]);
+  stats[key::hp] = fmin(stats[key::hp] + stats[key::regeneration], base_stats.stats[key::hp]);
+  stats[key::shield] = fmin(stats[key::shield] + 0.01, base_stats.stats[key::shield]);
 }
 
+// TODO: rewrite using fleet policies
 void ship::move(game_data *g){
   if (!has_fleet()) return;
   fleet::ptr f = g -> get_fleet(fleet_id);
@@ -157,10 +169,10 @@ void ship::move(game_data *g){
 void ship::post_phase(game_data *g){}
 
 void ship::receive_damage(game_object::ptr from, float damage) {
-  damage -= shield;
-  shield = fmax(shield - 0.1 * damage, 0);
-  hp -= damage;
-  remove = hp <= 0;
+  damage -= stats[key::shield];
+  stats[key::shield] = fmax(stats[key::shield] - 0.1 * damage, 0);
+  stats[key::hp] -= damage;
+  remove = stats[key::hp] <= 0;
   cout << "ship::receive_damage: " << id << " takes " << damage << " damage from " << from -> id << " - remove = " << remove << endl;
 }
 
@@ -188,7 +200,7 @@ bool ship::serialize(sf::Packet &p){
 }
 
 float ship::vision(){
-  return vision_range;
+  return stats[key::vision_range];
 }
 
 set<string> ship::compile_interactions(){
@@ -269,39 +281,44 @@ bool ship::can_see(game_object::ptr x) {
   return d < r;
 }
 
-void ship_stats::operator+= (const ship_stats &b) {
-  speed += b.speed;
-  hp += b.hp;
-  accuracy += b.accuracy;
-  ship_damage += b.ship_damage;
-  solar_damage += b.solar_damage;
-  interaction_radius_value += b.interaction_radius_value;
-  vision_range += b.vision_range;
-  load_time = fmax(load_time + b.load_time, 0);
-  cargo_capacity += b.cargo_capacity;
-  upgrades += b.upgrades;
-  build_cost.add(b.build_cost);
-  build_time += b.build_time;
-  regeneration += b.regeneration;
-  shield += b.shield;
-  detection += b.detection;
-  stealth += b.stealth;
+// ship stats stuff
+
+ship_stats_modifier::ship_stats_modifier() {
+  a = 1;
+  b = 0;
 }
 
-ship_stats::ship_stats(){
-  speed = 0;
-  hp = 0;
-  accuracy = 0;
-  ship_damage = 0;
-  solar_damage = 0;
-  interaction_radius_value = 0;
-  vision_range = 0;
-  load_time = 0;
-  cargo_capacity = 0;
+float ship_stats_modifier::apply(float x) {
+  return a * x + b;
+}
+
+void ship_stats_modifier::combine(const ship_stats_modifier &x) {
+  a *= x.a;
+  b += x.b;
+}
+
+template<typename T>
+modifiable_ship_stats::modifiable_ship_stats() {
+  stats.resize(key::count);
+}
+
+void ssmod_t::combine(const ssmod_t &b) {
+  for (int i = 0; i < key::count; i++) {
+    stats[i] += b.stats[i];
+  }
+}
+
+void ship_stats::modify_with(const ssmod_t &b) {
+  for (int i = 0; i < key::count; i++) {
+    stats[i] = b.stats[i].apply(stats[i]);
+  }
+}
+
+ssfloat_t::ssfloat_t() : modifiable_ship_stats<sfloat>(){
+  for (auto &x : stats) x = 0;
+}
+
+ship_stats::ship_stats() : ssfloat_t(){
   depends_facility_level = 0;
   build_time = 0;
-  regeneration = 0;
-  shield = 0;
-  detection = 0;
-  stealth = 0;
 }

@@ -18,53 +18,53 @@
 	},
 
 	"warp drive" : {
-	    "speed" : 1
+	    "speed" : "3#2"
 	},
 
 	"nano scout" : {
-	    "stealth" : 3
+	    "mass" : "0#0.1"
 	},
 
 	"intelligent" : {
-	    "hp" : 0.5
+	    "hp" : "1#0.5"
 	},
 
 	"targeting systems" : {
-	    "accuracy" : 0.2
+	    "accuracy" : "2#1"
 	},
 
 	"detection" : {
-	    "detection" : 2
+	    "detection" : "1#2"
 	},
 
 	"stealth" : {
-	    "stealth" : 2
+	    "stealth" : "1#2"
 	},
 
 	"shield" : {
-	    "shield" : 1
+	    "shield" : "1#2"
 	},
 
 	"nano hull" : {
-	    "hp" : 2
+	    "hp" : "3#2"
 	},
 
 	"nano torpedos" : {
-	    "damage" : 2
+	    "damage" : "1#2"
 	},
 
 	"nano shield" : {
-	    "shield" : 3
+	    "shield" : "1#3"
 	},
 
 	"bio-hull" : {
-	    "hp" : 1,
-	    "regeneration" : 0.1
+	    "hp" : "1#1",
+	    "regeneration" : "1#0.1"
 	},
 
 	"plasma laser" : {
-	    "damage" : 1,
-	    "load time" : -30
+	    "damage" : "1#1",
+	    "load time" : "0.7#0"
 	},
 
 	"hive communication" : {

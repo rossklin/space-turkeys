@@ -12,27 +12,48 @@
 namespace st3{
   class game_data;
   class solar;
-    
-  struct ship_stats{
-    static const hm_t<std::string, ship_stats>& table();
 
+  struct ship_stats_modifier {
+    float a;
+    float b;
+
+    ship_stats_modifier();
+    void parse(std::string v);
+    float apply(float x);
+    void combine(const ship_stats_modifier &b);
+  };
+
+  template<typename T>
+  class modifiable_ship_stats {
+  public:
+    enum key {
+      speed, hp, mass, accuracy, evasion, ship_damage, solar_damage, interaction_radius_value, vision_range, load_time, cargo_capacity, depends_facility_level, build_time, regeneration, shield, detection, stealth, count
+    };
+    std::vector<T> stats;
+
+    modifiable_ship_stats();
+    modifiable_ship_stats(const modifiable_ship_stats &s);
+  };
+
+  class ssmod_t : public modifiable_ship_stats<ship_stats_modifier> {
+  public:
+    ssmod_t(const ssmod_t &s);
+    void combine(const ssmod_t &b);
+    bool parse(std::string key, std::string value);
+  };
+
+  class ssfloat_t : public modifiable_ship_stats<sfloat> {
+    ssfloat_t();
+    ssfloat_t(const ssfloat_t &s);
+    bool insert(std::string key, sfloat value);
+  };
+    
+  class ship_stats : public ssfloat_t {
+  public:
+    static const hm_t<std::string, ship_stats>& table();
     // ship class info
     class_t ship_class; /*!< ship class */
     std::set<std::string> tags;
-
-    sfloat speed; /*!< ship's speed */
-    sfloat hp; /*!< ship's hit points */
-    sfloat accuracy;
-    sfloat ship_damage;
-    sfloat solar_damage;
-    sfloat interaction_radius_value; /*!< radius in which the ship can fire */
-    sfloat vision_range; /*!< ship's sight radius */
-    sfloat load_time;
-    sfloat cargo_capacity;
-    sfloat regeneration;
-    sfloat shield;
-    sfloat detection;
-    sfloat stealth;
     std::set<std::string> upgrades;
 
     // cost and req
@@ -44,8 +65,9 @@ namespace st3{
     // graphics
     std::vector<std::pair<point, unsigned char> > shape;
 
-    void operator += (const ship_stats &s);
     ship_stats();
+    ship_stats(const ship_stats &s);
+    void modify_with(const ssmod_t &m);
   };
 
   /*! ship game object */

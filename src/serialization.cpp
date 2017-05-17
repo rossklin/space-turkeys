@@ -175,54 +175,30 @@ sf::Packet& st3::operator >>(sf::Packet& packet, target_condition &c){
 
 // ship stats
 sf::Packet& st3::operator <<(sf::Packet& packet, const ship_stats &g){
-  return packet 
-    << g.speed
-    << g.hp
-    << g.accuracy
-    << g.ship_damage
-    << g.solar_damage
-    << g.interaction_radius_value
-    << g.vision_range
-    << g.load_time
+  return packet
+    << stats
     << g.upgrades
-    << g.cargo_capacity
     << g.depends_tech
     << g.depends_facility_level
     << g.build_cost
     << g.build_time
     << g.shape
     << g.ship_class
-    << g.tags
-    << g.regeneration
-    << g.shield
-    << g.stealth
-    << g.detection;
+    << g.tags;
 }
 
 // ship stats
 sf::Packet& st3::operator >>(sf::Packet& packet, ship_stats &g){
   return packet 
-    >> g.speed
-    >> g.hp
-    >> g.accuracy
-    >> g.ship_damage
-    >> g.solar_damage
-    >> g.interaction_radius_value
-    >> g.vision_range
-    >> g.load_time
+    >> stats
     >> g.upgrades
-    >> g.cargo_capacity
     >> g.depends_tech
     >> g.depends_facility_level
     >> g.build_cost
     >> g.build_time
     >> g.shape
     >> g.ship_class
-    >> g.tags
-    >> g.regeneration
-    >> g.shield
-    >> g.stealth
-    >> g.detection;
+    >> g.tags;
 }
 
 // ship

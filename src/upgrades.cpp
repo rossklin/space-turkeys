@@ -20,6 +20,16 @@ const hm_t<string, upgrade> &upgrade::table(){
   auto pdoc = utility::get_json("upgrade");
   auto &doc = (*pdoc)["upgrade"];
 
+  auto get_multiplier = [] (string v) -> float {
+    size_t split = v.find('#');
+    return stof(v.substr(0, split));
+  };
+
+  auto get_constant = [] (string v) -> float {
+    size_t split = v.find('#');
+    return stof(v.substr(split + 1));
+  };
+
   upgrade u, a;
   for (auto i = doc.MemberBegin(); i != doc.MemberEnd(); i++) {
     a = u;
