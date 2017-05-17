@@ -112,6 +112,103 @@ void fleet::give_commands(list<command> c, game_data *g){
   }
 }
 
+fleet::suggestion fleet::suggest(combid sid, game_data *g) {
+  ship::ptr s = g -> get_ship(sid);
+  float pref_density = 0.2;
+  float pref_maxrad = sqrt(ships.size() / (M_PI * pref_density));
+  
+  if (stats.enemies.size()) {
+    if (com.policy & policy_maintain_course) {
+      return suggestion::travel;
+    }else if (com.policy & policy_evasive) {
+      return suggestion::scatter;
+    }else{    
+      if (s -> tags.count("combat")) {
+	if (com.policy & policy_aggressive) {
+	  return suggestion(suggestion::engage, stats.enemies.fron().first);
+	}else{
+	  return suggestion(suggesetion::engage, s -> position);
+	}
+      }else{
+	return suggestion::scatter;
+      }
+    }
+  }else{
+    // peaceful times
+    if (utility::l2norm(s -> position - position) > pref_maxrad) {
+      return suggestion::summon;
+    }else if (is_idle()) {
+      return suggestion::hold;
+    }else if (converge) {
+      return suggestion::activate;
+    }else{
+      return suggestion::travel;
+    }
+  }
+}
+
+// cluster enemy ships
+void fleet::analyze_enemies(game_data *g) {
+  float r = stats.spread_radius + vision();
+  target_condition cond(target_condition::enemy, ship::class_id);
+  list<combid> t = g -> search_targets(id, position, r, cond.owned_by(owner));
+  int n = 10;
+  int rep = 10;
+  vector<point> x(n);
+
+  for (int i = 0; i < n; i++) x[i] = utility::random_point_polar(position, r);
+
+  // identify cluster points
+  for (int i = 0; i < rep; i++) {
+    // select a random enemy ship s
+    combid sid = utility::uniform_sample(t);
+    ship::ptr s = g -> get_ship(sid);
+
+    // sort points by distance to s
+    std::sort(x.begin(), x.end(), [=] (point a, point b) -> bool {
+	return utility::l2d2(s -> position - a) < utility::l2d2(s -> position - b);
+      });
+
+    // move points towards s
+    for (int j = 0; j < x.size(); j++){
+      float d = s -> position - x[j];
+      float f = exp(-utility::l2norm(d)) / (i + 1);
+      x[j] = x[j] + scale_point(d, f);
+    }
+
+    // join adjacent points
+    for (auto j = x.begin(); j != x.end(); j++) {
+      for (auto k = j + 1; k != x.end(); k++) {
+	if (utility::l2d2(*j - *k) < 100) x.erase(k--);
+      }
+    }
+  }
+
+  if (x.empty()) throw runtime_error("Failed to build enemy clusters!");
+  if (x.size() == n) throw runtime_error("Analyze enemies: clusters failed to form!");
+
+  // assign ships to clusters
+  hm_t<int, int> cc;
+  for (auto sid : t) {
+    ship::ptr s = g -> get_ship(sid);
+    float closest = INFINITY;
+    int idx = -1;
+    for (int i = 0; i < x.size(); i++) {
+      float d = utility::l2d2(x[i] - s -> position);
+      if (d < closest) {
+	closest = d;
+	idx = i;
+      }
+    }
+    if (idx < 0) throw runtime_error("Analyze enemies: failed to assign ship!");
+    cc[idx]++;
+  }
+
+  // build enemy fleet stats
+  for (auto i : cc) stats.enemies.push_back(make_pair(x[i.first], ships.size() / (float)i.second));
+  stats.enemies.sort([](pair<point, float> a, pair<point, float> b) {return a.second > b.second;});
+}
+
 void fleet::update_data(game_data *g){
 
   // need to update fleet data?
@@ -122,20 +219,28 @@ void fleet::update_data(game_data *g){
   // position, radius, speed and vision
   point p(0,0);
   float r2 = 0;
-  vision_buf = 0;
+  stats.vision_buf = 0;
+
+  for (auto k : ships) {
+    ship::ptr s = g -> get_ship(k);
+    p = p + s -> position;
+  }
+  
+  radius = g -> settings.fleet_default_radius;
+  position = utility::scale_point(p, 1 / (float)ships.size());
 
   for (auto k : ships){
     ship::ptr s = g -> get_ship(k);
     speed = fmin(speed, s -> speed);
     r2 = fmax(r2, utility::l2d2(s -> position - position));
-    vision_buf = fmax(vision_buf, s -> vision());
-    p = p + s -> position;
+    stats.vision_buf = fmax(vision_buf, s -> vision());
   }
   
-  // radius = fmax(sqrt(r2), fleet::min_radius);
-  radius = g -> settings.fleet_default_radius;
-  speed_limit = speed;  
-  position = utility::scale_point(p, 1 / (float)ships.size());
+  stats.spread_radius = fmax(sqrt(r2), fleet::min_radius);
+  stats.spread_density = ships.size() / (M_PI * pow(stats.spread_radius, 2));
+  stats.speed_limit = speed;
+
+  analyze_enemies(g);
 
   // the below only applies if the fleet has a target
   if (com.target == identifier::target_idle) return;

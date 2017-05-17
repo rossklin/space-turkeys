@@ -22,24 +22,52 @@ namespace st3{
     static ptr create(idtype pid);
     static const std::string class_id;
 
+    class suggestion {
+    public:
+      // fleet to ship suggestions
+      static const sint summon = 1;
+      static const sint engage = 2;
+      static const sint scatter = 4;
+      static const sint travel = 8;
+      static const sint activate = 16;
+      static const sint hold = 32;
+
+      sint id;
+      point p;
+
+      suggestion();
+      suggestion(sint i);
+    };
+
+    struct analytics {
+      std::list<std::pair<point, float> > enemies;
+      sbool converge;
+      sfloat vision_buf;
+      float speed_limit;
+      point target_position;
+      float spread_radius;
+      float spread_density;
+    };
+
     static const idtype server_pid = -1;
-    static const int update_period = 1; /*!< number of increments between fleet data updates */
+    static const int update_period = 10; /*!< number of increments between fleet data updates */
     static const int interact_d2 = 100; /*!< distance from target at which the fleet converges */
     static constexpr float min_radius = 10; /*!< smallest allowed fleet radius (for visibility) */
+
+    // fleet policies
+    static const sint policy_aggresive = 1;
+    static const sint policy_defensive = 2;
+    static const sint policy_evasive = 4;
+    static const sint policy_maintain_course = 8;
 
     // serialized components
     std::set<combid> ships; /*!< ids of ships in fleet */
     std::set<std::string> interactions; /*!< set of available interactions */
     command com; /*!< the fleet's command (currently this only holds the target) */
-    sbool converge; /*!< whether the fleet is converging on it's target */
-    sfloat vision_buf;
 
     // mechanical components
     int update_counter; /*!< counter for updating fleet data */
-    float speed_limit; /*!< speed of slowest ship in fleet */
-    point target_position;
-    
-    /*! default constructor */
+    analytics stats;
 
     // game_object stuff
     void pre_phase(game_data *g);
@@ -59,9 +87,11 @@ namespace st3{
     ~fleet();
     bool is_idle();
     void set_idle();
+    void analyze_enemies(game_data *g);
     void update_data(game_data *g);
     void remove_ship(combid i);
     bool confirm_ship_interaction(std::string a, combid t);
+    suggestion suggest(combid i, game_data *g);
     
     ptr clone();
 

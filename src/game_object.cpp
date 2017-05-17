@@ -78,9 +78,6 @@ void physical_object::interact(game_data *g) {
     list<combid> buf = g -> search_targets(id, position, this -> interaction_radius(), i.condition.owned_by(owner));
     list<combid> targets = this -> confirm_interaction(inter, buf, g);
 
-    // check whether the object wants to do the action now
-    // for (auto tid : buf) if (this -> confirm_interaction(inter, tid, g)) targets.push_back(tid);
-
     for (auto t : targets) {
       interaction_info info;
       info.source = id;
