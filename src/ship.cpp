@@ -28,7 +28,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
   s.stats[ssfloat_t::key::mass] = 1;
   s.stats[ssfloat_t::key::vision_range] = 50;
   s.stats[ssfloat_t::key::hp] = 1;
-  s.stats[ssfloat_t::key::interaction_radius_value] = 20;
+  s.stats[ssfloat_t::key::interaction_radius] = 20;
   s.stats[ssfloat_t::key::load_time] = 50;
   s.upgrades.insert(interaction::land);
 
@@ -62,15 +62,15 @@ const hm_t<string, ship_stats>& ship_stats::table(){
 	  success = true;
 	} else if (name == "shape") {
 	  pair<point, unsigned char> v;
-	  for (auto j = i -> value.Begin(); j != i -> value.End(); j++) {
-	    v.first.x = (*j)["x"].GetDouble();
-	    v.first.y = (*j)["y"].GetDouble();
-	    v.second = (*j)["c"].GetString()[0];
+	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) {
+	    v.first.x = (*k)["x"].GetDouble();
+	    v.first.y = (*k)["y"].GetDouble();
+	    v.second = (*k)["c"].GetString()[0];
 	    a.shape.push_back(v);
 	  }
 	  success = true;
 	} else if (name == "tags") {
-	  for (auto j = i -> value.Begin(); j != i -> value.End(); j++) a.tags.insert(j -> GetString());
+	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) a.tags.insert(k -> GetString());
 	  success = true;
 	}
       }else if (j -> value.IsObject()) {
@@ -84,7 +84,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
 		sub_success = true;
 	      }
 	    }
-	    if (name == "time") {
+	    if (res_name == "time") {
 	      a.build_time = k -> value.GetDouble();
 	      sub_success = true;
 	    }
@@ -143,7 +143,6 @@ void ship::pre_phase(game_data *g){
   stats[key::shield] = fmin(stats[key::shield] + 0.01, base_stats.stats[key::shield]);
 }
 
-// TODO: rewrite using fleet policies
 void ship::move(game_data *g){
   if (!has_fleet()) return;
   fleet::ptr f = g -> get_fleet(fleet_id);
@@ -313,7 +312,9 @@ void ship::move(game_data *g){
   for (auto sid : neighbours) {
     ship::ptr s = g -> get_ship(sid);
     point delta = s -> position - position;
-    if (utility::l2norm(delta) < radius + s -> radius) g -> collision_buffer.insert(id_pair(id, sid));
+    if (utility::l2norm(delta) < radius + s -> radius) {
+      g -> collision_buffer.insert(id_pair(id, sid));
+    }
   }
 
   float angle_increment = fmin(0.1 / stats[key::mass], 0.5);
@@ -407,7 +408,7 @@ bool ship::accuracy_check(float a, ship::ptr t) {
 }
 
 float ship::interaction_radius() {
-  return radius + interaction_radius_value;
+  return radius + stats[key::interaction_radius];
 }
 
 bool ship::is_active(){
@@ -449,64 +450,3 @@ bool ship::can_see(game_object::ptr x) {
   return d < r;
 }
 
-// ship stats stuff
-
-ship_stats_modifier::ship_stats_modifier() {
-  a = 1;
-  b = 0;
-}
-
-float ship_stats_modifier::apply(float x) const{
-  return a * x + b;
-}
-
-void ship_stats_modifier::combine(const ship_stats_modifier &x) {
-  a *= x.a;
-  b += x.b;
-}
-
-template<typename T>
-modifiable_ship_stats<T>::modifiable_ship_stats() {
-  stats.resize(key::count);
-}
-
-template<typename T>
-modifiable_ship_stats<T>::modifiable_ship_stats(const modifiable_ship_stats<T> &s) {
-  stats = s.stats;
-}
-
-void ssmod_t::combine(const ssmod_t &b) {
-  for (int i = 0; i < key::count; i++) {
-    stats[i].combine(b.stats[i]);
-  }
-}
-
-void ship_stats::modify_with(const ssmod_t &b) {
-  for (int i = 0; i < key::count; i++) {
-    stats[i] = b.stats[i].apply(stats[i]);
-  }
-}
-
-ssmod_t::ssmod_t() : modifiable_ship_stats<ship_stats_modifier>(){}
-ssmod_t::ssmod_t(const ssmod_t &s) : modifiable_ship_stats<ship_stats_modifier>(s) {}
-
-ssfloat_t::ssfloat_t() : modifiable_ship_stats<sfloat>(){
-  for (auto &x : stats) x = 0;
-}
-ssfloat_t::ssfloat_t(const ssfloat_t &s) : modifiable_ship_stats<sfloat>(s) {}
-
-ship_stats::ship_stats() : ssfloat_t(){
-  depends_facility_level = 0;
-  build_time = 0;
-}
-
-ship_stats::ship_stats(const ship_stats &s) : ssfloat_t(s) {
-  ship_class = s.ship_class;
-  tags = s.tags;
-  upgrades = s.upgrades;
-  depends_tech = s.depends_tech;
-  depends_facility_level = s.depends_facility_level;
-  build_cost = s.build_cost;
-  build_time = s.build_time;
-  shape = s.shape;
-}

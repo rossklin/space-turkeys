@@ -225,6 +225,8 @@ namespace st3{
   */
   sf::Packet& operator >>(sf::Packet& packet, fleet &g);
 
+  
+  // fleet analytics
   sf::Packet& operator <<(sf::Packet& packet, const fleet::analytics &g);
   sf::Packet& operator >>(sf::Packet& packet, fleet::analytics &g);
 

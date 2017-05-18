@@ -378,6 +378,29 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
     >> g.ships;
 }
 
+// fleet analytics
+sf::Packet& st3::operator <<(sf::Packet& packet, const fleet::analytics &g){
+  return packet
+    << g.converge
+    << g.speed_limit
+    << g.spread_radius
+    << g.spread_density
+    << g.target_position
+    << g.scatter_target
+    << g.vision_buf;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, fleet::analytics &g){
+  return packet
+    >> g.converge
+    >> g.speed_limit
+    >> g.spread_radius
+    >> g.spread_density
+    >> g.target_position
+    >> g.scatter_target
+    >> g.vision_buf;
+}
+
 // choice
 sf::Packet& st3::operator <<(sf::Packet& packet, const choice::choice &c){
   return packet << c.commands << c.solar_choices << c.waypoints << c.fleets << c.research;

@@ -1066,7 +1066,7 @@ int game::choice_event(sf::Event e){
       }
 
       f -> radius = settings.fleet_default_radius;
-      f -> vision_buf = vis;
+      f -> stats.vision_buf = vis;
       f -> position = utility::scale_point(pos, 1 / (float)buf.size());
       f -> selected = true;
       

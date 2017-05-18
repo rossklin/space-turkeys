@@ -59,6 +59,7 @@ namespace st3{
     void collide_ships(id_pair x);
     bool target_position(combid t, point &p);
     std::list<combid> search_targets(combid self_id, point p, float r, target_condition c);
+    std::list<combid> search_targets_nophys(combid self_id, point p, float r, target_condition c);
 
     // access
     ship::ptr get_ship(combid i);

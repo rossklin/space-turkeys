@@ -151,12 +151,15 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
 
 // cluster enemy ships
 void fleet::analyze_enemies(game_data *g) {
+  stats.enemies.clear();
   float r = stats.spread_radius + vision();
   target_condition cond(target_condition::enemy, ship::class_id);
-  list<combid> t = g -> search_targets(id, position, r, cond.owned_by(owner));
+  list<combid> t = g -> search_targets_nophys(id, position, r, cond.owned_by(owner));
   int n = 10;
   int rep = 10;
   vector<point> x(n);
+
+  if (t.empty()) return;
 
   for (int i = 0; i < n; i++) x[i] = utility::random_point_polar(position, r);
 
@@ -233,7 +236,7 @@ void fleet::update_data(game_data *g){
 
   for (auto k : ships){
     ship::ptr s = g -> get_ship(k);
-    speed = fmin(speed, s -> speed);
+    speed = fmin(speed, s -> base_stats.stats[ship_stats::key::speed]);
     r2 = fmax(r2, utility::l2d2(s -> position - position));
     stats.vision_buf = fmax(stats.vision_buf, s -> vision());
   }
@@ -327,6 +330,8 @@ fleet::analytics::analytics() {
   spread_radius = 0;
   spread_density = 0;
   target_position = point(0,0);
+  scatter_target = point(0,0);
+  vision_buf = 0;
 }
 
 fleet::suggestion::suggestion() {

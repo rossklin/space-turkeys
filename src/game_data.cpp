@@ -80,13 +80,26 @@ bool game_data::target_position(combid t, point &p){
 }
 
 // find all entities in ball(p, r) matching condition c
+// TODO: match against player vision matrix
+list<combid> game_data::search_targets_nophys(combid self_id, point p, float r, target_condition c){
+  list<combid> res;
+    
+  for (auto i : entity_grid -> search(p, r)){
+    auto e = get_entity(i.first);
+    if (e -> is_active() && e -> id != self_id && c.valid_on(e)) res.push_back(e -> id);
+  }
+
+  return res;
+}
+
+// find all entities in ball(p, r) matching condition c
 list<combid> game_data::search_targets(combid self_id, point p, float r, target_condition c){
   list<combid> res;
-  game_object::ptr e = get_entity(self_id);
-  if (!e -> isa(physical_object::class_id)) {
+  game_object::ptr self = get_entity(self_id);
+  if (!self -> isa(physical_object::class_id)) {
     throw runtime_error("Non-physical entity called search targets: " + self_id);
   }
-  physical_object::ptr s = utility::guaranteed_cast<physical_object>(e);
+  physical_object::ptr s = utility::guaranteed_cast<physical_object>(self);
     
   for (auto i : entity_grid -> search(p, r)){
     auto e = get_entity(i.first);
@@ -171,8 +184,8 @@ void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &
   }
   
   distribute_ships(sh, f -> position);
-  f -> update_data(this);
   add_entity(f);
+  f -> update_data(this);
 }
 
 void game_data::apply_choice(choice::choice c, idtype id){
@@ -584,7 +597,7 @@ void game_data::confirm_data() {
     for (auto &x : u) {
       for (auto v : x.second) assert(utab.count(v));
       if (x.first == research::upgrade_all_ships) continue;
-      if (x.first[0] == '!' || x.first[0] == '#') continue;
+      if (x.first[0] == '!' || x.first[0] == '#' || x.first[0] == '[') continue;
       assert(stab.count(x.first));
     }
   };

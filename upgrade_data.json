@@ -50,7 +50,7 @@
 	},
 
 	"nano torpedos" : {
-	    "damage" : "1#2"
+	    "ship damage" : "1#2"
 	},
 
 	"nano shield" : {
@@ -63,7 +63,7 @@
 	},
 
 	"plasma laser" : {
-	    "damage" : "1#1",
+	    "ship damage" : "1#1",
 	    "load time" : "0.7#0"
 	},
 

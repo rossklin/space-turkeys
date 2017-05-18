@@ -61,3 +61,12 @@ string identifier::get_multid_owner_symbol(combid v){
 combid identifier::make_waypoint_id(idtype owner, idtype id){
   return identifier::make(waypoint::class_id, to_string(owner) + "#" + to_string(id));
 }
+
+id_pair::id_pair(combid x, combid y) {
+  a = x;
+  b = y;
+}
+
+bool st3::operator < (const id_pair &x, const id_pair &y) {
+  return hash<string>{}(x.a)^hash<string>{}(x.b) < hash<string>{}(y.a)^hash<string>{}(y.b);
+}
