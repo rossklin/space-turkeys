@@ -82,10 +82,15 @@ bool game_data::target_position(combid t, point &p){
 // find all entities in ball(p, r) matching condition c
 list<combid> game_data::search_targets(combid self_id, point p, float r, target_condition c){
   list<combid> res;
+  game_object::ptr e = get_entity(self_id);
+  if (!e -> isa(physical_object::class_id)) {
+    throw runtime_error("Non-physical entity called search targets: " + self_id);
+  }
+  physical_object::ptr s = utility::guaranteed_cast<physical_object>(e);
     
   for (auto i : entity_grid -> search(p, r)){
     auto e = get_entity(i.first);
-    if (e -> is_active() && e -> id != self_id && c.valid_on(e)) res.push_back(e -> id);
+    if (s -> can_see(e) && e -> id != self_id && c.valid_on(e)) res.push_back(e -> id);
   }
 
   return res;
@@ -310,6 +315,35 @@ void game_data::distribute_ships(list<combid> sh, point p){
   }
 }
 
+void game_data::collide_ships(id_pair x) {
+  ship::ptr s = get_ship(x.a);
+  ship::ptr t = get_ship(x.b);
+
+  point delta = s -> position - t -> position;
+  float smaller_mass = fmin(t -> stats[ship_stats::key::mass], s -> stats[ship_stats::key::mass]);
+  point velocity_self(t -> stats[ship_stats::key::speed] * cos(t -> angle), t -> stats[ship_stats::key::speed] * sin(t -> angle));
+  point velocity_other(s -> stats[ship_stats::key::speed] * cos(s -> angle), s -> stats[ship_stats::key::speed] * sin(s -> angle));
+  float collision_energy = 0.5 * smaller_mass * utility::l2d2(velocity_other - velocity_self);
+  float mass_ratio = t -> stats[ship_stats::key::mass] / s -> stats[ship_stats::key::mass];
+  point new_velocity = utility::scale_point(velocity_self, mass_ratio) + utility::scale_point(velocity_other, 1/mass_ratio);
+  float new_angle = utility::point_angle(new_velocity);
+  float new_speed = utility::l2norm(new_velocity);
+
+  // merge speed and angle
+  t -> stats[ship_stats::key::speed] = new_speed;
+  s -> stats[ship_stats::key::speed] = new_speed;
+  t -> angle = new_angle;
+  s -> angle = new_angle;
+
+  // push ships apart a bit
+  t -> position += utility::scale_point(utility::normv(utility::point_angle(-delta)), 3);
+  s -> position += utility::scale_point(utility::normv(utility::point_angle(delta)), 3);
+
+  // damage ships
+  s -> receive_damage(t, utility::random_uniform(0, collision_energy));
+  t -> receive_damage(s, utility::random_uniform(0, collision_energy));
+}
+
 void game_data::increment(){
   remove_entities.clear();
   interaction_buffer.clear();
@@ -330,6 +364,9 @@ void game_data::increment(){
       i.perform(s, t, this);
     }
   }
+
+  // perform collisions
+  for (auto x : collision_buffer) collide_ships(x);
 
   // remove units twice, since removing ships can cause fleets to set
   // the remove flag

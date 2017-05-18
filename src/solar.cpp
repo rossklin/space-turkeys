@@ -324,6 +324,7 @@ bool solar::isa(string c) {
 
 bool solar::can_see(game_object::ptr x) {
   float r = 1;
+  if (!x -> is_active()) return false;
 
   if (x -> isa(ship::class_id)) {
     ship::ptr s = utility::guaranteed_cast<ship>(x);

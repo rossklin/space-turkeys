@@ -48,6 +48,7 @@ namespace st3{
     
     grid::tree::ptr entity_grid;
     std::vector<interaction_info> interaction_buffer;
+    std::set<id_pair> collision_buffer;
 
     game_data();
     ~game_data();
@@ -55,6 +56,7 @@ namespace st3{
     void assign(const game_data &g);
     void apply_choice(choice::choice c, idtype id);
     void increment();
+    void collide_ships(id_pair x);
     bool target_position(combid t, point &p);
     std::list<combid> search_targets(combid self_id, point p, float r, target_condition c);
 

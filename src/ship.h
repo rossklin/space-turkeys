@@ -19,7 +19,7 @@ namespace st3{
 
     ship_stats_modifier();
     void parse(std::string v);
-    float apply(float x);
+    float apply(float x) const;
     void combine(const ship_stats_modifier &b);
   };
 

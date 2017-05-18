@@ -19,6 +19,8 @@ const string interaction::space_combat = "space combat";
 const string interaction::bombard = "bombard";
 const string interaction::colonize = "colonize";
 const string interaction::pickup = "pickup";
+const string interaction::terraform = "terraform";
+const string interaction::hive_support = "hive support";
 
 const hm_t<string, interaction> &interaction::table() {
   static bool init = false;
@@ -194,7 +196,7 @@ const hm_t<string, interaction> &interaction::table() {
   data[i.name] = i;
 
   // terraform
-  i.name = "terraform";
+  i.name = terraform;
   i.condition = target_condition(target_condition::neutral, solar::class_id);
   i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
     ship::ptr s = utility::guaranteed_cast<ship>(self);
@@ -210,7 +212,7 @@ const hm_t<string, interaction> &interaction::table() {
   data[i.name] = i;
 
   // terraform
-  i.name = "hive support";
+  i.name = hive_support;
   i.condition = target_condition(target_condition::owned, ship::class_id);
   i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
     ship::ptr s = utility::guaranteed_cast<ship>(target);

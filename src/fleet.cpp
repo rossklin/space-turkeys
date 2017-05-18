@@ -328,3 +328,17 @@ fleet::analytics::analytics() {
   spread_density = 0;
   target_position = point(0,0);
 }
+
+fleet::suggestion::suggestion() {
+  id = 0;
+}
+
+fleet::suggestion::suggestion(sint i) {
+  id = i;
+}
+
+fleet::suggestion::suggestion(sint i, point x) {
+  id = i;
+  p = x;
+}
+

@@ -188,7 +188,7 @@ float utility::random_uniform(float a, float b){
 
 // random uniform int in [0, limit)
 unsigned int utility::random_int(int limit){
-  if (limit < 1) return 0;
+  if (limit < 2) return 0;
   boost::random::uniform_int_distribution<> dist(0, limit - 1);
   return dist(rng);
 }

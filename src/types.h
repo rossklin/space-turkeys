@@ -32,6 +32,15 @@ namespace st3{
   /*! type used to represent a point in coordinate space */
   typedef sf::Vector2f point;
 
+  struct id_pair {
+    combid a;
+    combid b;
+
+    id_pair(combid x, combid y);
+  };
+
+  bool operator<(const id_pair &x, const id_pair &y);
+
   namespace keywords{
     extern const std::vector<std::string> resource;
     extern const std::vector<std::string> sector;

@@ -34,32 +34,26 @@ const hm_t<string, upgrade> &upgrade::table(){
   for (auto i = doc.MemberBegin(); i != doc.MemberEnd(); i++) {
     a = u;
     string name = i -> name.GetString();
-    if (i -> value.HasMember("speed")) a.modify.speed = i -> value["speed"].GetDouble();
-    if (i -> value.HasMember("vision")) a.modify.vision_range = i -> value["vision"].GetDouble();
-    if (i -> value.HasMember("hp")) a.modify.hp = i -> value["hp"].GetDouble();
-    if (i -> value.HasMember("ship_damage")) a.modify.ship_damage = i -> value["ship_damage"].GetDouble();
-    if (i -> value.HasMember("solar_damage")) a.modify.solar_damage = i -> value["solar_damage"].GetDouble();
-    if (i -> value.HasMember("accuracy")) a.modify.accuracy = i -> value["accuracy"].GetDouble();
-    if (i -> value.HasMember("interaction_radius")) a.modify.interaction_radius_value = i -> value["interaction_radius"].GetDouble();
-    if (i -> value.HasMember("load_time")) a.modify.load_time = i -> value["load_time"].GetDouble();
-
-    if (i -> value.HasMember("interactions")){
-      if (!i -> value["interactions"].IsArray()) {
-	throw runtime_error("Error: loading upgrades: interactions is not an array!");
+    for (auto j = i -> value.MemberBegin(); j != i -> value.MemberEnd(); j++) {
+      bool success = false;
+      string stat_name = j -> name.GetString();
+      if (j -> value.IsString()) {
+	string stat_value = j -> value.GetString();
+	success = a.modify.parse(stat_name, stat_value);
+      } else if (j -> value.IsArray()) {
+	if (stat_name == "interactions") {
+	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) a.inter.insert(k -> GetString());
+	  success = true;
+	} else if (stat_name == "on liftoff") {
+	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) a.on_liftoff.insert(k -> GetString());
+	  success = true;
+	}
       }
 
-      auto &interactions = i -> value["interactions"];
-      for (auto j = interactions.Begin(); j != interactions.End(); j++) a.inter.insert(j -> GetString());
-    }
-
-    if (i -> value.HasMember("on liftoff")){
-      if (!i -> value["on liftoff"].IsArray()) {
-	throw runtime_error("Error: loading upgrades: on liftoff is not an array!");
+      if (!success) {
+	throw runtime_error("Invalid upgrade stat for " + name + ": " + stat_name);
       }
-
-      auto &on_liftoff = i -> value["on liftoff"];
-      for (auto j = on_liftoff.Begin(); j != on_liftoff.End(); j++) a.on_liftoff.insert(j -> GetString());
-    }
+    }      
 
     data[name] = a;
   }

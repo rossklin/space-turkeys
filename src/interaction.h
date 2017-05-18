@@ -37,6 +37,8 @@ namespace st3{
     static const std::string bombard;
     static const std::string colonize;
     static const std::string pickup;
+    static const std::string terraform;
+    static const std::string hive_support;
 
     typedef std::function<void(game_object::ptr self, game_object::ptr target, game_data *g)> perform_t;
     static const hm_t<std::string, interaction> &table();

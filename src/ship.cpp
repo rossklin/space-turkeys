@@ -25,6 +25,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
   ship_stats s, a;
   bool success;
   s.stats[ssfloat_t::key::speed] = 0.5;
+  s.stats[ssfloat_t::key::mass] = 1;
   s.stats[ssfloat_t::key::vision_range] = 50;
   s.stats[ssfloat_t::key::hp] = 1;
   s.stats[ssfloat_t::key::interaction_radius_value] = 20;
@@ -39,7 +40,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
     for (auto j = i -> value.MemberBegin(); j != i -> value.MemberEnd(); j++) {
       success = false;
       string name = j -> name.GetString();
-      if (j -> value.IsDouble()) {
+      if (j -> value.IsNumber()) {
 	float value = j -> value.GetDouble();
 	success |= a.insert(name, value);
 
@@ -122,6 +123,7 @@ ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   load = 0;
   passengers = 0;
   is_landed = false;
+  radius = pow(stats[key::mass], 2/(float)3);
 }
 
 ship::~ship(){}
@@ -153,56 +155,98 @@ void ship::move(game_data *g){
   bool travel = suggest.id & fleet::suggestion::travel;
   bool activate = suggest.id & fleet::suggestion::activate;
   bool hold = suggest.id & fleet::suggestion::hold;
+  bool local = engage || scatter || activate;
 
-  point target_position = f -> stats.target_position;
-  float fleet_target_angle = utility::point_angle(target_position - f -> position);
+  float fleet_target_angle = utility::point_angle(f -> stats.target_position - f -> position);
   point fleet_delta = f -> position - position;
   float fleet_angle = utility::point_angle(fleet_delta);
   float target_angle = fleet_target_angle;
-  point target_delta = target_position - position;
-
-  // use the local temporary target when available
-  if (engage || scatter || travel || activate) {
-    target_position = suggest.p;
-    target_delta = target_position - position;
-    target_angle = utility::point_angle(target_delta);
-  }
-
-  float target_speed = f -> speed_limit;
+  float target_speed = f -> stats.speed_limit;
 
   float nrad = interaction_radius();
-  list<combid> neighbours = g -> search_targets(id, position, nrad, target_condition(target_condition::owned, ship::class_id).owned_by(owner));
-  list<combid> local_enemies = g -> search_targets(id, position, interaction_radius(), target_condition(target_condition::enemy, ship::class_id).owned_by(owner));
+  list<combid> neighbours = g -> search_targets(id, position, nrad, target_condition(target_condition::any_alignment, ship::class_id).owned_by(owner));
 
-  if (summon) target_angle = fleet_angle;
+  auto check_space = [this, neighbours, g] (float a) -> bool {
+    float spread = 0.2 * M_PI;
+    float buffer = 2 * radius;
 
-  if (summon && travel) {
-    float test = utility::angle_difference(fleet_target_angle, fleet_angle);
-    if (test > 2 * M_PI / 3) {
-      // in front of fleet
-      if (check_space(fleet_target_angle + M_PI)) {
-	// slow down
-	target_speed = 0.8 * f -> speed_limit;
+    for (combid sid : neighbours) {
+      ship::ptr s = g -> get_ship(sid);
+      point delta = s -> position - position;
+      if (utility::l2norm(delta) < radius + s -> radius + buffer) {
+	if (abs(utility::angle_difference(utility::point_angle(delta), 0)) < spread) return false;
       }
-    } else if (test > M_PI / 3) {
-      // side of fleet
-      if (check_space(fleet_angle)) {
-	target_angle += 0.1 * utility::angle_difference(fleet_angle, target_angle);
+    }
+
+    return true;
+  };
+
+  // angle and speed for summon
+  auto compute_summon = [=] (float &a, float &s) {
+    if (travel) {
+      float test = utility::angle_difference(fleet_target_angle, fleet_angle);
+      if (test > 2 * M_PI / 3) {
+	// in front of fleet
+	if (check_space(fleet_target_angle + M_PI)) {
+	  // slow down
+	  s = 0.8 * f -> stats.speed_limit;
+	}
+      } else if (test > M_PI / 3) {
+	// side of fleet
+	if (check_space(fleet_angle)) {
+	  a = fleet_target_angle + 0.1 * utility::angle_difference(fleet_angle, fleet_target_angle);
+	}
+      } else {
+	// back of fleet
+	if (check_space(fleet_target_angle)) {
+	  s = stats[key::speed];
+	}
       }
     } else {
-      // back of fleet
-      if (check_space(fleet_target_angle)) {
-	target_speed = stats[key::speed];
+      a = fleet_angle;
+    }
+  };
+
+  // angle and speed when running local policies
+  auto compute_local = [this, suggest] (float &a, float &s) {
+    point local_delta = suggest.p - position;
+    a = utility::point_angle(local_delta);
+
+    if (utility::l2norm(local_delta) > 10) {
+      s = stats[key::speed];
+    } else {
+      s = 0;
+    }
+  };
+
+  // compute desired angle and speed
+  if (summon) {
+    compute_summon(target_angle, target_speed);
+  } else if (local) {
+    compute_local(target_angle, target_speed);
+  } else if (hold) {
+    target_speed = 0;
+  } else if (travel) {
+    // try to follow ships in front of you
+    for (auto sid : neighbours) {
+      ship::ptr s = g -> get_ship(sid);
+      if (s -> owner == owner) {
+	float weight = (cos(utility::angle_difference(utility::point_angle(s -> position - position), angle)) + 1) / 2;
+	target_angle += 0.1 * weight * utility::angle_difference(target_angle, s -> angle);
       }
     }
   }
 
+  // shoot enemies if able
   if (engage) {
     combid target_id;
     float best = -1;
 
-    for (auto sid : local_enemies) {
-      point delta = g -> get_ship(sid) -> position - position;
+    for (auto sid : neighbours) {
+      ship::ptr s = g -> get_ship(sid);
+      if (s -> owner == owner) continue;
+      
+      point delta = s -> position - position;
       float value = cos(utility::angle_difference(utility::point_angle(delta), angle));
       if (value > best) {
 	best = value;
@@ -218,25 +262,12 @@ void ship::move(game_data *g){
       info.interaction = interaction::space_combat;
       g -> interaction_buffer.push_back(info);
     }
-
-    if (utility::l2norm(target_delta) > 10) {
-      target_speed = stats[key::speed];
-    } else {
-      target_speed = 0;
-    }
   }
 
-  if (scatter) {
-    // todo
-  }
-
-  if (hold) {
-    target_speed = 0;
-  }
-
+  // activate fleet command action if able
   if (activate) {
     if (f -> com.target != identifier::target_idle && compile_interactions().count(f -> com.action)) {
-      game_object::ptr e = get_entity(f -> com.target);
+      game_object::ptr e = g -> get_entity(f -> com.target);
       if (can_see(e) && utility::l2norm(e -> position - position) <= interaction_radius()) {
 	interaction_info info;
 	info.source = id;
@@ -247,13 +278,57 @@ void ship::move(game_data *g){
     }
   }
 
-  // todo
-  float angle_increment = 0.1;
-  float epsilon = 0.01;
-  float angle_sign = utility::signum(utility::angle_difference(target_angle, angle), epsilon);
+  // activate hive support on all friendly neighbours if able
+  if (compile_interactions().count(interaction::hive_support)) {
+    for (auto sid : neighbours) {
+      ship::ptr s = g -> get_ship(sid);
+      if (s -> owner == owner) {
+	interaction_info info;
+	info.source = id;
+	info.target = s -> id;
+	info.interaction = interaction::hive_support;
+	g -> interaction_buffer.push_back(info);
+      }
+    }
+  }
 
-  angle += angle_increment * angle_sign;
-  position = position + utility::scale_point(utility::normv(angle), f -> speed_limit);
+  // check if there is free space at target angle
+  if (!check_space(target_angle)) {
+    float check_first = 1 - 2 * utility::random_int(2);
+    float spread = 0.2 * M_PI;
+    
+    if (check_space(target_angle + check_first * spread)) {
+      target_angle = target_angle + check_first * spread;
+    } else {
+      check_first *= -1;
+      if (check_space(target_angle + check_first * spread)) {
+	target_angle = target_angle + check_first * spread;
+      } else {
+	target_speed = 0;
+      }
+    }
+  }
+
+  // check unit collisions
+  for (auto sid : neighbours) {
+    ship::ptr s = g -> get_ship(sid);
+    point delta = s -> position - position;
+    if (utility::l2norm(delta) < radius + s -> radius) g -> collision_buffer.insert(id_pair(id, sid));
+  }
+
+  float angle_increment = fmin(0.1 / stats[key::mass], 0.5);
+  float acceleration = 0.1 * base_stats.stats[key::speed] / stats[key::mass];
+  float epsilon = 0.01;
+  float angle_miss = utility::angle_difference(target_angle, angle);
+  float angle_sign = utility::signum(angle_miss, epsilon);
+
+  // slow down if missing angle
+  target_speed = (cos(angle_miss) + 1) / 2 * target_speed;
+  float speed_miss = target_speed - stats[key::speed];
+  float speed_sign = utility::signum(speed_miss, epsilon);
+  stats[key::speed] += fmin(acceleration, abs(speed_miss)) * speed_sign;
+  angle += fmin(angle_increment, abs(angle_miss)) * angle_sign;
+  position = position + utility::scale_point(utility::normv(angle), stats[key::speed]);
 
   g -> entity_grid -> move(id, position);
 }
@@ -318,7 +393,7 @@ list<combid> ship::confirm_interaction(string a, list<combid> targets, game_data
 
   // chose at most one target
   list<combid> result;
-  if (a == "hive support"){
+  if (a == interaction::hive_support){
     result = allowed;
   }else{
     if (!allowed.empty()) result.push_back(utility::uniform_sample(allowed));
@@ -332,7 +407,7 @@ bool ship::accuracy_check(float a, ship::ptr t) {
 }
 
 float ship::interaction_radius() {
-  return interaction_radius_value;
+  return radius + interaction_radius_value;
 }
 
 bool ship::is_active(){
@@ -363,6 +438,7 @@ bool ship::isa(string c) {
 
 bool ship::can_see(game_object::ptr x) {
   float r = 1;
+  if (!x -> is_active()) return false;
 
   if (x -> isa(ship::class_id)) {
     ship::ptr s = utility::guaranteed_cast<ship>(x);
@@ -380,7 +456,7 @@ ship_stats_modifier::ship_stats_modifier() {
   b = 0;
 }
 
-float ship_stats_modifier::apply(float x) {
+float ship_stats_modifier::apply(float x) const{
   return a * x + b;
 }
 
@@ -390,13 +466,18 @@ void ship_stats_modifier::combine(const ship_stats_modifier &x) {
 }
 
 template<typename T>
-modifiable_ship_stats::modifiable_ship_stats() {
+modifiable_ship_stats<T>::modifiable_ship_stats() {
   stats.resize(key::count);
+}
+
+template<typename T>
+modifiable_ship_stats<T>::modifiable_ship_stats(const modifiable_ship_stats<T> &s) {
+  stats = s.stats;
 }
 
 void ssmod_t::combine(const ssmod_t &b) {
   for (int i = 0; i < key::count; i++) {
-    stats[i] += b.stats[i];
+    stats[i].combine(b.stats[i]);
   }
 }
 
@@ -406,11 +487,26 @@ void ship_stats::modify_with(const ssmod_t &b) {
   }
 }
 
+ssmod_t::ssmod_t() : modifiable_ship_stats<ship_stats_modifier>(){}
+ssmod_t::ssmod_t(const ssmod_t &s) : modifiable_ship_stats<ship_stats_modifier>(s) {}
+
 ssfloat_t::ssfloat_t() : modifiable_ship_stats<sfloat>(){
   for (auto &x : stats) x = 0;
 }
+ssfloat_t::ssfloat_t(const ssfloat_t &s) : modifiable_ship_stats<sfloat>(s) {}
 
 ship_stats::ship_stats() : ssfloat_t(){
   depends_facility_level = 0;
   build_time = 0;
+}
+
+ship_stats::ship_stats(const ship_stats &s) : ssfloat_t(s) {
+  ship_class = s.ship_class;
+  tags = s.tags;
+  upgrades = s.upgrades;
+  depends_tech = s.depends_tech;
+  depends_facility_level = s.depends_facility_level;
+  build_cost = s.build_cost;
+  build_time = s.build_time;
+  shape = s.shape;
 }

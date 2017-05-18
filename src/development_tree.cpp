@@ -44,10 +44,11 @@ void development::node::read_from_json(const rapidjson::Value &v) {
 	    if (cond[0] == '!' && s.second.tags.count(cond.substr(1))) pass = false;
 	    if (cond[0] == '[') {
 	      vector<string> limits;
-	      boost::split(limits, cond.substr(1, cond.length() - 2), [](char c){return c == ',';});
+	      string range = cond.substr(1, cond.length() - 2);
+	      boost::split(limits, range, [](char c){return c == ',';});
 	      float lower = stof(limits[0]);
 	      float upper = stof(limits[1]);
-	      if (s.mass < lower || s.mass > upper) pass = false;
+	      if (s.second.stats[ship_stats::key::mass] < lower || s.second.stats[ship_stats::key::mass] > upper) pass = false;
 	    }
 	  }
 	  if (pass) ship_classes.push_back(s.first);
