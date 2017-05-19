@@ -93,7 +93,7 @@ namespace st3{
     bool is_idle();
     void set_idle();
     void analyze_enemies(game_data *g);
-    void update_data(game_data *g);
+    void update_data(game_data *g, bool force_refresh = false);
     void remove_ship(combid i);
     bool confirm_ship_interaction(std::string a, combid t);
     suggestion suggest(combid i, game_data *g);

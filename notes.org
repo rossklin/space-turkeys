@@ -1,5 +1,12 @@
 * current work
-** after passing waypoint, fleet becomes idle
+** fleets should try to set scatter point towards owned solar
+** fleets should try not to change the scatter point
+** fleets should suggest travel instead of scatter if target direction is free
+** remake command gui to handle fleet policies
+** command selectors should update their position on each reload_data
+   Maybe they are? They jump in direction of command...
+** [J] after passing waypoint, fleet becomes idle
+** [J] make reassignment in relocate_ships pass on origin
 ** [J] idle fleet keeps moving and therefore summons ships to keep moving
 ** [J] ship speed is not checked for max
 ** [J] replace references to ship stats
@@ -15,7 +22,6 @@
 ** [J] make client choice contain fleet policy
 ** [J] update ship data with regard to accuracy/mass/evasion interaction
 ** [J] build entity_seen_by matrix in game_data for use in search_targets
-** remake command gui 
 * [!] issues
 ** [!] bugs & crashes
 *** Ships validate their action using target information that the player can't see
@@ -31,8 +37,6 @@
     client gets segfault. Perhaps the server failed to receive the
     leave game request from client 1 while it was waiting for the
     choice from client 2.
-** system
-*** need a way to handle conflicting upgrade stats e.g. mass for nano scout
 * system design ideas
 ** make angular acceleration an attribute
 ** consider letting fleet suggestion contain an angle?

@@ -33,71 +33,47 @@ namespace st3{
 
     template<>
     void specific_selector<solar>::draw(window_t &w){
-      // setup text
-      sf::Text text;
-      text.setString(to_string(ships.size()));
-      text.setFont(graphics::default_font); 
-      text.setCharacterSize(24);
-      sf::FloatRect text_dims = text.getLocalBounds();
-      text.setOrigin(point(text_dims.left + text_dims.width/2, text_dims.top + text_dims.height / 2));
-      text.setPosition(position); 
-      text.setColor(sf::Color(200,200,200));
-      text.setScale(graphics::inverse_scale(w));
-
-      sf::CircleShape sol(radius);
       // compute fill color
       sf::Color cfill;
       cfill.r = 256 * utility::sigmoid(2 * available_resource[keywords::key_metals] / 1000);
       cfill.g = 256 * utility::sigmoid(2 * available_resource[keywords::key_organics] / 1000);
       cfill.b = 256 * utility::sigmoid(2 * available_resource[keywords::key_gases] / 1000);
       cfill.a = 160;
-      sol.setPointCount(radius / graphics::inverse_scale(w).x);
-      sol.setFillColor(cfill);
-      sol.setOutlineThickness(-1);
-      sol.setOutlineColor(get_color());
-      sol.setPosition(position.x - radius, position.y - radius);
-      w.draw(sol);
-  
-      if (selected){
-	sol.setFillColor(graphics::solar_selected_fill);
-	sol.setOutlineThickness(1);
-	sol.setOutlineColor(graphics::solar_selected);
-	w.draw(sol);
-      }
+      graphics::draw_circle(w, position, radius, get_color(), cfill);
 
       if (owned){
-	sol.setRadius(vision());
-	sol.setPointCount(vision() / graphics::inverse_scale(w).x);
-	sol.setFillColor(sf::Color::Transparent);
-	sol.setOutlineThickness(-1);
-	sol.setOutlineColor(sf::Color(40, 200, 60, 100));
-	sol.setPosition(position - point(vision(), vision()));
-	w.draw(sol);
-	w.draw(text);
+	graphics::draw_circle(w, position, vision(), sf::Color(40, 200, 60, 100));
+	graphics::draw_text(w, to_string((int)(population / 100)), position, 16);
+  
+	if (selected){
+	  graphics::draw_circle(w, position, radius, graphics::solar_selected, graphics::solar_selected_fill, 1);
+
+	  // draw sector boost info on top of solar
+	  point dims(30, 20);
+	  float spacing = 5;
+	  point ul(position.x - (2.5 * dims.x + 2 * spacing), position.y - radius - spacing - dims.y);
+	  sf::FloatRect bounds(ul, dims);
+	  hm_t<string, sf::Color> cols;
+	  cols[keywords::key_research] = sf::Color::Blue;
+	  cols[keywords::key_development] = sf::Color::Green;
+	  cols[keywords::key_culture] = sf::Color::Yellow;
+	  cols[keywords::key_mining] = sf::Color::Magenta;
+	  cols[keywords::key_military] = sf::Color::Red;
+
+	  for (auto k : keywords::sector) {
+	    string v = to_string(int(100 * (compute_boost(k) - 1)));
+	    graphics::draw_framed_text(w, v, bounds, sf::Color::White, cols[k]);
+	    bounds.left += dims.x + spacing;
+	  }
+	}
 
 	if (flag) {
-	  // can build flag
-	  text.setString("*");
-	  text.setFont(graphics::default_font); 
-	  text.setCharacterSize(14);
-	  text_dims = text.getLocalBounds();
-	  text.setOrigin(point(text_dims.left + text_dims.width/2, text_dims.top + text_dims.height / 2));
-	  text.setPosition(position + point(radius, -radius)); 
-	  text.setColor(sf::Color(200,200,200));
-	  text.setScale(graphics::inverse_scale(w));
-	  w.draw(text);
+	  graphics::draw_text(w, "*", position + point(radius, -radius), 14);
 	}
       }
 
       // draw defense indicator
-      float defrad = radius + 4; 
-      sol.setRadius(defrad);
-      sol.setPointCount(defrad / graphics::inverse_scale(w).x);
-      sol.setOutlineThickness(utility::sigmoid(compute_shield_power(), 100) / 20);
-      sol.setOutlineColor(sf::Color(100, 140, 200, 150));
-      sol.setFillColor(sf::Color::Transparent);
-      sol.setPosition(position - point(defrad, defrad));
-      w.draw(sol);
+      graphics::draw_circle(w, position, radius + 4, sf::Color(100, 140, 200, 150), sf::Color::Transparent, compute_shield_power());
     }
 
     template<>

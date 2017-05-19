@@ -131,6 +131,7 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner){
   if (reassign){
     cout << "relocate: reassign" << endl;
     c.source = f -> com.source;
+    c.origin = f -> com.origin;
     f -> com = c;
   }else{
     f = fleet::create(fleet::server_pid);
@@ -162,7 +163,7 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner){
     add_entity(f);
   }
 
-  f -> update_data(this);
+  f -> update_data(this, true);
   cout << "relocate ships: added fleet " << f -> id << endl;
 }
 
@@ -186,7 +187,7 @@ void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &
   
   distribute_ships(sh, f -> position);
   add_entity(f);
-  f -> update_data(this);
+  f -> update_data(this, true);
 }
 
 void game_data::apply_choice(choice::choice c, idtype id){
@@ -221,8 +222,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
       }
     }
 
-    f -> update_counter = 0;
-    f -> update_data(this);
+    f -> update_data(this, true);
 
     cout << "apply_choice: player " << id << ": added " << x.first << endl;
   }

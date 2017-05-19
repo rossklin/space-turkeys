@@ -46,6 +46,10 @@ namespace st3{
 
     /*! initialize static graphics i.e. default font */
     void initialize();
+    void draw_text(window_t &w, std::string v, point p, int fs, bool ul = false);
+    void draw_framed_text(window_t &w, std::string v, sf::FloatRect r, sf::Color co, sf::Color cf = sf::Color::Transparent);
+
+    void draw_circle(window_t &w, point p, float r, sf::Color co, sf::Color cf = sf::Color::Transparent, float b = -1);
 
     /*! draw a ship to a window 
       @param w window

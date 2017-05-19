@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <string>
 
 #include "graphics.h"
 #include "types.h"
@@ -27,6 +28,48 @@ void graphics::initialize(){
   if (!default_font.loadFromFile("fonts/AjarSans-Regular.ttf")){
     throw runtime_error("error loading font");
   }
+}
+
+void graphics::draw_circle(window_t &w, point p, float r, sf::Color co, sf::Color cf, float b) {
+  sf::CircleShape sol(r);
+  float inv = inverse_scale(w).x;
+  sol.setPointCount(r / inv);
+  sol.setFillColor(cf);
+  sol.setOutlineThickness(b);
+  sol.setOutlineColor(co);
+  sol.setPosition(p.x - r, p.y - r);
+  w.draw(sol);
+};
+
+void graphics::draw_text(window_t &w, string v, point p, int fs, bool ul) {
+  point inv = graphics::inverse_scale(w);
+  sf::Text text;
+  text.setString(v);
+  text.setFont(graphics::default_font); 
+  text.setCharacterSize(fs);
+  sf::FloatRect text_dims = text.getLocalBounds();
+  if (ul) {
+    text.setOrigin(point(text_dims.left, text_dims.top));
+  }else{
+    text.setOrigin(point(text_dims.left + text_dims.width/2, text_dims.top + text_dims.height / 2));
+  }
+  text.setPosition(p); 
+  text.setColor(sf::Color(200,200,200));
+  text.setScale(inv);
+  w.draw(text);
+};
+
+void graphics::draw_framed_text(window_t &w, string v, sf::FloatRect bounds, sf::Color co, sf::Color cf) {
+  int margin = ceil(bounds.height / 10);
+  sf::RectangleShape r = graphics::build_rect(bounds);
+  r.setOutlineColor(co);
+  r.setFillColor(cf);
+  r.setOutlineThickness(-margin);
+  w.draw(r);
+
+  int fs = bounds.height - 2 * margin;
+  point p(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
+  draw_text(w, v, p, fs);
 }
 
 void graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){

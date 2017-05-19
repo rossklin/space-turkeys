@@ -163,7 +163,7 @@ void fleet::analyze_enemies(game_data *g) {
 
   if (t.empty()) return;
 
-  for (int i = 0; i < n; i++) x[i] = utility::random_point_polar(position, r);
+  for (int i = 0; i < n; i++) x[i] = g -> get_entity(utility::uniform_sample(t)) -> position;
 
   // identify cluster points
   for (int i = 0; i < rep; i++) {
@@ -202,7 +202,7 @@ void fleet::analyze_enemies(game_data *g) {
     float strength_value = s -> stats[sskey::key::mass] * s -> stats[sskey::key::ship_damage];
 
     // scatter value
-    int scatter_angle = min((int)(utility::point_angle(s -> position - position) * 10 / (2 * M_PI)), 9);
+    int scatter_angle = max(min((int)((utility::point_angle(s -> position - position) + M_PI) * 10 / (2 * M_PI)), 9), 0);
     scatter_data[scatter_angle] += strength_value;
 
     // cluster assignment
@@ -238,10 +238,10 @@ void fleet::analyze_enemies(game_data *g) {
   stats.scatter_target = position + utility::scale_point(utility::normv(angle), 100);
 }
 
-void fleet::update_data(game_data *g){
+void fleet::update_data(game_data *g, bool force_refresh){
 
   // need to update fleet data?
-  if (((update_counter++) % fleet::update_period)) return;
+  if (((update_counter++) % fleet::update_period) && !force_refresh) return;
   float speed = INFINITY;
   int count;
 
