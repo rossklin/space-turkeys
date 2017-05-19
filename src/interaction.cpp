@@ -54,15 +54,13 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     ship::ptr t = utility::guaranteed_cast<ship>(target);
       
-    if (s -> load < s -> load_time) return;
+    if (s -> load < s -> stats[sskey::key::load_time]) return;
 
     cout << "space_combat: loaded" << endl;
     s -> load = 0;
-    float a = utility::point_angle(t -> position - s -> position);
-    a = utility::angle_difference(a, 0);
-    if (s -> accuracy_check(a, t)) {
+    if (t -> evasion_check() < s -> accuracy_check(t)) {
       cout << "space_combat: hit!" << endl;
-      t -> receive_damage(self, utility::random_uniform(0, s -> ship_damage));
+      t -> receive_damage(self, utility::random_uniform(0, s -> stats[sskey::key::ship_damage]));
     }else{
       cout << "space_combat: miss!" << endl;
     }
@@ -89,7 +87,7 @@ const hm_t<string, interaction> &interaction::table() {
       if (t.damage > 0 && t.load >= 1 && d <= t.range){
 	t.load = 0;
 	
-	if (utility::random_uniform() < t.accuracy){
+	if (x -> evasion_check() < t.accuracy_check(x)){
 	  x -> receive_damage(s, utility::random_uniform(0, t.damage));
 	}
       }
@@ -104,12 +102,12 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
 
-    if (s -> load < s -> load_time) return;
+    if (s -> load < s -> stats[sskey::key::load_time]) return;
 
     // deal damage
     s -> load = 0;
-    if (utility::random_uniform() < s -> accuracy){
-      t -> receive_damage(s, utility::random_uniform(0, s -> solar_damage), g);
+    if (utility::random_uniform() < s -> stats[sskey::key::accuracy]){
+      t -> receive_damage(s, utility::random_uniform(0, s -> stats[sskey::key::solar_damage]), g);
     }
   };
   data[i.name] = i;
@@ -181,7 +179,7 @@ const hm_t<string, interaction> &interaction::table() {
     // todo: resource common capactiy
     for (auto v : keywords::resource) {
       float available = t -> resource_storage[v];
-      float cap = s -> cargo_capacity - s -> cargo[v];
+      float cap = s -> stats[sskey::key::cargo_capacity] - s -> cargo[v];
       float move = fmin(available, cap);
       s -> cargo[v] += move;
       t -> resource_storage[v] -= move;
@@ -202,7 +200,7 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
 
-    if (s -> load < s -> load_time) return;
+    if (s -> load < s -> stats[sskey::key::load_time]) return;
     s -> load = 0;
 
     t -> water = 1000;

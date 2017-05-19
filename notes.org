@@ -1,16 +1,21 @@
 * current work
-** replace references to ship stats
-** implement use of mass stat for detection, accuracy and graphics scale
-** implement use of evasion stat to counter accuracy
-** implement remaining ship_stats functions
-** remove physical_object::interact, call interactions in move phase
-** make solar call interactions in move phase
-** make fleet analytics use ship size to determine enemy strength
-** make fleet::suggest use enemy strength factor
-** implement ship::move using fleet::suggest
-** consider letting fleet suggestion contain an angle?
-** update ship data with regard to accuracy/mass/evasion interaction
-** make angular acceleration an attribute
+** after passing waypoint, fleet becomes idle
+** [J] idle fleet keeps moving and therefore summons ships to keep moving
+** [J] ship speed is not checked for max
+** [J] replace references to ship stats
+** [J] implement use of mass stat for detection, accuracy and graphics scale
+** [J] implement use of evasion stat to counter accuracy
+** [J] implement remaining ship_stats functions
+** [J] remove physical_object::interact, call interactions in move phase
+** [J] make solar call interactions in move phase
+** [J] make fleet analytics use ship size to determine enemy strength
+** [J] make fleet::suggest use enemy strength factor
+** [J] implement ship::move using fleet::suggest
+** [J] make fleet generate scatter_target
+** [J] make client choice contain fleet policy
+** [J] update ship data with regard to accuracy/mass/evasion interaction
+** [J] build entity_seen_by matrix in game_data for use in search_targets
+** remake command gui 
 * [!] issues
 ** [!] bugs & crashes
 *** Ships validate their action using target information that the player can't see
@@ -29,6 +34,8 @@
 ** system
 *** need a way to handle conflicting upgrade stats e.g. mass for nano scout
 * system design ideas
+** make angular acceleration an attribute
+** consider letting fleet suggestion contain an angle?
 ** add a list of animations to send to client rather than add explosion on ship removal
 ** add a battle-log to send to client
 ** add terrain

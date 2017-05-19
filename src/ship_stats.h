@@ -20,13 +20,16 @@ namespace st3{
     void combine(const ship_stats_modifier &b);
   };
 
-  template<typename T>
-  class modifiable_ship_stats {
-  public:
+  namespace sskey {
     enum key {
       speed, hp, mass, accuracy, evasion, ship_damage, solar_damage, interaction_radius, vision_range, load_time, cargo_capacity, depends_facility_level, build_time, regeneration, shield, detection, stealth, count
     };
-    static key lookup_key(std::string name);
+  };
+
+  template<typename T>
+  class modifiable_ship_stats {
+  public:
+    static sskey::key lookup_key(std::string name);
 
     std::vector<T> stats;
 

@@ -50,12 +50,19 @@ void solar::move(game_data *g){
       }
     }
   }
-}
 
-list<combid> solar::confirm_interaction(string a, list<combid> t, game_data *g) {
-  list<combid> result;
-  if (!t.empty()) result.push_back(utility::uniform_sample(t));
-  return result;
+  // check for turret combat interaction
+  target_condition cond(target_condition::enemy, ship::class_id);
+  list<combid> buf = g -> search_targets(id, position, interaction_radius(), cond.owned_by(owner));
+
+  if (!buf.empty()) {
+    combid t = utility::uniform_sample(buf);
+    interaction_info info;
+    info.source = id;
+    info.target = t;
+    info.interaction = interaction::turret_combat;
+    g -> interaction_buffer.push_back(info);
+  }
 }
 
 set<string> solar::compile_interactions(){
@@ -328,7 +335,8 @@ bool solar::can_see(game_object::ptr x) {
 
   if (x -> isa(ship::class_id)) {
     ship::ptr s = utility::guaranteed_cast<ship>(x);
-    r = vision() / (s -> stealth + 1);
+    float area = pow(s -> stats[sskey::key::mass], 2 / (float)3);
+    r = area * vision() / (s -> stats[sskey::key::stealth] + 1);
   }
   
   float d = utility::l2norm(x -> position - position);
@@ -454,6 +462,10 @@ turret_t::turret_t(){
   damage = 0;
   accuracy = 0;
   load = 0;
+}
+
+float turret_t::accuracy_check(ship::ptr t) {
+  return utility::random_uniform(0, accuracy);
 }
 
 list<string> solar::list_facility_requirements(string v, const research::data &r_level) {

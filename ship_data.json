@@ -7,7 +7,6 @@
 	    "ship damage" : 0.1,
 	    "accuracy" : 0.3,
 	    "upgrades" : ["space combat"],
-	    "mass" : 1,
 	    "cost" : {
 		"metals" : 1,
 		"gases" : 1,
@@ -19,24 +18,25 @@
 		{"x" : -2, "y" : 1, "c" : "p"},
 		{"x" : 2, "y" : 0, "c" : "p"}
 	    ],
-	    "tags" : ["scout"]
+	    "tags" : ["scout", "spacecombat"]
 	},
 
 	"fighter" : {
-	    "hp" : 2,
+	    "hp" : 4,
 	    "mass" : 3,
 	    "ship damage" : 1,
 	    "solar damage" : 0.1,
-	    "accuracy" : 0.7,
-	    "interaction radius" : 40,
+	    "accuracy" : 2,
+	    "evasion" : 2,
+	    "interaction radius" : 30,
 	    "load time" : 20,
 	    "upgrades" : ["space combat", "bombard"],
 	    "depends facility level" : 1,
 	    "depends tech" : "warp technology",
 	    "cost" : {
-		"metals" : 2,
-		"gases" : 1,
-		"time" : 80
+		"metals" : 8,
+		"gases" : 5,
+		"time" : 120
 	    },
 	    "shape" : [
 		{"x" : 2, "y" : 0, "c" : "n"},
@@ -45,11 +45,11 @@
 		{"x" : -2, "y" : 1, "c" : "p"},
 		{"x" : 2, "y" : 0, "c" : "n"}
 	    ],
-	    "tags" : ["combat"]
+	    "tags" : ["combat", "spacecombat", "bombard"]
 	},
 
 	"bomber" : {
-	    "hp" : 3,
+	    "hp" : 8,
 	    "mass" : 10,
 	    "solar damage" : 5,
 	    "accuracy" : 0.8,
@@ -57,9 +57,9 @@
 	    "depends facility level" : 2,
 	    "depends tech" : "warp plasma",
 	    "cost" : {
-		"metals" : 4,
-		"gases" : 3,
-		"time" : 160
+		"metals" : 16,
+		"gases" : 10,
+		"time" : 180
 	    },
 	    "shape" : [
 		{"x" : 2, "y" : 0, "c" : "p"},
@@ -70,19 +70,79 @@
 		{"x" : 0, "y" : 3, "c" : "n"},
 		{"x" : 2, "y" : 0, "c" : "p"}
 	    ],
-	    "tags" : ["combat"]
+	    "tags" : ["bombard"]
+	},
+	
+	"battleship" : {
+	    "hp" : 60,
+	    "mass" : 60,
+	    "speed" : 2,
+	    "solar damage" : 3,
+	    "ship damage" : 3,
+	    "accuracy" : 5,
+	    "evasion" : 2,
+	    "shield" : 2,
+	    "vision range" : 70,
+	    "upgrades" : ["space combat", "bombard"],
+	    "depends facility level" : 5,
+	    "depends tech" : "nano shields",
+	    "cost" : {
+		"metals" : 100,
+		"gases" : 100,
+		"organics" : 20,
+		"time" : 1000
+	    },
+	    "shape" : [
+		{"x" : 2, "y" : 0, "c" : "p"},
+		{"x" : -2, "y" : -1, "c" : "n"},
+		{"x" : -3, "y" : 0, "c" : "p"},
+		{"x" : -2, "y" : 1, "c" : "n"},
+		{"x" : 2, "y" : 0, "c" : "p"}
+	    ],
+	    "tags" : ["bombard", "combat", "spacecombat"]
+	},
+	
+	"voyager" : {
+	    "hp" : 30,
+	    "mass" : 30,
+	    "speed" : 5,
+	    "solar damage" : 2,
+	    "ship damage" : 2,
+	    "accuracy" : 10,
+	    "evasion" : 10,
+	    "shield" : 0,
+	    "vision range" : 100,
+	    "upgrades" : ["space combat", "bombard"],
+	    "depends facility level" : 5,
+	    "depends tech" : "subspace technology",
+	    "cost" : {
+		"metals" : 70,
+		"gases" : 70,
+		"organics" : 50,
+		"time" : 700
+	    },
+	    "shape" : [
+		{"x" : 2, "y" : 0, "c" : "p"},
+		{"x" : 0, "y" : -3, "c" : "p"},
+		{"x" : -2, "y" : -3, "c" : "n"},
+		{"x" : 1, "y" : 0, "c" : "p"},
+		{"x" : -2, "y" : 3, "c" : "n"},
+		{"x" : 0, "y" : 3, "c" : "p"},
+		{"x" : 2, "y" : 0, "c" : "p"}
+	    ],
+	    "tags" : ["bombard", "combat", "spacecombat"]
 	},
 
 	"colonizer" : {
 	    "speed" : 0.3,
-	    "hp" : 10,
+	    "hp" : 20,
 	    "mass" : 30,
 	    "upgrades" : ["colonize"],
 	    "depends facility level" : 1,
 	    "cost" : {
-		"metals" : 4,
-		"gases" : 2,
-		"organics" : 3,
+		"metals" : 15,
+		"gases" : 10,
+		"organics" : 20,
 		"time" : 240
 	    },
 	    "shape" : [
@@ -96,15 +156,15 @@
 
 	"freighter" : {
 	    "speed" : 0.5,
-	    "hp" : 5,
+	    "hp" : 20,
 	    "mass" : 30,
 	    "upgrades" : ["trade"],
 	    "depends facility level" : 1,
 	    "cargo capacity" : 10,
 	    "cost" : {
-		"metals" : 4,
-		"gases" : 3,
-		"organics" : 2,
+		"metals" : 20,
+		"gases" : 10,
+		"organics" : 10,
 		"time" : 240
 	    },
 	    "shape" : [

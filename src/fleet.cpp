@@ -51,7 +51,7 @@ void fleet::pre_phase(game_data *g){
 
 void fleet::move(game_data *g){
   // linear extrapolation of position estimate
-  position += stats.speed_limit * utility::normv(utility::point_angle(stats.target_position - position));
+  if (!is_idle()) position += stats.speed_limit * utility::normv(utility::point_angle(stats.target_position - position));
 }
 
 void fleet::post_phase(game_data *g){}
@@ -113,7 +113,7 @@ void fleet::give_commands(list<command> c, game_data *g){
 fleet::suggestion fleet::suggest(combid sid, game_data *g) {
   ship::ptr s = g -> get_ship(sid);
   float pref_density = 0.2;
-  float pref_maxrad = sqrt(ships.size() / (M_PI * pref_density));
+  float pref_maxrad = fmax(sqrt(ships.size() / (M_PI * pref_density)), 10);
   
   if (stats.enemies.size()) {
     if (com.policy & policy_maintain_course) {
@@ -121,11 +121,13 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
     }else if (com.policy & policy_evasive) {
       return suggestion(suggestion::scatter, stats.scatter_target);
     }else{    
-      if (s -> tags.count("combat")) {
+      if (s -> tags.count("spacecombat")) {
 	if (com.policy & policy_aggressive) {
 	  return suggestion(suggestion::engage, stats.enemies.front().first);
-	}else{
+	} else if (com.policy & policy_reasonable && stats.enemies.front().second < 1){
 	  return suggestion(suggestion::engage, s -> position);
+	} else {
+	  return suggestion(suggestion::scatter, stats.scatter_target);
 	}
       }else{
 	return suggestion(suggestion::scatter, stats.scatter_target);
@@ -193,9 +195,17 @@ void fleet::analyze_enemies(game_data *g) {
   if (x.size() == n) throw runtime_error("Analyze enemies: clusters failed to form!");
 
   // assign ships to clusters
-  hm_t<int, int> cc;
+  hm_t<int, float> cc;
+  vector<float> scatter_data(10, 0);
   for (auto sid : t) {
     ship::ptr s = g -> get_ship(sid);
+    float strength_value = s -> stats[sskey::key::mass] * s -> stats[sskey::key::ship_damage];
+
+    // scatter value
+    int scatter_angle = min((int)(utility::point_angle(s -> position - position) * 10 / (2 * M_PI)), 9);
+    scatter_data[scatter_angle] += strength_value;
+
+    // cluster assignment
     float closest = INFINITY;
     int idx = -1;
     for (int i = 0; i < x.size(); i++) {
@@ -206,12 +216,26 @@ void fleet::analyze_enemies(game_data *g) {
       }
     }
     if (idx < 0) throw runtime_error("Analyze enemies: failed to assign ship!");
-    cc[idx]++;
+    cc[idx] += strength_value;
   }
 
   // build enemy fleet stats
-  for (auto i : cc) stats.enemies.push_back(make_pair(x[i.first], ships.size() / (float)i.second));
+  for (auto i : cc) stats.enemies.push_back(make_pair(x[i.first], i.second / stats.self_strength));
   stats.enemies.sort([](pair<point, float> a, pair<point, float> b) {return a.second > b.second;});
+
+  // find best scatter direction
+  float best = INFINITY;
+  float angle = -1;
+  for (int i = 0; i < scatter_data.size(); i++) {
+    float v = scatter_data[i];
+    if (v < best) {
+      best = v;
+      angle = (i + (float)0.5) * 2 * M_PI / scatter_data.size();
+    }
+  }
+
+  if (angle < 0) throw runtime_error("Invalid scatter angle!");
+  stats.scatter_target = position + utility::scale_point(utility::normv(angle), 100);
 }
 
 void fleet::update_data(game_data *g){
@@ -234,11 +258,13 @@ void fleet::update_data(game_data *g){
   radius = g -> settings.fleet_default_radius;
   position = utility::scale_point(p, 1 / (float)ships.size());
 
+  stats.self_strength = 0;
   for (auto k : ships){
     ship::ptr s = g -> get_ship(k);
-    speed = fmin(speed, s -> base_stats.stats[ship_stats::key::speed]);
+    speed = fmin(speed, s -> base_stats.stats[sskey::key::speed]);
     r2 = fmax(r2, utility::l2d2(s -> position - position));
     stats.vision_buf = fmax(stats.vision_buf, s -> vision());
+    stats.self_strength += s -> stats[sskey::key::mass] * s -> stats[sskey::key::ship_damage];
   }
   
   stats.spread_radius = fmax(sqrt(r2), fleet::min_radius);
@@ -279,11 +305,12 @@ void fleet::check_waypoint(game_data *g){
 void fleet::check_in_sight(game_data *g){
   if (com.target == identifier::target_idle) return;
 
-  bool seen = g -> entity_seen_by(com.target, owner);
+  bool seen = g -> evm[owner].count(com.target);
   bool solar = identifier::get_type(com.target) == solar::class_id;
+  bool owned = g -> entity.count(com.target) && g -> get_entity(com.target) -> owner == owner;
 
   // target left sight?
-  if (!(seen || solar)){
+  if (!(seen || solar || owned)){
     cout << "fleet " << id << " looses sight of " << com.target << endl;
 
     // creating a waypoint here causes id collision with waypoints

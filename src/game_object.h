@@ -67,12 +67,10 @@ namespace st3{
     physical_object();
     ~physical_object();
 
-    virtual std::list<combid> confirm_interaction(std::string a, std::list<combid> t, game_data *g) = 0;
     virtual std::set<std::string> compile_interactions() = 0;
     virtual float interaction_radius() = 0;
     virtual bool can_see(game_object::ptr x) = 0;
 
-    void interact(game_data *g);
     bool is_physical();
     ptr clone();
     

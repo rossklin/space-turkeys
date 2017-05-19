@@ -637,6 +637,13 @@ void game::reload_data(data_frame &g){
 
   // update research level ref for solars
   for (auto s : get_all<solar>()) s -> research_level = &players[s -> owner].research_level;
+
+  // fix fleet positions
+  for (auto f : get_all<fleet>()) {
+    point p(0,0);
+    for (auto sid : f -> get_ships()) p += get_entity(sid) -> position;
+    f -> position = utility::scale_point(p, 1 / (float)f -> get_ships().size());
+  }
 }
 
 // ****************************************

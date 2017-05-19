@@ -65,6 +65,7 @@ void server::game_handler(com &c, game_data &g){
 
   auto pack_g = [&g, &c, &packets] () {
     entity_package ep;
+    g.rebuild_evm();
     ep.copy_from(g);
   
     // load_init, expects: only query

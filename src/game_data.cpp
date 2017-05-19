@@ -83,10 +83,11 @@ bool game_data::target_position(combid t, point &p){
 // TODO: match against player vision matrix
 list<combid> game_data::search_targets_nophys(combid self_id, point p, float r, target_condition c){
   list<combid> res;
+  game_object::ptr self = get_entity(self_id);
     
   for (auto i : entity_grid -> search(p, r)){
     auto e = get_entity(i.first);
-    if (e -> is_active() && e -> id != self_id && c.valid_on(e)) res.push_back(e -> id);
+    if (evm[self-> owner].count(i.first) && e -> id != self_id && c.valid_on(e)) res.push_back(e -> id);
   }
 
   return res;
@@ -333,18 +334,18 @@ void game_data::collide_ships(id_pair x) {
   ship::ptr t = get_ship(x.b);
 
   point delta = s -> position - t -> position;
-  float smaller_mass = fmin(t -> stats[ship_stats::key::mass], s -> stats[ship_stats::key::mass]);
-  point velocity_self(t -> stats[ship_stats::key::speed] * cos(t -> angle), t -> stats[ship_stats::key::speed] * sin(t -> angle));
-  point velocity_other(s -> stats[ship_stats::key::speed] * cos(s -> angle), s -> stats[ship_stats::key::speed] * sin(s -> angle));
+  float smaller_mass = fmin(t -> stats[sskey::key::mass], s -> stats[sskey::key::mass]);
+  point velocity_self(t -> stats[sskey::key::speed] * cos(t -> angle), t -> stats[sskey::key::speed] * sin(t -> angle));
+  point velocity_other(s -> stats[sskey::key::speed] * cos(s -> angle), s -> stats[sskey::key::speed] * sin(s -> angle));
   float collision_energy = 0.5 * smaller_mass * utility::l2d2(velocity_other - velocity_self);
-  float mass_ratio = t -> stats[ship_stats::key::mass] / s -> stats[ship_stats::key::mass];
+  float mass_ratio = t -> stats[sskey::key::mass] / s -> stats[sskey::key::mass];
   point new_velocity = utility::scale_point(velocity_self, mass_ratio) + utility::scale_point(velocity_other, 1/mass_ratio);
   float new_angle = utility::point_angle(new_velocity);
   float new_speed = utility::l2norm(new_velocity);
 
   // merge speed and angle
-  t -> stats[ship_stats::key::speed] = new_speed;
-  s -> stats[ship_stats::key::speed] = new_speed;
+  t -> stats[sskey::key::speed] = new_speed;
+  s -> stats[sskey::key::speed] = new_speed;
   t -> angle = new_angle;
   s -> angle = new_angle;
 
@@ -357,14 +358,36 @@ void game_data::collide_ships(id_pair x) {
   t -> receive_damage(s, utility::random_uniform(0, collision_energy));
 }
 
+void game_data::rebuild_evm() {
+  evm.clear();
+
+  // rebuild vision matrix
+  for (auto x : entity) {
+    if (x.second -> is_active()){
+      // entity sees itself
+      evm[x.second -> owner].insert(x.first);
+
+      // only physical entities can see others
+      if (x.second -> isa(physical_object::class_id)) {
+	physical_object::ptr e = utility::guaranteed_cast<physical_object>(x.second);
+	for (auto i : entity_grid -> search(e -> position, e -> vision())){
+	  game_object::ptr t = get_entity(i.first);
+	  // only see other players' entities if they are physical and active
+	  if (t -> isa(physical_object::class_id) && t -> is_active() && e -> can_see(t)) evm[e -> owner].insert(t -> id);
+	}
+      }
+    }
+  }
+}
+
 void game_data::increment(){
   remove_entities.clear();
   interaction_buffer.clear();
+  rebuild_evm();
 
   // update entities and compile interactions
   for (auto x : entity) if (x.second -> is_active()) x.second -> pre_phase(this);
   for (auto x : entity) if (x.second -> is_active()) x.second -> move(this);
-  for (auto x : all<physical_object>()) if (x -> is_active()) x -> interact(this);
 
   // perform interactions
   random_shuffle(interaction_buffer.begin(), interaction_buffer.end());
@@ -538,35 +561,11 @@ list<game_object::ptr> entity_package::all_owned_by(idtype id){
   return res;
 }
 
-bool entity_package::entity_seen_by(combid id, idtype pid){
-  if (!entity.count(id)) return false;
-  game_object::ptr x = get_entity(id);
-
-  // always see owned entities
-  if (x -> owner == pid) return true;
-
-  // never see opponent waypoints or fleets
-  if (x -> isa(waypoint::class_id) || x -> isa(fleet::class_id)) return false;
-
-  // don't see entities that aren't active
-  if (!x -> is_active()) return false;
-
-  for (auto s : all_owned_by(pid)) {
-    if (!s -> is_active()) continue;
-    if (s -> isa(physical_object::class_id)) {
-      physical_object::ptr obj = utility::guaranteed_cast<physical_object>(s);
-      if (obj -> can_see(x)) return true;
-    }
-  }
-
-  return false;
-}
-
 // limit_to without deallocating
 void entity_package::limit_to(idtype id){
   list<combid> remove_buf;
   for (auto i : entity) {
-    if (!entity_seen_by(i.first, id)) remove_buf.push_back(i.first);
+    if (!(i.second -> owner == id || evm[id].count(i.first))) remove_buf.push_back(i.first);
   }
   for (auto i : remove_buf) entity.erase(i);
 }
@@ -578,6 +577,7 @@ void entity_package::copy_from(const game_data &g){
   players = g.players;
   settings = g.settings;
   remove_entities = g.remove_entities;
+  evm = g.evm;
 }
 
 void entity_package::clear_entities(){

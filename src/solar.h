@@ -26,6 +26,7 @@ namespace st3{
     sfloat load;
 
     turret_t();
+    float accuracy_check(ship::ptr t);
   };
 
   class facility : public virtual development::node{
@@ -94,7 +95,6 @@ namespace st3{
     bool isa(std::string c);
 
     // physical_object
-    std::list<combid> confirm_interaction(std::string a, std::list<combid> t, game_data *g);
     std::set<std::string> compile_interactions();
     float interaction_radius();
     bool can_see(game_object::ptr x);

@@ -33,7 +33,7 @@
 	    "build time" : 400,
 	    "depends facilities" : {"research facility" : 3},
 	    "depends technologies" : ["AI"],
-	    "ship upgrades" : {"#combat" : ["targeting systems"]}
+	    "ship upgrades" : {"#spacecombat" : ["targeting systems"]}
 	},
 
 	"cyborgs" : {
@@ -102,7 +102,7 @@
 		"shipyard" : 4
 	    },
 	    "depends technologies" : ["nano technology"],
-	    "ship upgrades" : {"#combat" : ["nano torpedos"]}
+	    "ship upgrades" : {"#spacecombat" : ["nano torpedos"]}
 	},
 
 	"nano shields" : {
@@ -128,7 +128,7 @@
 		"research facility" : 7
 	    },
 	    "depends technologies" : ["warp technology"],
-	    "ship upgrades" : {"#combat" : ["plasma laser"]}
+	    "ship upgrades" : {"#spacecombat" : ["plasma laser"]}
 	},
 
 	"hive fleet" : {

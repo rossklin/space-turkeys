@@ -162,6 +162,10 @@ namespace st3{
 
     float signum(float x, float eps = 0);
 
+    float mass2area(float m);
+
+    float safe_inv(float x);
+
     /* **************************************** */
     /* VECTOR MATHS */
     /* **************************************** */

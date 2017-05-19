@@ -237,7 +237,7 @@ void utility::normalize_vector(vector<float> &x){
   for (auto y : x) sum += y;
 
   if (sum){
-    sum = abs(sum);
+    sum = fabs(sum);
     for (auto &y : x) y /= sum;
   }else{
     for (auto &y : x) y = 0;
@@ -351,6 +351,14 @@ string utility::format_float(float x){
   stringstream stream;
   stream << fixed << setprecision(2) << x;
   return stream.str();
+}
+
+float utility::mass2area(float m) {
+  return pow(m, 2/(float)3);
+}
+
+float utility::safe_inv(float x) {
+  return x ? 1/x : INFINITY;
 }
 
 // output vector x to stream ss

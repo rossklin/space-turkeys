@@ -32,11 +32,11 @@ namespace st3{
     game_settings settings; /*! game settings */
     hm_t<combid, game_object::ptr> entity;
     std::list<combid> remove_entities; 
+    hm_t<idtype, std::set<combid> > evm;
 
     void clear_entities();
     game_object::ptr get_entity(combid i);
     void limit_to(idtype pid);
-    bool entity_seen_by(combid id, idtype pid);
     void copy_from(const game_data &g);
     std::list<game_object::ptr> all_owned_by(idtype pid);
   };
@@ -60,6 +60,7 @@ namespace st3{
     bool target_position(combid t, point &p);
     std::list<combid> search_targets(combid self_id, point p, float r, target_condition c);
     std::list<combid> search_targets_nophys(combid self_id, point p, float r, target_condition c);
+    void rebuild_evm();
 
     // access
     ship::ptr get_ship(combid i);

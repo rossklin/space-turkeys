@@ -42,6 +42,7 @@ namespace st3{
 
     struct analytics {
       std::list<std::pair<point, float> > enemies;
+      float self_strength;
       sbool converge;
       sfloat vision_buf;
       float speed_limit;

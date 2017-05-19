@@ -27,7 +27,7 @@ void ship_stats_modifier::parse(std::string v) {
 // base class
 template<typename T>
 modifiable_ship_stats<T>::modifiable_ship_stats() {
-  stats.resize(key::count);
+  stats.resize(sskey::key::count);
 }
 
 template<typename T>
@@ -36,40 +36,40 @@ modifiable_ship_stats<T>::modifiable_ship_stats(const modifiable_ship_stats &s) 
 }
 
 template<typename T>
-typename modifiable_ship_stats<T>::key modifiable_ship_stats<T>::lookup_key(string name) {
-  static hm_t<string, key> map;
+typename sskey::key modifiable_ship_stats<T>::lookup_key(string name) {
+  static hm_t<string, sskey::key> map;
   static bool init = false;
 
   if (!init) {
-    map["speed"] = key::speed;
-    map["hp"] = key::hp;
-    map["mass"] = key::mass;
-    map["accuracy"] = key::accuracy;
-    map["evasion"] = key::evasion;
-    map["ship damage"] = key::ship_damage;
-    map["solar damage"] = key::solar_damage;
-    map["interaction radius"] = key::interaction_radius;
-    map["vision range"] = key::vision_range;
-    map["load time"] = key::load_time;
-    map["cargo capacity"] = key::cargo_capacity;
-    map["depends facility level"] = key::depends_facility_level;
-    map["build time"] = key::build_time;
-    map["regeneration"] = key::regeneration;
-    map["shield"] = key::shield;
-    map["detection"] = key::detection;
-    map["stealth"] = key::stealth;
+    map["speed"] = sskey::key::speed;
+    map["hp"] = sskey::key::hp;
+    map["mass"] = sskey::key::mass;
+    map["accuracy"] = sskey::key::accuracy;
+    map["evasion"] = sskey::key::evasion;
+    map["ship damage"] = sskey::key::ship_damage;
+    map["solar damage"] = sskey::key::solar_damage;
+    map["interaction radius"] = sskey::key::interaction_radius;
+    map["vision range"] = sskey::key::vision_range;
+    map["load time"] = sskey::key::load_time;
+    map["cargo capacity"] = sskey::key::cargo_capacity;
+    map["depends facility level"] = sskey::key::depends_facility_level;
+    map["build time"] = sskey::key::build_time;
+    map["regeneration"] = sskey::key::regeneration;
+    map["shield"] = sskey::key::shield;
+    map["detection"] = sskey::key::detection;
+    map["stealth"] = sskey::key::stealth;
   }
 
   if (map.count(name)) {
     return map[name];
   }else{
-    return key::count;
+    return sskey::key::count;
   }
 }
 
 // stats modifier
 void ssmod_t::combine(const ssmod_t &b) {
-  for (int i = 0; i < key::count; i++) {
+  for (int i = 0; i < sskey::key::count; i++) {
     stats[i].combine(b.stats[i]);
   }
 }
@@ -78,8 +78,8 @@ ssmod_t::ssmod_t() : modifiable_ship_stats<ship_stats_modifier>(){}
 ssmod_t::ssmod_t(const ssmod_t &s) : modifiable_ship_stats<ship_stats_modifier>(s) {}
 
 bool ssmod_t::parse(string name, string value) {
-  key k = lookup_key(name);
-  if (k == key::count) {
+  sskey::key k = lookup_key(name);
+  if (k == sskey::key::count) {
     return false;
   }else{
     stats[k].parse(value);
@@ -94,8 +94,8 @@ ssfloat_t::ssfloat_t() : modifiable_ship_stats<sfloat>(){
 ssfloat_t::ssfloat_t(const ssfloat_t &s) : modifiable_ship_stats<sfloat>(s) {}
 
 bool ssfloat_t::insert(string name, float value) {
-  key k = lookup_key(name);
-  if (k == key::count) {
+  sskey::key k = lookup_key(name);
+  if (k == sskey::key::count) {
     return false;
   }else{
     stats[k] = value;
@@ -121,7 +121,7 @@ ship_stats::ship_stats(const ship_stats &s) : ssfloat_t(s) {
 }
 
 void ship_stats::modify_with(const ssmod_t &b) {
-  for (int i = 0; i < key::count; i++) {
+  for (int i = 0; i < sskey::key::count; i++) {
     stats[i] = b.stats[i].apply(stats[i]);
   }
 }

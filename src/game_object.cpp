@@ -69,21 +69,3 @@ bool physical_object::is_physical() {
 physical_object::ptr physical_object::clone(){
   return dynamic_cast<physical_object::ptr>(clone_impl());
 }
-
-void physical_object::interact(game_data *g) {
-  // check ship interactions
-  auto itab = interaction::table();
-  for (auto inter : this -> compile_interactions()){
-    interaction i = itab[inter];
-    list<combid> buf = g -> search_targets(id, position, this -> interaction_radius(), i.condition.owned_by(owner));
-    list<combid> targets = this -> confirm_interaction(inter, buf, g);
-
-    for (auto t : targets) {
-      interaction_info info;
-      info.source = id;
-      info.target = t;
-      info.interaction = inter;
-      g -> interaction_buffer.push_back(info);
-    }
-  }
-}
