@@ -5,7 +5,7 @@
 
 namespace st3{
   namespace cost{
-    
+
     struct allocation{
       hm_t<std::string, sfloat> data;
 

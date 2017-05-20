@@ -5,6 +5,7 @@
 #include <set>
 #include <utility>
 
+#include "command_selector.h"
 #include "command_gui.h"
 #include "utility.h"
 #include "graphics.h"
@@ -13,15 +14,21 @@
 using namespace std;
 using namespace st3;
 
-float command_gui::table_width = 0;
-float command_gui::table_height = 0;
+command_gui::command_gui(command_selector::ptr c, game_data *g){
+  // setup command gui using ready ships from source plus ships
+  // already selected for this command (they will not be listed as
+  // ready)
+  set<combid> ready_ships = g -> get_ready_ships(c -> source);
+  ready_ships += c -> ships;
 
-command_gui::command_gui(idtype cid, window_t *window, hm_t<combid, ship> s, set<combid> prealloc, point dims, sf::Color c, string hstring){
+  for (auto sid : ready_ships) {
+    ship::ptr s = g -> get_ship(sid);
+    by_class[s -> class_id] = s -> id;
+  }
+
   float margin = 10;
   point p(margin, margin);
-  w = window;
-  comid = cid;
-  header_string = hstring;
+  header_string = c -> action + ": from " + c -> source + " to " + c -> target;
   table_width = 0.4 * (dims.x - 2 * (padding + margin));
   table_height = (dims.y - header_height - 2 * (padding + margin)) / ship::all_classes().size();
   bounds = sf::FloatRect(p.x, p.y, table_width + 2 * padding, dims.y - 2 * margin);

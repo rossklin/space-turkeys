@@ -31,16 +31,6 @@ void game_data::allocate_grid(){
   for (auto x : entity) entity_grid -> insert(x.first, x.second -> position);
 }
 
-// void game_data::assign(const game_data &g){
-//   if (entity_grid || entity.size()) throw runtime_error("Attempting to assign to game_data: already allcoated!");
-
-//   entity_grid = g.entity_grid -> clone();
-//   for (auto x : g.entity) entity[x.first] = x.second -> clone();
-//   players = g.players;
-//   settings = g.settings;
-//   remove_entities = g.remove_entities;
-// }
-
 ship::ptr game_data::get_ship(combid i){
   return utility::guaranteed_cast<ship>(get_entity(i));
 }
@@ -378,6 +368,25 @@ void game_data::rebuild_evm() {
       }
     }
   }
+}
+
+solar::ptr game_data::closest_solar(point p, idtype id) {
+  solar::ptr s = 0;
+
+  try {
+    s = utility::value_min<solar::ptr>(all<solar>(), [this, p, id] (solar::ptr t) -> float {
+	if (t -> owner != id) {
+	  return INFINITY;
+	}else{
+	  return utility::l2d2(t -> position - p);
+	}
+      });
+  } catch (exception &e) {
+    // player doesn't own any solars
+    return 0;
+  }
+
+  return s;
 }
 
 void game_data::increment(){

@@ -52,38 +52,6 @@ rapidjson::Document *utility::get_json(string key) {
   return doc;
 }
 
-template<typename T, typename F>
-typename T::ptr utility::guaranteed_cast(typename F::ptr p){
-  if (p == 0) throw runtime_error("attempt_cast: null pointer!");
-  
-  typename T::ptr res = dynamic_cast<typename T::ptr>(p);
-
-  if (res){
-    return res;
-  }else{
-    throw runtime_error("Failed to downcast");
-  }
-}
-
-template<typename K, typename V>
-list<K> utility::get_map_keys(const hm_t<K,V> &m) {
-  list<K> res;
-  for (auto &x : m) res.push_back(x.first);
-  return res;
-}
-
-template list<string> utility::get_map_keys<string, ship_stats>(const hm_t<string, ship_stats>&);
-
-
-template<typename M, typename C>
-void utility::assign_keys(M &m, C &data){
-  transform(m.begin(), m.end(),
-	    inserter(data, data.end()),
-	    [](auto pair){ return pair.first; });
-}
-
-template void utility::assign_keys<hm_t<int, player>, vector<int> > (hm_t<int, player>&, vector<int>&);
-
 // ****************************************
 // POINT ARITHMETICS
 // ****************************************
@@ -162,18 +130,6 @@ point st3::operator +(const point &a, const point &b){
   return point(a.x + b.x, a.y + b.y);
 }
 
-
-template<typename T>
-T utility::uniform_sample(std::list<T> &x){
-  int s = x.size();
-
-  for (auto &y : x){
-    if (random_uniform() <= 1 / (float)(s--)) return y;
-  }
-
-  return x.back();
-}
-
 // normal ~N(m,s)
 float utility::random_normal(float m, float s){
   boost::random::normal_distribution<float> dist(m,s);
@@ -191,48 +147,6 @@ unsigned int utility::random_int(int limit){
   if (limit < 2) return 0;
   boost::random::uniform_int_distribution<> dist(0, limit - 1);
   return dist(rng);
-}
-
-template<typename T>
-int utility::vector_min(vector<T> &x, function<float(T)> h) {
-  if (x.empty()) {
-    throw runtime_error("Can not call vector_min with empty vector!");
-  }
-  
-  float best = INFINITY;
-  int idx = -1;
-  for (int i = 0; i < x.size(); i++) {
-    float value = h(x[i]);
-    if (value < best) {
-      best = value;
-      idx = i;
-    }
-  }
-
-  if (idx == -1) {
-    throw runtime_error("vector_min: no finite values found!");
-  }
-
-  return idx;
-}
-
-template<typename T, typename C>
-T utility::value_min(const C &x, function<float(T)> h) {
-  if (x.empty()) {
-    throw runtime_error("Can not call value_min with empty vector!");
-  }
-  
-  float best = INFINITY;
-  T result;
-  for (auto &y : x) {
-    float value = h(y);
-    if (value < best) {
-      best = value;
-      result = y;
-    }
-  }
-
-  return result;
 }
 
 int utility::angle2index(int na, float a) {
@@ -262,11 +176,6 @@ vector<float> utility::circular_kernel(const vector<float> &x) {
   }
 
   return buf;
-}
-
-template<typename T>
-function<T(T)> utility::identity_function() {
-  return [](T x){return x;};
 }
 
 // vector of n random floats ~U(0,1) 
@@ -448,63 +357,3 @@ ostream & st3::operator << (ostream &ss, point const &x){
   ss << "(" << x.x << ", " << x.y << ")" << endl;
   return ss;
 }
-
-// set arithmetic operations
-
-// elements in a not in b
-template<typename T>
-set<T> st3::operator - (const set<T> &a, const set<T> &b){
-  set<T> res = a;
-  for (auto &x : b) res.erase(x);
-  return res;
-}
-
-// remove elements in b from a
-template<typename T>
-set<T> st3::operator -= (set<T> &a, const set<T> &b){
-  for (auto &x : b) a.erase(x);
-  return a;
-}
-
-// elements in a or b
-template<typename T>
-set<T> st3::operator + (const set<T> &a, const set<T> &b){
-  set<T> res = a;
-  for (auto &x : b) res.insert(x);
-  return res;
-}
-
-// add elements in b to a
-template<typename T>
-set<T> st3::operator += (set<T> &a, const set<T> &b){
-  for (auto &x : b) a.insert(x);
-  return a;
-}
-
-// elements in a and b
-template<typename T>
-set<T> st3::operator & (const set<T> &a, const set<T> &b){
-  set<T> res;
-  for (auto &x : b) {
-    if (a.count(x)) res.insert(x);
-  }
-  return res;
-}
-
-// random sample instantiation
-template combid st3::utility::uniform_sample(list<combid>&);
-
-// set operations instantiation
-template set<combid> st3::operator - (const set<combid> &a, const set<combid> &b);
-template set<combid> st3::operator -= (set<combid> &a, const set<combid> &b);
-template set<combid> st3::operator + (const set<combid> &a, const set<combid> &b);
-template set<combid> st3::operator += (set<combid> &a, const set<combid> &b);
-template set<combid> st3::operator & (const set<combid> &a, const set<combid> &b);
-
-// shared pointer cast instantiation
-template ship::ptr utility::guaranteed_cast<ship>(game_object::ptr);
-template fleet::ptr utility::guaranteed_cast<fleet>(game_object::ptr);
-template solar::ptr utility::guaranteed_cast<solar>(game_object::ptr);
-template waypoint::ptr utility::guaranteed_cast<waypoint>(game_object::ptr);
-template commandable_object::ptr utility::guaranteed_cast<commandable_object>(game_object::ptr);
-template physical_object::ptr utility::guaranteed_cast<physical_object>(game_object::ptr);

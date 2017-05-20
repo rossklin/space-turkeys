@@ -6,8 +6,10 @@
 #include "graphics.h"
 #include "types.h"
 #include "ship.h"
+#include "selector.h"
 
 namespace st3{
+  class game_data;
 
   /*! command sub gui for allocating a specific ship type */
   class command_table{
@@ -86,39 +88,11 @@ namespace st3{
 
   /*! gui for allocating ships to command selectors */
   class command_gui{
-    std::vector<command_table> tables; /*!< one table for each ship class */
-    sf::FloatRect bounds; /*!< drawing bounds in pixel coordinates */
-    window_t *w; /*!< window to draw on */
-    std::string header_string;
-
-    static constexpr float padding = 5;
-    static constexpr float header_height = 40;
+    hm_t<std::string, std::set<combid> > by_class;
     
   public:
-    static float table_width; /*!< width of tables */
-    static float table_height; /*!< height of tables */
-
-    std::set<combid> cached, allocated; /*!< sets of ids of waiting and allocated ships */
-    idtype comid; /*!< id of associated command selector */
-
-    /*! construct a command_gui
-      @param id id of command selector to remember 
-      @param w window to draw on
-      @param s table of available ships
-      @param prealloc ids of ships that should initially be allocated
-      @param dims width and height
-      @param c color for drawing ships
-      @param hstring text for header
-    */
-    command_gui(idtype id, window_t *w, hm_t<combid, ship> s, std::set<combid> prealloc, point dims, sf::Color c, std::string hstring);
-
-    /*! handle an event
-      @param e the event
-      @return whether the event was effective 
-    */
+    command_gui(command_selector::ptr c, game_data *g);
     bool handle_event(sf::Event e);
-
-    /*! draw the gui */
     void draw();
   };
 };

@@ -1,7 +1,7 @@
 * current work
-** fleets should try to set scatter point towards owned solar
-** fleets should try not to change the scatter point
-** fleets should suggest travel instead of scatter if target direction is free
+** [J] fleets should try to set scatter point towards owned solar
+** [J] fleets should try not to change the scatter point
+** [J] fleets should suggest travel instead of scatter if target direction is free
 ** remake command gui to handle fleet policies
 ** command selectors should update their position on each reload_data
    Maybe they are? They jump in direction of command...

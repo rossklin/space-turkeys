@@ -881,25 +881,10 @@ bool game::select_command(idtype key){
 
   c -> selected = !(c -> selected);
   c -> queue_level = selector_queue++;
-    
-  // setup command gui using ready ships from source plus ships
-  // already selected for this command (they will not be listed as
-  // ready)
-  hm_t<combid, ship> all_ships;
-  set<combid> ready_ships = get_ready_ships(c -> source);
-  ready_ships += c -> ships;    
-  for (auto x : ready_ships) all_ships[x] = *get_specific<ship>(x);
 
-  comgui = new command_gui(key, 
-			   &window, 
-			   all_ships,
-			   c -> ships,
-			   view_window.getSize(),
-			   col,
-			   "source: " + c -> source 
-			   + ", target: " + c -> target 
-			   + ", action: " + c -> action);
+  if (!c -> selected) return false;
 
+  comgui = new command_gui(c, this);
   return true;
 }
 

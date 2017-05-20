@@ -14,16 +14,36 @@ namespace st3{
   namespace utility{
 
     template<typename T, typename F = game_object>
-    typename T::ptr guaranteed_cast(typename F::ptr p);
+    typename T::ptr guaranteed_cast(typename F::ptr p){
+      if (p == 0) throw std::runtime_error("attempt_cast: null pointer!");
+  
+      typename T::ptr res = dynamic_cast<typename T::ptr>(p);
 
-    template<typename M, typename C>
-    void assign_keys(M &m, C &data);
+      if (res){
+	return res;
+      }else{
+	throw std::runtime_error("Failed to downcast");
+      }
+    }
 
     template<typename K, typename V>
-    std::list<K> get_map_keys(const hm_t<K,V> &m);
+    std::list<K> get_map_keys(const hm_t<K,V> &m) {
+      std::list<K> res;
+      for (auto &x : m) res.push_back(x.first);
+      return res;
+    }
 
+    template<typename M, typename C>
+    void assign_keys(M &m, C &data){
+      std::transform(m.begin(), m.end(),
+		inserter(data, data.end()),
+		[](auto pair){ return pair.first; });
+    }
+    
     template<typename T>
-    std::function<T(T)> identity_function();
+    std::function<T(T)> identity_function() {
+      return [](T x){return x;};
+    }
 
     std::string format_float(float x);
 
@@ -97,9 +117,6 @@ namespace st3{
     */
     float dpoint2line(point p, point a, point b);
 
-    template<typename T>
-    T uniform_sample(std::list<T> &x);
-
     unsigned int random_int(int limit);
 
     /*! 
@@ -124,10 +141,57 @@ namespace st3{
     std::vector<float> random_uniform_vector(int n, float a = 0, float b = 1);
 
     template<typename T>
-    int vector_min(const std::vector<T> &x, std::function<float(T)> h);
+    T uniform_sample(std::list<T> &x){
+      int s = x.size();
 
+      for (auto &y : x){
+	if (random_uniform() <= 1 / (float)(s--)) return y;
+      }
+
+      return x.back();
+    }
+
+    template<typename T>
+    int vector_min(std::vector<T> &x, std::function<float(T)> h) {
+      if (x.empty()) {
+	throw std::runtime_error("Can not call vector_min with empty vector!");
+      }
+  
+      float best = INFINITY;
+      int idx = -1;
+      for (int i = 0; i < x.size(); i++) {
+	float value = h(x[i]);
+	if (value < best) {
+	  best = value;
+	  idx = i;
+	}
+      }
+
+      if (idx == -1) {
+	throw std::runtime_error("vector_min: no finite values found!");
+      }
+
+      return idx;
+    }
+    
     template<typename T, typename C>
-    T value_min(const C &x, std::function<float(T)> h);
+    T value_min(const C &x, std::function<float(T)> h) {
+      if (x.empty()) {
+	throw std::runtime_error("Can not call value_min with empty vector!");
+      }
+  
+      float best = INFINITY;
+      T result;
+      for (auto &y : x) {
+	float value = h(y);
+	if (value < best) {
+	  best = value;
+	  result = y;
+	}
+      }
+
+      return result;
+    }
 
     int angle2index(int na, float a);
     float index2angle(int na, int idx);
@@ -271,46 +335,47 @@ namespace st3{
   /* **************************************** */
   /* SET OPERATIONS */
   /* **************************************** */
-
-  /*! compute set difference
-    @param a first set
-    @param b second set
-    @return set of elements in a not in b
-  */
+  
+  // elements in a not in b
   template<typename T>
-    std::set<T> operator - (const std::set<T> &a, const std::set<T> &b);
+  std::set<T> operator - (const std::set<T> &a, const std::set<T> &b){
+    std::set<T> res = a;
+    for (auto &x : b) res.erase(x);
+    return res;
+  }
 
-  /*! remove elements in a set from another set
-    @param a set to decrement
-    @param b set of elements to remove
-    @return a
-  */
+  // remove elements in b from a
   template<typename T>
-    std::set<T> operator -= (std::set<T> &a, const std::set<T> &b);
+  std::set<T> operator -= (std::set<T> &a, const std::set<T> &b){
+    for (auto &x : b) a.erase(x);
+    return a;
+  }
 
-  /*! compute union of two sets
-    @param a first set
-    @param b second set
-    @return set of elements in a or b
-  */
+  // elements in a or b
   template<typename T>
-    std::set<T> operator + (const std::set<T> &a, const std::set<T> &b);
+  std::set<T> operator + (const std::set<T> &a, const std::set<T> &b){
+    std::set<T> res = a;
+    for (auto &x : b) res.insert(x);
+    return res;
+  }
 
-  /*! add elements in a set to another set
-    @param a set to add elements to
-    @param b set of elements to add
-    @return resulting set
-  */
+  // add elements in b to a
   template<typename T>
-    std::set<T> operator += (std::set<T> &a, const std::set<T> &b);
+  std::set<T> operator += (std::set<T> &a, const std::set<T> &b){
+    for (auto &x : b) a.insert(x);
+    return a;
+  }
 
-  /*! compute intersection of two sets
-    @param a first set
-    @param b second set
-    @return set of elements in a and b
-  */
+  // elements in a and b
   template<typename T>
-    std::set<T> operator & (const std::set<T> &a, const std::set<T> &b);
+  std::set<T> operator & (const std::set<T> &a, const std::set<T> &b){
+    std::set<T> res;
+    for (auto &x : b) {
+      if (a.count(x)) res.insert(x);
+    }
+    return res;
+  }
+
 };
 
 #endif
