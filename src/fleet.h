@@ -31,6 +31,7 @@ namespace st3{
       static const sint travel = 8;
       static const sint activate = 16;
       static const sint hold = 32;
+      static const sint evade = 64;
 
       sint id;
       point p;
@@ -49,7 +50,8 @@ namespace st3{
       point target_position;
       float spread_radius;
       float spread_density;
-      point scatter_target;
+      point path;
+      sbool can_evade;
 
       analytics();
     };

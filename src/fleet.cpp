@@ -116,10 +116,13 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
   float pref_maxrad = fmax(sqrt(ships.size() / (M_PI * pref_density)), 10);
   
   if (stats.enemies.size()) {
+    suggestion s_evade(suggestion::evade, stats.path);
+    if (!stats.can_evade) s_evade.id = suggestion::scatter;
+    
     if (com.policy & policy_maintain_course) {
       return suggestion(suggestion::travel, stats.target_position);
     }else if (com.policy & policy_evasive) {
-      return suggestion(suggestion::scatter, stats.scatter_target);
+      return s_evade;
     }else{    
       if (s -> tags.count("spacecombat")) {
 	if (com.policy & policy_aggressive) {
@@ -127,10 +130,10 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
 	} else if (com.policy & policy_reasonable && stats.enemies.front().second < 1){
 	  return suggestion(suggestion::engage, s -> position);
 	} else {
-	  return suggestion(suggestion::scatter, stats.scatter_target);
+	  return s_evade;
 	}
       }else{
-	return suggestion(suggestion::scatter, stats.scatter_target);
+	return s_evade;
       }
     }
   }else{
@@ -161,7 +164,10 @@ void fleet::analyze_enemies(game_data *g) {
   int rep = 10;
   vector<point> x(n);
 
-  if (t.empty()) return;
+  if (t.empty()) {
+    stats.can_evade = false;
+    return;
+  }
 
   for (int i = 0; i < n; i++) x[i] = g -> get_entity(utility::uniform_sample(t)) -> position;
 
@@ -194,28 +200,21 @@ void fleet::analyze_enemies(game_data *g) {
   if (x.empty()) throw runtime_error("Failed to build enemy clusters!");
   if (x.size() == n) throw runtime_error("Analyze enemies: clusters failed to form!");
 
+  int na = 10;
+
   // assign ships to clusters
   hm_t<int, float> cc;
-  vector<float> scatter_data(10, 0);
+  vector<float> scatter_data(na, 0);
   for (auto sid : t) {
     ship::ptr s = g -> get_ship(sid);
     float strength_value = s -> stats[sskey::key::mass] * s -> stats[sskey::key::ship_damage];
 
     // scatter value
-    int scatter_angle = max(min((int)((utility::point_angle(s -> position - position) + M_PI) * 10 / (2 * M_PI)), 9), 0);
-    scatter_data[scatter_angle] += strength_value;
+    int scatter_idx = utility::angle2index(na,utility::point_angle(s -> position - position));
+    scatter_data[scatter_idx] += strength_value;
 
     // cluster assignment
-    float closest = INFINITY;
-    int idx = -1;
-    for (int i = 0; i < x.size(); i++) {
-      float d = utility::l2d2(x[i] - s -> position);
-      if (d < closest) {
-	closest = d;
-	idx = i;
-      }
-    }
-    if (idx < 0) throw runtime_error("Analyze enemies: failed to assign ship!");
+    int idx = utility::vector_min<point>(x, [s] (point y) -> float {return utility::l2d2(y - s -> position);});
     cc[idx] += strength_value;
   }
 
@@ -223,19 +222,51 @@ void fleet::analyze_enemies(game_data *g) {
   for (auto i : cc) stats.enemies.push_back(make_pair(x[i.first], i.second / stats.self_strength));
   stats.enemies.sort([](pair<point, float> a, pair<point, float> b) {return a.second > b.second;});
 
-  // find best scatter direction
+  // find best evade direction
+
+  // circular kernel smooth enemy strength data
+  vector<float> s_buf = utility::circular_kernel(scatter_data);
+
+  // preferred directions
+  float val_prev = s_buf[utility::angle2index(na,utility::point_angle(stats.path - position))];
+  if (!stats.can_evade) val_prev = INFINITY;
+  solar::ptr closest_solar = g -> closest_solar(position, owner);
+  point p_solar;
+  float val_solar = INFINITY;
+  if (closest_solar) {
+    p_solar = closest_solar -> position;
+    val_solar = s_buf[utility::angle2index(na,utility::point_angle(p_solar - position))];
+  }
+  float val_target = s_buf[utility::angle2index(na,utility::point_angle(stats.target_position - position))];
+
+  // direction with lowest threat
   float best = INFINITY;
   float angle = -1;
-  for (int i = 0; i < scatter_data.size(); i++) {
-    float v = scatter_data[i];
+  for (int i = 0; i < na; i++) {
+    float v = s_buf[i];
     if (v < best) {
       best = v;
-      angle = (i + (float)0.5) * 2 * M_PI / scatter_data.size();
+      angle = utility::index2angle(na,i);
     }
   }
 
-  if (angle < 0) throw runtime_error("Invalid scatter angle!");
-  stats.scatter_target = position + utility::scale_point(utility::normv(angle), 100);
+  // weight directions by preference and danger
+  point p_best = position + utility::scale_point(utility::normv(angle), 100);
+  vector<pair<float, point> > priority(4);
+  priority[0] = {best, p_best};
+  priority[1] = {val_target / 2, stats.target_position};
+  priority[2] = {val_prev / 1.6, stats.path};
+  priority[3] = {val_solar / 1.4, p_solar};
+    
+  pair<float, point> select = priority[utility::vector_min<pair<float, point> >(priority, [](pair<float, point> x) -> float {return x.first;})];
+
+  // only allow evasion if there exists a path with low enemy strength
+  if (select.first < 0.8) {
+    stats.can_evade = true;
+    stats.path = select.second;
+  } else {
+    stats.can_evade = false;
+  }
 }
 
 void fleet::update_data(game_data *g, bool force_refresh){
@@ -357,7 +388,8 @@ fleet::analytics::analytics() {
   spread_radius = 0;
   spread_density = 0;
   target_position = point(0,0);
-  scatter_target = point(0,0);
+  path = point(0,0);
+  can_evade = false;
   vision_buf = 0;
 }
 

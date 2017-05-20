@@ -193,6 +193,82 @@ unsigned int utility::random_int(int limit){
   return dist(rng);
 }
 
+template<typename T>
+int utility::vector_min(vector<T> &x, function<float(T)> h) {
+  if (x.empty()) {
+    throw runtime_error("Can not call vector_min with empty vector!");
+  }
+  
+  float best = INFINITY;
+  int idx = -1;
+  for (int i = 0; i < x.size(); i++) {
+    float value = h(x[i]);
+    if (value < best) {
+      best = value;
+      idx = i;
+    }
+  }
+
+  if (idx == -1) {
+    throw runtime_error("vector_min: no finite values found!");
+  }
+
+  return idx;
+}
+
+template<typename T, typename C>
+T utility::value_min(const C &x, function<float(T)> h) {
+  if (x.empty()) {
+    throw runtime_error("Can not call value_min with empty vector!");
+  }
+  
+  float best = INFINITY;
+  T result;
+  for (auto &y : x) {
+    float value = h(y);
+    if (value < best) {
+      best = value;
+      result = y;
+    }
+  }
+
+  return result;
+}
+
+int utility::angle2index(int na, float a) {
+  a = modulus(a, 2 * M_PI);
+  int i = a * na / (2 * M_PI);
+  return max(min(i, na - 1), 0);
+}
+
+float utility::index2angle(int na, int idx) {
+  return 2 * M_PI * (idx + 0.5) / (float)na;
+}
+
+vector<float> utility::circular_kernel(const vector<float> &x) {
+  // circular kernel smooth enemy strength data
+  int na = x.size();
+  vector<float> buf(na);
+
+  for (int i = 0; i < na; i++) {
+    buf[i] = 0;
+    float wsum = 0;
+    for (int j = -na/2; j <= na/2; j++) {
+      float w = exp(-pow(j,2));
+      buf[i] += w * x[(j + na) % na];
+      wsum += w;
+    }
+    buf[i] /= wsum;
+  }
+
+  return buf;
+}
+
+template<typename T>
+function<T(T)> utility::identity_function() {
+  return [](T x){return x;};
+}
+
 // vector of n random floats ~U(0,1) 
 vector<float> utility::random_uniform_vector(int n, float a, float b){
   boost::random::uniform_real_distribution<float> dist(a,b);

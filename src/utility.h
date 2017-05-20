@@ -22,6 +22,9 @@ namespace st3{
     template<typename K, typename V>
     std::list<K> get_map_keys(const hm_t<K,V> &m);
 
+    template<typename T>
+    std::function<T(T)> identity_function();
+
     std::string format_float(float x);
 
     void init();
@@ -119,6 +122,16 @@ namespace st3{
       @return the vector
     */
     std::vector<float> random_uniform_vector(int n, float a = 0, float b = 1);
+
+    template<typename T>
+    int vector_min(const std::vector<T> &x, std::function<float(T)> h);
+
+    template<typename T, typename C>
+    T value_min(const C &x, std::function<float(T)> h);
+
+    int angle2index(int na, float a);
+    float index2angle(int na, int idx);
+    std::vector<float> circular_kernel(const std::vector<float> &x);
 
     /*! 
       generates a random point with gaussian distribution 

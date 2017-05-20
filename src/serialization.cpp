@@ -386,7 +386,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const fleet::analytics &g){
     << g.spread_radius
     << g.spread_density
     << g.target_position
-    << g.scatter_target
+    << g.path
+    << g.can_evade
     << g.vision_buf
     << g.enemies
     << g.self_strength;
@@ -399,7 +400,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet::analytics &g){
     >> g.spread_radius
     >> g.spread_density
     >> g.target_position
-    >> g.scatter_target
+    >> g.path
+    >> g.can_evade
     >> g.vision_buf
     >> g.enemies
     >> g.self_strength;
