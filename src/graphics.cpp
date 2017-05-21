@@ -72,7 +72,25 @@ void graphics::draw_framed_text(window_t &w, string v, sf::FloatRect bounds, sf:
   draw_text(w, v, p, fs);
 }
 
-void graphics::draw_ship(window_t &w, ship s, sf::Color col, float sc){
+sfg::Button::Ptr graphics::ship_button(string ship_class, float width, float height, sf::Color col) {
+  sf::RenderTexture tex;
+  if (!tex.create(width, height)) {
+    throw runtime_error("Failed to create render texture!");
+  }
+
+  ship s(ship::table().at(ship_class));
+  s.position = point(width/2, height/2);
+  float scale = width / 6;
+  draw_ship(tex, s, col, scale);
+  tex.display();
+
+  sfg::Button::Ptr b = sfg::Button::Create();
+  b -> SetImage(tex.getTexture().copyToImage());
+  return b;
+};
+
+
+void graphics::draw_ship(sf::RenderTarget &w, ship s, sf::Color col, float sc){
   vector<sf::Vertex> svert;
 
   sf::Color cnose(255,200,180,200);

@@ -57,7 +57,9 @@ namespace st3{
       @param c color
       @param sc scale
     */
-    void draw_ship(window_t &w, ship s, sf::Color c, float sc = 1);
+    void draw_ship(sf::RenderTarget &w, ship s, sf::Color c, float sc = 1);
+
+    sfg::Button::Ptr ship_button(std::string ship_class, float width, float height, sf::Color col = sf::Color::Green);
 
     void draw_explosion(window_t &w, explosion e);
     
