@@ -1,9 +1,11 @@
 * current work
-** main_interface::reset_qw() does not clear command_gui radio buttons
+** command_gui throws bad_weak_ptr
+   In event handler, after moving ship button to tab_allocated
 ** command_gui ship buttons cover complete table
 ** graphics::ship_button drawn on weird angle
 ** command selectors should update their position on each reload_data
    Maybe they are? They jump in direction of command...
+** [J] main_interface::reset_qw() does not clear command_gui radio buttons
 * [!] issues
 ** [!] bugs & crashes
 *** Ships validate their action using target information that the player can't see

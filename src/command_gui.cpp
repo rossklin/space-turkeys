@@ -21,14 +21,42 @@ using namespace interface;
 
 const std::string command_gui::sfg_id = "command gui";
 
-void insert_into_table(Widget::Ptr b, Table::Ptr t, int cols) {
-  int i = t -> GetChildren().size();
-  int r = i / cols;
-  int c = i % cols;
-  int opt_x = Table::FILL | Table::EXPAND;
-  int opt_y = Table::FILL | Table::EXPAND;
-  point padding(5,5);
-  t -> Attach(b, sf::Rect<sf::Uint32>(c, r, 1, 1), opt_x, opt_y, padding);
+void command_gui::table_t::setup(int ncols, float pad) {
+  layout = Box::Create(Box::Orientation::VERTICAL, padding);
+  cols = ncols;
+  padding = pad;
+}
+
+void command_gui::table_t::update_rows() {
+  int n = buttons.size();
+  layout -> RemoveAll();
+  rows.clear();
+
+  if (n == 0) return;
+  
+  rows.resize(ceil(n / cols));
+  
+  int i = 0;
+  for (i = 0; i < rows.size(); i++) {
+    rows[i] = Box::Create(Box::Orientation::HORIZONTAL, padding);
+    layout -> Pack(rows[i]);
+  }
+
+  int count = 0;
+  for (auto b : buttons) {
+    rows[count / cols] -> Pack(b);
+    count++;
+  }
+}
+
+void command_gui::table_t::add_button(sfg::Button::Ptr b) {
+  buttons.insert(b);
+  update_rows();
+}
+
+void command_gui::table_t::remove_button(sfg::Button::Ptr b) {
+  buttons.erase(b);
+  update_rows();
 }
 
 command_gui::Ptr command_gui::Create(client::command_selector::ptr c, client::game *g) {
@@ -55,9 +83,12 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
   policy[fleet::policy_evasive] = RadioButton::Create("Evasive", policy[fleet::policy_reasonable] -> GetGroup());
   policy[fleet::policy_maintain_course] = RadioButton::Create("Maintain Course", policy[fleet::policy_reasonable] -> GetGroup());
 
+  policy[c -> policy] -> SetActive(true);
+
   for (auto p : policy) {
-    p.second -> GetSignal(ToggleButton::OnToggle).Connect([c, p] () {
-	c -> policy = p.first;
+    int fp = p.first;
+    p.second -> GetSignal(ToggleButton::OnToggle).Connect([c, fp] () {
+	c -> policy = fp;
     });
     layout -> Pack(p.second);
   }
@@ -86,47 +117,57 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
   sf::FloatRect t_rect = table_bounds;
   t_rect.height /= by_class.size();
 
+  // build ship allocation tables for each available ships class
   for (auto data : by_class) {
     string ship_class = data.first;
     set<combid> ships = data.second;
     Box::Ptr box = Box::Create(Box::Orientation::HORIZONTAL, 10);
 
-    tab_available[ship_class] = Table::Create();
-    tab_allocated[ship_class] = Table::Create();
-    
+    float inner_width = (t_rect.width - 3 * padding) / 2;
+    float inner_height = t_rect.height - 2 * padding;
     int n_total = ships.size();
     int cols = ceil(sqrt(n_total));
     int rows = ceil(n_total / cols);
-    point b_dims(0.5 * t_rect.width / cols, t_rect.height / cols);
+    point b_dims(inner_width / cols - 2 * padding, inner_height / rows - 2 * padding);
+
+    tab_available[ship_class].setup(cols, 2);
+    tab_allocated[ship_class].setup(cols, 2);
 
     // insert ship buttons
     for (auto sid : ships) {
       Button::Ptr b = graphics::ship_button(ship_class, b_dims.x, b_dims.y);
 
-      b -> GetSignal(Widget::OnLeftClick).Connect([this, ship_class, sid, c, cols] () {
+      b -> GetSignal(Widget::OnLeftClick).Connect([this, ship_class, sid, c] () {
 	  Button::Ptr p = ship_buttons[sid];
 	  if (c -> ships.count(sid)) {
 	    c -> ships.erase(sid);
-	    tab_allocated[ship_class] -> Remove(p);
-	    insert_into_table(p, tab_available[ship_class], cols);
+	    tab_allocated[ship_class].remove_button(p);
+	    tab_available[ship_class].add_button(p);
 	  }else{
 	    c -> ships.insert(sid);
-	    tab_available[ship_class] -> Remove(p);
-	    insert_into_table(p, tab_allocated[ship_class], cols);
+	    tab_available[ship_class].remove_button(p);
+	    tab_allocated[ship_class].add_button(p);
 	  }
 	});
 
       ship_buttons[sid] = b;
       if (c -> ships.count(sid)) {
-	insert_into_table(b, tab_allocated[ship_class], cols);
+	tab_allocated[ship_class].add_button(b);
       } else {
-	insert_into_table(b, tab_available[ship_class], cols);
+	tab_available[ship_class].add_button(b);
       }
     }
 
-    box -> Pack(tab_available[ship_class]);
-    box -> Pack(tab_allocated[ship_class]);
+    // set allocations
+    sf::FloatRect inner_bounds(t_rect.left + padding, t_rect.top + padding, inner_width, inner_height);
+    tab_available[ship_class].layout -> SetAllocation(inner_bounds);
+    inner_bounds.left = t_rect.left + inner_width + 2 * padding;
+    tab_allocated[ship_class].layout -> SetAllocation(inner_bounds);
+
+    box -> Pack(tab_available[ship_class].layout);
+    box -> Pack(tab_allocated[ship_class].layout);
     box -> SetAllocation(t_rect);
+
     layout -> Pack(box);
     t_rect.top += t_rect.height;
   }
