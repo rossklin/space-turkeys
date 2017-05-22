@@ -1,27 +1,9 @@
 * current work
-** [J] fleets should try to set scatter point towards owned solar
-** [J] fleets should try not to change the scatter point
-** [J] fleets should suggest travel instead of scatter if target direction is free
-** remake command gui to handle fleet policies
+** main_interface::reset_qw() does not clear command_gui radio buttons
+** command_gui ship buttons cover complete table
+** graphics::ship_button drawn on weird angle
 ** command selectors should update their position on each reload_data
    Maybe they are? They jump in direction of command...
-** [J] after passing waypoint, fleet becomes idle
-** [J] make reassignment in relocate_ships pass on origin
-** [J] idle fleet keeps moving and therefore summons ships to keep moving
-** [J] ship speed is not checked for max
-** [J] replace references to ship stats
-** [J] implement use of mass stat for detection, accuracy and graphics scale
-** [J] implement use of evasion stat to counter accuracy
-** [J] implement remaining ship_stats functions
-** [J] remove physical_object::interact, call interactions in move phase
-** [J] make solar call interactions in move phase
-** [J] make fleet analytics use ship size to determine enemy strength
-** [J] make fleet::suggest use enemy strength factor
-** [J] implement ship::move using fleet::suggest
-** [J] make fleet generate scatter_target
-** [J] make client choice contain fleet policy
-** [J] update ship data with regard to accuracy/mass/evasion interaction
-** [J] build entity_seen_by matrix in game_data for use in search_targets
 * [!] issues
 ** [!] bugs & crashes
 *** Ships validate their action using target information that the player can't see
@@ -98,6 +80,27 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] fleets should try to set scatter point towards owned solar
+** [J] fleets should try not to change the scatter point
+** [J] fleets should suggest travel instead of scatter if target direction is free
+** [J] remake command gui to handle fleet policies
+** [J] after passing waypoint, fleet becomes idle
+** [J] make reassignment in relocate_ships pass on origin
+** [J] idle fleet keeps moving and therefore summons ships to keep moving
+** [J] ship speed is not checked for max
+** [J] replace references to ship stats
+** [J] implement use of mass stat for detection, accuracy and graphics scale
+** [J] implement use of evasion stat to counter accuracy
+** [J] implement remaining ship_stats functions
+** [J] remove physical_object::interact, call interactions in move phase
+** [J] make solar call interactions in move phase
+** [J] make fleet analytics use ship size to determine enemy strength
+** [J] make fleet::suggest use enemy strength factor
+** [J] implement ship::move using fleet::suggest
+** [J] make fleet generate scatter_target
+** [J] make client choice contain fleet policy
+** [J] update ship data with regard to accuracy/mass/evasion interaction
+** [J] build entity_seen_by matrix in game_data for use in search_targets
 ** solar development tree
    Just something a little bit more fun than "expansion[i]", e.g. move
    turrets here.

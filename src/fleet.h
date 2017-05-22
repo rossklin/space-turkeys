@@ -62,10 +62,10 @@ namespace st3{
     static constexpr float min_radius = 10; /*!< smallest allowed fleet radius (for visibility) */
 
     // fleet policies
-    static const sint policy_aggressive = 1;
-    static const sint policy_reasonable = 2;
-    static const sint policy_evasive = 4;
-    static const sint policy_maintain_course = 8;
+    static const sint policy_aggressive;
+    static const sint policy_reasonable;
+    static const sint policy_evasive;
+    static const sint policy_maintain_course;
 
     // serialized components
     std::set<combid> ships; /*!< ids of ships in fleet */

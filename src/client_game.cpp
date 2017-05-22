@@ -38,10 +38,10 @@ waypoint_selector::ptr to_wps(entity_selector::ptr p){
 // ****************************************
 
 game::game(){
-  comgui = 0;
   targui = 0;
   selector_queue = 1;
   chosen_quit = false;
+  comgui_active = false;
 
   default_event_handler = [this](sf::Event e) -> int {
     if (e.type == sf::Event::Closed) {
@@ -116,8 +116,6 @@ set<typename specific_selector<T>::ptr> game::get_all(){
 }
 
 void game::clear_guis(){
-  if (comgui) delete comgui;
-  comgui = 0;
   if (targui) delete targui;
   targui = 0;
 }
@@ -296,10 +294,6 @@ bool game::choice_step(){
 
       // check the command gui
       window.setView(view_window);
-      if (comgui && comgui -> handle_event(e)){
-	get_command_selector(comgui -> comid) -> ships = comgui -> allocated;    
-	return 0;
-      }
 
       // process choice event
       return choice_event(e);
@@ -706,6 +700,8 @@ bool game::waypoint_ancestor_of(combid ancestor, combid child){
 */
 void game::remove_command(idtype key){
   if (!command_selectors.count(key)) return;
+  if (comgui_active) interface::desktop -> clear_qw();
+  comgui_active = false;
   
   command_selector::ptr cs = get_command_selector(key);
   entity_selector::ptr s = get_entity(cs -> source);
@@ -724,10 +720,6 @@ void game::remove_command(idtype key){
       remove_entity(t -> id);
     }
   }
-
-  // remove comgui
-  if (comgui) delete comgui;
-  comgui = 0;
 }
 
 // ****************************************
@@ -884,7 +876,8 @@ bool game::select_command(idtype key){
 
   if (!c -> selected) return false;
 
-  comgui = new command_gui(c, this);
+  interface::desktop -> reset_qw(interface::command_gui::Create(c, this));
+  comgui_active = true;
   return true;
 }
 
@@ -1116,7 +1109,7 @@ int game::choice_event(sf::Event e){
   case sf::Event::KeyPressed:
     switch (e.key.code){
     case sf::Keyboard::Space:
-      if (comgui || targui){
+      if (targui){
 	clear_guis();
       }else{
 	return query_accepted;
@@ -1329,10 +1322,7 @@ void game::draw_window(){
   if (targui) targui -> draw();
 
   // draw command gui
-  if (comgui) {
-    window.setView(view_window);
-    comgui -> draw();
-  } else if (interface::desktop -> query_window == 0){
+  if (interface::desktop -> query_window == 0){
     // Interface stuff that is only drawn if there is no query window
 
     // draw minimap contents

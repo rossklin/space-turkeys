@@ -1,6 +1,7 @@
 #include <cmath>
 #include <iostream>
 #include <string>
+#include <memory>
 
 #include "graphics.h"
 #include "types.h"
@@ -85,7 +86,7 @@ sfg::Button::Ptr graphics::ship_button(string ship_class, float width, float hei
   tex.display();
 
   sfg::Button::Ptr b = sfg::Button::Create();
-  b -> SetImage(tex.getTexture().copyToImage());
+  b -> SetImage(sfg::Image::Create(tex.getTexture().copyToImage()));
   return b;
 };
 

@@ -18,7 +18,6 @@
 #include "explosion.h"
 
 namespace st3{
-  class command_gui;
   class target_gui;
   
   namespace client{    
@@ -45,9 +44,9 @@ namespace st3{
       sint self_id;
       
       sfg::SFGUI *sfgui;
-      command_gui *comgui; /*!< gui for assigning ships to commands */
       target_gui *targui; /*!< gui for selecting command action */
       bool chosen_quit;
+      bool comgui_active;
 
       // stars
       std::vector<fixed_star> fixed_stars;

@@ -16,6 +16,11 @@ const string fleet::class_id = "fleet";
 const string fleet_action::go_to = "go to";
 const string fleet_action::idle = "idle";
 
+const sint fleet::policy_aggressive = 1;
+const sint fleet::policy_reasonable = 2;
+const sint fleet::policy_evasive = 4;
+const sint fleet::policy_maintain_course = 8;
+
 fleet::fleet(){}
 
 fleet::fleet(idtype pid){

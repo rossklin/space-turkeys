@@ -4,6 +4,7 @@
 #include <string>
 #include <functional>
 #include <SFML/Graphics.hpp>
+#include <SFGUI/Widgets.hpp>
 
 #include "game_data.h"
 #include "choice.h"
