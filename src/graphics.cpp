@@ -83,6 +83,8 @@ sf::Image graphics::ship_image_label(string text, string ship_class, float width
     throw runtime_error("Failed to create render texture!");
   }
 
+  tex.clear();
+
   ship s(ship::table().at(ship_class));
   s.position = point(width/2, height/2);
   s.angle = 0;

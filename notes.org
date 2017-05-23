@@ -1,11 +1,13 @@
 * current work
-** command_gui: sfg::Image -> SetImage causes meshed image
+** [J] command_gui: sfg::Image -> SetImage causes meshed image
    Consider making image with background color?
 * [~] issues
 ** [~ & crashes
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
+*** tech requirements list floods window
+   Make scroll window?
 *** priority buttons unresponsive to first right click
 *** Clicking interface response button also triggers click on minimap
 *** sfg window does not resize on sfml window resize
@@ -17,6 +19,8 @@
     leave game request from client 1 while it was waiting for the
     choice from client 2.
 * system design ideas
+** add a command buffer so commands reach entities with distance based delay
+** make detection stat determine which object stats are seen by client
 ** make angular acceleration an attribute
 ** consider letting fleet suggestion contain an angle?
 ** add a list of animations to send to client rather than add explosion on ship removal
@@ -36,15 +40,14 @@
    No particular reason to not put this in normal class members?
 ** add a vision map, build in client on reload_data
 * tweaks and fixes
-** command selectors should update their position on each reload_data
+** gui
+*** show accumulated research
+*** add "build" button on facilities in solar_gui
+*** command selectors should update their position on each reload_data
    Maybe they are? They jump in direction of command...
-** allow double-clicking ship to select all of same type
-** allow dragging waypoints
-** name and indicators for solars so you can tell them apart
-** increase build times for everything
-** increase ship fire rate
-** make ships in fleets group together
-** use solar radius to indicate resource quantity
+*** allow double-clicking ship to select all of same type
+*** allow dragging waypoints
+*** name and indicators for solars so you can tell them apart
 * optimization
 ** fix grid tree so make_split takes less time
 ** reduce sent data using an instruction based model
@@ -53,8 +56,7 @@
    need to copy all entities and rebuild the grid, and the client also
    won't need to copy entities.
 * content ideas
-** add some heavier ship classes
-** add some tech/facility for "medicine" that population crowding coefficient
+** add some tech/facility for "medicine" that affects population crowding coefficient
 * to be tested
 ** confirm
 *** new modified ship stats

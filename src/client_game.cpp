@@ -782,7 +782,7 @@ void game::command2entity(combid key, string act, list<combid> e_selected){
       if (s -> is_commandable()){
 	c.source = x;
 	from = s -> get_position();
-	add_command(c, from, to);
+	add_command(c, from, to, true);
       }
     }
   }
