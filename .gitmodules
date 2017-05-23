@@ -1,3 +1,6 @@
 [submodule "SFGUI"]
 	path = SFGUI
 	url = https://github.com/TankOs/SFGUI.git
+[submodule "rsk-sfml"]
+	path = rsk-sfml
+	url = git@gitlab.com:rsk_chaos/rsk-sfml.git
