@@ -1282,6 +1282,7 @@ void game::window_loop(int &done, function<int(sf::Event)> event_handler, functi
     controls();
 
     // draw universe and game objects
+    window.clear();
     draw_window();
 
     // main content callback
@@ -1346,7 +1347,7 @@ void game::draw_window(){
     sf::Text text;
     text.setFont(default_font); 
     text.setCharacterSize(24);
-    text.setColor(sf::Color(200,200,200));
+    text.setFillColor(sf::Color(200,200,200));
     text.setString(message);
     text.setPosition(point(10, 0.2 * (interface::main_interface::desktop_dims.y)));
     window.draw(text);

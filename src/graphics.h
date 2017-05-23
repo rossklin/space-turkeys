@@ -47,10 +47,10 @@ namespace st3{
 
     /*! initialize static graphics i.e. default font */
     void initialize();
-    void draw_text(window_t &w, std::string v, point p, int fs, bool ul = false);
-    void draw_framed_text(window_t &w, std::string v, sf::FloatRect r, sf::Color co, sf::Color cf = sf::Color::Transparent);
+    void draw_text(sf::RenderTarget &w, std::string v, point p, int fs, bool ul = false);
+    void draw_framed_text(sf::RenderTarget &w, std::string v, sf::FloatRect r, sf::Color co, sf::Color cf = sf::Color::Transparent);
 
-    void draw_circle(window_t &w, point p, float r, sf::Color co, sf::Color cf = sf::Color::Transparent, float b = -1);
+    void draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, sf::Color cf = sf::Color::Transparent, float b = -1);
 
     /*! draw a ship to a window 
       @param w window
@@ -61,8 +61,10 @@ namespace st3{
     void draw_ship(sf::RenderTarget &w, ship s, sf::Color c, float sc = 1);
 
     sfg::Button::Ptr ship_button(std::string ship_class, float width, float height, sf::Color col = sf::Color::Green);
+    sf::Image ship_image(std::string ship_class, float width, float height, sf::Color col = sf::Color::Green);
+    sf::Image ship_image_label(std::string text, std::string ship_class, float width, float height, sf::Color l_col = sf::Color::White, sf::Color s_col = sf::Color::Green);
 
-    void draw_explosion(window_t &w, explosion e);
+    void draw_explosion(sf::RenderTarget &w, explosion e);
     
     /* **************************************** */
     /* SFML STUFF */
@@ -78,13 +80,13 @@ namespace st3{
       @param w window to get the view from
       @return coordinates corresponding to UL corner of current view of w
     */
-    point ul_corner(window_t &w);
+    point ul_corner(sf::RenderTarget &w);
 
     /*! compute an sf::Transform mapping from coordinates to pixels
       @param w the current window
       @return the transform
     */
-    sf::Transform view_inverse_transform(window_t &w);
+    sf::Transform view_inverse_transform(sf::RenderTarget &w);
 
     /*! compute the scale factor coordinates per pixel
 
@@ -93,7 +95,7 @@ namespace st3{
       @param w the current window
       @return point containing x and y scales
     */
-    point inverse_scale(window_t &w);
+    point inverse_scale(sf::RenderTarget &w);
   };
 };
 #endif

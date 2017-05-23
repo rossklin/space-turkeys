@@ -1,13 +1,8 @@
 * current work
-** command_gui throws bad_weak_ptr
-   In event handler, after moving ship button to tab_allocated
-** command_gui ship buttons cover complete table
-** graphics::ship_button drawn on weird angle
-** command selectors should update their position on each reload_data
-   Maybe they are? They jump in direction of command...
-** [J] main_interface::reset_qw() does not clear command_gui radio buttons
-* [!] issues
-** [!] bugs & crashes
+** command_gui: sfg::Image -> SetImage causes meshed image
+   Consider making image with background color?
+* [~] issues
+** [~ & crashes
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
@@ -41,6 +36,8 @@
    No particular reason to not put this in normal class members?
 ** add a vision map, build in client on reload_data
 * tweaks and fixes
+** command selectors should update their position on each reload_data
+   Maybe they are? They jump in direction of command...
 ** allow double-clicking ship to select all of same type
 ** allow dragging waypoints
 ** name and indicators for solars so you can tell them apart
@@ -82,6 +79,13 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] command_gui throws bad_weak_ptr
+   In event handler, after moving ship button to tab_allocated
+
+   Caused by removing a widget while in the parent widget's event loop
+** [J] command_gui ship buttons cover complete table
+** [J] graphics::ship_button drawn on weird angle
+** [J] main_interface::reset_qw() does not clear command_gui radio buttons
 ** [J] fleets should try to set scatter point towards owned solar
 ** [J] fleets should try not to change the scatter point
 ** [J] fleets should suggest travel instead of scatter if target direction is free

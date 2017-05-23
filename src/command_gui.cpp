@@ -21,44 +21,6 @@ using namespace interface;
 
 const std::string command_gui::sfg_id = "command gui";
 
-void command_gui::table_t::setup(int ncols, float pad) {
-  layout = Box::Create(Box::Orientation::VERTICAL, padding);
-  cols = ncols;
-  padding = pad;
-}
-
-void command_gui::table_t::update_rows() {
-  int n = buttons.size();
-  layout -> RemoveAll();
-  rows.clear();
-
-  if (n == 0) return;
-  
-  rows.resize(ceil(n / cols));
-  
-  int i = 0;
-  for (i = 0; i < rows.size(); i++) {
-    rows[i] = Box::Create(Box::Orientation::HORIZONTAL, padding);
-    layout -> Pack(rows[i]);
-  }
-
-  int count = 0;
-  for (auto b : buttons) {
-    rows[count / cols] -> Pack(b);
-    count++;
-  }
-}
-
-void command_gui::table_t::add_button(sfg::Button::Ptr b) {
-  buttons.insert(b);
-  update_rows();
-}
-
-void command_gui::table_t::remove_button(sfg::Button::Ptr b) {
-  buttons.erase(b);
-  update_rows();
-}
-
 command_gui::Ptr command_gui::Create(client::command_selector::ptr c, client::game *g) {
   Ptr self(new command_gui(c, g));
   self -> Add(self -> layout);
@@ -68,12 +30,10 @@ command_gui::Ptr command_gui::Create(client::command_selector::ptr c, client::ga
 }
 
 command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Window(Window::Style::BACKGROUND) {
-  // dimensions
-  sf::FloatRect bounds = main_interface::qw_allocation;
   
   layout = Box::Create(Box::Orientation::VERTICAL, 10);
   // add header and policies
-  string header = c -> action + ": from " + c -> source + " to " + c -> target;
+  string header = c -> source + ": " + c -> action + " " + c -> target;
   layout -> Pack(Label::Create(header));
   layout -> Pack(Separator::Create());
 
@@ -87,95 +47,90 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
 
   for (auto p : policy) {
     int fp = p.first;
-    p.second -> GetSignal(ToggleButton::OnToggle).Connect([c, fp] () {
-	c -> policy = fp;
+    p.second -> GetSignal(ToggleButton::OnToggle).Connect([this, fp] () {
+	selected_policy = fp;
     });
     layout -> Pack(p.second);
   }
 
   layout -> Pack(Separator::Create());
 
-  // Add ship buttons
-  float h_header = layout -> GetRequisition().y + 40;
-  float padding = 5;
-  sf::FloatRect table_bounds(bounds.left + padding, bounds.top + 2 * padding + h_header, bounds.width - 2 * padding, bounds.height - 3 * padding - h_header);
-
-  
-  // setup command gui using ready ships from source plus ships
-  // already selected for this command (they will not be listed as
-  // ready)
-  set<combid> ready_ships = g -> get_ready_ships(c -> source);
-  ready_ships += c -> ships;
-
-  hm_t<string, set<combid> > by_class;
-
-  for (auto sid : ready_ships) {
+  for (auto sid : g -> get_ready_ships(c -> source)) {
     ship::ptr s = g -> get_specific<ship>(sid);
-    by_class[s -> ship_class].insert(s -> id);
+    data[s -> ship_class].available++;
   }
 
-  sf::FloatRect t_rect = table_bounds;
-  t_rect.height /= by_class.size();
+  for (auto sid : c -> ships) {
+    ship::ptr s = g -> get_specific<ship>(sid);
+    data[s -> ship_class].allocated++;
+  }
+
+  point label_dims(100, 60);
+
+  auto build_ship_label = [this, label_dims] (string ship_class) -> sf::Image {
+    string label = to_string(data[ship_class].allocated) + "/" + to_string(data[ship_class].allocated + data[ship_class].available);
+    return graphics::ship_image_label(label, ship_class, label_dims.x, label_dims.y);
+  };
 
   // build ship allocation tables for each available ships class
-  for (auto data : by_class) {
-    string ship_class = data.first;
-    set<combid> ships = data.second;
+  for (string ship_class : ship::all_classes()) {
+    int total = data[ship_class].available + data[ship_class].allocated;
+    if (total == 0) continue;
+
     Box::Ptr box = Box::Create(Box::Orientation::HORIZONTAL, 10);
+    Scale::Ptr scale = Scale::Create( sfg::Scale::Orientation::HORIZONTAL);
+    data[ship_class].image = Image::Create(build_ship_label(ship_class));
+    data[ship_class].adjust = scale -> GetAdjustment();
+    data[ship_class].adjust -> SetLower(0);
+    data[ship_class].adjust -> SetUpper(total);
+    data[ship_class].adjust -> SetValue(data[ship_class].allocated);
+    data[ship_class].adjust -> GetSignal(Adjustment::OnChange).Connect([this, build_ship_label, ship_class, total] () {
+	data[ship_class].allocated = data[ship_class].adjust -> GetValue();
+	data[ship_class].available = total - data[ship_class].allocated;
+	data[ship_class].image -> SetImage(build_ship_label(ship_class));
+      });
 
-    float inner_width = (t_rect.width - 3 * padding) / 2;
-    float inner_height = t_rect.height - 2 * padding;
-    int n_total = ships.size();
-    int cols = ceil(sqrt(n_total));
-    int rows = ceil(n_total / cols);
-    point b_dims(inner_width / cols - 2 * padding, inner_height / rows - 2 * padding);
-
-    tab_available[ship_class].setup(cols, 2);
-    tab_allocated[ship_class].setup(cols, 2);
-
-    // insert ship buttons
-    for (auto sid : ships) {
-      Button::Ptr b = graphics::ship_button(ship_class, b_dims.x, b_dims.y);
-
-      b -> GetSignal(Widget::OnLeftClick).Connect([this, ship_class, sid, c] () {
-	  Button::Ptr p = ship_buttons[sid];
-	  if (c -> ships.count(sid)) {
-	    c -> ships.erase(sid);
-	    tab_allocated[ship_class].remove_button(p);
-	    tab_available[ship_class].add_button(p);
-	  }else{
-	    c -> ships.insert(sid);
-	    tab_available[ship_class].remove_button(p);
-	    tab_allocated[ship_class].add_button(p);
-	  }
-	});
-
-      ship_buttons[sid] = b;
-      if (c -> ships.count(sid)) {
-	tab_allocated[ship_class].add_button(b);
-      } else {
-	tab_available[ship_class].add_button(b);
-      }
-    }
-
-    // set allocations
-    sf::FloatRect inner_bounds(t_rect.left + padding, t_rect.top + padding, inner_width, inner_height);
-    tab_available[ship_class].layout -> SetAllocation(inner_bounds);
-    inner_bounds.left = t_rect.left + inner_width + 2 * padding;
-    tab_allocated[ship_class].layout -> SetAllocation(inner_bounds);
-
-    box -> Pack(tab_available[ship_class].layout);
-    box -> Pack(tab_allocated[ship_class].layout);
-    box -> SetAllocation(t_rect);
-
+    box -> Pack(data[ship_class].image);
+    box -> Pack(scale);
     layout -> Pack(box);
-    t_rect.top += t_rect.height;
   }
 
-  // add ok
+  // add ok and cancel
   Button::Ptr ok = Button::Create("OK");
-  ok -> GetSignal(Widget::OnLeftClick).Connect([] () {
+  ok -> GetSignal(Widget::OnLeftClick).Connect([this, c, g] () {
+      c -> policy = selected_policy;
+      
+      // assign correct number of ships per class to c
+      c -> ships.clear();
+      set<combid> ready_ships = g -> get_ready_ships(c -> source);
+
+      // first list ships by class
+      hm_t<string, set<combid> > by_class;
+      for (auto sid : ready_ships) {
+	ship::ptr s = g -> get_specific<ship>(sid);
+	by_class[s -> ship_class].insert(s -> id);
+      }
+
+      // then assign ships
+      for (auto x : data) {
+	string ship_class = x.first;
+	int count = x.second.allocated;
+	for (int i = 0; i < count; i++) {
+	  auto iter = by_class[ship_class].begin();
+	  combid sid = *iter;
+	  by_class[ship_class].erase(iter);
+	  c -> ships.insert(sid);
+	}
+      }
+      
       desktop -> clear_qw();
     });
-  layout -> Pack(ok);
+
+  Button::Ptr cancel = Button::Create("Cancel");
+  cancel -> GetSignal(Widget::OnLeftClick).Connect([] () {desktop -> clear_qw();});
+
+  Box::Ptr l_bottom = Box::Create(Box::Orientation::HORIZONTAL, 10);
+  l_bottom -> Pack(ok);
+  l_bottom -> Pack(cancel);
+  layout -> Pack(l_bottom);
 }

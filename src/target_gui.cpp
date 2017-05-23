@@ -89,7 +89,7 @@ void st3::target_gui::draw(){
     text[i].setFont(graphics::default_font); 
     text[i].setCharacterSize(0.5 * option_size.y);
     text[i].setScale(scale);
-    text[i].setColor(sf::Color(10,20,30));
+    text[i].setFillColor(sf::Color(10,20,30));
     text[i].setString(options[i].key + " - " + options[i].option);
     text[i].setPosition(bounds.left, bounds.top + i * boxdims.y);
     max_width = fmax(max_width, text[i].getLocalBounds().width);

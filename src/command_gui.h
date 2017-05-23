@@ -17,23 +17,16 @@ namespace st3{
   namespace interface {
     /*! gui for allocating ships to command selectors */
     class command_gui : public sfg::Window {
-      struct table_t {
-	std::set<sfg::Button::Ptr> buttons;
-	sfg::Box::Ptr layout;
-	std::vector<sfg::Box::Ptr> rows;
-	int cols;
-	float padding;
-
-	void setup(int ncols, float padding);
-	void update_rows();
-	void add_button(sfg::Button::Ptr b);
-	void remove_button(sfg::Button::Ptr b);
+      struct class_info {
+	int available;
+	int allocated;
+	sfg::Adjustment::Ptr adjust;
+	sfg::Image::Ptr image;
       };
       
-      hm_t<combid, sfg::Button::Ptr> ship_buttons;
-      hm_t<std::string, table_t> tab_available;
-      hm_t<std::string, table_t> tab_allocated;
-
+      hm_t<std::string, class_info> data;
+      int selected_policy;
+      
     public:
       typedef std::shared_ptr<command_gui> Ptr;
       typedef std::shared_ptr<const command_gui> PtrConst;

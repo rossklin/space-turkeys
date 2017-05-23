@@ -31,7 +31,7 @@ void graphics::initialize(){
   }
 }
 
-void graphics::draw_circle(window_t &w, point p, float r, sf::Color co, sf::Color cf, float b) {
+void graphics::draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, sf::Color cf, float b) {
   sf::CircleShape sol(r);
   float inv = inverse_scale(w).x;
   sol.setPointCount(r / inv);
@@ -42,7 +42,7 @@ void graphics::draw_circle(window_t &w, point p, float r, sf::Color co, sf::Colo
   w.draw(sol);
 };
 
-void graphics::draw_text(window_t &w, string v, point p, int fs, bool ul) {
+void graphics::draw_text(sf::RenderTarget &w, string v, point p, int fs, bool ul) {
   point inv = graphics::inverse_scale(w);
   sf::Text text;
   text.setString(v);
@@ -55,12 +55,12 @@ void graphics::draw_text(window_t &w, string v, point p, int fs, bool ul) {
     text.setOrigin(point(text_dims.left + text_dims.width/2, text_dims.top + text_dims.height / 2));
   }
   text.setPosition(p); 
-  text.setColor(sf::Color(200,200,200));
+  text.setFillColor(sf::Color(200,200,200));
   text.setScale(inv);
   w.draw(text);
 };
 
-void graphics::draw_framed_text(window_t &w, string v, sf::FloatRect bounds, sf::Color co, sf::Color cf) {
+void graphics::draw_framed_text(sf::RenderTarget &w, string v, sf::FloatRect bounds, sf::Color co, sf::Color cf) {
   int margin = ceil(bounds.height / 10);
   sf::RectangleShape r = graphics::build_rect(bounds);
   r.setOutlineColor(co);
@@ -73,7 +73,11 @@ void graphics::draw_framed_text(window_t &w, string v, sf::FloatRect bounds, sf:
   draw_text(w, v, p, fs);
 }
 
-sfg::Button::Ptr graphics::ship_button(string ship_class, float width, float height, sf::Color col) {
+sf::Image graphics::ship_image(string ship_class, float width, float height, sf::Color col) {
+  return ship_image_label("", ship_class, width, height, col, col);
+}
+
+sf::Image graphics::ship_image_label(string text, string ship_class, float width, float height, sf::Color l_col, sf::Color s_col) {
   sf::RenderTexture tex;
   if (!tex.create(width, height)) {
     throw runtime_error("Failed to create render texture!");
@@ -81,12 +85,23 @@ sfg::Button::Ptr graphics::ship_button(string ship_class, float width, float hei
 
   ship s(ship::table().at(ship_class));
   s.position = point(width/2, height/2);
+  s.angle = 0;
   float scale = width / 6;
-  draw_ship(tex, s, col, scale);
+  draw_ship(tex, s, s_col, scale);
+
+  if (text.length() > 0) {
+    int fs = 0.6 * fmin(width / (float)text.length(), height);
+    draw_text(tex, text, s.position, fs);
+  }
+  
   tex.display();
 
+  return tex.getTexture().copyToImage();
+}
+
+sfg::Button::Ptr graphics::ship_button(string ship_class, float width, float height, sf::Color col) {
   sfg::Button::Ptr b = sfg::Button::Create();
-  b -> SetImage(sfg::Image::Create(tex.getTexture().copyToImage()));
+  b -> SetImage(sfg::Image::Create(ship_image(ship_class, width, height, col)));
   return b;
 };
 
@@ -120,14 +135,14 @@ sf::RectangleShape graphics::build_rect(sf::FloatRect bounds){
 }
 
 // point coordinates of view ul corner
-point graphics::ul_corner(window_t &w){
+point graphics::ul_corner(sf::RenderTarget &w){
   sf::View sv = w.getView();
   point v = sv.getSize();
   return sv.getCenter() - point(v.x * 0.5, v.y * 0.5);
 }
 
 // transform from pixels to points
-sf::Transform graphics::view_inverse_transform(window_t &w){
+sf::Transform graphics::view_inverse_transform(sf::RenderTarget &w){
   sf::Transform t;
   sf::View v = w.getView();
 
@@ -137,12 +152,12 @@ sf::Transform graphics::view_inverse_transform(window_t &w){
 }
 
 // scale from pixels to points
-point graphics::inverse_scale(window_t &w){
+point graphics::inverse_scale(sf::RenderTarget &w){
   sf::View v = w.getView();
   return point(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
 }
 
-void graphics::draw_explosion(window_t &w, explosion e){
+void graphics::draw_explosion(sf::RenderTarget &w, explosion e){
   float t = e.time_passed();
   float rad = 20 * t * exp(-pow(3 * t,2));
   sf::Color c = fade_color(c, sf::Color::White, 0.5);
