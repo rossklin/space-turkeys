@@ -32,7 +32,7 @@ development_gui::development_gui(hm_t<std::string, development::node> map, f_req
       if (is_facility) {
 	for (auto f : x.second.depends_facilities) if (!available.count(f.first)) pass = false;
       } else {
-	for (auto f : x.second.depends_techs) if (available.count(f)) dependent.insert(x.first);	
+	for (auto f : x.second.depends_techs) if (!available.count(f)) pass = false;
       }
       if (pass) dependent.insert(x.first);
     }
@@ -53,15 +53,29 @@ development_gui::development_gui(hm_t<std::string, development::node> map, f_req
     Box::Ptr l = Box::Create(Box::Orientation::VERTICAL);
     Frame::Ptr f = Frame::Create(v);
 
-    for (auto b : n.sector_boost) l -> Pack(Label::Create(b.first + " + " + to_string((int)(100 * (b.second - 1))) + "%"));
-    for (auto su : n.ship_upgrades) l -> Pack(Label::Create(su.first + " gains: " + boost::algorithm::join(su.second, ", ")));
+    for (auto b : n.sector_boost) l -> Pack(Label::Create(b.first + " + " + to_string((int)(100 * (b.second - 1))) + "%"), false, false);
+    for (auto su : n.ship_upgrades) l -> Pack(Label::Create(su.first + " gains: " + boost::algorithm::join(su.second, ", ")), false, false);
+
+    Button::Ptr b = Button::Create("Develop");
+    b -> GetSignal(Widget::OnLeftClick).Connect([v, on_complete] () {on_complete(true, v);});
+    l -> Pack(b, false, true);
     
     f -> Add(l);
-    f -> GetSignal(Widget::OnLeftClick).Connect([v, on_complete] () {on_complete(true, v);});
     return f;
   };
 
-  for (auto v : dependent) layout -> Pack(build_dependent(v));
+  // dependent techs go in a scrolled window
+  ScrolledWindow::Ptr scrolledwindow = ScrolledWindow::Create();
+  Box::Ptr window_box = Box::Create(Box::Orientation::VERTICAL, 5);
+
+  scrolledwindow->SetScrollbarPolicy( ScrolledWindow::HORIZONTAL_NEVER | ScrolledWindow::VERTICAL_AUTOMATIC );
+  scrolledwindow->AddWithViewport( window_box );
+
+  for (auto v : dependent) window_box -> Pack(build_dependent(v));
+  point req = window_box -> GetRequisition();
+  scrolledwindow->SetRequisition(point(req.x, 200));
+  layout -> Pack(scrolledwindow);
+
   Box::Ptr avl = Box::Create(Box::Orientation::HORIZONTAL);
   for (auto v : available) avl -> Pack(build_available(v));
   layout -> Pack(avl);

@@ -329,7 +329,7 @@ void command_selector::draw(window_t &w){
 
   // setup arrow colors
   if (selected){
-    text.setColor(graphics::command_selected_text);
+    text.setFillColor(graphics::command_selected_text);
     c_head[0].color = graphics::command_selected_head;
     c_head[1].color = graphics::command_selected_body;
     c_head[2].color = graphics::command_selected_body;
@@ -337,7 +337,7 @@ void command_selector::draw(window_t &w){
     c_body[1].color = graphics::command_selected_body;
     c_body[2].color = graphics::command_selected_tail;
   }else{
-    text.setColor(graphics::command_normal_text);
+    text.setFillColor(graphics::command_normal_text);
     c_head[0].color = graphics::command_normal_head;
     c_head[1].color = graphics::command_normal_body;
     c_head[2].color = graphics::command_normal_body;

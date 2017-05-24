@@ -119,25 +119,36 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
   ship::ptr s = g -> get_ship(sid);
   float pref_density = 0.2;
   float pref_maxrad = fmax(sqrt(ships.size() / (M_PI * pref_density)), 10);
+
+  auto output = [this] (string v) {
+    cout << id << ": suggest: " << v << endl;
+  };
   
   if (stats.enemies.size()) {
     suggestion s_evade(suggestion::evade, stats.path);
     if (!stats.can_evade) s_evade.id = suggestion::scatter;
     
     if (com.policy & policy_maintain_course) {
+      output("maintain course");
       return suggestion(suggestion::travel, stats.target_position);
     }else if (com.policy & policy_evasive) {
+      output("evade");
       return s_evade;
     }else{    
       if (s -> tags.count("spacecombat")) {
 	if (com.policy & policy_aggressive) {
-	  return suggestion(suggestion::engage, stats.enemies.front().first);
+	  point p = stats.enemies.front().first;
+	  output("aggressive engage: " + utility::point2string(p));
+	  return suggestion(suggestion::engage, p);
 	} else if (com.policy & policy_reasonable && stats.enemies.front().second < 1){
+	  output("local engage");
 	  return suggestion(suggestion::engage, s -> position);
 	} else {
+	  output("evade");
 	  return s_evade;
 	}
       }else{
+	  output("evade");
 	return s_evade;
       }
     }
@@ -145,15 +156,20 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
     // peaceful times
     if (utility::l2norm(s -> position - position) > pref_maxrad) {
       if (is_idle()) {
+	output("summon");
 	return suggestion::summon;
       } else {
+	output("summon and travel");
 	return suggestion(suggestion::summon | suggestion::travel, stats.target_position);
       }
     }else if (is_idle()) {
+      output("hold");
       return suggestion::hold;
     }else if (stats.converge) {
+      output("activate");
       return suggestion(suggestion::activate, stats.target_position);
     }else{
+      output("travel");
       return suggestion(suggestion::travel, stats.target_position);
     }
   }
@@ -169,8 +185,13 @@ void fleet::analyze_enemies(game_data *g) {
   int rep = 10;
   vector<point> x(n);
 
+  auto output = [this] (string v) {
+    cout << id << ": analyze enemies: " << v << endl;
+  };
+  
   if (t.empty()) {
     stats.can_evade = false;
+    output("no enemies");
     return;
   }
 
@@ -205,6 +226,8 @@ void fleet::analyze_enemies(game_data *g) {
   if (x.empty()) throw runtime_error("Failed to build enemy clusters!");
   if (x.size() == n) throw runtime_error("Analyze enemies: clusters failed to form!");
 
+  output("identified " + to_string(x.size()) + " clusters");
+
   int na = 10;
 
   // assign ships to clusters
@@ -221,56 +244,54 @@ void fleet::analyze_enemies(game_data *g) {
     // cluster assignment
     int idx = utility::vector_min<point>(x, [s] (point y) -> float {return utility::l2d2(y - s -> position);});
     cc[idx] += strength_value;
+
+    output("assigned enemy " + s -> id + " to cluster " + to_string(idx) + " at " + utility::point2string(x[idx]));
   }
 
   // build enemy fleet stats
-  for (auto i : cc) stats.enemies.push_back(make_pair(x[i.first], i.second / stats.self_strength));
+  for (auto i : cc) {
+    stats.enemies.push_back(make_pair(x[i.first], i.second / stats.self_strength));
+    output("added enemy cluster value: " + utility::point2string(x[i.first]) + ": " + to_string(i.second / stats.self_strength));
+  }
+  
   stats.enemies.sort([](pair<point, float> a, pair<point, float> b) {return a.second > b.second;});
 
   // find best evade direction
 
-  // circular kernel smooth enemy strength data
-  vector<float> s_buf = utility::circular_kernel(scatter_data);
+  // define prioritized directions
+  vector<float> dw(na, 1);
+  int idx_previous = utility::angle2index(na, utility::point_angle(stats.path - position));
+  int idx_target = utility::angle2index(na, utility::point_angle(stats.target_position - position));
+  int idx_closest = 0;
 
-  // preferred directions
-  float val_prev = s_buf[utility::angle2index(na,utility::point_angle(stats.path - position))];
-  if (!stats.can_evade) val_prev = INFINITY;
+  // approach mainly considering enemy threat when enemy is about
+  // twice as strong as you, but lower severity for weak fleets
+  float severity = utility::sigmoid(log(1 + stats.self_strength) * stats.enemies.front().second / 2);
+
   solar::ptr closest_solar = g -> closest_solar(position, owner);
-  point p_solar;
-  float val_solar = INFINITY;
   if (closest_solar) {
-    p_solar = closest_solar -> position;
-    val_solar = s_buf[utility::angle2index(na,utility::point_angle(p_solar - position))];
-  }
-  float val_target = s_buf[utility::angle2index(na,utility::point_angle(stats.target_position - position))];
-
-  // direction with lowest threat
-  float best = INFINITY;
-  float angle = -1;
-  for (int i = 0; i < na; i++) {
-    float v = s_buf[i];
-    if (v < best) {
-      best = v;
-      angle = utility::index2angle(na,i);
-    }
+    idx_closest = utility::angle2index(na, utility::point_angle(closest_solar -> position - position));
+    dw[idx_closest] = 0.8 * severity;
   }
 
-  // weight directions by preference and danger
-  point p_best = position + utility::scale_point(utility::normv(angle), 100);
-  vector<pair<float, point> > priority(4);
-  priority[0] = {best, p_best};
-  priority[1] = {val_target / 2, stats.target_position};
-  priority[2] = {val_prev / 1.6, stats.path};
-  priority[3] = {val_solar / 1.4, p_solar};
-    
-  pair<float, point> select = priority[utility::vector_min<pair<float, point> >(priority, [](pair<float, point> x) -> float {return x.first;})];
+  if (stats.can_evade) dw[idx_previous] = 0.7 * severity;
+
+  dw[idx_target] = 0.5 * severity;
+
+  // merge direction priorities with enemy strength data via circular kernel
+  vector<float> heuristics = utility::elementwise_product(utility::circular_kernel(scatter_data, (3 * na) / 2), utility::circular_kernel(dw, 3));
+
+  int prio_idx = utility::vector_min<float>(heuristics, utility::identity_function<float>());
+  float evalue = heuristics[prio_idx];
 
   // only allow evasion if there exists a path with low enemy strength
-  if (select.first < 0.8) {
+  if (evalue < 0.8) {
     stats.can_evade = true;
-    stats.path = select.second;
+    stats.path = position + utility::scale_point(utility::normv(utility::index2angle(na, prio_idx)), 100);
+    output("selected evasion angle: " + to_string(utility::index2angle(na, prio_idx)));
   } else {
     stats.can_evade = false;
+    output("no good evasion priority index (best was: " + to_string(utility::index2angle(na, prio_idx)) + " at " + to_string(evalue));
   }
 }
 

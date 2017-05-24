@@ -323,11 +323,17 @@ void game_data::collide_ships(id_pair x) {
   ship::ptr s = get_ship(x.a);
   ship::ptr t = get_ship(x.b);
 
+  point velocity_self = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
+  point velocity_other = utility::scale_point(utility::normv(s -> angle), s -> stats[sskey::key::speed]);
   point delta = s -> position - t -> position;
   float smaller_mass = fmin(t -> stats[sskey::key::mass], s -> stats[sskey::key::mass]);
-  point velocity_self(t -> stats[sskey::key::speed] * cos(t -> angle), t -> stats[sskey::key::speed] * sin(t -> angle));
-  point velocity_other(s -> stats[sskey::key::speed] * cos(s -> angle), s -> stats[sskey::key::speed] * sin(s -> angle));
   float collision_energy = 0.5 * smaller_mass * utility::l2d2(velocity_other - velocity_self);
+  float eps = 1e-3;
+
+  if (collision_energy < eps) {
+    return;
+  }
+  
   float mass_ratio = t -> stats[sskey::key::mass] / s -> stats[sskey::key::mass];
   point new_velocity = utility::scale_point(velocity_self, mass_ratio) + utility::scale_point(velocity_other, 1/mass_ratio);
   float new_angle = utility::point_angle(new_velocity);
@@ -353,14 +359,16 @@ void game_data::rebuild_evm() {
 
   // rebuild vision matrix
   for (auto x : entity) {
-    if (x.second -> is_active()){
+    if (x.second -> is_active() && x.second -> owner != game_object::neutral_owner) {
       // entity sees itself
       evm[x.second -> owner].insert(x.first);
 
       // only physical entities can see others
       if (x.second -> isa(physical_object::class_id)) {
 	physical_object::ptr e = utility::guaranteed_cast<physical_object>(x.second);
-	for (auto i : entity_grid -> search(e -> position, e -> vision())){
+	for (auto i : entity_grid -> search(e -> position, e -> vision())) {
+	  if (i.first == x.first) continue;
+	  
 	  game_object::ptr t = get_entity(i.first);
 	  // only see other players' entities if they are physical and active
 	  if (t -> isa(physical_object::class_id) && t -> is_active() && e -> can_see(t)) evm[e -> owner].insert(t -> id);

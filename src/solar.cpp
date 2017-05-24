@@ -279,7 +279,7 @@ void solar::dynamics(){
   if (population > 0){
     // population development
     
-    float random_growth = population * f_growth * utility::random_normal(0, 1);
+    float random_growth = population * f_growth * utility::random_normal(0, 0.2);
     buf.population += population_increment() * dt + random_growth * dw;
 
     // happiness development
@@ -330,13 +330,13 @@ bool solar::isa(string c) {
 }
 
 bool solar::can_see(game_object::ptr x) {
-  float r = 1;
+  float r = vision();
   if (!x -> is_active()) return false;
 
   if (x -> isa(ship::class_id)) {
     ship::ptr s = utility::guaranteed_cast<ship>(x);
     float area = pow(s -> stats[sskey::key::mass], 2 / (float)3);
-    r = area * vision() / (s -> stats[sskey::key::stealth] + 1);
+    r = vision() * fmin(area / (s -> stats[sskey::key::stealth] + 1), 1);
   }
   
   float d = utility::l2norm(x -> position - position);

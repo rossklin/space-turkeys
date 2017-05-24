@@ -56,6 +56,10 @@ rapidjson::Document *utility::get_json(string key) {
 // POINT ARITHMETICS
 // ****************************************
 
+string utility::point2string(point p) {
+  return to_string(p.x) + "x" + to_string(p.y);
+}
+
 float utility::signum(float x, float eps){
   return (x > eps) - (x < -eps);
 }
@@ -159,7 +163,18 @@ float utility::index2angle(int na, int idx) {
   return 2 * M_PI * (idx + 0.5) / (float)na;
 }
 
-vector<float> utility::circular_kernel(const vector<float> &x) {
+int utility::int_modulus(int x, int p) {
+  return x < 0 ? p + (x % p) : x % p;
+}
+
+std::vector<int> utility::sequence(int a, int b) {
+  assert(a < b);
+  vector<int> res(b - a);
+  for (int i = a; i < b; i++) res[i] = i;
+  return res;
+}
+
+vector<float> utility::circular_kernel(const vector<float> &x, int r) {
   // circular kernel smooth enemy strength data
   int na = x.size();
   vector<float> buf(na);
@@ -167,9 +182,9 @@ vector<float> utility::circular_kernel(const vector<float> &x) {
   for (int i = 0; i < na; i++) {
     buf[i] = 0;
     float wsum = 0;
-    for (int j = -na/2; j <= na/2; j++) {
-      float w = exp(-pow(j,2));
-      buf[i] += w * x[(j + na) % na];
+    for (int j = -r; j <= r; j++) {
+      float w = exp(-pow(7 * j / (float)r, 2));
+      buf[i] += w * x[utility::int_modulus(i + j + na, na)];
       wsum += w;
     }
     buf[i] /= wsum;

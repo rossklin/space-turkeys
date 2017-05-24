@@ -162,6 +162,10 @@ void ship::move(game_data *g){
   fleet::ptr f = g -> get_fleet(fleet_id);
   fleet::suggestion suggest = f -> suggest(id, g);
 
+  auto output = [this] (string v) {
+    cout << id << ": move: " << v << endl;
+  };
+
   bool summon = suggest.id & fleet::suggestion::summon;
   bool engage = suggest.id & fleet::suggestion::engage;
   bool scatter = suggest.id & fleet::suggestion::scatter;
@@ -243,54 +247,66 @@ void ship::move(game_data *g){
   };
 
   // angle and speed when running local policies
-  auto compute_local = [this, suggest] (float &a, float &s) {
+  auto compute_local = [this, suggest, output] (float &a, float &s) {
     point local_delta = suggest.p - position;
     a = utility::point_angle(local_delta);
 
     if (utility::l2norm(local_delta) > 10) {
-      s = stats[sskey::key::speed];
+      s = base_stats.stats[sskey::key::speed];
     } else {
       s = 0;
     }
+
+    output("setting local target angle: " + to_string(a));
+    output("setting local target speed: " + to_string(s) + " (delta is " + to_string(utility::l2norm(local_delta)));
   };
 
   // compute desired angle and speed
   if (summon) {
     compute_summon(target_angle, target_speed);
+    output("summon");
   } else if (local) {
     compute_local(target_angle, target_speed);
+    output("local");
   } else if (hold) {
     target_speed = 0;
+    output("hold");
   } else if (travel) {
     // try to follow ships in front of you
     apply_friends([this, &target_angle](ship::ptr s) {
 	float weight = (cos(utility::angle_difference(utility::point_angle(s -> position - position), angle)) + 1) / 2;
 	target_angle += 0.1 * weight * utility::angle_difference(target_angle, s -> angle);
       });
+    output("travel");
   } else if (scatter) {
     // just avoid nearby enemies
     if (local_enemies.size()) {
       int na = 10;
       vector<float> enemies(na, 0);
-      apply_enemies([this, &enemies, na](ship::ptr s) {
+      apply_enemies([this, &enemies, na, output](ship::ptr s) {
 	  int idx = utility::angle2index(na, utility::point_angle(s -> position - position));
 	  enemies[idx] += s -> stats[sskey::key::mass] * s -> stats[sskey::key::ship_damage];
+	  output("scatter: avoiding " + s -> id);
 	});
 
       enemies = utility::circular_kernel(enemies);
       target_angle = utility::index2angle(na, utility::vector_min(enemies, utility::identity_function<float>()));
+      output("scatter: target angle: " + to_string(target_angle));
     } else {
       target_speed = 0;
       target_angle = angle;
+      output("scatter: chilling");
     }
   }
 
   // shoot enemies if able
-  if (engage && local_enemies.size()) {
-    auto evalfun = [this, g] (combid sid) -> float {
+  if (local_enemies.size()) {
+    auto evalfun = [this, g, output] (combid sid) -> float {
       ship::ptr s = g -> get_ship(sid);
       point delta = s -> position - position;
-      return utility::safe_inv(cos(utility::angle_difference(utility::point_angle(delta), angle)));
+      float h = utility::safe_inv(cos(utility::angle_difference(utility::point_angle(delta), angle)));
+      output("scanning local enemy: " + s -> id + ": h = " + to_string(h));
+      return h;
     };
 
     combid target_id = utility::value_min<combid>(local_enemies, evalfun);
@@ -302,6 +318,9 @@ void ship::move(game_data *g){
       info.target = target_id;
       info.interaction = interaction::space_combat;
       g -> interaction_buffer.push_back(info);
+      output("fire at " + target_id);
+    }else{
+      output("can't find a good shot");
     }
   }
 
@@ -315,7 +334,12 @@ void ship::move(game_data *g){
 	info.target = e -> id;
 	info.interaction = f -> com.action;
 	g -> interaction_buffer.push_back(info);
+	output("activating " + f -> com.action + " on " + e -> id);
+      } else {
+	output("can't activate " + f -> com.action + " on " + e -> id);
       }
+    } else {
+      output("activate: fleet target idle or missing action: " + f -> com.action);
     }
   }
 
@@ -337,21 +361,25 @@ void ship::move(game_data *g){
     
     if (check_space(target_angle + check_first * spread)) {
       target_angle = target_angle + check_first * spread;
+      output("blocked: found new space to the right");
     } else {
       check_first *= -1;
       if (check_space(target_angle + check_first * spread)) {
 	target_angle = target_angle + check_first * spread;
+	output("blocked: found new space to the left");
       } else {
 	target_speed = 0;
+	output("blocked: failed to find free space");
       }
     }
   }
 
   // check unit collisions
-  apply_ships([this, g] (ship::ptr s) {
+  apply_ships([this, g, output] (ship::ptr s) {
       point delta = s -> position - position;
       if (utility::l2norm(delta) < radius + s -> radius) {
 	g -> collision_buffer.insert(id_pair(id, s -> id));
+	output("collided with " + s -> id);
       }
     });
 
@@ -458,13 +486,13 @@ bool ship::isa(string c) {
 }
 
 bool ship::can_see(game_object::ptr x) {
-  float r = 1;
+  float r = vision();
   if (!x -> is_active()) return false;
 
   if (x -> isa(ship::class_id)) {
     ship::ptr s = utility::guaranteed_cast<ship>(x);
     float area = pow(s -> stats[sskey::key::mass], 2 / (float)3);
-    r = area * vision() * fmin((stats[sskey::key::detection] + 1) / (s -> stats[sskey::key::stealth] + 1), 1);
+    r = vision() * fmin(area * (stats[sskey::key::detection] + 1) / (s -> stats[sskey::key::stealth] + 1), 1);
   }
   
   float d = utility::l2norm(x -> position - position);

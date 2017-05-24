@@ -280,11 +280,19 @@ bool game::choice_step(){
 	if (targui -> done){
 	  if (targui -> selected_option.key != "cancel"){
 	    combid k = targui -> selected_option.key;
+	    bool postselect = false;
+	    
 	    if (k == "add_waypoint"){
 	      k = add_waypoint(targui -> position);
+	      postselect = true;
 	    }
 
 	    command2entity(k, targui -> selected_option.option, targui -> selected_entities);
+
+	    if (postselect) {
+	      deselect_all();
+	      get_entity(k) -> selected = true;
+	    }
 	  }
 	  delete targui;
 	  targui = 0;
@@ -604,6 +612,13 @@ void game::reload_data(data_frame &g){
   }
   for (auto id : rbuf) remove_entity(id);
 
+  // fix fleet positions
+  for (auto f : get_all<fleet>()) {
+    point p(0,0);
+    for (auto sid : f -> get_ships()) p += get_entity(sid) -> position;
+    f -> position = utility::scale_point(p, 1 / (float)f -> get_ships().size());
+  }
+
   // update commands for owned fleets
   for (auto f : get_all<fleet>()) {
     if (entity.count(f -> com.target) && f -> owned){
@@ -631,13 +646,6 @@ void game::reload_data(data_frame &g){
 
   // update research level ref for solars
   for (auto s : get_all<solar>()) s -> research_level = &players[s -> owner].research_level;
-
-  // fix fleet positions
-  for (auto f : get_all<fleet>()) {
-    point p(0,0);
-    for (auto sid : f -> get_ships()) p += get_entity(sid) -> position;
-    f -> position = utility::scale_point(p, 1 / (float)f -> get_ships().size());
-  }
 }
 
 // ****************************************
@@ -976,6 +984,8 @@ void game::setup_targui(point p){
     // autoselect "add waypoint"
     combid k = add_waypoint(p);
     command2entity(k, fleet_action::go_to, keys_selected);
+    deselect_all();
+    get_entity(k) -> selected = true;
   }else{
     // default options
     options.push_back(target_gui::option_add_waypoint);

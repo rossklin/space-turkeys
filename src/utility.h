@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <set>
+#include <cassert>
 #include <rapidjson/document.h>
 
 #include "types.h"
@@ -54,6 +55,8 @@ namespace st3{
     /* **************************************** */
     /* POINT MATHS */
     /* **************************************** */
+
+    std::string point2string(point p);
 
     /*! 
       computes the l2 norm of a point
@@ -195,7 +198,7 @@ namespace st3{
 
     int angle2index(int na, float a);
     float index2angle(int na, int idx);
-    std::vector<float> circular_kernel(const std::vector<float> &x);
+    std::vector<float> circular_kernel(const std::vector<float> &x, int s = 1);
 
     /*! 
       generates a random point with gaussian distribution 
@@ -247,6 +250,14 @@ namespace st3{
     /* VECTOR MATHS */
     /* **************************************** */
 
+    template<typename T>
+    std::vector<T> elementwise_product(const std::vector<T> &a, const std::vector<T> &b) {
+      assert(a.size() == b.size());
+      std::vector<T> x = a;
+      for (int i = 0; i < x.size(); i++) x[i] *= b[i];
+      return x;
+    };
+
     /*! normalize a vector
       @param x vector to normalize
     */
@@ -296,6 +307,10 @@ namespace st3{
       @return x mod p
     */
     float modulus(float x, float p);
+
+    int int_modulus(int x, int p);
+
+    std::vector<int> sequence(int a, int b);
 
     /*! generate colors distinct from each other and from black and grey
       @param n number of colors 

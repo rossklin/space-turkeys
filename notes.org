@@ -1,12 +1,20 @@
 * current work
-** [J] command_gui: sfg::Image -> SetImage causes meshed image
-   Consider making image with background color?
-* [~] issues
-** [~ & crashes
+** add debug printouts and run through fleet suggest and fleet analyze enemies
+*** [J?] fleet always selects evade towards target position 
+    check enemy strength cirkular kernel estimate
+* [!] issues
+** [!] system
+*** [!] command selector policies uninitialized after reload
+*** Ships collide unnessecarily
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
-*** tech requirements list floods window
+*** no delete button in command_gui
+*** mouse scroll should zoom
+*** available developments should also be in a scroll-window
+*** available developments' build button should be bottom aligned
+*** development req list is not left-aligned
+*** [J] tech requirements list floods window
    Make scroll window?
 *** priority buttons unresponsive to first right click
 *** Clicking interface response button also triggers click on minimap
@@ -19,6 +27,7 @@
     leave game request from client 1 while it was waiting for the
     choice from client 2.
 * system design ideas
+** distinguish between interactions and auras (e.g. hive support)
 ** add a command buffer so commands reach entities with distance based delay
 ** make detection stat determine which object stats are seen by client
 ** make angular acceleration an attribute
@@ -41,6 +50,7 @@
 ** add a vision map, build in client on reload_data
 * tweaks and fixes
 ** gui
+*** show ship health by marking ship vertices red
 *** show accumulated research
 *** add "build" button on facilities in solar_gui
 *** command selectors should update their position on each reload_data
@@ -81,6 +91,8 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] command_gui: sfg::Image -> SetImage causes meshed image
+   Consider making image with background color?
 ** [J] command_gui throws bad_weak_ptr
    In event handler, after moving ship button to tab_allocated
 
