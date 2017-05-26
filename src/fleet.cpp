@@ -232,26 +232,25 @@ void fleet::analyze_enemies(game_data *g) {
 
   // assign ships to clusters
   hm_t<int, float> cc;
-  vector<float> scatter_data(na, 0);
+  vector<float> scatter_data(na, get_hp() / g -> settings.frames_per_round);
   for (auto sid : t) {
-    ship::ptr s = g -> get_ship(sid);
-    float strength_value = s -> stats[sskey::key::mass] * s -> stats[sskey::key::ship_damage];
+    ship s(ship::table().at(g -> get_ship(sid) -> ship_class));
 
     // scatter value
-    int scatter_idx = utility::angle2index(na,utility::point_angle(s -> position - position));
-    scatter_data[scatter_idx] += strength_value;
+    int scatter_idx = utility::angle2index(na,utility::point_angle(s.position - position));
+    scatter_data[scatter_idx] += s.get_dps();
 
     // cluster assignment
-    int idx = utility::vector_min<point>(x, [s] (point y) -> float {return utility::l2d2(y - s -> position);});
-    cc[idx] += strength_value;
+    int idx = utility::vector_min<point>(x, [s] (point y) -> float {return utility::l2d2(y - s.position);});
+    cc[idx] += s.get_strength();
 
-    output("assigned enemy " + s -> id + " to cluster " + to_string(idx) + " at " + utility::point2string(x[idx]));
+    output("assigned enemy " + s.id + " to cluster " + to_string(idx) + " at " + utility::point2string(x[idx]));
   }
 
   // build enemy fleet stats
   for (auto i : cc) {
-    stats.enemies.push_back(make_pair(x[i.first], i.second / stats.self_strength));
-    output("added enemy cluster value: " + utility::point2string(x[i.first]) + ": " + to_string(i.second / stats.self_strength));
+    stats.enemies.push_back(make_pair(x[i.first], i.second / get_strength()));
+    output("added enemy cluster value: " + utility::point2string(x[i.first]) + ": " + to_string(i.second / get_strength()));
   }
   
   stats.enemies.sort([](pair<point, float> a, pair<point, float> b) {return a.second > b.second;});
@@ -264,22 +263,18 @@ void fleet::analyze_enemies(game_data *g) {
   int idx_target = utility::angle2index(na, utility::point_angle(stats.target_position - position));
   int idx_closest = 0;
 
-  // approach mainly considering enemy threat when enemy is about
-  // twice as strong as you, but lower severity for weak fleets
-  float severity = utility::sigmoid(log(1 + stats.self_strength) * stats.enemies.front().second / 2);
-
   solar::ptr closest_solar = g -> closest_solar(position, owner);
   if (closest_solar) {
     idx_closest = utility::angle2index(na, utility::point_angle(closest_solar -> position - position));
-    dw[idx_closest] = 0.8 * severity;
+    dw[idx_closest] = 0.8;
   }
 
-  if (stats.can_evade) dw[idx_previous] = 0.7 * severity;
+  if (stats.can_evade) dw[idx_previous] = 0.7;
 
-  dw[idx_target] = 0.5 * severity;
+  dw[idx_target] = 0.5;
 
   // merge direction priorities with enemy strength data via circular kernel
-  vector<float> heuristics = utility::elementwise_product(utility::circular_kernel(scatter_data, (3 * na) / 2), utility::circular_kernel(dw, 3));
+  vector<float> heuristics = utility::elementwise_product(utility::circular_kernel(scatter_data, 3), utility::circular_kernel(dw, 1));
 
   int prio_idx = utility::vector_min<float>(heuristics, utility::identity_function<float>());
   float evalue = heuristics[prio_idx];
@@ -298,7 +293,9 @@ void fleet::analyze_enemies(game_data *g) {
 void fleet::update_data(game_data *g, bool force_refresh){
 
   // need to update fleet data?
-  if (((update_counter++) % fleet::update_period) && !force_refresh) return;
+  bool should_update = force_refresh || utility::random_uniform() < 1 / (float)fleet::update_period;
+  if (!should_update) return;
+  
   float speed = INFINITY;
   int count;
 
@@ -315,15 +312,16 @@ void fleet::update_data(game_data *g, bool force_refresh){
   radius = g -> settings.fleet_default_radius;
   position = utility::scale_point(p, 1 / (float)ships.size());
 
-  stats.self_strength = 0;
+  stats.average_ship = ssfloat_t();
   for (auto k : ships){
     ship::ptr s = g -> get_ship(k);
     speed = fmin(speed, s -> base_stats.stats[sskey::key::speed]);
     r2 = fmax(r2, utility::l2d2(s -> position - position));
     stats.vision_buf = fmax(stats.vision_buf, s -> vision());
-    stats.self_strength += s -> stats[sskey::key::mass] * s -> stats[sskey::key::ship_damage];
+    for (int i = 0; i < sskey::key::count; i++) stats.average_ship.stats[i] += s -> stats[i];
   }
   
+  for (int i = 0; i < sskey::key::count; i++) stats.average_ship.stats[i] /= ships.size();
   stats.spread_radius = fmax(sqrt(r2), fleet::min_radius);
   stats.spread_density = ships.size() / (M_PI * pow(stats.spread_radius, 2));
   stats.speed_limit = speed;
@@ -384,17 +382,6 @@ void fleet::check_in_sight(game_data *g){
   }
 }
 
-// todo: more advanced fleet action policies
-bool fleet::confirm_ship_interaction(string a, combid t){
-  // always allow "space combat"
-  if (a == interaction::space_combat) return true;
-
-  bool action_match = a == com.action;
-  bool target_match = t == com.target;
-
-  return action_match && target_match;
-}
-
 void fleet::copy_from(const fleet &s){
   (*this) = s;
 }
@@ -417,6 +404,18 @@ fleet::analytics::analytics() {
   path = point(0,0);
   can_evade = false;
   vision_buf = 0;
+}
+
+float fleet::get_dps() {
+  return stats.average_ship.get_dps() * ships.size();
+}
+
+float fleet::get_hp() {
+  return stats.average_ship.get_hp() * ships.size();
+}
+
+float fleet::get_strength() {
+  return stats.average_ship.get_dps() * stats.average_ship.get_hp() * ships.size();
 }
 
 fleet::suggestion::suggestion() {

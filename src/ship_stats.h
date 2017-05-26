@@ -50,6 +50,9 @@ namespace st3{
     ssfloat_t();
     ssfloat_t(const ssfloat_t &s);
     bool insert(std::string key, sfloat value);
+    float get_dps();
+    float get_hp();
+    float get_strength();
   };
     
   class ship_stats : public ssfloat_t {

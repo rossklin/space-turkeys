@@ -22,6 +22,7 @@ namespace st3{
     static const std::string class_id;
     static std::list<std::string> all_classes();
     static std::string starting_ship;
+    static const int na;
 
     combid fleet_id; /*!< id of the ship's fleet */
     sfloat angle; /*!< ship's angle */
@@ -30,6 +31,17 @@ namespace st3{
     sint passengers;
     sint is_landed;
     cost::res_t cargo;
+
+    // ai stats
+    float target_angle;
+    float target_speed;
+    bool activate;
+    std::list<combid> neighbours;
+    std::list<combid> local_enemies;
+    std::list<combid> local_friends;
+    std::list<combid> local_all;
+    std::vector<float> free_angle;
+    bool check_space(float a);
 
     // game_object
     void pre_phase(game_data *g);
@@ -52,7 +64,8 @@ namespace st3{
     ship(const ship &s);
     ship(const ship_stats &s);
     ~ship();
-
+    
+    void update_data(game_data *g);
     void set_stats(ship_stats s);
     void receive_damage(game_object::ptr from, float damage);
     void on_liftoff(solar *from, game_data *g);

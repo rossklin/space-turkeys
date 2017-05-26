@@ -6,6 +6,7 @@
 #include "command.h"
 #include "game_object.h"
 #include "interaction.h"
+#include "ship_stats.h"
 
 namespace st3{
   class game_data;
@@ -43,7 +44,7 @@ namespace st3{
 
     struct analytics {
       std::list<std::pair<point, float> > enemies;
-      float self_strength;
+      ssfloat_t average_ship;
       sbool converge;
       sfloat vision_buf;
       float speed_limit;
@@ -97,8 +98,10 @@ namespace st3{
     void analyze_enemies(game_data *g);
     void update_data(game_data *g, bool force_refresh = false);
     void remove_ship(combid i);
-    bool confirm_ship_interaction(std::string a, combid t);
     suggestion suggest(combid i, game_data *g);
+    float get_hp();
+    float get_dps();
+    float get_strength();
     
     ptr clone();
 

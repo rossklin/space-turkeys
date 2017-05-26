@@ -198,7 +198,7 @@ namespace st3{
 
     int angle2index(int na, float a);
     float index2angle(int na, int idx);
-    std::vector<float> circular_kernel(const std::vector<float> &x, int s = 1);
+    std::vector<float> circular_kernel(const std::vector<float> &x, float s = 1);
 
     /*! 
       generates a random point with gaussian distribution 

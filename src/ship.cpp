@@ -11,6 +11,7 @@ using namespace std;
 using namespace st3;
 
 const string ship::class_id = "ship";
+const int ship::na = 10;
 string ship::starting_ship;
 
 const hm_t<string, ship_stats>& ship_stats::table(){
@@ -157,20 +158,28 @@ void ship::pre_phase(game_data *g){
   stats[sskey::key::shield] = fmin(stats[sskey::key::shield] + 0.01, base_stats.stats[sskey::key::shield]);
 }
 
-void ship::move(game_data *g){
+bool ship::check_space(float a) {
+  if (free_angle.empty()) {
+    cout << "check_space: no precomputed angles!" << endl;
+    return false;
+  }
+  return free_angle[utility::angle2index(na, a)] > 5 * radius;
+};
+
+void ship::update_data(game_data *g) {
   if (!has_fleet()) return;
   fleet::ptr f = g -> get_fleet(fleet_id);
   fleet::suggestion suggest = f -> suggest(id, g);
 
   auto output = [this] (string v) {
-    cout << id << ": move: " << v << endl;
+    cout << id << ": update data: " << v << endl;
   };
 
   bool summon = suggest.id & fleet::suggestion::summon;
   bool engage = suggest.id & fleet::suggestion::engage;
   bool scatter = suggest.id & fleet::suggestion::scatter;
   bool travel = suggest.id & fleet::suggestion::travel;
-  bool activate = suggest.id & fleet::suggestion::activate;
+  activate = suggest.id & fleet::suggestion::activate;
   bool hold = suggest.id & fleet::suggestion::hold;
   bool evade = suggest.id & fleet::suggestion::evade;
   bool local = engage || evade || activate;
@@ -178,24 +187,23 @@ void ship::move(game_data *g){
   float fleet_target_angle = utility::point_angle(f -> stats.target_position - f -> position);
   point fleet_delta = f -> position - position;
   float fleet_angle = utility::point_angle(fleet_delta);
-  float target_angle = fleet_target_angle;
-  float target_speed = f -> stats.speed_limit;
+  target_angle = fleet_target_angle;
+  target_speed = f -> stats.speed_limit;
 
+  // analyze neighbourhood
   float nrad = interaction_radius();
-  list<combid> neighbours = g -> search_targets(id, position, nrad, target_condition(target_condition::any_alignment, ship::class_id).owned_by(owner));
-  list<combid> local_enemies;
-  list<combid> local_friends;
+  auto local_all_buf = g -> entity_grid -> search(position, nrad);
+  for (auto x : local_all_buf) if (x.first != id && g -> get_entity(x.first) -> isa(ship::class_id)) local_all.push_back(x.first);
+  neighbours = g -> search_targets(id, position, nrad, target_condition(target_condition::any_alignment, ship::class_id).owned_by(owner));
+  local_enemies.clear();
+  local_friends.clear();
 
-  auto apply_ships_generator = [this, g] (list<combid> sids) {
-    return [this, sids, g] (function<void(ship::ptr)> f) {
-      for (combid sid : sids) f(g -> get_ship(sid));
-    };
+  auto apply_ships = [this, g] (list<combid> sids, function<void(ship::ptr)> f) {
+    for (combid sid : sids) f(g -> get_ship(sid));
   };
 
-  auto apply_ships = apply_ships_generator(neighbours);
-
   // precompute enemies and friends
-  apply_ships([this, &local_enemies, &local_friends] (ship::ptr s) {
+  apply_ships(neighbours, [this] (ship::ptr s) {
       if (s -> owner == owner){
 	local_friends.push_back(s -> id);
       }else{
@@ -203,22 +211,15 @@ void ship::move(game_data *g){
       }
     });
 
-  auto apply_enemies = apply_ships_generator(local_enemies);
-  auto apply_friends = apply_ships_generator(local_friends);
-
-  auto check_space = [this, apply_ships, g] (float a) -> bool {
-    bool rvalue = true;
-    apply_ships([this, &rvalue] (ship::ptr s) {
-	float spread = 0.2 * M_PI;
-	float buffer = 2 * radius;
-	point delta = s -> position - position;
-	if (utility::l2norm(delta) < radius + s -> radius + buffer) {
-	  if (fabs(utility::angle_difference(utility::point_angle(delta), 0)) < spread) rvalue = false;
-	}
-      });
-
-    return rvalue;
-  };
+  // precompute available angles
+  free_angle = vector<float>(na, INFINITY);
+  apply_ships(neighbours, [this] (ship::ptr s) {
+      point delta = s -> position - position;
+      float a = utility::point_angle(delta);
+      float d = utility::l2norm(delta);
+      int i = utility::angle2index(na, a);
+      free_angle[i] = fmin(free_angle[i], d);
+    });
 
   // angle and speed for summon
   auto compute_summon = [=] (float &a, float &s) {
@@ -228,21 +229,25 @@ void ship::move(game_data *g){
 	// in front of fleet
 	if (check_space(fleet_target_angle + M_PI)) {
 	  // slow down
-	  s = 0.8 * f -> stats.speed_limit;
+	  s = fmin(0.8 * f -> stats.speed_limit, base_stats.stats[sskey::key::speed]);
+	  output("summon: in fron of fleet, slowing down");
 	}
       } else if (test > M_PI / 3) {
 	// side of fleet
 	if (check_space(fleet_angle)) {
 	  a = fleet_target_angle + 0.1 * utility::angle_difference(fleet_angle, fleet_target_angle);
+	  output("summon: to side of fleet, angling in");
 	}
       } else {
 	// back of fleet
 	if (check_space(fleet_target_angle)) {
-	  s = stats[sskey::key::speed];
+	  s = base_stats.stats[sskey::key::speed];
+	  output("summon: behind fleet, speeding up");
 	}
       }
     } else {
       a = fleet_angle;
+      output("summon: not traveling - heading towards center of fleet");
     }
   };
 
@@ -273,7 +278,7 @@ void ship::move(game_data *g){
     output("hold");
   } else if (travel) {
     // try to follow ships in front of you
-    apply_friends([this, &target_angle](ship::ptr s) {
+    apply_ships(local_friends, [this](ship::ptr s) {
 	float weight = (cos(utility::angle_difference(utility::point_angle(s -> position - position), angle)) + 1) / 2;
 	target_angle += 0.1 * weight * utility::angle_difference(target_angle, s -> angle);
       });
@@ -281,15 +286,14 @@ void ship::move(game_data *g){
   } else if (scatter) {
     // just avoid nearby enemies
     if (local_enemies.size()) {
-      int na = 10;
       vector<float> enemies(na, 0);
-      apply_enemies([this, &enemies, na, output](ship::ptr s) {
+      apply_ships(local_enemies, [this, &enemies, output](ship::ptr s) {
 	  int idx = utility::angle2index(na, utility::point_angle(s -> position - position));
 	  enemies[idx] += s -> stats[sskey::key::mass] * s -> stats[sskey::key::ship_damage];
 	  output("scatter: avoiding " + s -> id);
 	});
 
-      enemies = utility::circular_kernel(enemies);
+      enemies = utility::circular_kernel(enemies, 4);
       target_angle = utility::index2angle(na, utility::vector_min(enemies, utility::identity_function<float>()));
       output("scatter: target angle: " + to_string(target_angle));
     } else {
@@ -297,6 +301,44 @@ void ship::move(game_data *g){
       target_angle = angle;
       output("scatter: chilling");
     }
+  }
+
+  // allow engage to override local target
+  if (engage) {
+    if (local_enemies.empty()) {
+      // look for enemies a bit further away
+      list<combid> t = g -> search_targets(id, position, 2 * nrad, target_condition(target_condition::enemy, ship::class_id).owned_by(owner));
+      if (!t.empty()) {
+	// target closest
+	combid tid = utility::value_min<combid>(t, [this, g] (combid sid) -> float {
+	    return utility::l2d2(g -> get_ship(sid) -> position - position);
+	  });
+	ship::ptr s = g -> get_ship(tid);
+	point delta = s -> position - position;
+	target_angle = utility::point_angle(delta);
+	target_speed = fmax(0, utility::sigmoid(utility::l2norm(delta) - 0.8 * nrad));
+      }
+    }
+  }
+}
+
+void ship::move(game_data *g){
+  if (utility::random_uniform() < 0.1) update_data(g);
+
+  auto output = [this] (string v) {
+    cout << id << ": move: " << v << endl;
+  };
+
+  // clean up local_*
+  list<combid> rbuf;
+  for (auto i : neighbours) {
+    if (!(g -> entity.count(i) && can_see(g -> get_entity(i)))) rbuf.push_back(i);
+  }
+
+  for (auto i : rbuf) {
+    neighbours.remove(i);
+    local_friends.remove(i);
+    local_enemies.remove(i);
   }
 
   // shoot enemies if able
@@ -325,7 +367,8 @@ void ship::move(game_data *g){
   }
 
   // activate fleet command action if able
-  if (activate) {
+  if (activate && has_fleet()) {
+    fleet::ptr f = g -> get_fleet(fleet_id);
     if (f -> com.target != identifier::target_idle && compile_interactions().count(f -> com.action)) {
       game_object::ptr e = g -> get_entity(f -> com.target);
       if (can_see(e) && utility::l2norm(e -> position - position) <= interaction_radius()) {
@@ -341,17 +384,6 @@ void ship::move(game_data *g){
     } else {
       output("activate: fleet target idle or missing action: " + f -> com.action);
     }
-  }
-
-  // activate hive support on all friendly neighbours if able
-  if (compile_interactions().count(interaction::hive_support)) {
-    apply_friends([this, g] (ship::ptr s) {
-	interaction_info info;
-	info.source = id;
-	info.target = s -> id;
-	info.interaction = interaction::hive_support;
-	g -> interaction_buffer.push_back(info);
-      });
   }
 
   // check if there is free space at target angle
@@ -375,14 +407,18 @@ void ship::move(game_data *g){
   }
 
   // check unit collisions
-  apply_ships([this, g, output] (ship::ptr s) {
+  for (auto sid : local_all) {
+    if (g -> entity.count(sid)) {
+      ship::ptr s = g -> get_ship(sid);
       point delta = s -> position - position;
       if (utility::l2norm(delta) < radius + s -> radius) {
 	g -> collision_buffer.insert(id_pair(id, s -> id));
 	output("collided with " + s -> id);
       }
-    });
+    }
+  }
 
+  // move
   float angle_increment = fmin(0.1 / stats[sskey::key::mass], 0.5);
   float acceleration = 0.1 * base_stats.stats[sskey::key::speed] / stats[sskey::key::mass];
   float epsilon = 0.01;
@@ -390,8 +426,8 @@ void ship::move(game_data *g){
   float angle_sign = utility::signum(angle_miss, epsilon);
 
   // slow down if missing angle
-  target_speed = (cos(angle_miss) + 1) / 2 * target_speed;
-  float speed_miss = target_speed - stats[sskey::key::speed];
+  float speed_value = (cos(angle_miss) + 1) / 2 * target_speed;
+  float speed_miss = speed_value - stats[sskey::key::speed];
   float speed_sign = utility::signum(speed_miss, epsilon);
   stats[sskey::key::speed] += fmin(acceleration, fabs(speed_miss)) * speed_sign;
   stats[sskey::key::speed] = fmin(fmax(stats[sskey::key::speed], 0), base_stats.stats[sskey::key::speed]);

@@ -174,16 +174,17 @@ std::vector<int> utility::sequence(int a, int b) {
   return res;
 }
 
-vector<float> utility::circular_kernel(const vector<float> &x, int r) {
+vector<float> utility::circular_kernel(const vector<float> &x, float s) {
   // circular kernel smooth enemy strength data
   int na = x.size();
   vector<float> buf(na);
+  int r = na / 2;
 
   for (int i = 0; i < na; i++) {
     buf[i] = 0;
     float wsum = 0;
     for (int j = -r; j <= r; j++) {
-      float w = exp(-pow(7 * j / (float)r, 2));
+      float w = exp(-pow(j / s, 2));
       buf[i] += w * x[utility::int_modulus(i + j + na, na)];
       wsum += w;
     }

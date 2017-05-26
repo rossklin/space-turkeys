@@ -1,10 +1,13 @@
 * current work
-** add debug printouts and run through fleet suggest and fleet analyze enemies
-*** [J?] fleet always selects evade towards target position 
-    check enemy strength cirkular kernel estimate
+** test run fleet intelligence on more than one ship
+** add ship::request_update that fleet can set on e.g. passing a waypoint
+*** ship decided to leave waypoint after fleet arrived, then was told to hold at distant position
 * [!] issues
 ** [!] system
-*** [!] command selector policies uninitialized after reload
+*** client allows multiple development choices - server does not
+    Redesign: chose development in advance like everything else
+*** [?] command selector policies uninitialized after reload
+    Happened after fleet was idle at waypoint through round
 *** Ships collide unnessecarily
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
@@ -26,8 +29,9 @@
     client gets segfault. Perhaps the server failed to receive the
     leave game request from client 1 while it was waiting for the
     choice from client 2.
-* system design ideas
-** distinguish between interactions and auras (e.g. hive support)
+* [!] system design ideas
+** [!] distinguish between interactions and auras (e.g. hive support)
+   At the moment, non-targeted interactions are not applied at all
 ** add a command buffer so commands reach entities with distance based delay
 ** make detection stat determine which object stats are seen by client
 ** make angular acceleration an attribute

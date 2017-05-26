@@ -201,6 +201,17 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship_stats &g){
     >> g.tags;
 }
 
+
+// ship stats
+sf::Packet& st3::operator <<(sf::Packet& packet, const ssfloat_t &g){
+  return packet << g.stats;
+}
+
+// ship stats
+sf::Packet& st3::operator >>(sf::Packet& packet, ssfloat_t &g){
+  return packet >> g.stats;
+}
+
 // ship
 sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
   return packet
@@ -390,7 +401,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const fleet::analytics &g){
     << g.can_evade
     << g.vision_buf
     << g.enemies
-    << g.self_strength;
+    << g.average_ship;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, fleet::analytics &g){
@@ -404,7 +415,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet::analytics &g){
     >> g.can_evade
     >> g.vision_buf
     >> g.enemies
-    >> g.self_strength;
+    >> g.average_ship;
 }
 
 // choice

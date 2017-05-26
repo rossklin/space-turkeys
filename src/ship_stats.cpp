@@ -103,6 +103,18 @@ bool ssfloat_t::insert(string name, float value) {
   }
 }
 
+float ssfloat_t::get_dps() {
+  return stats[sskey::key::accuracy] * stats[sskey::key::ship_damage] / stats[sskey::key::load_time];
+}
+
+float ssfloat_t::get_hp() {
+  return stats[sskey::key::hp] * stats[sskey::key::evasion];
+}
+
+float ssfloat_t::get_strength() {
+  return get_hp() * get_dps();
+}
+
 // ship_stats
 ship_stats::ship_stats() : ssfloat_t(){
   depends_facility_level = 0;
