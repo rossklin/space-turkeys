@@ -1,24 +1,20 @@
 * current work
 ** test run fleet intelligence on more than one ship
-** add ship::request_update that fleet can set on e.g. passing a waypoint
+** [J?] add ship::request_update that fleet can set on e.g. passing a waypoint
 *** ship decided to leave waypoint after fleet arrived, then was told to hold at distant position
 * [!] issues
-** [!] system
+** [~] system
 *** client allows multiple development choices - server does not
     Redesign: chose development in advance like everything else
-*** [?] command selector policies uninitialized after reload
-    Happened after fleet was idle at waypoint through round
 *** Ships collide unnessecarily
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
-*** no delete button in command_gui
+*** large ships are too large
 *** mouse scroll should zoom
 *** available developments should also be in a scroll-window
 *** available developments' build button should be bottom aligned
 *** development req list is not left-aligned
-*** [J] tech requirements list floods window
-   Make scroll window?
 *** priority buttons unresponsive to first right click
 *** Clicking interface response button also triggers click on minimap
 *** sfg window does not resize on sfml window resize
@@ -64,13 +60,16 @@
 *** name and indicators for solars so you can tell them apart
 * optimization
 ** fix grid tree so make_split takes less time
+   Consider using simple linear split nodes, this will make it easier
+   splitting between leaves.
 ** reduce sent data using an instruction based model
    With instructions for updating and removing existing entities. Let
    client request when new entities are needed. Then the server won't
    need to copy all entities and rebuild the grid, and the client also
    won't need to copy entities.
 * content ideas
-** add some tech/facility for "medicine" that affects population crowding coefficient
+** scouts are possibly too lousy at fighting
+** add some tech/facility for pop crowd, ecology, water and space
 * to be tested
 ** confirm
 *** new modified ship stats
@@ -95,6 +94,12 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] command selector policies uninitialized after reload
+    Happened after fleet was idle at waypoint through round
+** [J] reset_qw is called from event handlers, possibly breaking event loop
+** [J] no delete button in command_gui
+** [J] tech requirements list floods window
+   Make scroll window?
 ** [J] command_gui: sfg::Image -> SetImage causes meshed image
    Consider making image with background color?
 ** [J] command_gui throws bad_weak_ptr

@@ -71,16 +71,14 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
   build_info();
 
   auto b_accept = Button::Create("ACCEPT");
-
-  b_accept -> GetSignal(Widget::OnLeftClick).Connect([=] () {
+  desktop -> bind_ppc(b_accept, [this] () {
       desktop -> response.solar_choices[sol -> id] = response;
-      desktop -> clear_qw();
       cout << "Added solar choice for " << sol -> id << endl;
+      desktop -> clear_qw();
     });
   
   auto b_cancel = Button::Create("CANCEL");
-
-  b_cancel -> GetSignal(Widget::OnLeftClick).Connect([] () {
+  desktop -> bind_ppc(b_cancel, [] () {
       desktop -> clear_qw();
     });
 
@@ -166,7 +164,7 @@ void solar_gui::build_choice(){
     if (subq.count(v)){
       // sectors with sub interfaces
       auto sub = Button::Create(">");
-      sub -> GetSignal(Widget::OnLeftClick).Connect([v,subq] () {subq.at(v)();});
+      desktop -> bind_ppc(sub, [v,subq] () {subq.at(v)();});
       sub -> GetSignal(Widget::OnMouseEnter).Connect([this,v] () {tooltip -> SetText("Edit sub choices for " + v);});
       l -> Pack(sub);
     }

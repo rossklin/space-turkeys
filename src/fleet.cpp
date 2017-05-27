@@ -329,24 +329,28 @@ void fleet::update_data(game_data *g, bool force_refresh){
   analyze_enemies(g);
 
   // the below only applies if the fleet has a target
-  if (com.target == identifier::target_idle) return;
+  if (com.target != identifier::target_idle) {
 
-  // check target status valid if action is an interaction
-  auto itab = interaction::table();
-  if (itab.count(com.action)) {
-    target_condition c = itab[com.action].condition.owned_by(owner);
-    if (!c.valid_on(g -> get_entity(com.target))) {
-      cout << "target " << com.target << " no longer valid for " << id << endl;
-      set_idle();
+    // check target status valid if action is an interaction
+    auto itab = interaction::table();
+    if (itab.count(com.action)) {
+      target_condition c = itab[com.action].condition.owned_by(owner);
+      if (!c.valid_on(g -> get_entity(com.target))) {
+	cout << "target " << com.target << " no longer valid for " << id << endl;
+	set_idle();
+      }
+    }
+
+    // have arrived?
+    if (!is_idle()){
+      if (g -> target_position(com.target, stats.target_position)) {
+	stats.converge = utility::l2d2(stats.target_position - position) < fleet::interact_d2;
+      }
     }
   }
 
-  // have arrived?
-  if (!is_idle()){
-    if (g -> target_position(com.target, stats.target_position)) {
-      stats.converge = utility::l2d2(stats.target_position - position) < fleet::interact_d2;
-    }
-  }
+  // make ships update data
+  for (auto sid : ships) g -> get_ship(sid) -> force_refresh = true;
 }
 
 void fleet::check_waypoint(game_data *g){

@@ -672,8 +672,7 @@ void game::add_command(command c, point from, point to, bool fill_ships){
   command_selector::ptr cs = command_selector::create(c, from, to);
   
   // add command to command selectors 
-  idtype id = comid++;
-  command_selectors[id] = cs;
+  command_selectors[cs -> id] = cs;
 
   // add ships to command
   if (fill_ships) {
@@ -682,7 +681,7 @@ void game::add_command(command c, point from, point to, bool fill_ships){
   }
 
   // add command selector key to list of the source entity's children
-  s -> commands.insert(id);
+  s -> commands.insert(cs -> id);
 }
 
 bool game::waypoint_ancestor_of(combid ancestor, combid child){

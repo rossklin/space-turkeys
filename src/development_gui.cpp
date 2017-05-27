@@ -57,7 +57,7 @@ development_gui::development_gui(hm_t<std::string, development::node> map, f_req
     for (auto su : n.ship_upgrades) l -> Pack(Label::Create(su.first + " gains: " + boost::algorithm::join(su.second, ", ")), false, false);
 
     Button::Ptr b = Button::Create("Develop");
-    b -> GetSignal(Widget::OnLeftClick).Connect([v, on_complete] () {on_complete(true, v);});
+    desktop -> bind_ppc(b, [v, on_complete] () {on_complete(true, v);});
     l -> Pack(b, false, true);
     
     f -> Add(l);
@@ -81,7 +81,7 @@ development_gui::development_gui(hm_t<std::string, development::node> map, f_req
   layout -> Pack(avl);
 
   Button::Ptr b_cancel = Button::Create("Cancel");
-  b_cancel -> GetSignal(Widget::OnLeftClick).Connect([on_complete] () {on_complete(false, "");});
+  desktop -> bind_ppc(b_cancel, [on_complete] () {on_complete(false, "");});
   layout -> Pack(b_cancel);
 
   frame -> Add(layout);

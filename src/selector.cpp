@@ -289,6 +289,8 @@ command_selector::ptr command_selector::create(command c, point s, point d){
 }
 
 command_selector::command_selector(command &c, point s, point d) : command(c){
+  static idtype idc = 0;
+  id = idc++;
   from = s;
   to = d;
   queue_level = 0;

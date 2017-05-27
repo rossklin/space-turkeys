@@ -43,7 +43,8 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
   policy[fleet::policy_evasive] = RadioButton::Create("Evasive", policy[fleet::policy_reasonable] -> GetGroup());
   policy[fleet::policy_maintain_course] = RadioButton::Create("Maintain Course", policy[fleet::policy_reasonable] -> GetGroup());
 
-  policy[c -> policy] -> SetActive(true);
+  selected_policy = c -> policy;
+  policy[selected_policy] -> SetActive(true);
 
   for (auto p : policy) {
     int fp = p.first;
@@ -97,40 +98,48 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
 
   // add ok and cancel
   Button::Ptr ok = Button::Create("OK");
-  ok -> GetSignal(Widget::OnLeftClick).Connect([this, c, g] () {
-      c -> policy = selected_policy;
+  auto on_ok = [this, c, g] () {
+    c -> policy = selected_policy;
       
-      // assign correct number of ships per class to c
-      c -> ships.clear();
-      set<combid> ready_ships = g -> get_ready_ships(c -> source);
+    // assign correct number of ships per class to c
+    c -> ships.clear();
+    set<combid> ready_ships = g -> get_ready_ships(c -> source);
 
-      // first list ships by class
-      hm_t<string, set<combid> > by_class;
-      for (auto sid : ready_ships) {
-	ship::ptr s = g -> get_specific<ship>(sid);
-	by_class[s -> ship_class].insert(s -> id);
-      }
+    // first list ships by class
+    hm_t<string, set<combid> > by_class;
+    for (auto sid : ready_ships) {
+      ship::ptr s = g -> get_specific<ship>(sid);
+      by_class[s -> ship_class].insert(s -> id);
+    }
 
-      // then assign ships
-      for (auto x : data) {
-	string ship_class = x.first;
-	int count = x.second.allocated;
-	for (int i = 0; i < count; i++) {
-	  auto iter = by_class[ship_class].begin();
-	  combid sid = *iter;
-	  by_class[ship_class].erase(iter);
-	  c -> ships.insert(sid);
-	}
+    // then assign ships
+    for (auto x : data) {
+      string ship_class = x.first;
+      int count = x.second.allocated;
+      for (int i = 0; i < count; i++) {
+	auto iter = by_class[ship_class].begin();
+	combid sid = *iter;
+	by_class[ship_class].erase(iter);
+	c -> ships.insert(sid);
       }
+    }
       
-      desktop -> clear_qw();
-    });
+    desktop -> clear_qw();
+  };
+  desktop -> bind_ppc(ok, on_ok);
 
   Button::Ptr cancel = Button::Create("Cancel");
-  cancel -> GetSignal(Widget::OnLeftClick).Connect([] () {desktop -> clear_qw();});
+  desktop -> bind_ppc(cancel, [] () {desktop -> clear_qw();});
+
+  Button::Ptr b_delete = Button::Create("Delete");
+  desktop -> bind_ppc(b_delete, [g, c] () {
+      desktop -> clear_qw();
+      g -> remove_command(c -> id);
+    });
 
   Box::Ptr l_bottom = Box::Create(Box::Orientation::HORIZONTAL, 10);
   l_bottom -> Pack(ok);
   l_bottom -> Pack(cancel);
+  l_bottom -> Pack(b_delete);
   layout -> Pack(l_bottom);
 }

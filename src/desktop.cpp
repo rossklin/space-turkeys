@@ -62,6 +62,20 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   SetProperty("Widget", "Color", sf::Color(200, 170, 120));
 }
 
+void main_interface::bind_ppc(Widget::Ptr w, function<void(void)> f) {
+  w -> GetSignal(Widget::OnLeftClick).Connect([this, f] () {
+      post_process.push_back(f);
+    });
+}
+
+// let sfg::Desktop handle event, then run post processing callbacks
+// added by children's event handlers
+void main_interface::HandleEvent(const sf::Event& event) {
+  Desktop::HandleEvent(event);
+  for (auto f : post_process) f();
+  post_process.clear();
+}
+
 research::data main_interface::get_research(){
   return g -> players[g -> self_id].research_level;
 }

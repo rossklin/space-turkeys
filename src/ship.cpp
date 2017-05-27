@@ -139,6 +139,7 @@ ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   passengers = 0;
   is_landed = false;
   radius = pow(stats[sskey::key::mass], 2/(float)3);
+  force_refresh = true;
 }
 
 ship::~ship(){}
@@ -167,6 +168,8 @@ bool ship::check_space(float a) {
 };
 
 void ship::update_data(game_data *g) {
+  force_refresh = false;
+  
   if (!has_fleet()) return;
   fleet::ptr f = g -> get_fleet(fleet_id);
   fleet::suggestion suggest = f -> suggest(id, g);
@@ -323,7 +326,7 @@ void ship::update_data(game_data *g) {
 }
 
 void ship::move(game_data *g){
-  if (utility::random_uniform() < 0.1) update_data(g);
+  if (force_refresh || utility::random_uniform() < 0.1) update_data(g);
 
   auto output = [this] (string v) {
     cout << id << ": move: " << v << endl;
@@ -346,14 +349,14 @@ void ship::move(game_data *g){
     auto evalfun = [this, g, output] (combid sid) -> float {
       ship::ptr s = g -> get_ship(sid);
       point delta = s -> position - position;
-      float h = utility::safe_inv(cos(utility::angle_difference(utility::point_angle(delta), angle)));
+      float h = utility::safe_inv(cos(utility::angle_difference(utility::point_angle(delta), angle)) + 1);
       output("scanning local enemy: " + s -> id + ": h = " + to_string(h));
       return h;
     };
 
     combid target_id = utility::value_min<combid>(local_enemies, evalfun);
 
-    if (evalfun(target_id) < 1.5) {
+    if (evalfun(target_id) < 1) {
       // I've got a shot!
       interaction_info info;
       info.source = id;
@@ -506,6 +509,7 @@ bool ship::has_fleet() {
 void ship::on_liftoff(solar::ptr from, game_data *g){
   g -> players[owner].research_level.repair_ship(*this, from);
   is_landed = false;
+  force_refresh = true;
 
   for (auto v : upgrades) {
     upgrade u = upgrade::table().at(v);

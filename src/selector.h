@@ -78,7 +78,8 @@ namespace st3{
       typedef command_selector* ptr;
 
       static ptr create(command c, point f, point t);
-      
+
+      idtype id;
       int queue_level; /*!< selection queue level: command selectors with lower level get priority */
       bool selected; /*!< whether the command_selector is selected */
       point from; /*!< source point */

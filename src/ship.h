@@ -36,6 +36,7 @@ namespace st3{
     float target_angle;
     float target_speed;
     bool activate;
+    bool force_refresh;
     std::list<combid> neighbours;
     std::list<combid> local_enemies;
     std::list<combid> local_friends;

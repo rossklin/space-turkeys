@@ -400,6 +400,7 @@ solar::ptr game_data::closest_solar(point p, idtype id) {
 void game_data::increment(){
   remove_entities.clear();
   interaction_buffer.clear();
+  collision_buffer.clear();
   rebuild_evm();
 
   // update entities and compile interactions
