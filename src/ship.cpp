@@ -458,8 +458,8 @@ void ship::move(game_data *g){
 void ship::post_phase(game_data *g){}
 
 void ship::receive_damage(game_object::ptr from, float damage) {
-  damage -= stats[sskey::key::shield];
   stats[sskey::key::shield] = fmax(stats[sskey::key::shield] - 0.1 * damage, 0);
+  damage = fmax(damage - stats[sskey::key::shield], 0);
   stats[sskey::key::hp] -= damage;
   remove = stats[sskey::key::hp] <= 0;
   cout << "ship::receive_damage: " << id << " takes " << damage << " damage from " << from -> id << " - remove = " << remove << endl;

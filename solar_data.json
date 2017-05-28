@@ -113,6 +113,28 @@
 	    "build time" : 70,
 	    "space usage" : 2,
 	    "water usage" : 1
+	},
+
+	"water recycling" : {
+	    "cost" : {
+		"metals" : 40,
+		"gases" : 40,
+		"organics" : 40
+	    },
+	    "build time" : 170,
+	    "water usage" : -100,
+	    "depends technologies" : ["nano construction"]
+	},
+
+	"inverted housing" : {
+	    "cost" : {
+		"metals" : 40,
+		"gases" : 40,
+		"organics" : 40
+	    },
+	    "build time" : 170,
+	    "space usage" : -100,
+	    "depends technologies" : ["warp technology"]
 	}
     }
 }

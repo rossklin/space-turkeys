@@ -2,22 +2,26 @@
 ** test run fleet intelligence on more than one ship
 * [!] issues
 ** [!] crashes
-*** "space_status: used more than space" reached after developing facility
+*** random_uniform called with b = inf
+*** [?] "space_status: used more than space" reached after developing facility
 ** mechanical errors
 *** Ships validate their action using target information that the player can't see
 ** [~] system
-*** [J?] fleet suggests summon | travel when arriving at destination solar
-*** [J?] ships should set speed = 0 on liftoff
-*** [J?] warp drive way too fast
 *** [J?] Ships collide while travelling in fleet
     Check free space on either side
+*** big ships are too clumsy and collide when courses intersect
+*** population adapts too quickly to circumstances e.g. space
 *** solars run out of space after building some stuff
+    Make facilities not use more space per level. Add attribute
+    "provides space" and "provides water".
+*** "maintain course" not respected
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
-*** [!] solars dissapear from sight
+*** [?] solars dissapear from sight
+*** allow zoom, show entity info etc during simulation
+*** autofill commands with only those units which support the action
 *** client allows multiple development choices - server does not
     Redesign: chose development in advance like everything else
-*** mouse scroll should zoom
 *** available developments should also be in a scroll-window
 *** available developments' build button should be bottom aligned
 *** development req list is not left-aligned
@@ -98,6 +102,10 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J?] fleet suggests summon | travel when arriving at destination solar
+** [J?] ships should set speed = 0 on liftoff
+** [J?] warp drive way too fast
+** [J?] mouse scroll should zoom
 ** new modified ship stats
 ** [J?] tag ships as e.g. small, large, bio, mech etc.
     This will allow techs applying upgrades to ships by type

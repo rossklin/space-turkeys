@@ -72,12 +72,6 @@
 		"[1,15]" : ["shield"]
 	    }
 	},
-
-	"nano construction" : {
-	    "build time" : 400,
-	    "depends facilities" : {"research facility" : 4},
-	    "depends technologies" : ["nano technology"]
-	},
 	
 	"nano construction" : {
 	    "build time" : 400,

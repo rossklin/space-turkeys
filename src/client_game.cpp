@@ -1116,6 +1116,7 @@ int game::choice_event(sf::Event e){
     }
     break;
   case sf::Event::MouseWheelMoved:
+    view_game.zoom(pow(1.2, -e.mouseWheel.delta));
     break;
   case sf::Event::KeyPressed:
     switch (e.key.code){

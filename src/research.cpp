@@ -142,23 +142,23 @@ hm_t<string,choice::c_solar> data::solar_template_table(solar::ptr sol){
   // culture growth
   x = empty;
   x.allocation[keywords::key_culture] = 3;
-  x.allocation[keywords::key_development] = 1;
+  x.allocation[keywords::key_development] = 2;
   x.allocation[keywords::key_mining] = 1;
   data["culture growth"] = x;
 
   // mining colony
   x = empty;
-  x.allocation[keywords::key_culture] = 1;
+  x.allocation[keywords::key_culture] = 2;
   x.allocation[keywords::key_development] = 1;
   x.allocation[keywords::key_mining] = 3;
   data["mining colony"] = x;
 
   // military expansion
   x = empty;
-  x.allocation[keywords::key_culture] = 1;
+  x.allocation[keywords::key_culture] = 2;
   x.allocation[keywords::key_development] = 1;
   x.allocation[keywords::key_military] = 3;
-  x.allocation[keywords::key_mining] = 3;
+  x.allocation[keywords::key_mining] = 2;
 
   if (can_build_ship("bomber", sol)) x.military["bomber"] = 1;
   if (can_build_ship("fighter", sol)) x.military["fighter"] = 2;

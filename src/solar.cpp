@@ -216,7 +216,7 @@ float solar::space_status(){
   for (auto &t : development) used += cost::expansion_multiplier(t.second.level) * t.second.space_usage;
 
   if (used > space) throw runtime_error("space_status: used more than space");
-  return (space - used) / space;
+  return fmin((space - used) / space, 1);
 }
 
 // [0,1] evaluation of available water
@@ -227,7 +227,7 @@ float solar::water_status(){
   for (auto &t : development) used += cost::expansion_multiplier(t.second.level) * t.second.water_usage;
 
   if (used > water) throw runtime_error("water status: used more than water!");
-  return (water - used) / water;
+  return fmin((water - used) / water, 1);
 }
 
 float solar::population_increment(){
@@ -399,46 +399,51 @@ void facility::read_from_json(const rapidjson::Value &x) {
     if (development::node::parse(name, i -> value)) continue;
 
     bool success = false;
-    if (name == "vision"){
-      vision = x["vision"].GetDouble();
-      success = true;
-    }else if (name == "hp"){
-      base_hp = x["hp"].GetDouble();
-      success = true;
-    }else if (name == "shield"){
-      shield = x["shield"].GetDouble();
-      success = true;
-    }else if (name == "turret"){
-      is_turret = 1;
-      for (auto t = i -> value.MemberBegin(); t != i -> value.MemberEnd(); t++) {
-	string t_name = t -> name.GetString();
-	if (t_name == "damage"){
-	  turret.damage = t -> value.GetDouble();
-	}else if (t_name == "range"){
-	  turret.range = t -> value.GetDouble();
-	}else if (t_name == "accuracy"){
-	  turret.accuracy = t -> value.GetDouble();
-	}else if (t_name == "load"){
-	  turret.load = t -> value.GetDouble();
-	}else{
-	  throw runtime_error("Failed to parse turret stats: " + t_name);
+    if (i -> value.IsObject()) {
+      if (name == "turret"){
+	is_turret = 1;
+	for (auto t = i -> value.MemberBegin(); t != i -> value.MemberEnd(); t++) {
+	  string t_name = t -> name.GetString();
+	  if (t_name == "damage"){
+	    turret.damage = t -> value.GetDouble();
+	  }else if (t_name == "range"){
+	    turret.range = t -> value.GetDouble();
+	  }else if (t_name == "accuracy"){
+	    turret.accuracy = t -> value.GetDouble();
+	  }else if (t_name == "load"){
+	    turret.load = t -> value.GetDouble();
+	  }else{
+	    throw runtime_error("Failed to parse turret stats: " + t_name);
+	  }
 	}
-      }
-      success = true;
+	success = true;
 
-    }else if (name == "cost"){
-      for (auto t = i -> value.MemberBegin(); t != i -> value.MemberEnd(); t++) {
-	if (!cost::parse_resource(t -> name.GetString(), t -> value.GetDouble(), cost_resources)) {
-	  throw runtime_error("Failed to parse facility cost: " + string(t -> name.GetString()));
+      }else if (name == "cost"){
+	for (auto t = i -> value.MemberBegin(); t != i -> value.MemberEnd(); t++) {
+	  if (!cost::parse_resource(t -> name.GetString(), t -> value.GetDouble(), cost_resources)) {
+	    throw runtime_error("Failed to parse facility cost: " + string(t -> name.GetString()));
+	  }
 	}
+	success = true;
       }
-      success = true;
-    }else if (name == "water usage"){
-      water_usage = x["water usage"].GetDouble();
-      success = true;
-    }else if (name == "space usage"){
-      space_usage = x["space usage"].GetDouble();
-      success = true;
+    } else {
+      float value = i -> value.GetDouble();
+      if (name == "vision"){
+	vision = value;
+	success = true;
+      }else if (name == "hp"){
+	base_hp = value;
+	success = true;
+      }else if (name == "shield"){
+	shield = value;
+	success = true;
+      }else if (name == "water usage"){
+	water_usage = value;
+	success = true;
+      }else if (name == "space usage"){
+	space_usage = value;
+	success = true;
+      }
     }
 
     if (!success) {
