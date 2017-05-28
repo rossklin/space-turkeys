@@ -2,10 +2,10 @@
     "ship" : {
 	"scout" : {
 	    "is starting ship" : 1,
-	    "speed" : 1,
+	    "speed" : 0.6,
 	    "vision range" : 100,
-	    "ship damage" : 0.1,
-	    "accuracy" : 0.3,
+	    "ship damage" : 0.2,
+	    "accuracy" : 0.5,
 	    "upgrades" : ["space combat"],
 	    "cost" : {
 		"metals" : 1,
@@ -22,6 +22,7 @@
 	},
 
 	"fighter" : {
+	    "speed" : 0.5,
 	    "hp" : 4,
 	    "mass" : 3,
 	    "ship damage" : 1,
@@ -49,6 +50,7 @@
 	},
 
 	"bomber" : {
+	    "speed" : 0.4,
 	    "hp" : 8,
 	    "mass" : 10,
 	    "solar damage" : 5,
@@ -76,7 +78,7 @@
 	"battleship" : {
 	    "hp" : 60,
 	    "mass" : 60,
-	    "speed" : 2,
+	    "speed" : 1,
 	    "solar damage" : 3,
 	    "ship damage" : 3,
 	    "accuracy" : 5,
@@ -105,7 +107,7 @@
 	"voyager" : {
 	    "hp" : 30,
 	    "mass" : 30,
-	    "speed" : 5,
+	    "speed" : 1.7,
 	    "solar damage" : 2,
 	    "ship damage" : 2,
 	    "accuracy" : 10,
@@ -134,7 +136,7 @@
 	},
 
 	"colonizer" : {
-	    "speed" : 0.3,
+	    "speed" : 0.2,
 	    "hp" : 20,
 	    "mass" : 30,
 	    "upgrades" : ["colonize"],
@@ -155,7 +157,7 @@
 	},
 
 	"freighter" : {
-	    "speed" : 0.5,
+	    "speed" : 0.3,
 	    "hp" : 20,
 	    "mass" : 30,
 	    "upgrades" : ["trade"],

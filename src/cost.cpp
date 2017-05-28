@@ -3,6 +3,7 @@
 
 #include "cost.h"
 #include "ship.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -75,9 +76,12 @@ sector_allocation::sector_allocation() {
   setup(keywords::sector);
 }
 
-// cost initializer
-using namespace keywords;
-
 float cost::expansion_multiplier(float level){
   return pow(2, floor(level));
+}
+
+bool cost::parse_resource(string res_name, float value, res_t &x) {
+  if (!utility::find_in(res_name, keywords::resource)) return false;
+  x[res_name] = value;
+  return true;
 }

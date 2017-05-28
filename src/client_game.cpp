@@ -266,8 +266,10 @@ bool game::choice_step(){
       
       interface::desktop -> clear_qw();
     };
-    
-    interface::desktop -> reset_qw(interface::development_gui::Create(research::data::table(), f_req, on_complete, false));
+
+    hm_t<string, development::node> map;
+    for (auto &f : research::data::table()) map[f.first] = f.second;
+    interface::desktop -> reset_qw(interface::development_gui::Create(map, f_req, on_complete, false));
   }
 
   message = "make your choice";

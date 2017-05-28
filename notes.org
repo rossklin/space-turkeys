@@ -1,16 +1,22 @@
 * current work
 ** test run fleet intelligence on more than one ship
-** [J?] add ship::request_update that fleet can set on e.g. passing a waypoint
-*** ship decided to leave waypoint after fleet arrived, then was told to hold at distant position
 * [!] issues
-** [~] system
-*** client allows multiple development choices - server does not
-    Redesign: chose development in advance like everything else
-*** Ships collide unnessecarily
+** [!] crashes
+*** "space_status: used more than space" reached after developing facility
+** mechanical errors
 *** Ships validate their action using target information that the player can't see
+** [~] system
+*** [J?] fleet suggests summon | travel when arriving at destination solar
+*** [J?] ships should set speed = 0 on liftoff
+*** [J?] warp drive way too fast
+*** [J?] Ships collide while travelling in fleet
+    Check free space on either side
+*** solars run out of space after building some stuff
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
-*** large ships are too large
+*** [!] solars dissapear from sight
+*** client allows multiple development choices - server does not
+    Redesign: chose development in advance like everything else
 *** mouse scroll should zoom
 *** available developments should also be in a scroll-window
 *** available developments' build button should be bottom aligned
@@ -26,14 +32,15 @@
     leave game request from client 1 while it was waiting for the
     choice from client 2.
 * [!] system design ideas
+** add a list of animations to send to client rather than add explosion on ship removal
+** add expansion limitations e.g. nr of fleets and solar distance penalty
+** add a battle-log to send to client
 ** [!] distinguish between interactions and auras (e.g. hive support)
    At the moment, non-targeted interactions are not applied at all
 ** add a command buffer so commands reach entities with distance based delay
 ** make detection stat determine which object stats are seen by client
 ** make angular acceleration an attribute
 ** consider letting fleet suggestion contain an angle?
-** add a list of animations to send to client rather than add explosion on ship removal
-** add a battle-log to send to client
 ** add terrain
    For starters: impassable areas. This requires fleets to do path
    finding.
@@ -68,20 +75,17 @@
    need to copy all entities and rebuild the grid, and the client also
    won't need to copy entities.
 * content ideas
-** scouts are possibly too lousy at fighting
+** [J?] scouts are possibly too lousy at fighting
 ** add some tech/facility for pop crowd, ecology, water and space
 * to be tested
 ** confirm
-*** new modified ship stats
-*** [J?] show unmet requirements for development::nodes with no dependencies
+*** [J?] deleting command does not cause command to be removed on server
+*** [J?] large ships rotate too slow
+*** [J?] large ships are too large
+*** [J?] add ship::request_update that fleet can set on e.g. passing a waypoint
+*** [J?] mass-based upgrade "warp drive" not applied to any ships
 *** [J?] right click with selected ships creates waypoint with no incident commands
-*** [J?] form fleet with F doesn't work
-*** [J?] ship upgrades e.g. warp drive do not respect e.g. !small for scout
 *** [J?] apply sector boost from research in solar
-*** [J?] tag ships as e.g. small, large, bio, mech etc.
-    This will allow techs applying upgrades to ships by type
-*** [J?] add ship attributes stealth, detection, regen and shield
-*** ships remain selected after fleet is created
 *** explosions are too long
 ** analyze
 *** [!confirm?] fleets don't seem to get cleared from client choice
@@ -94,6 +98,14 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** new modified ship stats
+** [J?] tag ships as e.g. small, large, bio, mech etc.
+    This will allow techs applying upgrades to ships by type
+** [J?] add ship attributes stealth, detection, regen and shield
+** ships remain selected after fleet is created
+** [J?] form fleet with F doesn't work
+** [J?] ship upgrades e.g. warp drive do not respect e.g. !small for scout
+** [J?] show unmet requirements for development::nodes with no dependencies
 ** [J] command selector policies uninitialized after reload
     Happened after fleet was idle at waypoint through round
 ** [J] reset_qw is called from event handlers, possibly breaking event loop

@@ -22,7 +22,7 @@ namespace st3 {
       std::set<std::string> depends_techs;
 
       node();
-      virtual void read_from_json(const rapidjson::Value &v);
+      bool parse(std::string name, const rapidjson::Value &v);
     };
 
     template<typename T>

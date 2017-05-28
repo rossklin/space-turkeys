@@ -13,7 +13,12 @@
 namespace st3{
   namespace research{
     const std::string upgrade_all_ships = "upgrade all ships";
-    typedef development::node tech;
+    class tech : public development::node {
+    public:
+      tech();
+      tech(const tech &f);
+      void read_from_json(const rapidjson::Value &v);
+    };
     
     /*! struct representing the research level of a player */
     struct data {

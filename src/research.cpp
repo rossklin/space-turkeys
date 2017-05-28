@@ -117,6 +117,18 @@ bool data::can_build_ship(string v, solar::ptr sol, list<string> *data){
   return success;
 }
 
+void tech::read_from_json(const rapidjson::Value &x) {
+  for (auto i = x.MemberBegin(); i != x.MemberEnd(); i++) {
+    string name = i -> name.GetString();
+    if (!development::node::parse(name, i -> value)) {
+      throw runtime_error("Failed to parse tech: " + name);
+    }
+  }
+}
+
+tech::tech() : development::node() {}
+tech::tech(const tech &t) : development::node(t) {}
+
 hm_t<string,choice::c_solar> data::solar_template_table(solar::ptr sol){
   static hm_t<string, choice::c_solar> data;
   using namespace cost;

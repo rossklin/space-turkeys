@@ -42,11 +42,15 @@ const hm_t<string, upgrade> &upgrade::table(){
 	success = a.modify.parse(stat_name, stat_value);
       } else if (j -> value.IsArray()) {
 	if (stat_name == "interactions") {
-	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) a.inter.insert(k -> GetString());
-	  success = true;
+	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) {
+	    a.inter.insert(k -> GetString());
+	    success = true;
+	  }
 	} else if (stat_name == "on liftoff") {
-	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) a.on_liftoff.insert(k -> GetString());
-	  success = true;
+	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) {
+	    a.on_liftoff.insert(k -> GetString());
+	    success = true;
+	  }
 	}
       }
 

@@ -212,6 +212,8 @@ void game_data::apply_choice(choice::choice c, idtype id){
       }
     }
 
+    // idle the fleet so it only acts if the client updates the command
+    f -> set_idle();
     f -> update_data(this, true);
 
     cout << "apply_choice: player " << id << ": added " << x.first << endl;
@@ -314,7 +316,6 @@ void game_data::distribute_ships(list<combid> sh, point p){
     ship::ptr s = get_ship(x);
     s -> position.x = utility::random_normal(p.x, radius);
     s -> position.y = utility::random_normal(p.y, radius);
-    s -> set_stats(s -> base_stats);
     entity_grid -> insert(s -> id, s -> position);
   }
 }

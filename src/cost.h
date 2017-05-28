@@ -34,6 +34,7 @@ namespace st3{
     typedef resource_allocation res_t;
 
     float expansion_multiplier(float level);
+    bool parse_resource(std::string name, float value, res_t &x);
   };
 };
 #endif

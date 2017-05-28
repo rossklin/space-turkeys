@@ -102,7 +102,8 @@ namespace st3{
     float get_hp();
     float get_dps();
     float get_strength();
-    
+    void refresh_ships(game_data *g);
+    void check_action(game_data *g);    
     ptr clone();
 
   protected:

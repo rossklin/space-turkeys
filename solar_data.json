@@ -51,9 +51,7 @@
 	    "sector boost" : {
 		"culture" : 2
 	    },
-	    "cost" : {
-		"space usage" : 10
-	    },
+	    "space usage" : 10,
 	    "build time" : 200
 	},
 

@@ -5,6 +5,8 @@
 #include <vector>
 #include <set>
 #include <cassert>
+#include <cmath>
+
 #include <rapidjson/document.h>
 
 #include "types.h"
@@ -39,6 +41,11 @@ namespace st3{
       std::transform(m.begin(), m.end(),
 		inserter(data, data.end()),
 		[](auto pair){ return pair.first; });
+    }
+
+    template<typename T, typename C>
+    bool find_in(T x, C c) {
+      return std::find(c.begin(), c.end(), x) != c.end();
     }
     
     template<typename T>
@@ -191,6 +198,10 @@ namespace st3{
 	  best = value;
 	  result = y;
 	}
+      }
+
+      if (!std::isfinite(best)) {
+	throw std::runtime_error("value_min: no finite value found!");
       }
 
       return result;

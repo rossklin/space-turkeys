@@ -393,30 +393,58 @@ int solar::get_facility_level(string fac) {
 }
 
 void facility::read_from_json(const rapidjson::Value &x) {
-  development::node::read_from_json(x);
-  
-  if (x.HasMember("vision")) vision = x["vision"].GetDouble();
-  if (x.HasMember("hp")) base_hp = x["hp"].GetDouble();
-  if (x.HasMember("shield")) shield = x["shield"].GetDouble();
 
-  if (x.HasMember("turret")){
-    is_turret = 1;
-    auto &t = x["turret"];
-    if (t.HasMember("damage")) turret.damage = t["damage"].GetDouble();
-    if (t.HasMember("range")) turret.range = t["range"].GetDouble();
-    if (t.HasMember("accuracy")) turret.accuracy = t["accuracy"].GetDouble();
-    if (t.HasMember("load")) turret.load = t["load"].GetDouble();
-  }
+  for (auto i = x.MemberBegin(); i != x.MemberEnd(); i++) {
+    string name = i -> name.GetString();
+    if (development::node::parse(name, i -> value)) continue;
 
-  if (x.HasMember("cost")) {
-    auto &c = x["cost"];
-    for (auto k : keywords::resource) {
-      if (c.HasMember(k.c_str())) cost_resources[k] = c[k.c_str()].GetDouble();
+    bool success = false;
+    if (name == "vision"){
+      vision = x["vision"].GetDouble();
+      success = true;
+    }else if (name == "hp"){
+      base_hp = x["hp"].GetDouble();
+      success = true;
+    }else if (name == "shield"){
+      shield = x["shield"].GetDouble();
+      success = true;
+    }else if (name == "turret"){
+      is_turret = 1;
+      for (auto t = i -> value.MemberBegin(); t != i -> value.MemberEnd(); t++) {
+	string t_name = t -> name.GetString();
+	if (t_name == "damage"){
+	  turret.damage = t -> value.GetDouble();
+	}else if (t_name == "range"){
+	  turret.range = t -> value.GetDouble();
+	}else if (t_name == "accuracy"){
+	  turret.accuracy = t -> value.GetDouble();
+	}else if (t_name == "load"){
+	  turret.load = t -> value.GetDouble();
+	}else{
+	  throw runtime_error("Failed to parse turret stats: " + t_name);
+	}
+      }
+      success = true;
+
+    }else if (name == "cost"){
+      for (auto t = i -> value.MemberBegin(); t != i -> value.MemberEnd(); t++) {
+	if (!cost::parse_resource(t -> name.GetString(), t -> value.GetDouble(), cost_resources)) {
+	  throw runtime_error("Failed to parse facility cost: " + string(t -> name.GetString()));
+	}
+      }
+      success = true;
+    }else if (name == "water usage"){
+      water_usage = x["water usage"].GetDouble();
+      success = true;
+    }else if (name == "space usage"){
+      space_usage = x["space usage"].GetDouble();
+      success = true;
+    }
+
+    if (!success) {
+      throw runtime_error("Failed to parse facility: " + name);
     }
   }
-  
-  if (x.HasMember("water usage")) water_usage = x["water usage"].GetDouble();
-  if (x.HasMember("space usage")) space_usage = x["space usage"].GetDouble();
 }
 
 const hm_t<string, facility>& solar::facility_table(){

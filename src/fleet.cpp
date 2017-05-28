@@ -51,6 +51,7 @@ void fleet::on_remove(game_data *g) {
 void fleet::pre_phase(game_data *g){
   check_in_sight(g);
   update_data(g);
+  check_action(g);
   check_waypoint(g);
 }
 
@@ -112,13 +113,14 @@ void fleet::give_commands(list<command> c, game_data *g){
     }
 
     g -> add_entity(f);
+    f -> update_data(g, true);
   }
 }
 
 fleet::suggestion fleet::suggest(combid sid, game_data *g) {
   ship::ptr s = g -> get_ship(sid);
-  float pref_density = 0.2;
-  float pref_maxrad = fmax(sqrt(ships.size() / (M_PI * pref_density)), 10);
+  float pref_density = 0.01;
+  float pref_maxrad = fmax(sqrt(ships.size() / (M_PI * pref_density)), 20);
 
   auto output = [this] (string v) {
     cout << id << ": suggest: " << v << endl;
@@ -154,7 +156,10 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
     }
   }else{
     // peaceful times
-    if (utility::l2norm(s -> position - position) > pref_maxrad) {
+    if (stats.converge) {
+      output("activate");
+      return suggestion(suggestion::activate, stats.target_position);
+    }else if (utility::l2norm(s -> position - position) > pref_maxrad) {
       if (is_idle()) {
 	output("summon");
 	return suggestion::summon;
@@ -165,9 +170,6 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
     }else if (is_idle()) {
       output("hold");
       return suggestion::hold;
-    }else if (stats.converge) {
-      output("activate");
-      return suggestion(suggestion::activate, stats.target_position);
     }else{
       output("travel");
       return suggestion(suggestion::travel, stats.target_position);
@@ -327,10 +329,19 @@ void fleet::update_data(game_data *g, bool force_refresh){
   stats.speed_limit = speed;
 
   analyze_enemies(g);
+  check_action(g);
+  refresh_ships(g);
+}
 
-  // the below only applies if the fleet has a target
+void fleet::refresh_ships(game_data *g) {
+  // make ships update data
+  for (auto sid : ships) g -> get_ship(sid) -> force_refresh = true;
+}
+
+void fleet::check_action(game_data *g) {
+  bool should_refresh = false;
+  
   if (com.target != identifier::target_idle) {
-
     // check target status valid if action is an interaction
     auto itab = interaction::table();
     if (itab.count(com.action)) {
@@ -338,19 +349,21 @@ void fleet::update_data(game_data *g, bool force_refresh){
       if (!c.valid_on(g -> get_entity(com.target))) {
 	cout << "target " << com.target << " no longer valid for " << id << endl;
 	set_idle();
+	should_refresh = true;
       }
     }
 
     // have arrived?
     if (!is_idle()){
       if (g -> target_position(com.target, stats.target_position)) {
-	stats.converge = utility::l2d2(stats.target_position - position) < fleet::interact_d2;
+	bool buf = utility::l2d2(stats.target_position - position) < fleet::interact_d2;
+	should_refresh = buf != stats.converge;
+	stats.converge = buf;
       }
     }
   }
-
-  // make ships update data
-  for (auto sid : ships) g -> get_ship(sid) -> force_refresh = true;
+  
+  if (should_refresh) refresh_ships(g);
 }
 
 void fleet::check_waypoint(game_data *g){

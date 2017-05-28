@@ -92,15 +92,11 @@ const hm_t<string, ship_stats>& ship_stats::table(){
 	if (name == "cost") {
 	  for (auto k = j -> value.MemberBegin(); k != j -> value.MemberEnd(); k++) {
 	    string res_name = k -> name.GetString();
-	    bool sub_success = false;
-	    for (auto r : keywords::resource) {
-	      if (res_name == r) {
-		a.build_cost[r] = k -> value.GetDouble();
-		sub_success = true;
-	      }
-	    }
+	    float res_value = k -> value.GetDouble();
+	    bool sub_success = cost::parse_resource(res_name, res_value, a.build_cost);
+
 	    if (res_name == "time") {
-	      a.build_time = k -> value.GetDouble();
+	      a.build_time = res_value;
 	      sub_success = true;
 	    }
 
@@ -349,14 +345,14 @@ void ship::move(game_data *g){
     auto evalfun = [this, g, output] (combid sid) -> float {
       ship::ptr s = g -> get_ship(sid);
       point delta = s -> position - position;
-      float h = utility::safe_inv(cos(utility::angle_difference(utility::point_angle(delta), angle)) + 1);
+      float h = utility::safe_inv(cos(utility::angle_difference(utility::point_angle(delta), angle)) + 2);
       output("scanning local enemy: " + s -> id + ": h = " + to_string(h));
       return h;
     };
 
     combid target_id = utility::value_min<combid>(local_enemies, evalfun);
 
-    if (evalfun(target_id) < 1) {
+    if (evalfun(target_id) < 0.4) {
       // I've got a shot!
       interaction_info info;
       info.source = id;
@@ -422,14 +418,33 @@ void ship::move(game_data *g){
   }
 
   // move
-  float angle_increment = fmin(0.1 / stats[sskey::key::mass], 0.5);
+  float angle_increment = fmin(0.1 / sqrt(stats[sskey::key::mass]), 0.5);
   float acceleration = 0.1 * base_stats.stats[sskey::key::speed] / stats[sskey::key::mass];
   float epsilon = 0.01;
   float angle_miss = utility::angle_difference(target_angle, angle);
   float angle_sign = utility::signum(angle_miss, epsilon);
 
+  if (target_speed > 0) {
+    // check if either side is crowded
+    bool crowd_left = !check_space(angle - M_PI / 2);
+    bool crowd_right = !check_space(angle + M_PI / 2);
+    if (crowd_left && !crowd_right) {
+      // make sure target angle is to right of angle
+      if (angle_miss < 0){
+	target_angle = angle + 0.1;
+	output("avoid collision: edge right");
+      }
+    } else if (crowd_right && !crowd_left) {
+      // make sure target angle is to left of angle
+      if (angle_miss > 0) {
+	target_angle = angle - 0.1;
+	output("avoid collision: edge left");
+      }
+    }
+  }
+
   // slow down if missing angle
-  float speed_value = (cos(angle_miss) + 1) / 2 * target_speed;
+  float speed_value = fmax(cos(angle_miss), 0) * target_speed;
   float speed_miss = speed_value - stats[sskey::key::speed];
   float speed_sign = utility::signum(speed_miss, epsilon);
   stats[sskey::key::speed] += fmin(acceleration, fabs(speed_miss)) * speed_sign;
@@ -510,6 +525,7 @@ void ship::on_liftoff(solar::ptr from, game_data *g){
   g -> players[owner].research_level.repair_ship(*this, from);
   is_landed = false;
   force_refresh = true;
+  stats[sskey::key::speed] = 0;
 
   for (auto v : upgrades) {
     upgrade u = upgrade::table().at(v);

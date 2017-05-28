@@ -7,6 +7,7 @@
 #include "research.h"
 #include "solar.h"
 #include "ship.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -15,24 +16,27 @@ development::node::node() {
   cost_time = 0;
 }
 
-void development::node::read_from_json(const rapidjson::Value &v) {
+bool development::node::parse(string name, const rapidjson::Value &v) {
   auto &stab = ship::table();
-  
-  if (v.HasMember("sector boost")) {
-    auto &secboost = v["sector boost"];
-    for (auto k : keywords::sector) {
-      if (secboost.HasMember(k.c_str())) sector_boost[k] = secboost[k.c_str()].GetDouble();
+    
+  if (name == "sector boost") {
+    for (auto u = v.MemberBegin(); u != v.MemberEnd(); u++) {
+      string sec_name = u -> name.GetString();
+      float sec_value = u -> value.GetDouble();
+      if (utility::find_in(sec_name, keywords::sector)) {
+	sector_boost[sec_name] = sec_value;
+      } else {
+	return false;
+      }
     }
-  }
-
-  if (v.HasMember("ship upgrades")) {
-    auto &upgrades = v["ship upgrades"];
-    for (auto u = upgrades.MemberBegin(); u != upgrades.MemberEnd(); u++) {
+  } else if (name == "ship upgrades") {
+    for (auto u = v.MemberBegin(); u != v.MemberEnd(); u++) {
       string ship_name = u -> name.GetString();
       list<string> ship_classes;
+	
       if (ship_name == research::upgrade_all_ships) {
 	ship_classes = ship::all_classes();
-      } else if (ship_name[0] == '#' || ship_name[0] == '!') {
+      } else if (ship_name[0] == '[' || ship_name[0] == '#' || ship_name[0] == '!') {
 	// list of tag conditions for set of upgrades
 	vector<string> conditions;
 	boost::split(conditions, ship_name, [](char c) {return c == ':';});
@@ -40,44 +44,50 @@ void development::node::read_from_json(const rapidjson::Value &v) {
 	for (auto &s : stab) {
 	  bool pass = true;
 	  for (auto cond : conditions) {
-	    if (cond[0] == '#' && !s.second.tags.count(cond.substr(1))) pass = false;
-	    if (cond[0] == '!' && s.second.tags.count(cond.substr(1))) pass = false;
-	    if (cond[0] == '[') {
+	    if (cond[0] == '#') {
+	      if (!s.second.tags.count(cond.substr(1))) pass = false;
+	    } else if (cond[0] == '!'){
+	      if (s.second.tags.count(cond.substr(1))) pass = false;
+	    } else if (cond[0] == '[') {
 	      vector<string> limits;
 	      string range = cond.substr(1, cond.length() - 2);
 	      boost::split(limits, range, [](char c){return c == ',';});
 	      float lower = stof(limits[0]);
 	      float upper = stof(limits[1]);
 	      if (s.second.stats[sskey::key::mass] < lower || s.second.stats[sskey::key::mass] > upper) pass = false;
+	    } else {
+	      throw runtime_error("invalid condition: " + cond);
 	    }
 	  }
 	  if (pass) ship_classes.push_back(s.first);
 	}
-      } else {
+      } else if (utility::find_in(ship_name, ship::all_classes())) {
 	ship_classes.push_back(ship_name);
+      } else {
+	throw runtime_error("invalid upgrade ship class specifier: " + ship_name);
       }
       
       for (auto sc : ship_classes) {
-	for (auto v = u -> value.Begin(); v != u -> value.End(); v++) {
-	  ship_upgrades[sc].insert(v -> GetString());
+	for (auto x = u -> value.Begin(); x != u -> value.End(); x++) {
+	  ship_upgrades[sc].insert(x -> GetString());
 	}
       }
     }
-  }
-  
-  if (v.HasMember("build time")) cost_time = v["build time"].GetDouble();
-
-  if (v.HasMember("depends facilities")) {
-    auto &dep = v["depends facilities"];
-    for (auto d = dep.MemberBegin(); d != dep.MemberEnd(); d++) {
+  } else if (name == "build time") {
+    cost_time = v.GetDouble();
+  } else if (name == "depends facilities") {
+    for (auto d = v.MemberBegin(); d != v.MemberEnd(); d++) {
       depends_facilities[d -> name.GetString()] = d -> value.GetInt();
     }
+  } else if (name == "depends technologies") {
+    for (auto d = v.Begin(); d != v.End(); d++) {
+      depends_techs.insert(d -> GetString());
+    }
+  } else {
+    return false;
   }
 
-  if (v.HasMember("depends technologies")) {
-    auto &dep = v["depends technologies"];
-    for (auto d = dep.Begin(); d != dep.End(); d++) depends_techs.insert(d -> GetString());
-  }
+  return true;
 }
 
 template<typename T>
