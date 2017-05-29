@@ -21,6 +21,8 @@ solar::solar(){}
 solar::~solar(){}
 
 void solar::pre_phase(game_data *g){
+  out_of_resources = false;
+  
   research_level = &g -> players[owner].research_level;
   for (auto &t : development){
     if (t.second.is_turret){
@@ -47,6 +49,21 @@ void solar::move(game_data *g){
 	sh.owner = owner;
 	ships.insert(sh.id);
 	g -> add_entity(ship::ptr(new ship(sh)));
+      }
+    }
+  }
+
+  // build facilities
+  if (choice_data.development.length() > 0) {
+    string dev = choice_data.development;
+    if (list_facility_requirements(dev, r).empty()) {
+      float ctime = get_facility_cost_time(dev);
+      cost::res_t cres = get_facility_cost_resources(dev);
+      if (ctime >= development_points && resource_constraint(cres) >= 1) {
+	develop(dev);
+	choice_data.development = "";
+      } else if (resource_constraint(cres) < 1) {
+	out_of_resources = true;
       }
     }
   }
@@ -213,7 +230,10 @@ float solar::space_status(){
   if (space <= 0) return 0;
   
   float used = 0;
-  for (auto &t : development) used += cost::expansion_multiplier(t.second.level) * t.second.space_usage;
+  for (auto &t : development) {
+    used += t.second.space_usage;
+    used -= t.second.level * t.second.space_provided;
+  }
 
   if (used > space) throw runtime_error("space_status: used more than space");
   return fmin((space - used) / space, 1);
@@ -224,17 +244,21 @@ float solar::water_status(){
   if (water <= 0) return 0;
   
   float used = 0;
-  for (auto &t : development) used += cost::expansion_multiplier(t.second.level) * t.second.water_usage;
+  for (auto &t : development) {
+    used += t.second.water_usage;
+    used -= t.second.level * t.second.water_provided;
+  }
 
   if (used > water) throw runtime_error("water status: used more than water!");
   return fmin((water - used) / water, 1);
 }
 
 float solar::population_increment(){
+  static float rate = 0.2;
   float base_growth = population * happiness * f_growth;
   float culture_growth = base_growth * compute_boost(keywords::key_culture);
-  float crowding_death = population * f_crowding * population / (ecology * space * space_status() + 1);
-  return base_growth + culture_growth - crowding_death;
+  float crowding_death = f_crowding * pow(population, 2) / (ecology * space * space_status() + 1);
+  return rate * (base_growth + culture_growth - crowding_death);
 }
 
 float solar::ecology_increment(){
@@ -268,6 +292,10 @@ float solar::compute_workers(){
 
 void solar::dynamics(){
   choice::c_solar c = choice_data;
+
+  // disable development if no development selected
+  if (c.development.emtpy()) c.allocation[keywords::key_development] = 0;
+  
   c.normalize();
   solar buf = *this;
   float dw = sqrt(dt);
@@ -277,10 +305,9 @@ void solar::dynamics(){
   buf.ecology = fmax(fmin(buf.ecology, 1), 0);
 
   if (population > 0){
-    // population development
-    
+    // population development    
     float random_growth = population * f_growth * utility::random_normal(0, 0.2);
-    buf.population += population_increment() * dt + random_growth * dw;
+    buf.population = fmax(population + population_increment() * dt + random_growth * dw, 0);
 
     // happiness development
     buf.happiness += happiness_increment(c) * dt + utility::random_normal(0, 0.01) * dw;
@@ -313,6 +340,7 @@ void solar::dynamics(){
     }
 
     float allowed = fmin(1, resource_constraint(total_cost));
+    if (allowed < 1) buf.out_of_resources = true;
 
     for (auto v : ship::all_classes()) {
       buf.fleet_growth[v] += allowed * weight_table[v];
@@ -373,15 +401,26 @@ void solar::develop(string fac) {
   }
 
   // pay
-  cost::res_t pay = development[fac].cost_resources;
-  float multiplier = cost::expansion_multiplier(development[fac].level);
-  pay.scale(multiplier);
-  pay_resources(pay);
-  development_points -= multiplier * development[fac].cost_time;
+  pay_resources(get_facility_cost_resources(fac));
+  development_points -= get_facility_cost_time(fac);
 
   // level up and repair
   development[fac].level++;
   development[fac].hp = development[fac].base_hp;
+}
+
+float solar::get_facility_cost_time(string v) {
+  facility f = facility_table().at(v);
+  float lm = cost::expansion_multiplier(get_facility_level(v) + 1);
+  return lm * f.cost_time;
+}
+
+float solar::get_facility_cost_resources(string v) {
+  facility f = facility_table().at(v);
+  float lm = cost::expansion_multiplier(get_facility_level(v) + 1);
+  res_t total = f.cost_resources;
+  total.scale(lm);
+  return total;
 }
 
 int solar::get_facility_level(string fac) {
@@ -443,6 +482,12 @@ void facility::read_from_json(const rapidjson::Value &x) {
       }else if (name == "space usage"){
 	space_usage = value;
 	success = true;
+      }else if (name == "water provided"){
+	water_provided = value;
+	success = true;
+      }else if (name == "space provided"){
+	space_provided = value;
+	success = true;
       }
     }
 
@@ -484,6 +529,8 @@ facility::facility() : development::node() {
   shield = 0;
   water_usage = 0;
   space_usage = 0;
+  water_provided = 0;
+  space_provided = 0;
 }
 
 facility::facility(const facility &f) : development::node(f) {
@@ -504,13 +551,9 @@ float turret_t::accuracy_check(ship::ptr t) {
 list<string> solar::list_facility_requirements(string v, const research::data &r_level) {
   list<string> req;
   facility f = facility_table().at(v);
-  float level_multiplier = cost::expansion_multiplier(get_facility_level(v));
+  float level_multiplier = cost::expansion_multiplier(get_facility_level(v) + 1);
 
   // check cost
-  cost::res_t res_buf = f.cost_resources;
-  res_buf.scale(level_multiplier);
-  if (resource_constraint(res_buf) < 1) req.push_back("resources");
-  if (development_points < level_multiplier * f.cost_time) req.push_back("development points");
   if (water * water_status() < level_multiplier * f.water_usage) req.push_back("water");
   if (space * space_status() < level_multiplier * f.space_usage) req.push_back("space");
 

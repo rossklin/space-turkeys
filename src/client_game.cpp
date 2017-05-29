@@ -19,6 +19,7 @@
 #include "desktop.h"
 #include "development_gui.h"
 #include "solar_gui.h"
+#include "animation.h"
 
 using namespace std;
 using namespace st3;
@@ -253,17 +254,14 @@ bool game::choice_step(){
   cout << "choice_step: start" << endl;
 
   // check if we can select a technology
-  if (!players[self_id].research_level.available().empty()) {
+  research::data &r = players[self_id].research_level;
+  if (r.researching.empty() && !r.available().empty()) {
     interface::development_gui::f_req_t f_req = [this] (string v) -> list<string> {
       return players[self_id].research_level.list_tech_requirements(v);
     };
 
     interface::development_gui::f_complete_t on_complete = [this] (bool accepted, string result) {
-      if (accepted) {
-	interface::desktop -> response.research = result;
-	players[self_id].research_level.researched.insert(interface::desktop -> response.research);
-      }
-      
+      if (accepted) interface::desktop -> response.research = result;      
       interface::desktop -> clear_qw();
     };
 
@@ -415,6 +413,14 @@ bool game::simulation_step(){
     window.draw(colored_rect(sf::Color::Green, idx / (float) settings.frames_per_round));
 
     message = "evolution: " + to_string((100 * idx) / settings.frames_per_round) + " %" + (playing ? "" : "(paused)");
+
+    // update animations
+    float fps = 1 / frame_time;
+    for (auto &a : animations) {
+      point vel = utility::scale_point(a.v, fps);
+      a.p1 += vel;
+      a.p2 += vel;
+    }
 
     playing &= idx < loaded - 1;
 
@@ -586,13 +592,7 @@ void game::reload_data(data_frame &g){
 
   // remove entities as server specifies
   for (auto x : g.remove_entities){
-    if (entity.count(x)){
-      // if ship, add explosion
-      auto p = get_entity(x);
-      if (p -> is_active() && p -> isa(ship::class_id)) {
-	explosions.push_back(explosion(p -> position, players[p -> owner].color));
-      }
-      
+    if (entity.count(x)){      
       cout << " -> remove entity " << x << endl;
       remove_entity(x);
     }
@@ -648,6 +648,9 @@ void game::reload_data(data_frame &g){
 
   // update research level ref for solars
   for (auto s : get_all<solar>()) s -> research_level = &players[s -> owner].research_level;
+  
+  // add animations
+  for (auto &a : players[self_id].animations) animations.push_back(a);
 }
 
 // ****************************************
@@ -1276,7 +1279,6 @@ string game::popup_options(string header_text, hm_t<string, string> options) {
 /** Core loop for gui. */
 void game::window_loop(int &done, function<int(sf::Event)> event_handler, function<int(void)> body){
   sf::Clock clock;
-  float frame_time = 1/(float)20;
 
   while (!done){
     auto delta = clock.restart().asSeconds();
@@ -1404,16 +1406,16 @@ void game::draw_interface_components(){
 
 }
 
-/** Draw entities, explosions and stars. */
+/** Draw entities, animations and stars. */
 void game::draw_universe(){
   for (auto star : fixed_stars) star.draw(window);
 
-  list<explosion> buf;
-  for (auto e : explosions) {
-    graphics::draw_explosion(window, e);
+  list<animation> buf;
+  for (auto e : animations) {
+    graphics::draw_animation(window, e);
     if (e.time_passed() < 4) buf.push_back(e);
   }
-  explosions = buf;
+  animations = buf;
   
   for (auto x : entity) x.second -> draw(window);
 }

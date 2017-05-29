@@ -284,7 +284,9 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const facility &g){
     << g.turret
     << g.cost_resources
     << g.water_usage
-    << g.space_usage;
+    << g.space_usage
+    << g.water_provided
+    << g.space_provided;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, facility &g){
@@ -297,7 +299,9 @@ sf::Packet& st3::operator >>(sf::Packet& packet, facility &g){
     >> g.turret
     >> g.cost_resources
     >> g.water_usage
-    >> g.space_usage;
+    >> g.space_usage
+    >> g.water_provided
+    >> g.space_provided;
 }
 
 sf::Packet& st3::operator <<(sf::Packet& packet, const facility_object &g){
@@ -330,7 +334,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
     << g.population
     << g.happiness
     << g.ships
-    << g.development;
+    << g.development
+    << g.out_of_resources;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
@@ -348,7 +353,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
     >> g.population
     >> g.happiness
     >> g.ships
-    >> g.development;
+    >> g.development
+    >> g.out_of_resources;
 }
 
 // solar choice
@@ -464,18 +470,18 @@ sf::Packet& st3::operator >>(sf::Packet& packet, point &c){
 
 // player
 sf::Packet& st3::operator <<(sf::Packet& packet, const player &c){
-  return packet << c.name << c.color << c.research_level;
+  return packet << c.name << c.color << c.research_level << c.animations << c.log;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, player &c){
-  return packet >> c.name >> c.color >> c.research_level;
+  return packet >> c.name >> c.color >> c.research_level >> c.animations >> c.log;
 }
 
 // research
 sf::Packet& st3::operator <<(sf::Packet& packet, const research::data &c){
-  return packet << c.researched << c.accumulated << c.facility_level;
+  return packet << c.researched << c.accumulated << c.facility_level << c.researching;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, research::data &c){
-  return packet >> c.researched >> c.accumulated >> c.facility_level;
+  return packet >> c.researched >> c.accumulated >> c.facility_level >> c.researching;
 }

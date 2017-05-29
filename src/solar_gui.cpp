@@ -139,13 +139,8 @@ void solar_gui::build_choice(){
       development_gui::f_req_t f_req = [s] (string v) -> list<string> {return s -> list_facility_requirements(v, desktop -> get_research());};
 
       development_gui::f_complete_t on_complete = [s, c] (bool accepted, string r) {
-	choice::c_solar b = c;
-	if (accepted) {
-	  b.development = r;
-	  desktop -> response.solar_choices[s -> id] = b;
-	  s -> develop(r);
-	}
-      
+	if (accepted) c.development = r;
+	desktop -> response.solar_choices[s -> id] = c;
 	desktop -> reset_qw(Create(s));
       };
 

@@ -56,11 +56,14 @@ const hm_t<string, interaction> &interaction::table() {
       
     if (s -> load < s -> stats[sskey::key::load_time]) return;
 
+    g -> log_ship_fire(s -> id, t -> id);
+
     cout << "space_combat: loaded" << endl;
     s -> load = 0;
     if (t -> evasion_check() < s -> accuracy_check(t)) {
       cout << "space_combat: hit!" << endl;
       t -> receive_damage(self, utility::random_uniform(0, s -> stats[sskey::key::ship_damage]));
+      if (t -> remove) g -> log_ship_destroyed(s -> id, t -> id);
     }else{
       cout << "space_combat: miss!" << endl;
     }

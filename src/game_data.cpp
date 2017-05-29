@@ -12,6 +12,7 @@
 #include "build_universe.h"
 #include "com_server.h"
 #include "upgrades.h"
+#include "animation_data.h"
 
 using namespace std;
 using namespace st3;
@@ -45,19 +46,6 @@ solar::ptr game_data::get_solar(combid i){
 
 waypoint::ptr game_data::get_waypoint(combid i){
   return utility::guaranteed_cast<waypoint>(get_entity(i));
-}
-
-template<typename T>
-list<typename T::ptr> game_data::all(){
-  list<typename T::ptr> res;
-
-  for (auto p : entity){
-    if (p.second -> isa(T::class_id)){
-      res.push_back(utility::guaranteed_cast<T>(p.second));
-    }
-  }
-
-  return res;
 }
 
 bool game_data::target_position(combid t, point &p){
@@ -167,12 +155,16 @@ void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &
   f -> position = p;
   f -> radius = settings.fleet_default_radius;
   f -> owner = owner;
+  float ta = utility::random_uniform(0, 2 * M_PI);
+  point tp;
+  if (target_position(c.target, tp)) ta = utility::point_angle(tp - p);
 
   for (auto &s : sh){
     auto sp = get_ship(s);
     f -> ships.insert(s);
     sp -> owner = owner;
     sp -> fleet_id = f -> id;
+    sp -> angle = ta;
   }
   
   distribute_ships(sh, f -> position);
@@ -219,25 +211,13 @@ void game_data::apply_choice(choice::choice c, idtype id){
     cout << "apply_choice: player " << id << ": added " << x.first << endl;
   }
 
-  // research choice: evaluated before solar choice so dependencies
-  // match those on client side
-  
-  // validate
+  // research
   if (c.research.length() > 0) {
-    list<string> available_techs = players[id].research_level.available();
-    bool ok = false;
-    for (auto t : available_techs) ok |= t == c.research;
-    if (!ok) {
+    if (!utility::find_in(c.research, players[id].research_level.available())) {
       throw runtime_error("Invalid research choice submitted by player " + to_string(id) + ": " + c.research);
     }
   }
-
-  // apply
-  if (c.research.length() > 0){
-    research::tech t = research::data::table().at(c.research);
-    players[id].research_level.accumulated -= t.cost_time;
-    players[id].research_level.researched.insert(t.name);
-  }
+  players[id].research_level.researching = c.research;
 
   // solar choices: require research to be applied
   for (auto &x : c.solar_choices){
@@ -254,7 +234,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
 
     if (!x.second.development.empty()){
       list<string> av = get_solar(x.first) -> available_facilities(players[id].research_level);
-      if (find(av.begin(), av.end(), x.second.development) == av.end()) {
+      if (!utility::find_in(x.second.development, av)) {
 	throw runtime_error("validate_choice: error: solar choice contained invalid development: " + x.second.development);
       }
     }
@@ -262,10 +242,6 @@ void game_data::apply_choice(choice::choice c, idtype id){
     // apply
     solar::ptr s = get_solar(x.first);
     s -> choice_data = x.second;
-
-    if (!x.second.development.empty()) {
-      s -> develop(x.second.development);
-    }
   }
 
   // commands: validate
@@ -399,9 +375,14 @@ solar::ptr game_data::closest_solar(point p, idtype id) {
 }
 
 void game_data::increment(){
+  // clear frame
   remove_entities.clear();
   interaction_buffer.clear();
   collision_buffer.clear();
+  for (auto &p : players) {
+    p.second.animations.clear();
+    p.second.log.clear();
+  }
   rebuild_evm();
 
   // update entities and compile interactions
@@ -420,8 +401,8 @@ void game_data::increment(){
     }
   }
 
-  // perform collisions
-  for (auto x : collision_buffer) collide_ships(x);
+  // // perform collisions
+  // for (auto x : collision_buffer) collide_ships(x);
 
   // remove units twice, since removing ships can cause fleets to set
   // the remove flag
@@ -557,8 +538,25 @@ void game_data::end_step(){
 
   for (auto x : players) {
     idtype id = x.first;
-    players[id].research_level.accumulated += pool[id];
-    players[id].research_level.facility_level = level[id];
+    research::data &r = players[id].research_level;
+    r.accumulated += pool[id];
+    r.facility_level = level[id];
+    
+    // apply
+    if (r.researching.length() > 0) {
+      if (utility::find_in(c.research, r.available())) {
+	research::tech t = research::data::table().at(r.researching);
+	if (r.accumulated >= t.cost_time) {
+	  // todo: log research completed
+	  r.accumulated -= t.cost_time;
+	  r.researched.insert(t.name);
+	  r.researching = "";
+	}
+      } else {
+	// todo: log that research became invalidated
+	r.researching = "";
+      }
+    }
   }
 }
 
@@ -645,4 +643,58 @@ void game_data::confirm_data() {
   }
 }
 
-template list<ship::ptr> game_data::all<ship>();
+void game_data::log_ship_fire(combid a, combid b) {
+  ship::ptr s = get_ship(a);
+  ship::ptr t = get_ship(b);
+
+  animation_data x;
+  x.p1 = s -> position;
+  x.p2 = t -> position;
+  x.magnitude = s -> stats[sskey::key::ship_damage];
+  x.v = utility::scale_point(utility::normv(s -> angle), s -> stats[sskey::key::speed]);
+  x.color = players[s -> owner].color;
+  x.cat = animation_data::category::shot;
+
+  animation sh;
+  sh.p1 = t -> position;
+  sh.magnitude = t -> stats[sskey::key::shield];
+  sh.v = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
+  sh.color = players[t -> owner].color;
+  sh.cat = animation_data::category::shield;
+
+  for (auto &p : players) {
+    if (evm[p.first].count(a) || evm[p.first].count(b)) {
+      p.second.animations.push_back(x);
+    }
+
+    if (evm[p.first].count(b)) {
+      p.second.animations.push_back(sh);
+    }
+  }  
+}
+
+void game_data::log_ship_destroyed(combid a, combid b) {
+  ship::ptr s = get_ship(a);
+  ship::ptr t = get_ship(b);
+
+  // text log
+  string log_p1 = "Your " + s -> ship_class + " destroyed an enemy " + t -> ship_class;
+  string log_p2 = "Your " + t -> ship_class + " was shot down by an enemy " + s -> ship_class;
+  
+  players[s -> owner].log.push_back(log_p1);
+  players[t -> owner].log.push_back(log_p2);
+
+  // animations
+  animation_data x;
+  x.p1 = t -> position;
+  x.magnitude = t -> stats[sskey::key::mass];
+  x.v = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
+  x.color = players[t -> owner].color;
+  x.cat = animation_data::category::explosion;
+
+  for (auto &p : players) {
+    if (evm[p.first].count(b)) {
+      p.second.animations.push_back(x);
+    }
+  }
+}

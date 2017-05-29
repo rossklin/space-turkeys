@@ -40,7 +40,6 @@ list<string> data::list_tech_requirements(string v) {
   if (researched.count(v)) {
     req.push_back("already researched");
   }else{
-    if (t.cost_time > accumulated) req.push_back("research points");
     for (auto d : t.depends_techs) if (!researched.count(d)) req.push_back("technology " + d);
     for (auto f : t.depends_facilities) if (f.second > facility_level[f.first]) req.push_back(f.first + " level " + to_string(f.second));
   }
@@ -55,8 +54,6 @@ list<string> data::available() {
 
 void data::repair_ship(ship &s, solar::ptr sol) {
   ship_stats base_stats = ship::table().at(s.ship_class);
-
-  s.angle = utility::random_uniform(0, 2 * M_PI);
 
   auto maybe_asu = [](const development::node &n, string sc) -> set<string> {
     set<string> sum;

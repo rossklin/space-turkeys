@@ -38,6 +38,8 @@ namespace st3{
     sfloat shield;
     sfloat water_usage;
     sfloat space_usage;
+    sfloat water_provided;
+    sfloat space_provided;
     cost::res_t cost_resources;
 
     facility();
@@ -77,6 +79,7 @@ namespace st3{
     sfloat ecology;
     sfloat population;
     sfloat happiness;
+    sbool out_of_resources;
 
     cost::res_t available_resource; 
     cost::res_t resource_storage;

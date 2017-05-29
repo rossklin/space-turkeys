@@ -1,32 +1,31 @@
 * current work
+** build log in client_game and add widget
 ** test run fleet intelligence on more than one ship
+** [J?] issue with clumsy ships
+*** [J?] Ships collide while travelling in fleet
+    Test: check free space on either side
+*** [J?] big ships are too clumsy and collide when courses intersect
+    Disable collisions, increase anglular rotation speed, give ships
+    correct angle on liftoff.
+** [J?] solars run out of space after building some stuff
+    Make facilities not use more space per level. Add facility
+    attributes "provides space" and "provides water".
+** [J?] population adapts too quickly to circumstances e.g. space
+** [J?] Redesign: chose development in advance like everything else
 * [!] issues
 ** [!] crashes
 *** random_uniform called with b = inf
-*** [?] "space_status: used more than space" reached after developing facility
-** mechanical errors
-*** Ships validate their action using target information that the player can't see
+*** [J?] "space_status: used more than space" reached after developing facility
 ** [~] system
-*** [J?] Ships collide while travelling in fleet
-    Check free space on either side
-*** big ships are too clumsy and collide when courses intersect
-*** population adapts too quickly to circumstances e.g. space
-*** solars run out of space after building some stuff
-    Make facilities not use more space per level. Add attribute
-    "provides space" and "provides water".
 *** "maintain course" not respected
+*** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
-*** [?] solars dissapear from sight
-*** allow zoom, show entity info etc during simulation
-*** autofill commands with only those units which support the action
-*** client allows multiple development choices - server does not
-    Redesign: chose development in advance like everything else
 *** available developments should also be in a scroll-window
-*** available developments' build button should be bottom aligned
-*** development req list is not left-aligned
 *** priority buttons unresponsive to first right click
 *** Clicking interface response button also triggers click on minimap
+*** available developments' build button should be bottom aligned
+*** development req list is not left-aligned
 *** sfg window does not resize on sfml window resize
 *** command selectors drawn on top of each other
 *** simulation step hangs on key escape abort game
@@ -35,16 +34,17 @@
     client gets segfault. Perhaps the server failed to receive the
     leave game request from client 1 while it was waiting for the
     choice from client 2.
+*** [redesign] client allows multiple development choices - server does not
 * [!] system design ideas
-** add a list of animations to send to client rather than add explosion on ship removal
+** [J?] add a list of animations to send to client rather than add explosion on ship removal
 ** add expansion limitations e.g. nr of fleets and solar distance penalty
-** add a battle-log to send to client
+** [J?] add a battle-log to send to client
 ** [!] distinguish between interactions and auras (e.g. hive support)
    At the moment, non-targeted interactions are not applied at all
-** add a command buffer so commands reach entities with distance based delay
 ** make detection stat determine which object stats are seen by client
-** make angular acceleration an attribute
-** consider letting fleet suggestion contain an angle?
+** add a command buffer so commands reach entities with distance based delay
+** [?] make angular acceleration an attribute
+** [?] consider letting fleet suggestion contain an angle
 ** add terrain
    For starters: impassable areas. This requires fleets to do path
    finding.
@@ -61,11 +61,10 @@
 ** add a vision map, build in client on reload_data
 * tweaks and fixes
 ** gui
+*** allow zoom, show entity info etc during simulation
 *** show ship health by marking ship vertices red
 *** show accumulated research
-*** add "build" button on facilities in solar_gui
-*** command selectors should update their position on each reload_data
-   Maybe they are? They jump in direction of command...
+*** autofill commands with only those units which support the action
 *** allow double-clicking ship to select all of same type
 *** allow dragging waypoints
 *** name and indicators for solars so you can tell them apart
@@ -92,6 +91,7 @@
 *** [J?] apply sector boost from research in solar
 *** explosions are too long
 ** analyze
+*** [?] solars dissapear from sight
 *** [!confirm?] fleets don't seem to get cleared from client choice
    Client seems to remove fleets when instructed, and c.fleets is
    cleared. Server clears all fleets during pre step, and removes old
@@ -102,6 +102,9 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] add "build" button on facilities in solar_gui
+** [J] command selectors should update their position on each reload_data
+   Maybe they are? They jump in direction of command...
 ** [J?] fleet suggests summon | travel when arriving at destination solar
 ** [J?] ships should set speed = 0 on liftoff
 ** [J?] warp drive way too fast

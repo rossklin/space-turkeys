@@ -48,7 +48,7 @@ namespace st3{
     
     grid::tree::ptr entity_grid;
     std::vector<interaction_info> interaction_buffer;
-    std::set<id_pair> collision_buffer;
+    /* std::set<id_pair> collision_buffer; */
 
     game_data();
     ~game_data();
@@ -56,12 +56,14 @@ namespace st3{
     void assign(const game_data &g);
     void apply_choice(choice::choice c, idtype id);
     void increment();
-    void collide_ships(id_pair x);
+    /* void collide_ships(id_pair x); */
     bool target_position(combid t, point &p);
     std::list<combid> search_targets(combid self_id, point p, float r, target_condition c);
     std::list<combid> search_targets_nophys(combid self_id, point p, float r, target_condition c);
     void rebuild_evm();
     solar::ptr closest_solar(point p, idtype id);
+    void log_ship_fire(combid a, combid b);
+    void log_ship_destroyed(combid a, combid b);
 
     // access
     ship::ptr get_ship(combid i);
@@ -70,8 +72,18 @@ namespace st3{
     waypoint::ptr get_waypoint(combid i);
 
     template<typename T>
-    std::list<typename T::ptr> all();
+    std::list<typename T::ptr> all(){
+      std::list<typename T::ptr> res;
 
+      for (auto p : entity){
+	if (p.second -> isa(T::class_id)){
+	  res.push_back(utility::guaranteed_cast<T>(p.second));
+	}
+      }
+
+      return res;
+    };
+    
     void add_entity(game_object::ptr p);
     void remove_units();
     void generate_fleet(point p, idtype i, command &c, std::list<combid> &sh);

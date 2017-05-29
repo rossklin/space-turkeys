@@ -122,7 +122,7 @@
 		"organics" : 40
 	    },
 	    "build time" : 170,
-	    "water usage" : -100,
+	    "water provided" : 400,
 	    "depends technologies" : ["nano construction"]
 	},
 
@@ -133,7 +133,7 @@
 		"organics" : 40
 	    },
 	    "build time" : 170,
-	    "space usage" : -100,
+	    "space provided" : 400,
 	    "depends technologies" : ["warp technology"]
 	}
     }

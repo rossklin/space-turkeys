@@ -25,6 +25,7 @@ namespace st3{
       static const hm_t<std::string, tech> &table();
       std::set<std::string> researched;
       sfloat accumulated;
+      std::string researching;
       hm_t<std::string, sint> facility_level;
 
       data();

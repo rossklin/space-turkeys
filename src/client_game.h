@@ -20,7 +20,9 @@
 namespace st3{
   class target_gui;
   
-  namespace client{    
+  namespace client{
+    const float frame_time = 0.05;
+
     /*! Client game interface
 
       The game struct runs the client game interface. It stores the

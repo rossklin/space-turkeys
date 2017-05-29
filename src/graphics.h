@@ -11,7 +11,7 @@
 #include "types.h"
 #include "ship.h"
 #include "research.h"
-#include "explosion.h"
+#include "animation.h"
 
 namespace st3{
   /*! type representing a window */
@@ -64,7 +64,7 @@ namespace st3{
     sf::Image ship_image(std::string ship_class, float width, float height, sf::Color col = sf::Color::Green);
     sf::Image ship_image_label(std::string text, std::string ship_class, float width, float height, sf::Color l_col = sf::Color::White, sf::Color s_col = sf::Color::Green);
 
-    void draw_explosion(sf::RenderTarget &w, explosion e);
+    void draw_animation(sf::RenderTarget &w, animation e);
     
     /* **************************************** */
     /* SFML STUFF */

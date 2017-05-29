@@ -8,7 +8,7 @@
 #include "utility.h"
 #include "cost.h"
 #include "client_game.h"
-#include "explosion.h"
+#include "animation.h"
 
 using namespace std;
 using namespace st3;
@@ -159,14 +159,38 @@ point graphics::inverse_scale(sf::RenderTarget &w){
   return point(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
 }
 
-void graphics::draw_explosion(sf::RenderTarget &w, explosion e){
+void graphics::draw_animation(sf::RenderTarget &w, animation e){
   float t = e.time_passed();
-  float rad = 20 * t * exp(-pow(3 * t,2));
-  sf::Color c = fade_color(c, sf::Color::White, 0.5);
-  c.a = 100;
+  sf::Color c(e.color);
   
-  sf::CircleShape s(rad);
-  s.setFillColor(c);
-  s.setPosition(e.position - point(rad, rad));
-  w.draw(s);
+  if (e.cat == animation_data::category::explosion) {
+    float rad = e.magnitude * t * exp(-pow(3 * t,2));
+    c = fade_color(c, sf::Color::White, 0.5);
+    c.a = 100;
+  
+    sf::CircleShape s(rad);
+    s.setFillColor(c);
+    s.setPosition(e.p1 - point(rad, rad));
+    w.draw(s);
+  } else if (e.cat == animation_data::category::shield) {
+    float rad = 10;
+    c = fade_color(sf::Color::Blue, sf::Color::White, 0.5);
+    c.a = 50 * t * exp(-pow(3 * t,2));
+  
+    sf::CircleShape s(rad);
+    s.setFillColor(c);
+    s.setPosition(e.p1 - point(rad, rad));
+    w.draw(s);
+  } else if (e.cat == animation_data::category::shot) {
+    vector<sf::Vertex> svert;
+    c.a = e.magnitude * exp(-pow(3 * t,2));
+
+    svert.resize(2);
+    svert[0].position = e.p1;
+    svert[0].color = c;
+    svert[1].position = e.p2;
+    svert[1].color = c;
+
+    w.draw(&svert[0], svert.size(), sf::LinesStrip);
+  }
 }
