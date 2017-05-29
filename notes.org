@@ -11,7 +11,12 @@
     Make facilities not use more space per level. Add facility
     attributes "provides space" and "provides water".
 ** [J?] population adapts too quickly to circumstances e.g. space
-** [J?] Redesign: chose development in advance like everything else
+** Redesign: chose development in advance like everything else
+*** landed on negative development points after completing expansion factories
+*** development choice is forgotten by opening and closing solar gui
+*** solar gui defaults to zeros even though choice_data is sent
+*** log research and facility completion
+*** show current research and facility choice and progress in gui
 * [!] issues
 ** [!] crashes
 *** random_uniform called with b = inf

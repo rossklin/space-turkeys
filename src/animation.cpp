@@ -6,7 +6,7 @@ using namespace std;
 using namespace chrono;
 using namespace st3;
 
-animation::animation(animation_data d) : data(d) {
+animation::animation(const animation_data &d) : animation_data(d) {
   created = system_clock::now();
 }
 

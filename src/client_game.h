@@ -56,8 +56,8 @@ namespace st3{
       static constexpr float grid_size = 20;
       std::set<std::pair<int, int> > known_universe;
 
-      // explosions
-      std::list<explosion> explosions;
+      // animations
+      std::list<animation> animations;
 
       /*! default contsructor */
       game();

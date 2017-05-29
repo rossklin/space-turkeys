@@ -477,6 +477,15 @@ sf::Packet& st3::operator >>(sf::Packet& packet, player &c){
   return packet >> c.name >> c.color >> c.research_level >> c.animations >> c.log;
 }
 
+// animation_data
+sf::Packet& st3::operator <<(sf::Packet& packet, const animation_data &c){
+  return packet << c.p1 << c.p2 << c.v << c.magnitude << c.color << c.cat;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, animation_data &c){
+  return packet >> c.p1 >> c.p2 >> c.v >> c.magnitude >> c.color >> c.cat;
+}
+
 // research
 sf::Packet& st3::operator <<(sf::Packet& packet, const research::data &c){
   return packet << c.researched << c.accumulated << c.facility_level << c.researching;

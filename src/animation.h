@@ -6,8 +6,7 @@
 #include "animation_data.h"
 
 namespace st3 {  
-  struct animation {
-    animation_data data;
+  struct animation : public animation_data {
     std::chrono::system_clock::time_point created;
 
     animation(const animation_data &d);
