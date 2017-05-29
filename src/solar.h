@@ -119,7 +119,9 @@ namespace st3{
     std::list<std::string> available_facilities(const research::data &r);
     void develop(std::string fac);
     int get_facility_level(std::string fac);
-
+    float get_facility_cost_time(std::string v);
+    cost::res_t get_facility_cost_resources(std::string v);
+    
     // solar: increment functions
     float population_increment();
     float ecology_increment();

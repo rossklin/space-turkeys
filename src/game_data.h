@@ -14,6 +14,7 @@
 #include "grid_tree.h"
 #include "game_settings.h"
 #include "interaction.h"
+#include "utility.h"
 
 namespace st3{
   namespace server {

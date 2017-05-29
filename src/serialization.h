@@ -261,8 +261,8 @@ namespace st3{
   */
   sf::Packet& operator >>(sf::Packet& packet, player &g);
 
-  sf::Packet& operator <<(sf::Packet& packet, animation_data &g);
-  sf::Packet& operator >>(sf::Packet& packet, const animation_data &g);
+  sf::Packet& operator <<(sf::Packet& packet, const animation_data &g);
+  sf::Packet& operator >>(sf::Packet& packet, animation_data &g);
 
   /*! stream a research into a packet
     @param packet the packet

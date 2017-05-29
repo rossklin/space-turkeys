@@ -296,40 +296,40 @@ void game_data::distribute_ships(list<combid> sh, point p){
   }
 }
 
-void game_data::collide_ships(id_pair x) {
-  ship::ptr s = get_ship(x.a);
-  ship::ptr t = get_ship(x.b);
+// void game_data::collide_ships(id_pair x) {
+//   ship::ptr s = get_ship(x.a);
+//   ship::ptr t = get_ship(x.b);
 
-  point velocity_self = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
-  point velocity_other = utility::scale_point(utility::normv(s -> angle), s -> stats[sskey::key::speed]);
-  point delta = s -> position - t -> position;
-  float smaller_mass = fmin(t -> stats[sskey::key::mass], s -> stats[sskey::key::mass]);
-  float collision_energy = 0.5 * smaller_mass * utility::l2d2(velocity_other - velocity_self);
-  float eps = 1e-3;
+//   point velocity_self = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
+//   point velocity_other = utility::scale_point(utility::normv(s -> angle), s -> stats[sskey::key::speed]);
+//   point delta = s -> position - t -> position;
+//   float smaller_mass = fmin(t -> stats[sskey::key::mass], s -> stats[sskey::key::mass]);
+//   float collision_energy = 0.5 * smaller_mass * utility::l2d2(velocity_other - velocity_self);
+//   float eps = 1e-3;
 
-  if (collision_energy < eps) {
-    return;
-  }
+//   if (collision_energy < eps) {
+//     return;
+//   }
   
-  float mass_ratio = t -> stats[sskey::key::mass] / s -> stats[sskey::key::mass];
-  point new_velocity = utility::scale_point(velocity_self, mass_ratio) + utility::scale_point(velocity_other, 1/mass_ratio);
-  float new_angle = utility::point_angle(new_velocity);
-  float new_speed = utility::l2norm(new_velocity);
+//   float mass_ratio = t -> stats[sskey::key::mass] / s -> stats[sskey::key::mass];
+//   point new_velocity = utility::scale_point(velocity_self, mass_ratio) + utility::scale_point(velocity_other, 1/mass_ratio);
+//   float new_angle = utility::point_angle(new_velocity);
+//   float new_speed = utility::l2norm(new_velocity);
 
-  // merge speed and angle
-  t -> stats[sskey::key::speed] = new_speed;
-  s -> stats[sskey::key::speed] = new_speed;
-  t -> angle = new_angle;
-  s -> angle = new_angle;
+//   // merge speed and angle
+//   t -> stats[sskey::key::speed] = new_speed;
+//   s -> stats[sskey::key::speed] = new_speed;
+//   t -> angle = new_angle;
+//   s -> angle = new_angle;
 
-  // push ships apart a bit
-  t -> position += utility::scale_point(utility::normv(utility::point_angle(-delta)), 3);
-  s -> position += utility::scale_point(utility::normv(utility::point_angle(delta)), 3);
+//   // push ships apart a bit
+//   t -> position += utility::scale_point(utility::normv(utility::point_angle(-delta)), 3);
+//   s -> position += utility::scale_point(utility::normv(utility::point_angle(delta)), 3);
 
-  // damage ships
-  s -> receive_damage(t, utility::random_uniform(0, collision_energy));
-  t -> receive_damage(s, utility::random_uniform(0, collision_energy));
-}
+//   // damage ships
+//   s -> receive_damage(t, utility::random_uniform(0, collision_energy));
+//   t -> receive_damage(s, utility::random_uniform(0, collision_energy));
+// }
 
 void game_data::rebuild_evm() {
   evm.clear();
@@ -378,7 +378,7 @@ void game_data::increment(){
   // clear frame
   remove_entities.clear();
   interaction_buffer.clear();
-  collision_buffer.clear();
+  // collision_buffer.clear();
   for (auto &p : players) {
     p.second.animations.clear();
     p.second.log.clear();
@@ -544,7 +544,7 @@ void game_data::end_step(){
     
     // apply
     if (r.researching.length() > 0) {
-      if (utility::find_in(c.research, r.available())) {
+      if (utility::find_in(r.researching, r.available())) {
 	research::tech t = research::data::table().at(r.researching);
 	if (r.accumulated >= t.cost_time) {
 	  // todo: log research completed
@@ -655,7 +655,7 @@ void game_data::log_ship_fire(combid a, combid b) {
   x.color = players[s -> owner].color;
   x.cat = animation_data::category::shot;
 
-  animation sh;
+  animation_data sh;
   sh.p1 = t -> position;
   sh.magnitude = t -> stats[sskey::key::shield];
   sh.v = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);

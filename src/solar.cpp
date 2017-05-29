@@ -294,7 +294,7 @@ void solar::dynamics(){
   choice::c_solar c = choice_data;
 
   // disable development if no development selected
-  if (c.development.emtpy()) c.allocation[keywords::key_development] = 0;
+  if (c.development.empty()) c.allocation[keywords::key_development] = 0;
   
   c.normalize();
   solar buf = *this;
@@ -415,10 +415,10 @@ float solar::get_facility_cost_time(string v) {
   return lm * f.cost_time;
 }
 
-float solar::get_facility_cost_resources(string v) {
+cost::res_t solar::get_facility_cost_resources(string v) {
   facility f = facility_table().at(v);
   float lm = cost::expansion_multiplier(get_facility_level(v) + 1);
-  res_t total = f.cost_resources;
+  cost::res_t total = f.cost_resources;
   total.scale(lm);
   return total;
 }
