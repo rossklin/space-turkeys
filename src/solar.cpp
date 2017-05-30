@@ -59,7 +59,7 @@ void solar::move(game_data *g){
     if (list_facility_requirements(dev, r).empty()) {
       float ctime = get_facility_cost_time(dev);
       cost::res_t cres = get_facility_cost_resources(dev);
-      if (ctime >= development_points && resource_constraint(cres) >= 1) {
+      if (ctime < development_points && resource_constraint(cres) >= 1) {
 	develop(dev);
 	choice_data.development = "";
       } else if (resource_constraint(cres) < 1) {
