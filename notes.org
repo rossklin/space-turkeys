@@ -11,12 +11,20 @@
     Make facilities not use more space per level. Add facility
     attributes "provides space" and "provides water".
 ** [J?] population adapts too quickly to circumstances e.g. space
-** Redesign: chose development in advance like everything else
-*** landed on negative development points after completing expansion factories
+** redesign solar_gui
+*** add research_gui: wrap new development_gui with ok/cancel + progress
+*** [J] use solar_selector::choice_data instead of desktop -> response.solar_choices
+*** make client::game::build_chioce use choice data from solar selectors
+*** [J] three tabs: sectors, development, military
+*** [J] sectors: remove template buttons
+*** remove research::solar_template_table
+*** development: show current choice and progress
+*** [J] allow selecting multiple templates, multiple ships but only one dev
+*** mining: automatically prioritize what is available inversely to storage
 *** development choice is forgotten by opening and closing solar gui
-*** solar gui defaults to zeros even though choice_data is sent
-*** log research and facility completion
-*** show current research and facility choice and progress in gui
+*** [J?] solar gui defaults to zeros even though choice_data is sent
+** log research and facility completion
+** show current research choice and progress in gui
 * [!] issues
 ** [!] crashes
 *** random_uniform called with b = inf
@@ -107,6 +115,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J?] landed on negative development points after completing expansion factories
 ** [J] add "build" button on facilities in solar_gui
 ** [J] command selectors should update their position on each reload_data
    Maybe they are? They jump in direction of command...

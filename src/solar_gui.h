@@ -19,6 +19,9 @@ namespace st3 {
       typedef std::shared_ptr<const solar_gui> PtrConst;
 
       static const std::string sfg_id;
+      static const std::string tab_sectors;
+      static const std::string tab_development;
+      static const std::string tab_military;
       choice::c_solar response;
 
       static Ptr Create(solar::ptr s);

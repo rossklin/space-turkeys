@@ -14,6 +14,10 @@ using namespace interface;
 
 const std::string solar_gui::sfg_id = "solar gui";
 
+const std::string solar_gui::tab_sectors = "Sectors";
+const std::string solar_gui::tab_development = "Development";
+const std::string solar_gui::tab_military = "Military";
+
 solar_gui::Ptr solar_gui::Create(solar::ptr s){
   Ptr self(new solar_gui(s));
   self -> Add(self -> layout);
@@ -24,55 +28,42 @@ solar_gui::Ptr solar_gui::Create(solar::ptr s){
 
 // main window for solar choice
 solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
-  if (desktop -> response.solar_choices.count(sol -> id)){
-    response = desktop -> response.solar_choices[sol -> id];
-  }else{
-    response = s -> choice_data;
-  }
+  response = s -> choice_data;
 
   // main layout
   layout = Box::Create(Box::Orientation::VERTICAL, 10);
 
+  // header
   layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
   tooltip = Label::Create("Customize solar choice for solar " + sol -> id);
   layout -> Pack(tooltip);
   layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
 
-  auto meta_layout = Box::Create(Box::Orientation::HORIZONTAL, 10);
-  meta_layout -> Pack(choice_layout = Box::Create(Box::Orientation::VERTICAL));
-  meta_layout -> Pack(sub_layout = Box::Create(Box::Orientation::VERTICAL));
-  meta_layout -> Pack(info_layout = Box::Create(Box::Orientation::VERTICAL));
-    
-  // choice template buttons
-  auto template_map = desktop -> get_research().solar_template_table(sol);
-  auto template_layout = Box::Create(Box::Orientation::HORIZONTAL);
+  // info layout
+  layout -> Pack(info_layout = Box::Create(Box::Orientation::HORIZONTAL, 10));
+  build_info();
+  layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
 
-  for (auto &x : template_map){
-    auto b = Button::Create(x.first);
-    b -> GetSignal(Widget::OnLeftClick).Connect([this, x] () {
-	string dev = response.development;
-	response = x.second;
-	response.development = dev;
-	build_choice();
-	build_info();
-	new_sub("(chose sub edit)");
-      });
-    b -> GetSignal(Widget::OnMouseEnter).Connect([this,x] () {
-	tooltip -> SetText("Use template " + x.first);
-      });
-    template_layout -> Pack(b);
+  // tabs
+  Box::Ptr tab_layout = Box::Create(Box::Orientation::HORIZONTAL, 10);
+  list<string> tab_names = {tab_sectors, tab_development, tab_military};
+  hm_t<string, Button::Ptr> tab_buttons;
+
+  for (auto v : tab_names) {
+    Button::Ptr b = Button::Create(v);
+    desktop -> bind_ppc(b, [this, v] () {setup(v);});
+    tab_layout -> Pack(b);
   }
 
-  layout -> Pack(template_layout);
-  layout -> Pack(meta_layout);
+  layout -> Pack(tab_layout);
 
-  build_choice();
-  new_sub("(chose sub edit)");
-  build_info();
+  // sub layout for sector, development or military
+  sub_layout = Box::Create(Box::Orientation::VERTICAL);
+  layout -> Pack(sub_layout);
 
   auto b_accept = Button::Create("ACCEPT");
   desktop -> bind_ppc(b_accept, [this] () {
-      desktop -> response.solar_choices[sol -> id] = response;
+      sol -> choice_data = response;
       cout << "Added solar choice for " << sol -> id << endl;
       desktop -> clear_qw();
     });
@@ -89,91 +80,80 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
   layout -> Pack(l_response);
 }
 
-// build a labeled button to modify priority data
-Button::Ptr solar_gui::priority_button(string label, float &data, function<bool()> inc_val, Label::Ptr tip){
+void solar_gui::setup(string key) {
+  sub_layout -> RemoveAll();
 
-  auto label_builder = [] (string label, float data){
-    return label + ": " + to_string((int)round(data));
+  if (key == tab_sectors) {
+    setup_sectors();
+  } else if (key == tab_development) {
+    setup_development();
+  } else if (key == tab_military) {
+    setup_military();
+  } else {
+    throw runtime_error("Invalid solar gui setup key: " + key);
+  }
+}
+
+void solar_gui::setup_development(){
+  if (sol -> available_facilities(desktop -> get_research()).empty()) {
+    return;
+  }
+      
+  development_gui::f_req_t f_req = [this] (string v) -> list<string> {
+    return sol -> list_facility_requirements(v, desktop -> get_research());
   };
 
-  auto b = Button::Create(label_builder(label, data));
-  auto p = b.get();
+  development_gui::f_complete_t on_select = [this] (string r) {
+    response.development = r;
+  };
 
-  b -> GetSignal(Widget::OnLeftClick).Connect([this, &data, p, label, inc_val, label_builder](){
-      if (inc_val()) data = floor(data + 1);
-      p -> SetLabel(label_builder(label, data));
-      build_info();
-    });
-    
-  b -> GetSignal(Widget::OnRightClick).Connect([this, &data, p, label, label_builder](){
-      if (data > 0) data = fmax(data - 1, 0);
-      p -> SetLabel(label_builder(label, data));
-      build_info();
-    });
-
-  if (tip){
-    b -> GetSignal(Widget::OnMouseEnter).Connect([tip, label](){
-	tip -> SetText("Modify priority for " + label);
-      });
-  }
-
-  return b;
-};
-
-void solar_gui::build_choice(){
-  // sector allocation buttons
-  auto layout = Box::Create(Box::Orientation::VERTICAL);
-  hm_t<string, function<void()> > subq;
-  subq[keywords::key_mining] = [this] () {build_mining();};
-  subq[keywords::key_military] = [this] () {build_military();};
-
-  // allow opening facility development interface if there are
-  // available developments
-  if (sol -> available_facilities(desktop -> get_research()).size()) {
-    subq[keywords::key_development] = [this] () {
-      // copy variables for use in callback functions after this
-      // solar_gui has been destroyed
-      solar::ptr s = sol;
-      choice::c_solar c = response;
-      
-      development_gui::f_req_t f_req = [s] (string v) -> list<string> {return s -> list_facility_requirements(v, desktop -> get_research());};
-
-      development_gui::f_complete_t on_complete = [s, c] (bool accepted, string r) {
-	choice::c_solar b = c;
-	if (accepted) b.development = r;
-	desktop -> response.solar_choices[s -> id] = b;
-	desktop -> reset_qw(Create(s));
-      };
-
-      hm_t<string, development::node> map;
-      for (auto &f : solar::facility_table()) map[f.first] = f.second;
-      desktop -> reset_qw(development_gui::Create(map, f_req, on_complete, true));
-    };
-  }
-
-  for (auto v : keywords::sector){
-    auto b = priority_button(v, response.allocation[v], [this](){return response.allocation.count() < choice::max_allocation;}, tooltip);
-
-    auto l = Box::Create(Box::Orientation::HORIZONTAL);
-    l -> Pack(b);
-
-    if (subq.count(v)){
-      // sectors with sub interfaces
-      auto sub = Button::Create(">");
-      desktop -> bind_ppc(sub, [v,subq] () {subq.at(v)();});
-      sub -> GetSignal(Widget::OnMouseEnter).Connect([this,v] () {tooltip -> SetText("Edit sub choices for " + v);});
-      l -> Pack(sub);
-    }
-    
-    layout -> Pack(l);
-  }
-
-  auto frame = Frame::Create("Sector priorities");
-  frame -> Add(layout);
-
-  choice_layout -> RemoveAll();
-  choice_layout -> Pack(frame);
+  hm_t<string, development::node> map;
+  for (auto &f : solar::facility_table()) map[f.first] = f.second;
+  sub_layout -> Pack(development_gui::Create(map, response.development, f_req, on_select, true));
 }
+
+void solar_gui::setup_sectors() {
+  auto build_label = [this] (string v) -> Image {
+    return Image(graphics::selector_card(v, response.allocation[v]));
+  };
+  
+  for (auto v : keywords::sector){
+    sector_buttons[v] = Button::Create(v);
+    sector_buttons[v] -> SetImage(build_label(v));
+    
+    desktop -> bind_ppc(sector_buttons[v], [this, v, build_label] () {
+	response.allocation[v] = !response.allocation[v];
+	sector_buttons[v] -> SetImage(build_label(v));
+      });
+    
+    sub_layout -> Pack(sector_buttons[v]);
+  }
+}
+// sub window for military choice
+void solar_gui::setup_military(){
+  list<string> req;
+
+  auto build_label = [this] (string v, list<string> requirements = {}) -> Image {
+    return Image(graphics::selector_card(v, response.military[v], {}, requirements));
+  };
+  
+  // add buttons for ships
+  for (auto v : ship::all_classes()) {
+    military_buttons[v] = Button::Create(v);
+    
+    if (desktop -> get_research().can_build_ship(v, sol, &req)) {
+      military_buttons[v] -> SetImage(build_label(v));
+      desktop -> bind_ppc(military_buttons[v], [this, build_label, v] () {
+	  response.military[v] = !response.military[v];
+	  military_buttons[v] -> SetImage(build_label(v));
+	});
+    }else{
+      military_buttons[v] -> SetImage(build_label(v, req));
+    }
+
+    sub_layout -> Pack(military_buttons[v]);
+  }
+};
 
 void solar_gui::build_info(){
   auto res = Box::Create(Box::Orientation::VERTICAL);
@@ -185,7 +165,7 @@ void solar_gui::build_info(){
     a -> GetSignal(Widget::OnMouseEnter).Connect([this, v] () {
 	tooltip -> SetText("Status for " + v + " [rate of change in brackets]");
       });
-  };    
+  };
 
   auto label_build = [this, patch_label] (string v, float absolute, float delta) -> Label::Ptr{
     auto a = Label::Create(v + ": " + utility::format_float(absolute) + " [" + utility::format_float(delta) + "]");
@@ -242,51 +222,5 @@ void solar_gui::build_info(){
   info_layout -> RemoveAll();
   info_layout -> Pack(frame("Solar " + sol -> id + " info", res), false, false);
 }
-
-Box::Ptr solar_gui::new_sub(string v){
-  auto buf = Box::Create(Box::Orientation::VERTICAL);
-  auto frame = Frame::Create(v);
-  frame -> Add(buf);
-  sub_layout -> RemoveAll();
-  sub_layout -> Pack(frame);
-  return buf;
-}
  
-// sub window for military choice
-void solar_gui::build_military(){
-  auto &c = response.military;
-  auto buf = new_sub("Military build priorities");
-  list<string> req;
-  hm_t<string, list<string> > unqualified;
-  
-  // add buttons for expandable sectors
-  for (auto v : ship::all_classes()) {
-    if (desktop -> get_research().can_build_ship(v, sol, &req)) {
-      buf -> Pack(priority_button(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip));
-    }else{
-      unqualified[v] = req;
-    }
-  }
 
-  for (auto &x : unqualified) {
-    buf -> Pack(Label::Create(x.first));
-    auto r = Label::Create(boost::algorithm::join(x.second, ", "));
-    string id = "req#" + x.first;
-    r -> SetId(id);
-    buf -> Pack(r);
-    desktop -> SetProperty(id, "Color", sf::Color::Red);
-    buf -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
-  }
-};
-
-// sub window for mining choice
-void solar_gui::build_mining(){
-  auto &c = response.mining;
-  auto buf = new_sub("Mining resource priorities");
-
-  // add buttons for expandable sectors
-  for (auto v : keywords::resource){
-    auto b = priority_button(v, c[v], [&c](){return c.count() < choice::max_allocation;}, tooltip);
-    buf -> Pack(b);
-  }
-};

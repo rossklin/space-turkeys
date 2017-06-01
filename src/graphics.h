@@ -96,6 +96,8 @@ namespace st3{
       @return point containing x and y scales
     */
     point inverse_scale(sf::RenderTarget &w);
+
+    sf::Image selector_card(std::string title, bool selected, std::list<std::string> info = {}, std::list<std::string> requirements = {});
   };
 };
 #endif

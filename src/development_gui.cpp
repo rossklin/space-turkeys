@@ -12,20 +12,22 @@ using namespace interface;
 
 const string development_gui::sfg_id = "development_gui";
 
-development_gui::Ptr development_gui::Create(hm_t<std::string, development::node> map, f_req_t f_req, f_complete_t on_complete, bool is_facility) {
-  Ptr buf(new development_gui(map, f_req, on_complete, is_facility));
+development_gui::Ptr development_gui::Create(hm_t<std::string, development::node> map, string sel, f_req_t f_req, f_select_t on_select, bool is_facility) {
+  Ptr buf(new development_gui(map, f_req, on_select, is_facility));
   buf -> Add(buf -> frame);
   buf -> SetAllocation(main_interface::qw_allocation);
   buf -> SetId(sfg_id);
   return buf;
 }
 
-development_gui::development_gui(hm_t<std::string, development::node> map, f_req_t f_req, f_complete_t on_complete, bool is_facility) : Window(Window::Style::BACKGROUND) {
+development_gui::development_gui(hm_t<std::string, development::node> _map, string _sel, f_req_t _f_req, f_select_t _on_select, bool is_facility) : Window(Window::Style::BACKGROUND) {
+  map = _map;
+  selected = _sel;
+  f_req = _f_req;
+  on_select = _on_select;
 
-  set<string> available;
   for (auto &x : map) if (f_req(x.first).empty()) available.insert(x.first);
 
-  set<string> dependent;
   for (auto &x : map) {
     if (!available.count(x.first)) {
       bool pass = true;
@@ -38,30 +40,37 @@ development_gui::development_gui(hm_t<std::string, development::node> map, f_req
     }
   }
 
-  // main layout
   string title = is_facility ? "Select a facility to develop" : "Select a technology to develop";
   frame = Frame::Create(title);
+  
+  setup();
+}
+
+void development_gui::setup() {
+  // main layout
   Box::Ptr layout = Box::Create(Box::Orientation::VERTICAL, 10);
 
-  auto build_dependent = [f_req] (string v) -> Widget::Ptr {
+  auto build_dependent = [this] (string v) -> Widget::Ptr {
     string text = v + ": " + boost::algorithm::join(f_req(v), ", ");
     return Label::Create(text);
   };
 
-  auto build_available = [on_complete,&map] (string v) -> Widget::Ptr {
+  auto build_available = [this] (string v) -> Widget::Ptr {
     development::node n = map[v];
-    Box::Ptr l = Box::Create(Box::Orientation::VERTICAL);
-    Frame::Ptr f = Frame::Create(v);
+    list<string> info;
 
-    for (auto b : n.sector_boost) l -> Pack(Label::Create(b.first + " + " + to_string((int)(100 * (b.second - 1))) + "%"), false, false);
-    for (auto su : n.ship_upgrades) l -> Pack(Label::Create(su.first + " gains: " + boost::algorithm::join(su.second, ", ")), false, false);
+    for (auto b : n.sector_boost) info.push_back(b.first + " + " + to_string((int)(100 * (b.second - 1))) + "%");
+    for (auto su : n.ship_upgrades) info.push_back(su.first + " gains: " + boost::algorithm::join(su.second, ", "));
 
-    Button::Ptr b = Button::Create("Develop");
-    desktop -> bind_ppc(b, [v, on_complete] () {on_complete(true, v);});
-    l -> Pack(b, false, true);
+    auto b = Button::Create();
+    b -> SetImage(Image(graphics::selector_card(v, v == selected, info)));
+    desktop -> bind_ppc(b, [this, v] () {
+	on_select(v);
+	selected = v;
+	setup();
+      });
     
-    f -> Add(l);
-    return f;
+    return b;
   };
 
   // dependent techs go in a scrolled window
@@ -80,9 +89,6 @@ development_gui::development_gui(hm_t<std::string, development::node> map, f_req
   for (auto v : available) avl -> Pack(build_available(v));
   layout -> Pack(avl);
 
-  Button::Ptr b_cancel = Button::Create("Cancel");
-  desktop -> bind_ppc(b_cancel, [on_complete] () {on_complete(false, "");});
-  layout -> Pack(b_cancel);
-
+  frame -> RemoveAll();
   frame -> Add(layout);
 }

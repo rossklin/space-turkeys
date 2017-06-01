@@ -461,11 +461,13 @@ void game_data::build(){
 	s.available_resource = initial_resources;
 	s.water = 1000;
 	s.space = 1000;
-	s.population = 100;
+	s.population = 1000;
 	s.happiness = 1;
 	s.ecology = 1;
 	s.dt = settings.dt;
 	s.radius = settings.solar_maxrad;
+	s.choice_data = rbase.solar_template_table().at("culture growth");
+
 	ship sh = rbase.build_ship(ship::starting_ship, &s);
 	sh.is_landed = true;
 	sh.owner = x.first;
