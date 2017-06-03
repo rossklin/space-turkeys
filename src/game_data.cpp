@@ -466,7 +466,7 @@ void game_data::build(){
 	s.ecology = 1;
 	s.dt = settings.dt;
 	s.radius = settings.solar_maxrad;
-	s.choice_data = rbase.solar_template_table().at("culture growth");
+	s.choice_data.allocation = cost::sector_allocation::base_allocation();
 
 	ship sh = rbase.build_ship(ship::starting_ship, &s);
 	sh.is_landed = true;

@@ -76,6 +76,14 @@ sector_allocation::sector_allocation() {
   setup(keywords::sector);
 }
 
+sector_allocation sector_allocation::base_allocation() {
+  sector_allocation r;
+  r[keywords::key_culture] = 1;
+  r[keywords::key_development] = 1;
+  r[keywords::key_mining] = 1;
+  return r;
+}
+
 float cost::expansion_multiplier(float level){
   return pow(2, floor(level));
 }

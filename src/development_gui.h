@@ -28,13 +28,14 @@ namespace st3 {
       std::set<std::string> available;
 
       hm_t<std::string, development::node> map;
-      std::string sel;
+      std::string selected;
       f_req_t f_req;
       f_select_t on_select;
       
       sfg::Frame::Ptr frame;
       
       development_gui(hm_t<std::string, development::node> map, std::string selected, f_req_t callback, f_select_t on_select, bool is_facility);
+      void setup();
     };
   };
 };

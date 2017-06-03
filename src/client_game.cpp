@@ -19,6 +19,7 @@
 #include "desktop.h"
 #include "development_gui.h"
 #include "solar_gui.h"
+#include "research_gui.h"
 #include "animation.h"
 
 using namespace std;
@@ -245,7 +246,6 @@ bool game::choice_step(){
   choice::choice c;
   for (auto x : interface::desktop -> response.solar_choices){
     if (entity.count(x.first) && get_entity(x.first) -> owned) {
-      x.second.development = "";
       c.solar_choices[x.first] = x.second;
     }
   }
@@ -256,18 +256,7 @@ bool game::choice_step(){
   // check if we can select a technology
   research::data &r = players[self_id].research_level;
   if (r.researching.empty() && !r.available().empty()) {
-    interface::development_gui::f_req_t f_req = [this] (string v) -> list<string> {
-      return players[self_id].research_level.list_tech_requirements(v);
-    };
-
-    interface::development_gui::f_complete_t on_complete = [this] (bool accepted, string result) {
-      if (accepted) interface::desktop -> response.research = result;      
-      interface::desktop -> clear_qw();
-    };
-
-    hm_t<string, development::node> map;
-    for (auto &f : research::data::table()) map[f.first] = f.second;
-    interface::desktop -> reset_qw(interface::development_gui::Create(map, f_req, on_complete, false));
+    interface::desktop -> reset_qw(interface::research_gui::Create());
   }
 
   message = "make your choice";

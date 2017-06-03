@@ -4,6 +4,7 @@
 #include "desktop.h"
 #include "development_tree.h"
 #include "development_gui.h"
+#include "graphics.h"
 
 using namespace std;
 using namespace st3;
@@ -13,7 +14,7 @@ using namespace interface;
 const string development_gui::sfg_id = "development_gui";
 
 development_gui::Ptr development_gui::Create(hm_t<std::string, development::node> map, string sel, f_req_t f_req, f_select_t on_select, bool is_facility) {
-  Ptr buf(new development_gui(map, f_req, on_select, is_facility));
+  Ptr buf(new development_gui(map, sel, f_req, on_select, is_facility));
   buf -> Add(buf -> frame);
   buf -> SetAllocation(main_interface::qw_allocation);
   buf -> SetId(sfg_id);
@@ -63,7 +64,7 @@ void development_gui::setup() {
     for (auto su : n.ship_upgrades) info.push_back(su.first + " gains: " + boost::algorithm::join(su.second, ", "));
 
     auto b = Button::Create();
-    b -> SetImage(Image(graphics::selector_card(v, v == selected, info)));
+    b -> SetImage(Image::Create(graphics::selector_card(v, v == selected, info)));
     desktop -> bind_ppc(b, [this, v] () {
 	on_select(v);
 	selected = v;

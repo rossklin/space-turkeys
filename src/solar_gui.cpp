@@ -6,6 +6,7 @@
 #include "desktop.h"
 #include "research.h"
 #include "utility.h"
+#include "graphics.h"
 
 using namespace std;
 using namespace st3;
@@ -103,7 +104,7 @@ void solar_gui::setup_development(){
     return sol -> list_facility_requirements(v, desktop -> get_research());
   };
 
-  development_gui::f_complete_t on_select = [this] (string r) {
+  development_gui::f_select_t on_select = [this] (string r) {
     response.development = r;
   };
 
@@ -113,8 +114,8 @@ void solar_gui::setup_development(){
 }
 
 void solar_gui::setup_sectors() {
-  auto build_label = [this] (string v) -> Image {
-    return Image(graphics::selector_card(v, response.allocation[v]));
+  auto build_label = [this] (string v) -> Image::Ptr {
+    return Image::Create(graphics::selector_card(v, response.allocation[v]));
   };
   
   for (auto v : keywords::sector){
@@ -133,8 +134,8 @@ void solar_gui::setup_sectors() {
 void solar_gui::setup_military(){
   list<string> req;
 
-  auto build_label = [this] (string v, list<string> requirements = {}) -> Image {
-    return Image(graphics::selector_card(v, response.military[v], {}, requirements));
+  auto build_label = [this] (string v, list<string> requirements = {}) -> Image::Ptr {
+    return Image::Create(graphics::selector_card(v, response.military[v], {}, requirements));
   };
   
   // add buttons for ships

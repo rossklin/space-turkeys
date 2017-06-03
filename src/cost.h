@@ -24,6 +24,7 @@ namespace st3{
     };
 
     struct sector_allocation : public allocation {
+      static sector_allocation base_allocation();
       sector_allocation();
     };
 
