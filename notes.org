@@ -12,16 +12,17 @@
     attributes "provides space" and "provides water".
 ** [J?] population adapts too quickly to circumstances e.g. space
 ** redesign solar_gui
-*** add research_gui: wrap new development_gui with ok/cancel + progress
+*** add development::node::progress replacing research and development points
+*** fix development_gui::setup so it uses development::node::progress
+*** mining: automatically prioritize what is available inversely to storage
+*** [J] add research_gui: wrap new development_gui with ok/cancel + progress
 *** [J] use solar_selector::choice_data instead of desktop -> response.solar_choices
-*** make client::game::build_chioce use choice data from solar selectors
+*** [J] make client::game::build_chioce use choice data from solar selectors
 *** [J] three tabs: sectors, development, military
 *** [J] sectors: remove template buttons
-*** remove research::solar_template_table
-*** development: show current choice and progress
+*** [J] remove research::solar_template_table
 *** [J] allow selecting multiple templates, multiple ships but only one dev
-*** mining: automatically prioritize what is available inversely to storage
-*** development choice is forgotten by opening and closing solar gui
+*** [J?] development choice is forgotten by opening and closing solar gui
 *** [J?] solar gui defaults to zeros even though choice_data is sent
 ** log research and facility completion
 ** show current research choice and progress in gui

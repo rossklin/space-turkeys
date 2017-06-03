@@ -13,19 +13,19 @@ using namespace interface;
 
 const string development_gui::sfg_id = "development_gui";
 
-development_gui::Ptr development_gui::Create(hm_t<std::string, development::node> map, string sel, f_req_t f_req, f_select_t on_select, bool is_facility) {
-  Ptr buf(new development_gui(map, sel, f_req, on_select, is_facility));
-  buf -> Add(buf -> frame);
-  buf -> SetAllocation(main_interface::qw_allocation);
+development_gui::Ptr development_gui::Create(hm_t<std::string, development::node> map, string sel, f_req_t f_req, f_select_t on_select, bool is_facility, int w) {
+  Ptr buf(new development_gui(map, sel, f_req, on_select, is_facility, w));
+  buf -> Add(buf -> layout);
   buf -> SetId(sfg_id);
   return buf;
 }
 
-development_gui::development_gui(hm_t<std::string, development::node> _map, string _sel, f_req_t _f_req, f_select_t _on_select, bool is_facility) : Window(Window::Style::BACKGROUND) {
+development_gui::development_gui(hm_t<std::string, development::node> _map, string _sel, f_req_t _f_req, f_select_t _on_select, bool is_facility, int w) : Bin() {
   map = _map;
   selected = _sel;
   f_req = _f_req;
   on_select = _on_select;
+  width = w;
 
   for (auto &x : map) if (f_req(x.first).empty()) available.insert(x.first);
 
@@ -41,22 +41,36 @@ development_gui::development_gui(hm_t<std::string, development::node> _map, stri
     }
   }
 
-  string title = is_facility ? "Select a facility to develop" : "Select a technology to develop";
-  frame = Frame::Create(title);
-  
+  layout = Box::Create(Box::Orientation::VERTICAL, 5);
+    
   setup();
 }
 
+const string& development_gui::GetName() const {
+  return sfg_id;
+}
+
+sf::Vector2f development_gui::CalculateRequisition() {
+  return layout -> GetRequisition();
+}
+
 void development_gui::setup() {
-  // main layout
-  Box::Ptr layout = Box::Create(Box::Orientation::VERTICAL, 10);
+  layout -> RemoveAll();
 
-  auto build_dependent = [this] (string v) -> Widget::Ptr {
-    string text = v + ": " + boost::algorithm::join(f_req(v), ", ");
-    return Label::Create(text);
-  };
+  // show progress
+  Frame::Ptr pf = Frame::Create("Progress");
+  int percent = 0;
 
-  auto build_available = [this] (string v) -> Widget::Ptr {
+  // todo: fun set_progress
+  layout -> Pack(pf);
+
+  string title = is_facility ? "Select a facility to build" : "Select a technology to develop";
+  frame = Frame::Create(title);
+
+  // inner layout
+  Box::Ptr buf = Box::Create(Box::Orientation::VERTICAL, 10);
+
+  auto build = [this] (string v, bool available) -> Widget::Ptr {
     development::node n = map[v];
     list<string> info;
 
@@ -64,32 +78,25 @@ void development_gui::setup() {
     for (auto su : n.ship_upgrades) info.push_back(su.first + " gains: " + boost::algorithm::join(su.second, ", "));
 
     auto b = Button::Create();
-    b -> SetImage(Image::Create(graphics::selector_card(v, v == selected, info)));
-    desktop -> bind_ppc(b, [this, v] () {
-	on_select(v);
-	selected = v;
-	setup();
-      });
+    b -> SetImage(Image::Create(graphics::selector_card(v, v == selected, info, f_req(v))));
+
+    if (available) {
+      desktop -> bind_ppc(b, [this, v] () {
+	  on_select(v);
+	  selected = v;
+	  setup();
+	});
+    }
     
     return b;
   };
 
-  // dependent techs go in a scrolled window
-  ScrolledWindow::Ptr scrolledwindow = ScrolledWindow::Create();
-  Box::Ptr window_box = Box::Create(Box::Orientation::VERTICAL, 5);
+  // devs go in a scrolled window
+  Box::Ptr window_box = Box::Create(Box::Orientation::HORIZONTAL, 5);
+  for (auto v : available) window_box -> Pack(build(v, true));
+  for (auto v : dependent) window_box -> Pack(build(v, false));
+  buf -> Pack(graphics::wrap_in_scroll(window_box, true, width));
+  frame -> Add(buf);
 
-  scrolledwindow->SetScrollbarPolicy( ScrolledWindow::HORIZONTAL_NEVER | ScrolledWindow::VERTICAL_AUTOMATIC );
-  scrolledwindow->AddWithViewport( window_box );
-
-  for (auto v : dependent) window_box -> Pack(build_dependent(v));
-  point req = window_box -> GetRequisition();
-  scrolledwindow->SetRequisition(point(req.x, 200));
-  layout -> Pack(scrolledwindow);
-
-  Box::Ptr avl = Box::Create(Box::Orientation::HORIZONTAL);
-  for (auto v : available) avl -> Pack(build_available(v));
-  layout -> Pack(avl);
-
-  frame -> RemoveAll();
-  frame -> Add(layout);
+  layout -> Pack(frame);
 }

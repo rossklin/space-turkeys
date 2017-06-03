@@ -35,15 +35,10 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
   layout = Box::Create(Box::Orientation::VERTICAL, 10);
 
   // header
-  layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
+  Box::Ptr header_layout = Box::Create(Box::Orientation::VERTICAL, 5);
   tooltip = Label::Create("Customize solar choice for solar " + sol -> id);
-  layout -> Pack(tooltip);
-  layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
-
-  // info layout
-  layout -> Pack(info_layout = Box::Create(Box::Orientation::HORIZONTAL, 10));
-  build_info();
-  layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
+  header_layout -> Pack(tooltip);
+  header_layout -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
 
   // tabs
   Box::Ptr tab_layout = Box::Create(Box::Orientation::HORIZONTAL, 10);
@@ -56,11 +51,18 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
     tab_layout -> Pack(b);
   }
 
-  layout -> Pack(tab_layout);
+  header_layout -> Pack(tab_layout);
+  layout -> Pack(header_layout);
 
+  Box::Ptr panel_layout = Box::Create(Box::Orientation::HORIZONTAL);
   // sub layout for sector, development or military
-  sub_layout = Box::Create(Box::Orientation::VERTICAL);
-  layout -> Pack(sub_layout);
+  sub_layout = Box::Create(Box::Orientation::HORIZONTAL);
+  panel_layout -> Pack(sub_layout);
+
+  // info layout
+  panel_layout -> Pack(info_layout = Box::Create(Box::Orientation::HORIZONTAL, 10));
+  build_info();
+  layout -> Pack(panel_layout);
 
   auto b_accept = Button::Create("ACCEPT");
   desktop -> bind_ppc(b_accept, [this] () {
@@ -79,81 +81,143 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
   l_response -> Pack(b_cancel);
 
   layout -> Pack(l_response);
+
+  int used_width = info_layout -> GetRequisition().x + 1;
+  int used_height = header_layout -> GetRequisition().y + l_response -> GetRequisition().y + 1;
+  sub_dims = point(main_interface::qw_allocation.width - used_width - 40, main_interface::qw_allocation.height - used_height);
+
+  setup(tab_sectors);
 }
 
 void solar_gui::setup(string key) {
   sub_layout -> RemoveAll();
+  sector_buttons.clear();
+  military_buttons.clear();
+
+  Widget::Ptr buf;
 
   if (key == tab_sectors) {
-    setup_sectors();
+    buf = setup_sectors();
   } else if (key == tab_development) {
-    setup_development();
+    buf = setup_development();
   } else if (key == tab_military) {
-    setup_military();
+    buf = setup_military();
   } else {
     throw runtime_error("Invalid solar gui setup key: " + key);
   }
+
+  sub_layout -> Pack(buf);
 }
 
-void solar_gui::setup_development(){
+Widget::Ptr solar_gui::setup_development(){
   if (sol -> available_facilities(desktop -> get_research()).empty()) {
-    return;
+    return Box::Create();
   }
+
+  Label::Ptr current = Label::Create();
+  hm_t<string, development::node> devmap;
+  for (auto &f : solar::facility_table()) devmap[f.first] = f.second;
       
   development_gui::f_req_t f_req = [this] (string v) -> list<string> {
     return sol -> list_facility_requirements(v, desktop -> get_research());
   };
-
-  development_gui::f_select_t on_select = [this] (string r) {
-    response.development = r;
+  
+  auto set_progress = [this, current, devmap] () {
+    int percent = 0;
+    
+    if (devmap.count(response.development)) {
+      percent = 100 * sol -> development_points / devmap.at(response.development).cost_time;
+    }
+    
+    current -> SetText(to_string(percent) + "%");
   };
 
-  hm_t<string, development::node> map;
-  for (auto &f : solar::facility_table()) map[f.first] = f.second;
-  sub_layout -> Pack(development_gui::Create(map, response.development, f_req, on_select, true));
+  development_gui::f_select_t on_select = [this, set_progress] (string r) {
+    response.development = r;
+    set_progress();
+  };
+
+  Box::Ptr buf = Box::Create(Box::Orientation::VERTICAL, 5);
+
+  // show progress
+  Frame::Ptr frame = Frame::Create("Currently building: " + response.development);
+  frame -> Add(current);
+  set_progress();
+  buf -> Pack(frame);
+  buf -> Pack(development_gui::Create(devmap, response.development, sol -> development_points, f_req, on_select, true, sub_dims.x));
+
+  return buf;
 }
 
-void solar_gui::setup_sectors() {
-  auto build_label = [this] (string v) -> Image::Ptr {
-    return Image::Create(graphics::selector_card(v, response.allocation[v]));
+Widget::Ptr solar_gui::setup_sectors() {
+  auto build_label = [this] (string v) -> sf::Image {
+    return graphics::selector_card(v, response.allocation[v]);
   };
-  
+
+  Box::Ptr buf = Box::Create(Box::Orientation::HORIZONTAL);
   for (auto v : keywords::sector){
-    sector_buttons[v] = Button::Create(v);
-    sector_buttons[v] -> SetImage(build_label(v));
+    sector_buttons[v] = Image::Create(build_label(v));
     
     desktop -> bind_ppc(sector_buttons[v], [this, v, build_label] () {
 	response.allocation[v] = !response.allocation[v];
 	sector_buttons[v] -> SetImage(build_label(v));
       });
     
-    sub_layout -> Pack(sector_buttons[v]);
+    buf -> Pack(sector_buttons[v]);
   }
+
+  Frame::Ptr frame = Frame::Create("Select active sectors");
+  frame -> Add(graphics::wrap_in_scroll(buf, true, sub_dims.x));
+
+  return frame;
 }
 // sub window for military choice
-void solar_gui::setup_military(){
+Widget::Ptr solar_gui::setup_military(){
   list<string> req;
 
-  auto build_label = [this] (string v, list<string> requirements = {}) -> Image::Ptr {
-    return Image::Create(graphics::selector_card(v, response.military[v], {}, requirements));
+  auto build_label = [this] (string v, list<string> requirements = {}) -> sf::Image {
+    return graphics::selector_card(v, response.military[v], {}, requirements);
+  };
+
+  Box::Ptr wrapper = Box::Create(Box::Orientation::VERTICAL, 5);
+  Frame::Ptr pf = Frame::Create("Progress");
+
+  auto set_progress = [this, pf] () {
+    pf -> RemoveAll();
+    for (auto v : ship::all_classes()) {
+      if (response.military[v] > 0) {
+	int percent = 100 * sol -> fleet_growth[v];
+	pf -> Add(Label::Create(v + ": " + to_string(percent) + "%"));
+      }
+    }
   };
   
   // add buttons for ships
+  Box::Ptr buf = Box::Create(Box::Orientation::HORIZONTAL);
   for (auto v : ship::all_classes()) {
-    military_buttons[v] = Button::Create(v);
-    
     if (desktop -> get_research().can_build_ship(v, sol, &req)) {
-      military_buttons[v] -> SetImage(build_label(v));
-      desktop -> bind_ppc(military_buttons[v], [this, build_label, v] () {
+      military_buttons[v] = Image::Create(build_label(v));
+      desktop -> bind_ppc(military_buttons[v], [this, build_label, v, set_progress] () {
 	  response.military[v] = !response.military[v];
 	  military_buttons[v] -> SetImage(build_label(v));
+	  set_progress();
 	});
     }else{
-      military_buttons[v] -> SetImage(build_label(v, req));
+      military_buttons[v] = Image::Create(build_label(v, req));
     }
 
-    sub_layout -> Pack(military_buttons[v]);
+    buf -> Pack(military_buttons[v]);
   }
+
+  set_progress();
+
+  Frame::Ptr frame = Frame::Create("Select ships to build");
+  frame -> Add(graphics::wrap_in_scroll(buf, true, sub_dims.x));
+
+  wrapper -> Pack(pf);
+  wrapper -> Pack(frame);
+
+  return wrapper;
 };
 
 void solar_gui::build_info(){
@@ -181,11 +245,8 @@ void solar_gui::build_info(){
   };
 
   auto frame = [] (string title, sfg::Widget::Ptr content) {
-    auto buf = Box::Create(Box::Orientation::VERTICAL);
-    buf -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
-    buf -> Pack(Label::Create(title));
-    buf -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL));
-    buf -> Pack(content);
+    auto buf = Frame::Create(title);
+    buf -> Add(content);
     return buf;
   };
 
@@ -195,8 +256,8 @@ void solar_gui::build_info(){
   buf -> Pack(label_build("Ecology", sol -> ecology, sol -> ecology_increment()));
   buf -> Pack(label_build("Water", sol -> water_status(), 0));
   buf -> Pack(label_build("Space", sol -> space_status(), 0));
-  buf -> Pack(label_build("Research rate", sol -> research_increment(c), 0));
-  buf -> Pack(label_build("Development points", sol -> development_points, sol -> development_increment(c)));
+  buf -> Pack(label_build("Research", sol -> research_increment(c), 0));
+  buf -> Pack(label_build("Development", sol -> development_points, sol -> development_increment(c)));
 
   res -> Pack(frame("Stats", buf));
 

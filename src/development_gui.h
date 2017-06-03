@@ -12,7 +12,7 @@
 
 namespace st3 {
   namespace interface {
-    class development_gui : public sfg::Window {
+    class development_gui : public sfg::Bin {
     public:
       typedef std::shared_ptr<development_gui> Ptr;
       typedef std::shared_ptr<const development_gui> PtrConst;
@@ -21,7 +21,17 @@ namespace st3 {
 
       static const std::string sfg_id;
 
-      static Ptr Create(hm_t<std::string, development::node> map, std::string selected, f_req_t callback, f_select_t on_select, bool is_facility);
+      static Ptr Create(hm_t<std::string,
+			development::node> map,
+			std::string selected,
+			float progress,
+			f_req_t callback,
+			f_select_t on_select,
+			bool is_facility,
+			int width);
+
+      const std::string& GetName() const;
+      sf::Vector2f CalculateRequisition();
 
     protected:
       std::set<std::string> dependent;
@@ -31,10 +41,18 @@ namespace st3 {
       std::string selected;
       f_req_t f_req;
       f_select_t on_select;
+      int width;
       
-      sfg::Frame::Ptr frame;
+      sfg::Box::Ptr layout;
       
-      development_gui(hm_t<std::string, development::node> map, std::string selected, f_req_t callback, f_select_t on_select, bool is_facility);
+      development_gui(hm_t<std::string,
+		      development::node> map,
+		      std::string selected,
+		      float progress,
+		      f_req_t callback,
+		      f_select_t on_select,
+		      bool is_facility,
+		      int width);
       void setup();
     };
   };

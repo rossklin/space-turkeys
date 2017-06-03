@@ -194,8 +194,8 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
 
 sf::Image graphics::selector_card(string title, bool selected, list<string> info, list<string> requirements) {
   sf::RenderTexture tex;
-  int width = 200;
-  int height = 400;
+  int width = 120;
+  int height = 200;
   sf::FloatRect bounds(0, 0, width, height);
   
   if (!tex.create(width, height)) {
@@ -211,11 +211,31 @@ sf::Image graphics::selector_card(string title, bool selected, list<string> info
   
   draw_text(tex, title, point(width / 2, 20), 16, false);
   int c = 2;
-  for (auto v : info) draw_text(tex, title, point(width / 2, (c++) * 20), 16, false);
+  for (auto v : info) draw_text(tex, v, point(width / 2, (c++) * 20), 11, false);
   c++;
-  for (auto v : requirements) draw_text(tex, title, point(width / 2, (c++) * 20), 16, false, sf::Color::Red);
+  for (auto v : requirements) draw_text(tex, v, point(width / 2, (c++) * 20), 11, false, sf::Color::Red);
   
   tex.display();
 
   return tex.getTexture().copyToImage();  
+}
+
+sfg::Widget::Ptr graphics::wrap_in_scroll(sfg::Widget::Ptr w, bool horizontal, int dim) {
+  sfg::ScrolledWindow::Ptr sw = sfg::ScrolledWindow::Create();
+  if (horizontal) {
+    sw->SetScrollbarPolicy(sfg::ScrolledWindow::HORIZONTAL_AUTOMATIC | sfg::ScrolledWindow::VERTICAL_NEVER);
+  } else {
+    sw->SetScrollbarPolicy(sfg::ScrolledWindow::HORIZONTAL_NEVER | sfg::ScrolledWindow::VERTICAL_AUTOMATIC);
+  }
+  
+  sw->AddWithViewport(w);
+  point req = w -> GetRequisition();
+
+  if (horizontal) {
+    sw->SetRequisition(point(dim, req.y));
+  }else{
+    sw->SetRequisition(point(req.x, dim));
+  }
+
+  return sw;
 }

@@ -481,10 +481,11 @@ choice::choice game::build_choice(choice::choice c){
     if (x.second -> isa(waypoint::class_id)) {
       c.waypoints[x.first] = *get_specific<waypoint>(x.first);
       cout << "build choice: " << x.first << endl;
-    }
-
-    if (x.second -> isa(fleet::class_id)) {
+    } else if (x.second -> isa(fleet::class_id)) {
       c.fleets[x.first] = *get_specific<fleet>(x.first);
+      cout << "build_choice: " << x.first << endl;
+    } else if (x.second -> isa(solar::class_id) && x.second -> owned) {
+      c.solar_choices[x.first] = get_specific<solar>(x.first) -> choice_data;
       cout << "build_choice: " << x.first << endl;
     }
   }

@@ -37,7 +37,7 @@ research_gui::research_gui() : Window(Window::Style::BACKGROUND) {
 
   hm_t<string, development::node> map;
   for (auto &f : research::data::table()) map[f.first] = f.second;
-  layout -> Pack(development_gui::Create(map, response, f_req, on_select, false));
+  layout -> Pack(development_gui::Create(map, response, f_req, on_select, false, main_interface::qw_allocation.width - 100));
 
   // accept/cancel
   Box::Ptr response_layout = Box::Create(Box::Orientation::HORIZONTAL);

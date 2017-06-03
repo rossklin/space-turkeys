@@ -32,17 +32,18 @@ namespace st3 {
       sfg::Box::Ptr sub_layout;
       sfg::Box::Ptr info_layout;
       sfg::Label::Ptr tooltip;
-      hm_t<std::string, sfg::Button::Ptr> sector_buttons;
-      hm_t<std::string, sfg::Button::Ptr> military_buttons;
+      hm_t<std::string, sfg::Image::Ptr> sector_buttons;
+      hm_t<std::string, sfg::Image::Ptr> military_buttons;
+      point sub_dims;
       
       solar::ptr sol;
 
       solar_gui(solar::ptr s);
       void build_info();
       void setup(std::string v);
-      void setup_development();
-      void setup_sectors();
-      void setup_military();
+      sfg::Widget::Ptr setup_development();
+      sfg::Widget::Ptr setup_sectors();
+      sfg::Widget::Ptr setup_military();
     };
   };
 };
