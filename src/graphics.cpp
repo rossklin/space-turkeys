@@ -42,7 +42,7 @@ void graphics::draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, 
   w.draw(sol);
 };
 
-void graphics::draw_text(sf::RenderTarget &w, string v, point p, int fs, bool ul) {
+void graphics::draw_text(sf::RenderTarget &w, string v, point p, int fs, bool ul, sf::Color fill) {
   point inv = graphics::inverse_scale(w);
   sf::Text text;
   text.setString(v);
@@ -55,17 +55,24 @@ void graphics::draw_text(sf::RenderTarget &w, string v, point p, int fs, bool ul
     text.setOrigin(point(text_dims.left + text_dims.width/2, text_dims.top + text_dims.height / 2));
   }
   text.setPosition(p); 
-  text.setFillColor(sf::Color(200,200,200));
+  text.setFillColor(fill);
   text.setScale(inv);
   w.draw(text);
 };
 
-void graphics::draw_framed_text(sf::RenderTarget &w, string v, sf::FloatRect bounds, sf::Color co, sf::Color cf) {
-  int margin = ceil(bounds.height / 10);
-  sf::RectangleShape r = graphics::build_rect(bounds);
+sf::RectangleShape graphics::build_rect(sf::FloatRect bounds, int thickness, sf::Color co, sf::Color cf) {
+  sf::RectangleShape r;
+  r.setSize(sf::Vector2f(bounds.width, bounds.height));
+  r.setPosition(sf::Vector2f(bounds.left, bounds.top));
   r.setOutlineColor(co);
   r.setFillColor(cf);
-  r.setOutlineThickness(-margin);
+  r.setOutlineThickness(thickness);
+  return r;
+}
+
+void graphics::draw_framed_text(sf::RenderTarget &w, string v, sf::FloatRect bounds, sf::Color co, sf::Color cf) {
+  int margin = ceil(bounds.height / 10);
+  sf::RectangleShape r = graphics::build_rect(bounds, -margin, co, cf);
   w.draw(r);
 
   int fs = bounds.height - 2 * margin;
@@ -126,16 +133,6 @@ void graphics::draw_ship(sf::RenderTarget &w, ship s, sf::Color col, float sc){
   w.draw(&svert[0], svert.size(), sf::LinesStrip, t);
 }
 
-
-// sfml stuff
-// make an sf::RectangleShape with given bounds
-sf::RectangleShape graphics::build_rect(sf::FloatRect bounds){
-  sf::RectangleShape r;
-  r.setSize(sf::Vector2f(bounds.width, bounds.height));
-  r.setPosition(sf::Vector2f(bounds.left, bounds.top));
-  return r;
-}
-
 // point coordinates of view ul corner
 point graphics::ul_corner(sf::RenderTarget &w){
   sf::View sv = w.getView();
@@ -193,4 +190,32 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
 
     w.draw(&svert[0], svert.size(), sf::LinesStrip);
   }
+}
+
+sf::Image graphics::selector_card(string title, bool selected, list<string> info, list<string> requirements) {
+  sf::RenderTexture tex;
+  int width = 200;
+  int height = 400;
+  sf::FloatRect bounds(0, 0, width, height);
+  
+  if (!tex.create(width, height)) {
+    throw runtime_error("Failed to create render texture!");
+  }
+
+  tex.clear();
+
+  // draw stuff
+  sf::Color outline = sf::Color(150,150,150);
+  if (selected) outline = sf::Color::White;
+  tex.draw(build_rect(bounds, -2, outline));
+  
+  draw_text(tex, title, point(width / 2, 20), 16, false);
+  int c = 2;
+  for (auto v : info) draw_text(tex, title, point(width / 2, (c++) * 20), 16, false);
+  c++;
+  for (auto v : requirements) draw_text(tex, title, point(width / 2, (c++) * 20), 16, false, sf::Color::Red);
+  
+  tex.display();
+
+  return tex.getTexture().copyToImage();  
 }

@@ -47,7 +47,7 @@ namespace st3{
 
     /*! initialize static graphics i.e. default font */
     void initialize();
-    void draw_text(sf::RenderTarget &w, std::string v, point p, int fs, bool ul = false);
+    void draw_text(sf::RenderTarget &w, std::string v, point p, int fs, bool ul = false, sf::Color fill = sf::Color::White);
     void draw_framed_text(sf::RenderTarget &w, std::string v, sf::FloatRect r, sf::Color co, sf::Color cf = sf::Color::Transparent);
 
     void draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, sf::Color cf = sf::Color::Transparent, float b = -1);
@@ -69,12 +69,6 @@ namespace st3{
     /* **************************************** */
     /* SFML STUFF */
     /* **************************************** */
-
-    /*! build and sfml rectangle shape from given bounds
-      @param r bounds
-      @return an sf::RectangleShape with size and position from r
-    */
-    sf::RectangleShape build_rect(sf::FloatRect r);
 
     /*! compute coordinates of the upper left corner of the current view
       @param w window to get the view from
@@ -98,6 +92,8 @@ namespace st3{
     point inverse_scale(sf::RenderTarget &w);
 
     sf::Image selector_card(std::string title, bool selected, std::list<std::string> info = {}, std::list<std::string> requirements = {});
-  };
+    void draw_frame(sf::FloatRect r, int thickness, sf::Color co, sf::Color cf = sf::Color::Transparent); 
+    sf::RectangleShape build_rect(sf::FloatRect bounds, int thickness = -1, sf::Color co = sf::Color::White, sf::Color cf = sf::Color::Transparent);
+ };
 };
 #endif
