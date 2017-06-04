@@ -204,17 +204,16 @@ sf::Image graphics::selector_card(string title, bool selected, float progress, l
 
   tex.clear();
 
-  // draw stuff
-  
-  draw_text(tex, title, point(width / 2, 20), 16, false);
-  int c = 2;
-  for (auto v : info) draw_text(tex, v, point(width / 2, (c++) * 20), 11, false);
-  c++;
-  for (auto v : requirements) draw_text(tex, v, point(width / 2, (c++) * 20), 11, false, sf::Color::Red);
-
   // draw progress
   auto pfill = build_rect(sf::FloatRect(0, (1 - progress) * bounds.height, bounds.width, progress * bounds.height), 0, sf::Color::Transparent, sf::Color(50,50,80));
   tex.draw(pfill);
+
+  // draw text
+  draw_text(tex, title, point(width / 2, 20), 16, false);
+  int c = 2;
+  for (auto v : requirements) draw_text(tex, v, point(width / 2, (c++) * 20), 11, false, sf::Color::Red);
+  c++;
+  for (auto v : info) draw_text(tex, v, point(width / 2, (c++) * 20), 11, false);
 
   // draw outline
   sf::Color outline = sf::Color(150,150,150);

@@ -115,8 +115,7 @@ Widget::Ptr solar_gui::setup_development(){
   }
 
   hm_t<string, development::node> devmap;
-  for (auto f : solar::facility_table()) devmap[f.first] = f.second;
-  for (auto f : sol -> developed()) devmap[f.name] = f;
+  for (auto f : solar::facility_table()) devmap[f.first] = sol -> developed(f.first, 1);
       
   development_gui::f_req_t f_req = [this] (string v) -> list<string> {
     list<string> result = sol -> list_facility_requirements(v, desktop -> get_research());
@@ -231,8 +230,8 @@ void solar_gui::build_info(){
   res -> Pack(frame("Stats", buf));
 
   buf = Box::Create(Box::Orientation::VERTICAL);
-  for (auto &f : sol -> development) {
-    buf -> Pack(label_build(f.first, f.second.level, sol -> development_increment(c)));
+  for (auto f : sol -> developed()) {
+    buf -> Pack(label_build(f.name, f.level, sol -> development_increment(c)));
   }
 
   res -> Pack(frame("Sectors", buf));

@@ -224,7 +224,7 @@ void solar::damage_facilities(float d){
 	if (utility::random_uniform(-(i -> level), k) > 0) remove.push_back(i -> name);
       }
     }
-    for (auto r : remove) development.erase(r);
+    for (auto r : remove) development[r] = facility_table().at(r);
   }
 }
 
@@ -297,10 +297,11 @@ void solar::dynamics(){
   if (choice_data.development.empty()) choice_data.allocation[keywords::key_development] = 0;
 
   // disable mining if there are no resources
+  // mine more if there is less in storage
   float rsum = 0;
   for (auto v : keywords::resource) {
     rsum += available_resource[v];
-    if (!available_resource[v]) choice_data.mining[v] = 0;
+    choice_data.mining[v] = 1 / (resource_storage[v] + 1);
   }
   if (!rsum) choice_data.allocation[keywords::key_mining] = 0;
   
@@ -424,17 +425,17 @@ bool solar::develop(string fac) {
 }
 
 facility_object solar::developed(string key, int lev_inc) {  
-  facility_object *base = facility_access(key);
-  float lm = cost::expansion_multiplier(base -> level + lev_inc);
+  facility_object base = *facility_access(key);
+  float lm = cost::expansion_multiplier(base.level + lev_inc);
 
   // scale costs
-  base -> cost_time *= lm;
-  base -> cost_resources.scale(lm);
+  base.cost_time *= lm;
+  base.cost_resources.scale(lm);
 
   // scale boosts
   // todo
 
-  return *base;
+  return base;
 }
 
 list<facility_object> solar::developed() {

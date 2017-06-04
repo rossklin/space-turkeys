@@ -223,7 +223,7 @@ bool game::pre_step(){
   for (auto x : entity) {
     if (x.second -> isa(solar::class_id)) {
       solar_selector::ptr s = get_specific<solar>(x.first);
-      s -> flag = !s -> available_facilities(players[s -> owner].research_level).empty();
+      s -> flag = s -> choice_data.development.empty();
     }
   }
 
@@ -637,7 +637,13 @@ void game::reload_data(data_frame &g){
   }
 
   // update research level ref for solars
-  for (auto s : get_all<solar>()) s -> research_level = &players[s -> owner].research_level;
+  for (auto s : get_all<solar>()) {
+    if (s -> owned) {
+      s -> research_level = &players[s -> owner].research_level;
+    } else {
+      s -> research_level = NULL;
+    }
+  }
   
   // add animations
   for (auto &a : players[self_id].animations) animations.push_back(a);

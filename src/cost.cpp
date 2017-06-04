@@ -85,7 +85,7 @@ sector_allocation sector_allocation::base_allocation() {
 }
 
 float cost::expansion_multiplier(float level){
-  return pow(2, floor(level));
+  return pow(2, floor(fmax(level - 1, 0)));
 }
 
 bool cost::parse_resource(string res_name, float value, res_t &x) {
