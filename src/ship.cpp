@@ -341,7 +341,7 @@ void ship::move(game_data *g){
   }
 
   // shoot enemies if able
-  if (local_enemies.size()) {
+  if (compile_interactions().count(interaction::space_combat) && local_enemies.size()) {
     auto evalfun = [this, g, output] (combid sid) -> float {
       ship::ptr s = g -> get_ship(sid);
       point delta = s -> position - position;

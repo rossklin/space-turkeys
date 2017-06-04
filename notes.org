@@ -12,10 +12,12 @@
     attributes "provides space" and "provides water".
 ** [J?] population adapts too quickly to circumstances e.g. space
 ** redesign solar_gui
-*** colonizer gets 0 progress
-*** sol -> developed() have name == "" in solar_gui
-*** [J] find out why solar::development costs become inf on client side
 *** add boosts in solar::developed()
+*** add button for showing research gui
+*** [J] colonizer should carry 1000 ppl
+*** [J] colonizer gets 0 progress
+*** [J] sol -> developed() have name == "" in solar_gui
+*** [J] find out why solar::development costs become inf on client side
 *** [J] add development::node::progress replacing research and development points
 *** [J] add parameter progress to graphics::selector_card 
 *** [J] mining: automatically prioritize what is available inversely to storage

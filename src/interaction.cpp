@@ -62,7 +62,9 @@ const hm_t<string, interaction> &interaction::table() {
     s -> load = 0;
     if (t -> evasion_check() < s -> accuracy_check(t)) {
       cout << "space_combat: hit!" << endl;
-      t -> receive_damage(self, utility::random_uniform(0, s -> stats[sskey::key::ship_damage]));
+      float damage = 0;
+      if (s -> stats[sskey::key::ship_damage] > 0) damage = utility::random_uniform(0, s -> stats[sskey::key::ship_damage]);
+      t -> receive_damage(self, damage);
       if (t -> remove) g -> log_ship_destroyed(s -> id, t -> id);
     }else{
       cout << "space_combat: miss!" << endl;
@@ -122,8 +124,8 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
 
-    if (s -> passengers  == 0) return;
-      
+    if (s -> passengers == 0) return;
+    
     t -> population = s -> passengers;
     t -> happiness = 1;
     t -> owner = s -> owner;
@@ -141,9 +143,15 @@ const hm_t<string, interaction> &interaction::table() {
     solar::ptr t = utility::guaranteed_cast<solar>(target);
 
     if (s -> passengers > 0) return;
-      
-    t -> population = fmax(t -> population - 100, 0);
-    s -> passengers = 100;
+
+    int number = 1000;
+    int leave = 1000;
+    int pickup = fmin(number, t -> population - leave);
+
+    if (pickup > 0) {
+      t -> population -= pickup;
+      s -> passengers = pickup;
+    }
   };
   data[i.name] = i;
 

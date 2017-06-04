@@ -345,10 +345,17 @@ void solar::dynamics(){
     
     // military industry
     for (auto v : ship::all_classes()){
+      // how many "build points" can we produce this frame?
       float quantity = dt * ship_increment(v, c);
+
+      // build time and cost for one whole ship
+      float build_time = ship::table().at(v).build_time;
       cost::res_t build_cost = ship::table().at(v).build_cost;
+
+      // build cost for quantity "build points" of a ship
+      build_cost.scale(quantity / build_time);
+      
       total_quantity += quantity;
-      build_cost.scale(quantity);
       total_cost.add(build_cost);
       weight_table[v] = quantity;
     }
@@ -356,6 +363,8 @@ void solar::dynamics(){
     float allowed = fmin(1, resource_constraint(total_cost));
     if (allowed < 1) buf.out_of_resources = true;
 
+    // todo: this is still trying to build nr of ships, rather than
+    // build time points
     for (auto v : ship::all_classes()) {
       buf.fleet_growth[v] += allowed * weight_table[v];
     }
