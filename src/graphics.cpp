@@ -197,6 +197,8 @@ sf::Image graphics::selector_card(string title, bool selected, float progress, l
   int width = 120;
   int height = 200;
   sf::FloatRect bounds(0, 0, width, height);
+
+  cout << "selector card: " << title << ": progress = " << progress << endl;
   
   if (!tex.create(width, height)) {
     throw runtime_error("Failed to create render texture!");

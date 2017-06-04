@@ -443,7 +443,8 @@ list<facility_object> solar::developed() {
 
   for (auto &x : development) {
     if (x.second.level == 0) continue;
-    d.push_back(developed(x.first));
+    facility_object f = developed(x.first);
+    d.push_back(f);
   }
   
   return d;
