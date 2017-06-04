@@ -156,20 +156,8 @@ Widget::Ptr solar_gui::setup_military(){
   list<string> req;
 
   auto build_label = [this] (string v, list<string> requirements = {}) -> sf::Image {
+    float build_time = ship::table().at(v).build_time;
     return graphics::selector_card(v, response.military[v], {}, requirements);
-  };
-
-  Box::Ptr wrapper = Box::Create(Box::Orientation::VERTICAL, 5);
-  Frame::Ptr pf = Frame::Create("Progress");
-
-  auto set_progress = [this, pf] () {
-    pf -> RemoveAll();
-    for (auto v : ship::all_classes()) {
-      if (response.military[v] > 0) {
-	int percent = 100 * sol -> fleet_growth[v];
-	pf -> Add(Label::Create(v + ": " + to_string(percent) + "%"));
-      }
-    }
   };
   
   // add buttons for ships
@@ -180,7 +168,6 @@ Widget::Ptr solar_gui::setup_military(){
       desktop -> bind_ppc(military_buttons[v], [this, build_label, v, set_progress] () {
 	  response.military[v] = !response.military[v];
 	  military_buttons[v] -> SetImage(build_label(v));
-	  set_progress();
 	});
     }else{
       military_buttons[v] = Image::Create(build_label(v, req));
@@ -189,15 +176,10 @@ Widget::Ptr solar_gui::setup_military(){
     buf -> Pack(military_buttons[v]);
   }
 
-  set_progress();
-
   Frame::Ptr frame = Frame::Create("Select ships to build");
   frame -> Add(graphics::wrap_in_scroll(buf, true, sub_dims.x));
 
-  wrapper -> Pack(pf);
-  wrapper -> Pack(frame);
-
-  return wrapper;
+  return frame;
 };
 
 void solar_gui::build_info(){

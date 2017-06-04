@@ -97,7 +97,7 @@ bool data::can_build_ship(string v, solar::ptr sol, list<string> *data) const {
     throw runtime_error("Military template: no such ship class: " + v);
   }
   
-  int facility = sol -> development["shipyard"].level;
+  int facility = sol -> facility_access("shipyard") -> level;
   ship_stats s = ship::table().at(v);
   bool success = true;
 
@@ -118,7 +118,7 @@ bool data::can_build_ship(string v, solar::ptr sol, list<string> *data) const {
 
 set<string> data::researched() const {
   set<string> x;
-  for (auto &t : tech_map) if (t.second.level) x.insert(t.first);
+  for (auto &t : tech_map) if (t.second.level > 0) x.insert(t.first);
   return x;
 }
 

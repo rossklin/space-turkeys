@@ -319,7 +319,7 @@ void solar::dynamics(){
     buf.research_points += research_increment(c) * dt;
 
     if (c.development.length() > 0) {
-      buf.development[c.development].progress += development_increment(c) * dt;
+      buf.facility_access(c.development) -> progress += development_increment(c) * dt;
     }
 
     // mining
@@ -406,26 +406,27 @@ bool solar::develop(string fac) {
 
   // pay
   pay_resources(f.cost_resources);
-  development[fac].progress -= f.cost_time;
+  facility_object *fx = facility_access(fac);
+  fx -> progress -= f.cost_time;
 
   // level up and repair
-  development[fac].level++;
-  development[fac].hp = development[fac].base_hp;
+  fx -> level++;
+  fx -> hp = fx -> base_hp;
   return true;
 }
 
-facility_object solar::developed(string key, int lev_inc) {
-  facility_object base = development[key];
-  float lm = cost::expansion_multiplier(base.level + lev_inc);
+facility_object solar::developed(string key, int lev_inc) {  
+  facility_object *base = facility_access(key);
+  float lm = cost::expansion_multiplier(base -> level + lev_inc);
 
   // scale costs
-  base.cost_time *= lm;
-  base.cost_resources.scale(lm);
+  base -> cost_time *= lm;
+  base -> cost_resources.scale(lm);
 
   // scale boosts
   // todo
 
-  return base;
+  return *base;
 }
 
 list<facility_object> solar::developed() {
@@ -437,6 +438,11 @@ list<facility_object> solar::developed() {
   }
   
   return d;
+}
+
+facility_object *solar::facility_access(string key) {
+  if (!development.count(key)) development[key] = facility_table().at(key);
+  return &development[key];
 }
 
 list<facility_object*> solar::facility_access() {
@@ -573,7 +579,7 @@ list<string> solar::list_facility_requirements(string v, const research::data &r
   if (space * space_status() < f.space_usage) req.push_back("space");
 
   // check dependencies
-  for (auto &y : f.depends_facilities) if (development[y.first].level < y.second) req.push_back(y.first + " level " + to_string(y.second));
+  for (auto &y : f.depends_facilities) if (facility_access(y.first) -> level < y.second) req.push_back(y.first + " level " + to_string(y.second));
   for (auto &y : f.depends_techs) if (!r_level.researched().count(y)) req.push_back("technology " + y);
 
   return req;

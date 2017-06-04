@@ -119,6 +119,7 @@ namespace st3{
     std::list<facility_object> developed();
     facility_object developed(std::string v, int lev_inc = 0);
     std::list<facility_object*> facility_access();
+    facility_object *facility_access(std::string key);
     
     // solar: increment functions
     float population_increment();
