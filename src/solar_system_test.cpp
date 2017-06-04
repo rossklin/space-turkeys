@@ -46,10 +46,9 @@ int main(int argc, char **argv){
   for (int i = 0; i < entities; i++){
     solar::ptr s = build_solar();
     
-    auto ctable = r.solar_template_table(s);
-    choice::c_solar c = ctable[sc];
+    s -> choice_data.allocation = cost::sector_allocation::base_allocation();
 
-    s -> choice_data = c;
+    // todo: handle sc
     
     for (int j = 0; j < steps; j++){
       s -> dynamics();

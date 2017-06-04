@@ -325,7 +325,6 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
     << g.choice_data
     << g.fleet_growth
     << g.research_points
-    << g.development_points
     << g.water
     << g.space
     << g.ecology
@@ -344,7 +343,6 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
     >> g.choice_data
     >> g.fleet_growth
     >> g.research_points
-    >> g.development_points
     >> g.water
     >> g.space
     >> g.ecology
@@ -488,9 +486,17 @@ sf::Packet& st3::operator >>(sf::Packet& packet, animation_data &c){
 
 // research
 sf::Packet& st3::operator <<(sf::Packet& packet, const research::data &c){
-  return packet << c.researched << c.accumulated << c.facility_level << c.researching;
+  return packet << c.tech_map << c.facility_level << c.researching;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, research::data &c){
-  return packet >> c.researched >> c.accumulated >> c.facility_level >> c.researching;
+  return packet >> c.tech_map >> c.facility_level >> c.researching;
+}
+
+sf::Packet& st3::operator <<(sf::Packet& packet, const research::tech &c){
+  return packet << static_cast<const development::node &>(c);
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, research::tech &c){
+  return packet >> static_cast<development::node &>(c);
 }

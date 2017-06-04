@@ -23,18 +23,17 @@ namespace st3{
     /*! struct representing the research level of a player */
     struct data {
       static const hm_t<std::string, tech> &table();
-      std::set<std::string> researched;
-      sfloat accumulated;
+      hm_t<std::string, tech> tech_map;
       std::string researching;
       hm_t<std::string, sint> facility_level;
 
       data();
-      std::list<std::string> list_tech_requirements(std::string v);
-      std::list<std::string> available();
-      ship build_ship(std::string v, solar::ptr sol);
-      void repair_ship(ship &s, solar::ptr sol);
-      bool can_build_ship(std::string v, solar::ptr s, std::list<std::string> *data = 0);
-      hm_t<std::string, choice::c_solar> solar_template_table(solar::ptr s);
+      std::list<std::string> list_tech_requirements(std::string v) const;
+      std::list<std::string> available() const;
+      std::set<std::string> researched() const;
+      ship build_ship(std::string v, solar::ptr sol) const;
+      void repair_ship(ship &s, solar::ptr sol) const;
+      bool can_build_ship(std::string v, solar::ptr s, std::list<std::string> *data = 0) const;
     };    
   };
 };

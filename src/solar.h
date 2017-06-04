@@ -50,7 +50,6 @@ namespace st3{
   class facility_object : public facility {
   public:
     sfloat hp;
-    sint level;
 
     facility_object();
     facility_object(const facility &f);
@@ -72,7 +71,6 @@ namespace st3{
 
     // points to spend on development
     sfloat research_points;
-    sfloat development_points;
     
     sfloat water;
     sfloat space;
@@ -117,10 +115,10 @@ namespace st3{
     float compute_shield_power();
     std::list<std::string> list_facility_requirements(std::string v, const research::data &r);
     std::list<std::string> available_facilities(const research::data &r);
-    void develop(std::string fac);
-    int get_facility_level(std::string fac);
-    float get_facility_cost_time(std::string v);
-    cost::res_t get_facility_cost_resources(std::string v);
+    bool develop(std::string fac);
+    std::list<facility_object> developed();
+    facility_object developed(std::string v, int lev_inc = 0);
+    std::list<facility_object*> facility_access();
     
     // solar: increment functions
     float population_increment();

@@ -13,7 +13,9 @@ using namespace std;
 using namespace st3;
 
 development::node::node() {
+  level = 0;
   cost_time = 0;
+  progress = 0;
 }
 
 bool development::node::parse(string name, const rapidjson::Value &v) {

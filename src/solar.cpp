@@ -24,9 +24,9 @@ void solar::pre_phase(game_data *g){
   out_of_resources = false;
   
   research_level = &g -> players[owner].research_level;
-  for (auto &t : development){
-    if (t.second.is_turret){
-      t.second.turret.load += 0.02 * t.second.level;
+  for (auto t : facility_access()){
+    if (t -> is_turret){
+      t -> turret.load += 0.02 * t -> level;
     }
   }
 }
@@ -42,8 +42,9 @@ void solar::move(game_data *g){
   research::data r = g -> players[owner].research_level;
   for (auto v : ship::all_classes()) {
     if (r.can_build_ship(v, ptr(this))){
-      while (fleet_growth[v] >= 1) {
-	fleet_growth[v]--;
+      float build_time = ship::table().at(v).build_time;
+      while (fleet_growth[v] >= build_time) {
+	fleet_growth[v] -= build_time;
 	ship sh = r.build_ship(v, ptr(this));
 	sh.is_landed = true;
 	sh.owner = owner;
@@ -57,12 +58,10 @@ void solar::move(game_data *g){
   if (choice_data.development.length() > 0) {
     string dev = choice_data.development;
     if (list_facility_requirements(dev, r).empty()) {
-      float ctime = get_facility_cost_time(dev);
-      cost::res_t cres = get_facility_cost_resources(dev);
-      if (ctime < development_points && resource_constraint(cres) >= 1) {
-	develop(dev);
+      if (develop(dev)) {
+	g -> players[owner].log.push_back("Completed building " + dev);
 	choice_data.development = "";
-      } else if (resource_constraint(cres) < 1) {
+      } else if (resource_constraint(developed(dev, 1).cost_resources) < 1) {
 	out_of_resources = true;
       }
     }
@@ -89,9 +88,9 @@ set<string> solar::compile_interactions(){
 float solar::interaction_radius() {
   float r = 0;
 
-  for (auto &t : development){
-    if (t.second.is_turret){
-      r = max(r, t.second.turret.range);
+  for (auto t : developed()){
+    if (t.is_turret){
+      r = max(r, t.turret.range);
     }
   }
   
@@ -123,8 +122,8 @@ void solar::post_phase(game_data *g){
 
   // repair facilities
   if (owner != game_object::neutral_owner) {
-    for (auto &f : development) {
-      if (f.second.hp < f.second.base_hp) f.second.hp += 0.01;
+    for (auto f : facility_access()) {
+      if (f -> hp < f -> base_hp) f -> hp += 0.01;
     }
   }
 }
@@ -178,7 +177,7 @@ string solar::get_info(){
 
 sfloat solar::vision(){
   sfloat res = 5;
-  for (auto &x : development) res = fmax(res, x.second.vision);
+  for (auto x : developed()) res = fmax(res, x.vision);
   return res + radius;
 }
 
@@ -204,21 +203,25 @@ bool solar::serialize(sf::Packet &p){
 
 bool solar::has_defense(){
   if (owner == game_object::neutral_owner) return false;
-  for (auto &t : development) if (t.second.is_turret) return true;
+  for (auto t : facility_access()) if (t -> is_turret) return true;
 }
 
 void solar::damage_facilities(float d){
   float d0 = d;
-  while (d > 0 && development.size() > 0){
-    list<string> remove;
-    for (auto i = development.begin(); d > 0 && i != development.end(); i++){
+  list<string> remove;
+  while (d > 0 && facility_access().size() > 0){
+    remove.clear();
+    for (auto i : facility_access()) {
+      if (i -> level == 0) continue;
+      if (d <= 0) break;
+      
       float k = fmin(utility::random_uniform(0, 0.1 * d0), d);
       d -= k;
-      if (i -> second.hp > 0) {
-	i -> second.hp -= k;
-	if (i -> second.hp <= 0) remove.push_back(i -> first);
+      if (i -> hp > 0) {
+	i -> hp -= k;
+	if (i -> hp <= 0) remove.push_back(i -> name);
       } else {
-	if (utility::random_uniform(-(i -> second.level), k) > 0) remove.push_back(i -> first);
+	if (utility::random_uniform(-(i -> level), k) > 0) remove.push_back(i -> name);
       }
     }
     for (auto r : remove) development.erase(r);
@@ -230,9 +233,9 @@ float solar::space_status(){
   if (space <= 0) return 0;
   
   float used = 0;
-  for (auto &t : development) {
-    used += t.second.space_usage;
-    used -= t.second.level * t.second.space_provided;
+  for (auto t : developed()) {
+    used += t.space_usage;
+    used -= t.level * t.space_provided;
   }
 
   if (used > space) throw runtime_error("space_status: used more than space");
@@ -244,9 +247,9 @@ float solar::water_status(){
   if (water <= 0) return 0;
   
   float used = 0;
-  for (auto &t : development) {
-    used += t.second.water_usage;
-    used -= t.second.level * t.second.water_provided;
+  for (auto t : developed()) {
+    used += t.water_usage;
+    used -= t.level * t.water_provided;
   }
 
   if (used > water) throw runtime_error("water status: used more than water!");
@@ -282,8 +285,7 @@ float solar::development_increment(choice::c_solar &c){
 }
 
 float solar::ship_increment(string v, choice::c_solar &c){
-  float build_time = ship::table().at(v).build_time;
-  return f_buildrate * compute_boost(keywords::key_military) * c.allocation[keywords::key_military] * c.military[v] * compute_workers() / build_time;
+  return f_buildrate * compute_boost(keywords::key_military) * c.allocation[keywords::key_military] * c.military[v] * compute_workers();
 }
 
 float solar::compute_workers(){
@@ -315,7 +317,10 @@ void solar::dynamics(){
 
     // research and development
     buf.research_points += research_increment(c) * dt;
-    buf.development_points += development_increment(c) * dt;
+
+    if (c.development.length() > 0) {
+      buf.development[c.development].progress += development_increment(c) * dt;
+    }
 
     // mining
     for (auto v : keywords::resource){
@@ -373,62 +378,75 @@ bool solar::can_see(game_object::ptr x) {
 
 float solar::compute_shield_power() {
   float sum = 0;
-  for (auto &f : development) sum += f.second.shield;
+  for (auto f : developed()) sum += f.shield;
   return log(sum + 1);
 }
 
 float solar::compute_boost(string v){
   float sum = 1;
-  for (auto &f : development) {
-    if (f.second.sector_boost.count(v)) {
-      sum *= f.second.sector_boost[v] * f.second.level;
+  for (auto f : developed()) {
+    if (f.sector_boost.count(v)) {
+      sum *= f.sector_boost[v] * f.level;
     }
   }
 
   auto &rtab = research::data::table();
-  for (auto r : research_level -> researched) {
-    research::tech t = rtab.at(r);
+  for (auto r : research_level -> researched()) {
+    research::tech &t = research_level -> tech_map[r];
     if (t.sector_boost.count(v)) sum *= t.sector_boost[v];
   }
   
   return sum;
 }
 
-void solar::develop(string fac) {
-  // initialize
-  if (!development.count(fac)) {
-    development[fac] = facility_table().at(fac);
-  }
+bool solar::develop(string fac) {
+  facility_object f = developed(fac, 1);
+  if (resource_constraint(f.cost_resources) < 1) return false;
+  if (f.progress < f.cost_time) return false;
 
   // pay
-  pay_resources(get_facility_cost_resources(fac));
-  development_points -= get_facility_cost_time(fac);
+  pay_resources(f.cost_resources);
+  development[fac].progress -= f.cost_time;
 
   // level up and repair
   development[fac].level++;
   development[fac].hp = development[fac].base_hp;
+  return true;
 }
 
-float solar::get_facility_cost_time(string v) {
-  facility f = facility_table().at(v);
-  float lm = cost::expansion_multiplier(get_facility_level(v) + 1);
-  return lm * f.cost_time;
+facility_object solar::developed(string key, int lev_inc) {
+  facility_object base = development[key];
+  float lm = cost::expansion_multiplier(base.level + lev_inc);
+
+  // scale costs
+  base.cost_time *= lm;
+  base.cost_resources.scale(lm);
+
+  // scale boosts
+  // todo
+
+  return base;
 }
 
-cost::res_t solar::get_facility_cost_resources(string v) {
-  facility f = facility_table().at(v);
-  float lm = cost::expansion_multiplier(get_facility_level(v) + 1);
-  cost::res_t total = f.cost_resources;
-  total.scale(lm);
-  return total;
-}
+list<facility_object> solar::developed() {
+  list<facility_object> d;
 
-int solar::get_facility_level(string fac) {
-  if (development.count(fac)) {
-    return development[fac].level;
-  }else{
-    return 0;
+  for (auto &x : development) {
+    if (x.second.level == 0) continue;
+    d.push_back(developed(x.first));
   }
+  
+  return d;
+}
+
+list<facility_object*> solar::facility_access() {
+  list<facility_object*> res;
+
+  for (auto &x : development) {
+    if (x.second.level > 0) res.push_back(&x.second);
+  }
+
+  return res;
 }
 
 void facility::read_from_json(const rapidjson::Value &x) {
@@ -513,12 +531,10 @@ const hm_t<string, facility>& solar::facility_table(){
 }
     
 facility_object::facility_object() : facility() {
-  level = 0;
   hp = 0;
 }
     
 facility_object::facility_object(const facility &f) : facility(f) {
-  level = 0;
   hp = 0;
 }
 
@@ -550,16 +566,15 @@ float turret_t::accuracy_check(ship::ptr t) {
 
 list<string> solar::list_facility_requirements(string v, const research::data &r_level) {
   list<string> req;
-  facility f = facility_table().at(v);
-  float level_multiplier = cost::expansion_multiplier(get_facility_level(v) + 1);
+  facility f = developed(v, 1);
 
   // check cost
-  if (water * water_status() < level_multiplier * f.water_usage) req.push_back("water");
-  if (space * space_status() < level_multiplier * f.space_usage) req.push_back("space");
+  if (water * water_status() < f.water_usage) req.push_back("water");
+  if (space * space_status() < f.space_usage) req.push_back("space");
 
   // check dependencies
-  for (auto &y : f.depends_facilities) if (get_facility_level(y.first) < y.second) req.push_back(y.first + " level " + to_string(y.second));
-  for (auto &y : f.depends_techs) if (!r_level.researched.count(y)) req.push_back("technology " + y);
+  for (auto &y : f.depends_facilities) if (development[y.first].level < y.second) req.push_back(y.first + " level " + to_string(y.second));
+  for (auto &y : f.depends_techs) if (!r_level.researched().count(y)) req.push_back("technology " + y);
 
   return req;
 }

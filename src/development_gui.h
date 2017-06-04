@@ -24,7 +24,6 @@ namespace st3 {
       static Ptr Create(hm_t<std::string,
 			development::node> map,
 			std::string selected,
-			float progress,
 			f_req_t callback,
 			f_select_t on_select,
 			bool is_facility,
@@ -44,11 +43,11 @@ namespace st3 {
       int width;
       
       sfg::Box::Ptr layout;
+      sfg::Frame::Ptr frame;
       
       development_gui(hm_t<std::string,
 		      development::node> map,
 		      std::string selected,
-		      float progress,
 		      f_req_t callback,
 		      f_select_t on_select,
 		      bool is_facility,

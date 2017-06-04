@@ -541,21 +541,23 @@ void game_data::end_step(){
   for (auto x : players) {
     idtype id = x.first;
     research::data &r = players[id].research_level;
-    r.accumulated += pool[id];
     r.facility_level = level[id];
     
     // apply
     if (r.researching.length() > 0) {
       if (utility::find_in(r.researching, r.available())) {
-	research::tech t = research::data::table().at(r.researching);
-	if (r.accumulated >= t.cost_time) {
+	research::tech &t = r.tech_map[r.researching];
+	t.progress += pool[id];
+	if (t.progress >= t.cost_time) {
 	  // todo: log research completed
-	  r.accumulated -= t.cost_time;
-	  r.researched.insert(t.name);
+	  t.progress = 0;
+	  t.level = 1;
+	  players[id].log.push_back("Researched " + r.researching);
 	  r.researching = "";
 	}
       } else {
 	// todo: log that research became invalidated
+	players[id].log.push_back("Can't research " + r.researching);
 	r.researching = "";
       }
     }

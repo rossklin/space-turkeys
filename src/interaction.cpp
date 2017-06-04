@@ -127,8 +127,7 @@ const hm_t<string, interaction> &interaction::table() {
     t -> population = s -> passengers;
     t -> happiness = 1;
     t -> owner = s -> owner;
-    auto ctab = g -> players[t -> owner].research_level.solar_template_table(t);
-    t -> choice_data = ctab["culture growth"];
+    t -> choice_data.allocation = cost::sector_allocation::base_allocation();
 
     s -> remove = true;
   };

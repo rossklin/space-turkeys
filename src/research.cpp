@@ -14,9 +14,7 @@ using namespace st3;
 using namespace research;
 using namespace cost;
 
-data::data(){  
-  accumulated = 0;
-}
+data::data(){}
 
 const hm_t<string, tech>& data::table(){
   static hm_t<std::string, tech> tree;
@@ -34,25 +32,29 @@ const hm_t<string, tech>& data::table(){
   return tree;
 }
 
-list<string> data::list_tech_requirements(string v) {
+list<string> data::list_tech_requirements(string v) const {
   list<string> req;
   tech t = table().at(v);
-  if (researched.count(v)) {
+  if (researched().count(v)) {
     req.push_back("already researched");
   }else{
-    for (auto d : t.depends_techs) if (!researched.count(d)) req.push_back("technology " + d);
-    for (auto f : t.depends_facilities) if (f.second > facility_level[f.first]) req.push_back(f.first + " level " + to_string(f.second));
+    for (auto d : t.depends_techs) if (!researched().count(d)) req.push_back("technology " + d);
+    for (auto f : t.depends_facilities) {
+      int flev = 0;
+      if (facility_level.count(f.first)) flev = facility_level.at(f.first);
+      if (f.second > flev) req.push_back(f.first + " level " + to_string(f.second));
+    }
   }
   return req;
 }
 
-list<string> data::available() {
+list<string> data::available() const {
   list<string> res;
   for (auto &x : table()) if (list_tech_requirements(x.first).empty()) res.push_back(x.first);
   return res;
 }
 
-void data::repair_ship(ship &s, solar::ptr sol) {
+void data::repair_ship(ship &s, solar::ptr sol) const {
   ship_stats base_stats = ship::table().at(s.ship_class);
 
   auto maybe_asu = [](const development::node &n, string sc) -> set<string> {
@@ -64,7 +66,7 @@ void data::repair_ship(ship &s, solar::ptr sol) {
   
   // add upgrades from research and facilities
   auto &rtab = table();
-  for (auto t : researched) s.upgrades += maybe_asu(rtab.at(t), s.ship_class);
+  for (auto t : researched()) s.upgrades += maybe_asu(rtab.at(t), s.ship_class);
   for (auto &x : sol -> development) s.upgrades += maybe_asu(x.second, s.ship_class);
 
   // evaluate upgrades
@@ -77,7 +79,7 @@ void data::repair_ship(ship &s, solar::ptr sol) {
   s.set_stats(s.base_stats);
 }
 
-ship data::build_ship(string c, solar::ptr sol){
+ship data::build_ship(string c, solar::ptr sol) const {
   ship s(ship::table().at(c));
 
   // apply id  
@@ -90,12 +92,12 @@ ship data::build_ship(string c, solar::ptr sol){
   return s;
 }
 
-bool data::can_build_ship(string v, solar::ptr sol, list<string> *data){
+bool data::can_build_ship(string v, solar::ptr sol, list<string> *data) const {
   if (!ship::table().count(v)) {
     throw runtime_error("Military template: no such ship class: " + v);
   }
   
-  int facility = sol -> get_facility_level("shipyard");
+  int facility = sol -> development["shipyard"].level;
   ship_stats s = ship::table().at(v);
   bool success = true;
 
@@ -106,12 +108,18 @@ bool data::can_build_ship(string v, solar::ptr sol, list<string> *data){
     if (data) data -> push_back("shipyard level " + to_string(s.depends_facility_level));
   }
   
-  if (s.depends_tech.length() > 0 && !researched.count(s.depends_tech)) {
+  if (s.depends_tech.length() > 0 && !researched().count(s.depends_tech)) {
     success = false;
     if (data) data -> push_back("research " + s.depends_tech);
   }
   
   return success;
+}
+
+set<string> data::researched() const {
+  set<string> x;
+  for (auto &t : tech_map) if (t.second.level) x.insert(t.first);
+  return x;
 }
 
 void tech::read_from_json(const rapidjson::Value &x) {
@@ -125,50 +133,3 @@ void tech::read_from_json(const rapidjson::Value &x) {
 
 tech::tech() : development::node() {}
 tech::tech(const tech &t) : development::node(t) {}
-
-hm_t<string,choice::c_solar> data::solar_template_table(solar::ptr sol){
-  static hm_t<string, choice::c_solar> data;
-  using namespace cost;
-
-  // basic pop growth
-  choice::c_solar empty;
-  choice::c_solar x = empty;
-  x.allocation[keywords::key_culture] = 1;
-  data["basic growth"] = x;
-
-  // culture growth
-  x = empty;
-  x.allocation[keywords::key_culture] = 3;
-  x.allocation[keywords::key_development] = 2;
-  x.allocation[keywords::key_mining] = 1;
-  data["culture growth"] = x;
-
-  // mining colony
-  x = empty;
-  x.allocation[keywords::key_culture] = 2;
-  x.allocation[keywords::key_development] = 1;
-  x.allocation[keywords::key_mining] = 3;
-  data["mining colony"] = x;
-
-  // military expansion
-  x = empty;
-  x.allocation[keywords::key_culture] = 2;
-  x.allocation[keywords::key_development] = 1;
-  x.allocation[keywords::key_military] = 3;
-  x.allocation[keywords::key_mining] = 2;
-
-  if (can_build_ship("bomber", sol)) x.military["bomber"] = 1;
-  if (can_build_ship("fighter", sol)) x.military["fighter"] = 2;
-
-  data["military expansion"] = x;
-
-  // research & development
-  x = empty;
-  x.allocation[keywords::key_culture] = 1;
-  x.allocation[keywords::key_development] = 1;
-  x.allocation[keywords::key_research] = 1;
-  x.allocation[keywords::key_mining] = 1;
-  data["research"] = x;
-  
-  return data;
-}

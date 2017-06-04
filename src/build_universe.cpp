@@ -26,7 +26,6 @@ hm_t<combid, solar> build_universe::random_solars(game_settings settings){
     s.population = 0;
     s.happiness = 1;
     s.research_points = 0;
-    s.development_points = 0;
     
     s.water = 1000 * utility::random_uniform();
     s.space = 1000 * utility::random_uniform();

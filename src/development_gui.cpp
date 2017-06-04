@@ -42,6 +42,10 @@ development_gui::development_gui(hm_t<std::string, development::node> _map, stri
   }
 
   layout = Box::Create(Box::Orientation::VERTICAL, 5);
+
+  string title = is_facility ? "Select a facility to build" : "Select a technology to develop";
+  frame = Frame::Create(title);
+  layout -> Pack(frame);
     
   setup();
 }
@@ -55,17 +59,7 @@ sf::Vector2f development_gui::CalculateRequisition() {
 }
 
 void development_gui::setup() {
-  layout -> RemoveAll();
-
-  // show progress
-  Frame::Ptr pf = Frame::Create("Progress");
-  int percent = 0;
-
-  // todo: fun set_progress
-  layout -> Pack(pf);
-
-  string title = is_facility ? "Select a facility to build" : "Select a technology to develop";
-  frame = Frame::Create(title);
+  frame -> RemoveAll();
 
   // inner layout
   Box::Ptr buf = Box::Create(Box::Orientation::VERTICAL, 10);
@@ -97,6 +91,4 @@ void development_gui::setup() {
   for (auto v : dependent) window_box -> Pack(build(v, false));
   buf -> Pack(graphics::wrap_in_scroll(window_box, true, width));
   frame -> Add(buf);
-
-  layout -> Pack(frame);
 }

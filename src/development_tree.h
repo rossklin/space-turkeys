@@ -12,7 +12,7 @@ namespace st3 {
   namespace development {
     class node {
     public:
-      std::string name;
+      // boosts
       hm_t<std::string, sfloat> sector_boost;
       hm_t<std::string, std::set<std::string> > ship_upgrades;
 
@@ -20,6 +20,11 @@ namespace st3 {
       sfloat cost_time;
       hm_t<std::string, sint> depends_facilities;
       std::set<std::string> depends_techs;
+
+      // trackers
+      std::string name;
+      sfloat progress;
+      sint level;
 
       node();
       bool parse(std::string name, const rapidjson::Value &v);

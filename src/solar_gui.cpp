@@ -122,31 +122,11 @@ Widget::Ptr solar_gui::setup_development(){
     return sol -> list_facility_requirements(v, desktop -> get_research());
   };
   
-  auto set_progress = [this, current, devmap] () {
-    int percent = 0;
-    
-    if (devmap.count(response.development)) {
-      percent = 100 * sol -> development_points / devmap.at(response.development).cost_time;
-    }
-    
-    current -> SetText(to_string(percent) + "%");
-  };
-
-  development_gui::f_select_t on_select = [this, set_progress] (string r) {
+  development_gui::f_select_t on_select = [this] (string r) {
     response.development = r;
-    set_progress();
   };
 
-  Box::Ptr buf = Box::Create(Box::Orientation::VERTICAL, 5);
-
-  // show progress
-  Frame::Ptr frame = Frame::Create("Currently building: " + response.development);
-  frame -> Add(current);
-  set_progress();
-  buf -> Pack(frame);
-  buf -> Pack(development_gui::Create(devmap, response.development, sol -> development_points, f_req, on_select, true, sub_dims.x));
-
-  return buf;
+  return development_gui::Create(devmap, response.development, f_req, on_select, true, sub_dims.x);
 }
 
 Widget::Ptr solar_gui::setup_sectors() {
@@ -257,7 +237,6 @@ void solar_gui::build_info(){
   buf -> Pack(label_build("Water", sol -> water_status(), 0));
   buf -> Pack(label_build("Space", sol -> space_status(), 0));
   buf -> Pack(label_build("Research", sol -> research_increment(c), 0));
-  buf -> Pack(label_build("Development", sol -> development_points, sol -> development_increment(c)));
 
   res -> Pack(frame("Stats", buf));
 
