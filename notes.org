@@ -12,9 +12,10 @@
     attributes "provides space" and "provides water".
 ** [J?] population adapts too quickly to circumstances e.g. space
 ** redesign solar_gui
+*** find out why solar::development costs become inf on client side
 *** [J] add development::node::progress replacing research and development points
-*** add parameter progress to graphics::selector_card 
-*** mining: automatically prioritize what is available inversely to storage
+*** [J] add parameter progress to graphics::selector_card 
+*** [J] mining: automatically prioritize what is available inversely to storage
 *** [J] add research_gui: wrap new development_gui with ok/cancel + progress
 *** [J] use solar_selector::choice_data instead of desktop -> response.solar_choices
 *** [J] make client::game::build_chioce use choice data from solar selectors

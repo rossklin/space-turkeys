@@ -293,12 +293,20 @@ float solar::compute_workers(){
 }
 
 void solar::dynamics(){
-  choice::c_solar c = choice_data;
-
   // disable development if no development selected
-  if (c.development.empty()) c.allocation[keywords::key_development] = 0;
+  if (choice_data.development.empty()) choice_data.allocation[keywords::key_development] = 0;
+
+  // disable mining if there are no resources
+  float rsum = 0;
+  for (auto v : keywords::resource) {
+    rsum += available_resource[v];
+    if (!available_resource[v]) choice_data.mining[v] = 0;
+  }
+  if (!rsum) choice_data.allocation[keywords::key_mining] = 0;
   
+  choice::c_solar c = choice_data;
   c.normalize();
+  
   solar buf = *this;
   float dw = sqrt(dt);
 

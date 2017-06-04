@@ -261,7 +261,9 @@ sf::Packet& st3::operator <<(sf::Packet &packet, const development::node &g) {
     << g.ship_upgrades
     << g.depends_facilities
     << g.depends_techs
-    << g.cost_time;
+    << g.cost_time
+    << g.level
+    << g.progress;
 }
 
 sf::Packet& st3::operator >>(sf::Packet &packet, development::node &g) {
@@ -271,7 +273,9 @@ sf::Packet& st3::operator >>(sf::Packet &packet, development::node &g) {
     >> g.ship_upgrades
     >> g.depends_facilities
     >> g.depends_techs
-    >> g.cost_time;
+    >> g.cost_time
+    >> g.level
+    >> g.progress;
 }
 
 sf::Packet& st3::operator <<(sf::Packet& packet, const facility &g){
@@ -307,15 +311,13 @@ sf::Packet& st3::operator >>(sf::Packet& packet, facility &g){
 sf::Packet& st3::operator <<(sf::Packet& packet, const facility_object &g){
   return packet
     << static_cast<const facility&> (g)
-    << g.hp
-    << g.level;
+    << g.hp;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, facility_object &g){
   return packet
     >> static_cast<facility&> (g)
-    >> g.hp
-    >> g.level;
+    >> g.hp;
 }
 
 // solar

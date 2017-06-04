@@ -114,12 +114,14 @@ Widget::Ptr solar_gui::setup_development(){
     return Box::Create();
   }
 
-  Label::Ptr current = Label::Create();
   hm_t<string, development::node> devmap;
-  for (auto &f : solar::facility_table()) devmap[f.first] = f.second;
+  for (auto f : solar::facility_table()) devmap[f.first] = f.second;
+  for (auto f : sol -> developed()) devmap[f.name] = f;
       
   development_gui::f_req_t f_req = [this] (string v) -> list<string> {
-    return sol -> list_facility_requirements(v, desktop -> get_research());
+    list<string> result = sol -> list_facility_requirements(v, desktop -> get_research());
+    if (!response.allocation[keywords::key_development]) result.push_back("Workforce");
+    return result;
   };
   
   development_gui::f_select_t on_select = [this] (string r) {
@@ -131,7 +133,7 @@ Widget::Ptr solar_gui::setup_development(){
 
 Widget::Ptr solar_gui::setup_sectors() {
   auto build_label = [this] (string v) -> sf::Image {
-    return graphics::selector_card(v, response.allocation[v]);
+    return graphics::selector_card(v, response.allocation[v], 0);
   };
 
   Box::Ptr buf = Box::Create(Box::Orientation::HORIZONTAL);
@@ -155,28 +157,34 @@ Widget::Ptr solar_gui::setup_sectors() {
 Widget::Ptr solar_gui::setup_military(){
   list<string> req;
 
-  auto build_label = [this] (string v, list<string> requirements = {}) -> sf::Image {
+  bool allocated = response.allocation[keywords::key_military];
+
+  auto build_label = [this, allocated] (string v, list<string> requirements = {}) -> sf::Image {
     float build_time = ship::table().at(v).build_time;
-    return graphics::selector_card(v, response.military[v], {}, requirements);
+    float progress = sol -> fleet_growth[v] / build_time;
+    if (!allocated) requirements.push_back("Workforce");
+    return graphics::selector_card(v, response.military[v], progress, {}, requirements);
   };
   
   // add buttons for ships
   Box::Ptr buf = Box::Create(Box::Orientation::HORIZONTAL);
   for (auto v : ship::all_classes()) {
-    if (desktop -> get_research().can_build_ship(v, sol, &req)) {
-      military_buttons[v] = Image::Create(build_label(v));
-      desktop -> bind_ppc(military_buttons[v], [this, build_label, v, set_progress] () {
+    bool can_build = desktop -> get_research().can_build_ship(v, sol, &req);
+    military_buttons[v] = Image::Create(build_label(v, req));
+    
+    if (allocated && can_build) {
+      desktop -> bind_ppc(military_buttons[v], [this, build_label, v] () {
 	  response.military[v] = !response.military[v];
 	  military_buttons[v] -> SetImage(build_label(v));
 	});
-    }else{
-      military_buttons[v] = Image::Create(build_label(v, req));
     }
 
     buf -> Pack(military_buttons[v]);
   }
 
-  Frame::Ptr frame = Frame::Create("Select ships to build");
+  string title = "Select ships to build";
+  if (!allocated) title = "Allocate workforce to military in order to build";
+  Frame::Ptr frame = Frame::Create(title);
   frame -> Add(graphics::wrap_in_scroll(buf, true, sub_dims.x));
 
   return frame;
