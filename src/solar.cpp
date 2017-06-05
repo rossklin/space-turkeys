@@ -39,13 +39,12 @@ void solar::move(game_data *g){
   dynamics();
 
   // build ships
-  research::data r = g -> players[owner].research_level;
   for (auto v : ship::all_classes()) {
-    if (r.can_build_ship(v, ptr(this))){
+    if (research_level -> can_build_ship(v, ptr(this))){
       float build_time = ship::table().at(v).build_time;
       while (fleet_growth[v] >= build_time) {
 	fleet_growth[v] -= build_time;
-	ship sh = r.build_ship(v, ptr(this));
+	ship sh = research_level -> build_ship(v, ptr(this));
 	sh.is_landed = true;
 	sh.owner = owner;
 	ships.insert(sh.id);
@@ -57,7 +56,7 @@ void solar::move(game_data *g){
   // build facilities
   if (choice_data.development.length() > 0) {
     string dev = choice_data.development;
-    if (list_facility_requirements(dev, r).empty()) {
+    if (list_facility_requirements(dev, *research_level).empty()) {
       if (develop(dev)) {
 	g -> players[owner].log.push_back("Completed building " + dev);
 	choice_data.development = "";
@@ -235,7 +234,7 @@ float solar::space_status(){
   float used = 0;
   for (auto t : developed()) {
     used += t.space_usage;
-    used -= t.level * t.space_provided;
+    used -= t.space_provided;
   }
 
   if (used > space) throw runtime_error("space_status: used more than space");
@@ -249,7 +248,7 @@ float solar::water_status(){
   float used = 0;
   for (auto t : developed()) {
     used += t.water_usage;
-    used -= t.level * t.water_provided;
+    used -= t.water_provided;
   }
 
   if (used > water) throw runtime_error("water status: used more than water!");
@@ -293,9 +292,6 @@ float solar::compute_workers(){
 }
 
 void solar::dynamics(){
-  // disable development if no development selected
-  if (choice_data.development.empty()) choice_data.allocation[keywords::key_development] = 0;
-
   // disable mining if there are no resources
   // mine more if there is less in storage
   float rsum = 0;
@@ -306,6 +302,11 @@ void solar::dynamics(){
   if (!rsum) choice_data.allocation[keywords::key_mining] = 0;
   
   choice::c_solar c = choice_data;
+
+  // disable development/research if none selected
+  if (c.development.empty()) c.allocation[keywords::key_development] = 0;
+  if (research_level -> researching.empty()) c.allocation[keywords::key_research] = 0;
+  
   c.normalize();
   
   solar buf = *this;
@@ -404,7 +405,7 @@ float solar::compute_boost(string v){
   float sum = 1;
   for (auto f : developed()) {
     if (f.sector_boost.count(v)) {
-      sum *= f.sector_boost[v] * f.level;
+      sum *= f.sector_boost[v];
     }
   }
 
@@ -425,7 +426,7 @@ bool solar::develop(string fac) {
   // pay
   pay_resources(f.cost_resources);
   facility_object *fx = facility_access(fac);
-  fx -> progress -= f.cost_time;
+  fx -> progress = 0;
 
   // level up and repair
   fx -> level++;
@@ -435,14 +436,23 @@ bool solar::develop(string fac) {
 
 facility_object solar::developed(string key, int lev_inc) {  
   facility_object base = *facility_access(key);
-  float lm = cost::expansion_multiplier(base.level + lev_inc);
+  int level = max((int)base.level + lev_inc, (int)0);
+  float lm = cost::expansion_multiplier(level);
 
   // scale costs
   base.cost_time *= lm;
   base.cost_resources.scale(lm);
 
   // scale boosts
-  // todo
+  base.vision *= pow(1.5, level);
+  base.turret.range *= level;
+  base.turret.damage *= level;
+  base.shield *= level;
+  base.water_provided *= level;
+  base.space_provided *= level;
+
+  for (auto &x : base.sector_boost) x.second = pow(x.second, level);
+  base.level = level;
 
   return base;
 }

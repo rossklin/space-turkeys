@@ -43,7 +43,25 @@ namespace st3{
 
       if (owned){
 	graphics::draw_circle(w, position, vision(), sf::Color(40, 200, 60, 100));
-	graphics::draw_text(w, to_string((int)(population / 100)), position, 16);
+	graphics::draw_text(w, to_string((int)(population / 1000)), position, 16);
+
+	if (choice_data.development.empty()) {
+	  graphics::draw_text(w, "*", position + point(radius, -radius), 14);
+	}
+
+	int nships = ships.size();
+	if (nships > 0) {
+	  point p = position + point(0, -(radius + 20));
+	  float s = 7;
+	  int ndig = log10(nships) + 1;
+	  sf::RectangleShape bkg = graphics::build_rect(sf::FloatRect(p.x, p.y, (3 + ndig) * s, 3 * s), 0, sf::Color::Transparent, sf::Color(200,200,200,50));
+	  w.draw(bkg);
+	  ship sbuf = ship::table().at(ship::starting_ship);
+	  sbuf.position = p + point(s, s);
+	  sbuf.angle = M_PI;
+	  graphics::draw_ship(w, sbuf, get_color(), s);
+	  graphics::draw_text(w, to_string(nships), p + point(3 * s, 0), 14, true);
+	}
   
 	if (selected){
 	  graphics::draw_circle(w, position, radius, graphics::solar_selected, graphics::solar_selected_fill, 1);
@@ -65,10 +83,6 @@ namespace st3{
 	    graphics::draw_framed_text(w, v, bounds, sf::Color::White, cols[k]);
 	    bounds.left += dims.x + spacing;
 	  }
-	}
-
-	if (flag) {
-	  graphics::draw_text(w, "*", position + point(radius, -radius), 14);
 	}
       }
 
@@ -240,7 +254,6 @@ entity_selector::entity_selector(sf::Color c, bool o){
   seen = owned;
   selected = false;
   queue_level = 0;
-  flag = 0;
 }
 
 entity_selector::~entity_selector(){}

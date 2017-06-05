@@ -26,6 +26,7 @@ namespace st3 {
 
       sfg::Widget::Ptr query_window;
       sfg::Label::Ptr hover_label;
+      sfg::Box::Ptr log_panel;
 
       client::game *g;
 
@@ -42,6 +43,7 @@ namespace st3 {
       void clear_qw();
       research::data get_research();
       void bind_ppc(sfg::Widget::Ptr w, std::function<void(void)> f);
+      void push_log(std::list<std::string> log);
     };
 
     extern main_interface *desktop;

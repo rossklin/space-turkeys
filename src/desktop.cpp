@@ -1,6 +1,7 @@
 #include "desktop.h"
 #include "client_game.h"
 #include "solar_gui.h"
+#include "research_gui.h"
 
 using namespace std;
 using namespace st3;
@@ -33,7 +34,6 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   auto pack_in_window = [] (Widget::Ptr w, sf::FloatRect alloc) -> Window::Ptr {
     auto window = Window::Create(Window::Style::BACKGROUND);
     auto box = Box::Create();
-    // box -> SetRequisition(hl_window -> GetRequisition());
     box -> Pack(w);
     window -> Add(box);
     window -> SetAllocation(alloc);
@@ -51,8 +51,18 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   Add(w_proceed);
 
   // hover info label
+  Box::Ptr right_panel = Box::Create(Box::Orientation::VERTICAL, 10);
+  Button::Ptr b_research = Button::Create("Research");
+  bind_ppc(b_research, [this] () {reset_qw(research_gui::Create());});
   hover_label = Label::Create("Empty space");
-  auto w_info = pack_in_window(hover_label, get_rect(0.71, 0.8, 0.28, 0.19));
+  log_panel = Box::Create(Box::Orientation::VERTICAL);
+  
+  right_panel -> Pack(b_research, true, false);
+  right_panel -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL), true, false);
+  right_panel -> Pack(graphics::wrap_in_scroll(log_panel, false, 250));
+  right_panel -> Pack(hover_label, true, false);
+  
+  auto w_info = pack_in_window(right_panel, get_rect(0.8, 0, 0.2, 1));
   Add(w_info);
 
   // set display properties
@@ -60,6 +70,17 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   SetProperty("Button", "BackgroundColor", sf::Color(20, 120, 80, 140));
   SetProperty("Button", "BorderColor", sf::Color(80, 180, 120, 200));
   SetProperty("Widget", "Color", sf::Color(200, 170, 120));
+}
+
+void main_interface::push_log(list<string> log) {
+  static list<string> queue;
+  int max_size = 40;
+
+  for (auto v : log) queue.push_front(v);
+  while (queue.size() > max_size) queue.pop_back();
+
+  log_panel -> RemoveAll();
+  for (auto v : queue) log_panel -> Pack(Label::Create(v), true, false);
 }
 
 void main_interface::bind_ppc(Widget::Ptr w, function<void(void)> f) {

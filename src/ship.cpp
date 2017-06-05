@@ -77,12 +77,21 @@ const hm_t<string, ship_stats>& ship_stats::table(){
 	  success = true;
 	} else if (name == "shape") {
 	  pair<point, unsigned char> v;
+	  float rmax = 0;
 	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) {
 	    v.first.x = (*k)["x"].GetDouble();
 	    v.first.y = (*k)["y"].GetDouble();
 	    v.second = (*k)["c"].GetString()[0];
+	    rmax = fmax(rmax, utility::l2norm(v.first));
 	    a.shape.push_back(v);
 	  }
+
+	  if (rmax == 0) {
+	    throw runtime_error("Invalid ship shape for " + a.ship_class);
+	  }
+
+	  for (auto &x : a.shape) x.first = utility::scale_point(x.first, 1 / rmax);
+	  
 	  success = true;
 	} else if (name == "tags") {
 	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) a.tags.insert(k -> GetString());

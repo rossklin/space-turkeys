@@ -1,6 +1,20 @@
 * current work
-** build log in client_game and add widget
 ** test run fleet intelligence on more than one ship
+** research completes too fast
+** fleets seem to idle when reaching solar before all ships land
+** sector boosts apply exponentially with level and should be lower
+** (see above) movement is too slow in relation to development
+** protect from spacebar immediately after simulation is finished
+** mining is too efficient
+** default ship assignment for special action should be one compatible ship
+** log panel grows sideways off screen, info panel follows
+** state of water, space and ecology of new solars is too random
+** fleet summon doesn't seem to work very well
+** trade actions can't swap fleet action since this prevents other ships in fleet from trading
+** animations move too fast - bind them to frames!
+** progress bar goes behind right panel
+** upgrade fighters have too much health vs damage
+** drawing client side stuff starts taking time
 ** [J?] issue with clumsy ships
 *** [J?] Ships collide while travelling in fleet
     Test: check free space on either side
@@ -11,27 +25,6 @@
     Make facilities not use more space per level. Add facility
     attributes "provides space" and "provides water".
 ** [J?] population adapts too quickly to circumstances e.g. space
-** redesign solar_gui
-*** add boosts in solar::developed()
-*** add button for showing research gui
-*** [J] colonizer should carry 1000 ppl
-*** [J] colonizer gets 0 progress
-*** [J] sol -> developed() have name == "" in solar_gui
-*** [J] find out why solar::development costs become inf on client side
-*** [J] add development::node::progress replacing research and development points
-*** [J] add parameter progress to graphics::selector_card 
-*** [J] mining: automatically prioritize what is available inversely to storage
-*** [J] add research_gui: wrap new development_gui with ok/cancel + progress
-*** [J] use solar_selector::choice_data instead of desktop -> response.solar_choices
-*** [J] make client::game::build_chioce use choice data from solar selectors
-*** [J] three tabs: sectors, development, military
-*** [J] sectors: remove template buttons
-*** [J] remove research::solar_template_table
-*** [J] allow selecting multiple templates, multiple ships but only one dev
-*** [J?] development choice is forgotten by opening and closing solar gui
-*** [J?] solar gui defaults to zeros even though choice_data is sent
-** log research and facility completion
-** show current research choice and progress in gui
 * [!] issues
 ** [!] crashes
 *** random_uniform called with b = inf
@@ -41,11 +34,7 @@
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
-*** available developments should also be in a scroll-window
-*** priority buttons unresponsive to first right click
 *** Clicking interface response button also triggers click on minimap
-*** available developments' build button should be bottom aligned
-*** development req list is not left-aligned
 *** sfg window does not resize on sfml window resize
 *** command selectors drawn on top of each other
 *** simulation step hangs on key escape abort game
@@ -122,6 +111,32 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] log research and facility completion
+** [J] show current research choice and progress in gui
+** [J] available developments should also be in a scroll-window
+** [J] priority buttons unresponsive to first right click
+** [J] available developments' build button should be bottom aligned
+** [J] development req list is not left-aligned
+** [J] build log in client_game and add widget
+** [J] redesign solar_gui
+*** [J] add boosts in solar::developed()
+*** [J] add button for showing research gui
+*** [J] colonizer should carry 1000 ppl
+*** [J] colonizer gets 0 progress
+*** [J] sol -> developed() have name == "" in solar_gui
+*** [J] find out why solar::development costs become inf on client side
+*** [J] add development::node::progress replacing research and development points
+*** [J] add parameter progress to graphics::selector_card 
+*** [J] mining: automatically prioritize what is available inversely to storage
+*** [J] add research_gui: wrap new development_gui with ok/cancel + progress
+*** [J] use solar_selector::choice_data instead of desktop -> response.solar_choices
+*** [J] make client::game::build_chioce use choice data from solar selectors
+*** [J] three tabs: sectors, development, military
+*** [J] sectors: remove template buttons
+*** [J] remove research::solar_template_table
+*** [J] allow selecting multiple templates, multiple ships but only one dev
+*** [J?] development choice is forgotten by opening and closing solar gui
+*** [J?] solar gui defaults to zeros even though choice_data is sent
 ** [J?] landed on negative development points after completing expansion factories
 ** [J] add "build" button on facilities in solar_gui
 ** [J] command selectors should update their position on each reload_data

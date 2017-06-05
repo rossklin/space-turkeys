@@ -220,13 +220,6 @@ bool game::pre_step(){
 
   reload_data(data);
 
-  for (auto x : entity) {
-    if (x.second -> isa(solar::class_id)) {
-      solar_selector::ptr s = get_specific<solar>(x.first);
-      s -> flag = s -> choice_data.development.empty();
-    }
-  }
-
   return true;
 }
 
@@ -647,6 +640,9 @@ void game::reload_data(data_frame &g){
   
   // add animations
   for (auto &a : players[self_id].animations) animations.push_back(a);
+
+  // add log
+  interface::desktop -> push_log(players[self_id].log);
 }
 
 // ****************************************
