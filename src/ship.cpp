@@ -237,13 +237,13 @@ void ship::update_data(game_data *g) {
 	// in front of fleet
 	if (check_space(fleet_target_angle + M_PI)) {
 	  // slow down
-	  s = fmin(0.8 * f -> stats.speed_limit, base_stats.stats[sskey::key::speed]);
+	  s = fmin(0.6 * f -> stats.speed_limit, base_stats.stats[sskey::key::speed]);
 	  output("summon: in fron of fleet, slowing down");
 	}
       } else if (test > M_PI / 3) {
 	// side of fleet
 	if (check_space(fleet_angle)) {
-	  a = fleet_target_angle + 0.1 * utility::angle_difference(fleet_angle, fleet_target_angle);
+	  a = fleet_target_angle + 0.15 * utility::angle_difference(fleet_angle, fleet_target_angle);
 	  output("summon: to side of fleet, angling in");
 	}
       } else {
@@ -395,20 +395,22 @@ void ship::move(game_data *g){
   }
 
   // check if there is free space at target angle
-  if (!check_space(target_angle)) {
+  float selected_angle = target_angle;
+  float selected_speed = target_speed;
+  if (!check_space(selected_angle)) {
     float check_first = 1 - 2 * utility::random_int(2);
     float spread = 0.2 * M_PI;
     
-    if (check_space(target_angle + check_first * spread)) {
-      target_angle = target_angle + check_first * spread;
+    if (check_space(selected_angle + check_first * spread)) {
+      selected_angle = selected_angle + check_first * spread;
       output("blocked: found new space to the right");
     } else {
       check_first *= -1;
-      if (check_space(target_angle + check_first * spread)) {
-	target_angle = target_angle + check_first * spread;
+      if (check_space(selected_angle + check_first * spread)) {
+	selected_angle = selected_angle + check_first * spread;
 	output("blocked: found new space to the left");
       } else {
-	target_speed = 0;
+	selected_speed = 0;
 	output("blocked: failed to find free space");
       }
     }
@@ -430,30 +432,30 @@ void ship::move(game_data *g){
   float angle_increment = fmin(0.2 / sqrt(stats[sskey::key::mass]), 0.5);
   float acceleration = 0.1 * base_stats.stats[sskey::key::speed] / stats[sskey::key::mass];
   float epsilon = 0.01;
-  float angle_miss = utility::angle_difference(target_angle, angle);
+  float angle_miss = utility::angle_difference(selected_angle, angle);
   float angle_sign = utility::signum(angle_miss, epsilon);
 
-  if (target_speed > 0) {
+  if (selected_speed > 0) {
     // check if either side is crowded
     bool crowd_left = !check_space(angle - M_PI / 2);
     bool crowd_right = !check_space(angle + M_PI / 2);
     if (crowd_left && !crowd_right) {
       // make sure target angle is to right of angle
       if (angle_miss < 0){
-	target_angle = angle + 0.1;
+	selected_angle = angle + 0.1;
 	output("avoid collision: edge right");
       }
     } else if (crowd_right && !crowd_left) {
       // make sure target angle is to left of angle
       if (angle_miss > 0) {
-	target_angle = angle - 0.1;
+	selected_angle = angle - 0.1;
 	output("avoid collision: edge left");
       }
     }
   }
 
   // slow down if missing angle
-  float speed_value = fmax(cos(angle_miss), 0) * target_speed;
+  float speed_value = fmax(cos(angle_miss), 0) * selected_speed;
   float speed_miss = speed_value - stats[sskey::key::speed];
   float speed_sign = utility::signum(speed_miss, epsilon);
   stats[sskey::key::speed] += fmin(acceleration, fabs(speed_miss)) * speed_sign;

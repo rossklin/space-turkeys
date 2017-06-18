@@ -381,7 +381,8 @@ bool game::simulation_step(){
     window.setView(view_window);
 
     auto colored_rect = [] (sf::Color c, float r) -> sf::RectangleShape{
-      float w = interface::main_interface::desktop_dims.x - 20;
+      float bounds = interface::main_interface::desktop_dims.x * 0.8;
+      float w = bounds - 20;
       auto rect = graphics::build_rect(sf::FloatRect(10, interface::main_interface::top_height + 10, r * w, 20));
       c.a = 150;
       rect.setFillColor(c);
@@ -396,17 +397,17 @@ bool game::simulation_step(){
 
     message = "evolution: " + to_string((100 * idx) / settings.frames_per_round) + " %" + (playing ? "" : "(paused)");
 
-    // update animations
-    float fps = 1 / frame_time;
-    for (auto &a : animations) {
-      point vel = utility::scale_point(a.v, fps);
-      a.p1 += vel;
-      a.p2 += vel;
-    }
-
     playing &= idx < loaded - 1;
 
     if (playing){
+
+      // update animations
+      for (auto &a : animations) {
+	a.p1 += a.v;
+	a.p2 += a.v;
+	a.frame++;
+      }
+
       idx++;
       reload_data(g[idx]);
     }
@@ -674,6 +675,23 @@ void game::add_command(command c, point from, point to, bool fill_ships){
   // add ships to command
   if (fill_ships) {
     set<combid> ready_ships = get_ready_ships(c.source);
+    set<string> fleet_actions = {fleet_action::go_to, interaction::land, interaction::space_combat, interaction::bombard};
+
+    // check if special action
+    if (!fleet_actions.count(c.action)) {
+      combid sel = identifier::source_none;
+      for (auto sid : ready_ships) {
+	if (get_specific<ship>(sid) -> compile_interactions().count(c.action)) {
+	  sel = sid;
+	}
+      }
+
+      if (sel != identifier::source_none) {
+	ready_ships.clear();
+	ready_ships.insert(sel);
+      }
+    }
+    
     cs -> ships = ready_ships;
   }
 

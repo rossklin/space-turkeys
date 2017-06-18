@@ -468,11 +468,14 @@ void game_data::build(){
 	s.radius = settings.solar_maxrad;
 	s.choice_data.allocation = cost::sector_allocation::base_allocation();
 
-	ship sh = rbase.build_ship(ship::starting_ship, &s);
-	sh.is_landed = true;
-	sh.owner = x.first;
-	s.ships.insert(sh.id);
-	ship_data[sh.id] = sh;
+	// debug: start with 20 fighters
+	for (int j = 0; j < 20; j++) {
+	  ship sh = rbase.build_ship("fighter", &s);
+	  sh.is_landed = true;
+	  sh.owner = x.first;
+	  s.ships.insert(sh.id);
+	  ship_data[sh.id] = sh;
+	}
       }
     }
   }
@@ -669,7 +672,7 @@ void game_data::log_ship_fire(combid a, combid b) {
       p.second.animations.push_back(x);
     }
 
-    if (evm[p.first].count(b)) {
+    if (evm[p.first].count(b) && t -> stats[sskey::key::shield] > 0) {
       p.second.animations.push_back(sh);
     }
   }  

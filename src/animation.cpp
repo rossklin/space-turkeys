@@ -1,15 +1,13 @@
-#include <chrono>
-
 #include "animation.h"
+#include "client_game.h"
 
 using namespace std;
-using namespace chrono;
 using namespace st3;
 
 animation::animation(const animation_data &d) : animation_data(d) {
-  created = system_clock::now();
+  frame = 0;
 }
 
 float animation::time_passed() {
-  return duration<float>(system_clock::now() - created).count();
+  return client::frame_time * frame;
 }

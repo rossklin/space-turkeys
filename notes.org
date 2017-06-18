@@ -1,20 +1,21 @@
 * current work
-** test run fleet intelligence on more than one ship
-** research completes too fast
 ** fleets seem to idle when reaching solar before all ships land
-** sector boosts apply exponentially with level and should be lower
-** (see above) movement is too slow in relation to development
 ** protect from spacebar immediately after simulation is finished
-** mining is too efficient
-** default ship assignment for special action should be one compatible ship
-** log panel grows sideways off screen, info panel follows
-** state of water, space and ecology of new solars is too random
-** fleet summon doesn't seem to work very well
-** trade actions can't swap fleet action since this prevents other ships in fleet from trading
-** animations move too fast - bind them to frames!
-** progress bar goes behind right panel
-** upgrade fighters have too much health vs damage
+** trade actions can't swap fleet action 
+   since this prevents other ships in fleet from trading. Somewhat
+   solved by default assigning one ship to special actions.
 ** drawing client side stuff starts taking time
+** [J?] fleet summon doesn't seem to work very well
+** [J?] movement is too slow in relation to development
+** [J?] animations move too fast - bind them to frames!
+** [J?] progress bar goes behind right panel
+** [J?] upgraded fighters have too much health vs damage
+** [J?] research completes too fast
+** [J?] sector boosts apply exponentially with level and should be lower
+** [J?] mining is too efficient
+** [J?] default ship assignment for special action should be one compatible ship
+** [J?] log panel grows sideways off screen, info panel follows
+** [J?] state of water, space and ecology of new solars is too random
 ** [J?] issue with clumsy ships
 *** [J?] Ships collide while travelling in fleet
     Test: check free space on either side

@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "build_universe.h"
+#include "game_object.h"
 #include "utility.h"
 #include "cost.h"
 
@@ -13,6 +14,9 @@ hm_t<combid, solar> build_universe::random_solars(game_settings settings){
   hm_t<combid, solar> buf;
   int q_start = 10;
   vector<combid> idbuf(settings.num_solars);
+  auto fres = [] () {
+    return fmax(utility::random_normal(1000, 500), 0);
+  };
 
   for (int i = 0; i < settings.num_solars; i++){
     solar s;
@@ -21,19 +25,19 @@ hm_t<combid, solar> build_universe::random_solars(game_settings settings){
     
     s.position.x = utility::random_uniform(s.radius, settings.width - 2 * s.radius);
     s.position.y = utility::random_uniform(s.radius, settings.height - 2 * s.radius);
-    s.owner = -1;
+    s.owner = game_object::neutral_owner;
 
     s.population = 0;
     s.happiness = 1;
     s.research_points = 0;
     
-    s.water = 1000 * utility::random_uniform();
-    s.space = 1000 * utility::random_uniform();
-    s.ecology = utility::random_uniform();
+    s.water = fres();
+    s.space = fres();
+    s.ecology = fmax(fmin(utility::random_normal(0.5, 0.2), 1), 0);
 
     float rsum = 0;
     for (auto v : keywords::resource) {
-      s.available_resource[v] = 1000 * utility::random_uniform();
+      s.available_resource[v] = fres();
       rsum += s.available_resource[v];
     }
 

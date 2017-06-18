@@ -138,13 +138,13 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
       return s_evade;
     }else{    
       if (s -> tags.count("spacecombat")) {
+	point p = stats.enemies.front().first;
 	if (com.policy & policy_aggressive) {
-	  point p = stats.enemies.front().first;
 	  output("aggressive engage: " + utility::point2string(p));
 	  return suggestion(suggestion::engage, p);
 	} else if (com.policy & policy_reasonable && stats.enemies.front().second < 1){
 	  output("local engage");
-	  return suggestion(suggestion::engage, s -> position);
+	  return suggestion(suggestion::engage, p);
 	} else {
 	  output("evade");
 	  return s_evade;
@@ -234,13 +234,14 @@ void fleet::analyze_enemies(game_data *g) {
 
   // assign ships to clusters
   hm_t<int, float> cc;
-  vector<float> scatter_data(na, get_hp() / g -> settings.frames_per_round);
+  vector<float> scatter_data(na, 1);
+  float dps_scale = g -> settings.frames_per_round / get_hp();
   for (auto sid : t) {
     ship s(ship::table().at(g -> get_ship(sid) -> ship_class));
 
     // scatter value
     int scatter_idx = utility::angle2index(na,utility::point_angle(s.position - position));
-    scatter_data[scatter_idx] += s.get_dps();
+    scatter_data[scatter_idx] += s.get_dps() * dps_scale;
 
     // cluster assignment
     int idx = utility::vector_min<point>(x, [s] (point y) -> float {return utility::l2d2(y - s.position);});
@@ -276,13 +277,13 @@ void fleet::analyze_enemies(game_data *g) {
   dw[idx_target] = 0.5;
 
   // merge direction priorities with enemy strength data via circular kernel
-  vector<float> heuristics = utility::elementwise_product(utility::circular_kernel(scatter_data, 3), utility::circular_kernel(dw, 1));
+  vector<float> heuristics = utility::elementwise_product(utility::circular_kernel(scatter_data, 2), utility::circular_kernel(dw, 1));
 
   int prio_idx = utility::vector_min<float>(heuristics, utility::identity_function<float>());
   float evalue = heuristics[prio_idx];
 
   // only allow evasion if there exists a path with low enemy strength
-  if (evalue < 0.8) {
+  if (evalue < 1) {
     stats.can_evade = true;
     stats.path = position + utility::scale_point(utility::normv(utility::index2angle(na, prio_idx)), 100);
     output("selected evasion angle: " + to_string(utility::index2angle(na, prio_idx)));

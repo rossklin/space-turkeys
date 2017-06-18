@@ -161,9 +161,9 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
   sf::Color c(e.color);
   
   if (e.cat == animation_data::category::explosion) {
-    float rad = e.magnitude * t * exp(-pow(3 * t,2));
+    float rad = 10 * e.magnitude * t * exp(-pow(4 * t,2));
     c = fade_color(c, sf::Color::White, 0.5);
-    c.a = 100;
+    c.a = utility::sigmoid(30 * e.magnitude * exp(-pow(3 * t,2)), 255);
   
     sf::CircleShape s(rad);
     s.setFillColor(c);
@@ -180,7 +180,7 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
     w.draw(s);
   } else if (e.cat == animation_data::category::shot) {
     vector<sf::Vertex> svert;
-    c.a = e.magnitude * exp(-pow(3 * t,2));
+    c.a = utility::sigmoid(30 * e.magnitude * exp(-pow(3 * t,2)), 255);
 
     svert.resize(2);
     svert[0].position = e.p1;
@@ -244,5 +244,13 @@ sfg::Widget::Ptr graphics::wrap_in_scroll(sfg::Widget::Ptr w, bool horizontal, i
     sw->SetRequisition(point(req.x, dim));
   }
 
+  return sw;
+}
+
+sfg::Widget::Ptr graphics::wrap_in_scroll2(sfg::Widget::Ptr w, int width, int height) {
+  sfg::ScrolledWindow::Ptr sw = sfg::ScrolledWindow::Create();
+  sw->SetScrollbarPolicy(sfg::ScrolledWindow::HORIZONTAL_AUTOMATIC | sfg::ScrolledWindow::VERTICAL_AUTOMATIC);  
+  sw->AddWithViewport(w);
+  sw->SetRequisition(point(width, height));
   return sw;
 }

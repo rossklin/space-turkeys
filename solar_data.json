@@ -3,7 +3,7 @@
 
 	"shipyard" : {
 	    "sector boost" : {
-		"military" : 2
+		"military" : 1.2
 	    },
 	    "hp" : 2,
 	    "cost" : {
@@ -18,7 +18,7 @@
 
 	"research facility" : {
 	    "sector boost" : {
-		"research" : 2
+		"research" : 1.2
 	    },
 	    "cost" : {
 		"metals" : 3,
@@ -32,7 +32,7 @@
 
 	"biomechanics facility" : {
 	    "sector boost" : {
-		"research" : 1.5
+		"research" : 1.2
 	    },
 	    "cost" : {
 		"metals" : 3,
@@ -49,7 +49,7 @@
 
 	"local traditions" : {
 	    "sector boost" : {
-		"culture" : 2
+		"culture" : 1.2
 	    },
 	    "space usage" : 10,
 	    "build time" : 200
@@ -57,7 +57,7 @@
 
 	"automated mines" : {
 	    "sector boost" : {
-		"mining" : 2
+		"mining" : 1.2
 	    },
 	    "cost" : {
 		"metals" : 10,
@@ -71,7 +71,7 @@
 
 	"expansion factories" : {
 	    "sector boost" : {
-		"development" : 2
+		"development" : 1.2
 	    },
 	    "cost" : {
 		"metals" : 10,
