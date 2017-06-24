@@ -263,12 +263,7 @@ void ship::update_data(game_data *g) {
   auto compute_local = [this, suggest, output] (float &a, float &s) {
     point local_delta = suggest.p - position;
     a = utility::point_angle(local_delta);
-
-    if (utility::l2norm(local_delta) > 10) {
-      s = base_stats.stats[sskey::key::speed];
-    } else {
-      s = 0;
-    }
+    s = base_stats.stats[sskey::key::speed];
 
     output("setting local target angle: " + to_string(a));
     output("setting local target speed: " + to_string(s) + " (delta is " + to_string(utility::l2norm(local_delta)) + ")");
