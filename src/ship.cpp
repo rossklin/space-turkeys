@@ -271,7 +271,7 @@ void ship::update_data(game_data *g) {
     }
 
     output("setting local target angle: " + to_string(a));
-    output("setting local target speed: " + to_string(s) + " (delta is " + to_string(utility::l2norm(local_delta)));
+    output("setting local target speed: " + to_string(s) + " (delta is " + to_string(utility::l2norm(local_delta)) + ")");
   };
 
   // compute desired angle and speed
@@ -285,11 +285,6 @@ void ship::update_data(game_data *g) {
     target_speed = 0;
     output("hold");
   } else if (travel) {
-    // try to follow ships in front of you
-    apply_ships(local_friends, [this](ship::ptr s) {
-	float weight = (cos(utility::angle_difference(utility::point_angle(s -> position - position), angle)) + 1) / 2;
-	target_angle += 0.1 * weight * utility::angle_difference(target_angle, s -> angle);
-      });
     output("travel");
   } else if (scatter) {
     // just avoid nearby enemies
@@ -328,6 +323,14 @@ void ship::update_data(game_data *g) {
       }
     }
   }
+
+  // try to follow ships in front of you
+  apply_ships(local_friends, [this](ship::ptr s) {
+      float shift = utility::angle_difference(utility::point_angle(s -> position - position), angle);
+      float delta = utility::angle_difference(s -> angle, target_angle);
+      float w = 0.1;
+      target_angle += w * utility::angular_hat(shift) * utility::angular_hat(delta) * delta;
+    });   
 }
 
 void ship::move(game_data *g){

@@ -203,6 +203,14 @@ vector<float> utility::random_uniform_vector(int n, float a, float b){
   return res;
 }
 
+float utility::interval_function(float a, float b, float x) {
+  return (float)(x >= a && x <= b);
+}
+
+float utility::angular_hat(float x) {
+  return interval_function(-M_PI, M_PI, x) * (cos(x) + 1) / 2;
+}
+
 // random point with gaussian distribution around p, sigma = r
 point utility::random_point_polar(point p, float r){
   boost::random::normal_distribution<float> n(0, r);

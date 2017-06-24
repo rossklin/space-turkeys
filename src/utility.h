@@ -211,6 +211,10 @@ namespace st3{
     float index2angle(int na, int idx);
     std::vector<float> circular_kernel(const std::vector<float> &x, float s = 1);
 
+    float interval_function(float a, float b, float x);
+
+    float angular_hat(float x);
+
     /*! 
       generates a random point with gaussian distribution 
       @param p center point
