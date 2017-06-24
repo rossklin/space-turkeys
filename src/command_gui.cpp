@@ -66,7 +66,7 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
     data[s -> ship_class].allocated++;
   }
 
-  point label_dims(100, 60);
+  point label_dims(80, 40);
 
   auto build_ship_label = [this, label_dims] (string ship_class) -> sf::Image {
     string label = to_string(data[ship_class].allocated) + "/" + to_string(data[ship_class].allocated + data[ship_class].available);

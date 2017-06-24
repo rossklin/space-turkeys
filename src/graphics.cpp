@@ -131,6 +131,9 @@ void graphics::draw_ship(sf::RenderTarget &w, ship s, sf::Color col, float sc){
   t.rotate(s.angle / (2 * M_PI) * 360);
   t.scale(sc, sc);
   w.draw(&svert[0], svert.size(), sf::LinesStrip, t);
+
+  // temp for debug
+  draw_text(w, s.id, s.position, 12, false);
 }
 
 // point coordinates of view ul corner

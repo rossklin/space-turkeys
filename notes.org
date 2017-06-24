@@ -1,10 +1,13 @@
 * current work
-** fleets seem to idle when reaching solar before all ships land
+** runtime_error("Analyze enemies: clusters failed to form!");
+** ships don't seems to respect fleet speed limit
+** add/fix bombard animation
 ** protect from spacebar immediately after simulation is finished
 ** trade actions can't swap fleet action 
    since this prevents other ships in fleet from trading. Somewhat
    solved by default assigning one ship to special actions.
 ** drawing client side stuff starts taking time
+** [J?] fleets seem to idle when reaching solar before all ships land
 ** [J?] fleet summon doesn't seem to work very well
 ** [J?] movement is too slow in relation to development
 ** [J?] animations move too fast - bind them to frames!

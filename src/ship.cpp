@@ -232,7 +232,8 @@ void ship::update_data(game_data *g) {
   // angle and speed for summon
   auto compute_summon = [=] (float &a, float &s) {
     if (travel) {
-      float test = utility::angle_difference(fleet_target_angle, fleet_angle);
+      float test = abs(utility::angle_difference(fleet_target_angle, fleet_angle));
+      output("summon: travel:");
       if (test > 2 * M_PI / 3) {
 	// in front of fleet
 	if (check_space(fleet_target_angle + M_PI)) {

@@ -284,7 +284,7 @@ void game_data::remove_units(){
 
 // should set positions, update stats and add entities
 void game_data::distribute_ships(list<combid> sh, point p){
-  float density = 0.01;
+  float density = 0.02;
   float area = sh.size() / density;
   float radius = sqrt(area / M_PI);
   
@@ -469,12 +469,14 @@ void game_data::build(){
 	s.choice_data.allocation = cost::sector_allocation::base_allocation();
 
 	// debug: start with 20 fighters
-	for (int j = 0; j < 20; j++) {
-	  ship sh = rbase.build_ship("fighter", &s);
-	  sh.is_landed = true;
-	  sh.owner = x.first;
-	  s.ships.insert(sh.id);
-	  ship_data[sh.id] = sh;
+	for (string sc : ship::all_classes()) {
+	  for (int j = 0; j < 10; j++) {
+	    ship sh = rbase.build_ship(sc, &s);
+	    sh.is_landed = true;
+	    sh.owner = x.first;
+	    s.ships.insert(sh.id);
+	    ship_data[sh.id] = sh;
+	  }
 	}
       }
     }
