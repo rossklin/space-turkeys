@@ -169,7 +169,7 @@ bool ship::check_space(float a) {
     cout << "check_space: no precomputed angles!" << endl;
     return false;
   }
-  return free_angle[utility::angle2index(na, a)] > 5 * radius;
+  return free_angle[utility::angle2index(na, a)] > 10;
 };
 
 void ship::update_data(game_data *g) {

@@ -200,35 +200,41 @@ void fleet::analyze_enemies(game_data *g) {
   for (int i = 0; i < n; i++) x[i] = g -> get_entity(utility::uniform_sample(t)) -> position;
 
   // identify cluster points
+  vector<point> buf;
   for (int i = 0; i < rep; i++) {
     // select a random enemy ship s
     combid sid = utility::uniform_sample(t);
     ship::ptr s = g -> get_ship(sid);
 
-    // sort points by distance to s
-    std::sort(x.begin(), x.end(), [=] (point a, point b) -> bool {
-	return utility::l2d2(s -> position - a) < utility::l2d2(s -> position - b);
-      });
-
     // move points towards s
     for (int j = 0; j < x.size(); j++){
       point d = s -> position - x[j];
-      float f = exp(-utility::l2norm(d)) / (i + 1);
+      float f = 10 * exp(-utility::l2norm(d) / 10) / (i + 1);
       x[j] = x[j] + utility::scale_point(d, f);
     }
 
     // join adjacent points
+    bool has_duplicate;
+    buf.clear();
     for (auto j = x.begin(); j != x.end(); j++) {
+      has_duplicate = false;
       for (auto k = j + 1; k != x.end(); k++) {
-	if (utility::l2d2(*j - *k) < 100) x.erase(k--);
+	if (utility::l2d2(*j - *k) < 100) {
+	  has_duplicate = true;
+	  break;
+	}
       }
+
+      if (!has_duplicate) buf.push_back(*j);
     }
+
+    swap(x, buf);
   }
 
   if (x.empty()) throw runtime_error("Failed to build enemy clusters!");
   if (x.size() == n) throw runtime_error("Analyze enemies: clusters failed to form!");
 
-  output("identified " + to_string(x.size()) + " clusters");
+  output("identified " + to_string(x.size()) + " clusters from " + to_string(t.size()) + " ships.");
 
   int na = 10;
 
