@@ -311,7 +311,7 @@ void ship::update_data(game_data *g) {
       list<combid> t = g -> search_targets(id, position, 2 * nrad, target_condition(target_condition::enemy, ship::class_id).owned_by(owner));
       if (!t.empty()) {
 	// target closest
-	combid tid = utility::value_min<combid>(t, [this, g] (combid sid) -> float {
+	combid tid = utility::value_min(t, (function<float(combid)>) [this, g] (combid sid) -> float {
 	    return utility::l2d2(g -> get_ship(sid) -> position - position);
 	  });
 	ship::ptr s = g -> get_ship(tid);
@@ -352,15 +352,14 @@ void ship::move(game_data *g){
 
   // shoot enemies if able
   if (compile_interactions().count(interaction::space_combat) && local_enemies.size()) {
-    auto evalfun = [this, g, output] (combid sid) -> float {
+    function<float(combid)> evalfun = [this, g, output] (combid sid) -> float {
       ship::ptr s = g -> get_ship(sid);
       point delta = s -> position - position;
       float h = flex_weight(utility::point_angle(delta));
-      output("scanning local enemy: " + s -> id + ": h = " + to_string(h));
       return -h;
     };
 
-    combid target_id = utility::value_min<combid>(local_enemies, evalfun);
+    combid target_id = utility::value_min(local_enemies, evalfun);
 
     if (evalfun(target_id) < -0.5) {
       // I've got a shot!

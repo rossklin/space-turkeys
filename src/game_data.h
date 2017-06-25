@@ -55,6 +55,7 @@ namespace st3{
     ~game_data();
     game_data(const game_data &g) = delete;
     void assign(const game_data &g);
+    void rehash_grid();
     void apply_choice(choice::choice c, idtype id);
     void increment();
     /* void collide_ships(id_pair x); */

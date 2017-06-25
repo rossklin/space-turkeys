@@ -158,7 +158,7 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
 	  return s_evade;
 	}
       }else{
-	  output("evade");
+	output("evade");
 	return s_evade;
       }
     }
@@ -191,9 +191,8 @@ void fleet::analyze_enemies(game_data *g) {
   float r = stats.spread_radius + vision();
   target_condition cond(target_condition::enemy, ship::class_id);
   list<combid> t = g -> search_targets_nophys(id, position, r, cond.owned_by(owner));
-  int n = 10;
-  int rep = 10;
-  vector<point> x(n);
+  vector<point> pos = utility::fmap<vector<point> >(t, (function<point(combid)>) [g] (combid sid) -> point {return g -> get_ship(sid) -> position;});
+  vector<point> x;
 
   auto output = [this] (string v) {
     cout << id << ": analyze enemies: " << v << endl;
@@ -205,42 +204,7 @@ void fleet::analyze_enemies(game_data *g) {
     return;
   }
 
-  for (int i = 0; i < n; i++) x[i] = g -> get_entity(utility::uniform_sample(t)) -> position;
-
-  // identify cluster points
-  vector<point> buf;
-  for (int i = 0; i < rep; i++) {
-    // select a random enemy ship s
-    combid sid = utility::uniform_sample(t);
-    ship::ptr s = g -> get_ship(sid);
-
-    // move points towards s
-    for (int j = 0; j < x.size(); j++){
-      point d = s -> position - x[j];
-      float f = 10 * exp(-utility::l2norm(d) / 10) / (i + 1);
-      x[j] = x[j] + utility::scale_point(d, f);
-    }
-
-    // join adjacent points
-    bool has_duplicate;
-    buf.clear();
-    for (auto j = x.begin(); j != x.end(); j++) {
-      has_duplicate = false;
-      for (auto k = j + 1; k != x.end(); k++) {
-	if (utility::l2d2(*j - *k) < 100) {
-	  has_duplicate = true;
-	  break;
-	}
-      }
-
-      if (!has_duplicate) buf.push_back(*j);
-    }
-
-    swap(x, buf);
-  }
-
-  if (x.empty()) throw runtime_error("Failed to build enemy clusters!");
-  if (x.size() == n) output("Analyze enemies: clusters failed to form!");
+  x = utility::cluster_points(pos);
 
   output("identified " + to_string(x.size()) + " clusters from " + to_string(t.size()) + " ships.");
 
@@ -252,16 +216,17 @@ void fleet::analyze_enemies(game_data *g) {
   float dps_scale = g -> settings.frames_per_round / get_hp();
   for (auto sid : t) {
     ship s(ship::table().at(g -> get_ship(sid) -> ship_class));
+    point p = g -> get_ship(sid) -> position;
 
     // scatter value
-    int scatter_idx = utility::angle2index(na,utility::point_angle(s.position - position));
+    int scatter_idx = utility::angle2index(na,utility::point_angle(p - position));
     scatter_data[scatter_idx] += s.get_dps() * dps_scale;
 
     // cluster assignment
-    int idx = utility::vector_min<point>(x, [s] (point y) -> float {return utility::l2d2(y - s.position);});
+    int idx = utility::vector_min<point>(x, [p] (point y) -> float {return utility::l2d2(y - p);});
     cc[idx] += s.get_strength();
 
-    output("assigned enemy " + s.id + " to cluster " + to_string(idx) + " at " + utility::point2string(x[idx]));
+    output("assigned enemy " + sid + " to cluster " + to_string(idx) + " at " + utility::point2string(x[idx]));
   }
 
   // build enemy fleet stats
@@ -369,12 +334,10 @@ void fleet::check_action(game_data *g) {
     }
 
     // have arrived?
-    if (!is_idle()){
-      if (g -> target_position(com.target, stats.target_position)) {
-	bool buf = utility::l2d2(stats.target_position - position) < fleet::interact_d2;
-	should_refresh = buf != stats.converge;
-	stats.converge = buf;
-      }
+    if (g -> target_position(com.target, stats.target_position)) {
+      bool buf = utility::l2d2(stats.target_position - position) < fleet::interact_d2;
+      should_refresh |= buf != stats.converge;
+      stats.converge = buf;
     }
   }
   
@@ -383,9 +346,12 @@ void fleet::check_action(game_data *g) {
 
 void fleet::check_waypoint(game_data *g){
   // set to idle and 'land' ships if converged to waypoint
-  if (stats.converge && identifier::get_type(com.target) == waypoint::class_id && com.action == fleet_action::go_to){
-    com.action = fleet_action::idle;
-    cout << "set fleet " << id << " idle target: " << com.target << endl;
+  if (identifier::get_type(com.target) == waypoint::class_id){
+    if (stats.converge) {
+      com.action = fleet_action::idle;
+    } else {
+      com.action = fleet_action::go_to;
+    }
   }
 }
 

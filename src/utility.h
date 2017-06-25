@@ -29,9 +29,9 @@ namespace st3{
       }
     }
 
-    template<typename K, typename V>
-    std::list<K> get_map_keys(const hm_t<K,V> &m) {
-      std::list<K> res;
+    template<typename T>
+    std::list<typename T::key_type> get_map_keys(const T &m) {
+      std::list<typename T::key_type> res;
       for (auto &x : m) res.push_back(x.first);
       return res;
     }
@@ -43,14 +43,26 @@ namespace st3{
 		[](auto pair){ return pair.first; });
     }
 
-    template<typename T, typename C>
-    bool find_in(T x, C c) {
+    template<typename C>
+    bool find_in(typename C::value_type x, C c) {
       return std::find(c.begin(), c.end(), x) != c.end();
     }
     
     template<typename T>
     std::function<T(T)> identity_function() {
       return [](T x){return x;};
+    }
+
+    template<
+      typename C2,
+      typename C1,
+      typename A = typename C2::value_type,
+      typename B = typename C1::value_type
+      >
+    C2 fmap(C1 &x, std::function<A(B)> f) {
+      C2 res;
+      for (auto &y : x) res.push_back(f(y));
+      return res;
     }
 
     std::string format_float(float x);
@@ -62,6 +74,8 @@ namespace st3{
     /* **************************************** */
     /* POINT MATHS */
     /* **************************************** */
+
+    std::vector<point> cluster_points(std::vector<point> x);
 
     std::string point2string(point p);
 
@@ -150,8 +164,8 @@ namespace st3{
     */
     std::vector<float> random_uniform_vector(int n, float a = 0, float b = 1);
 
-    template<typename T>
-    T uniform_sample(std::list<T> &x){
+    template<typename C>
+    typename C::value_type uniform_sample(C &x){
       int s = x.size();
 
       for (auto &y : x){
@@ -184,7 +198,7 @@ namespace st3{
       return idx;
     }
     
-    template<typename T, typename C>
+    template<typename C, typename T = typename C::value_type>
     T value_min(const C &x, std::function<float(T)> h) {
       if (x.empty()) {
 	throw std::runtime_error("Can not call value_min with empty vector!");

@@ -21,6 +21,12 @@ tree::ptr tree::create(){
   return ptr(new tree());
 }
 
+void tree::clear() {
+  delete root;
+  root = new node(this, 0);
+  index.clear();
+}
+
 void tree::insert(key_type k, value_type v){
   if (index.count(k)){
     index[k] -> move(k, v);

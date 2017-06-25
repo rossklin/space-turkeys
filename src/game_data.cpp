@@ -29,7 +29,18 @@ game_data::~game_data(){
 void game_data::allocate_grid(){
   clear_entities();
   entity_grid = grid::tree::create();
-  for (auto x : entity) entity_grid -> insert(x.first, x.second -> position);
+  rehash_grid();
+}
+
+void game_data::rehash_grid() {
+  entity_grid -> clear();
+  list<combid> keys = utility::get_map_keys(entity);
+  vector<combid> vkeys(keys.begin(), keys.end());
+  random_shuffle(vkeys.begin(), vkeys.end());
+  for (auto eid : vkeys) {
+    game_object::ptr x = get_entity(eid);
+    entity_grid -> insert(eid, x -> position);
+  }
 }
 
 ship::ptr game_data::get_ship(combid i){
@@ -359,7 +370,7 @@ solar::ptr game_data::closest_solar(point p, idtype id) {
   solar::ptr s = 0;
 
   try {
-    s = utility::value_min<solar::ptr>(all<solar>(), [this, p, id] (solar::ptr t) -> float {
+    s = utility::value_min(all<solar>(), (function<float(solar::ptr)>) [this, p, id] (solar::ptr t) -> float {
 	if (t -> owner != id) {
 	  return INFINITY;
 	}else{
@@ -489,15 +500,15 @@ void game_data::build(){
 
 // clean up things that will be reloaded from client
 void game_data::pre_step(){
-  // // idle all non-idle fleets
-  // for (auto i : all<fleet>()) i -> com.action = fleet_action::idle;
-
   // clear waypoints and fleets, but don't list removals as client
   // manages them
   for (auto i : all<waypoint>()) i -> remove = true;
   for (auto i : all<fleet>()) i -> remove = true;
   remove_units();
   remove_entities.clear();
+
+  // force grid to rebuild
+  rehash_grid();
 }
 
 // pool research and remove unused waypoints

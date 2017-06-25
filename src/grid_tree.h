@@ -91,6 +91,8 @@ namespace st3{
       /*! disallow copy construction */
       tree(const tree &g) = delete;
 
+      void clear();
+
       /*! insert an id-position pair
 	@param id id
 	@param p position

@@ -56,6 +56,47 @@ rapidjson::Document *utility::get_json(string key) {
 // POINT ARITHMETICS
 // ****************************************
 
+vector<point> utility::cluster_points(vector<point> pos) {
+  int n = 10;
+  int rep = 10;
+  vector<point> x(n);
+  vector<point> buf;
+  
+  for (int i = 0; i < n; i++) x[i] = utility::uniform_sample(pos);
+
+  // identify cluster points
+  for (int i = 0; i < rep; i++) {
+    // select a random enemy ship s
+    point y = utility::uniform_sample(pos);
+
+    // move points towards s
+    for (int j = 0; j < x.size(); j++){
+      point d = y - x[j];
+      float f = 10 * exp(-utility::l2norm(d) / 10) / (i + 1);
+      x[j] = x[j] + utility::scale_point(d, f);
+    }
+
+    // join adjacent points
+    bool has_duplicate;
+    buf.clear();
+    for (auto j = x.begin(); j != x.end(); j++) {
+      has_duplicate = false;
+      for (auto k = j + 1; k != x.end(); k++) {
+	if (utility::l2d2(*j - *k) < 100) {
+	  has_duplicate = true;
+	  break;
+	}
+      }
+
+      if (!has_duplicate) buf.push_back(*j);
+    }
+
+    swap(x, buf);
+  }
+
+  return x;
+}
+
 string utility::point2string(point p) {
   return to_string(p.x) + "x" + to_string(p.y);
 }
