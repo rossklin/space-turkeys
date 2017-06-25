@@ -66,9 +66,10 @@ namespace st3{
     ship(const ship_stats &s);
     ~ship();
     
+    float flex_weight(float a);
     void update_data(game_data *g);
     void set_stats(ship_stats s);
-    void receive_damage(game_object::ptr from, float damage);
+    void receive_damage(game_data *g, game_object::ptr from, float damage);
     void on_liftoff(solar *from, game_data *g);
     bool has_fleet();
     float evasion_check();

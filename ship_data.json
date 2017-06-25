@@ -46,7 +46,8 @@
 		{"x" : -2, "y" : 1, "c" : "p"},
 		{"x" : 2, "y" : 0, "c" : "n"}
 	    ],
-	    "tags" : ["combat", "spacecombat", "bombard"]
+	    "tags" : ["combat", "spacecombat", "bombard"],
+	    "cannon flex" : 0.2
 	},
 
 	"bomber" : {
@@ -101,7 +102,8 @@
 		{"x" : -2, "y" : 1, "c" : "n"},
 		{"x" : 2, "y" : 0, "c" : "p"}
 	    ],
-	    "tags" : ["bombard", "combat", "spacecombat"]
+	    "tags" : ["bombard", "combat", "spacecombat"],
+	    "cannon flex" : 1
 	},
 	
 	"voyager" : {
@@ -132,7 +134,8 @@
 		{"x" : 0, "y" : 3, "c" : "p"},
 		{"x" : 2, "y" : 0, "c" : "p"}
 	    ],
-	    "tags" : ["bombard", "combat", "spacecombat"]
+	    "tags" : ["bombard", "combat", "spacecombat"],
+	    "cannon flex" : 0.8
 	},
 
 	"colonizer" : {

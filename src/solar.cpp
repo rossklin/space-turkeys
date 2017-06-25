@@ -98,6 +98,10 @@ float solar::interaction_radius() {
 
 void solar::receive_damage(game_object::ptr s, float damage, game_data *g){
   damage -= compute_shield_power();
+  g -> log_bombard(s -> id, id);
+  
+  if (damage <= 0) return;
+  
   damage_facilities(damage);
   population *= 1 - 0.05 * damage;
   happiness *= 0.9;

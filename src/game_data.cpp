@@ -284,7 +284,7 @@ void game_data::remove_units(){
 
 // should set positions, update stats and add entities
 void game_data::distribute_ships(list<combid> sh, point p){
-  float density = 0.02;
+  float density = 0.1;
   float area = sh.size() / density;
   float radius = sqrt(area / M_PI);
   
@@ -650,21 +650,58 @@ void game_data::confirm_data() {
   }
 }
 
-void game_data::log_ship_fire(combid a, combid b) {
+void game_data::log_bombard(combid a, combid b) {
   ship::ptr s = get_ship(a);
+  solar::ptr t = get_solar(b);
+
+  animation_data x;
+  x.p1 = s -> position;
+  x.p2 = t -> position;
+  x.color = players[s -> owner].color;
+  x.cat = animation_data::category::bomb;
+  x.magnitude = s -> stats[sskey::key::solar_damage];
+  x.v = point(0, 0);
+  
+  animation_data sh;
+  float shield = t -> compute_shield_power();
+  sh.p1 = t -> position;
+  sh.radius = 1.2 * t -> radius;
+  sh.magnitude = shield;
+  sh.v = point(0, 0);
+  sh.color = players[t -> owner].color;
+  sh.cat = animation_data::category::shield;
+  
+  for (auto &p : players) {
+    if (evm[p.first].count(b)) {
+      p.second.animations.push_back(x);
+      if (shield > 0) p.second.animations.push_back(sh);
+    }
+  }
+}
+
+void game_data::log_ship_fire(combid a, combid b) {
+  game_object::ptr s = get_entity(a);
   ship::ptr t = get_ship(b);
 
   animation_data x;
   x.p1 = s -> position;
   x.p2 = t -> position;
-  x.magnitude = s -> stats[sskey::key::ship_damage];
-  x.v = utility::scale_point(utility::normv(s -> angle), s -> stats[sskey::key::speed]);
   x.color = players[s -> owner].color;
   x.cat = animation_data::category::shot;
+  
+  if (s -> isa(ship::class_id)) {
+    ship::ptr sp = utility::guaranteed_cast<ship>(s);
+    x.magnitude = sp -> stats[sskey::key::ship_damage];
+    x.v = utility::scale_point(utility::normv(sp -> angle), sp -> stats[sskey::key::speed]);
+  } else {
+    x.magnitude = 1;
+    x.v = point(0,0);
+  }
 
   animation_data sh;
   sh.p1 = t -> position;
   sh.magnitude = t -> stats[sskey::key::shield];
+  sh.radius = 1.2 * t -> radius;
   sh.v = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
   sh.color = players[t -> owner].color;
   sh.cat = animation_data::category::shield;

@@ -479,11 +479,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, player &c){
 
 // animation_data
 sf::Packet& st3::operator <<(sf::Packet& packet, const animation_data &c){
-  return packet << c.p1 << c.p2 << c.v << c.magnitude << c.color << c.cat;
+  return packet << c.p1 << c.p2 << c.v << c.magnitude << c.radius << c.color << c.cat;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, animation_data &c){
-  return packet >> c.p1 >> c.p2 >> c.v >> c.magnitude >> c.color >> c.cat;
+  return packet >> c.p1 >> c.p2 >> c.v >> c.magnitude >> c.radius >> c.color >> c.cat;
 }
 
 // research

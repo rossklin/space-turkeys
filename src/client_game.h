@@ -188,7 +188,7 @@ namespace st3{
 	@param to the coordinate point of the target
 	@param fill_ships whether to automatically allocate the ready ships from the source
       */
-      void add_command(command c, point from, point to, bool fill_ships = false);
+      void add_command(command c, point from, point to, bool fill_ships = false, bool default_policy = true);
 
       /*! remove a command selector
 	@param key id of the command selector to remove

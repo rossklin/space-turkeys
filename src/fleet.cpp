@@ -21,6 +21,14 @@ const sint fleet::policy_reasonable = 2;
 const sint fleet::policy_evasive = 4;
 const sint fleet::policy_maintain_course = 8;
 
+sint fleet::default_policy(string action) {
+  if (action == interaction::space_combat) {
+    return policy_aggressive;
+  } else {
+    return policy_reasonable;
+  }
+}
+
 fleet::fleet(){}
 
 fleet::fleet(idtype pid){
@@ -119,7 +127,7 @@ void fleet::give_commands(list<command> c, game_data *g){
 
 fleet::suggestion fleet::suggest(combid sid, game_data *g) {
   ship::ptr s = g -> get_ship(sid);
-  float pref_density = 0.01;
+  float pref_density = 0.1;
   float pref_maxrad = fmax(sqrt(ships.size() / (M_PI * pref_density)), 20);
 
   auto output = [this] (string v) {
@@ -232,7 +240,7 @@ void fleet::analyze_enemies(game_data *g) {
   }
 
   if (x.empty()) throw runtime_error("Failed to build enemy clusters!");
-  if (x.size() == n) throw runtime_error("Analyze enemies: clusters failed to form!");
+  if (x.size() == n) output("Analyze enemies: clusters failed to form!");
 
   output("identified " + to_string(x.size()) + " clusters from " + to_string(t.size()) + " ships.");
 

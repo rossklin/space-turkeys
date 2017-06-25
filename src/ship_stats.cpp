@@ -58,6 +58,7 @@ typename sskey::key modifiable_ship_stats<T>::lookup_key(string name) {
     map["shield"] = sskey::key::shield;
     map["detection"] = sskey::key::detection;
     map["stealth"] = sskey::key::stealth;
+    map["cannon flex"] = sskey::key::cannon_flex;
   }
 
   if (map.count(name)) {

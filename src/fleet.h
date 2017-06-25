@@ -68,6 +68,8 @@ namespace st3{
     static const sint policy_evasive;
     static const sint policy_maintain_course;
 
+    static sint default_policy(std::string action);
+
     // serialized components
     std::set<combid> ships; /*!< ids of ships in fleet */
     std::set<std::string> interactions; /*!< set of available interactions */

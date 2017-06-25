@@ -6,13 +6,14 @@
 namespace st3 {
   struct animation_data {
     enum category {
-      explosion, shot, shield
+      explosion, shot, shield, bomb
     };
     
     point p1;
     point p2;
     point v;
     sfloat magnitude;
+    sfloat radius;
     sint color;
     sint cat;
   };

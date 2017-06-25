@@ -143,6 +143,7 @@ float utility::random_normal(float m, float s){
 // random float ~U(a,b)
 float utility::random_uniform(float a, float b){
   assert(isfinite(a) && isfinite(b));
+  if (a == b) return a;
   boost::random::uniform_real_distribution<float> dist(a,b);
   return dist(rng);
 }

@@ -613,7 +613,7 @@ void game::reload_data(data_frame &g){
       point to = get_entity(f -> com.target) -> get_position();
       // assure we don't assign ships which have been killed
       c.ships = c.ships & f -> ships;
-      add_command(c, f -> position, to, false);
+      add_command(c, f -> position, to, false, false);
     } else {
       f -> com.target = identifier::target_idle;
       f -> com.action = fleet_action::idle;
@@ -624,7 +624,7 @@ void game::reload_data(data_frame &g){
   for (auto w : get_all<waypoint>()){
     for (auto c : w -> pending_commands){
       if (entity.count(c.target)){
-	add_command(c, w -> get_position(), get_entity(c.target) -> get_position(), false);
+	add_command(c, w -> get_position(), get_entity(c.target) -> get_position(), false, false);
       }
     }
     w -> pending_commands.clear();
@@ -652,7 +652,7 @@ void game::reload_data(data_frame &g){
 
 /** Add a command selector.
  */
-void game::add_command(command c, point from, point to, bool fill_ships){
+void game::add_command(command c, point from, point to, bool fill_ships, bool default_policy){
   // check if command already exists
   for (auto x : command_selectors){
     if (c == (command)*x.second) return;
@@ -666,6 +666,9 @@ void game::add_command(command c, point from, point to, bool fill_ships){
     cout << "add_command: circular waypoint graphs forbidden!" << endl;
     return;
   }
+
+  // set default fleet policy
+  if (default_policy) c.policy = fleet::default_policy(c.action);
 
   command_selector::ptr cs = command_selector::create(c, from, to);
   

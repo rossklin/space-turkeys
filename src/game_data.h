@@ -65,6 +65,7 @@ namespace st3{
     solar::ptr closest_solar(point p, idtype id);
     void log_ship_fire(combid a, combid b);
     void log_ship_destroyed(combid a, combid b);
+    void log_bombard(combid a, combid b);
 
     // access
     ship::ptr get_ship(combid i);

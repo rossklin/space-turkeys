@@ -44,6 +44,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
   s.stats[sskey::key::shield] = 0;
   s.stats[sskey::key::detection] = 0;
   s.stats[sskey::key::stealth] = 0;
+  s.stats[sskey::key::cannon_flex] = 0.1;
 
   s.upgrades.insert(interaction::land);
 
@@ -169,7 +170,7 @@ bool ship::check_space(float a) {
     cout << "check_space: no precomputed angles!" << endl;
     return false;
   }
-  return free_angle[utility::angle2index(na, a)] > 10;
+  return free_angle[utility::angle2index(na, a)] > 2;
 };
 
 void ship::update_data(game_data *g) {
@@ -294,6 +295,7 @@ void ship::update_data(game_data *g) {
 
       enemies = utility::circular_kernel(enemies, 4);
       target_angle = utility::index2angle(na, utility::vector_min(enemies, utility::identity_function<float>()));
+      target_speed = base_stats.stats[sskey::key::speed];
       output("scatter: target angle: " + to_string(target_angle));
     } else {
       target_speed = 0;
@@ -353,14 +355,14 @@ void ship::move(game_data *g){
     auto evalfun = [this, g, output] (combid sid) -> float {
       ship::ptr s = g -> get_ship(sid);
       point delta = s -> position - position;
-      float h = utility::safe_inv(cos(utility::angle_difference(utility::point_angle(delta), angle)) + 2);
+      float h = flex_weight(utility::point_angle(delta));
       output("scanning local enemy: " + s -> id + ": h = " + to_string(h));
-      return h;
+      return -h;
     };
 
     combid target_id = utility::value_min<combid>(local_enemies, evalfun);
 
-    if (evalfun(target_id) < 0.4) {
+    if (evalfun(target_id) < -0.5) {
       // I've got a shot!
       interaction_info info;
       info.source = id;
@@ -467,12 +469,14 @@ void ship::move(game_data *g){
 
 void ship::post_phase(game_data *g){}
 
-void ship::receive_damage(game_object::ptr from, float damage) {
+void ship::receive_damage(game_data *g, game_object::ptr from, float damage) {
   stats[sskey::key::shield] = fmax(stats[sskey::key::shield] - 0.1 * damage, 0);
   damage = fmax(damage - stats[sskey::key::shield], 0);
   stats[sskey::key::hp] -= damage;
   remove = stats[sskey::key::hp] <= 0;
   cout << "ship::receive_damage: " << id << " takes " << damage << " damage from " << from -> id << " - remove = " << remove << endl;
+
+  if (remove) g -> log_ship_destroyed(from -> id, id);
 }
 
 void ship::on_remove(game_data *g){
@@ -509,10 +513,21 @@ set<string> ship::compile_interactions(){
   return res;
 }
 
+// weight accuracy by angular targetability i.e. easier to target
+// ships in front of you
+float ship::flex_weight(float a) {
+  float da = utility::angle_difference(angle, a);
+  if (da == 0) return 1;
+
+  // cannon flex transform
+  float xw = stats[sskey::key::cannon_flex];
+  float x = (1 - xw) * utility::safe_inv(xw) * da;
+  return utility::angular_hat(x);
+}
+
 float ship::accuracy_check(ship::ptr t) {
   float a = utility::point_angle(t -> position - position);
-  a = utility::angle_difference(a, angle);
-  return utility::random_uniform(0, stats[sskey::key::accuracy] * (cos(a) + 1) / 2);
+  return utility::random_uniform(0, stats[sskey::key::accuracy] * flex_weight(a));
 }
 
 float ship::evasion_check() {

@@ -64,8 +64,7 @@ const hm_t<string, interaction> &interaction::table() {
       cout << "space_combat: hit!" << endl;
       float damage = 0;
       if (s -> stats[sskey::key::ship_damage] > 0) damage = utility::random_uniform(0, s -> stats[sskey::key::ship_damage]);
-      t -> receive_damage(self, damage);
-      if (t -> remove) g -> log_ship_destroyed(s -> id, t -> id);
+      t -> receive_damage(g, self, damage);
     }else{
       cout << "space_combat: miss!" << endl;
     }
@@ -91,9 +90,11 @@ const hm_t<string, interaction> &interaction::table() {
 
       if (t.damage > 0 && t.load >= 1 && d <= t.range){
 	t.load = 0;
+
+	g -> log_ship_fire(s -> id, x -> id);
 	
 	if (x -> evasion_check() < t.accuracy_check(x)){
-	  x -> receive_damage(s, utility::random_uniform(0, t.damage));
+	  x -> receive_damage(g, s, utility::random_uniform(0, t.damage));
 	}
       }
     }

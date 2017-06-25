@@ -226,7 +226,7 @@ namespace st3{
 	w.draw(s);
       }
       
-      graphics::draw_ship(w, *this, get_color(), fmax(sqrt(stats[sskey::key::mass]), 1));
+      graphics::draw_ship(w, *this, get_color(), graphics::ship_scale_factor * radius);
     }
 
     template<>
