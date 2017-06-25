@@ -1,5 +1,20 @@
 * current work
 ** memory leak
+   valgrind says there is no memory leak in my code (just two small
+   ones in *ld* and *esets*). However, almost all memory usage arises
+   from the following location:
+
+->42.95% (12,759,264B) 0x40FF62: st3::ship::operator=(st3::ship const&) (ship.h:18)
+-> ->42.95% (12,759,264B) 0x4975EF: st3::ship::copy_from(st3::ship const&) (ship.cpp:561)
+->   ->42.95% (12,759,264B) 0x492050: st3::ship::ship(st3::ship const&) (ship.cpp:137)
+->     ->42.95% (12,759,264B) 0x496DC3: st3::ship::clone_impl() (ship.cpp:497)
+->       ->42.95% (12,759,264B) 0x48FF6D: st3::game_object::clone() (game_object.cpp:46)
+->         ->42.95% (12,759,264B) 0x40BBAF: st3::entity_package::copy_from(st3::game_data const&) (game_data.cpp:611)
+->           ->42.95% (12,759,264B) 0x43AA44: simulation_step(st3::server::com&, st3::game_data&) (game_handler.cpp:29)
+->           -> ->42.95% (12,759,264B) 0x43B550: st3::server::game_handler(st3::server::com&, st3::game_data&) (game_handler.cpp:113)
+->           ->   ->42.95% (12,759,264B) 0x438FBC: main (server.cpp:34)
+
+
    Seemed fixed by clearing entity_grid at pre_step, but unfixed when
    inserting entities after clearing grid.
 

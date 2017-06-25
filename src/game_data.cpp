@@ -39,7 +39,7 @@ void game_data::rehash_grid() {
   random_shuffle(vkeys.begin(), vkeys.end());
   for (auto eid : vkeys) {
     game_object::ptr x = get_entity(eid);
-    entity_grid -> insert(eid, x -> position);
+    if (x -> is_active()) entity_grid -> insert(eid, x -> position);
   }
 }
 

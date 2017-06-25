@@ -22,10 +22,6 @@ hm_t<combid, solar> build_universe::random_solars(game_settings settings){
     solar s;
     s.id = identifier::make(solar::class_id, i);
     idbuf[i] = s.id;
-    
-    s.position.x = utility::random_uniform(s.radius, settings.width - 2 * s.radius);
-    s.position.y = utility::random_uniform(s.radius, settings.height - 2 * s.radius);
-    s.owner = game_object::neutral_owner;
 
     s.population = 0;
     s.happiness = 1;
@@ -43,6 +39,10 @@ hm_t<combid, solar> build_universe::random_solars(game_settings settings){
 
     // set radius to indicate resources
     s.radius = settings.solar_minrad + rsum * (settings.solar_maxrad - settings.solar_minrad) / 3000;
+    
+    s.position.x = utility::random_uniform(s.radius, settings.width - 2 * s.radius);
+    s.position.y = utility::random_uniform(s.radius, settings.height - 2 * s.radius);
+    s.owner = game_object::neutral_owner;
 
     buf[s.id] = s;
   }
