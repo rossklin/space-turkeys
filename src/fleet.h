@@ -92,9 +92,11 @@ namespace st3{
     void give_commands(std::list<command> c, game_data *g);
 
     // fleet stuff
-    fleet();
     fleet(idtype pid);
-    ~fleet();
+    fleet() = default;
+    ~fleet() = default;
+    fleet(const fleet &f);
+
     bool is_idle();
     void set_idle();
     void analyze_enemies(game_data *g);
@@ -106,13 +108,11 @@ namespace st3{
     float get_strength();
     void refresh_ships(game_data *g);
     void check_action(game_data *g);    
-    ptr clone();
+    game_object::ptr clone();
 
   protected:
     void check_waypoint(game_data *g);
     void check_in_sight(game_data *g);
-    virtual game_object::ptr clone_impl();
-    void copy_from(const fleet &s);
   };
 };
 #endif

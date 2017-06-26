@@ -1,5 +1,8 @@
 * current work
 ** memory leak
+   Memory loss triggered from game_handler.cpp: 29. Note that memory
+   usage rises before distribute_frames starts working.
+
    valgrind says there is no memory leak in my code (just two small
    ones in *ld* and *esets*). However, almost all memory usage arises
    from the following location:

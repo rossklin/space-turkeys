@@ -18,17 +18,18 @@ using namespace st3::server;
 
 void simulation_step(com &c, game_data &g) {
   vector<entity_package> frames(g.settings.frames_per_round);
-  int frame_count;
-
+  int frame_count = 0;
+  int frame_count_buf = 0; // todo: remove (debugging)
+  
   cout << "starting simulation ... " << endl;
-  frame_count = 0;
-  thread t(&com::distribute_frames, c, ref(frames), ref(frame_count));
+  thread t(&com::distribute_frames, c, ref(frames), ref(frame_count_buf));
 
   for (frame_count = 0; frame_count < g.settings.frames_per_round; frame_count++){
     g.increment();
-    frames[frame_count].copy_from(g);
+    frames[frame_count].copy_from(g); // todo: memory leak triggered from here
   }
 
+  frame_count_buf = frame_count;
   cout << "waiting for distribute_frames() ..." << endl;
   t.join();
 

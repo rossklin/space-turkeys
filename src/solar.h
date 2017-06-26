@@ -84,15 +84,16 @@ namespace st3{
     cost::ship_allocation fleet_growth;
     std::set<combid> ships;
 
-    solar();
-    ~solar();
+    solar() = default;
+    ~solar() = default;
+    solar(const solar &s);
 
     // game_object
     void pre_phase(game_data *g);
     void move(game_data *g);
     void post_phase(game_data *g);
     bool serialize(sf::Packet &p);
-    ptr clone();
+    game_object::ptr clone();
     bool isa(std::string c);
 
     // physical_object
@@ -142,8 +143,6 @@ namespace st3{
 
     void pay_resources(cost::res_t r);
     float resource_constraint(cost::res_t r);
-    virtual game_object::ptr clone_impl();
-    void copy_from(const solar &s);
   };
 };
 #endif

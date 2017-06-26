@@ -4,6 +4,7 @@
 #include <set>
 #include <list>
 #include <memory>
+#include <iostream>
 #include <SFML/Network.hpp>
 
 #include "types.h"
@@ -25,7 +26,9 @@ namespace st3{
     combid id;
 
     game_object();
-    virtual ~game_object();    
+    game_object(const game_object &x);
+    
+    virtual ~game_object() = default;
     virtual void pre_phase(game_data *g) = 0;
     virtual void move(game_data *g) = 0;
     virtual void post_phase(game_data *g) = 0;
@@ -36,12 +39,8 @@ namespace st3{
     virtual bool is_commandable();
     virtual bool is_physical();
     virtual bool is_active();
-    virtual bool isa(std::string c);
-    
-    ptr clone();
-
-  protected:
-    virtual ptr clone_impl() = 0;
+    virtual bool isa(std::string c);    
+    virtual ptr clone() = 0;
   };
 
   class commandable_object : public virtual game_object{
@@ -49,14 +48,10 @@ namespace st3{
     static const std::string class_id;
     typedef commandable_object* ptr;
 
-    commandable_object();
-    ~commandable_object();
+    commandable_object() = default;
+    virtual ~commandable_object() = default;
     virtual void give_commands(std::list<command> c, game_data *g) = 0;
     bool is_commandable();
-    ptr clone();
-    
-  protected:
-    virtual game_object::ptr clone_impl() = 0;
   };
 
   class physical_object : public virtual game_object{
@@ -64,18 +59,14 @@ namespace st3{
     static const std::string class_id;
     typedef physical_object* ptr;
 
-    physical_object();
-    ~physical_object();
+    physical_object() = default;
+    virtual ~physical_object() = default;
 
     virtual std::set<std::string> compile_interactions() = 0;
     virtual float interaction_radius() = 0;
     virtual bool can_see(game_object::ptr x) = 0;
 
     bool is_physical();
-    ptr clone();
-    
-  protected:
-    virtual game_object::ptr clone_impl() = 0;
   };
 };
 

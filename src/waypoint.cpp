@@ -10,7 +10,6 @@ using namespace st3;
 
 const string waypoint::class_id = "waypoint";
 
-waypoint::waypoint(){}
 waypoint::waypoint(idtype o){
   static int idc = 0;
   
@@ -19,7 +18,9 @@ waypoint::waypoint(idtype o){
   radius = 20;
 }
 
-waypoint::~waypoint(){}
+waypoint::waypoint(const waypoint &x) : game_object(x) {
+  *this = x;
+}
 
 void waypoint::pre_phase(game_data *g){}
 void waypoint::move(game_data *g){}
@@ -66,20 +67,12 @@ waypoint::ptr waypoint::create(idtype o){
   return ptr(new waypoint(o));
 }
 
-waypoint::ptr waypoint::clone(){
-  return dynamic_cast<waypoint::ptr>(clone_impl());
-}
-
-game_object::ptr waypoint::clone_impl(){
-  return ptr(new waypoint(*this));
+game_object::ptr waypoint::clone(){
+  return new waypoint(*this);
 }
 
 bool waypoint::serialize(sf::Packet &p){
   return p << class_id << *this;
-}
-
-void waypoint::copy_from(const waypoint &s){
-  (*this) = s;
 }
 
 bool waypoint::isa(string c) {

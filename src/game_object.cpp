@@ -16,7 +16,9 @@ game_object::game_object(){
   remove = false;
 }
 
-game_object::~game_object(){}
+game_object::game_object(const game_object &x) {
+  *this = x;
+}
 
 void game_object::on_add(game_data *g){
   if (this -> is_active()) g -> entity_grid -> insert(id, position);
@@ -42,30 +44,12 @@ bool game_object::isa(string c){
   return identifier::get_type(id) == c;
 }
 
-game_object::ptr game_object::clone(){
-  return clone_impl();
-}
-
 // commandable object
-commandable_object::commandable_object() {}
-commandable_object::~commandable_object() {}
-
 bool commandable_object::is_commandable() {
   return true;
 }
 
-commandable_object::ptr commandable_object::clone(){
-  return dynamic_cast<commandable_object::ptr>(clone_impl());
-}
-
 // physical object
-physical_object::physical_object() {}
-physical_object::~physical_object() {}
-
 bool physical_object::is_physical() {
   return true;
-}
-
-physical_object::ptr physical_object::clone(){
-  return dynamic_cast<physical_object::ptr>(clone_impl());
 }

@@ -21,16 +21,6 @@ const sint fleet::policy_reasonable = 2;
 const sint fleet::policy_evasive = 4;
 const sint fleet::policy_maintain_course = 8;
 
-sint fleet::default_policy(string action) {
-  if (action == interaction::space_combat) {
-    return policy_aggressive;
-  } else {
-    return policy_reasonable;
-  }
-}
-
-fleet::fleet(){}
-
 fleet::fleet(idtype pid){
   static int idc = 0;
   if (pid < 0){
@@ -47,7 +37,17 @@ fleet::fleet(idtype pid){
   com.action = fleet_action::idle;
 }
 
-fleet::~fleet(){}
+fleet::fleet(const fleet &x) : game_object(x) {
+  *this = x;
+}
+
+sint fleet::default_policy(string action) {
+  if (action == interaction::space_combat) {
+    return policy_aggressive;
+  } else {
+    return policy_reasonable;
+  }
+}
 
 void fleet::on_remove(game_data *g) {
   for (auto sid : ships) {
@@ -78,12 +78,8 @@ fleet::ptr fleet::create(idtype pid){
   return ptr(new fleet(pid));
 }
 
-fleet::ptr fleet::clone(){
-  return dynamic_cast<fleet::ptr>(clone_impl());
-}
-
-game_object::ptr fleet::clone_impl(){
-  return ptr(new fleet(*this));
+game_object::ptr fleet::clone(){
+  return new fleet(*this);
 }
 
 bool fleet::serialize(sf::Packet &p){
@@ -378,10 +374,6 @@ void fleet::check_in_sight(game_data *g){
 
     set_idle();
   }
-}
-
-void fleet::copy_from(const fleet &s){
-  (*this) = s;
 }
 
 void fleet::remove_ship(combid i){

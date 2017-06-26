@@ -16,9 +16,9 @@ using namespace st3;
 
 const string solar::class_id = "solar";
 
-solar::solar(){}
-
-solar::~solar(){}
+solar::solar(const solar &s) : game_object(s) {
+  *this = s;
+};
 
 void solar::pre_phase(game_data *g){
   out_of_resources = false;
@@ -188,16 +188,8 @@ solar::ptr solar::create(){
   return ptr(new solar());
 }
 
-solar::ptr solar::clone(){
-  return dynamic_cast<solar::ptr>(clone_impl());
-}
-
-game_object::ptr solar::clone_impl(){
-  return ptr(new solar(*this));
-}
-
-void solar::copy_from(const solar &s){
-  (*this) = s;
+game_object::ptr solar::clone(){
+  return new solar(*this);
 }
 
 bool solar::serialize(sf::Packet &p){

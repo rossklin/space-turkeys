@@ -35,6 +35,7 @@ namespace st3{
     std::list<combid> remove_entities; 
     hm_t<idtype, std::set<combid> > evm;
 
+    virtual ~entity_package() = default;
     void clear_entities();
     game_object::ptr get_entity(combid i);
     void limit_to(idtype pid);
@@ -43,7 +44,7 @@ namespace st3{
   };
 
   /*! struct containing data for game objects */
-  class game_data : public entity_package{
+  class game_data : public virtual entity_package{
   public:
     static void confirm_data();
     

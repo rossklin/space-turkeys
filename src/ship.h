@@ -52,7 +52,7 @@ namespace st3{
     float vision();
     bool serialize(sf::Packet &p);
     bool is_active();
-    ptr clone();
+    game_object::ptr clone();
     bool isa(std::string c);
   
     // physical_object
@@ -61,10 +61,10 @@ namespace st3{
     bool can_see(game_object::ptr x);
 
     // ship
-    ship();
     ship(const ship &s);
     ship(const ship_stats &s);
-    ~ship();
+    ship() = default;
+    ~ship() = default;
     
     float flex_weight(float a);
     void update_data(game_data *g);
@@ -74,11 +74,6 @@ namespace st3{
     bool has_fleet();
     float evasion_check();
     float accuracy_check(ship::ptr a);
-
-  protected:
-    // serialised variables
-    virtual game_object::ptr clone_impl();
-    void copy_from(const ship &s);
   };
 };
 #endif

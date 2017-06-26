@@ -14,6 +14,10 @@ const string ship::class_id = "ship";
 const int ship::na = 10;
 string ship::starting_ship;
 
+ship::ship(const ship &s) : game_object(s), ship_stats(s) {
+  *this = s;
+};
+
 const hm_t<string, ship_stats>& ship_stats::table(){
   static bool init = false;
   static hm_t<string, ship_stats> buf;
@@ -131,12 +135,6 @@ const hm_t<string, ship_stats>& ship_stats::table(){
   return buf;
 }
 
-ship::ship(){}
-
-ship::ship(const ship &s) {
-  copy_from(s);
-}
-
 ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   base_stats = s;
   fleet_id = identifier::source_none;
@@ -147,8 +145,6 @@ ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   radius = pow(stats[sskey::key::mass], 2/(float)3);
   force_refresh = true;
 }
-
-ship::~ship(){}
 
 list<string> ship::all_classes() {
   return utility::get_map_keys(table());
@@ -489,12 +485,8 @@ ship::ptr ship::create(){
   return ptr(new ship());
 }
 
-ship::ptr ship::clone(){
-  return dynamic_cast<ship::ptr>(clone_impl());
-}
-
-game_object::ptr ship::clone_impl(){
-  return ptr(new ship(*this));
+game_object::ptr ship::clone(){
+  return new ship(*this);
 }
 
 bool ship::serialize(sf::Packet &p){
@@ -555,10 +547,6 @@ void ship::on_liftoff(solar::ptr from, game_data *g){
     upgrade u = upgrade::table().at(v);
     for (auto i : u.on_liftoff) interaction::table().at(i).perform(this, from, g);
   }
-}
-
-void ship::copy_from(const ship &s){
-  (*this) = s;
 }
 
 bool ship::isa(string c) {

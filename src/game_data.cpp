@@ -29,7 +29,6 @@ game_data::~game_data(){
 void game_data::allocate_grid(){
   clear_entities();
   entity_grid = grid::tree::create();
-  rehash_grid();
 }
 
 void game_data::rehash_grid() {

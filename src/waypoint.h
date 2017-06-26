@@ -26,20 +26,17 @@ namespace st3{
     void post_phase(game_data *g);
     float vision();
     bool serialize(sf::Packet &p);
-    ptr clone();
+    game_object::ptr clone();
     bool isa(std::string c);
 
     // commandable_object
     void give_commands(std::list<command> c, game_data *g);
 
     // waypoint
-    waypoint();
     waypoint(idtype o);
-    ~waypoint();
-
-  protected:
-    virtual game_object::ptr clone_impl();
-    void copy_from(const waypoint &s);
+    waypoint() = default;
+    ~waypoint() = default;
+    waypoint(const waypoint &w);
   };
 };
 #endif
