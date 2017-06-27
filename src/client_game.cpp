@@ -403,8 +403,8 @@ bool game::simulation_step(){
 
       // update animations
       for (auto &a : animations) {
-	a.p1 += a.v;
-	a.p2 += a.v;
+	a.p1 += a.v1;
+	a.p2 += a.v2;
 	a.frame++;
       }
 

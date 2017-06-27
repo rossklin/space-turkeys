@@ -164,11 +164,12 @@ point graphics::inverse_scale(sf::RenderTarget &w){
 void graphics::draw_animation(sf::RenderTarget &w, animation e){
   float t = e.time_passed();
   sf::Color c(e.color);
+  int alpha_wave = 1000 * t * exp(-pow(3 * t,2));
 
-  auto fexpl = [&w, e, t, c] (sf::Color ct) {
+  auto fexpl = [&w, e, t, c, alpha_wave] (sf::Color ct) {
     float rad = e.magnitude * t * exp(-pow(4 * t,2));
     sf::Color col = fade_color(c, ct, 0.5);
-    col.a = utility::sigmoid(3 * e.magnitude * exp(-pow(3 * t,2)), 255);
+    col.a = alpha_wave;
   
     sf::CircleShape s(rad);
     s.setFillColor(col);
@@ -183,7 +184,7 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
   } else if (e.cat == animation_data::category::shield) {
     float rad = ship_scale_factor * e.radius;
     c = sf::Color(130, 130, 255);
-    c.a = 50 * t * exp(-pow(3 * t,2));
+    c.a = alpha_wave;
   
     sf::CircleShape s(rad);
     s.setFillColor(c);
@@ -191,7 +192,7 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
     w.draw(s);
   } else if (e.cat == animation_data::category::shot) {
     vector<sf::Vertex> svert;
-    c.a = utility::sigmoid(30 * e.magnitude * exp(-pow(5 * t,2)), 255);
+    c.a = utility::sigmoid(30 * e.magnitude * exp(-pow(7 * t,2)), 255);
 
     svert.resize(2);
     svert[0].position = e.p1;

@@ -11,7 +11,8 @@ namespace st3 {
     
     point p1;
     point p2;
-    point v;
+    point v1;
+    point v2;
     sfloat magnitude;
     sfloat radius;
     sint color;

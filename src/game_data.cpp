@@ -478,10 +478,14 @@ void game_data::build(){
 	s.radius = settings.solar_maxrad;
 	s.choice_data.allocation = cost::sector_allocation::base_allocation();
 
-	// debug: start with 20 fighters
-	for (string sc : ship::all_classes()) {
-	  for (int j = 0; j < 10; j++) {
-	    ship sh = rbase.build_ship(sc, &s);
+	// debug: start with some ships
+	hm_t<string, int> starter_fleet;
+	starter_fleet["fighter"] = 100;
+	starter_fleet["voyager"] = 10;
+	starter_fleet["battleship"] = 5;
+	for (auto sc : starter_fleet) {
+	  for (int j = 0; j < sc.second; j++) {
+	    ship sh = rbase.build_ship(sc.first, &s);
 	    sh.is_landed = true;
 	    sh.owner = x.first;
 	    s.ships.insert(sh.id);
@@ -670,14 +674,16 @@ void game_data::log_bombard(combid a, combid b) {
   x.color = players[s -> owner].color;
   x.cat = animation_data::category::bomb;
   x.magnitude = s -> stats[sskey::key::solar_damage];
-  x.v = point(0, 0);
+  x.v1 = point(0, 0);
+  x.v2 = point(0, 0);
   
   animation_data sh;
   float shield = t -> compute_shield_power();
   sh.p1 = t -> position;
   sh.radius = 1.2 * t -> radius;
   sh.magnitude = shield;
-  sh.v = point(0, 0);
+  sh.v1 = point(0, 0);
+  sh.v2 = point(0, 0);
   sh.color = players[t -> owner].color;
   sh.cat = animation_data::category::shield;
   
@@ -702,17 +708,18 @@ void game_data::log_ship_fire(combid a, combid b) {
   if (s -> isa(ship::class_id)) {
     ship::ptr sp = utility::guaranteed_cast<ship>(s);
     x.magnitude = sp -> stats[sskey::key::ship_damage];
-    x.v = utility::scale_point(utility::normv(sp -> angle), sp -> stats[sskey::key::speed]);
+    x.v1 = utility::scale_point(utility::normv(sp -> angle), sp -> stats[sskey::key::speed]);
   } else {
     x.magnitude = 1;
-    x.v = point(0,0);
+    x.v1 = point(0,0);
   }
+  x.v2 = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
 
   animation_data sh;
   sh.p1 = t -> position;
   sh.magnitude = t -> stats[sskey::key::shield];
   sh.radius = 1.2 * t -> radius;
-  sh.v = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
+  sh.v1 = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
   sh.color = players[t -> owner].color;
   sh.cat = animation_data::category::shield;
 
@@ -742,7 +749,7 @@ void game_data::log_ship_destroyed(combid a, combid b) {
   animation_data x;
   x.p1 = t -> position;
   x.magnitude = t -> stats[sskey::key::mass];
-  x.v = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
+  x.v1 = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
   x.color = players[t -> owner].color;
   x.cat = animation_data::category::explosion;
 
