@@ -198,6 +198,7 @@ void ship::update_data(game_data *g) {
   // analyze neighbourhood
   float nrad = interaction_radius();
   auto local_all_buf = g -> entity_grid -> search(position, nrad);
+  local_all.clear();
   for (auto x : local_all_buf) if (x.first != id && g -> get_entity(x.first) -> isa(ship::class_id)) local_all.push_back(x.first);
   neighbours = g -> search_targets(id, position, nrad, target_condition(target_condition::any_alignment, ship::class_id).owned_by(owner));
   local_enemies.clear();
