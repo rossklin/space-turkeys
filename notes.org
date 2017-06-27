@@ -1,13 +1,129 @@
 * current work
-** clicking ship label in target_gui should select/deselect all 
 ** facilities build to 100% but never complete
-** allow controls and stuff during simulation
-** zoom in should target mouse point
-** protect from spacebar immediately after simulation is finished
-** trade actions can't swap fleet action 
+* [!] issues
+** [!] crashes
+*** random_uniform called with b = inf
+** [~] system
+*** trade actions can't swap fleet action 
    since this prevents other ships in fleet from trading. Somewhat
    solved by default assigning one ship to special actions.
-** drawing client side stuff starts taking time
+*** Ships validate their action using target information that the player can't see
+*** look through all copy constructors to make sure they explicitly call parents
+** [~] gui 
+*** drawing client side stuff starts taking time
+*** Clicking interface response button also triggers click on minimap
+*** sfg window does not resize on sfml window resize
+*** command selectors drawn on top of each other
+*** simulation step hangs on key escape abort game
+    This was when client 1 aborts at frame -1, while client 2 is still
+    in choice step. Server exits with error 'disconnect' and other
+    client gets segfault. Perhaps the server failed to receive the
+    leave game request from client 1 while it was waiting for the
+    choice from client 2.
+*** [redesign] client allows multiple development choices - server does not
+* [!] system design ideas
+** possibility to find "treasures" when discovering new solar systems
+   Combined with a new detection level stat of some kind.
+** new better universe builder, possibly generate while exploring
+** add expansion limitations e.g. nr of fleets and solar distance penalty
+** [!] distinguish between interactions and auras (e.g. hive support)
+   At the moment, non-targeted interactions are not applied at all
+** make detection stat determine which object stats are seen by client
+** add a command buffer so commands reach entities with distance based delay
+** [?] make angular acceleration an attribute
+** [?] consider letting fleet suggestion contain an angle
+** add terrain
+   For starters: impassable areas. This requires fleets to do path
+   finding.
+** make ship cost scale with upgrades
+** allow "fortification" so units can block other units and hold a position?
+** add trigger system for e.g. upgrades, techs and solar facilities
+*** hm_t<string, function> on_interaction (and prevent_interaction)
+*** on_takeoff (for e.g. freighter ship)
+*** extra_solar_dynamics
+** ?add a "dynamic data" hash map to game object
+   For stuff like "has cargo x", "is jammed", "was scanned by player i" etc.
+
+   No particular reason to not put this in normal class members?
+** add a vision map, build in client on reload_data
+* tweaks and fixes
+** gui
+*** protect from spacebar immediately after simulation is finished
+*** allow controls and stuff during simulation
+*** zoom in should target mouse point
+*** clicking ship label in target_gui should select/deselect all 
+*** allow zoom, show entity info etc during simulation
+*** show ship health by marking ship vertices red
+*** show accumulated research
+*** autofill commands with only those units which support the action
+*** allow double-clicking ship to select all of same type
+*** allow dragging waypoints
+*** name and indicators for solars so you can tell them apart
+* optimization
+** fix grid tree so make_split takes less time
+   Consider using simple linear split nodes, this will make it easier
+   splitting between leaves.
+** reduce sent data using an instruction based model
+   With instructions for updating and removing existing entities. Let
+   client request when new entities are needed. Then the server won't
+   need to copy all entities and rebuild the grid, and the client also
+   won't need to copy entities.
+* content ideas
+** [J?] scouts are possibly too lousy at fighting
+** add some tech/facility for pop crowd, ecology, water and space
+* to be tested
+** confirm
+*** [J?] "space_status: used more than space" reached after developing facility
+*** [J?] "maintain course" not respected
+*** [J?] fleets need to unset idle/converge on receiving a command with long distance
+*** [J?] interaction space combat should default to aggresive policy
+*** [J?] add/fix bombard animation
+*** [J?] runtime_error("Analyze enemies: clusters failed to form!");
+*** [J?] ships don't seem to respect fleet speed limit
+*** [J?] fleets seem to idle when reaching solar before all ships land
+*** [J?] fleet summon doesn't seem to work very well
+*** [J?] movement is too slow in relation to development
+*** [J?] animations move too fast - bind them to frames!
+*** [J?] progress bar goes behind right panel
+*** [J?] upgraded fighters have too much health vs damage
+*** [J?] research completes too fast
+*** [J?] sector boosts apply exponentially with level and should be lower
+*** [J?] mining is too efficient
+*** [J?] default ship assignment for special action should be one compatible ship
+*** [J?] log panel grows sideways off screen, info panel follows
+*** [J?] state of water, space and ecology of new solars is too random
+*** [J?] issue with clumsy ships
+**** [J?] Ships collide while travelling in fleet
+    Test: check free space on either side
+**** [J?] big ships are too clumsy and collide when courses intersect
+    Disable collisions, increase anglular rotation speed, give ships
+    correct angle on liftoff.
+*** [J?] solars run out of space after building some stuff
+    Make facilities not use more space per level. Add facility
+    attributes "provides space" and "provides water".
+*** [J?] population adapts too quickly to circumstances e.g. space
+*** [J?] deleting command does not cause command to be removed on server
+*** [J?] large ships rotate too slow
+*** [J?] large ships are too large
+*** [J?] add ship::request_update that fleet can set on e.g. passing a waypoint
+*** [J?] mass-based upgrade "warp drive" not applied to any ships
+*** [J?] right click with selected ships creates waypoint with no incident commands
+*** [J?] apply sector boost from research in solar
+*** explosions are too long
+** analyze
+*** [?] solars dissapear from sight
+*** [!confirm?] fleets don't seem to get cleared from client choice
+   Client seems to remove fleets when instructed, and c.fleets is
+   cleared. Server clears all fleets during pre step, and removes old
+   fleets when applying commands.
+*** ?? solar choice not saved when opening development gui
+*** client created fleets can't be click-selected
+* remember
+** when updating a struct/class, also update serialization
+* git pending
+* fixed
+** [J?] add a list of animations to send to client rather than add explosion on ship removal
+** [J?] add a battle-log to send to client
 ** [J] memory leak
    Forgot to clear buffer ship::local_all before adding new data.
 
@@ -39,119 +155,6 @@
    hiding at origin causing tree depth.
 
    Memory seems to rize in chunks at end/beginning of round.
-** [J?] fleets need to unset idle/converge on receiving a command with long distance
-** [J?] interaction space combat should default to aggresive policy
-** [J?] add/fix bombard animation
-** [J?] runtime_error("Analyze enemies: clusters failed to form!");
-** [J?] ships don't seem to respect fleet speed limit
-** [J?] fleets seem to idle when reaching solar before all ships land
-** [J?] fleet summon doesn't seem to work very well
-** [J?] movement is too slow in relation to development
-** [J?] animations move too fast - bind them to frames!
-** [J?] progress bar goes behind right panel
-** [J?] upgraded fighters have too much health vs damage
-** [J?] research completes too fast
-** [J?] sector boosts apply exponentially with level and should be lower
-** [J?] mining is too efficient
-** [J?] default ship assignment for special action should be one compatible ship
-** [J?] log panel grows sideways off screen, info panel follows
-** [J?] state of water, space and ecology of new solars is too random
-** [J?] issue with clumsy ships
-*** [J?] Ships collide while travelling in fleet
-    Test: check free space on either side
-*** [J?] big ships are too clumsy and collide when courses intersect
-    Disable collisions, increase anglular rotation speed, give ships
-    correct angle on liftoff.
-** [J?] solars run out of space after building some stuff
-    Make facilities not use more space per level. Add facility
-    attributes "provides space" and "provides water".
-** [J?] population adapts too quickly to circumstances e.g. space
-* [!] issues
-** [!] crashes
-*** random_uniform called with b = inf
-*** [J?] "space_status: used more than space" reached after developing facility
-** [~] system
-*** "maintain course" not respected
-*** Ships validate their action using target information that the player can't see
-*** look through all copy constructors to make sure they explicitly call parents
-** [~] gui 
-*** Clicking interface response button also triggers click on minimap
-*** sfg window does not resize on sfml window resize
-*** command selectors drawn on top of each other
-*** simulation step hangs on key escape abort game
-    This was when client 1 aborts at frame -1, while client 2 is still
-    in choice step. Server exits with error 'disconnect' and other
-    client gets segfault. Perhaps the server failed to receive the
-    leave game request from client 1 while it was waiting for the
-    choice from client 2.
-*** [redesign] client allows multiple development choices - server does not
-* [!] system design ideas
-** [J?] add a list of animations to send to client rather than add explosion on ship removal
-** add expansion limitations e.g. nr of fleets and solar distance penalty
-** [J?] add a battle-log to send to client
-** [!] distinguish between interactions and auras (e.g. hive support)
-   At the moment, non-targeted interactions are not applied at all
-** make detection stat determine which object stats are seen by client
-** add a command buffer so commands reach entities with distance based delay
-** [?] make angular acceleration an attribute
-** [?] consider letting fleet suggestion contain an angle
-** add terrain
-   For starters: impassable areas. This requires fleets to do path
-   finding.
-** make ship cost scale with upgrades
-** allow "fortification" so units can block other units and hold a position?
-** add trigger system for e.g. upgrades, techs and solar facilities
-*** hm_t<string, function> on_interaction (and prevent_interaction)
-*** on_takeoff (for e.g. freighter ship)
-*** extra_solar_dynamics
-** ?add a "dynamic data" hash map to game object
-   For stuff like "has cargo x", "is jammed", "was scanned by player i" etc.
-
-   No particular reason to not put this in normal class members?
-** add a vision map, build in client on reload_data
-* tweaks and fixes
-** gui
-*** allow zoom, show entity info etc during simulation
-*** show ship health by marking ship vertices red
-*** show accumulated research
-*** autofill commands with only those units which support the action
-*** allow double-clicking ship to select all of same type
-*** allow dragging waypoints
-*** name and indicators for solars so you can tell them apart
-* optimization
-** fix grid tree so make_split takes less time
-   Consider using simple linear split nodes, this will make it easier
-   splitting between leaves.
-** reduce sent data using an instruction based model
-   With instructions for updating and removing existing entities. Let
-   client request when new entities are needed. Then the server won't
-   need to copy all entities and rebuild the grid, and the client also
-   won't need to copy entities.
-* content ideas
-** [J?] scouts are possibly too lousy at fighting
-** add some tech/facility for pop crowd, ecology, water and space
-* to be tested
-** confirm
-*** [J?] deleting command does not cause command to be removed on server
-*** [J?] large ships rotate too slow
-*** [J?] large ships are too large
-*** [J?] add ship::request_update that fleet can set on e.g. passing a waypoint
-*** [J?] mass-based upgrade "warp drive" not applied to any ships
-*** [J?] right click with selected ships creates waypoint with no incident commands
-*** [J?] apply sector boost from research in solar
-*** explosions are too long
-** analyze
-*** [?] solars dissapear from sight
-*** [!confirm?] fleets don't seem to get cleared from client choice
-   Client seems to remove fleets when instructed, and c.fleets is
-   cleared. Server clears all fleets during pre step, and removes old
-   fleets when applying commands.
-*** ?? solar choice not saved when opening development gui
-*** client created fleets can't be click-selected
-* remember
-** when updating a struct/class, also update serialization
-* git pending
-* fixed
 ** [J] log research and facility completion
 ** [J] show current research choice and progress in gui
 ** [J] available developments should also be in a scroll-window
