@@ -129,14 +129,17 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
   auto output = [this] (string v) {
     cout << id << ": suggest: " << v << endl;
   };
+
+  int unmask = 0;
+  if (stats.converge) unmask |= suggestion::activate;
   
   if (stats.enemies.size()) {
-    suggestion s_evade(suggestion::evade, stats.path);
+    suggestion s_evade(suggestion::evade | unmask, stats.path);
     if (!stats.can_evade) s_evade.id = suggestion::scatter;
     
     if (com.policy & policy_maintain_course) {
       output("maintain course");
-      return suggestion(suggestion::travel, stats.target_position);
+      return suggestion(suggestion::travel | unmask, stats.target_position);
     }else if (com.policy & policy_evasive) {
       output("evade");
       return s_evade;
@@ -145,10 +148,10 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
 	point p = stats.enemies.front().first;
 	if (com.policy & policy_aggressive) {
 	  output("aggressive engage: " + utility::point2string(p));
-	  return suggestion(suggestion::engage, p);
+	  return suggestion(suggestion::engage | unmask, p);
 	} else if (com.policy & policy_reasonable && stats.enemies.front().second < 1){
 	  output("local engage");
-	  return suggestion(suggestion::engage, p);
+	  return suggestion(suggestion::engage | unmask, p);
 	} else {
 	  output("evade");
 	  return s_evade;
@@ -162,21 +165,21 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
     // peaceful times
     if (stats.converge) {
       output("activate");
-      return suggestion(suggestion::activate, stats.target_position);
+      return suggestion(suggestion::activate | unmask, stats.target_position);
     }else if (utility::l2norm(s -> position - position) > pref_maxrad) {
       if (is_idle()) {
 	output("summon");
-	return suggestion::summon;
+	return suggestion(suggestion::summon | unmask);
       } else {
 	output("summon and travel");
-	return suggestion(suggestion::summon | suggestion::travel, stats.target_position);
+	return suggestion(suggestion::summon | suggestion::travel | unmask, stats.target_position);
       }
     }else if (is_idle()) {
       output("hold");
-      return suggestion::hold;
+      return suggestion(suggestion::hold | unmask);
     }else{
       output("travel");
-      return suggestion(suggestion::travel, stats.target_position);
+      return suggestion(suggestion::travel | unmask, stats.target_position);
     }
   }
 }

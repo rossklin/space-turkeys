@@ -1,5 +1,16 @@
 * current work
-** memory leak
+** clicking ship label in target_gui should select/deselect all 
+** facilities build to 100% but never complete
+** allow controls and stuff during simulation
+** zoom in should target mouse point
+** protect from spacebar immediately after simulation is finished
+** trade actions can't swap fleet action 
+   since this prevents other ships in fleet from trading. Somewhat
+   solved by default assigning one ship to special actions.
+** drawing client side stuff starts taking time
+** [J] memory leak
+   Forgot to clear buffer ship::local_all before adding new data.
+
    Note that entity_package::clear_entities does successfully
    deallocate, shown in test_memory().
 
@@ -28,11 +39,6 @@
    hiding at origin causing tree depth.
 
    Memory seems to rize in chunks at end/beginning of round.
-** protect from spacebar immediately after simulation is finished
-** trade actions can't swap fleet action 
-   since this prevents other ships in fleet from trading. Somewhat
-   solved by default assigning one ship to special actions.
-** drawing client side stuff starts taking time
 ** [J?] fleets need to unset idle/converge on receiving a command with long distance
 ** [J?] interaction space combat should default to aggresive policy
 ** [J?] add/fix bombard animation

@@ -480,9 +480,10 @@ void game_data::build(){
 
 	// debug: start with some ships
 	hm_t<string, int> starter_fleet;
-	starter_fleet["fighter"] = 100;
-	starter_fleet["voyager"] = 10;
-	starter_fleet["battleship"] = 5;
+	starter_fleet["fighter"] = 10;
+	starter_fleet["voyager"] = 2;
+	starter_fleet["battleship"] = 1;
+	starter_fleet["colonizer"] = 1;
 	for (auto sc : starter_fleet) {
 	  for (int j = 0; j < sc.second; j++) {
 	    ship sh = rbase.build_ship(sc.first, &s);
