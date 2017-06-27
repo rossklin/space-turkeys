@@ -1,3 +1,4 @@
+#include <iostream>
 #include "ship_stats.h"
 
 using namespace std;

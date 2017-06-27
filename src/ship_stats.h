@@ -35,6 +35,7 @@ namespace st3{
 
     modifiable_ship_stats();
     modifiable_ship_stats(const modifiable_ship_stats &s);
+    virtual ~modifiable_ship_stats() = default;
   };
 
   class ssmod_t : public modifiable_ship_stats<ship_stats_modifier> {

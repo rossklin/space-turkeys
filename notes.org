@@ -1,5 +1,8 @@
 * current work
 ** memory leak
+   Note that entity_package::clear_entities does successfully
+   deallocate, shown in test_memory().
+
    Memory loss triggered from game_handler.cpp: 29. Note that memory
    usage rises before distribute_frames starts working.
 
