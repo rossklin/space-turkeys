@@ -1,5 +1,4 @@
 * current work
-** facilities build to 100% but never complete
 * [!] issues
 ** [!] crashes
 *** random_uniform called with b = inf
@@ -10,6 +9,7 @@
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
+*** selecting in development_gui resets scroll
 *** drawing client side stuff starts taking time
 *** Clicking interface response button also triggers click on minimap
 *** sfg window does not resize on sfml window resize
@@ -48,6 +48,8 @@
 ** add a vision map, build in client on reload_data
 * tweaks and fixes
 ** gui
+*** "make your choice" and progress bar too low
+*** show ship stats in ship hover info
 *** protect from spacebar immediately after simulation is finished
 *** allow controls and stuff during simulation
 *** zoom in should target mouse point
@@ -59,6 +61,9 @@
 *** allow double-clicking ship to select all of same type
 *** allow dragging waypoints
 *** name and indicators for solars so you can tell them apart
+** system
+*** ships should stop when they hit converge on a waypoint
+*** research completes too fast
 * optimization
 ** fix grid tree so make_split takes less time
    Consider using simple linear split nodes, this will make it easier
@@ -122,6 +127,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** facilities build to 100% but never complete
 ** [J?] add a list of animations to send to client rather than add explosion on ship removal
 ** [J?] add a battle-log to send to client
 ** [J] memory leak

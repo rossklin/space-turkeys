@@ -262,7 +262,7 @@ float solar::ecology_increment(){
 }
 
 float solar::happiness_increment(choice::c_solar &c){
-  return 0.01 * (0.2 * compute_boost(keywords::key_culture) + c.allocation[keywords::key_culture] - c.allocation[keywords::key_military] - 0.1 * log(population) / (ecology + 1) - (happiness - 0.5));
+  return 0.01 * (0.3 * compute_boost(keywords::key_culture) + c.allocation[keywords::key_culture] - c.allocation[keywords::key_military] - 0.05 * log(population) / (2 * ecology + 1) - 0.3 * (happiness - 0.5));
 }
 
 float solar::research_increment(choice::c_solar &c){
@@ -300,7 +300,8 @@ void solar::dynamics(){
   choice::c_solar c = choice_data;
 
   // disable development/research if none selected
-  if (c.development.empty()) c.allocation[keywords::key_development] = 0;
+  bool is_developing = !c.development.empty();
+  if (!is_developing) c.allocation[keywords::key_development] = 0;
   if (research_level -> researching.empty()) c.allocation[keywords::key_research] = 0;
   
   c.normalize();
@@ -345,7 +346,7 @@ void solar::dynamics(){
     };
 
     // development
-    if (c.development.length() > 0) {
+    if (is_developing) {
       add_cost("dev", development_increment(c) * dt, buf.facility_access(c.development) -> cost_time, developed(c.development, 1).cost_resources);
     }
     
@@ -364,7 +365,9 @@ void solar::dynamics(){
     }
 
     // add production for development
-    buf.facility_access(c.development) -> progress += allowed * weight_table["dev"];
+    if (is_developing) {
+      buf.facility_access(c.development) -> progress += allowed * weight_table["dev"];
+    }
 
     // pay for production
     total_cost.scale(allowed);
