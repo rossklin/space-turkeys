@@ -60,8 +60,6 @@ void solar::move(game_data *g){
       if (develop(dev)) {
 	g -> players[owner].log.push_back("Completed building " + dev);
 	choice_data.development = "";
-      } else if (resource_constraint(developed(dev, 1).cost_resources) < 1) {
-	out_of_resources = true;
       }
     }
   }
@@ -291,8 +289,10 @@ void solar::dynamics(){
   // disable mining if there are no resources
   // mine more if there is less in storage
   float rsum = 0;
+  float ssum = 0;
   for (auto v : keywords::resource) {
     rsum += available_resource[v];
+    ssum += resource_storage[v];
     choice_data.mining[v] = 1 / (resource_storage[v] + 1);
   }
   if (!rsum) choice_data.allocation[keywords::key_mining] = 0;
@@ -324,10 +324,6 @@ void solar::dynamics(){
     // research and development
     buf.research_points += research_increment(c) * dt;
 
-    if (c.development.length() > 0) {
-      buf.facility_access(c.development) -> progress += development_increment(c) * dt;
-    }
-
     // mining
     for (auto v : keywords::resource){
       float move = fmin(available_resource[v], dt * resource_increment(v, c));
@@ -339,35 +335,57 @@ void solar::dynamics(){
     float total_quantity = 0;
     cost::res_t total_cost;
     hm_t<string, float> weight_table;
-    
-    // military industry
-    for (auto v : ship::all_classes()){
-      // how many "build points" can we produce this frame?
-      float quantity = dt * ship_increment(v, c);
 
-      // build time and cost for one whole ship
-      float build_time = ship::table().at(v).build_time;
-      cost::res_t build_cost = ship::table().at(v).build_cost;
-
-      // build cost for quantity "build points" of a ship
+    // sum resource and time costs
+    auto add_cost = [&total_quantity, &total_cost, &weight_table] (string key, float quantity, float build_time, cost::res_t build_cost) {
       build_cost.scale(quantity / build_time);
-      
       total_quantity += quantity;
       total_cost.add(build_cost);
-      weight_table[v] = quantity;
+      weight_table[key] = quantity;
+    };
+
+    // development
+    if (c.development.length() > 0) {
+      add_cost("dev", development_increment(c) * dt, buf.facility_access(c.development) -> cost_time, developed(c.development, 1).cost_resources);
+    }
+    
+    // military industry
+    for (auto v : ship::all_classes()) {
+      add_cost("ship:" + v, ship_increment(v, c) * dt, ship::table().at(v).build_time, ship::table().at(v).build_cost);
     }
 
+    // compute allowed production ratio
     float allowed = fmin(1, resource_constraint(total_cost));
     if (allowed < 1) buf.out_of_resources = true;
 
-    // todo: this is still trying to build nr of ships, rather than
-    // build time points
+    // add production for ships
     for (auto v : ship::all_classes()) {
-      buf.fleet_growth[v] += allowed * weight_table[v];
+      buf.fleet_growth[v] += allowed * weight_table["ship:" + v];
     }
 
+    // add production for development
+    buf.facility_access(c.development) -> progress += allowed * weight_table["dev"];
+
+    // pay for production
     total_cost.scale(allowed);
     buf.pay_resources(total_cost);
+
+    // adaptive mining
+    float m = buf.choice_data.allocation[keywords::key_mining];
+
+    if (buf.out_of_resources) {
+      if (m < 1) {
+	m = 1;
+      } else {
+	m *= 1.2;
+      }
+    } else {
+      if (m > 1) {
+	m = fmax(0.9 * m, 1);
+      }
+    }
+
+    buf.choice_data.allocation[keywords::key_mining] = m;
   }
 
   *this = buf;
@@ -416,11 +434,9 @@ float solar::compute_boost(string v){
 
 bool solar::develop(string fac) {
   facility_object f = developed(fac, 1);
-  if (resource_constraint(f.cost_resources) < 1) return false;
   if (f.progress < f.cost_time) return false;
 
-  // pay
-  pay_resources(f.cost_resources);
+  // reset progress
   facility_object *fx = facility_access(fac);
   fx -> progress = 0;
 
