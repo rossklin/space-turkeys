@@ -1036,14 +1036,16 @@ int game::choice_event(sf::Event e){
 
   auto update_hover_info = [this] (point p) {
     auto keys = entities_at(p);
-    string text = "Empty space";
+    string text = "";
       
-    if (keys.size() == 1){
-      combid k = *keys.begin();
-      if (!entity.count(k)) throw runtime_error("update hover info: entity not in table: " + k);
-      text = get_entity(k) -> hover_info();
-    }else if (keys.size() > 1){
-      text = "Multiple entities here!";
+    if (keys.empty()) {
+      text = "Empty space";
+    } else {
+      if (keys.size() > 1) text = "Multiple entities\n----------\n";
+      for (auto k : keys) {
+	text += "----------\n";
+	text += get_entity(k) -> hover_info() + "\n";
+      }
     }
 
     interface::desktop -> hover_label -> SetText(text);

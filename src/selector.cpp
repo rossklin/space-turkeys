@@ -236,7 +236,39 @@ namespace st3{
 
     template<>
     string specific_selector<ship>::hover_info(){
-      return ship_class + " ship at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
+      auto get_percent = [this] (int k) -> int {
+	return 100 * stats[k] / base_stats.stats[k];
+      };
+
+      auto build_percent = [this, get_percent] (string label, int percent) -> string {
+	return label + ": " + to_string(percent) + "%" + "\n";
+      };
+      
+      string output = ship_class + "\n";
+      output += build_percent("Hull", get_percent(sskey::key::hp));
+      output += build_percent("Weapons", 100 * load / stats[sskey::key::load_time]);
+      
+      if (base_stats.stats[sskey::key::shield] > 0) {
+	output += build_percent("Shields", get_percent(sskey::key::shield));
+      }
+
+      auto maybe_include = [this, &output] (string label, int value) {
+	if (value > 0) output += label + ": " + to_string(value) + "\n";
+      };
+
+      maybe_include("Passengers", passengers);
+
+      if (is_loaded) {
+	if (cargo.count()) {
+	  maybe_include("Cargo: metals", cargo[keywords::key_metals]);
+	  maybe_include("Cargo: gases", cargo[keywords::key_gases]);
+	  maybe_include("Cargo: organics", cargo[keywords::key_organics]);
+	} else {
+	  output += "Cargo: empty\n";
+	}
+      }
+
+      return output;
     }
   }
 }
