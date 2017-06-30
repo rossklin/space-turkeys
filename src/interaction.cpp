@@ -36,11 +36,20 @@ const hm_t<string, interaction> &interaction::table() {
     cout << "interaction: land: " << self -> id << " targeting " << target -> id << endl;
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
-    if (!s -> has_fleet()) return;
-
     cout << s -> id << " lands at " << t -> id << endl;
-    g -> get_fleet(s -> fleet_id) -> remove_ship(s -> id);
+
+    // unset fleet
+    if (s -> has_fleet()) {
+      g -> get_fleet(s -> fleet_id) -> remove_ship(s -> id);
+    }
     s -> fleet_id = identifier::source_none;
+
+    // unload cargo
+    t -> resource_storage.add(s -> cargo);
+    s -> cargo = cost::res_t();
+    s -> is_loaded = false;
+
+    // add to solar's fleet
     s -> is_landed = true;
     t -> ships.insert(s -> id);
   };
@@ -145,11 +154,10 @@ const hm_t<string, interaction> &interaction::table() {
 
     if (s -> passengers > 0) return;
 
-    int number = 1000;
+    int pickup = 1000;
     int leave = 1000;
-    int pickup = fmin(number, t -> population - leave);
 
-    if (pickup > 0) {
+    if (t -> population >= leave + pickup) {
       t -> population -= pickup;
       s -> passengers = pickup;
     }
@@ -163,15 +171,24 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
     if (!s -> has_fleet()) return;
+    if (!s -> is_loaded) return;
 
     // load resources
     for (auto v : keywords::resource) {
       t -> resource_storage[v] += s -> cargo[v];
     }
     s -> cargo = cost::res_t();
+    s -> is_loaded = false;
 
-    // go back for more
     fleet::ptr f = g -> get_fleet(s -> fleet_id);
+
+    // check that we are the last ship in fleet unloading
+    for (auto sid : f -> ships) {
+      ship::ptr sh = g -> get_ship(sid);
+      if (sh -> is_loaded) return;
+    }
+    
+    // go back for more
     f -> com.action = interaction::trade_from;
     f -> com.target = f -> com.origin;
     f -> com.origin = target -> id;
@@ -185,19 +202,26 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
     if (!s -> has_fleet()) return;
+    if (s -> is_loaded) return;
 
     // load resources
-    // todo: resource common capactiy
-    for (auto v : keywords::resource) {
-      float available = t -> resource_storage[v];
-      float cap = s -> stats[sskey::key::cargo_capacity] - s -> cargo[v];
-      float move = fmin(available, cap);
-      s -> cargo[v] += move;
-      t -> resource_storage[v] -= move;
+    float total = t -> resource_storage.count();
+    float ratio = fmax(s -> stats[sskey::key::cargo_capacity] / total, 1);
+    cost::res_t move = t -> resource_storage;
+    move.scale(ratio);
+    s -> cargo.add(move);
+    move.scale(-1);
+    t -> resource_storage.add(move);
+    s -> is_loaded = true;
+
+    // check that we are the last ship in fleet loading
+    fleet::ptr f = g -> get_fleet(s -> fleet_id);
+    for (auto sid : f -> ships) {
+      ship::ptr sh = g -> get_ship(sid);
+      if (!sh -> is_loaded) return;
     }
 
     // set target
-    fleet::ptr f = g -> get_fleet(s -> fleet_id);
     f -> com.action = interaction::trade_to;
     f -> com.target = f -> com.origin;
     f -> com.origin = target -> id;

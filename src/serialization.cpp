@@ -222,7 +222,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
     << g.load
     << g.base_stats
     << g.cargo
-    << g.is_landed;
+    << g.is_landed
+    << g.is_loaded;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
@@ -234,7 +235,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
     >> g.load
     >> g.base_stats
     >> g.cargo
-    >> g.is_landed;
+    >> g.is_landed
+    >> g.is_loaded;
 }
 
 // turret

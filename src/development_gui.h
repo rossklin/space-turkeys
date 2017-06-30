@@ -35,6 +35,7 @@ namespace st3 {
     protected:
       std::set<std::string> dependent;
       std::set<std::string> available;
+      hm_t<std::string, sfg::Button::Ptr> button_map;
 
       hm_t<std::string, development::node> map;
       std::string selected;
@@ -53,6 +54,7 @@ namespace st3 {
 		      bool is_facility,
 		      int width);
       void setup();
+      void reset_image(std::string v);
     };
   };
 };

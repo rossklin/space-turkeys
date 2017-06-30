@@ -31,6 +31,7 @@ namespace st3{
     sint passengers;
     sint is_landed;
     cost::res_t cargo;
+    sbool is_loaded;
 
     // ai stats
     float target_angle;

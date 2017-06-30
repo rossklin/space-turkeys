@@ -51,24 +51,36 @@ sf::Vector2f development_gui::CalculateRequisition() {
   return frame -> GetRequisition();
 }
 
+void development_gui::reset_image(string v) {
+  if (!button_map.count(v)) return;
+
+  list<string> info;
+  development::node n = map[v];
+
+  for (auto b : n.sector_boost) info.push_back(b.first + " + " + to_string((int)(100 * (b.second - 1))) + "%");
+  for (auto su : n.ship_upgrades) info.push_back(su.first + " gains: " + boost::algorithm::join(su.second, ", "));
+
+  button_map[v] -> SetImage(Image::Create(graphics::selector_card(v, v == selected, n.progress / n.cost_time, info, f_req(v))));
+}
+
 void development_gui::setup() {
   layout -> RemoveAll();
 
   auto build = [this] (string v, bool available) -> Widget::Ptr {
-    development::node n = map[v];
-    list<string> info;
-
-    for (auto b : n.sector_boost) info.push_back(b.first + " + " + to_string((int)(100 * (b.second - 1))) + "%");
-    for (auto su : n.ship_upgrades) info.push_back(su.first + " gains: " + boost::algorithm::join(su.second, ", "));
-
     auto b = Button::Create();
-    b -> SetImage(Image::Create(graphics::selector_card(v, v == selected, n.progress / n.cost_time, info, f_req(v))));
+    button_map[v] = b;
+    reset_image(v);
 
     if (available) {
       desktop -> bind_ppc(b, [this, v] () {
+	  // callback
 	  on_select(v);
+
+	  // update button images
+	  string previous = selected;
 	  selected = v;
-	  setup();
+	  reset_image(v);
+	  reset_image(previous);
 	});
     }
     

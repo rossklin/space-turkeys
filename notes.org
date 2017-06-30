@@ -9,8 +9,7 @@
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
-*** selecting in development_gui resets scroll
-*** drawing client side stuff starts taking time
+*** [J] selecting in development_gui resets scroll
 *** Clicking interface response button also triggers click on minimap
 *** sfg window does not resize on sfml window resize
 *** command selectors drawn on top of each other
@@ -65,6 +64,7 @@
 *** ships should stop when they hit converge on a waypoint
 *** research completes too fast
 * optimization
+** drawing client side stuff starts taking time
 ** fix grid tree so make_split takes less time
    Consider using simple linear split nodes, this will make it easier
    splitting between leaves.
@@ -77,40 +77,22 @@
 ** [J?] scouts are possibly too lousy at fighting
 ** add some tech/facility for pop crowd, ecology, water and space
 * to be tested
-** confirm
+** untested functionality
+*** new trade interaction
+*** new colonize interaction
+** confirm bugs
 *** [J?] "space_status: used more than space" reached after developing facility
-*** [J?] "maintain course" not respected
-*** [J?] fleets need to unset idle/converge on receiving a command with long distance
 *** [J?] interaction space combat should default to aggresive policy
 *** [J?] add/fix bombard animation
-*** [J?] runtime_error("Analyze enemies: clusters failed to form!");
-*** [J?] ships don't seem to respect fleet speed limit
-*** [J?] fleets seem to idle when reaching solar before all ships land
-*** [J?] fleet summon doesn't seem to work very well
-*** [J?] movement is too slow in relation to development
-*** [J?] animations move too fast - bind them to frames!
 *** [J?] progress bar goes behind right panel
 *** [J?] upgraded fighters have too much health vs damage
-*** [J?] research completes too fast
 *** [J?] sector boosts apply exponentially with level and should be lower
-*** [J?] mining is too efficient
-*** [J?] default ship assignment for special action should be one compatible ship
 *** [J?] log panel grows sideways off screen, info panel follows
 *** [J?] state of water, space and ecology of new solars is too random
-*** [J?] issue with clumsy ships
-**** [J?] Ships collide while travelling in fleet
-    Test: check free space on either side
-**** [J?] big ships are too clumsy and collide when courses intersect
-    Disable collisions, increase anglular rotation speed, give ships
-    correct angle on liftoff.
 *** [J?] solars run out of space after building some stuff
     Make facilities not use more space per level. Add facility
     attributes "provides space" and "provides water".
-*** [J?] population adapts too quickly to circumstances e.g. space
 *** [J?] deleting command does not cause command to be removed on server
-*** [J?] large ships rotate too slow
-*** [J?] large ships are too large
-*** [J?] add ship::request_update that fleet can set on e.g. passing a waypoint
 *** [J?] mass-based upgrade "warp drive" not applied to any ships
 *** [J?] right click with selected ships creates waypoint with no incident commands
 *** [J?] apply sector boost from research in solar
