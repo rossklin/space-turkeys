@@ -279,6 +279,11 @@ point utility::normv(float a){
   return point(cos(a), sin(a));
 }
 
+point utility::normalize_and_scale(point x, float a){
+  float d = l2norm(x);
+  return point(d * cos(a), d * sin(a));
+}
+
 // vector maths
 // normalize the vector
 void utility::normalize_vector(vector<float> &x){

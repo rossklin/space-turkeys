@@ -182,8 +182,30 @@ sfloat solar::vision(){
   return res + radius;
 }
 
-solar::ptr solar::create(){
-  return ptr(new solar());
+solar::ptr solar::create(point p, float bounty) {
+  static int idc = 0;
+  auto fres = [bounty] () {
+    return fmax(utility::random_normal(pow(2, 10 * bounty), pow(2, 8 * bounty)), 0);
+  };
+
+  solar::ptr s = new solar();
+  s -> id = identifier::make(solar::class_id, idc++);
+
+  s -> population = 0;
+  s -> happiness = 1;
+  s -> research_points = 0;
+    
+  s -> water = fres();
+  s -> space = fres();
+  s -> ecology = fmax(fmin(utility::random_normal(0.5, 0.2), 1), 0.2);
+
+  for (auto v : keywords::resource) s -> available_resource[v] = fres();
+
+  s -> radius = 10 + 20 * s -> available_resource.count() / 3000;
+  s -> position = p;
+  s -> owner = game_object::neutral_owner;
+
+  return s;
 }
 
 game_object::ptr solar::clone(){

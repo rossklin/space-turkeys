@@ -9,7 +9,6 @@
 #include "utility.h"
 #include "research.h"
 #include "game_object.h"
-#include "build_universe.h"
 #include "com_server.h"
 #include "upgrades.h"
 #include "animation_data.h"
@@ -68,7 +67,6 @@ bool game_data::target_position(combid t, point &p){
 }
 
 // find all entities in ball(p, r) matching condition c
-// TODO: match against player vision matrix
 list<combid> game_data::search_targets_nophys(combid self_id, point p, float r, target_condition c){
   list<combid> res;
   game_object::ptr self = get_entity(self_id);
@@ -306,40 +304,64 @@ void game_data::distribute_ships(list<combid> sh, point p){
   }
 }
 
-// void game_data::collide_ships(id_pair x) {
-//   ship::ptr s = get_ship(x.a);
-//   ship::ptr t = get_ship(x.b);
+void game_data::discover(point x, float r) {
+  float ratio = 100; // space units per index
+  auto point2idx = [ratio] (float u) {return u / ratio;};
+  int x1 = point2idx(x.x - r);
+  int y1 = point2idx(x.y - r);
+  int x2 = point2idx(x.x + r);
+  int y2 = point2idx(x.y + r);
 
-//   point velocity_self = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
-//   point velocity_other = utility::scale_point(utility::normv(s -> angle), s -> stats[sskey::key::speed]);
-//   point delta = s -> position - t -> position;
-//   float smaller_mass = fmin(t -> stats[sskey::key::mass], s -> stats[sskey::key::mass]);
-//   float collision_energy = 0.5 * smaller_mass * utility::l2d2(velocity_other - velocity_self);
-//   float eps = 1e-3;
+  auto extend_universe = [this, ratio] (int i, int j) {
+    point ul(i * ratio, j * ratio);
+    point br((i + 1) * ratio, (j + 1) * ratio);
+    point center = utility::scale_point(ul + br, 0.5);
+    float distance = utility::l2norm(center);
+    float bounty = exp(-pow(distance / settings.galaxy_radius, 2));
+    int n_solar = utility::random_int(bounty * pow(ratio, 2) * settings.solar_density);
 
-//   if (collision_energy < eps) {
-//     return;
-//   }
-  
-//   float mass_ratio = t -> stats[sskey::key::mass] / s -> stats[sskey::key::mass];
-//   point new_velocity = utility::scale_point(velocity_self, mass_ratio) + utility::scale_point(velocity_other, 1/mass_ratio);
-//   float new_angle = utility::point_angle(new_velocity);
-//   float new_speed = utility::l2norm(new_velocity);
+    // select positions
+    vector<point> static_pos;    
+    for (auto test : entity_grid -> search(center, ratio)) {
+      if (identifier::get_type(test.first) == solar::class_id) static_pos.push_back(test.second);
+    }
 
-//   // merge speed and angle
-//   t -> stats[sskey::key::speed] = new_speed;
-//   s -> stats[sskey::key::speed] = new_speed;
-//   t -> angle = new_angle;
-//   s -> angle = new_angle;
+    vector<point> x(n_solar);
+    for (auto &y : x) y = point(utility::random_uniform(ul.x, br.x), utility::random_uniform(ul.y, br.y));
 
-//   // push ships apart a bit
-//   t -> position += utility::scale_point(utility::normv(utility::point_angle(-delta)), 3);
-//   s -> position += utility::scale_point(utility::normv(utility::point_angle(delta)), 3);
+    // shake positions so solars don't end up on top of each other
+    vector<point> all_points;
+    float buffer_distance = 40;
+    float shake_rate = 10;
+    for (float e = 1; e *= 0.9; e > 0.1) {
+      all_points = static_pos;
+      all_points.insert(all_points.end(), x.begin(), x.end());
+      int idx = utility::random_int(x.size());
+      point p = x[idx];
+      function<float(point)> dm = [p] (point r) {return utility::l2d2(p - r);};
+      point p_close = utility::value_min(all_points, dm);
+      float distance = utility::l2norm(p - p_close);
+      x[idx] += utility::normalize_and_scale(p - p_close, e * shake_rate * exp(-pow(distance / buffer_distance, 2)));
+    }
 
-//   // damage ships
-//   s -> receive_damage(t, utility::random_uniform(0, collision_energy));
-//   t -> receive_damage(s, utility::random_uniform(0, collision_energy));
-// }
+    // make solars
+    for (auto p : x) add_entity(solar::create(p, bounty));
+  };
+
+  for (int i = x1; i <= x2; i++) {
+    for (int j = y1; j <= y2; j++) {
+      pair<int, int> idx = make_pair(i, j);
+      if (!discovered_universe.count(idx)) {
+	discovered_universe.insert(idx);
+	extend_universe(i, j);
+      }
+    }
+  }
+}
+
+void game_data::update_discover() {
+  for (auto e : all<physical_object>()) if (e -> is_active()) discover(e -> position, e -> vision());
+}
 
 void game_data::rebuild_evm() {
   evm.clear();
@@ -370,10 +392,11 @@ solar::ptr game_data::closest_solar(point p, idtype id) {
 
   try {
     s = utility::value_min(all<solar>(), (function<float(solar::ptr)>) [this, p, id] (solar::ptr t) -> float {
-	if (t -> owner != id) {
-	  return INFINITY;
-	}else{
+	bool owned = t -> owner == id || (id == game_object::any_owner && t -> owner >= 0);
+	if (owned) {
 	  return utility::l2d2(t -> position - p);
+	}else{
+	  return INFINITY;
 	}
       });
   } catch (exception &e) {
@@ -442,64 +465,47 @@ void game_data::build(){
 
   cout << "game_data: running dummy build" << endl;
 
-  cost::res_t initial_resources;
-  for (auto v : keywords::resource) initial_resources[v] = 1000;
-  
-  // build solars
-  int ntest = 100;
-  float unfairness = INFINITY;
-  hm_t<idtype, combid> test_homes;
-  hm_t<combid, solar> solar_data;
-  hm_t<combid, ship> ship_data;
-  int d_start = 10;
-  vector<idtype> player_ids;
-  utility::assign_keys(players, player_ids);
+  auto make_home_solar = [this] (point p, idtype pid) {
+    cost::res_t initial_resources;
+    for (auto v : keywords::resource) initial_resources[v] = 1000;
 
-  for (int i = 0; i < ntest && unfairness > 0; i++){
-    hm_t<combid, solar> solar_buf = build_universe::random_solars(settings);
-    float u = build_universe::heuristic_homes(solar_buf, test_homes, settings, player_ids);
+    solar::ptr s = solar::create(p, 1);
+    s -> owner = pid;
+    s -> available_resource = initial_resources;
+    s -> water = 1000;
+    s -> space = 1000;
+    s -> population = 1000;
+    s -> happiness = 1;
+    s -> ecology = 1;
+    s -> radius = settings.solar_meanrad;
+    s -> choice_data.allocation = cost::sector_allocation::base_allocation();
 
-    if (u < unfairness){
-      cout << "game_data::initialize: new best homes, u = " << u << endl;
-      unfairness = u;
-      solar_data = solar_buf;
-      ship_data.clear();
-
-      for (auto x : test_homes){
-	solar &s = solar_data[x.second];
-	s.owner = x.first;
-	s.available_resource = initial_resources;
-	s.water = 1000;
-	s.space = 1000;
-	s.population = 1000;
-	s.happiness = 1;
-	s.ecology = 1;
-	s.dt = settings.dt;
-	s.radius = settings.solar_maxrad;
-	s.choice_data.allocation = cost::sector_allocation::base_allocation();
-
-	// debug: start with some ships
-	hm_t<string, int> starter_fleet;
-	starter_fleet["fighter"] = 10;
-	starter_fleet["voyager"] = 2;
-	starter_fleet["battleship"] = 1;
-	starter_fleet["colonizer"] = 1;
-	for (auto sc : starter_fleet) {
-	  for (int j = 0; j < sc.second; j++) {
-	    ship sh = rbase.build_ship(sc.first, &s);
-	    sh.is_landed = true;
-	    sh.owner = x.first;
-	    s.ships.insert(sh.id);
-	    ship_data[sh.id] = sh;
-	  }
-	}
+    // debug: start with some ships
+    hm_t<string, int> starter_fleet;
+    starter_fleet["fighter"] = 10;
+    starter_fleet["voyager"] = 2;
+    starter_fleet["battleship"] = 1;
+    starter_fleet["colonizer"] = 1;
+    for (auto sc : starter_fleet) {
+      for (int j = 0; j < sc.second; j++) {
+	ship sh = rbase.build_ship(sc.first, s);
+	sh.is_landed = true;
+	sh.owner = pid;
+	s -> ships.insert(sh.id);
+	add_entity(ship::ptr(new ship(sh)));
       }
     }
-  }
+    add_entity(s);
+  };
 
   allocate_grid();
-  for (auto &s : solar_data) add_entity(solar::ptr(new solar(s.second)));
-  for (auto &s : ship_data) add_entity(ship::ptr(new ship(s.second)));
+  float angle = utility::random_uniform(0, 2 * M_PI);
+  float np = players.size();
+  for (auto &p : players) {
+    point p_base = utility::scale_point(utility::normv(angle), settings.galaxy_radius);
+    point p_start = utility::random_point_polar(p_base, 0.2 * settings.galaxy_radius);
+    make_home_solar(p_start, p.first);
+  }
 }
 
 // clean up things that will be reloaded from client

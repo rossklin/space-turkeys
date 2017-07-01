@@ -55,6 +55,8 @@ namespace st3{
       std::list<fixed_star> hidden_stars;
       static constexpr float grid_size = 20;
       std::set<std::pair<int, int> > known_universe;
+      point sight_ul;
+      pint sight_br;
 
       // animations
       std::list<animation> animations;

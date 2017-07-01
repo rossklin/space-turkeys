@@ -58,9 +58,8 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   log_panel = Box::Create(Box::Orientation::VERTICAL);
   
   right_panel -> Pack(b_research, true, false);
-  right_panel -> Pack(Separator::Create(Separator::Orientation::HORIZONTAL), true, false);
-  right_panel -> Pack(graphics::wrap_in_scroll2(log_panel, 0.2 * desktop_dims.x, 250));
-  right_panel -> Pack(hover_label, true, false);
+  right_panel -> Pack(graphics::wrap_in_scroll2(log_panel, 0.17 * desktop_dims.x, 0.4 * desktop_dims.y));
+  right_panel -> Pack(graphics::wrap_in_scroll(hover_label, false, 0.4 * desktop_dims.y));
   
   auto w_info = pack_in_window(right_panel, get_rect(0.8, 0, 0.2, 1));
   Add(w_info);

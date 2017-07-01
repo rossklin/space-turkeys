@@ -17,6 +17,7 @@ namespace st3{
   public:
     typedef game_object* ptr;
     static const sint neutral_owner = -1;
+    static const sint any_owner = -2;
     static const std::string class_id;
     
     point position;

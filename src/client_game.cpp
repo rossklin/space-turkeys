@@ -44,6 +44,8 @@ game::game(){
   selector_queue = 1;
   chosen_quit = false;
   comgui_active = false;
+  sight_ul = point(0, 0);
+  sight_br = point(0, 0);
 
   default_event_handler = [this](sf::Event e) -> int {
     if (e.type == sf::Event::Closed) {
@@ -504,6 +506,10 @@ list<idtype> game::incident_commands(combid key){
 // written by Johan Mattsson
 void game::add_fixed_stars (point position, float vision) {
   float r = vision + grid_size;
+  sight_ul.x = fmin(sight_ul.x, position.x - r);
+  sight_ul.y = fmin(sight_ul.y, position.y - r);
+  sight_br.x = fmax(sight_br.x, position.x + r);
+  sight_br.y = fmax(sight_br.y, position.y + r);
   
   for (float p = -r; p < r; p += grid_size) {
     float ymax = sqrt (r * r - p * p);

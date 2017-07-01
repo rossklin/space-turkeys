@@ -1,15 +1,11 @@
 * current work
-* [!] issues
-** [!] crashes
+* [~] issues
+** [~] crashes
 *** random_uniform called with b = inf
 ** [~] system
-*** trade actions can't swap fleet action 
-   since this prevents other ships in fleet from trading. Somewhat
-   solved by default assigning one ship to special actions.
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
-*** hover info moves further down each time it's updated
 *** Clicking interface response button also triggers click on minimap
 *** sfg window does not resize on sfml window resize
 *** command selectors drawn on top of each other
@@ -21,11 +17,9 @@
     choice from client 2.
 *** [redesign] client allows multiple development choices - server does not
 * [!] system design ideas
-** try making a memcpy based serialization
-   Maybe classes containing pointers can have a serial subclass?
+** new better universe builder, possibly generate while exploring
 ** possibility to find "treasures" when discovering new solar systems
    Combined with a new detection level stat of some kind.
-** new better universe builder, possibly generate while exploring
 ** add expansion limitations e.g. nr of fleets and solar distance penalty
 ** [!] distinguish between interactions and auras (e.g. hive support)
    At the moment, non-targeted interactions are not applied at all
@@ -47,6 +41,8 @@
 
    No particular reason to not put this in normal class members?
 ** add a vision map, build in client on reload_data
+** [?] try making a memcpy based serialization
+   Maybe classes containing pointers can have a serial subclass?
 * tweaks and fixes
 ** gui
 *** client::game::entity_at should respect zoom level
@@ -112,6 +108,10 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** hover info moves further down each time it's updated
+** [J?] trade actions can't swap fleet action 
+   since this prevents other ships in fleet from trading. Somewhat
+   solved by default assigning one ship to special actions.
 ** [J] selecting in development_gui resets scroll
 ** facilities build to 100% but never complete
 ** [J?] add a list of animations to send to client rather than add explosion on ship removal

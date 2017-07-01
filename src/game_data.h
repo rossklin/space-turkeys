@@ -50,7 +50,7 @@ namespace st3{
     
     grid::tree::ptr entity_grid;
     std::vector<interaction_info> interaction_buffer;
-    /* std::set<id_pair> collision_buffer; */
+    std::set<std::pair<int, int> > discovered_universe;
 
     game_data();
     ~game_data();
@@ -59,11 +59,12 @@ namespace st3{
     void rehash_grid();
     void apply_choice(choice::choice c, idtype id);
     void increment();
-    /* void collide_ships(id_pair x); */
     bool target_position(combid t, point &p);
     std::list<combid> search_targets(combid self_id, point p, float r, target_condition c);
     std::list<combid> search_targets_nophys(combid self_id, point p, float r, target_condition c);
     void rebuild_evm();
+    void discover(point x, float r);
+    void update_discover();
     solar::ptr closest_solar(point p, idtype id);
     void log_ship_fire(combid a, combid b);
     void log_ship_destroyed(combid a, combid b);

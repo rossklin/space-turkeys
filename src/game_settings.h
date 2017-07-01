@@ -7,12 +7,11 @@ namespace st3{
   /*! Struct containing settings for a game */
   struct game_settings{
     sint frames_per_round; /*!< number of frames in the simulation step */
-    sint width; /*!< width of the coordinate system */
-    sint height; /*!< height of the coordinate system */
+    sfloat galaxy_radius;
     sfloat ship_speed; /*!< base ship speed (coordinate length per unit time) */
-    sfloat solar_minrad; /*!< smallest solar radius */
-    sfloat solar_maxrad; /*!< largest solar radius */
-    sint num_solars; /*!< number of solars */
+    sfloat solar_minrad;
+    sfloat solar_meanrad;
+    sfloat solar_density; /*!< solars per space unit */
     sfloat fleet_default_radius; /*!< default radius for fleets */
     sfloat dt; /*!< game time per iteration step */
 

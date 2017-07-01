@@ -269,6 +269,8 @@ namespace st3{
     */
     point normv(float angle);
 
+    point normalize_and_scale(point p, float a);
+
     float signum(float x, float eps = 0);
 
     float mass2area(float m);
