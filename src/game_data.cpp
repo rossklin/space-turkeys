@@ -318,7 +318,10 @@ void game_data::discover(point x, float r) {
     point center = utility::scale_point(ul + br, 0.5);
     float distance = utility::l2norm(center);
     float bounty = exp(-pow(distance / settings.galaxy_radius, 2));
-    int n_solar = utility::random_int(bounty * pow(ratio, 2) * settings.solar_density);
+    float nbuf = bounty * pow(ratio, 2) * settings.solar_density;
+    int n_solar = fmax(utility::random_normal(nbuf, 0.2 * nbuf), 0);
+
+    if (n_solar == 0) return;
 
     // select positions
     vector<point> static_pos;    
@@ -329,19 +332,22 @@ void game_data::discover(point x, float r) {
     vector<point> x(n_solar);
     for (auto &y : x) y = point(utility::random_uniform(ul.x, br.x), utility::random_uniform(ul.y, br.y));
 
-    // shake positions so solars don't end up on top of each other
-    vector<point> all_points;
-    float buffer_distance = 40;
-    float shake_rate = 10;
-    for (float e = 1; e *= 0.9; e > 0.1) {
-      all_points = static_pos;
-      all_points.insert(all_points.end(), x.begin(), x.end());
-      int idx = utility::random_int(x.size());
-      point p = x[idx];
-      function<float(point)> dm = [p] (point r) {return utility::l2d2(p - r);};
-      point p_close = utility::value_min(all_points, dm);
-      float distance = utility::l2norm(p - p_close);
-      x[idx] += utility::normalize_and_scale(p - p_close, e * shake_rate * exp(-pow(distance / buffer_distance, 2)));
+    if (n_solar > 1) {
+      // shake positions so solars don't end up on top of each other
+      vector<point> all_points;
+      float buffer_distance = 40;
+      float shake_rate = 10;
+      for (float e = 1; e > 0.1; e *= 0.9) {
+	all_points = x;
+	all_points.insert(all_points.end(), static_pos.begin(), static_pos.end());
+	int idx = utility::random_int(x.size());
+	all_points.erase(all_points.begin() + idx);
+	point p = x[idx];
+	function<float(point)> dm = [p] (point r) {return utility::l2d2(p - r);};
+	point p_close = utility::value_min(all_points, dm);
+	float distance = utility::l2norm(p - p_close);
+	x[idx] += utility::normalize_and_scale(p - p_close, e * shake_rate * exp(-pow(distance / buffer_distance, 2)));
+      }
     }
 
     // make solars
@@ -411,11 +417,11 @@ void game_data::increment(){
   // clear frame
   remove_entities.clear();
   interaction_buffer.clear();
-  // collision_buffer.clear();
   for (auto &p : players) {
     p.second.animations.clear();
     p.second.log.clear();
   }
+  update_discover();
   rebuild_evm();
 
   // update entities and compile interactions
@@ -505,6 +511,7 @@ void game_data::build(){
     point p_base = utility::scale_point(utility::normv(angle), settings.galaxy_radius);
     point p_start = utility::random_point_polar(p_base, 0.2 * settings.galaxy_radius);
     make_home_solar(p_start, p.first);
+    angle += 2 * M_PI / np;
   }
 }
 

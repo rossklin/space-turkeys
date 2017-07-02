@@ -279,8 +279,8 @@ point utility::normv(float a){
   return point(cos(a), sin(a));
 }
 
-point utility::normalize_and_scale(point x, float a){
-  float d = l2norm(x);
+point utility::normalize_and_scale(point x, float d){
+  float a = point_angle(x);
   return point(d * cos(a), d * sin(a));
 }
 

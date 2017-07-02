@@ -164,7 +164,7 @@ bool game::wait_for_it(sf::Packet &p){
   int done = 0;
   
   thread t(query, socket, ref(p), ref(done));
-  window_loop(done, default_event_handler, default_body);
+  if (interface::desktop) window_loop(done, default_event_handler, default_body);
   t.join();
 
   if (done & (query_game_complete | query_aborted)){
@@ -886,7 +886,8 @@ idtype game::command_at(point p, int &q){
 
 /** Select the next queued entity or command selector at a point. */
 bool game::select_at(point p){
-  int qent, qcom;
+  int qent = selector_queue;
+  int qcom = selector_queue;
   combid key = entity_at(p, qent);
   idtype cid = command_at(p, qcom);
 

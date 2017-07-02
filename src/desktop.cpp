@@ -13,7 +13,7 @@ sf::FloatRect main_interface::qw_allocation;
 int main_interface::top_height;
 int main_interface::bottom_start;
 
-main_interface *interface::desktop;
+main_interface *interface::desktop = 0;
 
 main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   done = false;

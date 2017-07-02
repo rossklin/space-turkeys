@@ -6,7 +6,7 @@ st3::game_settings::game_settings(){
   ship_speed = 3;
   solar_minrad = 10;
   solar_meanrad = 20;
-  solar_density = 2e-5;
+  solar_density = 2e-4;
   fleet_default_radius = 10;
   dt = 0.1;
 }
