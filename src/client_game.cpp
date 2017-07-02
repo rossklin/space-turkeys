@@ -45,7 +45,7 @@ game::game(){
   chosen_quit = false;
   comgui_active = false;
   sight_ul = point(0, 0);
-  sight_br = point(0, 0);
+  sight_wh = point(0, 0);
 
   default_event_handler = [this](sf::Event e) -> int {
     if (e.type == sf::Event::Closed) {
@@ -130,17 +130,16 @@ void game::run(){
   bool proceed = true;
   bool first = true;
   area_select_active = false;
-  view_game = sf::View(sf::FloatRect(0, 0, settings.width, settings.height));
-  view_minimap = view_game;
-  view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
-  view_window = window.getDefaultView();
   self_id = socket -> id;
 
+  init_data();
+  
   // construct interface
+  // view_game = sf::View(sf::FloatRect(sight_ul, sight_wh)); // handled by init_data??
+  view_window = window.getDefaultView();
+  view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
   window.setView(view_window);
   interface::desktop = new interface::main_interface(window.getSize(), this);
-
-  init_data();
   
   // game loop
   while (true){
@@ -190,11 +189,15 @@ bool game::init_data(){
   players = data.players;
   settings = data.settings;
   col = sf::Color(players[self_id].color);
+
+  sight_ul = point(-settings.galaxy_radius, -settings.galaxy_radius);
+  sight_wh = point(2 * settings.galaxy_radius, 2 * settings.galaxy_radius);
+  update_sight_range(point(0, 0), 1);
   
   for (auto i : data.entity){
     if (i.second -> isa(solar::class_id) && i.second -> owned){
       view_game.setCenter(i.second -> get_position());
-      view_game.setSize(point(25 * settings.solar_maxrad, 25 * settings.solar_maxrad));
+      view_game.setSize(point(25 * settings.solar_meanrad, 25 * settings.solar_meanrad));
       break;
     }
   }
@@ -503,13 +506,22 @@ list<idtype> game::incident_commands(combid key){
   return res;
 }
 
+void game::update_sight_range(point position, float r) {
+  point step(r, r);
+  point ds = position + step - sight_ul;
+  sight_ul.x = fmin(sight_ul.x, position.x - r);
+  sight_ul.y = fmin(sight_ul.y, position.y - r);
+  sight_wh.x = fmax(sight_wh.x, ds.x);
+  sight_wh.y = fmax(sight_wh.y, ds.y);
+
+  view_minimap.setCenter(sight_ul + utility::scale_point(sight_wh, 0.5));
+  view_minimap.setSize(sight_wh);
+}
+
 // written by Johan Mattsson
 void game::add_fixed_stars (point position, float vision) {
   float r = vision + grid_size;
-  sight_ul.x = fmin(sight_ul.x, position.x - r);
-  sight_ul.y = fmin(sight_ul.y, position.y - r);
-  sight_br.x = fmax(sight_br.x, position.x + r);
-  sight_br.y = fmax(sight_br.y, position.y + r);
+  update_sight_range(position, vision);
   
   for (float p = -r; p < r; p += grid_size) {
     float ymax = sqrt (r * r - p * p);
@@ -1114,7 +1126,7 @@ int game::choice_event(sf::Event e){
 	minirect = minimap_rect();
 	if (minirect.contains(mpos.x, mpos.y)){
 	  delta = point(mpos.x - minirect.left, mpos.y - minirect.top);
-	  target = point(delta.x / minirect.width * settings.width, delta.y / minirect.height * settings.height);
+	  target = point(sight_ul.x + delta.x / minirect.width * sight_wh.x, sight_ul.y + delta.y / minirect.height * sight_wh.y);
 	  view_game.setCenter(target);
 	}else{
 	  select_at(p);
@@ -1188,7 +1200,7 @@ void game::controls(){
     return;
   }
 
-  float s = view_game.getSize().x / settings.width;
+  float s = view_game.getSize().x / sight_wh.x;
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
     vel.x -= 15 * s;

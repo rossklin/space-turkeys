@@ -56,7 +56,7 @@ namespace st3{
       static constexpr float grid_size = 20;
       std::set<std::pair<int, int> > known_universe;
       point sight_ul;
-      pint sight_br;
+      point sight_wh;
 
       // animations
       std::list<animation> animations;
@@ -83,6 +83,8 @@ namespace st3{
       bool wait_for_it(sf::Packet &p);
 
       bool init_data();
+
+      void update_sight_range(point p, float r);
 
       /*! run the pre step: check with server and get game data
 	@return whether to continue the game round
