@@ -1,19 +1,14 @@
 * current work
-** [J?] technology still researches instantly, even when sector research is not active
-** [J?] extend_universe pushes solars into already discovered area
-** [J] guarantee good nsolar in starting area
-** [J] solars too tightly packed
-** [J] zoom still doesn't run during simulation
-** [J?] make solar dynamics use sectors medicine and ecology
-** [J] treasure found at solars that the client can't see
-** [J] implement find_treasure
-* [~] issues
+* [!] issues
 ** [~] crashes
 *** random_uniform called with b = inf
 ** [~] system
+*** weird that solar systems aren't automatically searched when colonized?
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
-** [~] gui 
+** [!] gui 
+*** [!] No research progress shown
+    Server does pool research points.
 *** Clicking interface response button also triggers click on minimap
 *** sfg window does not resize on sfml window resize
 *** command selectors drawn on top of each other
@@ -24,13 +19,8 @@
     leave game request from client 1 while it was waiting for the
     choice from client 2.
 *** [redesign] client allows multiple development choices - server does not
-* [!] system design ideas
-** new better universe builder, possibly generate while exploring
-** possibility to find "treasures" when discovering new solar systems
-   Combined with a new detection level stat of some kind.
+* system design ideas
 ** add expansion limitations e.g. nr of fleets and solar distance penalty
-** [!] distinguish between interactions and auras (e.g. hive support)
-   At the moment, non-targeted interactions are not applied at all
 ** make detection stat determine which object stats are seen by client
 ** add a command buffer so commands reach entities with distance based delay
 ** [?] make angular acceleration an attribute
@@ -53,6 +43,7 @@
    Maybe classes containing pointers can have a serial subclass?
 * tweaks and fixes
 ** gui
+*** waypoint, command and fleet selectors should invert zoom
 *** client::game::entity_at should respect zoom level
 *** "make your choice" and progress bar too low
 *** show ship stats in ship hover info
@@ -116,6 +107,19 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [!] distinguish between interactions and auras (e.g. hive support)
+   At the moment, non-targeted interactions are not applied at all
+** [J] new better universe builder, possibly generate while exploring
+** [J] possibility to find "treasures" when discovering new solar systems
+   Combined with a new detection level stat of some kind.
+** [J] technology still researches instantly, even when sector research is not active
+** [J] extend_universe pushes solars into already discovered area
+** [J] guarantee good nsolar in starting area
+** [J] solars too tightly packed
+** [J] zoom still doesn't run during simulation
+** [J] make solar dynamics use sectors medicine and ecology
+** [J] treasure found at solars that the client can't see
+** [J] implement find_treasure
 ** hover info moves further down each time it's updated
 ** [J?] trade actions can't swap fleet action 
    since this prevents other ships in fleet from trading. Somewhat

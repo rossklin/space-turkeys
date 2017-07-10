@@ -306,7 +306,7 @@ void game_data::distribute_ships(list<combid> sh, point p){
 
 void game_data::discover(point x, float r, bool starting_area) {
   float ratio = 400; // space units per index
-  auto point2idx = [ratio] (float u) {return u / ratio;};
+  auto point2idx = [ratio] (float u) {return floor(u / ratio);};
   int x1 = point2idx(x.x - r);
   int y1 = point2idx(x.y - r);
   int x2 = point2idx(x.x + r);
@@ -347,32 +347,17 @@ void game_data::discover(point x, float r, bool starting_area) {
     if (n_solar > 1) {
       // shake positions so solars don't end up on top of each other
       vector<point> all_points;
-      float buffer_distance = 100;
-      float shake_rate = 4;
-      
-      for (float e = 1; e > 0.1; e *= 0.95) {
+
+      for (float e = 10; e >= 1; e *= 0.95) {
 	all_points = x;
 	all_points.insert(all_points.end(), static_pos.begin(), static_pos.end());
-	int idx = utility::random_int(x.size());
-	all_points.erase(all_points.begin() + idx);
-	point p = x[idx];
-	function<float(point)> dm = [p] (point r) {return utility::l2d2(p - r);};
-	int idx_other = utility::vector_min(all_points, dm);
-	if (idx_other >= idx) idx_other++; // since we removed point at idx
-
-	point p_close = all_points[idx_other];
-	float distance = utility::l2norm(p - p_close);	
-	point shove = utility::normalize_and_scale(p - p_close, e * shake_rate * exp(-pow(distance / buffer_distance, 2)));
-	v[idx] += shove;
-	if (idx_other < n_solar) v[idx_other] -= shove; // don't shove static solars
 
 	for (int i = 0; i < n_solar; i++) {
-	  v[i] = utility::scale_point(v[i], 0.9);
-	  x[i] += v[i];
-	  
-	  if (!utility::point_between(x[i], ul, br)) {
-	    x[i] = point_init();
-	    v[i] = point(0, 0);
+	  for (int j = i + 1; j < all_points.size(); j++) {
+	    point d = x[i] - all_points[j];
+	    if (utility::l2norm(d) < 50) {
+	      x[i] += utility::normalize_and_scale(d, e);
+	    }
 	  }
 	}
       }
@@ -537,7 +522,7 @@ void game_data::build(){
       }
     }
     add_entity(s);
-    discover(s -> position, 100, true);
+    discover(s -> position, 0, true);
   };
 
   allocate_grid();
