@@ -386,7 +386,9 @@ void game_data::rebuild_evm() {
 	  
 	  game_object::ptr t = get_entity(i.first);
 	  // only see other players' entities if they are physical and active
-	  if (t -> isa(physical_object::class_id) && t -> is_active() && e -> can_see(t)) evm[e -> owner].insert(t -> id);
+	  if (t -> isa(physical_object::class_id) && t -> is_active() && e -> can_see(t)) {
+	    evm[e -> owner].insert(t -> id);
+	  }
 	}
       }
     }
@@ -477,6 +479,7 @@ void game_data::build(){
 
     solar::ptr s = solar::create(p, 1);
     s -> owner = pid;
+    s -> was_discovered = true;
     s -> available_resource = initial_resources;
     s -> water = 1000;
     s -> space = 1000;

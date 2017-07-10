@@ -18,7 +18,9 @@ const vector<string> keywords::sector = {
   keywords::key_culture,
   keywords::key_military,
   keywords::key_mining,
-  keywords::key_development
+  keywords::key_development,
+  keywords::key_medicine,
+  keywords::key_ecology
 };
 
 // make a source symbol with type t and id i

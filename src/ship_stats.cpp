@@ -53,7 +53,6 @@ typename sskey::key modifiable_ship_stats<T>::lookup_key(string name) {
     map["vision range"] = sskey::key::vision_range;
     map["load time"] = sskey::key::load_time;
     map["cargo capacity"] = sskey::key::cargo_capacity;
-    map["depends facility level"] = sskey::key::depends_facility_level;
     map["build time"] = sskey::key::build_time;
     map["regeneration"] = sskey::key::regeneration;
     map["shield"] = sskey::key::shield;
@@ -120,6 +119,7 @@ float ssfloat_t::get_strength() {
 // ship_stats
 ship_stats::ship_stats() : ssfloat_t(){
   depends_facility_level = 0;
+  depends_tech = "";
   build_time = 0;
 }
 

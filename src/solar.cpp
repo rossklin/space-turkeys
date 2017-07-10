@@ -204,6 +204,7 @@ solar::ptr solar::create(point p, float bounty) {
   s -> radius = 10 + 20 * s -> available_resource.count() / 3000;
   s -> position = p;
   s -> owner = game_object::neutral_owner;
+  s -> was_discovered = false;
 
   return s;
 }

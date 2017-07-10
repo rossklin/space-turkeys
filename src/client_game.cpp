@@ -52,7 +52,18 @@ game::game(){
       window.close();
       return query_aborted;
     }else{
+      bool had_qw = !!interface::desktop -> query_window;
       interface::desktop -> HandleEvent(e);
+
+      // handle escape on query window
+      if (had_qw) {
+	if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape){
+	  interface::desktop -> clear_qw();
+	}
+	return 0;
+      }
+
+      control_event(e);
       return 0;
     }
   };
@@ -64,23 +75,12 @@ game::game(){
 
 function<int(sf::Event)> game::generate_event_handler(function<int(sf::Event)> task){
   return [&task, this] (sf::Event e) {
-    bool had_qw = !!interface::desktop -> query_window;
-    interface::desktop -> HandleEvent(e);
+    // run default event handler
+    int test = default_event_handler(e);
 
-    // handle escape on query window
-    if (had_qw) {
-      if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape){
-	interface::desktop -> clear_qw();
-      }
-      return 0;
-    }
-
-    if (e.type == sf::Event::Closed) {
-      // handle close event
-      window.close();
-      return query_aborted;
+    if (test) {
+      return test;
     }else{
-      // handle custom task
       return task(e);
     }
   };
@@ -1029,29 +1029,14 @@ void game::setup_targui(point p){
 
     targui = new target_gui(p, options, keys_selected, &window);
   }
-} 
+}
 
-/** Event handler for the main choice interface.
-
-    Called by the event handler in choice_step.
-
-    @return true if client is finished
-*/
-int game::choice_event(sf::Event e){
+void game::control_event(sf::Event e) {
   point p;
-  list<combid> ss;
-
   sf::Vector2i mpos;
   sf::FloatRect minirect;
   point delta;
   point target;
-
-  // event reaction functions
-  auto init_area_select = [this] (sf::Event e) {
-    point p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
-    area_select_active = true;
-    srect = sf::FloatRect(p.x, p.y, 0, 0);
-  };
 
   auto update_hover_info = [this] (point p) {
     auto keys = entities_at(p);
@@ -1069,6 +1054,83 @@ int game::choice_event(sf::Event e){
 
     interface::desktop -> hover_label -> SetText(text);
   };
+
+  // event reaction functions
+  auto init_area_select = [this] (sf::Event e) {
+    point p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
+    area_select_active = true;
+    srect = sf::FloatRect(p.x, p.y, 0, 0);
+  };
+  
+  window.setView(view_game);
+  switch (e.type) {
+  case sf::Event::MouseMoved:
+    p = window.mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
+    
+    if (area_select_active){
+      // update area selection
+      srect.width = p.x - srect.left;
+      srect.height = p.y - srect.top;
+    }else{
+      update_hover_info(p);
+    }
+    break;
+  case sf::Event::MouseButtonPressed:
+    if (e.mouseButton.button == sf::Mouse::Left) init_area_select(e);
+    break;
+  case sf::Event::MouseButtonReleased:
+    mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
+    p = window.mapPixelToCoords(mpos);
+    
+    if (e.mouseButton.button == sf::Mouse::Left){
+      if (abs(srect.width) > 5 || abs(srect.height) > 5){
+	area_select();
+      }else{
+	// check if on minimap
+	minirect = minimap_rect();
+	if (minirect.contains(mpos.x, mpos.y)){
+	  delta = point(mpos.x - minirect.left, mpos.y - minirect.top);
+	  target = point(sight_ul.x + delta.x / minirect.width * sight_wh.x, sight_ul.y + delta.y / minirect.height * sight_wh.y);
+	  view_game.setCenter(target);
+	}else{
+	  select_at(p);
+	}
+      }
+    }
+
+    // clear selection rect
+    area_select_active = false;
+    srect = sf::FloatRect(0, 0, 0, 0);
+    break;
+  case sf::Event::MouseWheelMoved:
+    view_game.zoom(pow(1.2, -e.mouseWheel.delta));
+    break;
+  case sf::Event::KeyPressed:
+    switch (e.key.code){
+    case sf::Keyboard::O:
+      view_game.zoom(1.2);
+      break;
+    case sf::Keyboard::I:
+      view_game.zoom(1 / 1.2);
+      break;
+    }
+  }
+}
+
+/** Event handler for the main choice interface.
+
+    Called by the event handler in choice_step.
+
+    @return true if client is finished
+*/
+int game::choice_event(sf::Event e){
+  point p;
+  list<combid> ss;
+
+  sf::Vector2i mpos;
+  sf::FloatRect minirect;
+  point delta;
+  point target;
 
   // delete all selected fleets and commands
   auto handle_delete = [this] () {
@@ -1111,49 +1173,15 @@ int game::choice_event(sf::Event e){
   // event switch
   window.setView(view_game);
   switch (e.type){
-  case sf::Event::MouseButtonPressed:
-    if (e.mouseButton.button == sf::Mouse::Left) init_area_select(e);
-    break;
   case sf::Event::MouseButtonReleased:
     clear_guis();
     mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
     p = window.mapPixelToCoords(mpos);
     
-    if (e.mouseButton.button == sf::Mouse::Left){
-      if (abs(srect.width) > 5 || abs(srect.height) > 5){
-	area_select();
-      }else{
-	// check if on minimap
-	minirect = minimap_rect();
-	if (minirect.contains(mpos.x, mpos.y)){
-	  delta = point(mpos.x - minirect.left, mpos.y - minirect.top);
-	  target = point(sight_ul.x + delta.x / minirect.width * sight_wh.x, sight_ul.y + delta.y / minirect.height * sight_wh.y);
-	  view_game.setCenter(target);
-	}else{
-	  select_at(p);
-	}
-      }
-    } else if (e.mouseButton.button == sf::Mouse::Right && exists_selected()){
+    if (e.mouseButton.button == sf::Mouse::Right && exists_selected()){
       setup_targui(p);
     }
 
-    // clear selection rect
-    area_select_active = false;
-    srect = sf::FloatRect(0, 0, 0, 0);
-    break;
-  case sf::Event::MouseMoved:
-    p = window.mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
-    
-    if (area_select_active){
-      // update area selection
-      srect.width = p.x - srect.left;
-      srect.height = p.y - srect.top;
-    }else{
-      update_hover_info(p);
-    }
-    break;
-  case sf::Event::MouseWheelMoved:
-    view_game.zoom(pow(1.2, -e.mouseWheel.delta));
     break;
   case sf::Event::KeyPressed:
     switch (e.key.code){
@@ -1173,12 +1201,6 @@ int game::choice_event(sf::Event e){
       break;
     case sf::Keyboard::F:
       make_fleet();
-      break;
-    case sf::Keyboard::O:
-      view_game.zoom(1.2);
-      break;
-    case sf::Keyboard::I:
-      view_game.zoom(1 / 1.2);
       break;
     case sf::Keyboard::Escape:
       window.setView(view_window);

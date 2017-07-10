@@ -78,6 +78,7 @@ namespace st3{
     sfloat population;
     sfloat happiness;
     sbool out_of_resources;
+    bool was_discovered;
 
     cost::res_t available_resource; 
     cost::res_t resource_storage;

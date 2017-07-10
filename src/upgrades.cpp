@@ -51,6 +51,11 @@ const hm_t<string, upgrade> &upgrade::table(){
 	    a.on_liftoff.insert(k -> GetString());
 	    success = true;
 	  }
+	} else if (stat_name == "on move") {
+	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) {
+	    a.on_move.insert(k -> GetString());
+	    success = true;
+	  }
 	}
       }
 

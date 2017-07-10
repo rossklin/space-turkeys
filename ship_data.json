@@ -1,12 +1,26 @@
 {
     "ship" : {
 	"scout" : {
-	    "is starting ship" : 1,
 	    "speed" : 0.6,
-	    "vision range" : 100,
-	    "ship damage" : 0.2,
+	    "hp" : 1,
+	    "mass" : 1,
 	    "accuracy" : 0.5,
-	    "upgrades" : ["space combat"],
+	    "evasion" : 1,
+	    "ship damage" : 1,
+	    "solar damage" : 0,
+	    "interaction radius" : 20,
+	    "vision range" : 100,
+	    "load time" : 20,
+	    "cargo capacity" : 0,
+	    "regeneration" : 0,
+	    "shield" : 0,
+	    "detection" : 0,
+	    "stealth" : 0,
+	    "cannon flex" : 0.1,
+	    "is starting ship" : 1,
+	    "depends facility level" : 0,
+	    "depends tech" : "",
+	    "upgrades" : ["space combat", "search"],
 	    "cost" : {
 		"metals" : 1,
 		"gases" : 1,
@@ -22,18 +36,20 @@
 	},
 
 	"fighter" : {
-	    "speed" : 0.5,
+	    "speed" : 0.4,
 	    "hp" : 3,
 	    "mass" : 3,
 	    "ship damage" : 4,
 	    "solar damage" : 1,
 	    "accuracy" : 2,
 	    "evasion" : 2,
+	    "vision range" : 60,
 	    "interaction radius" : 30,
 	    "load time" : 20,
+	    "cannon flex" : 0.2,
 	    "upgrades" : ["space combat", "bombard"],
 	    "depends facility level" : 1,
-	    "depends tech" : "warp technology",
+	    "depends tech" : "plasma technology",
 	    "cost" : {
 		"metals" : 8,
 		"gases" : 5,
@@ -46,19 +62,18 @@
 		{"x" : -2, "y" : 1, "c" : "p"},
 		{"x" : 2, "y" : 0, "c" : "n"}
 	    ],
-	    "tags" : ["combat", "spacecombat", "bombard"],
-	    "cannon flex" : 0.2
+	    "tags" : ["combat", "spacecombat", "bombard"]
 	},
 
 	"bomber" : {
-	    "speed" : 0.4,
+	    "speed" : 0.3,
 	    "hp" : 8,
 	    "mass" : 10,
 	    "solar damage" : 5,
 	    "accuracy" : 0.8,
 	    "upgrades" : ["bombard"],
 	    "depends facility level" : 2,
-	    "depends tech" : "warp plasma",
+	    "depends tech" : "plasma technology",
 	    "cost" : {
 		"metals" : 16,
 		"gases" : 10,
@@ -76,6 +91,70 @@
 	    "tags" : ["bombard"]
 	},
 	
+	"corsair" : {
+	    "hp" : 15,
+	    "mass" : 15,
+	    "speed" : 1.2,
+	    "solar damage" : 0,
+	    "ship damage" : 1,
+	    "accuracy" : 2,
+	    "evasion" : 2,
+	    "shield" : 2,
+	    "vision range" : 70,
+	    "cannon flex" : 1,
+	    "load time" : 4,
+	    "upgrades" : ["space combat"],
+	    "depends facility level" : 3,
+	    "depends tech" : "nano weapons",
+	    "cost" : {
+		"metals" : 10,
+		"gases" : 20,
+		"time" : 200
+	    },
+	    "shape" : [
+		{"x" : 1, "y" : 0, "c" : "p"},
+		{"x" : 2, "y" : -2, "c" : "p"},
+		{"x" : -2, "y" : -1, "c" : "n"},
+		{"x" : -3, "y" : 0, "c" : "p"},
+		{"x" : -2, "y" : 1, "c" : "n"},
+		{"x" : 2, "y" : 2, "c" : "p"},
+		{"x" : 1, "y" : 0, "c" : "p"}
+	    ],
+	    "tags" : ["combat", "spacecombat"]
+	},
+		
+	"destroyer" : {
+	    "hp" : 40,
+	    "mass" : 55,
+	    "speed" : 1.5,
+	    "solar damage" : 0,
+	    "ship damage" : 80,
+	    "accuracy" : 10,
+	    "evasion" : 2,
+	    "shield" : 0,
+	    "vision range" : 60,
+	    "cannon flex" : 0.1,
+	    "load time" : 50,
+	    "upgrades" : ["space combat"],
+	    "depends facility level" : 5,
+	    "depends tech" : "subspace projectiles",
+	    "cost" : {
+		"metals" : 10,
+		"gases" : 10,
+		"time" : 300
+	    },
+	    "shape" : [
+		{"x" : 2, "y" : 0, "c" : "p"},
+		{"x" : 1, "y" : -1, "c" : "p"},
+		{"x" : -1, "y" : -1, "c" : "n"},
+		{"x" : -2, "y" : 0, "c" : "p"},
+		{"x" : -1, "y" : 1, "c" : "n"},
+		{"x" : 1, "y" : 1, "c" : "p"},
+		{"x" : 1, "y" : 0, "c" : "p"}
+	    ],
+	    "tags" : ["combat", "spacecombat"]
+	},
+	
 	"battleship" : {
 	    "hp" : 60,
 	    "mass" : 60,
@@ -83,12 +162,12 @@
 	    "solar damage" : 20,
 	    "ship damage" : 20,
 	    "accuracy" : 5,
-	    "evasion" : 2,
-	    "shield" : 2,
-	    "vision range" : 70,
+	    "evasion" : 5,
+	    "shield" : 5,
+	    "vision range" : 100,
 	    "upgrades" : ["space combat", "bombard"],
 	    "depends facility level" : 5,
-	    "depends tech" : "nano shields",
+	    "depends tech" : "shields",
 	    "cost" : {
 		"metals" : 100,
 		"gases" : 100,
@@ -112,11 +191,11 @@
 	    "speed" : 1.7,
 	    "solar damage" : 5,
 	    "ship damage" : 10,
-	    "accuracy" : 10,
-	    "evasion" : 10,
-	    "shield" : 0,
-	    "vision range" : 100,
-	    "upgrades" : ["space combat", "bombard"],
+	    "accuracy" : 20,
+	    "evasion" : 20,
+	    "shield" : 1,
+	    "vision range" : 130,
+	    "upgrades" : ["space combat", "bombard", "search"],
 	    "depends facility level" : 5,
 	    "depends tech" : "subspace technology",
 	    "cost" : {
@@ -134,7 +213,7 @@
 		{"x" : 0, "y" : 3, "c" : "p"},
 		{"x" : 2, "y" : 0, "c" : "p"}
 	    ],
-	    "tags" : ["bombard", "combat", "spacecombat"],
+	    "tags" : ["scout", "bombard", "combat", "spacecombat"],
 	    "cannon flex" : 0.8
 	},
 

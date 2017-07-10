@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 
 #include "game_data.h"
 #include "interaction.h"
@@ -6,6 +7,7 @@
 #include "ship.h"
 #include "utility.h"
 #include "solar.h"
+#include "upgrades.h"
 
 using namespace std;
 using namespace st3;
@@ -14,6 +16,7 @@ const class_t target_condition::no_target = "no target";
 const string interaction::trade_to = "trade to";
 const string interaction::trade_from = "trade from";
 const string interaction::land = "land";
+const string interaction::search = "search";
 const string interaction::turret_combat = "turret combat";
 const string interaction::space_combat = "space combat";
 const string interaction::bombard = "bombard";
@@ -52,6 +55,107 @@ const hm_t<string, interaction> &interaction::table() {
     // add to solar's fleet
     s -> is_landed = true;
     t -> ships.insert(s -> id);
+  };
+  data[i.name] = i;
+
+  // search
+  i.name = interaction::search;
+  i.condition = target_condition(target_condition::neutral, solar::class_id);
+  i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
+    cout << "interaction: search: " << self -> id << " targeting " << target -> id << endl;
+    ship::ptr s = utility::guaranteed_cast<ship>(self);
+    solar::ptr t = utility::guaranteed_cast<solar>(target);
+    stringstream ss;
+
+    ss << "Your " << s -> ship_class << " searched " << t -> id;
+
+    float test = utility::random_uniform();
+    bool message_set = false;
+    if (t -> was_discovered) {
+      // nothing happens
+    } else if (test < 0.1) {
+      // random tech
+      auto keys = utility::get_map_keys(research::data::table());
+      research::data &level = g -> players[s -> owner].research_level;
+      auto researched = level.researched();
+      for (auto v : researched) keys.remove(v);
+
+      if (keys.size() > 0) {
+	string tech = utility::uniform_sample(keys);
+	level.tech_map[tech].level = 1;
+	ss << " and discovered an ancient technology: " << tech << "!";
+	message_set = true;
+      }
+    } else if (test < 0.2) {
+      // population boost
+      solar::ptr csol = g -> closest_solar(t -> position, s -> owner);
+      if (csol) {
+	float pop = fmax(utility::random_normal(500, 200), 10);
+	csol -> population += pop;
+	ss << " and encountered a group of " << int(pop) << " people who join your civilization at " << t -> id << "!";
+      } else {
+	ss << " and encountered a group of people who can't join you because you control no solars!";
+      }
+      message_set = true;
+    } else if (test < 0.3) {
+      // additional ships
+      research::data rbase;
+      hm_t<string, float> prob;
+      prob["scout"] = 3;
+      prob["fighter"] = 2;
+      prob["bomber"] = 1;
+      prob["battleship"] = 0.1;
+      prob["corsair"] = 0.2;
+      prob["destroyer"] = 0.1;
+      prob["voyager"] = 0.2;
+      prob["freighter"] = 0.4;
+      prob["colonizer"] = 0.6;
+
+      list<combid> new_ships;
+      for (auto m : prob) {
+	int count = utility::random_normal(m.second, 0.2 * m.second);
+	for (int j = 0; j < count; j++) {
+	  ship sh = rbase.build_ship(m.first, t);
+	  new_ships.push_back(sh.id);
+	  sh.owner = s -> owner;
+	  g -> add_entity(ship::ptr(new ship(sh)));
+	}
+      }
+
+      if (new_ships.size()) {
+	command c;
+	c.action = fleet_action::idle;
+	c.target = identifier::target_idle;
+
+	g -> generate_fleet(t -> position, s -> owner, c, new_ships);
+
+	ss << " and encountered a band of " << new_ships.size() << " renegade ships who join your civilization.";
+	message_set = true;
+      }
+    } else if (test < 0.5) {
+      // ship upgrade
+      auto keys = utility::get_map_keys(upgrade::table());
+      for (auto u : s -> upgrades) keys.remove(u);
+      if (keys.size()) {
+	string u = utility::uniform_sample(keys);
+	s -> upgrades.insert(u);
+	ss << " and discovers an upgrade: " << u << "!";
+	message_set = true;
+      }
+    } else {
+      // nothing
+    }
+
+    if (!message_set) {
+      ss << " but found nothing of interest.";
+    }
+
+    // log message to player
+    g -> players[s -> owner].log.push_back(ss.str());
+
+    // this solar can't be searched again
+    t -> was_discovered = true;
+    g -> get_fleet(s -> fleet_id) -> set_idle();
   };
   data[i.name] = i;
 
@@ -246,10 +350,9 @@ const hm_t<string, interaction> &interaction::table() {
 
   // terraform
   i.name = hive_support;
-  i.condition = target_condition(target_condition::owned, ship::class_id);
-  i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
-    ship::ptr s = utility::guaranteed_cast<ship>(target);
-    if (s -> upgrades.count("hive communication")) s -> load++;
+  i.perform = [] (game_object::ptr self, game_object::ptr null_pointer, game_data *g) {
+    ship::ptr s = utility::guaranteed_cast<ship>(self);
+    for (auto sid : s -> local_friends) g -> get_ship(sid) -> load++;
   };
   data[i.name] = i;
 

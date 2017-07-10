@@ -22,7 +22,7 @@ namespace st3{
 
   namespace sskey {
     enum key {
-      speed, hp, mass, accuracy, evasion, ship_damage, solar_damage, interaction_radius, vision_range, load_time, cargo_capacity, depends_facility_level, build_time, regeneration, shield, detection, stealth, cannon_flex, count
+      speed, hp, mass, accuracy, evasion, ship_damage, solar_damage, interaction_radius, vision_range, load_time, cargo_capacity, build_time, regeneration, shield, detection, stealth, cannon_flex, count
     };
   };
 

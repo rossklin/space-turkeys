@@ -7,47 +7,16 @@
 	    },
 	    "hp" : 2,
 	    "cost" : {
-		"metals" : 10,
-		"gases" : 3,
-		"organics" : 2
+		"metals" : 20,
+		"gases" : 10,
+		"organics" : 5
 	    },
 	    "build time" : 100,
 	    "space usage" : 30,
 	    "water usage" : 20
 	},
 
-	"research facility" : {
-	    "sector boost" : {
-		"research" : 1.2
-	    },
-	    "cost" : {
-		"metals" : 3,
-		"gases" : 10,
-		"organics" : 5
-	    },
-	    "build time" : 100,
-	    "space usage" : 10,
-	    "water usage" : 10
-	},
-
-	"biomechanics facility" : {
-	    "sector boost" : {
-		"research" : 1.2
-	    },
-	    "cost" : {
-		"metals" : 3,
-		"gases" : 10,
-		"organics" : 5
-	    },
-	    "depends technologies" : ["biomechanics"],
-	    "depends facilities" : {"research facility" : 3},
-	    "build time" : 100,
-	    "space usage" : 10,
-	    "water usage" : 10,
-	    "ship upgrades" : {"#combat" : ["bio-hull"]}
-	},
-
-	"local traditions" : {
+	"traditions" : {
 	    "sector boost" : {
 		"culture" : 1.2
 	    },
@@ -55,32 +24,95 @@
 	    "build time" : 200
 	},
 
-	"automated mines" : {
-	    "sector boost" : {
-		"mining" : 1.2
-	    },
-	    "cost" : {
-		"metals" : 10,
-		"gases" : 10,
-		"organics" : 2
-	    },
-	    "build time" : 100,
-	    "space usage" : 40,
-	    "water usage" : 60
-	},
-
-	"expansion factories" : {
+	"factories" : {
 	    "sector boost" : {
 		"development" : 1.2
 	    },
 	    "cost" : {
-		"metals" : 10,
-		"gases" : 10,
-		"organics" : 10
+		"metals" : 30,
+		"gases" : 20,
+		"organics" : 20
 	    },
 	    "build time" : 100,
 	    "space usage" : 60,
 	    "water usage" : 40
+	},
+
+	"nano factories" : {
+	    "sector boost" : {
+		"development" : 1.1,
+		"military" : 1.2
+	    },
+	    "cost" : {
+		"metals" : 40,
+		"gases" : 30,
+		"organics" : 20
+	    },
+	    "build time" : 500,
+	    "space usage" : 50,
+	    "water usage" : 40,
+	    "depends facilities" : {"factories" : 1},
+	    "depends technologies" : ["nano technology"]
+	},
+
+	"nano mines" : {
+	    "sector boost" : {
+		"mining" : 1.3
+	    },
+	    "cost" : {
+		"metals" : 40,
+		"gases" : 20,
+		"organics" : 40
+	    },
+	    "build time" : 400,
+	    "space usage" : 40,
+	    "water usage" : 60,
+	    "depends facilities" : {"factories" : 1},
+	    "depends technologies" : ["nano technology"]
+	},
+
+	"research facility" : {
+	    "sector boost" : {
+		"research" : 1.2
+	    },
+	    "cost" : {
+		"metals" : 10,
+		"gases" : 20,
+		"organics" : 15
+	    },
+	    "build time" : 100,
+	    "space usage" : 10,
+	    "water usage" : 10
+	},
+
+	"hospital" : {
+	    "sector boost" : {
+		"medicine" : 1.2
+	    },
+	    "cost" : {
+		"metals" : 10,
+		"gases" : 10,
+		"organics" : 30
+	    },
+	    "build time" : 300,
+	    "space usage" : 10,
+	    "water usage" : 10,
+	    "depends facilities" : {"traditions" : 1}
+	},
+
+	"ecosystem integration" : {
+	    "sector boost" : {
+		"ecology" : 1.2
+	    },
+	    "cost" : {
+		"metals" : 3,
+		"gases" : 4,
+		"organics" : 3
+	    },
+	    "build time" : 400,
+	    "space provided" : 100,
+	    "water provided" : 100,
+	    "depends facilities" : {"traditions" : 1}
 	},
 
 	"missile turret" : {
@@ -104,6 +136,21 @@
 	    }
 	},
 
+	"shield generator" : {
+	    "hp" : 10,
+	    "shield" : 2,
+	    "cost" : {
+		"metals" : 15,
+		"gases" : 15
+	    },
+	    "build time" : 70,
+	    "space usage" : 2,
+	    "water usage" : 1,
+	    "depends facilities" : {
+		"shipyard" : 1
+	    }
+	},
+
 	"radar tower" : {
 	    "vision" : 80,
 	    "cost" : {
@@ -115,26 +162,30 @@
 	    "water usage" : 1
 	},
 
-	"water recycling" : {
-	    "cost" : {
-		"metals" : 40,
-		"gases" : 40,
-		"organics" : 40
+	"biomechanics facility" : {
+	    "sector boost" : {
+		"research" : 1.2
 	    },
-	    "build time" : 170,
-	    "water provided" : 400,
-	    "depends technologies" : ["nano construction"]
+	    "cost" : {
+		"metals" : 10,
+		"gases" : 10,
+		"organics" : 25
+	    },
+	    "depends technologies" : ["biomechanics"],
+	    "depends facilities" : {"research facility" : 3, "hospital" : 2},
+	    "build time" : 1000,
+	    "space usage" : 10,
+	    "water usage" : 10
 	},
 
-	"inverted housing" : {
+	"advanced shipyard" : {
+	    "sector boost" : {"military" : 1.3},
 	    "cost" : {
-		"metals" : 40,
-		"gases" : 40,
-		"organics" : 40
+		"metals" : 100,
+		"gases" : 80,
+		"organics" : 80
 	    },
-	    "build time" : 170,
-	    "space provided" : 400,
-	    "depends technologies" : ["warp technology"]
+	    "depends facilities" : {"nano factories" : 2, "shipyard" : 5}
 	}
     }
 }

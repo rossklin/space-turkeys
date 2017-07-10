@@ -113,6 +113,7 @@ namespace st3{
 	@return client::query_status denoting whether to proceed to next step
       */
       int choice_event(sf::Event e);
+      void control_event(sf::Event e);
 
       std::function<int(sf::Event)> generate_event_handler(std::function<int(sf::Event)> task);
       

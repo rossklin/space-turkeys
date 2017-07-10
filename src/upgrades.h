@@ -19,6 +19,7 @@ namespace st3{
 
     std::set<std::string> inter;
     std::set<std::string> on_liftoff;
+    std::set<std::string> on_move;
     ssmod_t modify;
   };
 };

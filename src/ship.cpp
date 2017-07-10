@@ -42,7 +42,6 @@ const hm_t<string, ship_stats>& ship_stats::table(){
   s.stats[sskey::key::vision_range] = 50;
   s.stats[sskey::key::load_time] = 50;
   s.stats[sskey::key::cargo_capacity] = 0;
-  s.stats[sskey::key::depends_facility_level] = 0;
   s.stats[sskey::key::build_time] = 100;
   s.stats[sskey::key::regeneration] = 0;
   s.stats[sskey::key::shield] = 0;
@@ -392,6 +391,12 @@ void ship::move(game_data *g){
     }
   }
 
+  // check upgrade on_move hooks so they can modify target speed and angle  
+  for (auto v : upgrades) {
+    upgrade u = upgrade::table().at(v);
+    for (auto i : u.on_move) interaction::table().at(i).perform(this, NULL, g);
+  }
+
   // check if there is free space at target angle
   float selected_angle = target_angle;
   float selected_speed = target_speed;
@@ -467,8 +472,9 @@ void ship::move(game_data *g){
 void ship::post_phase(game_data *g){}
 
 void ship::receive_damage(game_data *g, game_object::ptr from, float damage) {
+  float shield_value = stats[sskey::key::shield];
   stats[sskey::key::shield] = fmax(stats[sskey::key::shield] - 0.1 * damage, 0);
-  damage = fmax(damage - stats[sskey::key::shield], 0);
+  damage = fmax(damage - shield_value, 0);
   stats[sskey::key::hp] -= damage;
   remove = stats[sskey::key::hp] <= 0;
   cout << "ship::receive_damage: " << id << " takes " << damage << " damage from " << from -> id << " - remove = " << remove << endl;

@@ -136,7 +136,16 @@ Widget::Ptr solar_gui::setup_sectors() {
   };
 
   Box::Ptr buf = Box::Create(Box::Orientation::HORIZONTAL);
-  for (auto v : keywords::sector){
+
+  vector<string> active_sectors = {
+    keywords::key_research,
+    keywords::key_culture,
+    keywords::key_military,
+    keywords::key_mining,
+    keywords::key_development
+  };
+				   
+  for (auto v : active_sectors){
     sector_buttons[v] = Image::Create(build_label(v));
     
     desktop -> bind_ppc(sector_buttons[v], [this, v, build_label] () {

@@ -16,6 +16,9 @@
 	"trade" : {
 	    "interactions" : ["trade to", "trade from"]
 	},
+	"search" : {
+	    "interactions" : ["search"]
+	},
 
 	"warp drive" : {
 	    "speed" : "2#1"
@@ -23,14 +26,6 @@
 
 	"nano scout" : {
 	    "mass" : "0#0.1"
-	},
-
-	"intelligent" : {
-	    "hp" : "1#0.5"
-	},
-
-	"targeting systems" : {
-	    "accuracy" : "2#1"
 	},
 
 	"detection" : {
@@ -42,7 +37,7 @@
 	},
 
 	"shield" : {
-	    "shield" : "1#2"
+	    "shield" : "2#2"
 	},
 
 	"nano hull" : {
@@ -53,11 +48,7 @@
 	    "ship damage" : "1#2"
 	},
 
-	"nano shield" : {
-	    "shield" : "1#3"
-	},
-
-	"bio-hull" : {
+	"biohull" : {
 	    "hp" : "1#1",
 	    "regeneration" : "1#0.1"
 	},
@@ -67,12 +58,16 @@
 	    "load time" : "0.7#0"
 	},
 
-	"hive communication" : {
+	"hive mind" : {
 	    "interactions" : ["hive support"]
 	},
 
 	"terraform" : {
 	    "interactions" : ["terraform"]
+	},
+
+	"subspace drive" : {
+	    "speed" : "2#0"
 	}
     }
 }

@@ -1,4 +1,10 @@
 * current work
+** guarantee good nsolar in starting area
+** solars too tightly packed
+** zoom still doesn't run during simulation
+** make solar dynamics use sectors medicine and ecology
+** [J] treasure found at solars that the client can't see
+** [J] implement find_treasure
 * [~] issues
 ** [~] crashes
 *** random_uniform called with b = inf

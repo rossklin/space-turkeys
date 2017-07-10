@@ -111,7 +111,12 @@ bool client::deserialize(data_frame &f, sf::Packet &p, sint id){
       throw runtime_error("deserialize: key " + key + " not recognized!");
     }
 
-    obj -> color = sf::Color(f.players[obj -> owner].color);
+    if (obj -> owner >= 0) {
+      obj -> color = sf::Color(f.players[obj -> owner].color);
+    } else {
+      obj -> color = sf::Color(150,150,150);
+    }
+    
     f.entity[obj -> id] = obj;
   }
 
