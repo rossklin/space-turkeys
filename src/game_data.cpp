@@ -304,22 +304,28 @@ void game_data::distribute_ships(list<combid> sh, point p){
   }
 }
 
-void game_data::discover(point x, float r) {
-  float ratio = 100; // space units per index
+void game_data::discover(point x, float r, bool starting_area) {
+  float ratio = 400; // space units per index
   auto point2idx = [ratio] (float u) {return u / ratio;};
   int x1 = point2idx(x.x - r);
   int y1 = point2idx(x.y - r);
   int x2 = point2idx(x.x + r);
   int y2 = point2idx(x.y + r);
 
-  auto extend_universe = [this, ratio] (int i, int j) {
+  auto extend_universe = [this, ratio, starting_area] (int i, int j) {
     point ul(i * ratio, j * ratio);
     point br((i + 1) * ratio, (j + 1) * ratio);
     point center = utility::scale_point(ul + br, 0.5);
     float distance = utility::l2norm(center);
     float bounty = exp(-pow(distance / settings.galaxy_radius, 2));
+    bounty = utility::linsig(utility::random_normal(bounty, 0.2 * bounty));
     float nbuf = bounty * pow(ratio, 2) * settings.solar_density;
     int n_solar = fmax(utility::random_normal(nbuf, 0.2 * nbuf), 0);
+    
+    if (starting_area) {
+      n_solar = 10;
+      bounty = 1;
+    }
 
     if (n_solar == 0) return;
 
@@ -330,28 +336,57 @@ void game_data::discover(point x, float r) {
     }
 
     vector<point> x(n_solar);
-    for (auto &y : x) y = point(utility::random_uniform(ul.x, br.x), utility::random_uniform(ul.y, br.y));
+    vector<point> v(n_solar, point(0, 0));
+    
+    auto point_init = [ul, br] () {
+      return point(utility::random_uniform(ul.x, br.x), utility::random_uniform(ul.y, br.y));
+    };
+    
+    for (auto &y : x) y = point_init();
 
     if (n_solar > 1) {
       // shake positions so solars don't end up on top of each other
       vector<point> all_points;
-      float buffer_distance = 40;
-      float shake_rate = 10;
-      for (float e = 1; e > 0.1; e *= 0.9) {
+      float buffer_distance = 100;
+      float shake_rate = 4;
+      
+      for (float e = 1; e > 0.1; e *= 0.95) {
 	all_points = x;
 	all_points.insert(all_points.end(), static_pos.begin(), static_pos.end());
 	int idx = utility::random_int(x.size());
 	all_points.erase(all_points.begin() + idx);
 	point p = x[idx];
 	function<float(point)> dm = [p] (point r) {return utility::l2d2(p - r);};
-	point p_close = utility::value_min(all_points, dm);
-	float distance = utility::l2norm(p - p_close);
-	x[idx] += utility::normalize_and_scale(p - p_close, e * shake_rate * exp(-pow(distance / buffer_distance, 2)));
+	int idx_other = utility::vector_min(all_points, dm);
+	if (idx_other >= idx) idx_other++; // since we removed point at idx
+
+	point p_close = all_points[idx_other];
+	float distance = utility::l2norm(p - p_close);	
+	point shove = utility::normalize_and_scale(p - p_close, e * shake_rate * exp(-pow(distance / buffer_distance, 2)));
+	v[idx] += shove;
+	if (idx_other < n_solar) v[idx_other] -= shove; // don't shove static solars
+
+	for (int i = 0; i < n_solar; i++) {
+	  v[i] = utility::scale_point(v[i], 0.9);
+	  x[i] += v[i];
+	  
+	  if (!utility::point_between(x[i], ul, br)) {
+	    x[i] = point_init();
+	    v[i] = point(0, 0);
+	  }
+	}
       }
     }
 
     // make solars
     for (auto p : x) add_entity(solar::create(p, bounty));
+
+    if (starting_area) {
+      // debug output
+      cout << "build starting area: b=" << bounty << ": box " << ul << " -> " << br << ": positions: " << endl;
+      for (auto p : x) cout << p;
+      cout << endl;
+    }
   };
 
   for (int i = x1; i <= x2; i++) {
@@ -491,10 +526,7 @@ void game_data::build(){
 
     // debug: start with some ships
     hm_t<string, int> starter_fleet;
-    starter_fleet["fighter"] = 10;
     starter_fleet["voyager"] = 2;
-    starter_fleet["battleship"] = 1;
-    starter_fleet["colonizer"] = 1;
     for (auto sc : starter_fleet) {
       for (int j = 0; j < sc.second; j++) {
 	ship sh = rbase.build_ship(sc.first, s);
@@ -505,6 +537,7 @@ void game_data::build(){
       }
     }
     add_entity(s);
+    discover(s -> position, 100, true);
   };
 
   allocate_grid();
@@ -582,7 +615,7 @@ void game_data::end_step(){
     // apply
     if (r.researching.length() > 0) {
       if (utility::find_in(r.researching, r.available())) {
-	research::tech &t = r.tech_map[r.researching];
+	research::tech &t = r.access(r.researching);
 	t.progress += pool[id];
 	if (t.progress >= t.cost_time) {
 	  t.progress = 0;

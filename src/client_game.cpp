@@ -354,20 +354,12 @@ bool game::simulation_step(){
   thread t(load_frames, socket, ref(g), ref(loaded), ref(done));
 
   // event handler which handles play/pause
-  auto event_handler = [this, &playing] (sf::Event e) -> int {
-    switch (e.type){
-    case sf::Event::Closed:
-    window.close();
-    return query_aborted;
-    case sf::Event::KeyPressed:
-    if (e.key.code == sf::Keyboard::Escape){
-      return query_aborted;
-    }else if (e.key.code == sf::Keyboard::Space){
-      playing = !playing;
-    }
-    }
-    return 0;
-  };
+  auto event_handler = generate_event_handler([this, &playing] (sf::Event e) -> int {
+      if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Space){
+	playing = !playing;
+      }
+      return 0;
+    });
 
   // gui loop body that draws progress indicator and keeps track of
   // the active frame
@@ -600,11 +592,11 @@ void game::reload_data(data_frame &g){
     }
   }
 
-  // remove unseen entities that are in sight range
+  // remove unseen ships that are in sight range
   list<combid> rbuf;
   for (auto y : entity){
     entity_selector::ptr s = y.second;
-    if (!s -> seen){
+    if (s -> isa(ship::class_id) && !s -> seen){
       for (auto x : entity){
 	if (x.second -> owned && utility::l2norm(s -> position - x.second -> position) < x.second -> vision()){
 	  rbuf.push_back(s -> id);

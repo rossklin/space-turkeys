@@ -82,7 +82,7 @@ const hm_t<string, interaction> &interaction::table() {
 
       if (keys.size() > 0) {
 	string tech = utility::uniform_sample(keys);
-	level.tech_map[tech].level = 1;
+	level.access(tech).level = 1;
 	ss << " and discovered an ancient technology: " << tech << "!";
 	message_set = true;
       }

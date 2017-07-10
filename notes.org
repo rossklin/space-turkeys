@@ -1,8 +1,10 @@
 * current work
-** guarantee good nsolar in starting area
-** solars too tightly packed
-** zoom still doesn't run during simulation
-** make solar dynamics use sectors medicine and ecology
+** [J?] technology still researches instantly, even when sector research is not active
+** [J?] extend_universe pushes solars into already discovered area
+** [J] guarantee good nsolar in starting area
+** [J] solars too tightly packed
+** [J] zoom still doesn't run during simulation
+** [J?] make solar dynamics use sectors medicine and ecology
 ** [J] treasure found at solars that the client can't see
 ** [J] implement find_treasure
 * [~] issues

@@ -348,6 +348,10 @@ float utility::sigmoid(float x, float s){
   return s * atan(x / s) / (M_PI / 2);
 }
 
+float utility::linsig(float x) {
+  return fmax(fmin(x, 1), 0);
+}
+
 // generate a vector of n different colors, which are also different
 // from black (background) and grey (neutral solar) colors
 vector<sint> utility::different_colors(int n){

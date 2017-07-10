@@ -331,6 +331,8 @@ namespace st3{
       @return limited value
     */
     float sigmoid(float x, float s = 1);
+
+    float linsig(float x);
     
     /*! compute modulus 
       @param x value

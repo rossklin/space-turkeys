@@ -42,12 +42,15 @@ namespace st3{
       graphics::draw_circle(w, position, radius, get_color(), cfill);
       graphics::draw_circle(w, position, radius, sf::Color(200,200,200));
 
+      string indicator_text = "";
+      if (!was_discovered) indicator_text += "!";
+
       if (owned){
 	graphics::draw_circle(w, position, vision(), sf::Color(40, 200, 60, 100));
 	graphics::draw_text(w, to_string((int)(population / 1000)), position, 16);
 
 	if (choice_data.development.empty()) {
-	  graphics::draw_text(w, "*", position + point(radius, -radius), 14);
+	  indicator_text += "*";
 	}
 
 	int nships = ships.size();
@@ -91,6 +94,11 @@ namespace st3{
       float sp = compute_shield_power();
       if (sp > 0) {
 	graphics::draw_circle(w, position, radius + 4, sf::Color(100, 140, 200, 150), sf::Color::Transparent, sp);
+      }
+
+      // draw symbol indicators
+      if (indicator_text.length()) {
+	graphics::draw_text(w, indicator_text, position + point(radius, -radius), 14);
       }
     }
 

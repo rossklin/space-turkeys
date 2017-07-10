@@ -61,7 +61,7 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   right_panel -> Pack(graphics::wrap_in_scroll2(log_panel, 0.17 * desktop_dims.x, 0.4 * desktop_dims.y));
   right_panel -> Pack(graphics::wrap_in_scroll2(hover_label, 0.17 * desktop_dims.x, 0.4 * desktop_dims.y));
 
-  auto info_rect = get_rect(0.75, 0.05, 0.2, 0.9);
+  auto info_rect = get_rect(0.79, 0.01, 0.2, 0.98);
   right_panel -> SetAllocation(info_rect);
   auto w_info = pack_in_window(right_panel, info_rect);
   Add(w_info);

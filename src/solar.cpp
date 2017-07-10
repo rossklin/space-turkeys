@@ -201,7 +201,7 @@ solar::ptr solar::create(point p, float bounty) {
 
   for (auto v : keywords::resource) s -> available_resource[v] = fres();
 
-  s -> radius = 10 + 20 * s -> available_resource.count() / 3000;
+  s -> radius = 10 + 10 * s -> available_resource.count() / 3000;
   s -> position = p;
   s -> owner = game_object::neutral_owner;
   s -> was_discovered = false;
@@ -276,12 +276,14 @@ float solar::population_increment(){
   static float rate = 0.2;
   float base_growth = population * happiness * f_growth;
   float culture_growth = base_growth * compute_boost(keywords::key_culture);
-  float crowding_death = f_crowding * pow(population, 2) / (ecology * space * space_status() + 1);
+  float env_factor = ecology * space * space_status();
+  float crowding_death = f_crowding * pow(population, 2) / (compute_boost(keywords::key_medicine) * env_factor + 1);
   return rate * (base_growth + culture_growth - crowding_death);
 }
 
 float solar::ecology_increment(){
-  return 0.01 * ((space_status() * water_status() - ecology));
+  float env_factor = space_status() * water_status();
+  return 0.01 * (compute_boost(keywords::key_ecology) * env_factor - ecology);
 }
 
 float solar::happiness_increment(choice::c_solar &c){
@@ -289,7 +291,7 @@ float solar::happiness_increment(choice::c_solar &c){
 }
 
 float solar::research_increment(choice::c_solar &c){
-  return f_resrate * c.allocation[keywords::key_research] * population * compute_boost(keywords::key_research) * happiness;
+  return f_resrate * c.allocation[keywords::key_research] * compute_boost(keywords::key_research) * compute_workers();
 }
 
 float solar::resource_increment(string v, choice::c_solar &c){
@@ -451,7 +453,7 @@ float solar::compute_boost(string v){
 
   auto &rtab = research::data::table();
   for (auto r : research_level -> researched()) {
-    research::tech &t = research_level -> tech_map[r];
+    research::tech &t = research_level -> access(r);
     if (t.sector_boost.count(v)) sum *= t.sector_boost[v];
   }
   

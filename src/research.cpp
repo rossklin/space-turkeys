@@ -122,12 +122,28 @@ set<string> data::researched() const {
   return x;
 }
 
+tech &data::access(string v) {
+  auto &rtab = table();
+  if (!rtab.count(v)) {
+    throw runtime_error("Attempted to access invalid tech: " + v);
+  } else if (!tech_map.count(v)) {
+    tech_map[v] = rtab.at(v);
+  }
+
+  return tech_map[v];
+}
+
 void tech::read_from_json(const rapidjson::Value &x) {
   for (auto i = x.MemberBegin(); i != x.MemberEnd(); i++) {
     string name = i -> name.GetString();
     if (!development::node::parse(name, i -> value)) {
       throw runtime_error("Failed to parse tech: " + name);
     }
+  }
+
+  // sanity check
+  if (cost_time <= 0) {
+    throw runtime_error("tech::read_from_json: invalid build time!");
   }
 }
 
