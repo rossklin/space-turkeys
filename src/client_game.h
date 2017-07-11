@@ -115,6 +115,8 @@ namespace st3{
       int choice_event(sf::Event e);
       void control_event(sf::Event e);
 
+      void do_zoom(float factor, point p);
+
       std::function<int(sf::Event)> generate_event_handler(std::function<int(sf::Event)> task);
       
       /*! start a solar gui for a solar

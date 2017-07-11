@@ -1,14 +1,12 @@
 * current work
-* [!] issues
+* [~] issues
 ** [~] crashes
 *** random_uniform called with b = inf
 ** [~] system
 *** weird that solar systems aren't automatically searched when colonized?
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
-** [!] gui 
-*** [J?] No research progress shown
-    Server does pool research points.
+** [~] gui 
 *** Clicking interface response button also triggers click on minimap
 *** sfg window does not resize on sfml window resize
 *** command selectors drawn on top of each other
@@ -43,7 +41,6 @@
    Maybe classes containing pointers can have a serial subclass?
 * tweaks and fixes
 ** gui
-*** waypoint, command and fleet selectors should invert zoom
 *** client::game::entity_at should respect zoom level
 *** "make your choice" and progress bar too low
 *** show ship stats in ship hover info
@@ -107,6 +104,10 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] respect mouse position on zoom
+** [J] waypoint, command and fleet selectors should invert zoom
+** [J] No research progress shown
+    Server does pool research points.
 ** [!] distinguish between interactions and auras (e.g. hive support)
    At the moment, non-targeted interactions are not applied at all
 ** [J] new better universe builder, possibly generate while exploring

@@ -138,19 +138,21 @@ namespace st3{
 
     template<>
     void specific_selector<fleet>::draw(window_t &w){
-      auto f = [this, &w] (float r, sf::Color cf, sf::Color co) {
+      float unscale = graphics::inverse_scale(w).x;
+      
+      auto f = [this, &w, unscale] (float r, sf::Color cf, sf::Color co) {
 	sf::CircleShape s(r);
-	s.setPointCount(r / graphics::inverse_scale(w).x);
+	s.setPointCount(r / unscale);
 	s.setFillColor(cf);
 	s.setOutlineColor(co);
-	s.setOutlineThickness(1);
+	s.setOutlineThickness(unscale);
 	s.setPosition(position - point(r, r));
 	w.draw(s);
       };
 
       sf::Color outline = graphics::fleet_outline;
       if (selected) outline = graphics::fade_color(outline, sf::Color::White, 0.4);
-      f(radius, graphics::fleet_fill, outline);
+      f(radius * unscale, graphics::fleet_fill, outline);
       f(vision(), sf::Color::Transparent, sf::Color(40, 200, 60, 30));
     }
 
@@ -188,11 +190,13 @@ namespace st3{
 
     template<>
     void specific_selector<waypoint>::draw(window_t &w){
-      sf::CircleShape s(radius);
+      float unscale = graphics::inverse_scale(w).x;
+      float r = radius * unscale;
+      sf::CircleShape s(r);
       s.setFillColor(selected ? sf::Color(255,255,255,100) : sf::Color(0,0,0,0));
       s.setOutlineColor(get_color());
-      s.setOutlineThickness(1);
-      s.setPosition(position - point(radius, radius));
+      s.setOutlineThickness(unscale);
+      s.setPosition(position - point(r,r));
       w.draw(s);
     }
 
@@ -364,15 +368,19 @@ bool command_selector::contains_point(point p, float &d){
 }
 
 void command_selector::draw(window_t &w){
-  static sf::Vertex c_head[3] = {
+
+  float unscale = graphics::inverse_scale(w).x;
+  float body_length = 1 - 0.1 * unscale;
+
+  sf::Vertex c_head[3] = {
     sf::Vertex(sf::Vector2f(1, 0)),
-    sf::Vertex(sf::Vector2f(0.9, -3)),
-    sf::Vertex(sf::Vector2f(0.9, 3))
+    sf::Vertex(sf::Vector2f(body_length, -3)),
+    sf::Vertex(sf::Vector2f(body_length, 3))
   };
 
-  static sf::Vertex c_body[3] = {
-    sf::Vertex(sf::Vector2f(0.9, 2)),
-    sf::Vertex(sf::Vector2f(0.9, -2)),
+  sf::Vertex c_body[3] = {
+    sf::Vertex(sf::Vector2f(body_length, 2)),
+    sf::Vertex(sf::Vector2f(body_length, -2)),
     sf::Vertex(sf::Vector2f(0, 0))
   };
   
@@ -383,7 +391,7 @@ void command_selector::draw(window_t &w){
   text.setCharacterSize(14);
   // text.setStyle(sf::Text::Underlined);
   sf::FloatRect text_dims = text.getLocalBounds();
-  text.setPosition(utility::scale_point(to + from, 0.5) - point(text_dims.width/2, text_dims.height + 10));
+  text.setPosition(utility::scale_point(to + from, 0.5) - utility::scale_point(point(text_dims.width/2, text_dims.height + 10), unscale));
   text.setScale(graphics::inverse_scale(w));
 
   // setup arrow colors
@@ -411,10 +419,9 @@ void command_selector::draw(window_t &w){
   float scale = utility::l2norm(delta);
   t.translate(from);
   t.rotate(utility::point_angle(delta) / (2 * M_PI) * 360);
-  t.scale(scale, 1);
+  t.scale(scale, unscale);
 
   w.draw(c_head, 3, sf::Triangles, t);
   w.draw(c_body, 3, sf::Triangles, t);
   w.draw(text);
-
 }

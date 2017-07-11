@@ -389,13 +389,13 @@ bool game::simulation_step(){
     window.setView(view_window);
 
     auto colored_rect = [] (sf::Color c, float r) -> sf::RectangleShape{
-      float bounds = interface::main_interface::desktop_dims.x * 0.8;
-      float w = bounds - 20;
-      auto rect = graphics::build_rect(sf::FloatRect(10, interface::main_interface::top_height + 10, r * w, 20));
+      float bounds = interface::main_interface::desktop_dims.x;
+      float w = bounds - 10;
+      auto rect = graphics::build_rect(sf::FloatRect(5, 5, r * w, 10));
       c.a = 150;
       rect.setFillColor(c);
       rect.setOutlineColor(sf::Color::White);
-      rect.setOutlineThickness(1);
+      rect.setOutlineThickness(-1);
       return rect;
     };
 
@@ -1106,18 +1106,32 @@ void game::control_event(sf::Event e) {
     srect = sf::FloatRect(0, 0, 0, 0);
     break;
   case sf::Event::MouseWheelMoved:
-    view_game.zoom(pow(1.2, -e.mouseWheel.delta));
+    p = window.mapPixelToCoords(sf::Vector2i(e.mouseWheel.x, e.mouseWheel.y));
+    do_zoom(pow(1.2, -e.mouseWheel.delta), p);
     break;
   case sf::Event::KeyPressed:
     switch (e.key.code){
     case sf::Keyboard::O:
-      view_game.zoom(1.2);
+      do_zoom(1.2, view_game.getCenter());
       break;
     case sf::Keyboard::I:
-      view_game.zoom(1 / 1.2);
+      do_zoom(1 / 1.2, view_game.getCenter());
       break;
     }
   }
+}
+
+void game::do_zoom(float factor, point p) {
+  point center = view_game.getCenter();
+  point size = view_game.getSize();
+  point ul = center - utility::scale_point(size, 0.5);
+  point br = center + utility::scale_point(size, 0.5);
+  point delta_ul = ul - p;
+  point delta_br = br - p;
+  point new_ul = p + utility::scale_point(delta_ul, factor);
+  point new_br = p + utility::scale_point(delta_br, factor);
+  view_game.setCenter(utility::scale_point(new_ul + new_br, 0.5));
+  view_game.setSize(new_br - new_ul);
 }
 
 /** Event handler for the main choice interface.
@@ -1393,47 +1407,48 @@ void game::draw_window(){
 
   // draw targui
   window.setView(view_game);
-  if (targui) targui -> draw();
-
-  // draw command gui
-  if (interface::desktop -> query_window == 0){
-    // Interface stuff that is only drawn if there is no query window
-
-    // draw minimap contents
-    window.setView(view_minimap);
-    draw_universe();
-
-    // draw view rectangle
-    sf::RectangleShape r;
-    sf::Vector2f center = view_game.getCenter();
-    sf::Vector2f size = view_game.getSize();
-    r.setPosition(center.x - size.x / 2, center.y - size.y / 2);
-    r.setSize(sf::Vector2f(size.x, size.y));
-    r.setFillColor(sf::Color::Transparent);
-    r.setOutlineColor(sf::Color::Green);
-    r.setOutlineThickness(1);
-    window.draw(r);
-    
-    window.setView(view_window);
-
-    // draw text
-    sf::Text text;
-    text.setFont(default_font); 
-    text.setCharacterSize(24);
-    text.setFillColor(sf::Color(200,200,200));
-    text.setString(message);
-    text.setPosition(point(10, 0.2 * (interface::main_interface::desktop_dims.y)));
-    window.draw(text);
-
-    // draw minimap bounds
-    sf::FloatRect fr = minimap_rect();
-    r.setPosition(fr.left, fr.top);
-    r.setSize(sf::Vector2f(fr.width, fr.height));
-    r.setOutlineColor(sf::Color(255,255,255));
-    r.setFillColor(sf::Color(0,0,25,100));
-    r.setOutlineThickness(1);
-    window.draw(r);
+  if (targui) {
+    targui -> draw();
+  } else if (interface::desktop -> query_window) {
+    return;
   }
+
+  // Interface stuff that is only drawn if there is no query window
+
+  // draw minimap contents
+  window.setView(view_minimap);
+  draw_universe();
+
+  // draw view rectangle
+  sf::RectangleShape r;
+  sf::Vector2f center = view_game.getCenter();
+  sf::Vector2f size = view_game.getSize();
+  r.setPosition(center.x - size.x / 2, center.y - size.y / 2);
+  r.setSize(sf::Vector2f(size.x, size.y));
+  r.setFillColor(sf::Color::Transparent);
+  r.setOutlineColor(sf::Color::Green);
+  r.setOutlineThickness(1);
+  window.draw(r);
+    
+  window.setView(view_window);
+
+  // draw text
+  sf::Text text;
+  text.setFont(default_font); 
+  text.setCharacterSize(20);
+  text.setFillColor(sf::Color(200,200,200));
+  text.setString(message);
+  text.setPosition(point(10, 20));
+  window.draw(text);
+
+  // draw minimap bounds
+  sf::FloatRect fr = minimap_rect();
+  r.setPosition(fr.left, fr.top);
+  r.setSize(sf::Vector2f(fr.width, fr.height));
+  r.setOutlineColor(sf::Color(255,255,255));
+  r.setFillColor(sf::Color(0,0,25,100));
+  r.setOutlineThickness(1);
+  window.draw(r);
 }
 
 /** Get positional rectangle representing the minimap in the window. */
