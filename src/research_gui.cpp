@@ -28,7 +28,9 @@ research_gui::research_gui() : Window(Window::Style::BACKGROUND) {
 
   // development gui
   development_gui::f_req_t f_req = [] (string v) -> list<string> {
-    return desktop -> get_research().list_tech_requirements(v);
+    list<string> res = desktop -> get_research().list_tech_requirements(v);
+    if (desktop -> get_research().researched().count(v)) res.push_back("Already researched");
+    return res;
   };
 
   development_gui::f_select_t on_select = [this] (string result) {
@@ -37,6 +39,7 @@ research_gui::research_gui() : Window(Window::Style::BACKGROUND) {
 
   hm_t<string, development::node> map;
   for (auto &f : research::data::table()) map[f.first] = f.second;
+  for (auto &t : desktop -> get_research().tech_map) map[t.first] = t.second;
   layout -> Pack(development_gui::Create(map, response, f_req, on_select, false, main_interface::qw_allocation.width - 100));
 
   // accept/cancel

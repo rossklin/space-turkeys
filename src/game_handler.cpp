@@ -62,7 +62,7 @@ void server::game_handler(com &c, game_data &g){
     return false;
   };
 
-  auto pack_g = [&g, &c, &packets] () {
+  auto pack_g = [&g, &c, &packets] (bool do_limit) {
     entity_package ep;
     g.rebuild_evm();
     ep.copy_from(g);
@@ -71,7 +71,7 @@ void server::game_handler(com &c, game_data &g){
     for (auto x : c.clients) {
       entity_package buf;
       buf = ep;
-      buf.limit_to(x.first);
+      if (do_limit) buf.limit_to(x.first);
     
       packets[x.first].clear();
       packets[x.first] << protocol::confirm;
@@ -92,13 +92,13 @@ void server::game_handler(com &c, game_data &g){
   
   p_confirm << protocol::confirm;
 
-  pack_g();
+  pack_g(false);
   if (!c.check_protocol(protocol::load_init, packets)) return;
 
   while (true){
     if (check_end()) return;
 
-    pack_g();
+    pack_g(true);
     if (!c.check_protocol(protocol::game_round, packets)) return;
 
     // idle the fleets and clear waypoints

@@ -7,7 +7,7 @@
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [!] gui 
-*** [!] No research progress shown
+*** [J?] No research progress shown
     Server does pool research points.
 *** Clicking interface response button also triggers click on minimap
 *** sfg window does not resize on sfml window resize

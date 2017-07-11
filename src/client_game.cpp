@@ -193,15 +193,24 @@ bool game::init_data(){
   sight_ul = point(-settings.galaxy_radius, -settings.galaxy_radius);
   sight_wh = point(2 * settings.galaxy_radius, 2 * settings.galaxy_radius);
   update_sight_range(point(0, 0), 1);
-  
+
+  // load player starting positions
   for (auto i : data.entity){
-    if (i.second -> isa(solar::class_id) && i.second -> owned){
-      view_game.setCenter(i.second -> get_position());
-      view_game.setSize(point(25 * settings.solar_meanrad, 25 * settings.solar_meanrad));
-      break;
+    entity_selector::ptr p = i.second;
+    cout << "init_data: checking: " << i.first << endl;
+    if (p -> isa(solar::class_id) && p -> owner >= 0) {
+      entity[i.first] = i.second;
+      cout << "init_data: added: " << i.first << endl;
+      
+      if (p -> owned){
+	view_game.setCenter(p -> get_position());
+	view_game.setSize(point(25 * settings.solar_meanrad, 25 * settings.solar_meanrad));
+	p -> seen = true;
+	cout << "init_data: selected starting position: " << i.first << endl;
+      }
     }
   }
-
+  
   return true;
 }
 
@@ -241,12 +250,14 @@ bool game::choice_step(){
   interface::desktop -> done = false;
   interface::desktop -> accept = false;
 
+  // keep solar and research choices
   choice::choice c;
   for (auto x : interface::desktop -> response.solar_choices){
     if (entity.count(x.first) && get_entity(x.first) -> owned) {
       c.solar_choices[x.first] = x.second;
     }
   }
+  c.research = interface::desktop -> response.research;
   interface::desktop -> response = c;
 
   cout << "choice_step: start" << endl;
@@ -499,12 +510,12 @@ list<idtype> game::incident_commands(combid key){
 }
 
 void game::update_sight_range(point position, float r) {
-  point step(r, r);
-  point ds = position + step - sight_ul;
+  point sight_br = sight_ul + sight_wh;
   sight_ul.x = fmin(sight_ul.x, position.x - r);
   sight_ul.y = fmin(sight_ul.y, position.y - r);
-  sight_wh.x = fmax(sight_wh.x, ds.x);
-  sight_wh.y = fmax(sight_wh.y, ds.y);
+  sight_br.x = fmax(sight_br.x, position.x + r);
+  sight_br.y = fmax(sight_br.y, position.y + r);
+  sight_wh = sight_br - sight_ul;
 
   view_minimap.setCenter(sight_ul + utility::scale_point(sight_wh, 0.5));
   view_minimap.setSize(sight_wh);
