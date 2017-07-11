@@ -33,7 +33,7 @@ namespace st3{
       */
       bool receive_query(protocol_t query);
 
-      void check_protocol(protocol_t q, sf::Packet &p);
+      bool check_protocol(protocol_t q, sf::Packet &p);
 
       bool is_connected();
     };
@@ -41,6 +41,11 @@ namespace st3{
     /*! structure handling a set of clients */
     struct com{
       hm_t<int, client_t*> clients; /*!< clients */
+      int idc;
+      bool running;
+      bool complete;
+
+      com();
 
       bool connect(int n);
 

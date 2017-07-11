@@ -17,7 +17,8 @@ namespace st3{
     const sint connect = 3; /*!< query to connect */
     const sint leave = 4;
     const sint load_init = 5;
-    const sint any = 6;
+    const sint id = 6;
+    const sint any = 7;
 
     /* **************************************** */
     /* RESPONSES */

@@ -44,20 +44,27 @@ bool server::client_t::is_connected(){
   return status != sf::Socket::Disconnected;
 }
 
-void server::client_t::check_protocol(protocol_t q, sf::Packet &p){
+bool server::client_t::check_protocol(protocol_t q, sf::Packet &p){
   cout << "client " << name << ": checking protocol: " << q << endl;
   while (!receive_query(q)){
-    if (!is_connected()) return;
+    if (!is_connected()) return false;
     sf::sleep(sf::milliseconds(10));
   }
   cout << "client " << name << ": received protocol: " << q << endl;
 
   while (!send_packet(p)){
-    if (!is_connected()) return;
+    if (!is_connected()) return false;
     sf::sleep(sf::milliseconds(10));
   }
 
   cout << "client " << name << ": sent response to protocol" << endl;
+  return true;
+}
+
+server::com::com() {
+  idc = 0;
+  running = false;
+  complete = false;
 }
 
 void server::com::disconnect(){
@@ -66,58 +73,6 @@ void server::com::disconnect(){
     delete c.second;
   }
   clients.clear();
-}
-
-bool server::com::connect(int num_clients){
-  sf::TcpListener listener;
-
-  disconnect();
-
-  cout << "binding listener ...";
-  // bind the listener to a port
-  if (listener.listen(53000) != sf::Socket::Done) {
-    cout << "failed." << endl;
-    return false;
-  }
-
-  cout << "done." << endl;
-  
-  // accept a new connection
-  for (int i = 0; i < num_clients; i++){
-    cout << "listening...";
-    clients[i] = new client_t();
-    clients[i] -> id = i;
-    if (listener.accept(*clients[i]) != sf::Socket::Done) {
-      cout << "error." << endl;
-      disconnect();
-      return false;
-    }
-    clients[i] -> setBlocking(false);
-    cout << "client connected!" << endl;
-  }
-
-  listener.close();
-
-  cout << "starting with " << clients.size() << " clients" << endl;
-  return true;
-}
-
-bool server::com::introduce(){
-  // formalities
-  hm_t<sint, sf::Packet> packets;
-
-  for (auto c : clients)
-    packets[c.first] << protocol::confirm << c.first;
-
-  if (!check_protocol(protocol::connect, packets)) return false;
-
-  for (auto c : clients){
-    if (!(c.second -> data >> c.second -> name)){
-      cout << "client " << c.first << " failed to provide name." << endl;
-      return false;
-    }
-  }
-  return true;
 }
 
 bool com::cleanup_clients(){

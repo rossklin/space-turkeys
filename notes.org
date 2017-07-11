@@ -1,4 +1,5 @@
 * current work
+** make server clean up old games on completion
 * [~] issues
 ** [~] crashes
 *** random_uniform called with b = inf
@@ -42,22 +43,14 @@
 * tweaks and fixes
 ** gui
 *** client::game::entity_at should respect zoom level
-*** "make your choice" and progress bar too low
-*** show ship stats in ship hover info
 *** protect from spacebar immediately after simulation is finished
-*** allow controls and stuff during simulation
-*** zoom in should target mouse point
 *** clicking ship label in target_gui should select/deselect all 
-*** allow zoom, show entity info etc during simulation
 *** show ship health by marking ship vertices red
-*** show accumulated research
-*** autofill commands with only those units which support the action
 *** allow double-clicking ship to select all of same type
 *** allow dragging waypoints
 *** name and indicators for solars so you can tell them apart
 ** system
 *** ships should stop when they hit converge on a waypoint
-*** research completes too fast
 * optimization
 ** drawing client side stuff starts taking time
 ** fix grid tree so make_split takes less time
@@ -104,6 +97,14 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** allow controls and stuff during simulation
+** zoom in should target mouse point
+** allow zoom, show entity info etc during simulation
+** show accumulated research
+** autofill commands with only those units which support the action
+** research completes too fast
+** "make your choice" and progress bar too low
+** show ship stats in ship hover info
 ** [J] respect mouse position on zoom
 ** [J] waypoint, command and fleet selectors should invert zoom
 ** [J] No research progress shown
