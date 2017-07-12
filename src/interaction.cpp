@@ -101,7 +101,7 @@ const hm_t<string, interaction> &interaction::table() {
       // additional ships
       research::data rbase;
       hm_t<string, float> prob;
-      prob["scout"] = 3;
+      prob["scout"] = 0.3;
       prob["fighter"] = 2;
       prob["bomber"] = 1;
       prob["battleship"] = 0.1;

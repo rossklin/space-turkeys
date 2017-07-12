@@ -1,5 +1,7 @@
 * current work
-** make server clean up old games on completion
+** [J] make server clean up old games on completion
+** to big early advantage finding scouts in treasure, as they can search
+** make server handle signals instead of looping over true
 * [~] issues
 ** [~] crashes
 *** random_uniform called with b = inf
@@ -8,6 +10,7 @@
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
+*** only allow command action if *available* ships support it
 *** Clicking interface response button also triggers click on minimap
 *** sfg window does not resize on sfml window resize
 *** command selectors drawn on top of each other

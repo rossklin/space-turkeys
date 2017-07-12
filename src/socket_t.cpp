@@ -21,7 +21,7 @@ bool st3::socket_t::send_packet(sf::Packet &packet){
     // cout << "socket_t::send: not ready" << endl;
     return false;
   case sf::Socket::Partial:
-    return false;
+    throw runtime_error("socket_t::send: status partial in blocking mode!");
   default:
     throw runtime_error("socket_t::send: unknown status: " + to_string(status));
   }
@@ -40,7 +40,9 @@ bool st3::socket_t::receive_packet(){
   case sf::Socket::NotReady:
     // cout << "socket_t::receive: not ready" << endl;
     return false;
+  case sf::Socket::Partial:
+    throw runtime_error("socket_t::receive: status partial in blocking mode!");
   default:
-    throw runtime_error("socket_t::send: unknown status: " + to_string(status));
+    throw runtime_error("socket_t::receive: unknown status: " + to_string(status));
   }
 }

@@ -46,19 +46,7 @@ bool server::client_t::is_connected(){
 
 bool server::client_t::check_protocol(protocol_t q, sf::Packet &p){
   cout << "client " << name << ": checking protocol: " << q << endl;
-  while (!receive_query(q)){
-    if (!is_connected()) return false;
-    sf::sleep(sf::milliseconds(10));
-  }
-  cout << "client " << name << ": received protocol: " << q << endl;
-
-  while (!send_packet(p)){
-    if (!is_connected()) return false;
-    sf::sleep(sf::milliseconds(10));
-  }
-
-  cout << "client " << name << ": sent response to protocol" << endl;
-  return true;
+  return receive_query(q) && send_packet(p) && is_connected();
 }
 
 server::com::com() {
