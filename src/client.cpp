@@ -29,7 +29,7 @@ int main(int argc, char **argv){
   string game_id = "game1";
   string ip = "127.0.0.1";
   string name = "Name_blabla";
-  int nump = 2;
+  string nump = "2";
 
   game_data::confirm_data();
   utility::init();
@@ -38,17 +38,37 @@ int main(int argc, char **argv){
   name[utility::random_int(name.length())] = utility::random_int(256);
   name[utility::random_int(name.length())] = utility::random_int(256);
 
-  if (argc > 5){
-    cout << "usage: " << argv[0] << " [game_id] [ip_number] [name] [num_players]" << endl;
+  auto parse_input = [&game_id, &ip, &name, &nump] (string x) {
+    size_t idx = x.find("=");
+    if (idx == string::npos) {
+      throw runtime_error("Invalid input: " + x);
+    }
+
+    string key = x.substr(0, idx);
+    string value = x.substr(idx+1);
+
+    if (key == "game_id") {
+      game_id = value;
+    } else if (key == "ip") {
+      ip = value;
+    } else if (key == "name") {
+      name = value;
+    } else if (key == "num_players") {
+      nump = value;
+    } else {
+      throw runtime_error("Invalid input: " + x);
+    }
+  };
+
+  try {
+    for (int i = 1; i < argc; i++) parse_input(argv[i]);
+  } catch (exception e) {
+    cout << e.what() << endl;
+    cout << "usage: " << argv[0] << " [game_id=...] [ip=...] [name=...] [num_players=...]" << endl;
     exit(0);
   }
 
-  if (argc > 4) nump = atoi(argv[4]);
-  if (argc > 3) name = argv[3];
-  if (argc > 2) ip = argv[2];
-  if (argc > 1) game_id = argv[1];
-
-  game_id += ":" + to_string(nump);
+  game_id += ":" + nump;
   
   // connect
   cout << "connecting...";
