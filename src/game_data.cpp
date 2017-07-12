@@ -511,7 +511,19 @@ void game_data::build(){
 
     // debug: start with some ships
     hm_t<string, int> starter_fleet;
-    starter_fleet["voyager"] = 2;
+    if (settings.starting_fleet == "single") {
+      starter_fleet["fighter"] = 1;
+    } else if (settings.starting_fleet == "voyagers") {
+      starter_fleet["voyager"] = 2;
+    } else if (settings.starting_fleet == "massive") {
+      starter_fleet["fighter"] = 80;
+      starter_fleet["corsair"] = 10;
+      starter_fleet["battleship"] = 8;
+      starter_fleet["destroyer"] = 4;
+    } else {
+      throw runtime_error("Invalid starting fleet option: " + settings.starting_fleet);
+    }
+    
     for (auto sc : starter_fleet) {
       for (int j = 0; j < sc.second; j++) {
 	ship sh = rbase.build_ship(sc.first, s);

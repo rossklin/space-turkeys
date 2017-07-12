@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <thread>
 #include <ctime>
+#include <set>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Network.hpp>
@@ -18,6 +19,8 @@
 #include "research.h"
 #include "selector.h"
 #include "utility.h"
+#include "serialization.h"
+#include "game_settings.h"
 
 using namespace std;
 using namespace st3;
@@ -29,7 +32,7 @@ int main(int argc, char **argv){
   string game_id = "game1";
   string ip = "127.0.0.1";
   string name = "Name_blabla";
-  string nump = "2";
+  game_settings settings;
 
   game_data::confirm_data();
   utility::init();
@@ -38,7 +41,7 @@ int main(int argc, char **argv){
   name[utility::random_int(name.length())] = utility::random_int(256);
   name[utility::random_int(name.length())] = utility::random_int(256);
 
-  auto parse_input = [&game_id, &ip, &name, &nump] (string x) {
+  auto parse_input = [&game_id, &ip, &name, &settings] (string x) {
     size_t idx = x.find("=");
     if (idx == string::npos) {
       throw runtime_error("Invalid input: " + x);
@@ -54,7 +57,17 @@ int main(int argc, char **argv){
     } else if (key == "name") {
       name = value;
     } else if (key == "num_players") {
-      nump = value;
+      settings.num_players = stoi(value);
+    } else if (key == "size") {
+      settings.galaxy_radius = stof(value);
+    } else if (key == "round_length") {
+      settings.frames_per_round = stoi(value);
+    } else if (key == "starting_fleet") {
+      if (starting_options.count(value)) {
+	settings.starting_fleet = value;
+      } else {
+	throw runtime_error("Invalid starting fleet option: " + value);
+      }
     } else {
       throw runtime_error("Invalid input: " + x);
     }
@@ -64,11 +77,9 @@ int main(int argc, char **argv){
     for (int i = 1; i < argc; i++) parse_input(argv[i]);
   } catch (exception e) {
     cout << e.what() << endl;
-    cout << "usage: " << argv[0] << " [game_id=...] [ip=...] [name=...] [num_players=...]" << endl;
+    cout << "usage: " << argv[0] << " [game_id=...] [ip=...] [name=...] [num_players=...] [size=...] [round_length=...] [starting_fleet=single|voyagers|massive]" << endl;
     exit(0);
   }
-
-  game_id += ":" + nump;
   
   // connect
   cout << "connecting...";
@@ -86,7 +97,7 @@ int main(int argc, char **argv){
   int done;
 
   cout << "sending game id..." << endl;
-  pq << protocol::connect << game_id << nump;
+  pq << protocol::connect << game_id << settings;
   query(g.socket, pq, done);
 
   cout << "sending name..." << endl;
@@ -100,9 +111,9 @@ int main(int argc, char **argv){
 
   cout << "received player id: " << g.socket -> id << endl;
 
-  sf::ContextSettings settings;
-  settings.antialiasingLevel = 8;
-  g.window.create(sf::VideoMode(width, height), "SFML Turkeys!", sf::Style::Default, settings);
+  sf::ContextSettings sf_settings;
+  sf_settings.antialiasingLevel = 8;
+  g.window.create(sf::VideoMode(width, height), "SFML Turkeys!", sf::Style::Default, sf_settings);
 
   sfg::SFGUI sfgui;
 

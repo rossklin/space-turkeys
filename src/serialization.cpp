@@ -144,24 +144,26 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const game_settings &g){
   return packet 
     << g.frames_per_round /*!< number of frames in the simulation step */
     << g.galaxy_radius
-    << g.ship_speed /*!< base ship speed (coordinate length per unit time) */
     << g.solar_minrad
     << g.solar_meanrad
     << g.solar_density /*!< solars per space unit */
     << g.fleet_default_radius /*!< default radius for fleets */
-    << g.dt; /*!< game time per iteration step */
+    << g.dt
+    << g.num_players
+    << g.starting_fleet; /*!< game time per iteration step */
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, game_settings &g){
   return packet
     >> g.frames_per_round /*!< number of frames in the simulation step */
     >> g.galaxy_radius
-    >> g.ship_speed /*!< base ship speed (coordinate length per unit time) */
     >> g.solar_minrad
     >> g.solar_meanrad
     >> g.solar_density /*!< solars per space unit */
     >> g.fleet_default_radius /*!< default radius for fleets */
-    >> g.dt; /*!< game time per iteration step */
+    >> g.dt
+    >> g.num_players
+    >> g.starting_fleet; /*!< game time per iteration step */
 }
 
 // ship::target_condition

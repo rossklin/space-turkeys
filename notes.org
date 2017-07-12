@@ -21,7 +21,9 @@
     choice from client 2.
 *** [redesign] client allows multiple development choices - server does not
 * system design ideas
-** make server handle signals instead of looping over true
+** make ships have to go around territories and neutral solars
+** split game_settings into parent classes client_settings and server_settings
+** generalize game_settings::starting_fleet to some "starting bonus" 
 ** add expansion limitations e.g. nr of fleets and solar distance penalty
 ** make detection stat determine which object stats are seen by client
 ** add a command buffer so commands reach entities with distance based delay
@@ -54,6 +56,7 @@
 *** allow dragging waypoints
 *** name and indicators for solars so you can tell them apart
 ** system
+*** make fleet move at below speed limit so ships can catch up
 *** decrease likelihood of finding treasure
 *** ships should stop when they hit converge on a waypoint
 * optimization
@@ -102,6 +105,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] make server handle signals instead of looping over true
 ** [J] make server clean up old games on completion
 ** [J] to big early advantage finding scouts in treasure, as they can search
 ** allow controls and stuff during simulation

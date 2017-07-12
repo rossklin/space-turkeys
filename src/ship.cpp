@@ -419,18 +419,6 @@ void ship::move(game_data *g){
     }
   }
 
-  // // check unit collisions
-  // for (auto sid : local_all) {
-  //   if (g -> entity.count(sid)) {
-  //     ship::ptr s = g -> get_ship(sid);
-  //     point delta = s -> position - position;
-  //     if (utility::l2norm(delta) < radius + s -> radius) {
-  // 	g -> collision_buffer.insert(id_pair(id, s -> id));
-  // 	output("collided with " + s -> id);
-  //     }
-  //   }
-  // }
-
   // move
   float angle_increment = fmin(0.2 / sqrt(stats[sskey::key::mass]), 0.5);
   float acceleration = 0.1 * base_stats.stats[sskey::key::speed] / stats[sskey::key::mass];

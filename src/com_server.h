@@ -8,6 +8,7 @@
 
 #include "types.h"
 #include "socket_t.h"
+#include "game_settings.h"
 
 namespace st3{
   class entity_package;
@@ -41,6 +42,7 @@ namespace st3{
     /*! structure handling a set of clients */
     struct com{
       hm_t<int, client_t*> clients; /*!< clients */
+      game_settings settings;
       int idc;
       int thread_com;
 
