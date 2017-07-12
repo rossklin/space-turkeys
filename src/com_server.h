@@ -42,15 +42,11 @@ namespace st3{
     struct com{
       hm_t<int, client_t*> clients; /*!< clients */
       int idc;
-      bool running;
-      bool complete;
+      int thread_com;
 
       com();
 
-      bool connect(int n);
-
-      bool introduce();
-
+      void add_client(client_t *c);
       void disconnect();
 
       bool cleanup_clients();

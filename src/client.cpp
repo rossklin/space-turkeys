@@ -26,9 +26,10 @@ using namespace st3::client;
 int main(int argc, char **argv){
   int width = 800;
   int height = 600;
-  string game_id = "game 1";
+  string game_id = "game1";
   string ip = "127.0.0.1";
   string name = "Name_blabla";
+  int nump = 2;
 
   game_data::confirm_data();
   utility::init();
@@ -37,15 +38,18 @@ int main(int argc, char **argv){
   name[utility::random_int(name.length())] = utility::random_int(256);
   name[utility::random_int(name.length())] = utility::random_int(256);
 
-  if (argc > 4){
-    cout << "usage: " << argv[0] << " [game_id] [ip_number] [name]" << endl;
+  if (argc > 5){
+    cout << "usage: " << argv[0] << " [game_id] [ip_number] [name] [num_players]" << endl;
     exit(0);
   }
 
+  if (argc > 4) nump = atoi(argv[4]);
   if (argc > 3) name = argv[3];
   if (argc > 2) ip = argv[2];
   if (argc > 1) game_id = argv[1];
 
+  game_id += ":" + to_string(nump);
+  
   // connect
   cout << "connecting...";
   game g;
@@ -62,7 +66,7 @@ int main(int argc, char **argv){
   int done;
 
   cout << "sending game id..." << endl;
-  pq << protocol::connect << game_id;
+  pq << protocol::connect << game_id << nump;
   query(g.socket, pq, done);
 
   cout << "sending name..." << endl;

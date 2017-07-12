@@ -11,7 +11,7 @@ using namespace std;
 using namespace st3;
 using namespace st3::server;
 
-void st3::server::client_t::send_invalid(){
+void client_t::send_invalid(){
   sf::Packet p;
   p << protocol::invalid;
   if(!send_packet(p)){
@@ -19,7 +19,7 @@ void st3::server::client_t::send_invalid(){
   }
 }
 
-bool st3::server::client_t::receive_query(protocol_t query){
+bool client_t::receive_query(protocol_t query){
   protocol_t input;
 
   if (receive_packet()){
@@ -40,22 +40,26 @@ bool st3::server::client_t::receive_query(protocol_t query){
   return false;
 }
 
-bool server::client_t::is_connected(){
+bool client_t::is_connected(){
   return status != sf::Socket::Disconnected;
 }
 
-bool server::client_t::check_protocol(protocol_t q, sf::Packet &p){
+bool client_t::check_protocol(protocol_t q, sf::Packet &p){
   cout << "client " << name << ": checking protocol: " << q << endl;
   return receive_query(q) && send_packet(p) && is_connected();
 }
 
-server::com::com() {
+com::com() {
   idc = 0;
-  running = false;
-  complete = false;
+  thread_com = socket_t::tc_init;
 }
 
-void server::com::disconnect(){
+void com::add_client(client_t *c) {
+  c -> thread_com = &thread_com;
+  clients[c -> id] = c;
+}
+
+void com::disconnect(){
   for (auto c : clients){
     c.second -> disconnect();
     delete c.second;
@@ -88,7 +92,7 @@ bool com::cleanup_clients(){
   return true;
 }
 
-bool st3::server::com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &packets){
+bool com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &packets){
   list<thread*> ts;
 
   if (packets.size() < clients.size()){
@@ -97,7 +101,7 @@ bool st3::server::com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &
   }
 
   for (auto c : clients){
-    ts.push_back(new thread(&server::client_t::check_protocol, c.second, query, ref(packets[c.first])));
+    ts.push_back(new thread(&client_t::check_protocol, c.second, query, ref(packets[c.first])));
   }
 
   for (auto &t : ts){
@@ -108,7 +112,7 @@ bool st3::server::com::check_protocol(protocol_t query, hm_t<sint, sf::Packet> &
   return cleanup_clients();
 }
 
-bool st3::server::com::check_protocol(protocol_t query, sf::Packet &packet){
+bool com::check_protocol(protocol_t query, sf::Packet &packet){
   hm_t<sint, sf::Packet> v;
   for (auto c : clients) v[c.first] = packet;
   return check_protocol(query, v);
@@ -147,21 +151,26 @@ void distribute_frames_to(vector<entity_package> &buf, int &available_frames, cl
     
     lim_start = lim_end;
     
-    if (idx == no_frame && c -> receive_query(protocol::frame)){
-      if (!(c -> data >> idx)){
-	c -> send_invalid();
-	throw runtime_error("distribute_frames_to: failed to load index!");
-      }
+    if (idx == no_frame ) {
+      if (c -> receive_query(protocol::frame)){
+	if (!(c -> data >> idx)){
+	  c -> send_invalid();
+	  throw runtime_error("distribute_frames_to: failed to load index!");
+	}
 
-      if (verbose) cout << "client " << c -> id << " requests frame " << idx << endl;
+	if (verbose) cout << "client " << c -> id << " requests frame " << idx << endl;
 
-      if (idx == no_frame){
-	if (verbose) cout << "client " << c -> id << " is done!" << endl;
-	p << protocol::confirm;
-	c -> send_packet(p);
-	break;
+	if (idx == no_frame){
+	  if (verbose) cout << "client " << c -> id << " is done!" << endl;
+	  p << protocol::confirm;
+	  c -> send_packet(p);
+	  break;
+	}
+      } else {
+	cout << "distribute frames: did not receive protocol: frame" << endl;
+	return;
       }
-    }
+    } 
 
     // check disconnect
     if (!c -> is_connected()) {
@@ -175,7 +184,8 @@ void distribute_frames_to(vector<entity_package> &buf, int &available_frames, cl
       if (c -> send_packet(p)) {
 	idx = no_frame;
       }else{
-	if (verbose) cout << "Failed to send packet with frame " << idx << " to client " << c -> id << " (retrying)" << endl;
+	if (verbose) cout << "Failed to send packet with frame " << idx << " to client " << c -> id << " - terminating" << endl;
+	return;
       }
     }else if (idx > last_idx){
       c -> send_invalid();
@@ -188,22 +198,20 @@ void distribute_frames_to(vector<entity_package> &buf, int &available_frames, cl
   cout << "distributed " << idx << " of " << (g.size() - 1) << " frames to " << c -> id << ": end" << endl;
 }
 
-void try_distribute_frames_to(vector<entity_package> &buf, int &available_frames, client_t *c){
-  try {
-    distribute_frames_to(buf, available_frames, c);
-  }catch (exception &e){
-    cout << "try distribute: exception: " << e.what() << endl;
-  }
-  
-  return;
-}
-
-void st3::server::com::distribute_frames(vector<entity_package> &g, int &frame_count){
+void com::distribute_frames(vector<entity_package> &g, int &frame_count){
   list<thread*> ts;
 
   cout << "com::distribute_frames: " << clients.size() << " clients:" << endl;
   for (auto c : clients){
-    ts.push_back(new thread(try_distribute_frames_to, ref(g), ref(frame_count), c.second));
+    client_t *cl = c.second;
+    ts.push_back(new thread([this, &g, &frame_count, cl] () {
+	  try {
+	    distribute_frames_to(ref(g), ref(frame_count), cl);
+	  } catch (exception e) {
+	    // if something went wrong, tell the other threads to stop
+	    if (thread_com == socket_t::tc_run) thread_com = socket_t::tc_stop;
+	  }
+	}));
   }
 
   for (auto &x : ts) {

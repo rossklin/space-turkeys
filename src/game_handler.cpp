@@ -23,15 +23,21 @@ void simulation_step(com &c, game_data &g) {
   
   cout << "starting simulation ... " << endl;
   thread t(&com::distribute_frames, c, ref(frames), ref(frame_count));
-  for (frame_count = 0; frame_count < n; frame_count++){
-    g.increment();
-    frames[frame_count].copy_from(g);
+
+  try {
+    for (frame_count = 0; frame_count < n; frame_count++){
+      g.increment();
+      frames[frame_count].copy_from(g);
+      if (c.thread_com != socket_t::tc_run) break;
+    }
+  } catch (exception e) {
+    if (c.thread_com != socket_t::tc_run) c.thread_com = socket_t::tc_stop;
   }
 
   cout << "waiting for distribute_frames() ..." << endl;
   t.join();
 
-  for (auto f : frames) f.clear_entities();
+  for (int i = 0; i < frame_count; i++) frames[i].clear_entities();
 }
 
 void server::game_handler(com &c, game_data &g){
@@ -41,6 +47,9 @@ void server::game_handler(com &c, game_data &g){
 
   auto check_end = [&c, &g] () -> bool{
     sf::Packet packet;
+
+    if (c.thread_com != socket_t::tc_run) return true;
+    
     int pid = -1;
     int psum = 0;
     for (auto x : g.all<solar>()){
@@ -95,7 +104,7 @@ void server::game_handler(com &c, game_data &g){
   pack_g(false);
   if (!c.check_protocol(protocol::load_init, packets)) return;
 
-  while (true){
+  while (c.thread_com == socket_t::tc_run){
     if (check_end()) return;
 
     pack_g(true);

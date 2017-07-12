@@ -1,11 +1,10 @@
 * current work
-** [J] make server clean up old games on completion
-** to big early advantage finding scouts in treasure, as they can search
-** make server handle signals instead of looping over true
 * [~] issues
 ** [~] crashes
 *** random_uniform called with b = inf
 ** [~] system
+*** init_data sends all data - should limit to "player_any"
+*** socket_t routines should have a timeout
 *** weird that solar systems aren't automatically searched when colonized?
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
@@ -22,6 +21,7 @@
     choice from client 2.
 *** [redesign] client allows multiple development choices - server does not
 * system design ideas
+** make server handle signals instead of looping over true
 ** add expansion limitations e.g. nr of fleets and solar distance penalty
 ** make detection stat determine which object stats are seen by client
 ** add a command buffer so commands reach entities with distance based delay
@@ -45,6 +45,7 @@
    Maybe classes containing pointers can have a serial subclass?
 * tweaks and fixes
 ** gui
+*** solar radius too large
 *** client::game::entity_at should respect zoom level
 *** protect from spacebar immediately after simulation is finished
 *** clicking ship label in target_gui should select/deselect all 
@@ -53,6 +54,7 @@
 *** allow dragging waypoints
 *** name and indicators for solars so you can tell them apart
 ** system
+*** decrease likelihood of finding treasure
 *** ships should stop when they hit converge on a waypoint
 * optimization
 ** drawing client side stuff starts taking time
@@ -100,6 +102,8 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] make server clean up old games on completion
+** [J] to big early advantage finding scouts in treasure, as they can search
 ** allow controls and stuff during simulation
 ** zoom in should target mouse point
 ** allow zoom, show entity info etc during simulation

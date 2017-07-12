@@ -7,8 +7,14 @@
 namespace st3{
   /*! struct to handle data and status for sfml's tcp socket */
   struct socket_t : public sf::TcpSocket{
+    static const int tc_init = 0;
+    static const int tc_run = 1;
+    static const int tc_stop = 2;
+    static const int tc_complete = 4;
+    
     /*! client id */
     sint id;
+    int *thread_com;
 
     /*! latest status */
     sf::Socket::Status status;
@@ -18,6 +24,8 @@ namespace st3{
 
     /*! default constructor */
     socket_t();
+
+    bool check_com();
 
     /*! send a given packet
      @param packet the packet
