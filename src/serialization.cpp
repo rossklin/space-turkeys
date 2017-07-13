@@ -141,7 +141,8 @@ sf::Packet& st3::operator >> (sf::Packet& packet, game_object &g){
 
 // game_settings
 sf::Packet& st3::operator <<(sf::Packet& packet, const game_settings &g){
-  return packet 
+  return packet
+    << static_cast<const client_game_settings&>(g)
     << g.solar_minrad
     << g.solar_meanrad
     << g.solar_density /*!< solars per space unit */
@@ -151,6 +152,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const game_settings &g){
 
 sf::Packet& st3::operator >>(sf::Packet& packet, game_settings &g){
   return packet
+    >> static_cast<client_game_settings&>(g)
     >> g.solar_minrad
     >> g.solar_meanrad
     >> g.solar_density /*!< solars per space unit */
