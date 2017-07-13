@@ -32,7 +32,7 @@ int main(int argc, char **argv){
   string game_id = "game1";
   string ip = "127.0.0.1";
   string name = "Name_blabla";
-  game_settings settings;
+  client_game_settings settings;
 
   game_data::confirm_data();
   utility::init();

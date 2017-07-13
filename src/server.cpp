@@ -74,13 +74,16 @@ struct handler {
       }
 
       if (game_is_new) {
-	if (!(c -> data >> link.settings)) {
+	client_game_settings test_settings;
+	if (!(c -> data >> test_settings)) {
 	  throw runtime_error("client failed to provide settings.");
 	}
 
-	if (!link.settings.validate()) {
+	if (!test_settings.validate()) {
 	  throw runtime_error("client provided invalid settings.");
 	}
+
+	static_cast<client_game_settings&>(link.settings) = test_settings;
       }
     } catch (exception e) {
       cout << "Client connection exception: " << e.what() << endl;

@@ -305,7 +305,7 @@ void fleet::update_data(game_data *g, bool force_refresh){
   for (int i = 0; i < sskey::key::count; i++) stats.average_ship.stats[i] /= ships.size();
   stats.spread_radius = fmax(sqrt(r2), fleet::min_radius);
   stats.spread_density = ships.size() / (M_PI * pow(stats.spread_radius, 2));
-  stats.speed_limit = speed;
+  stats.speed_limit = 0.9 * speed;
 
   analyze_enemies(g);
   check_action(g);

@@ -142,26 +142,35 @@ sf::Packet& st3::operator >> (sf::Packet& packet, game_object &g){
 // game_settings
 sf::Packet& st3::operator <<(sf::Packet& packet, const game_settings &g){
   return packet 
-    << g.frames_per_round /*!< number of frames in the simulation step */
-    << g.galaxy_radius
     << g.solar_minrad
     << g.solar_meanrad
     << g.solar_density /*!< solars per space unit */
     << g.fleet_default_radius /*!< default radius for fleets */
-    << g.dt
-    << g.num_players
-    << g.starting_fleet; /*!< game time per iteration step */
+    << g.dt;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, game_settings &g){
   return packet
-    >> g.frames_per_round /*!< number of frames in the simulation step */
-    >> g.galaxy_radius
     >> g.solar_minrad
     >> g.solar_meanrad
     >> g.solar_density /*!< solars per space unit */
     >> g.fleet_default_radius /*!< default radius for fleets */
-    >> g.dt
+    >> g.dt;
+}
+
+// game_settings
+sf::Packet& st3::operator <<(sf::Packet& packet, const client_game_settings &g){
+  return packet 
+    << g.frames_per_round /*!< number of frames in the simulation step */
+    << g.galaxy_radius
+    << g.num_players
+    << g.starting_fleet; /*!< game time per iteration step */
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, client_game_settings &g){
+  return packet
+    >> g.frames_per_round /*!< number of frames in the simulation step */
+    >> g.galaxy_radius
     >> g.num_players
     >> g.starting_fleet; /*!< game time per iteration step */
 }

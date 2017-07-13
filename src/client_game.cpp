@@ -375,6 +375,9 @@ bool game::simulation_step(){
   // gui loop body that draws progress indicator and keeps track of
   // the active frame
   auto body = [&,this] () -> int {
+    static int sub_idx = 0;
+    const int sub_frames = 4;
+    
     if (!window.isOpen()){
       cout << "simulation: aborted by window close" << endl;
       return query_aborted;
@@ -408,16 +411,39 @@ bool game::simulation_step(){
     playing &= idx < loaded - 1;
 
     if (playing){
+      float sub_ratio = 1 / (float) sub_frames;
 
-      // update animations
+      // update entity positions
+      for (auto sh : get_all<ship>()) {
+	if (sh -> seen) {
+	  sh -> position += utility::scale_point(utility::normv(sh -> angle), sub_ratio * sh -> stats[sskey::key::speed]);
+	}
+      }
+
+      for (auto fl : get_all<fleet>()) {
+	point p(0, 0);
+	for (auto sid : fl -> ships) p += get_specific<ship>(sid) -> position;
+	fl -> position = utility::scale_point(p, 1 / (float)fl -> ships.size());
+      }
+
+      for (auto cs : command_selectors) {
+	cs.second -> from = get_entity(cs.second -> source) -> position;
+	cs.second -> to = get_entity(cs.second -> target) -> position;
+      }
+
       for (auto &a : animations) {
-	a.p1 += a.v1;
-	a.p2 += a.v2;
+	a.p1 += utility::scale_point(a.v1, sub_ratio);
+	a.p2 += utility::scale_point(a.v2, sub_ratio);
 	a.frame++;
       }
 
-      idx++;
-      reload_data(g[idx]);
+      sub_idx++;
+
+      if (sub_idx >= sub_frames) {
+	sub_idx = 0;
+	idx++;
+	reload_data(g[idx]);
+      }
     }
     return 0;
   };

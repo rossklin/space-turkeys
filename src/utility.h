@@ -167,12 +167,14 @@ namespace st3{
     template<typename C>
     typename C::value_type uniform_sample(C &x){
       int s = x.size();
+      typename C::value_type test;
 
       for (auto &y : x){
+	test = y;
 	if (random_uniform() <= 1 / (float)(s--)) return y;
       }
 
-      return x.back();
+      return test;
     }
 
     template<typename T>

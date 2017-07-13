@@ -1,14 +1,21 @@
 * current work
+** test a server with memory and network capacity
 * [~] issues
 ** [~] crashes
 *** random_uniform called with b = inf
 ** [~] system
+*** terribly slow run on server, though not using CPU (network?)
 *** init_data sends all data - should limit to "player_any"
 *** socket_t routines should have a timeout
 *** weird that solar systems aren't automatically searched when colonized?
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
+*** window freezes while waiting for other clients to connect
+    Since wait_for_it() doesn't start window loop unless desktop is
+    initialized.
+*** game objects handle event before (non query window) interface widgets
+    E.g. quit button or right panel
 *** only allow command action if *available* ships support it
 *** Clicking interface response button also triggers click on minimap
 *** sfg window does not resize on sfml window resize
@@ -27,8 +34,6 @@
 ** add expansion limitations e.g. nr of fleets and solar distance penalty
 ** make detection stat determine which object stats are seen by client
 ** add a command buffer so commands reach entities with distance based delay
-** [?] make angular acceleration an attribute
-** [?] consider letting fleet suggestion contain an angle
 ** add terrain
    For starters: impassable areas. This requires fleets to do path
    finding.
@@ -43,6 +48,8 @@
 
    No particular reason to not put this in normal class members?
 ** add a vision map, build in client on reload_data
+** [?] make angular acceleration an attribute
+** [?] consider letting fleet suggestion contain an angle
 ** [?] try making a memcpy based serialization
    Maybe classes containing pointers can have a serial subclass?
 * tweaks and fixes
@@ -56,19 +63,42 @@
 *** allow dragging waypoints
 *** name and indicators for solars so you can tell them apart
 ** system
+*** ships shoot a bit far
 *** make fleet move at below speed limit so ships can catch up
 *** decrease likelihood of finding treasure
 *** ships should stop when they hit converge on a waypoint
 * optimization
 ** drawing client side stuff starts taking time
+   Consider not drawing complete universe on minimap
 ** fix grid tree so make_split takes less time
    Consider using simple linear split nodes, this will make it easier
    splitting between leaves.
-** reduce sent data using an instruction based model
+** reduce sent data 
+*** using an instruction based model
    With instructions for updating and removing existing entities. Let
    client request when new entities are needed. Then the server won't
    need to copy all entities and rebuild the grid, and the client also
    won't need to copy entities.
+
+   This will require every function which modifies an entity to also
+   register this in an update map, or, alternatively, a central
+   "modify_entity" access point for this purpose. Reasonably, this
+   could be designed by making all entity properties be part of a hash
+   map. It will also require the client to list and ask for required
+   entities each frame.
+
+   Might cause so much extra work on server + extra calls that it
+   slows down the whole process, plus it's quite a lot of work.
+*** using compression
+    An easier alternative would be to gather all frames in the packet
+    and then compress it before sending, by inheriting
+    sf::Packet::on[Send|Receive]().
+
+    On client, first show computation progress and then show dl
+    progress - check if sf::Packet::getDataSize() can be used for this
+    purpose.
+*** using reduced granularity
+    This requires the client to interpolate between frames.
 * content ideas
 ** [J?] scouts are possibly too lousy at fighting
 ** add some tech/facility for pop crowd, ecology, water and space

@@ -420,8 +420,8 @@ void ship::move(game_data *g){
   }
 
   // move
-  float angle_increment = fmin(0.2 / sqrt(stats[sskey::key::mass]), 0.5);
-  float acceleration = 0.1 * base_stats.stats[sskey::key::speed] / stats[sskey::key::mass];
+  float angle_increment = fmin(1 / sqrt(stats[sskey::key::mass]), 0.5);
+  float acceleration = 0.1 * base_stats.stats[sskey::key::speed] / sqrt(stats[sskey::key::mass]);
   float epsilon = 0.01;
   float angle_miss = utility::angle_difference(selected_angle, angle);
   float angle_sign = utility::signum(angle_miss, epsilon);

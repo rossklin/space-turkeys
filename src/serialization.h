@@ -82,19 +82,11 @@ namespace st3{
   sf::Packet& operator << (sf::Packet& packet, const game_object &g);
   sf::Packet& operator >> (sf::Packet& packet, game_object &g);
 
-  /*! stream a game_settings into a packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
   sf::Packet& operator <<(sf::Packet& packet, const game_settings &g);
-
-  /*! stream a game_settings out of a packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
   sf::Packet& operator >>(sf::Packet& packet, game_settings &g);
+  
+  sf::Packet& operator <<(sf::Packet& packet, const client_game_settings &g);
+  sf::Packet& operator >>(sf::Packet& packet, client_game_settings &g);
 
   // choice structs
 
