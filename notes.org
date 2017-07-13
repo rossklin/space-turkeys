@@ -1,5 +1,5 @@
 * current work
-** test a server with memory and network capacity
+** find suitable kernel for smooth ship visualization
 * [~] issues
 ** [~] crashes
 *** random_uniform called with b = inf
@@ -97,8 +97,6 @@
     On client, first show computation progress and then show dl
     progress - check if sf::Packet::getDataSize() can be used for this
     purpose.
-*** using reduced granularity
-    This requires the client to interpolate between frames.
 * content ideas
 ** [J?] scouts are possibly too lousy at fighting
 ** add some tech/facility for pop crowd, ecology, water and space
@@ -135,6 +133,8 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** using reduced granularity
+    This requires the client to interpolate between frames.
 ** [J] make server handle signals instead of looping over true
 ** [J] make server clean up old games on completion
 ** [J] to big early advantage finding scouts in treasure, as they can search

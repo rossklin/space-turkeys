@@ -376,7 +376,8 @@ bool game::simulation_step(){
   // the active frame
   auto body = [&,this] () -> int {
     static int sub_idx = 0;
-    const int sub_frames = 4;
+    const int sub_frames = 10;
+    float sub_ratio = 1 / (float) sub_frames;
     
     if (!window.isOpen()){
       cout << "simulation: aborted by window close" << endl;
@@ -408,15 +409,31 @@ bool game::simulation_step(){
 
     message = "evolution: " + to_string((100 * idx) / settings.frames_per_round) + " %" + (playing ? "" : "(paused)");
 
-    playing &= idx < loaded - 1;
+    int buffer_size = min(settings.frames_per_round - idx - 1, 4);
+    playing &= idx < loaded - buffer_size;
+    int lookahead = min(loaded - idx - 1, 4);
 
     if (playing){
-      float sub_ratio = 1 / (float) sub_frames;
-
       // update entity positions
       for (auto sh : get_all<ship>()) {
 	if (sh -> seen) {
-	  sh -> position += utility::scale_point(utility::normv(sh -> angle), sub_ratio * sh -> stats[sskey::key::speed]);
+	  if (lookahead > 1 && idx >= 0) {
+	    float t = sub_idx / (float)sub_frames;
+	    float bw = 1;
+	    float wsum = 0;
+	    point p(0, 0);
+	    
+	    for (int i = 0; i <= lookahead; i++) {
+	      if (!g[idx+i].entity.count(sh -> id)) break;
+	      float w = exp(-pow((t - i) / bw, 2));
+	      wsum += w;
+	      p += w * g[idx + i].entity[sh -> id] -> position;
+	    }
+	    
+	    sh -> position = utility::scale_point(p, 1/wsum);
+	  } else {
+	    sh -> position += utility::scale_point(utility::normv(sh -> angle), sub_ratio * sh -> stats[sskey::key::speed]);
+	  }
 	}
       }
 
