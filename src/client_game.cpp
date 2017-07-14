@@ -411,23 +411,36 @@ bool game::simulation_step(){
 
     int buffer_size = min(settings.frames_per_round - idx - 1, 4);
     playing &= idx < loaded - buffer_size;
-    int lookahead = min(loaded - idx - 1, 4);
+    int lookaround = min(min(loaded - idx - 1, idx), 4);
+
+    auto kernel = [] (float x) {
+      return 1 - fabs(utility::sigmoid(x));
+    };
 
     if (playing){
       // update entity positions
       for (auto sh : get_all<ship>()) {
 	if (sh -> seen) {
-	  if (lookahead > 1 && idx >= 0) {
+	  if (lookaround > 1 && idx >= 0) {
 	    float t = sub_idx / (float)sub_frames;
 	    float bw = 1;
 	    float wsum = 0;
 	    point p(0, 0);
+	    bool ok = true;
 	    
-	    for (int i = 0; i <= lookahead; i++) {
-	      if (!g[idx+i].entity.count(sh -> id)) break;
-	      float w = exp(-pow((t - i) / bw, 2));
-	      wsum += w;
-	      p += w * g[idx + i].entity[sh -> id] -> position;
+	    for (int i = 0; i <= lookaround; i++) {
+	      for (int s = -1; s < (3 * !!i); s += 2) {
+		int delta = s * i;
+		if (!g[idx + delta].entity.count(sh -> id)) {
+		  ok = false;
+		  break;
+		}
+		if (!ok) break;
+		
+		float w = kernel(t - delta);
+		wsum += w;
+		p += w * g[idx + delta].entity[sh -> id] -> base_position;
+	      }
 	    }
 	    
 	    sh -> position = utility::scale_point(p, 1/wsum);
