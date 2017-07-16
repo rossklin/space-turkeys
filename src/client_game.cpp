@@ -414,38 +414,40 @@ bool game::simulation_step(){
     int lookaround = min(min(loaded - idx - 1, idx), 4);
 
     auto kernel = [] (float x) {
-      return 1 - fabs(utility::sigmoid(x));
+      return fmax(1 - fabs(x), 0);
     };
 
     if (playing){
+      float t = sub_idx / (float)sub_frames;
+      float bw = 1;
+      
       // update entity positions
       for (auto sh : get_all<ship>()) {
 	if (sh -> seen) {
 	  if (lookaround > 1 && idx >= 0) {
-	    float t = sub_idx / (float)sub_frames;
-	    float bw = 1;
 	    float wsum = 0;
 	    point p(0, 0);
 	    bool ok = true;
-	    
+
 	    for (int i = 0; i <= lookaround; i++) {
 	      for (int s = -1; s < (3 * !!i); s += 2) {
 		int delta = s * i;
-		if (!g[idx + delta].entity.count(sh -> id)) {
+		if (!(g[idx + delta].entity.count(sh -> id) && g[idx + delta].entity[sh -> id] -> is_active())) {
 		  ok = false;
 		  break;
 		}
-		if (!ok) break;
 		
 		float w = kernel(t - delta);
 		wsum += w;
 		p += w * g[idx + delta].entity[sh -> id] -> base_position;
 	      }
+	      
+	      if (!ok) break;
 	    }
 	    
-	    sh -> position = utility::scale_point(p, 1/wsum);
+	    sh -> position = (1 / wsum) * p;
 	  } else {
-	    sh -> position += utility::scale_point(utility::normv(sh -> angle), sub_ratio * sh -> stats[sskey::key::speed]);
+	    sh -> position += sub_ratio * sh -> stats[sskey::key::speed] * utility::normv(sh -> angle);
 	  }
 	}
       }
@@ -646,7 +648,7 @@ void game::reload_data(data_frame &g){
     combid key = x.first;
     if (entity.count(key)) remove_entity(key);
     entity[key] = p;
-    p -> seen = true;
+    p -> seen = p -> is_active();
     if (p -> owner == self_id && p -> is_active()) add_fixed_stars (p -> position, p -> vision());
     cout << "reload_data: loaded seen entity: " << p -> id << endl;
   }
@@ -663,7 +665,7 @@ void game::reload_data(data_frame &g){
   list<combid> rbuf;
   for (auto y : entity){
     entity_selector::ptr s = y.second;
-    if (s -> isa(ship::class_id) && !s -> seen){
+    if (s -> isa(ship::class_id) && s -> is_active() && !s -> seen){
       for (auto x : entity){
 	if (x.second -> owned && utility::l2norm(s -> position - x.second -> position) < x.second -> vision()){
 	  rbuf.push_back(s -> id);
@@ -1446,7 +1448,8 @@ void game::window_loop(int &done, function<int(sf::Event)> event_handler, functi
     // display on screen
     window.display();
 
-    sf::Time wait_for = sf::seconds(fmax(frame_time - clock.getElapsedTime().asSeconds(), 0));
+    float elapsed_seconds = clock.getElapsedTime().asSeconds();
+    sf::Time wait_for = sf::seconds(fmax(frame_time - elapsed_seconds, 0));
     sf::sleep(wait_for);
   }
 }

@@ -1,5 +1,8 @@
 * current work
+** figure out why setting seen = is_active() for selector causes segfault
 ** find suitable kernel for smooth ship visualization
+** bind animations to entities if available
+** non-active entities should not be labeled as seen by client
 * [~] issues
 ** [~] crashes
 *** random_uniform called with b = inf
