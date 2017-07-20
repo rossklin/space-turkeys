@@ -1,8 +1,9 @@
 * current work
-** figure out why setting seen = is_active() for selector causes segfault
+** Issue with "seen" being unset
+   For some reason, the "seen" property of ships in passed data frames
+   is unset, causing them to be ignored by the position kernel.
 ** find suitable kernel for smooth ship visualization
 ** bind animations to entities if available
-** non-active entities should not be labeled as seen by client
 * [~] issues
 ** [~] crashes
 *** random_uniform called with b = inf
@@ -136,6 +137,11 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] non-active entities should not be labeled as seen by client
+** [J] figure out why setting seen = is_active() for selector causes segfault
+   Caused by attempting to dynamic cast an entity_selector* to a
+   specific_selector<ship>* - presumably this requires some reference
+   to the other parent class.
 ** using reduced granularity
     This requires the client to interpolate between frames.
 ** [J] make server handle signals instead of looping over true

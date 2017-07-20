@@ -432,8 +432,10 @@ bool game::simulation_step(){
 	    for (int i = 0; i <= lookaround; i++) {
 	      for (int s = -1; s < (3 * !!i); s += 2) {
 		int delta = s * i;
-		if (!(g[idx + delta].entity.count(sh -> id) && g[idx + delta].entity[sh -> id] -> is_active())) {
-		  ok = false;
+		bool exists = g[idx + delta].entity.count(sh -> id);
+		bool ok = exists && g[idx + delta].entity[sh -> id] -> seen;
+
+		if (!ok) {
 		  break;
 		}
 		
