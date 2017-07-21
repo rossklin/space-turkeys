@@ -31,6 +31,7 @@ namespace st3{
       sf::Color color; /*!< the player color of this entity */
       std::set<idtype> commands; /*! the commands given to this entity */
       point base_position;
+      float base_angle;
       
       entity_selector(sf::Color c, bool o);
       virtual ~entity_selector() = default;
@@ -66,6 +67,9 @@ namespace st3{
       std::set<combid> get_ships();
       std::string hover_info();
     };
+
+    template<>
+    specific_selector<ship>::specific_selector(ship &s, sf::Color c, bool o);
 
     typedef specific_selector<ship> ship_selector;
     typedef specific_selector<fleet> fleet_selector;

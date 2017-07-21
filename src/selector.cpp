@@ -323,6 +323,13 @@ bool entity_selector::inside_rect(sf::FloatRect r){
 template<typename T>
 specific_selector<T>::specific_selector(T &s, sf::Color c, bool o) : entity_selector(c,o), T(s) {
   base_position = position;
+  base_angle = 0;
+}
+
+template<>
+specific_selector<ship>::specific_selector(ship &s, sf::Color c, bool o) : entity_selector(c,o), ship(s) {
+  base_position = position;
+  base_angle = angle;
 }
 
 template<typename T>

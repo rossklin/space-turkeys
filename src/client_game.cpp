@@ -413,10 +413,6 @@ bool game::simulation_step(){
     playing &= idx < loaded - buffer_size;
     int lookaround = min(min(loaded - idx - 1, idx), 4);
 
-    auto kernel = [] (float x) {
-      return fmax(1 - fabs(x), 0);
-    };
-
     if (playing){
 
       if (sub_idx >= sub_frames) {
@@ -432,25 +428,27 @@ bool game::simulation_step(){
       // update entity positions
       for (auto sh : get_all<ship>()) {
 	if (sh -> seen) {
-	  if (lookaround > 0) {
-	    float wsum = 0;
-	    point p(0, 0);
-	    bool ok = true;
-
-	    for (auto delta : utility::zig_seq(lookaround)) {
+	  bool ok = lookaround > 1;
+	  vector<point> pbuf(5);
+	  vector<float> abuf(5);
+	  
+	  if (ok) {
+	    for (auto delta : utility::zig_seq(2)) {
 	      bool exists = g[idx + delta].entity.count(sh -> id);
-	      bool ok = exists && g[idx + delta].entity[sh -> id] -> is_active();
+	      ok = exists && g[idx + delta].entity[sh -> id] -> is_active();
 
 	      if (!ok) {
 		break;
 	      }
-		
-	      float w = kernel(t - delta);
-	      wsum += w;
-	      p += w * g[idx + delta].entity[sh -> id] -> base_position;
-	    }
-	    
-	    sh -> position = (1 / wsum) * p;
+
+	      pbuf[2 + delta] = g[idx + delta].entity[sh -> id] -> base_position;
+	      abuf[2 + delta] = g[idx + delta].entity[sh -> id] -> base_angle;
+	    }	    
+	  }
+
+	  if (ok) {
+	    sh -> position = utility::cubic_interpolation(pbuf, t);
+	    sh -> angle = utility::cubic_interpolation(abuf, t);
 	  } else {
 	    sh -> position += sub_ratio * sh -> stats[sskey::key::speed] * utility::normv(sh -> angle);
 	  }

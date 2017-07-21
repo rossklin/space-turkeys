@@ -284,6 +284,16 @@ namespace st3{
     /* **************************************** */
 
     template<typename T>
+    T cubic_interpolation(std::vector<T> data, float t) {
+      float sixth = 1 / (float)6;
+      T a1 = sixth * (data[4] - (float)3 * data[3] + (float)3 * data[2] - data[1]);
+      T a2 = (float)0.5 * (data[1] + data[3] - (float)2 * data[2]);
+      T a3 = sixth * (-data[4] + (float)6 * data[3] - (float)3 * data[2] - (float)2 * data[1]);
+      T a4 = data[2];
+      return (float)pow(t, 3) * a1 + (float)pow(t, 2) * a2 + t * a3 + a4;
+    }
+
+    template<typename T>
     std::vector<T> elementwise_product(const std::vector<T> &a, const std::vector<T> &b) {
       assert(a.size() == b.size());
       std::vector<T> x = a;
