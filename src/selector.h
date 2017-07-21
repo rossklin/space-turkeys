@@ -33,7 +33,8 @@ namespace st3{
       point base_position;
       
       entity_selector(sf::Color c, bool o);
-      virtual ~entity_selector();
+      virtual ~entity_selector() = default;
+      virtual ptr ss_clone() = 0;
 
       virtual bool contains_point(point p, float &d) = 0;
       virtual void draw(window_t &w) = 0;
@@ -56,9 +57,8 @@ namespace st3{
       static ptr create(T &s, sf::Color c, bool o);
 
       specific_selector(T &s, sf::Color c, bool o);
-
-      /*! empty destructor */
-      ~specific_selector();
+      ~specific_selector() = default;
+      entity_selector::ptr ss_clone();
       bool is_selectable();
       bool contains_point(point p, float &d);
       void draw(window_t &w);

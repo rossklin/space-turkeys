@@ -347,6 +347,8 @@ namespace st3{
 
     std::vector<int> sequence(int a, int b);
 
+    std::vector<int> zig_seq(int a);
+
     /*! generate colors distinct from each other and from black and grey
       @param n number of colors 
       @return n distinct colors in 32 bit argb format

@@ -375,7 +375,7 @@ bool game::simulation_step(){
   // gui loop body that draws progress indicator and keeps track of
   // the active frame
   auto body = [&,this] () -> int {
-    static int sub_idx = 0;
+    static int sub_idx = 1;
     const int sub_frames = 10;
     float sub_ratio = 1 / (float) sub_frames;
     
@@ -418,33 +418,36 @@ bool game::simulation_step(){
     };
 
     if (playing){
+
+      if (sub_idx >= sub_frames) {
+	sub_idx = 1;
+	idx++;
+	reload_data(g[idx]);
+	return 0;
+      }
+
       float t = sub_idx / (float)sub_frames;
       float bw = 1;
       
       // update entity positions
       for (auto sh : get_all<ship>()) {
 	if (sh -> seen) {
-	  if (lookaround > 1 && idx >= 0) {
+	  if (lookaround > 0) {
 	    float wsum = 0;
 	    point p(0, 0);
 	    bool ok = true;
 
-	    for (int i = 0; i <= lookaround; i++) {
-	      for (int s = -1; s < (3 * !!i); s += 2) {
-		int delta = s * i;
-		bool exists = g[idx + delta].entity.count(sh -> id);
-		bool ok = exists && g[idx + delta].entity[sh -> id] -> seen;
+	    for (auto delta : utility::zig_seq(lookaround)) {
+	      bool exists = g[idx + delta].entity.count(sh -> id);
+	      bool ok = exists && g[idx + delta].entity[sh -> id] -> is_active();
 
-		if (!ok) {
-		  break;
-		}
-		
-		float w = kernel(t - delta);
-		wsum += w;
-		p += w * g[idx + delta].entity[sh -> id] -> base_position;
+	      if (!ok) {
+		break;
 	      }
-	      
-	      if (!ok) break;
+		
+	      float w = kernel(t - delta);
+	      wsum += w;
+	      p += w * g[idx + delta].entity[sh -> id] -> base_position;
 	    }
 	    
 	    sh -> position = (1 / wsum) * p;
@@ -470,14 +473,8 @@ bool game::simulation_step(){
 	a.p2 += utility::scale_point(a.v2, sub_ratio);
 	a.frame++;
       }
-
+      
       sub_idx++;
-
-      if (sub_idx >= sub_frames) {
-	sub_idx = 0;
-	idx++;
-	reload_data(g[idx]);
-      }
     }
     return 0;
   };
@@ -494,6 +491,8 @@ bool game::simulation_step(){
 
   cout << "simulation: waiting for thread join" << endl;
   t.join();
+
+  for (auto &f : g) for (auto x : f.entity) delete x.second;
 
   cout << "simulation: finished." << endl;
   return true;
@@ -646,7 +645,7 @@ void game::reload_data(data_frame &g){
 
   // update entities: fleets, solars and waypoints
   for (auto x : g.entity){
-    entity_selector::ptr p = x.second;
+    entity_selector::ptr p = x.second -> ss_clone();
     combid key = x.first;
     if (entity.count(key)) remove_entity(key);
     entity[key] = p;

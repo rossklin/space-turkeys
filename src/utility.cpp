@@ -217,6 +217,15 @@ std::vector<int> utility::sequence(int a, int b) {
   return res;
 }
 
+std::vector<int> utility::zig_seq(int a) {
+  assert(a >= 0);
+  vector<int> res(2 * a + 1);
+  int c = 0;
+  res[0] = 0;
+  for (int i = 1; i <= a; i++) for (int s = -1; s <= 1; s += 2) res[c++] = i * s;
+  return res;
+}
+
 vector<float> utility::circular_kernel(const vector<float> &x, float s) {
   // circular kernel smooth enemy strength data
   int na = x.size();

@@ -304,8 +304,6 @@ entity_selector::entity_selector(sf::Color c, bool o){
   queue_level = 0;
 }
 
-entity_selector::~entity_selector(){}
-
 bool entity_selector::is_area_selectable() {
   return this -> is_selectable() && !this -> isa(waypoint::class_id);
 }
@@ -328,7 +326,9 @@ specific_selector<T>::specific_selector(T &s, sf::Color c, bool o) : entity_sele
 }
 
 template<typename T>
-specific_selector<T>::~specific_selector() {}
+entity_selector::ptr specific_selector<T>::ss_clone() {
+  return create(static_cast<T&>(*this), color, owned);
+}
 
 template<typename T>
 point specific_selector<T>::get_position(){
