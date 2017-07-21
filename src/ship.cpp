@@ -40,7 +40,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
   s.stats[sskey::key::solar_damage] = 0;
   s.stats[sskey::key::interaction_radius] = 20;
   s.stats[sskey::key::vision_range] = 50;
-  s.stats[sskey::key::load_time] = 50;
+  s.stats[sskey::key::load_time] = 20;
   s.stats[sskey::key::cargo_capacity] = 0;
   s.stats[sskey::key::build_time] = 100;
   s.stats[sskey::key::regeneration] = 0;
@@ -156,9 +156,10 @@ void ship::set_stats(ship_stats s){
 
 void ship::pre_phase(game_data *g){
   // load stuff
-  load = fmin(load + 1, base_stats.stats[sskey::key::load_time]);
-  stats[sskey::key::hp] = fmin(stats[sskey::key::hp] + stats[sskey::key::regeneration], base_stats.stats[sskey::key::hp]);
-  stats[sskey::key::shield] = fmin(stats[sskey::key::shield] + 0.01, base_stats.stats[sskey::key::shield]);
+  float dt = g -> get_dt();
+  load = fmin(load + dt, base_stats.stats[sskey::key::load_time]);
+  stats[sskey::key::hp] = fmin(stats[sskey::key::hp] + dt * stats[sskey::key::regeneration], base_stats.stats[sskey::key::hp]);
+  stats[sskey::key::shield] = fmin(stats[sskey::key::shield] + dt * 0.01, base_stats.stats[sskey::key::shield]);
 }
 
 bool ship::check_space(float a) {
@@ -329,7 +330,7 @@ void ship::update_data(game_data *g) {
 }
 
 void ship::move(game_data *g){
-  if (force_refresh || utility::random_uniform() < 0.1) update_data(g);
+  if (force_refresh || utility::random_uniform() < g -> get_dt() * 0.1) update_data(g);
 
   auto output = [this] (string v) {
     cout << id << ": move: " << v << endl;
@@ -420,9 +421,10 @@ void ship::move(game_data *g){
   }
 
   // move
+  float dt = g -> get_dt();
   float angle_increment = fmin(0.6 / sqrt(stats[sskey::key::mass]), 0.3);
   float acceleration = 0.1 * base_stats.stats[sskey::key::speed] / sqrt(stats[sskey::key::mass]);
-  float epsilon = 0.01;
+  float epsilon = dt * 0.01;
   float angle_miss = utility::angle_difference(selected_angle, angle);
   float angle_sign = utility::signum(angle_miss, epsilon);
 
@@ -451,8 +453,8 @@ void ship::move(game_data *g){
   float speed_sign = utility::signum(speed_miss, epsilon);
   stats[sskey::key::speed] += fmin(acceleration, fabs(speed_miss)) * speed_sign;
   stats[sskey::key::speed] = fmin(fmax(stats[sskey::key::speed], 0), base_stats.stats[sskey::key::speed]);
-  angle += fmin(angle_increment, fabs(angle_miss)) * angle_sign;
-  position = position + utility::scale_point(utility::normv(angle), stats[sskey::key::speed]);
+  angle += fmin(dt * angle_increment, fabs(angle_miss)) * angle_sign;
+  position += dt * stats[sskey::key::speed] * utility::normv(angle);
 
   g -> entity_grid -> move(id, position);
 }

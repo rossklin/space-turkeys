@@ -163,6 +163,8 @@ point graphics::inverse_scale(sf::RenderTarget &w){
 
 void graphics::draw_animation(sf::RenderTarget &w, animation e){
   float t = e.time_passed();
+  if (t < 0) return;
+  
   sf::Color c(e.color);
   int alpha_wave = 1000 * t * exp(-pow(3 * t,2));
 
@@ -173,7 +175,7 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
   
     sf::CircleShape s(rad);
     s.setFillColor(col);
-    s.setPosition(e.p1 - point(rad, rad));
+    s.setPosition(e.t1.p - point(rad, rad));
     w.draw(s);
   };
   
@@ -188,16 +190,16 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
   
     sf::CircleShape s(rad);
     s.setFillColor(c);
-    s.setPosition(e.p1 - point(rad, rad));
+    s.setPosition(e.t1.p - point(rad, rad));
     w.draw(s);
   } else if (e.cat == animation_data::category::shot) {
     vector<sf::Vertex> svert;
     c.a = utility::sigmoid(30 * e.magnitude * exp(-pow(7 * t,2)), 255);
 
     svert.resize(2);
-    svert[0].position = e.p1;
+    svert[0].position = e.t1.p;
     svert[0].color = c;
-    svert[1].position = e.p2;
+    svert[1].position = e.t2.p;
     svert[1].color = c;
 
     w.draw(&svert[0], svert.size(), sf::LinesStrip);

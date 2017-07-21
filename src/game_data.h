@@ -15,6 +15,7 @@
 #include "game_settings.h"
 #include "interaction.h"
 #include "utility.h"
+#include "animation_data.h"
 
 namespace st3{
   namespace server {
@@ -66,9 +67,11 @@ namespace st3{
     void discover(point x, float r, bool starting_area = false);
     void update_discover();
     solar::ptr closest_solar(point p, idtype id);
+    animation_tracker_info get_tracker(combid id);
     void log_ship_fire(combid a, combid b);
     void log_ship_destroyed(combid a, combid b);
     void log_bombard(combid a, combid b);
+    float get_dt();
 
     // access
     ship::ptr get_ship(combid i);

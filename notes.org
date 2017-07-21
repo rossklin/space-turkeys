@@ -1,9 +1,4 @@
 * current work
-** Issue with "seen" being unset
-   For some reason, the "seen" property of ships in passed data frames
-   is unset, causing them to be ignored by the position kernel.
-** find suitable kernel for smooth ship visualization
-** bind animations to entities if available
 * [~] issues
 ** [~] crashes
 *** random_uniform called with b = inf
@@ -15,6 +10,7 @@
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
+*** solars don't show player colors
 *** window freezes while waiting for other clients to connect
     Since wait_for_it() doesn't start window loop unless desktop is
     initialized.
@@ -67,7 +63,9 @@
 *** allow dragging waypoints
 *** name and indicators for solars so you can tell them apart
 ** system
+*** slow down when entering combat
 *** ships shoot a bit far
+    make distance part of accuracy check and apply it in ship::move when checking shootability
 *** make fleet move at below speed limit so ships can catch up
 *** decrease likelihood of finding treasure
 *** ships should stop when they hit converge on a waypoint
@@ -103,7 +101,7 @@
     purpose.
 * content ideas
 ** [J?] scouts are possibly too lousy at fighting
-** add some tech/facility for pop crowd, ecology, water and space
+** [J] add some tech/facility for pop crowd, ecology, water and space
 * to be tested
 ** untested functionality
 *** new trade interaction
@@ -137,6 +135,17 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] don't show animations when loading data in pre/choice-step
+** [J] add random animation-delay based on sub-frames (consistent for animation pairs)
+** [J] make animation time parameter respect sub-frames
+** [J] at start/end of ship path, interpolate around an inner point instead
+** [J] bind animations to entities if available
+** [J] Issue with "seen" being unset
+   Solution: references in passed frames had been *deleted*.
+
+   For some reason, the "seen" property of ships in passed data frames
+   is unset, causing them to be ignored by the position kernel.
+** [J] find suitable kernel for smooth ship visualization
 ** [J] non-active entities should not be labeled as seen by client
 ** [J] figure out why setting seen = is_active() for selector causes segfault
    Caused by attempting to dynamic cast an entity_selector* to a

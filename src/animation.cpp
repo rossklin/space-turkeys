@@ -9,5 +9,5 @@ animation::animation(const animation_data &d) : animation_data(d) {
 }
 
 float animation::time_passed() {
-  return client::frame_time * frame;
+  return client::frame_time * 10 * (frame - delay) / (float)sub_frames;
 }

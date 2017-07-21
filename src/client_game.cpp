@@ -232,7 +232,7 @@ bool game::pre_step(){
   }
   cout << "client " << self_id << ": pre step: loaded" << endl;
 
-  reload_data(data);
+  reload_data(data, false);
 
   return true;
 }
@@ -376,7 +376,6 @@ bool game::simulation_step(){
   // the active frame
   auto body = [&,this] () -> int {
     static int sub_idx = 1;
-    const int sub_frames = 10;
     float sub_ratio = 1 / (float) sub_frames;
     
     if (!window.isOpen()){
@@ -411,7 +410,6 @@ bool game::simulation_step(){
 
     int buffer_size = min(settings.frames_per_round - idx - 1, 4);
     playing &= idx < loaded - buffer_size;
-    int lookaround = min(min(loaded - idx - 1, idx), 4);
 
     if (playing){
 
@@ -428,27 +426,31 @@ bool game::simulation_step(){
       // update entity positions
       for (auto sh : get_all<ship>()) {
 	if (sh -> seen) {
-	  bool ok = lookaround > 1;
-	  vector<point> pbuf(5);
-	  vector<float> abuf(5);
+	  vector<point> pbuf(4);
+	  vector<float> abuf(4);
+
+	  auto load_buffers = [&] (int offset) -> bool {
+	    for (int i = -1; i < 3; i++) {
+	      int idx_access = idx + offset + i;
+	      if (idx_access < 0 || idx_access >= loaded) return false;
+	      if (!g[idx_access].entity.count(sh -> id)) return false;
+
+	      entity_selector::ptr ep = g[idx_access].entity[sh -> id];
+	      if (!ep -> is_active()) return false;
+
+	      pbuf[1 + i] = ep -> base_position;
+	      abuf[1 + i] = ep -> base_angle;
+	    }
+	    return true;
+	  };
+
+	  int offset = 0;
+	  bool test = false;
+	  for (auto i : utility::zig_seq(2)) if (test = load_buffers(offset = i)) break;
 	  
-	  if (ok) {
-	    for (auto delta : utility::zig_seq(2)) {
-	      bool exists = g[idx + delta].entity.count(sh -> id);
-	      ok = exists && g[idx + delta].entity[sh -> id] -> is_active();
-
-	      if (!ok) {
-		break;
-	      }
-
-	      pbuf[2 + delta] = g[idx + delta].entity[sh -> id] -> base_position;
-	      abuf[2 + delta] = g[idx + delta].entity[sh -> id] -> base_angle;
-	    }	    
-	  }
-
-	  if (ok) {
-	    sh -> position = utility::cubic_interpolation(pbuf, t);
-	    sh -> angle = utility::cubic_interpolation(abuf, t);
+	  if (test) {
+	    sh -> position = utility::cubic_interpolation(pbuf, t - offset);
+	    sh -> angle = utility::cubic_interpolation(abuf, t - offset);
 	  } else {
 	    sh -> position += sub_ratio * sh -> stats[sskey::key::speed] * utility::normv(sh -> angle);
 	  }
@@ -467,8 +469,16 @@ bool game::simulation_step(){
       }
 
       for (auto &a : animations) {
-	a.p1 += utility::scale_point(a.v1, sub_ratio);
-	a.p2 += utility::scale_point(a.v2, sub_ratio);
+	auto update_tracker = [this, sub_ratio] (animation_tracker_info &t) {
+	  if (entity.count(t.eid)) {
+	    t.p = entity[t.eid] -> position;
+	  } else {
+	    t.p += sub_ratio * t.v;
+	  }
+	};
+
+	update_tracker(a.t1);
+	update_tracker(a.t2);
 	a.frame++;
       }
       
@@ -634,7 +644,7 @@ void game::remove_entity(combid i){
     Adds and removes entity selectors given by the frame. Also adds
     new command selectors representing fleet commands.
 */
-void game::reload_data(data_frame &g){
+void game::reload_data(data_frame &g, bool use_animations){
   // make selectors 'not seen' and 'not owned' and clear commands and
   // waypoints
   clear_selectors();  
@@ -718,7 +728,11 @@ void game::reload_data(data_frame &g){
   }
   
   // add animations
-  for (auto &a : players[self_id].animations) animations.push_back(a);
+  if (use_animations) {
+    for (auto &a : players[self_id].animations) animations.push_back(a);
+  } else {
+    animations.clear();
+  }
 
   // add log
   interface::desktop -> push_log(players[self_id].log);

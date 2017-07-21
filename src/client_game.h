@@ -105,7 +105,7 @@ namespace st3{
       /*! update gui with new game data
 	@param g the game data
       */
-      void reload_data(data_frame &g);
+      void reload_data(data_frame &g, bool use_animations = true);
 
       // event handling
       /*! update the choice generating gui with an sfml event

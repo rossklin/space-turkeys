@@ -439,6 +439,6 @@ ostream & st3::operator << (ostream &ss, vector<float> const &x){
 
 // output point x to stream ss
 ostream & st3::operator << (ostream &ss, point const &x){
-  ss << "(" << x.x << ", " << x.y << ")" << endl;
+  ss << "(" << x.x << ", " << x.y << ")";
   return ss;
 }

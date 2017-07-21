@@ -35,7 +35,7 @@ void solar::pre_phase(game_data *g){
 void solar::move(game_data *g){
   if (owner < 0 || population <= 0) return;
 
-  dt = g -> settings.dt;
+  dt = g -> get_dt();
   dynamics();
 
   // build ships

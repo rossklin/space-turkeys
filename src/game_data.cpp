@@ -711,28 +711,45 @@ void game_data::confirm_data() {
   }
 }
 
+animation_tracker_info game_data::get_tracker(combid id) {
+  animation_tracker_info info;
+  info.eid = id;
+
+  if (entity.count(id)) {
+    info.p = get_entity(id) -> position;
+
+    if (get_entity(id) -> isa(ship::class_id)) {
+      ship::ptr s = get_ship(id);
+      info.v = s -> stats[sskey::key::speed] * utility::normv(s -> angle);
+    } else {
+      info.v = point(0, 0);
+    }
+  }
+
+  return info;
+}
+
 void game_data::log_bombard(combid a, combid b) {
   ship::ptr s = get_ship(a);
   solar::ptr t = get_solar(b);
+  int delay = utility::random_int(sub_frames);
 
   animation_data x;
-  x.p1 = s -> position;
-  x.p2 = t -> position;
+  x.t1 = get_tracker(s -> id);
+  x.t2 = get_tracker(t -> id);
   x.color = players[s -> owner].color;
   x.cat = animation_data::category::bomb;
   x.magnitude = s -> stats[sskey::key::solar_damage];
-  x.v1 = point(0, 0);
-  x.v2 = point(0, 0);
+  x.delay = delay;
   
   animation_data sh;
   float shield = t -> compute_shield_power();
-  sh.p1 = t -> position;
+  sh.t1 = get_tracker(t -> id);
   sh.radius = 1.2 * t -> radius;
   sh.magnitude = shield;
-  sh.v1 = point(0, 0);
-  sh.v2 = point(0, 0);
   sh.color = players[t -> owner].color;
   sh.cat = animation_data::category::shield;
+  sh.delay = delay;
   
   for (auto &p : players) {
     if (evm[p.first].count(b)) {
@@ -745,30 +762,29 @@ void game_data::log_bombard(combid a, combid b) {
 void game_data::log_ship_fire(combid a, combid b) {
   game_object::ptr s = get_entity(a);
   ship::ptr t = get_ship(b);
+  int delay = utility::random_int(sub_frames);
 
   animation_data x;
-  x.p1 = s -> position;
-  x.p2 = t -> position;
+  x.t1 = get_tracker(s -> id);
+  x.t2 = get_tracker(t -> id);
   x.color = players[s -> owner].color;
   x.cat = animation_data::category::shot;
+  x.delay = delay;
   
   if (s -> isa(ship::class_id)) {
     ship::ptr sp = utility::guaranteed_cast<ship>(s);
     x.magnitude = sp -> stats[sskey::key::ship_damage];
-    x.v1 = utility::scale_point(utility::normv(sp -> angle), sp -> stats[sskey::key::speed]);
   } else {
     x.magnitude = 1;
-    x.v1 = point(0,0);
   }
-  x.v2 = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
 
   animation_data sh;
-  sh.p1 = t -> position;
+  sh.t1 = get_tracker(t -> id);
   sh.magnitude = t -> stats[sskey::key::shield];
   sh.radius = 1.2 * t -> radius;
-  sh.v1 = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
   sh.color = players[t -> owner].color;
   sh.cat = animation_data::category::shield;
+  sh.delay = delay;
 
   for (auto &p : players) {
     if (evm[p.first].count(a) || evm[p.first].count(b)) {
@@ -784,6 +800,7 @@ void game_data::log_ship_fire(combid a, combid b) {
 void game_data::log_ship_destroyed(combid a, combid b) {
   ship::ptr s = get_ship(a);
   ship::ptr t = get_ship(b);
+  int delay = utility::random_int(sub_frames);
 
   // text log
   string log_p1 = "Your " + s -> ship_class + " destroyed an enemy " + t -> ship_class;
@@ -794,15 +811,19 @@ void game_data::log_ship_destroyed(combid a, combid b) {
 
   // animations
   animation_data x;
-  x.p1 = t -> position;
+  x.t1 = get_tracker(t -> id);
   x.magnitude = t -> stats[sskey::key::mass];
-  x.v1 = utility::scale_point(utility::normv(t -> angle), t -> stats[sskey::key::speed]);
   x.color = players[t -> owner].color;
   x.cat = animation_data::category::explosion;
+  x.delay = delay;
 
   for (auto &p : players) {
     if (evm[p.first].count(b)) {
       p.second.animations.push_back(x);
     }
   }
+}
+
+float game_data::get_dt() {
+  return sub_frames * settings.dt;
 }
