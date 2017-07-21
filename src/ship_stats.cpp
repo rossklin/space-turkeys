@@ -105,7 +105,7 @@ bool ssfloat_t::insert(string name, float value) {
 }
 
 float ssfloat_t::get_dps() {
-  return stats[sskey::key::accuracy] * stats[sskey::key::ship_damage] / stats[sskey::key::load_time];
+  return stats[sskey::key::accuracy] * stats[sskey::key::ship_damage] / fmax(stats[sskey::key::load_time], 1);
 }
 
 float ssfloat_t::get_hp() {

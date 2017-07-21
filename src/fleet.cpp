@@ -127,7 +127,9 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
   float pref_maxrad = fmax(sqrt(ships.size() / (M_PI * pref_density)), 20);
 
   auto output = [this] (string v) {
+#ifdef VERBOSE
     cout << id << ": suggest: " << v << endl;
+#endif
   };
 
   int unmask = 0;
@@ -194,7 +196,9 @@ void fleet::analyze_enemies(game_data *g) {
   vector<point> x;
 
   auto output = [this] (string v) {
+#ifdef VERBOSE
     cout << id << ": analyze enemies: " << v << endl;
+#endif
   };
   
   if (t.empty()) {

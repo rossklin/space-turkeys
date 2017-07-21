@@ -25,6 +25,10 @@ const string interaction::pickup = "pickup";
 const string interaction::terraform = "terraform";
 const string interaction::hive_support = "hive support";
 
+void output(string v) {
+  
+}
+
 const hm_t<string, interaction> &interaction::table() {
   static bool init = false;
   static hm_t<string, interaction> data;

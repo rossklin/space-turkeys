@@ -1,9 +1,10 @@
 * current work
+** command_gui should not show during simulation!
+** wrap all output in macro #ifdefined VERBOSE
 * [~] issues
 ** [~] crashes
 *** random_uniform called with b = inf
 ** [~] system
-*** terribly slow run on server, though not using CPU (network?)
 *** init_data sends all data - should limit to "player_any"
 *** socket_t routines should have a timeout
 *** weird that solar systems aren't automatically searched when colonized?
@@ -63,9 +64,13 @@
 *** allow dragging waypoints
 *** name and indicators for solars so you can tell them apart
 ** system
-*** slow down when entering combat
-*** ships shoot a bit far
-    make distance part of accuracy check and apply it in ship::move when checking shootability
+*** better combat "feel"
+    o [J?] slow down when entering combat
+    o make distance part of accuracy check and apply it in ship::move when checking shootability
+    o [J?] increased angular rotational acceleration for large ships
+    o [J?] increase damage / health ratio
+    o [J?] increase rate of fire
+    o Corsairs don't beat fighters - set load time to 0 and increase damage and accuracy
 *** make fleet move at below speed limit so ships can catch up
 *** decrease likelihood of finding treasure
 *** ships should stop when they hit converge on a waypoint
@@ -135,6 +140,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] terribly slow run on server, though not using CPU (network?)
 ** [J] don't show animations when loading data in pre/choice-step
 ** [J] add random animation-delay based on sub-frames (consistent for animation pairs)
 ** [J] make animation time parameter respect sub-frames
