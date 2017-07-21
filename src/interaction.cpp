@@ -26,7 +26,9 @@ const string interaction::terraform = "terraform";
 const string interaction::hive_support = "hive support";
 
 void output(string v) {
-  
+#ifdef VERBOSE
+  cout << v << endl;
+#endif
 }
 
 const hm_t<string, interaction> &interaction::table() {
@@ -40,10 +42,10 @@ const hm_t<string, interaction> &interaction::table() {
   i.name = interaction::land;
   i.condition = target_condition(target_condition::owned, solar::class_id);
   i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
-    cout << "interaction: land: " << self -> id << " targeting " << target -> id << endl;
+    output("interaction: land: " + self -> id + " targeting " + target -> id);
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
-    cout << s -> id << " lands at " << t -> id << endl;
+    output(s -> id + " lands at " + t -> id);
 
     // unset fleet
     if (s -> has_fleet()) {
@@ -66,7 +68,7 @@ const hm_t<string, interaction> &interaction::table() {
   i.name = interaction::search;
   i.condition = target_condition(target_condition::neutral, solar::class_id);
   i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
-    cout << "interaction: search: " << self -> id << " targeting " << target -> id << endl;
+    output("interaction: search: " + self -> id + " targeting " + target -> id);
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
     stringstream ss;
@@ -167,7 +169,7 @@ const hm_t<string, interaction> &interaction::table() {
   i.name = interaction::space_combat;
   i.condition = target_condition(target_condition::enemy, ship::class_id);
   i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
-    cout << "interaction: space_combat: " << self -> id << " targeting " << target -> id << endl;
+    output("interaction: space_combat: " + self -> id + " targeting " + target -> id);
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     ship::ptr t = utility::guaranteed_cast<ship>(target);
       
@@ -175,15 +177,15 @@ const hm_t<string, interaction> &interaction::table() {
 
     g -> log_ship_fire(s -> id, t -> id);
 
-    cout << "space_combat: loaded" << endl;
+    output("space_combat: loaded");
     s -> load = 0;
     if (t -> evasion_check() < s -> accuracy_check(t)) {
-      cout << "space_combat: hit!" << endl;
+      output("space_combat: hit!");
       float damage = 0;
       if (s -> stats[sskey::key::ship_damage] > 0) damage = utility::random_uniform(0, s -> stats[sskey::key::ship_damage]);
       t -> receive_damage(g, self, damage);
     }else{
-      cout << "space_combat: miss!" << endl;
+      output("space_combat: miss!");
     }
   };
   data[i.name] = i;
@@ -192,7 +194,7 @@ const hm_t<string, interaction> &interaction::table() {
   i.name = interaction::turret_combat;
   i.condition = target_condition(target_condition::enemy, ship::class_id);
   i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
-    cout << "interaction: turret_combat: " << self -> id << " targeting " << target -> id << endl;
+    output("interaction: turret_combat: " + self -> id + " targeting " + target -> id);
     solar::ptr s = utility::guaranteed_cast<solar>(self);
     ship::ptr x = utility::guaranteed_cast<ship>(target);
     float d = utility::l2norm(s -> position - x -> position);

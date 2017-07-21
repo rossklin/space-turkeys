@@ -365,13 +365,6 @@ void game_data::discover(point x, float r, bool starting_area) {
 
     // make solars
     for (auto p : x) add_entity(solar::create(p, bounty));
-
-    if (starting_area) {
-      // debug output
-      cout << "build starting area: b=" << bounty << ": box " << ul << " -> " << br << ": positions: " << endl;
-      for (auto p : x) cout << p;
-      cout << endl;
-    }
   };
 
   for (int i = x1; i <= x2; i++) {
@@ -490,8 +483,6 @@ void game_data::build(){
   static research::data rbase;
   
   if (players.empty()) throw runtime_error("game_data: build: no players!");
-
-  cout << "game_data: running dummy build" << endl;
 
   auto make_home_solar = [this] (point p, idtype pid) {
     cost::res_t initial_resources;

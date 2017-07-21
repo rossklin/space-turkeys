@@ -477,7 +477,6 @@ void ship::receive_damage(game_data *g, game_object::ptr from, float damage) {
   damage = fmax(damage - shield_value, 0);
   stats[sskey::key::hp] -= damage;
   remove = stats[sskey::key::hp] <= 0;
-  cout << "ship::receive_damage: " << id << " takes " << damage << " damage from " << from -> id << " - remove = " << remove << endl;
 
   if (remove) g -> log_ship_destroyed(from -> id, id);
 }

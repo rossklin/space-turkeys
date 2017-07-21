@@ -1,5 +1,6 @@
 * current work
 ** command_gui should not show during simulation!
+   Add some kind of phase tracker variable
 ** wrap all output in macro #ifdefined VERBOSE
 * [~] issues
 ** [~] crashes
