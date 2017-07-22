@@ -68,13 +68,11 @@ game::game(){
     }
   };
 
-  default_body = [this] () -> int {
-    if (window.isOpen()) {return 0;} else {return query_aborted;}
-  };
+  default_body = generate_loop_body([] () -> int {return 0;});
 }
 
 function<int(sf::Event)> game::generate_event_handler(function<int(sf::Event)> task){
-  return [&task, this] (sf::Event e) {
+  return [task, this] (sf::Event e) -> int {
     // run default event handler
     int test = default_event_handler(e);
 
@@ -83,6 +81,19 @@ function<int(sf::Event)> game::generate_event_handler(function<int(sf::Event)> t
     }else{
       return task(e);
     }
+  };
+}
+
+function<int()> game::generate_loop_body(function<int()> task) {
+  return [task, this] () -> int {
+    static sf::Clock clock;
+    
+    controls();
+    draw_window();
+    window.setView(view_window);
+    float delta = clock.restart().asSeconds();
+    interface::desktop -> Update(delta);
+    return task();
   };
 }
 
@@ -164,7 +175,28 @@ bool game::wait_for_it(sf::Packet &p){
   int done = 0;
   
   thread t(query, socket, ref(p), ref(done));
-  if (interface::desktop) window_loop(done, default_event_handler, default_body);
+  if (interface::desktop) {
+    window_loop(done, default_event_handler, default_body);
+  } else {
+
+    auto empty_event_handler = [this] (sf::Event e) -> int {
+      if (e.type == sf::Event::Closed) {
+	window.close();
+	return query_aborted;
+      }else{
+	return 0;
+      }
+    };
+
+    auto empty_body = [this] () -> int {
+      window.setView(view_window);
+      graphics::draw_text(window, "Loading...", view_window.getCenter(), 20, false, sf::Color::White);
+      return 0;
+    };
+
+    window_loop(done, empty_event_handler, empty_body);
+  }
+  
   t.join();
 
   if (done & (query_game_complete | query_aborted)){
@@ -221,6 +253,7 @@ bool game::init_data(){
 bool game::pre_step(){
   sf::Packet pq;
   data_frame data;
+  phase = "pre";
 
   message = "loading game data...";
   pq << protocol::game_round;
@@ -244,6 +277,7 @@ bool game::pre_step(){
 */
 
 bool game::choice_step(){
+  phase = "choice";
 
   // reset interface response parameters and clear solar choices for
   // solars which are no longer available.
@@ -306,12 +340,13 @@ bool game::choice_step(){
     });
 
   // gui loop body that handles return status from interface::desktop
-  auto body = [this] () -> int {
-    if (interface::desktop -> done) {
-      return interface::desktop -> accept ? query_accepted : query_game_complete;
-    }
-    return default_body();
-  };
+  auto body = generate_loop_body([this] () -> int {
+      if (interface::desktop -> done) {
+	return interface::desktop -> accept ? query_accepted : query_game_complete;
+      } else {
+	return 0;
+      }
+    });
 
   int done = 0;
   window_loop(done, event_handler, body);
@@ -353,6 +388,7 @@ bool game::choice_step(){
 */
 
 bool game::simulation_step(){
+  phase = "simulation";
   int done = 0;
   bool playing = true;
   int idx = -1;
@@ -374,118 +410,113 @@ bool game::simulation_step(){
 
   // gui loop body that draws progress indicator and keeps track of
   // the active frame
-  auto body = [&,this] () -> int {
-    static int sub_idx = 1;
-    float sub_ratio = 1 / (float) sub_frames;
+  auto body = generate_loop_body([&,this] () -> int {
+      static int sub_idx = 1;
+      float sub_ratio = 1 / (float) sub_frames;
     
-    if (!window.isOpen()){
-      cout << "simulation: aborted by window close" << endl;
-      return query_aborted;
-    }
-    
-    if (idx == settings.frames_per_round - 1) {
-      cout << "simulation: all loaded" << endl;
-      return query_accepted;
-    }
-
-    // draw load progress
-    window.setView(view_window);
-
-    auto colored_rect = [] (sf::Color c, float r) -> sf::RectangleShape{
-      float bounds = interface::main_interface::desktop_dims.x;
-      float w = bounds - 10;
-      auto rect = graphics::build_rect(sf::FloatRect(5, 5, r * w, 10));
-      c.a = 150;
-      rect.setFillColor(c);
-      rect.setOutlineColor(sf::Color::White);
-      rect.setOutlineThickness(-1);
-      return rect;
-    };
-
-    window.draw(colored_rect(sf::Color::Red, 1));
-    window.draw(colored_rect(sf::Color::Blue, loaded / (float) settings.frames_per_round));
-    window.draw(colored_rect(sf::Color::Green, idx / (float) settings.frames_per_round));
-
-    message = "evolution: " + to_string((100 * idx) / settings.frames_per_round) + " %" + (playing ? "" : "(paused)");
-
-    int buffer_size = min(settings.frames_per_round - idx - 1, 4);
-    playing &= idx < loaded - buffer_size;
-
-    if (playing){
-
-      if (sub_idx >= sub_frames) {
-	sub_idx = 1;
-	idx++;
-	reload_data(g[idx]);
-	return 0;
+      if (idx == settings.frames_per_round - 1) {
+	cout << "simulation: all loaded" << endl;
+	return query_accepted;
       }
 
-      float t = sub_idx / (float)sub_frames;
-      float bw = 1;
+      // draw load progress
+      window.setView(view_window);
+
+      auto colored_rect = [] (sf::Color c, float r) -> sf::RectangleShape{
+	float bounds = interface::main_interface::desktop_dims.x;
+	float w = bounds - 10;
+	auto rect = graphics::build_rect(sf::FloatRect(5, 5, r * w, 10));
+	c.a = 150;
+	rect.setFillColor(c);
+	rect.setOutlineColor(sf::Color::White);
+	rect.setOutlineThickness(-1);
+	return rect;
+      };
+
+      window.draw(colored_rect(sf::Color::Red, 1));
+      window.draw(colored_rect(sf::Color::Blue, loaded / (float) settings.frames_per_round));
+      window.draw(colored_rect(sf::Color::Green, idx / (float) settings.frames_per_round));
+
+      message = "evolution: " + to_string((100 * idx) / settings.frames_per_round) + " %" + (playing ? "" : "(paused)");
+
+      int buffer_size = min(settings.frames_per_round - idx - 1, 4);
+      playing &= idx < loaded - buffer_size;
+
+      if (playing){
+
+	if (sub_idx >= sub_frames) {
+	  sub_idx = 1;
+	  idx++;
+	  reload_data(g[idx]);
+	  return 0;
+	}
+
+	float t = sub_idx / (float)sub_frames;
+	float bw = 1;
       
-      // update entity positions
-      for (auto sh : get_all<ship>()) {
-	if (sh -> seen) {
-	  vector<point> pbuf(4);
-	  vector<float> abuf(4);
+	// update entity positions
+	for (auto sh : get_all<ship>()) {
+	  if (sh -> seen) {
+	    vector<point> pbuf(4);
+	    vector<float> abuf(4);
 
-	  auto load_buffers = [&] (int offset) -> bool {
-	    for (int i = -1; i < 3; i++) {
-	      int idx_access = idx + offset + i;
-	      if (idx_access < 0 || idx_access >= loaded) return false;
-	      if (!g[idx_access].entity.count(sh -> id)) return false;
+	    auto load_buffers = [&] (int offset) -> bool {
+	      for (int i = -1; i < 3; i++) {
+		int idx_access = idx + offset + i;
+		if (idx_access < 0 || idx_access >= loaded) return false;
+		if (!g[idx_access].entity.count(sh -> id)) return false;
 
-	      entity_selector::ptr ep = g[idx_access].entity[sh -> id];
-	      if (!ep -> is_active()) return false;
+		entity_selector::ptr ep = g[idx_access].entity[sh -> id];
+		if (!ep -> is_active()) return false;
 
-	      pbuf[1 + i] = ep -> base_position;
-	      abuf[1 + i] = ep -> base_angle;
-	    }
-	    return true;
-	  };
+		pbuf[1 + i] = ep -> base_position;
+		abuf[1 + i] = ep -> base_angle;
+	      }
+	      return true;
+	    };
 
-	  int offset = 0;
-	  bool test = false;
-	  for (auto i : utility::zig_seq(2)) if (test = load_buffers(offset = i)) break;
+	    int offset = 0;
+	    bool test = false;
+	    for (auto i : utility::zig_seq(2)) if (test = load_buffers(offset = i)) break;
 	  
-	  if (test) {
-	    sh -> position = utility::cubic_interpolation(pbuf, t - offset);
-	    sh -> angle = utility::cubic_interpolation(abuf, t - offset);
-	  } else {
-	    sh -> position += sub_ratio * sh -> stats[sskey::key::speed] * utility::normv(sh -> angle);
+	    if (test) {
+	      sh -> position = utility::cubic_interpolation(pbuf, t - offset);
+	      sh -> angle = utility::cubic_interpolation(abuf, t - offset);
+	    } else {
+	      sh -> position += sub_ratio * sh -> stats[sskey::key::speed] * utility::normv(sh -> angle);
+	    }
 	  }
 	}
-      }
 
-      for (auto fl : get_all<fleet>()) {
-	point p(0, 0);
-	for (auto sid : fl -> ships) p += get_specific<ship>(sid) -> position;
-	fl -> position = utility::scale_point(p, 1 / (float)fl -> ships.size());
-      }
+	for (auto fl : get_all<fleet>()) {
+	  point p(0, 0);
+	  for (auto sid : fl -> ships) p += get_specific<ship>(sid) -> position;
+	  fl -> position = utility::scale_point(p, 1 / (float)fl -> ships.size());
+	}
 
-      for (auto cs : command_selectors) {
-	cs.second -> from = get_entity(cs.second -> source) -> position;
-	cs.second -> to = get_entity(cs.second -> target) -> position;
-      }
+	for (auto cs : command_selectors) {
+	  cs.second -> from = get_entity(cs.second -> source) -> position;
+	  cs.second -> to = get_entity(cs.second -> target) -> position;
+	}
 
-      for (auto &a : animations) {
-	auto update_tracker = [this, sub_ratio] (animation_tracker_info &t) {
-	  if (entity.count(t.eid)) {
-	    t.p = entity[t.eid] -> position;
-	  } else {
-	    t.p += sub_ratio * t.v;
-	  }
-	};
+	for (auto &a : animations) {
+	  auto update_tracker = [this, sub_ratio] (animation_tracker_info &t) {
+	    if (entity.count(t.eid)) {
+	      t.p = entity[t.eid] -> position;
+	    } else {
+	      t.p += sub_ratio * t.v;
+	    }
+	  };
 
-	update_tracker(a.t1);
-	update_tracker(a.t2);
-	a.frame++;
-      }
+	  update_tracker(a.t1);
+	  update_tracker(a.t2);
+	  a.frame++;
+	}
       
-      sub_idx++;
-    }
-    return 0;
-  };
+	sub_idx++;
+      }
+      return 0;
+    });
 
   cout << "simlulation: starting loop" << endl;
 
@@ -965,7 +996,7 @@ bool game::select_at(point p){
   combid key = entity_at(p, qent);
   idtype cid = command_at(p, qcom);
 
-  if (qcom < qent) return select_command(cid);
+  if (qcom < qent && phase == "choice") return select_command(cid);
 
   auto it = entity.find(key);
  
@@ -1425,40 +1456,20 @@ void game::window_loop(int &done, function<int(sf::Event)> event_handler, functi
   sf::Clock clock;
 
   while (!done){
-    auto delta = clock.restart().asSeconds();
-
     sf::Event event;
     while (window.pollEvent(event) && !done){
       done |= event_handler(event);
     }
     
-    if (!window.isOpen()) done |= query_aborted;
-
-    if (done) break;
-
-    // update controls
-    controls();
-
-    // draw universe and game objects
-    window.clear();
-    draw_window();
-
-    // main content callback
-    done |= body();
-
-    if (done) break;
-
-    window.setView(view_window);
-    // todo: add a dummy draw here to ensure sfgui uses this view
+    if (!window.isOpen()) {
+      done |= query_aborted;
+      break;
+    }
     
-
-    // update sfgui
-    interface::desktop -> Update(delta);
-
-    // draw sfgui
+    window.clear();
+    
+    done |= body();
     sfgui -> Display(window);
-
-    // display on screen
     window.display();
 
     float elapsed_seconds = clock.getElapsedTime().asSeconds();

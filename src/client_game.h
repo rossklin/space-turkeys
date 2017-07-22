@@ -38,6 +38,7 @@ namespace st3{
       std::string message; /*!< game round progress message */
       bool area_select_active; /*!< whether area selection is active */
       sf::FloatRect srect; /*!< area selection rectangle */
+      std::string phase;
       
       hm_t<idtype, command_selector::ptr> command_selectors; /*!< graphical representations for commands */
       int selector_queue; /*!< index for back end of selector queue */
@@ -118,6 +119,7 @@ namespace st3{
       void do_zoom(float factor, point p);
 
       std::function<int(sf::Event)> generate_event_handler(std::function<int(sf::Event)> task);
+      std::function<int()> generate_loop_body(std::function<int()> task);
       
       /*! start a solar gui for a solar
 	@param key the id of the solar selector representing the solar

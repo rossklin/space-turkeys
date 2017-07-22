@@ -39,8 +39,7 @@ namespace st3{
       cfill.g = 256 * utility::sigmoid(2 * available_resource[keywords::key_organics] / 1000);
       cfill.b = 256 * utility::sigmoid(2 * available_resource[keywords::key_gases] / 1000);
       cfill.a = 160;
-      graphics::draw_circle(w, position, radius, get_color(), cfill);
-      graphics::draw_circle(w, position, radius, sf::Color(200,200,200));
+      graphics::draw_circle(w, position, radius, get_color(), cfill, -2);
 
       string indicator_text = "";
       if (!was_discovered) indicator_text += "!";
@@ -68,7 +67,7 @@ namespace st3{
 	}
   
 	if (selected){
-	  graphics::draw_circle(w, position, radius, graphics::solar_selected, graphics::solar_selected_fill, 1);
+	  graphics::draw_circle(w, position, radius + 1, graphics::solar_selected, graphics::solar_selected_fill, 2);
 
 	  // // draw sector boost info on top of solar
 	  // point dims(30, 20);

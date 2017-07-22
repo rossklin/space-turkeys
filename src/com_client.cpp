@@ -49,8 +49,15 @@ void st3::client::query(socket_t *socket,
 	   int &done){
   protocol_t message;
 
-  while (!socket -> send_packet(pq)) sf::sleep(sf::milliseconds(10));
-  while (!socket -> receive_packet()) sf::sleep(sf::milliseconds(10));
+  while (!socket -> send_packet(pq)) {
+    if (done) return;
+    sf::sleep(sf::milliseconds(10));
+  }
+  
+  while (!socket -> receive_packet()) {
+    if (done) return;
+    sf::sleep(sf::milliseconds(10));
+  }
 
   if (socket -> data >> message){
     if (message == protocol::confirm){
