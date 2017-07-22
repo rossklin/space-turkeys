@@ -172,29 +172,38 @@ void game::run(){
 }
 
 bool game::wait_for_it(sf::Packet &p){
-  int done = 0;
+  int tr = 0;
+  int tc = socket_t::tc_run;
+  int lc = 0;
+  int lr = 0;
   
-  thread t(query, socket, ref(p), ref(done));
+  thread t(query, socket, ref(p), ref(tr), ref(tc));
+  
   if (interface::desktop) {
-    window_loop(done, default_event_handler, default_body);
+    lr = window_loop(lc, default_event_handler, default_body);
   } else {
 
-    auto empty_event_handler = [this] (sf::Event e) -> int {
+    auto empty_event_handler = [this, &tc] (sf::Event e) -> int {
       if (e.type == sf::Event::Closed) {
 	window.close();
+	tc = socket_t::tc_stop;
 	return query_aborted;
       }else{
 	return 0;
       }
     };
 
-    auto empty_body = [this] () -> int {
+    auto empty_body = [this, &tc] () -> int {
+      if (tr == socket_t::tc_stop) {
+	return query_aborted;
+      }
+      
       window.setView(view_window);
       graphics::draw_text(window, "Loading...", view_window.getCenter(), 20, false, sf::Color::White);
       return 0;
     };
 
-    window_loop(done, empty_event_handler, empty_body);
+    lr = window_loop(lc, empty_event_handler, empty_body);
   }
   
   t.join();

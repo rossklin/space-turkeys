@@ -1,6 +1,14 @@
 * current work
 ** figure out why server hangs on quit after client disconnects
    Look at blocking flag in subroutines of check_protocol
+** implement new client communication structure
+*** client::query should take two com parameters: tr and tc
+    They should use the socket_t::tc_* protocol. tc should be passed
+    on to socket -> thread_com.
+*** window loop should take a parameter lc and return a response lr
+*** event handlers should set tc = tc_stop on abort event
+*** body callbacks should set lc = query_abort if tr == tc_stop
+*** client:::query should only call [send|receive]_packet once
 * [~] issues
 ** [~] system
 *** apply upgrades in test_space_combat
