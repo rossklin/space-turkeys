@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <functional>
 
 #include <SFML/Network.hpp>
 
@@ -22,11 +23,13 @@ namespace st3{
       
     typedef std::function<handler_result(int cid, sf::Packet q)> query_handler;
 
+    handler_result handler_switch(bool test, std::function<void(handler_result&)> on_success = 0, std::function<void(handler_result&)> on_fail = 0);
+
     /*! special socket functions for server */
     struct client_t : public socket_t{
       std::string name;
-      handler_result receive_query(query_handler f);
-      bool check_protocol(query_handler f);
+      handler_result receive_query(protocol_t p, query_handler f);
+      bool check_protocol(protocol_t p, query_handler f);
       bool is_connected();
       void set_disconnect();
     };
@@ -48,7 +51,7 @@ namespace st3{
       static query_handler basic_query_handler(protocol_t query, sf::Packet response);
       static query_handler basic_query_handler(protocol_t query, protocol_t response);
       bool cleanup_clients();
-      bool check_protocol(query_handler h);
+      bool check_protocol(protocol_t p, query_handler h);
       void distribute_frames(std::vector<entity_package> &g, int &frame_count);
     };
   };

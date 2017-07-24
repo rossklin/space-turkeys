@@ -50,7 +50,7 @@ game::game(){
   default_event_handler = [this](sf::Event e) -> int {
     if (e.type == sf::Event::Closed) {
       window.close();
-      return query_aborted;
+      return socket_t::tc_stop;
     }else{
       bool had_qw = !!interface::desktop -> query_window;
       interface::desktop -> HandleEvent(e);
@@ -172,43 +172,37 @@ void game::run(){
 }
 
 bool game::wait_for_it(sf::Packet &p){
-  int tr = 0;
-  int tc = socket_t::tc_run;
-  int lc = 0;
-  int lr = 0;
+  int w2c = socket_t::tc_run;
+  int c2w = socket_t::tc_run;
+  message = "Loading...";
   
-  thread t(query, socket, ref(p), ref(tr), ref(tc));
+  thread t(query, socket, ref(p), ref(w2c), ref(c2w));
   
   if (interface::desktop) {
-    lr = window_loop(lc, default_event_handler, default_body);
+    window_loop(default_event_handler, default_body, c2w, w2c);
   } else {
 
-    auto empty_event_handler = [this, &tc] (sf::Event e) -> int {
+    auto empty_event_handler = [this] (sf::Event e) -> int {
       if (e.type == sf::Event::Closed) {
 	window.close();
-	tc = socket_t::tc_stop;
-	return query_aborted;
+	return socket_t::tc_stop;
       }else{
 	return 0;
       }
     };
 
-    auto empty_body = [this, &tc] () -> int {
-      if (tr == socket_t::tc_stop) {
-	return query_aborted;
-      }
-      
+    auto empty_body = [this] () -> int {      
       window.setView(view_window);
-      graphics::draw_text(window, "Loading...", view_window.getCenter(), 20, false, sf::Color::White);
+      graphics::draw_text(window, message, view_window.getCenter(), 20, false, sf::Color::White);
       return 0;
     };
 
-    lr = window_loop(lc, empty_event_handler, empty_body);
+    window_loop(empty_event_handler, empty_body, c2w, w2c);
   }
   
   t.join();
 
-  if (done & (query_game_complete | query_aborted)){
+  if ((w2c | c2w) & ~(socket_t::tc_run | socket_t::tc_complete)){
     cout << "wait_for_it: finished/aborted" << endl;
     return false;
   }
@@ -351,19 +345,20 @@ bool game::choice_step(){
   // gui loop body that handles return status from interface::desktop
   auto body = generate_loop_body([this] () -> int {
       if (interface::desktop -> done) {
-	return interface::desktop -> accept ? query_accepted : query_game_complete;
+	return interface::desktop -> accept ? socket_t::tc_complete : socket_t::tc_game_complete;
       } else {
 	return 0;
       }
     });
 
   int done = 0;
-  window_loop(done, event_handler, body);
+  int tc_in = socket_t::tc_run;
+  window_loop(event_handler, body, tc_in, done);
 
   sf::Packet pq;
 
   // client chose to leave the game
-  if (done & (query_game_complete | query_aborted)){
+  if (done & (socket_t::tc_game_complete | socket_t::tc_stop)){
     cout << "choice_step: finishded" << endl;
     pq.clear();
     pq << protocol::leave;
@@ -398,7 +393,8 @@ bool game::choice_step(){
 
 bool game::simulation_step(){
   phase = "simulation";
-  int done = 0;
+  int w2c = socket_t::tc_run;
+  int c2w = socket_t::tc_run;
   bool playing = true;
   int idx = -1;
   int loaded = 0;
@@ -407,7 +403,7 @@ bool game::simulation_step(){
   cout << "simluation: starting data loader" << endl;
 
   // start loading frames in background
-  thread t(load_frames, socket, ref(g), ref(loaded), ref(done));
+  thread t(load_frames, socket, ref(g), ref(loaded), ref(w2c), ref(c2w));
 
   // event handler which handles play/pause
   auto event_handler = generate_event_handler([this, &playing] (sf::Event e) -> int {
@@ -419,19 +415,19 @@ bool game::simulation_step(){
 
   // gui loop body that draws progress indicator and keeps track of
   // the active frame
-  auto body = generate_loop_body([&,this] () -> int {
+  auto body = generate_loop_body([this,&] () -> int {
       static int sub_idx = 1;
       float sub_ratio = 1 / (float) sub_frames;
     
       if (idx == settings.frames_per_round - 1) {
 	cout << "simulation: all loaded" << endl;
-	return query_accepted;
+	return socket_t::tc_complete;
       }
 
       // draw load progress
       window.setView(view_window);
 
-      auto colored_rect = [] (sf::Color c, float r) -> sf::RectangleShape{
+      auto colored_rect = [] (sf::Color c, float r) -> sf::RectangleShape {
 	float bounds = interface::main_interface::desktop_dims.x;
 	float w = bounds - 10;
 	auto rect = graphics::build_rect(sf::FloatRect(5, 5, r * w, 10));
@@ -529,9 +525,9 @@ bool game::simulation_step(){
 
   cout << "simlulation: starting loop" << endl;
 
-  window_loop(done, event_handler, body);
+  window_loop(event_handler, body, c2w, w2c);
 
-  if (done & (query_game_complete | query_aborted)){
+  if ((w2c | c2w) & (socket_t::tc_game_complete | socket_t::tc_stop)){
     cout << "simulation step: game aborted" << endl;
     t.join();
     return false;
@@ -1317,7 +1313,7 @@ int game::choice_event(sf::Event e){
       if (targui){
 	clear_guis();
       }else{
-	return query_accepted;
+	return socket_t::tc_complete;
       }
       break;
     case sf::Keyboard::Return:
@@ -1334,7 +1330,7 @@ int game::choice_event(sf::Event e){
       window.setView(view_window);
       if(popup_query("Really quit?")){
 	chosen_quit = true;
-	return query_aborted;
+	return socket_t::tc_stop;
       }
     }
     break;
@@ -1397,7 +1393,7 @@ void game::popup_message(string title, string message){
   auto event_handler = generate_event_handler([this] (sf::Event e) -> int {
       if (e.type == sf::Event::KeyPressed){
 	if (e.key.code == sf::Keyboard::Return){
-	  return query_accepted;
+	  return socket_t::tc_complete;
 	}
       }
       return 0;
@@ -1447,7 +1443,7 @@ string game::popup_options(string header_text, hm_t<string, string> options) {
       if (e.type == sf::Event::KeyPressed){
 	if (e.key.code == sf::Keyboard::Escape){
 	  response = "";
-	  return query_aborted;
+	  return socket_t::tc_stop;
 	}
       }
       return 0;
@@ -1461,23 +1457,23 @@ string game::popup_options(string header_text, hm_t<string, string> options) {
 }
 
 /** Core loop for gui. */
-void game::window_loop(int &done, function<int(sf::Event)> event_handler, function<int(void)> body){
+void game::window_loop(function<int(sf::Event)> event_handler, function<int(void)> body, int &tc_in, int &tc_out) {
   sf::Clock clock;
 
-  while (!done){
+  while (tc_in | tc_out == socket_t::tc_run) {
     sf::Event event;
-    while (window.pollEvent(event) && !done){
-      done |= event_handler(event);
+    while (window.pollEvent(event)){
+      tc_out |= event_handler(event);
     }
     
     if (!window.isOpen()) {
-      done |= query_aborted;
+      tc_out |= socket_t::tc_stop;
       break;
     }
     
     window.clear();
     
-    done |= body();
+    tc_out |= body();
     sfgui -> Display(window);
     window.display();
 

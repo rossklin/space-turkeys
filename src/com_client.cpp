@@ -10,71 +10,75 @@ using namespace std;
 using namespace st3;
 using namespace st3::client;
 
-void st3::client::load_frames(socket_t *socket, vector<data_frame> &g, int &loaded, int &done){
+void st3::client::load_frames(socket_t *socket, vector<data_frame> &g, int &idx, int &com_in, int &com_out) {
   sf::Packet pq;
-  int response = 0;
+  int sub_com = socket_t::tc_run;
 
-  sint i = 0;
-  while (i < g.size() && !done){
+  for (idx = 0; idx < g.size() && com_in == socket_t::tc_run; idx++) {
     pq.clear();
-    pq << protocol::frame << i;
+    pq << protocol::frame << idx;
 
-    query(socket, pq, response);
+    query(socket, pq, com_in, sub_com);
 
-    if (response != query_accepted){
-      done |= response;
+    if (sub_com != socket_t::tc_complete) {
+      com_out = sub_com;
       break;
     }
 
-    if (deserialize(g[i], socket -> data, socket -> id)){
-      i++;
-      loaded = i;
-    }else{
-      sf::sleep(sf::milliseconds(10));
-    }
+    deserialize(g[idx], socket -> data, socket -> id);
   }
 
-  if (done) return;
+  if (!(com_in | com_out == socket_t::tc_run)) return;
 
   // indicate done
-  i = -1;
+  int i = -1;
   pq.clear();
   pq << protocol::frame << i;
-  query(socket, pq, response);
-  if (response != query_accepted) done |= response;
+  query(socket, pq, com_in, com_out);
 }
 
-void st3::client::query(socket_t *socket, 
-	   sf::Packet &pq,
-	   int &done){
+void st3::client::query(socket_t *socket, sf::Packet &pq, int &com_in, int &com_out) {
   protocol_t message;
 
-  while (!socket -> send_packet(pq)) {
-    if (done) return;
-    sf::sleep(sf::milliseconds(10));
+  socket -> thread_com = &com_in;
+  if (!socket -> send_packet(pq)) {
+    if (com_in != socket_t::tc_run) {
+      // communication stopped
+      return;
+    } else {
+      throw network_error("client::query: failed to send packet");
+    }
   }
   
-  while (!socket -> receive_packet()) {
-    if (done) return;
-    sf::sleep(sf::milliseconds(10));
+  if (!socket -> receive_packet()) {
+    if (com_in != socket_t::tc_run) {
+      // communication stopped
+      return;
+    } else {
+      throw network_error("client::query: failed to receive packet");
+    }
   }
 
   if (socket -> data >> message){
     if (message == protocol::confirm){
-      done = query_accepted;
+      com_out = socket_t::tc_complete;
+    }else if (message == protocol::standby){
+      // wait a little while then try again
+      sf::sleep(sf::milliseconds(500));
+      query(socket, pq, com_in, com_out);
     }else if (message == protocol::invalid){
-      throw runtime_error("query: server says invalid");
+      throw network_error("query: server says invalid");
     }else if (message == protocol::complete){
       cout << "query: server says complete" << endl;
-      done = query_game_complete;
+      com_out = socket_t::tc_game_complete;
     }else if (message == protocol::aborted){
       cout << "query: server says game aborted" << endl;
-      done = query_aborted;
+      com_out = socket_t::tc_stop;
     }else {
-      throw runtime_error("query: unknown response: " + message);
+      throw network_error("query: unknown response: " + message);
     }
   }else{
-    throw runtime_error("query: failed to unpack message");
+    throw network_error("query: failed to unpack message");
   }
 }
 
@@ -87,19 +91,20 @@ entity_selector::ptr client::deserialize_object(sf::Packet &p, sint id){
 
   sf::Color col;
   typename T::base_object_t s;
-  if (!(p >> s)) throw runtime_error("deserialize_object: package empty!");
+  if (!(p >> s)) throw network_error("deserialize_object: package empty!");
   return T::create(s, col, s.owner == id);
 }
 
-bool client::deserialize(data_frame &f, sf::Packet &p, sint id){
+void client::deserialize(data_frame &f, sf::Packet &p, sint id){
   sint n;
+
+  if (f.entity.size()) {
+    throw runtime_error("client::deserialize: data frame contains entities!");
+  }
   
   if (!(p >> f.players >> f.settings >> f.remove_entities >> n)){
-    cout << "deserialize: package empty!" << endl;
-    return false;
+    throw network_error("deserialize: package empty!");
   }
-
-  if (f.entity.size()) throw runtime_error("client::deserialize: data frame contains entities!");
 
   // "polymorphic" deserialization
   for (int i = 0; i < n; i++){
@@ -115,7 +120,7 @@ bool client::deserialize(data_frame &f, sf::Packet &p, sint id){
     }else if (key == waypoint::class_id){
       if (!(obj = deserialize_object<client::waypoint_selector>(p, id))) return false;
     }else{
-      throw runtime_error("deserialize: key " + key + " not recognized!");
+      throw network_error("deserialize: key " + key + " not recognized!");
     }
 
     if (obj -> owner >= 0) {
@@ -126,7 +131,5 @@ bool client::deserialize(data_frame &f, sf::Packet &p, sint id){
     
     f.entity[obj -> id] = obj;
   }
-
-  return true;
 }
 

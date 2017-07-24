@@ -28,6 +28,7 @@ namespace st3{
     const sint complete = 1001; /*!< tell the client the game is complete */
     const sint invalid = 1002; /*!< tell the client the query is invalid */
     const sint aborted = 1003; /*!< tell the client the game was aborted */
+    const sint standby = 1004;
   };
 };
 #endif

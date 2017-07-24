@@ -18,6 +18,7 @@ namespace st3{
     static const int tc_stop = 2;
     static const int tc_complete = 4;
     static const int tc_failed = 8;
+    static const int tc_game_complete = 16;
     
     /*! client id */
     sint id;

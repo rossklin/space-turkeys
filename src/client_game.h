@@ -272,7 +272,7 @@ namespace st3{
 
       void popup_message(std::string title, std::string text);
 
-      void window_loop(int &done, std::function<int(sf::Event)> event_handler, std::function<int(void)> body);
+      void window_loop(std::function<int(sf::Event)> event_handler, std::function<int(void)> body, int &tc_in, int &tc_out);
 
       void setup_targui(point p);
 
