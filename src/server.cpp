@@ -33,7 +33,7 @@ void dispatch_game(com &c) {
 
 string protocol_to_string(client_t *c, protocol_t x, sf::Packet &p) {
   string result;
-  if (!c -> check_protocol(x, p)) {
+  if (!c -> check_protocol(com::basic_query_handler(x, p))) {
     throw runtime_error("dispatch_client: failed to require protocol " + to_string(x));
   }
 

@@ -367,7 +367,7 @@ bool game::choice_step(){
     cout << "choice_step: finishded" << endl;
     pq.clear();
     pq << protocol::leave;
-    while (!socket -> send_packet(pq)) sf::sleep(sf::milliseconds(100));
+    socket -> send_packet(pq);
     return false;
   }
 

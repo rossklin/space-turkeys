@@ -15,33 +15,26 @@ namespace st3{
 
   /*! server side specifics */
   namespace server{
+    struct handler_result {
+      sf::Packet response;
+      int status;
+    };
+      
+    typedef std::function<handler_result(int cid, sf::Packet q)> query_handler;
 
     /*! special socket functions for server */
     struct client_t : public socket_t{
-      std::string name; /*!< store the client's name */
-
-      /*! send a packet containing protocol::invlaid to client */
-      void send_invalid();
-
-      /*! receive an expected query
-
-	If the client does not send a protocol or the received
-	protocol does not match query, this routine prints an error
-	message and exits.
-	
-	@param query query protocol to expect
-	@return whether the receive succeded
-      */
-      bool receive_query(protocol_t query);
-
-      bool check_protocol(protocol_t q, sf::Packet &p);
-
+      std::string name;
+      handler_result receive_query(query_handler f);
+      bool check_protocol(query_handler f);
       bool is_connected();
+      void set_disconnect();
     };
 
     /*! structure handling a set of clients */
-    struct com{
-      hm_t<int, client_t*> clients; /*!< clients */
+    struct com {
+      
+      hm_t<int, client_t*> clients;
       game_settings settings;
       int idc;
       int thread_com;
@@ -51,38 +44,11 @@ namespace st3{
       void add_client(client_t *c);
       void disconnect();
 
+      static query_handler basic_query_handler(protocol_t query, hm_t<int, sf::Packet> response);
+      static query_handler basic_query_handler(protocol_t query, sf::Packet response);
+      static query_handler basic_query_handler(protocol_t query, protocol_t response);
       bool cleanup_clients();
-
-      /*! receive an expected query and send a packet
-	
-       For each client, try to receive a specified query and then send
-       a packet.
-
-       @param query query to expect
-       @param packet packet to send
-      */
-      bool check_protocol(protocol_t query, sf::Packet &packet);
-
-      /*! receive an expected query and send multiple packets
-	
-       For each client, try to receive a specified query and then send
-       a client specific packet.
-
-       @param query query to expect
-       @param packets vector with one packet per client
-      */
-      bool check_protocol(protocol_t query, hm_t<sint, sf::Packet> &packets);
-
-      /*! distribute simulated game data to clients
-
-	Receive frame queries from clients and send game_data packets
-	until all clients have received the last game_data
-	object. Does not send a required frame until the index is
-	lower than the frame limit parameter.
-
-	@param g vector of game_data objects to distribute
-	@param frame_count frame limit parameter
-      */
+      bool check_protocol(query_handler h);
       void distribute_frames(std::vector<entity_package> &g, int &frame_count);
     };
   };

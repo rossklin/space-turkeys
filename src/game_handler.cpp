@@ -20,34 +20,71 @@ void simulation_step(com &c, game_data &g) {
   int n = g.settings.frames_per_round;
   vector<entity_package> frames(n);
   int frame_count = 0;
-  
-  cout << "starting simulation ... " << endl;
-  thread t(&com::distribute_frames, c, ref(frames), ref(frame_count));
 
-  try {
-    for (frame_count = 0; frame_count < n; frame_count++){
-      g.increment();
-      frames[frame_count].copy_from(g);
-      if (c.thread_com != socket_t::tc_run) break;
+  query_handler handler = [&c, &frames, &frame_count] (int cid, sf::Packet q) -> handler_result {
+    handler_result result;
+    protocol_t input;
+    int idx;
+    entity_package g;
+
+    // default to invalid status
+    result.status = socket_t::tc_stop;
+    result.response << protocol::invalid;
+
+    if (q >> input) {
+      if (input == protocol::frame) {
+	if (q >> idx) {
+	  if (idx < 0) {
+	    // client done
+	    result.response.clear();
+	    result.response << protocol::confirm;
+	    result.status = socket_t::tc_complete;
+	  } else if (idx < frame_count) {
+	    // pack frame
+	    g = frames[idx];
+	    g.limit_to(cid);
+	    result.response.clear();
+	    result.response << protocol::confirm << g;
+	    result.status = socket_t::tc_run;
+	  } else {
+	    // invalid idx
+	  }
+	} else {
+	  // no idx supplied
+	}
+      } else {
+	// unexpected query
+      }
+    } else {
+      // no query supplied
     }
-  } catch (exception e) {
-    if (c.thread_com != socket_t::tc_run) c.thread_com = socket_t::tc_stop;
-  }
 
-  cout << "waiting for distribute_frames() ..." << endl;
+    return result;
+  };
+
+  auto generate_frames = [&c, &g, &frames, &frame_count, n] () {
+    try {
+      for (frame_count = 0; frame_count < n; frame_count++){
+	g.increment();
+	frames[frame_count].copy_from(g);
+	if (c.thread_com != socket_t::tc_run) break;
+      }
+    } catch (exception e) {
+      c.thread_com = socket_t::tc_stop;
+    }
+  };
+
+  thread t(generate_frames);
+  if (!c.check_protocol(handler)) c.thread_com = socket_t::tc_stop;
   t.join();
 
   for (int i = 0; i < frame_count; i++) frames[i].clear_entities();
 }
 
 void server::game_handler(com &c, game_data &g){
-  sf::Packet packet, p_confirm;
   hm_t<sint, sf::Packet> packets;
-  unsigned int i;
 
-  auto check_end = [&c, &g] () -> bool{
-    sf::Packet packet;
-
+  auto check_end = [&c, &g, &packets] () -> bool{
     if (c.thread_com != socket_t::tc_run) return true;
     
     int pid = -1;
@@ -61,10 +98,25 @@ void server::game_handler(com &c, game_data &g){
 
     if (psum < 2){
       cout << "game complete" << endl;
-      packet.clear();
-      packet << protocol::complete;
-      packet << (psum == 1 ? string("The winner is: ") + c.clients[pid] -> name : string("The game is a tie"));
-      c.check_protocol(protocol::game_round, packet);
+      for (auto x : c.clients) {
+	string message;
+
+	if (psum == 1) {
+	  if (x.first == pid) {
+	    message = "You won the game!";
+	  } else {
+	    message = "Player " + to_string(pid) + ": " + x.second -> name + " won the game.";
+	  }
+	} else {
+	  message = "The game is a tie.";
+	}
+	
+	packets[x.first].clear();
+	packets[x.first] << protocol::complete;
+	packets[x.first] << message;
+      }
+      
+      c.check_protocol(com::basic_query_handler(protocol::game_round, packets));
       return true;
     }
 
@@ -98,23 +150,21 @@ void server::game_handler(com &c, game_data &g){
       cout << "choice for player " << client -> name << " failed to unpack!" << endl;
     }
   };
-  
-  p_confirm << protocol::confirm;
 
   pack_g(false);
-  if (!c.check_protocol(protocol::load_init, packets)) return;
+  if (!c.check_protocol(com::basic_query_handler(protocol::load_init, packets))) return;
 
-  while (c.thread_com == socket_t::tc_run){
+  while (true) {
     if (check_end()) return;
 
     pack_g(true);
-    if (!c.check_protocol(protocol::game_round, packets)) return;
+    if (!c.check_protocol(com::basic_query_handler(protocol::game_round, packets))) return;
 
     // idle the fleets and clear waypoints
     g.pre_step();
 
     // choices, expects: query + choice
-    if (!c.check_protocol(protocol::choice, p_confirm)) return;
+    if (!c.check_protocol(com::basic_query_handler(protocol::choice, protocol::confirm))) return;
     for (auto x : c.clients) load_client_choice(x.second, x.first);
 
     // simulation

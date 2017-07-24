@@ -2,6 +2,11 @@
 ** figure out why server hangs on quit after client disconnects
    Look at blocking flag in subroutines of check_protocol
 ** implement new client communication structure
+*** try to create a general structure for running com-threads
+    Something along the lines of a function that takes a communication
+    task and callbacks on_complete and on_fail, but also integrates
+    with the window_loop somehow, and also works with multiple clients
+    and datasets on the server side.
 *** client::query should take two com parameters: tr and tc
     They should use the socket_t::tc_* protocol. tc should be passed
     on to socket -> thread_com.
