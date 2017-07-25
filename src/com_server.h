@@ -28,6 +28,8 @@ namespace st3{
     /*! special socket functions for server */
     struct client_t : public socket_t{
       std::string name;
+      std::string game_id;
+      
       handler_result receive_query(protocol_t p, query_handler f);
       bool check_protocol(protocol_t p, query_handler f);
       bool is_connected();

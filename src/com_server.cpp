@@ -43,6 +43,7 @@ handler_result client_t::receive_query(protocol_t p, query_handler f){
 	set_disconnect();
       } else if (input == p) {
 	res = f(id, data);
+	cout << "received protocol " << p << " from client " << id << endl;
       } else {
 	throw network_error("client_t::receive_query: unexpected protocol: " + to_string(input));
       }
@@ -65,11 +66,14 @@ bool client_t::is_connected(){
 
 bool client_t::check_protocol(protocol_t p, query_handler f) {
   bool running = true;
+  bool completed = false;
   sf::Packet p_aborted;
   p_aborted << protocol::aborted;
 
+  cout << "check protocol " << p << ": client " << id << ": begin." << endl;
+
   try {
-    while (running && *thread_com == socket_t::tc_run) {
+    while (running && (*thread_com == socket_t::tc_run || *thread_com == socket_t::tc_init)) {
       handler_result res = receive_query(p, f);
 
       if (res.status == socket_t::tc_failed && is_connected()) {
@@ -87,13 +91,16 @@ bool client_t::check_protocol(protocol_t p, query_handler f) {
       }
 
       running = res.status == socket_t::tc_run;
+      completed = !running;
     }
   } catch (network_error e) {
     // network error
     set_disconnect();
   }
 
-  return is_connected();
+  cout << "check protocol " << p << ": client " << id << ": " << is_connected() << endl;
+
+  return completed;
 }
 
 // ****************************************

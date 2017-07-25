@@ -171,7 +171,7 @@ void game::run(){
   interface::desktop = 0;
 }
 
-bool game::wait_for_it(sf::Packet &p){
+bool game::wait_for_it(sf::Packet &p, std::function<bool(sf::Packet)> callback){
   int w2c = socket_t::tc_run;
   int c2w = socket_t::tc_run;
   message = "Loading...";
@@ -202,12 +202,16 @@ bool game::wait_for_it(sf::Packet &p){
   
   t.join();
 
-  if ((w2c | c2w) & ~(socket_t::tc_run | socket_t::tc_complete)){
+  if ((w2c | c2w) & socket_t::tc_bad_result) {
     cout << "wait_for_it: finished/aborted" << endl;
     return false;
   }
 
-  return true;
+  if (callback) {
+    return callback(socket -> data);
+  } else {
+    return true;
+  }
 }
 
 bool game::init_data(){
@@ -217,7 +221,16 @@ bool game::init_data(){
   message = "loading players...";
   pq << protocol::load_init;
 
-  if (!(wait_for_it(pq) && deserialize(data, socket -> data, self_id))) {
+  auto callback = [this, &data] (sf::Packet p) -> bool {
+    try {
+      deserialize(data, p, self_id);
+    } catch (exception e) {
+      return false;
+    }
+    return true;
+  };
+
+  if (!wait_for_it(pq, callback)) {
     throw runtime_error("pre_step: failed to load/deserialize init_data");
   }
 
@@ -261,8 +274,17 @@ bool game::pre_step(){
   message = "loading game data...";
   pq << protocol::game_round;
 
+  auto callback = [this, &data] (sf::Packet p) -> bool {
+    try {
+      deserialize(data, p, self_id);
+    } catch (exception e) {
+      return false;
+    }
+    return true;
+  };
+
   cout << "client " << self_id << ": pre step: start" << endl;
-  if (!(wait_for_it(pq) && deserialize(data, socket -> data, self_id))) {
+  if (!wait_for_it(pq, callback)) {
     cout << "pre_step: failed to load/deserialize game_data" << endl;
     return false;
   }
@@ -351,14 +373,14 @@ bool game::choice_step(){
       }
     });
 
-  int done = 0;
+  int result = 0;
   int tc_in = socket_t::tc_run;
-  window_loop(event_handler, body, tc_in, done);
+  window_loop(event_handler, body, tc_in, result);
 
   sf::Packet pq;
 
   // client chose to leave the game
-  if (done & (socket_t::tc_game_complete | socket_t::tc_stop)){
+  if (result & socket_t::tc_bad_result) {
     cout << "choice_step: finishded" << endl;
     pq.clear();
     pq << protocol::leave;
@@ -415,7 +437,7 @@ bool game::simulation_step(){
 
   // gui loop body that draws progress indicator and keeps track of
   // the active frame
-  auto body = generate_loop_body([this,&] () -> int {
+  auto body = generate_loop_body([&,this] () -> int {
       static int sub_idx = 1;
       float sub_ratio = 1 / (float) sub_frames;
     
@@ -527,19 +549,13 @@ bool game::simulation_step(){
 
   window_loop(event_handler, body, c2w, w2c);
 
-  if ((w2c | c2w) & (socket_t::tc_game_complete | socket_t::tc_stop)){
-    cout << "simulation step: game aborted" << endl;
-    t.join();
-    return false;
-  }
-
   cout << "simulation: waiting for thread join" << endl;
   t.join();
 
   for (auto &f : g) for (auto x : f.entity) delete x.second;
 
   cout << "simulation: finished." << endl;
-  return true;
+  return !((w2c | c2w) & socket_t::tc_bad_result);
 }
 
 // ****************************************
@@ -1371,7 +1387,7 @@ using namespace graphics;
 
 /** Draw a box with a message and wait for ok. */
 void game::popup_message(string title, string message){
-  int done = false;
+  int done = socket_t::tc_run;
 
   auto w = sfg::Window::Create();
   auto layout = sfg::Box::Create(sfg::Box::Orientation::VERTICAL, 10);
@@ -1379,7 +1395,7 @@ void game::popup_message(string title, string message){
   auto baccept = sfg::Button::Create("OK");
 
   baccept -> GetSignal(sfg::Widget::OnLeftClick).Connect([&] () {
-      done = true;
+      done = socket_t::tc_complete;
     });
 
   layout -> Pack(text);
@@ -1399,7 +1415,8 @@ void game::popup_message(string title, string message){
       return 0;
     });
 
-  window_loop(done, event_handler, default_body);
+  int result;
+  window_loop(event_handler, default_body, done, result);
 
   interface::desktop -> Remove(w);
 }
@@ -1413,7 +1430,7 @@ bool game::popup_query(string v){
 }
 
 string game::popup_options(string header_text, hm_t<string, string> options) {
-  int done = false;
+  int status = socket_t::tc_run;
   string response;
 
   auto w = sfg::Window::Create();
@@ -1425,9 +1442,9 @@ string game::popup_options(string header_text, hm_t<string, string> options) {
 
   for (auto v : options) {
     button = sfg::Button::Create(v.second);
-    button -> GetSignal(sfg::Widget::OnLeftClick).Connect([v, &done, &response] () {
+    button -> GetSignal(sfg::Widget::OnLeftClick).Connect([v, &status, &response] () {
 	response = v.first;
-	done = true;
+	status = socket_t::tc_complete;
       });
     blayout -> Pack(button);
   }
@@ -1449,7 +1466,8 @@ string game::popup_options(string header_text, hm_t<string, string> options) {
       return 0;
     });
 
-  window_loop(done, event_handler, default_body);
+  int result = 0;
+  window_loop(event_handler, default_body, status, result);
 
   interface::desktop -> Remove(w);
   
@@ -1460,7 +1478,7 @@ string game::popup_options(string header_text, hm_t<string, string> options) {
 void game::window_loop(function<int(sf::Event)> event_handler, function<int(void)> body, int &tc_in, int &tc_out) {
   sf::Clock clock;
 
-  while (tc_in | tc_out == socket_t::tc_run) {
+  while ((tc_in | tc_out) == socket_t::tc_run) {
     sf::Event event;
     while (window.pollEvent(event)){
       tc_out |= event_handler(event);

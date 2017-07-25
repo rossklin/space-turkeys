@@ -26,9 +26,55 @@ using namespace std;
 using namespace st3;
 using namespace st3::client;
 
-int main(int argc, char **argv){
+void run(string game_id, string name, game &g, client_game_settings settings) {  
   int width = 800;
   int height = 600;
+
+  // create graphics
+  sf::Packet pq, pr;
+  int tc_in = socket_t::tc_run;
+  int tc_out = 0;
+
+  cout << "sending game id..." << endl;
+  pq << protocol::connect << game_id << settings;
+  query(g.socket, pq, tc_in, tc_out);
+
+  if (tc_out & socket_t::tc_bad_result) {
+    throw runtime_error("Failed to send game id to server.");
+  }
+
+  cout << "sending name..." << endl;
+  pq.clear();
+  pq << protocol::id << name;
+  query(g.socket, pq, tc_in, tc_out);
+
+  if (tc_out & socket_t::tc_bad_result) {
+    throw runtime_error("Failed to send name to server.");
+  }
+
+  if (!(g.socket -> data >> g.socket -> id)){
+    throw runtime_error("server failed to provide id");
+  }
+
+  cout << "received player id: " << g.socket -> id << endl;
+
+  sf::ContextSettings sf_settings;
+  sf_settings.antialiasingLevel = 8;
+  g.window.create(sf::VideoMode(width, height), "SFML Turkeys!", sf::Style::Default, sf_settings);
+
+  sfg::SFGUI sfgui;
+
+  g.sfgui = &sfgui;
+  g.window.setActive();
+  
+  graphics::initialize();
+
+  entity_selector::g = &g;
+  g.run();
+
+}
+
+int main(int argc, char **argv){
   string game_id = "game1";
   string ip = "127.0.0.1";
   string name = "Name_blabla";
@@ -80,10 +126,11 @@ int main(int argc, char **argv){
     cout << "usage: " << argv[0] << " [game_id=...] [ip=...] [name=...] [num_players=...] [size=...] [round_length=...] [starting_fleet=single|voyagers|massive]" << endl;
     exit(0);
   }
-  
+
+  game g;
+
   // connect
   cout << "connecting...";
-  game g;
   g.socket = new socket_t();
   if (g.socket -> connect(ip, 53000) != sf::Socket::Done){
     cout << "client: connection failed." << endl;
@@ -92,40 +139,12 @@ int main(int argc, char **argv){
   g.socket -> setBlocking(false);
   cout << "done." << endl;
 
-  // create graphics
-  sf::Packet pq, pr;
-  int done;
-
-  cout << "sending game id..." << endl;
-  pq << protocol::connect << game_id << settings;
-  query(g.socket, pq, done);
-
-  cout << "sending name..." << endl;
-  pq.clear();
-  pq << protocol::id << name;
-  query(g.socket, pq, done);
-
-  if (!(g.socket -> data >> g.socket -> id)){
-    throw runtime_error("server failed to provide id");
+  try {
+    run(game_id, name, g, settings);
+  } catch (exception e) {
+    cout << "Exception in client::run: " << e.what() << endl;
+    cout << "Exiting..." << endl;
   }
-
-  cout << "received player id: " << g.socket -> id << endl;
-
-  sf::ContextSettings sf_settings;
-  sf_settings.antialiasingLevel = 8;
-  g.window.create(sf::VideoMode(width, height), "SFML Turkeys!", sf::Style::Default, sf_settings);
-
-  sfg::SFGUI sfgui;
-
-  g.sfgui = &sfgui;
-  g.window.setActive();
-  
-  graphics::initialize();
-  // todo: might need to g.window.setActive(), and might not even be
-  // able to construct sfgui in g before g.window.create()
-
-  entity_selector::g = &g;
-  g.run();
 
   g.socket -> disconnect();
   delete g.socket;

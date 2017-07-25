@@ -31,6 +31,7 @@ void dispatch_game(com &c) {
   c.thread_com = socket_t::tc_complete;
 }
 
+// todo: on success, set response to p in handler!
 string protocol_to_string(client_t *c, protocol_t x, sf::Packet &p) {
   string result;
   
@@ -47,8 +48,9 @@ string protocol_to_string(client_t *c, protocol_t x, sf::Packet &p) {
 
 struct handler {
   sf::TcpListener listener;
-  hm_t<string, server::com> clients;
+  hm_t<string, server::com> coms;
   hm_t<string, thread*> threads;
+  list<int*> temp_tc;
   int status;
 
   handler() {
@@ -59,41 +61,68 @@ struct handler {
     c -> setBlocking(true);
     cout << "dispatch client:" << endl;
 
-    string game_id;
     sf::Packet p;
-    bool game_is_new = false;
+
+    query_handler join_handler = [this, c] (int cid, sf::Packet p) -> handler_result {
+      string gid;
+      bool test = p >> gid;
+
+      auto on_success = [this, c, gid, p] (handler_result &res) {
+	auto set_invalid = [&res] () {
+	  res.status = socket_t::tc_stop;
+	  res.response.clear();
+	  res.response << protocol::invalid;
+	};
+
+	sf::Packet pbuf = p;
+	  
+	c -> game_id = gid;
+	bool game_is_new = !coms.count(c -> game_id);
+	server::com &link = coms[c -> game_id];
+	  
+	if (link.thread_com != socket_t::tc_init) {
+	  cout << "tried to join running game" << endl;
+	  set_invalid();
+	  return;
+	}
+
+	if (game_is_new) {
+	  client_game_settings test_settings;
+	  if (!(pbuf >> test_settings)) {
+	    cout << "didn't provide settings" << endl;
+	    set_invalid();
+	    return;
+	  }
+
+	  if (!test_settings.validate()) {
+	    cout << "provided invalid settings" << endl;
+	    set_invalid();
+	    return;
+	  }
+
+	  static_cast<client_game_settings&>(link.settings) = test_settings;
+	}
+      };
+	
+      return handler_switch(test, on_success);
+    };
     
-    try {
-      // assign client to game
-      p << protocol::confirm;
-      game_id = protocol_to_string(c, protocol::connect, p);
-      game_is_new = !clients.count(game_id);
-      server::com &link = clients[game_id];
-      
-      if (link.thread_com != socket_t::tc_init) {
-	throw runtime_error("client tried to join running game");
-      }
-
-      if (game_is_new) {
-	client_game_settings test_settings;
-	if (!(c -> data >> test_settings)) {
-	  throw runtime_error("client failed to provide settings.");
-	}
-
-	if (!test_settings.validate()) {
-	  throw runtime_error("client provided invalid settings.");
-	}
-
-	static_cast<client_game_settings&>(link.settings) = test_settings;
-      }
-    } catch (exception e) {
-      cout << "Client connection exception: " << e.what() << endl;
-      c -> disconnect();
+    // assign client to game
+    int *com_buf = new int(socket_t::tc_run);
+    temp_tc.push_back(com_buf);
+    c -> thread_com = com_buf;
+    if (!c -> check_protocol(protocol::connect, join_handler)) {
       delete c;
-      return;
+      c = 0;
     }
+    
+    temp_tc.remove(com_buf);
+    delete com_buf;
 
-    server::com &link = clients[game_id];
+    if (!c) return;
+
+    // client c now has a valid game_id
+    server::com &link = coms[c -> game_id];
     try {
       c -> id = link.idc++;
       link.add_client(c);
@@ -110,14 +139,9 @@ struct handler {
     }    
 
     // if game is full, start it
-    try {
-      if (link.clients.size() == link.settings.num_players) {
-	cout << "starting game " << game_id << endl;
-	threads[game_id] = new thread(dispatch_game, ref(link));
-      }
-    } catch (exception e) {
-      cout << "Dispatch game exception: " << e.what() << endl;
-      link.disconnect();
+    if (link.clients.size() == link.settings.num_players) {
+      cout << "starting game " << c -> game_id << endl;
+      threads[c -> game_id] = new thread(dispatch_game, ref(link));
     }
   }
 
@@ -134,11 +158,11 @@ struct handler {
 
     // start worker threads
     thread t_cleanup([this] () {cleanup_clients();});
-    thread t_input([this] () {handle_input();});
+    // disabled for debug:
+    // thread t_input([this] () {handle_input();});
   
     // accept connections
     while (status == socket_t::tc_run) {
-      cout << "listening...";
       client_t *test = new client_t();
       sf::Socket::Status code;
       
@@ -146,7 +170,6 @@ struct handler {
       if (code == sf::Socket::Done) {
 	dispatch_client(test);
       } else {
-	cout << " no client found." << endl;
 	test -> disconnect();
 	delete test;
       }
@@ -156,7 +179,7 @@ struct handler {
 
     cout << "server: handler: waiting for threads." << endl;
     t_cleanup.join();
-    t_input.join();
+    // t_input.join();
     listener.close();
     cout << "server: handler: completed!" << endl;
   }
@@ -170,16 +193,18 @@ struct handler {
 
       if (test == "info") {
 	cout << "games: " << endl;
-	for (auto &c : clients) {
+	for (auto &c : coms) {
 	  cout << " - " << c.first << ": " << c.second.thread_com << ": " << c.second.clients.size() << endl;
 	}
       }
     }
     
     status = socket_t::tc_stop;
-    for (auto &c : clients) c.second.thread_com = socket_t::tc_stop;
-    while (clients.size()) {
-      cout << "Waiting for games to terminate..." << endl;
+    for (auto &c : coms) c.second.thread_com = socket_t::tc_stop;
+    for (auto c : temp_tc) *c = socket_t::tc_stop;
+    
+    while (coms.size() || temp_tc.size()) {
+      cout << "Waiting for clients to terminate..." << endl;
       sf::sleep(sf::milliseconds(100));
     }
     
@@ -190,8 +215,12 @@ struct handler {
     list<string> rbuf;
     while (status == socket_t::tc_run || status == socket_t::tc_stop) {
       rbuf.clear();
-      for (auto &x : clients) {
-	if (x.second.thread_com == socket_t::tc_complete || x.second.clients.empty()) {
+      for (auto &x : coms) {
+	bool is_complete = x.second.thread_com == socket_t::tc_complete;
+	bool is_empty = x.second.clients.empty();
+	bool is_init = x.second.thread_com == socket_t::tc_init;
+	
+	if (is_complete || (is_empty && !is_init)) {
 	  rbuf.push_back(x.first);
 	}
       }
@@ -201,7 +230,7 @@ struct handler {
 	threads[v] -> join();
 	delete threads[v];
 	threads.erase(v);
-	clients.erase(v);
+	coms.erase(v);
 	cout << "completed terminating game " << v << endl;
       }
       

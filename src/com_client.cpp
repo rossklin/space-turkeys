@@ -91,7 +91,11 @@ entity_selector::ptr client::deserialize_object(sf::Packet &p, sint id){
 
   sf::Color col;
   typename T::base_object_t s;
-  if (!(p >> s)) throw network_error("deserialize_object: package empty!");
+  
+  if (!(p >> s)) {
+    throw network_error("deserialize_object: package empty!");
+  }
+  
   return T::create(s, col, s.owner == id);
 }
 
@@ -112,13 +116,13 @@ void client::deserialize(data_frame &f, sf::Packet &p, sint id){
     entity_selector::ptr obj;
     p >> key;
     if (key == ship::class_id){
-      if (!(obj = deserialize_object<client::ship_selector>(p, id))) return false;
+      obj = deserialize_object<client::ship_selector>(p, id);
     }else if (key == fleet::class_id){
-      if (!(obj = deserialize_object<client::fleet_selector>(p, id))) return false;
+      obj = deserialize_object<client::fleet_selector>(p, id);
     }else if (key == solar::class_id){
-      if (!(obj = deserialize_object<client::solar_selector>(p, id))) return false;
+      obj = deserialize_object<client::solar_selector>(p, id);
     }else if (key == waypoint::class_id){
-      if (!(obj = deserialize_object<client::waypoint_selector>(p, id))) return false;
+      obj = deserialize_object<client::waypoint_selector>(p, id);
     }else{
       throw network_error("deserialize: key " + key + " not recognized!");
     }

@@ -81,7 +81,7 @@ namespace st3{
       void run();
 
       /*! send a packet to query and wait for response */
-      bool wait_for_it(sf::Packet &p);
+      bool wait_for_it(sf::Packet &p, std::function<bool(sf::Packet)> callback = 0);
 
       bool init_data();
 

@@ -15,7 +15,7 @@ bool socket_t::check_com() {
   return (!thread_com) || *thread_com == tc_run || *thread_com == tc_init;
 }
 
-bool st3::socket_t::send_packet(sf::Packet &packet){
+bool st3::socket_t::send_packet(sf::Packet packet){
   setBlocking(false);
   while (check_com()) {
     switch(status = send(packet)){
@@ -24,6 +24,7 @@ bool st3::socket_t::send_packet(sf::Packet &packet){
     case sf::Socket::Error:
       throw network_error("socket_t::send: error sending!");
     case sf::Socket::Done:
+      cout << "socket_t::send_packet: done" << endl;
       return true;
     case sf::Socket::NotReady:
       // continue
@@ -38,6 +39,7 @@ bool st3::socket_t::send_packet(sf::Packet &packet){
     sf::sleep(sf::milliseconds(10));
   }
 
+  // return false when aborted by thread_com
   return false;
 }
 
@@ -51,6 +53,7 @@ bool st3::socket_t::receive_packet() {
     case sf::Socket::Error:
       throw network_error("socket_t::receive: error receiving!");
     case sf::Socket::Done:
+      cout << "socket_t::receive_packet: done" << endl;
       return true;
     case sf::Socket::NotReady:
       break;
@@ -63,5 +66,6 @@ bool st3::socket_t::receive_packet() {
     sf::sleep(sf::milliseconds(10));
   }
 
+  // return false when aborted by thread_com
   return false;
 }
