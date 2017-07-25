@@ -1,7 +1,7 @@
 * current work
-** figure out why server hangs on quit after client disconnects
-   Look at blocking flag in subroutines of check_protocol
 ** implement new client communication structure
+*** unexpected protocol exception using protocol any
+*** client simulation step ends when all frames are loaded
 *** try to create a general structure for running com-threads
     Something along the lines of a function that takes a communication
     task and callbacks on_complete and on_fail, but also integrates

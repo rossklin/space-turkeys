@@ -126,10 +126,24 @@ struct handler {
     try {
       c -> id = link.idc++;
       link.add_client(c);
-      // send id and get name
-      p.clear();
-      p << protocol::confirm << c -> id;
-      c -> name = protocol_to_string(c, protocol::id, p);
+      
+      query_handler handler = [c] (int cid, sf::Packet query) -> handler_result {
+	handler_result res;
+	
+	if (query >> c -> name) {
+	  res.response << protocol::confirm << c -> id;
+	  res.status = socket_t::tc_complete;
+	} else {
+	  res.response << protocol::invalid;
+	  res.status = socket_t::tc_stop;
+	}
+
+	return res;
+      };
+      
+      if (!c -> check_protocol(protocol::id, handler)) {
+	throw runtime_error("Client failed protocol::id");
+      }
     } catch (exception e) {
       cout << "Client id exchange exception: " << e.what() << endl;
       link.clients.erase(c -> id);
