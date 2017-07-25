@@ -1,7 +1,25 @@
 * current work
 ** implement new client communication structure
-*** unexpected protocol exception using protocol any
-*** client simulation step ends when all frames are loaded
+*** Find a thread safe structure for accepting clients
+    Consider that hm_t::operator[] is not thread safe, while at the
+    same time handle_sigint can't wait for dispatch_client before
+    setting socket_t::tc_stop.
+*** Mixed thread io on server
+    *handle_sigint* sets thread_com to tc_stop, then *cleanup_clients*
+    waits for thread_com == tc_complete.
+
+    A) If the game has not been started, thread_com will never be set
+    to tc_complete. *cleanup_clients* must check for games that have
+    waiting clients but have not been started.
+
+    B) Thread safety (low risk): if *handle_sigint* sets thread_com to tc_stop
+    after it was set to tc_complete at end of dispatch_game,
+    *cleanup_clients* will never complete.
+
+    Instead, use separate input and output com variables; this should
+    solve both problems.
+*** [J] unexpected protocol exception using protocol any
+*** [J?] client simulation step ends when all frames are loaded
 *** try to create a general structure for running com-threads
     Something along the lines of a function that takes a communication
     task and callbacks on_complete and on_fail, but also integrates

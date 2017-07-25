@@ -41,7 +41,7 @@ handler_result client_t::receive_query(protocol_t p, query_handler f){
       if (input == protocol::leave) {
 	cout << "client " << id << " disconnected!" << endl;
 	set_disconnect();
-      } else if (input == p) {
+      } else if (input == p || p == protocol::any) {
 	res = f(id, data);
 	cout << "received protocol " << p << " from client " << id << endl;
       } else {

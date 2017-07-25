@@ -2,6 +2,8 @@
 #include <exception>
 #include <cstdlib>
 #include <thread>
+#include <csignal>
+#include <mutex>
 
 #include "game_handler.h"
 #include "com_server.h"
@@ -19,7 +21,6 @@ void dispatch_game(com &c) {
   try {
     game_data g;
     g.settings = c.settings;
-    c.thread_com = socket_t::tc_run;
     g.build_players(c.clients);
     g.build();  
     game_handler(c, g);
@@ -31,37 +32,23 @@ void dispatch_game(com &c) {
   c.thread_com = socket_t::tc_complete;
 }
 
-// todo: on success, set response to p in handler!
-string protocol_to_string(client_t *c, protocol_t x, sf::Packet &p) {
-  string result;
-  
-  query_handler handler = [&result] (int cid, sf::Packet p) -> handler_result {
-    return handler_switch(p >> result);
-  };
-
-  if (!c -> check_protocol(x, handler)) {
-    throw runtime_error("dispatch_client: failed to require protocol " + to_string(x));
-  }
-
-  return result;
-}
-
 struct handler {
   sf::TcpListener listener;
   hm_t<string, server::com> coms;
   hm_t<string, thread*> threads;
   list<int*> temp_tc;
   int status;
+  mutex dcmutex;
 
   handler() {
     status = socket_t::tc_run;
   }
 
   void dispatch_client(client_t *c) {
-    c -> setBlocking(true);
-    cout << "dispatch client:" << endl;
+    // only dispatch one client at a time
+    unique_lock<mutex> dclock(dcmutex);
 
-    sf::Packet p;
+    cout << "dispatch client:" << endl;
 
     query_handler join_handler = [this, c] (int cid, sf::Packet p) -> handler_result {
       string gid;
@@ -123,10 +110,12 @@ struct handler {
 
     // client c now has a valid game_id
     server::com &link = coms[c -> game_id];
+
+    // thread safely add client to link
+    c -> id = link.idc++;
+    link.add_client(c);
+    
     try {
-      c -> id = link.idc++;
-      link.add_client(c);
-      
       query_handler handler = [c] (int cid, sf::Packet query) -> handler_result {
 	handler_result res;
 	
@@ -152,8 +141,10 @@ struct handler {
       return;
     }    
 
-    // if game is full, start it
+    // if game is full
     if (link.clients.size() == link.settings.num_players) {
+      // start the game
+      link.thread_com = socket_t::tc_run;      
       cout << "starting game " << c -> game_id << endl;
       threads[c -> game_id] = new thread(dispatch_game, ref(link));
     }
@@ -172,8 +163,6 @@ struct handler {
 
     // start worker threads
     thread t_cleanup([this] () {cleanup_clients();});
-    // disabled for debug:
-    // thread t_input([this] () {handle_input();});
   
     // accept connections
     while (status == socket_t::tc_run) {
@@ -193,26 +182,15 @@ struct handler {
 
     cout << "server: handler: waiting for threads." << endl;
     t_cleanup.join();
-    // t_input.join();
     listener.close();
     cout << "server: handler: completed!" << endl;
   }
 
   // cli to terminate server
-  void handle_input() {
-    string test;
+  // todo: fix thread safety
+  void handle_sigint() {
+    cout << "server: caught signal SIGINT, stopping..." << endl;
 
-    while (test != "quit") {
-      cin >> test;
-
-      if (test == "info") {
-	cout << "games: " << endl;
-	for (auto &c : coms) {
-	  cout << " - " << c.first << ": " << c.second.thread_com << ": " << c.second.clients.size() << endl;
-	}
-      }
-    }
-    
     status = socket_t::tc_stop;
     for (auto &c : coms) c.second.thread_com = socket_t::tc_stop;
     for (auto c : temp_tc) *c = socket_t::tc_stop;
@@ -225,15 +203,22 @@ struct handler {
     status = socket_t::tc_complete;
   }
 
+  // todo: fix thread safety
   void cleanup_clients() {
     list<string> rbuf;
     while (status == socket_t::tc_run || status == socket_t::tc_stop) {
       rbuf.clear();
       for (auto &x : coms) {
+
+	if (x.second.thread_com == socket_t::tc_init && status == socket_t::tc_stop) {
+	  x.second.disconnect();
+	  x.second.thread_com = socket_t::tc_complete;
+	}
+
 	bool is_complete = x.second.thread_com == socket_t::tc_complete;
 	bool is_empty = x.second.clients.empty();
 	bool is_init = x.second.thread_com == socket_t::tc_init;
-	
+
 	if (is_complete || (is_empty && !is_init)) {
 	  rbuf.push_back(x.first);
 	}
@@ -241,9 +226,12 @@ struct handler {
 
       for (auto v : rbuf) {
 	cout << "register game " << v << " for termination." << endl;
-	threads[v] -> join();
-	delete threads[v];
-	threads.erase(v);
+	if (threads.count(v)) {
+	  threads[v] -> join();
+	  delete threads[v];
+	  threads.erase(v);
+	}
+	
 	coms.erase(v);
 	cout << "completed terminating game " << v << endl;
       }
@@ -253,10 +241,14 @@ struct handler {
   }
 };
 
+handler h;
+
+void handle_sigint(int sig) {
+  h.handle_sigint();
+}
 
 int main(int argc, char **argv){
-  handler h;
-
+  signal(SIGINT, handle_sigint);
   game_data::confirm_data();
   utility::init();
   h.run();

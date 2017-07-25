@@ -174,7 +174,6 @@ void game::run(){
 bool game::wait_for_it(sf::Packet &p, std::function<bool(sf::Packet)> callback){
   int w2c = socket_t::tc_run;
   int c2w = socket_t::tc_run;
-  message = "Loading...";
   
   thread t(query, socket, ref(p), ref(w2c), ref(c2w));
   
@@ -547,7 +546,8 @@ bool game::simulation_step(){
 
   cout << "simlulation: starting loop" << endl;
 
-  window_loop(event_handler, body, c2w, w2c);
+  int dont_interrupt = socket_t::tc_run;
+  window_loop(event_handler, body, dont_interrupt, w2c);
 
   cout << "simulation: waiting for thread join" << endl;
   t.join();
