@@ -4,6 +4,88 @@
     Consider that hm_t::operator[] is not thread safe, while at the
     same time handle_sigint can't wait for dispatch_client before
     setting socket_t::tc_stop.
+
+*** Server
+    safe_game_access(gid) {
+      o *lock* game ring
+      o [get|create] game
+      o *unlock* game ring
+      o return game
+    }
+
+    safe_delete(gid) {
+      o *lock* game ring
+      o cleanup and erase game gid
+      o *unlock* game ring
+    }
+
+    safe_game_count() {
+      o *lock* game ring
+      o result = games.count()
+      o *unlock* game ring
+    }
+
+    safe_state(gid) {
+      return safe_game_access(gid).state
+    }
+**** game_dispatcher
+     while (server_status == run) {
+       o *lock* game ring
+       for (auto g : games) {
+         if (g ready to launch) thread dispatch_game(g.id)
+       }
+       o *unlock* game ring
+       o sleep a bit
+     }
+***** dispatch_game gid: only runs on game in init state
+       // at this point, no more clients will pass the "can join game"
+       // condition
+
+       o game = safe_game_access(gid)
+       o *lock* game 
+       o get list of clients
+       o *unlock* game 
+       o join all client wait_for_game threads
+       o game_handler.run()
+       o disconnect clients
+       o *lock* game 
+       o set game state to complete
+       o *unlock* game 
+**** Listener
+***** dispatch_client (add timeout for introduction protocol)
+      o check server status
+      o client >> gid >> settings >> name
+      o game = safe_game_access(gid)
+      o *lock* game
+      o read game state
+      o can_join = game state == init and game not full
+      if (can_join) {
+        o write to game: add client and (if new) settings
+	o package = ok + id
+      } else {
+        o package = not ok
+      }
+      o *unlock* game gid
+      o client << package
+      o if (can_join) thread wait_for_game
+****** wait_for_game gid
+       while (safe_state(gid) == init) {
+         c -> check_protocol(load_init, standby)
+       }
+       o if (safe_state(gid) == running) set client state to running
+**** Signal Handler
+     o set server status to stop
+     o *lock* game ring
+     for each game {
+       *lock* game
+       set status to stop
+       *unlock* game
+     }
+     o *unlock* game ring
+     o while (safe_game_count()) {
+       for each game gid: if safe_state(gid) == complete: safe_delete(gid)
+       sleep
+     } 
 *** Mixed thread io on server
     *handle_sigint* sets thread_com to tc_stop, then *cleanup_clients*
     waits for thread_com == tc_complete.
