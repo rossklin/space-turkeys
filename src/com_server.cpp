@@ -114,6 +114,7 @@ com::com() {
 
 void com::add_client(client_t *c) {
   c -> thread_com = &thread_com;
+  c -> id = idc++;
   clients[c -> id] = c;
 }
 

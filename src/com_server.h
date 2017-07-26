@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <mutex>
 
 #include <SFML/Network.hpp>
 
@@ -43,6 +44,7 @@ namespace st3{
       game_settings settings;
       int idc;
       int thread_com;
+      std::mutex m_lock;
 
       com();
 
