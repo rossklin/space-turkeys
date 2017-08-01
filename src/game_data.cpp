@@ -466,15 +466,15 @@ void game_data::increment(){
   for (auto x : entity) if (x.second -> is_active()) x.second -> post_phase(this);
 }
 
-void game_data::build_players(hm_t<int, server::client_t*> clients){
+void game_data::build_players(list<server::client_t*> clients){
   // build player data
   vector<sint> colbuf = utility::different_colors(clients.size());
   int i = 0;
   player p;
   for (auto x : clients){
-    p.name = x.second -> name;
+    p.name = x -> name;
     p.color = colbuf[i++];
-    players[x.first] = p;
+    players[x -> id] = p;
   }
 }
 

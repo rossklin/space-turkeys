@@ -5,6 +5,8 @@
 #include <vector>
 #include <functional>
 #include <mutex>
+#include <thread>
+#include <list>
 
 #include <SFML/Network.hpp>
 
@@ -27,9 +29,10 @@ namespace st3{
     handler_result handler_switch(bool test, std::function<void(handler_result&)> on_success = 0, std::function<void(handler_result&)> on_fail = 0);
 
     /*! special socket functions for server */
-    struct client_t : public socket_t{
+    struct client_t : public socket_t {
       std::string name;
       std::string game_id;
+      std::thread *wfg_thread;
       
       handler_result receive_query(protocol_t p, query_handler f);
       bool check_protocol(protocol_t p, query_handler f);
@@ -39,24 +42,24 @@ namespace st3{
 
     /*! structure handling a set of clients */
     struct com {
-      
       hm_t<int, client_t*> clients;
       game_settings settings;
       int idc;
       int thread_com;
       std::mutex m_lock;
+      std::thread *active_thread;
 
       com();
-
       void add_client(client_t *c);
-      void disconnect();
-
-      static query_handler basic_query_handler(protocol_t query, hm_t<int, sf::Packet> response);
-      static query_handler basic_query_handler(protocol_t query, sf::Packet response);
-      static query_handler basic_query_handler(protocol_t query, protocol_t response);
+      void disconnect();      
       bool cleanup_clients();
       bool check_protocol(protocol_t p, query_handler h);
       void distribute_frames(std::vector<entity_package> &g, int &frame_count);
+      std::list<client_t*> access_clients();
+      bool can_join();
+      bool ready_to_launch();
+      void lock();
+      void unlock();
     };
   };
 };

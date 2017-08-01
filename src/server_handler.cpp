@@ -1,8 +1,25 @@
+#include <iostream>
+
+#include "game_handler.h"
+#include "game_data.h"
 #include "server_handler.h"
+#include "serialization.h"
+#include "protocol.h"
 
 using namespace std;
 using namespace st3;
 using namespace server;
+
+bool valid_string(string v) {
+  // todo
+  return v.length() < 1000;
+}
+
+void end_thread(thread *&t) {
+  t -> join();
+  delete t;
+  t = 0;
+}
 
 // at this point, no other thread will access c -> clients
 void handler::dispatch_game(string gid) {
@@ -10,16 +27,12 @@ void handler::dispatch_game(string gid) {
   c -> thread_com = socket_t::tc_run;
 
   // wait for client wfg threads to finish
-  for (auto cl : c -> clients) {
-    if (cl.second -> wfg_thread) {
-      cl.second -> wfg_thread -> join();
-    }
-  }
+  for (auto cl : c -> access_clients()) if (cl -> wfg_thread) end_thread(cl -> wfg_thread);
 
   try {
     game_data g;
     g.settings = c -> settings;
-    g.build_players(c -> clients);
+    g.build_players(c -> access_clients());
     g.build();  
     game_handler(*c, g);
   } catch (exception e) {
@@ -45,6 +58,10 @@ void handler::dispatch_client(client_t *c) {
     string name;
     client_game_settings c_settings;
     bool test = p >> gid >> name >> c_settings;
+
+    // guarantee server status does not change until the game has been
+    // created
+    status_ring.lock();
     test = test && status == socket_t::tc_run && valid_string(gid) && valid_string(name) && c_settings.validate();
 
     res.status = socket_t::tc_complete;
@@ -64,6 +81,7 @@ void handler::dispatch_client(client_t *c) {
       game_is_new = true;
       link = create_game(gid, c_settings);
     }
+    status_ring.unlock();
 	  
     link -> lock();
 
@@ -84,7 +102,7 @@ void handler::dispatch_client(client_t *c) {
   // temporarily use server status as thread com
   c -> thread_com = &status;
   if (c -> check_protocol(protocol::connect, join_handler)) {
-    dispatch_wfg(c);
+    c -> wfg_thread = new thread([this,c] () {wfg(c);});
   } else {
     delete c;
   }
@@ -131,11 +149,12 @@ void handler::run() {
 void handler::handle_sigint() {
   cout << "server: caught signal SIGINT, stopping..." << endl;
 
+  status_ring.lock();
   status = socket_t::tc_stop;
-  for (auto &c : coms) c.second.thread_com = socket_t::tc_stop;
-  for (auto c : temp_tc) *c = socket_t::tc_stop;
+  for (auto &c : games) c.second.thread_com = socket_t::tc_stop;
+  status_ring.unlock();
     
-  while (coms.size() || temp_tc.size()) {
+  while (games.size()) {
     cout << "Waiting for clients to terminate..." << endl;
     sf::sleep(sf::milliseconds(100));
   }
@@ -143,35 +162,45 @@ void handler::handle_sigint() {
   status = socket_t::tc_complete;
 }
 
-void handler::cleanup_clients() {
+void handler::game_dispatcher() {
   list<string> rbuf;
-  while (status == socket_t::tc_run || status == socket_t::tc_stop) {
-    rbuf.clear();
-    for (auto &x : coms) {
+  while (status != socket_t::tc_complete) {
 
-      if (x.second.thread_com == socket_t::tc_init && status == socket_t::tc_stop) {
-	x.second.disconnect();
-	x.second.thread_com = socket_t::tc_complete;
+    game_ring.lock();
+    // check games to launch
+    for (auto &c : games) {
+      com &game = c.second;
+      string gid = c.first;
+      if (game.ready_to_launch()) {
+	game.active_thread = new thread([this, gid] () {dispatch_game(gid);});
       }
-
+    }
+    
+    // check games to remove
+    rbuf.clear();
+    for (auto &x : games) {
       bool is_complete = x.second.thread_com == socket_t::tc_complete;
-      bool is_empty = x.second.clients.empty();
+      bool is_empty = x.second.access_clients().empty();
       bool is_init = x.second.thread_com == socket_t::tc_init;
 
       if (is_complete || (is_empty && !is_init)) {
 	rbuf.push_back(x.first);
       }
     }
+    game_ring.unlock();
 
+    // remove games
     for (auto v : rbuf) {
       cout << "register game " << v << " for termination." << endl;
-      if (threads.count(v)) {
-	threads[v] -> join();
-	delete threads[v];
-	threads.erase(v);
+      com *g = access_game(v);
+
+      for (auto c : g -> access_clients()) {
+	if (c -> wfg_thread) end_thread(c -> wfg_thread);
       }
+      
+      if (g -> active_thread) end_thread(g -> active_thread);
 	
-      coms.erase(v);
+      games.erase(v);
       cout << "completed terminating game " << v << endl;
     }
       

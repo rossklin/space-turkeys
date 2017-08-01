@@ -100,7 +100,7 @@ namespace st3{
     // game steps
     void pre_step(); 
     void end_step();
-    void build_players(hm_t<int, server::client_t*> clients);
+    void build_players(std::list<server::client_t*> clients);
     void build();
 
   protected:
