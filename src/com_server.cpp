@@ -96,6 +96,7 @@ bool client_t::check_protocol(protocol_t p, query_handler f) {
   } catch (network_error e) {
     // network error
     set_disconnect();
+    completed = false;
   }
 
   cout << "check protocol " << p << ": client " << id << ": " << is_connected() << endl;
@@ -116,6 +117,30 @@ void com::add_client(client_t *c) {
   c -> thread_com = &thread_com;
   c -> id = idc++;
   clients[c -> id] = c;
+}
+
+list<client_t*> com::access_clients() {
+  list<client_t*> res;
+  lock();
+  for (auto &c : clients) res.push_back(c.second);
+  unlock();
+  return res;
+}
+
+void com::lock() {
+  m_lock.lock();
+}
+
+void com::unlock() {
+  m_lock.unlock();
+}
+
+bool com::can_join() {
+  return thread_com == socket_t::tc_init && clients.size() < settings.num_players;
+}
+
+bool com::ready_to_launch() {
+  return thread_com == socket_t::tc_init && clients.size() == settings.num_players;
 }
 
 void com::disconnect(){

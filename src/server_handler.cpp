@@ -21,10 +21,53 @@ void end_thread(thread *&t) {
   t = 0;
 }
 
+com *handler::access_game(string gid) {
+  com *g = 0;
+  game_ring.lock();
+  if (games.count(gid)) {
+    g = &games[gid];
+  }
+  game_ring.unlock();
+  return g;
+}
+
+com *handler::create_game(string gid, client_game_settings set) {
+  com *g;
+  game_ring.lock();
+  if (games.count(gid)) {
+    throw runtime_error("Attempted to create game but id alread in use!");
+  } else {
+    g = &games[gid];
+    static_cast<client_game_settings&>(g -> settings) = set;
+  }
+  game_ring.unlock();
+  return g;
+}
+
+void handler::wfg(client_t *c) {
+  query_handler handler = [] (int cid, sf::Packet p) -> handler_result {
+    handler_result res;
+    res.status << socket_t::tc_complete;
+    res.response << protocol::standby;
+    return res;
+  };
+
+  // standby during init status
+  while (c -> is_connected() && access_game(c -> game_id) -> thread_com == socket_t::tc_init) {
+    if (!c -> check_protocol(protocol::any, handler)) {
+      c -> set_disconnect();
+    }
+  }
+
+  // disconnect if we didn't pass to run status
+  if (c -> is_connected() && *(c -> thread_com) != socket_t::tc_run) {
+    c -> set_disconnect();
+  }
+}
+
 // at this point, no other thread will access c -> clients
 void handler::dispatch_game(string gid) {
   com *c = access_game(gid);
-  c -> thread_com = socket_t::tc_run;
 
   // wait for client wfg threads to finish
   for (auto cl : c -> access_clients()) if (cl -> wfg_thread) end_thread(cl -> wfg_thread);
@@ -40,7 +83,6 @@ void handler::dispatch_game(string gid) {
   }
 
   c -> disconnect();
-  c -> thread_com = socket_t::tc_complete;
 }
 
 handler::handler() {
@@ -61,7 +103,7 @@ void handler::dispatch_client(client_t *c) {
 
     // guarantee server status does not change until the game has been
     // created
-    status_ring.lock();
+    game_ring.lock();
     test = test && status == socket_t::tc_run && valid_string(gid) && valid_string(name) && c_settings.validate();
 
     res.status = socket_t::tc_complete;
@@ -71,6 +113,7 @@ void handler::dispatch_client(client_t *c) {
     res_invalid.response << protocol::invalid;
 
     if (!(test && status == socket_t::tc_run)) {
+      game_ring.unlock();
       return res_invalid;
     }
 
@@ -81,7 +124,6 @@ void handler::dispatch_client(client_t *c) {
       game_is_new = true;
       link = create_game(gid, c_settings);
     }
-    status_ring.unlock();
 	  
     link -> lock();
 
@@ -96,6 +138,7 @@ void handler::dispatch_client(client_t *c) {
     }
     
     link -> unlock();
+    game_ring.unlock();
     return res;
   };
 
@@ -149,10 +192,10 @@ void handler::run() {
 void handler::handle_sigint() {
   cout << "server: caught signal SIGINT, stopping..." << endl;
 
-  status_ring.lock();
+  game_ring.lock();
   status = socket_t::tc_stop;
   for (auto &c : games) c.second.thread_com = socket_t::tc_stop;
-  status_ring.unlock();
+  game_ring.unlock();
     
   while (games.size()) {
     cout << "Waiting for clients to terminate..." << endl;
@@ -164,27 +207,35 @@ void handler::handle_sigint() {
 
 void handler::game_dispatcher() {
   list<string> rbuf;
+  
   while (status != socket_t::tc_complete) {
+    rbuf.clear();
 
     game_ring.lock();
+    
     // check games to launch
     for (auto &c : games) {
       com &game = c.second;
       string gid = c.first;
+      list<client_t*> clients = game.access_clients();
+
+      // only cleanup clients for games in init status
+      if (game.thread_com == socket_t::tc_init) {
+	for (auto c : clients) {
+	  if (c -> wfg_thread && !c -> is_connected()) {
+	    end_thread(c -> wfg_thread);
+	    game.clients.erase(c -> id);
+	  }
+	}
+      }
+      
       if (game.ready_to_launch()) {
+	game.thread_com = socket_t::tc_run;
 	game.active_thread = new thread([this, gid] () {dispatch_game(gid);});
       }
-    }
-    
-    // check games to remove
-    rbuf.clear();
-    for (auto &x : games) {
-      bool is_complete = x.second.thread_com == socket_t::tc_complete;
-      bool is_empty = x.second.access_clients().empty();
-      bool is_init = x.second.thread_com == socket_t::tc_init;
 
-      if (is_complete || (is_empty && !is_init)) {
-	rbuf.push_back(x.first);
+      if (game.clients.empty()) {
+	rbuf.push_back(gid);
       }
     }
     game_ring.unlock();
@@ -193,13 +244,7 @@ void handler::game_dispatcher() {
     for (auto v : rbuf) {
       cout << "register game " << v << " for termination." << endl;
       com *g = access_game(v);
-
-      for (auto c : g -> access_clients()) {
-	if (c -> wfg_thread) end_thread(c -> wfg_thread);
-      }
-      
       if (g -> active_thread) end_thread(g -> active_thread);
-	
       games.erase(v);
       cout << "completed terminating game " << v << endl;
     }

@@ -51,7 +51,7 @@ namespace st3{
 
       com();
       void add_client(client_t *c);
-      void disconnect();      
+      void disconnect();
       bool cleanup_clients();
       bool check_protocol(protocol_t p, query_handler h);
       void distribute_frames(std::vector<entity_package> &g, int &frame_count);
