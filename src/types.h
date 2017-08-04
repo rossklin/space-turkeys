@@ -2,10 +2,15 @@
 
 #ifndef _STK_TYPES
 #define _STK_TYPES
-#include <SFML/System.hpp>
+#include <string>
 #include <unordered_map>
+#include <SFML/System.hpp>
 
 namespace st3{
+  namespace server {
+    void output(std::string v);
+  };
+  
   /*! 32 bit int for network serialization */
   typedef sf::Int32 sint;
 

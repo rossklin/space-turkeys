@@ -1,11 +1,23 @@
 #include <sstream>
 #include <iostream>
+#include <mutex>
 
 #include "types.h"
 #include "waypoint.h"
 
+#define DEBUG
+
 using namespace std;
 using namespace st3;
+
+void server::output(string v) {
+  static mutex m;
+#ifdef DEBUG
+  m.lock();
+  cout << v << endl;
+  m.unlock();
+#endif
+}
 
 const vector<string> keywords::resource = {
   keywords::key_metals,

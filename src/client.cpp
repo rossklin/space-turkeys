@@ -36,20 +36,11 @@ void run(string game_id, string name, game &g, client_game_settings settings) {
   int tc_out = 0;
 
   cout << "sending game id..." << endl;
-  pq << protocol::connect << game_id << settings;
+  pq << protocol::connect << game_id << name << settings;
   query(g.socket, pq, tc_in, tc_out);
 
   if (tc_out & socket_t::tc_bad_result) {
     throw runtime_error("Failed to send game id to server.");
-  }
-
-  cout << "sending name..." << endl;
-  pq.clear();
-  pq << protocol::id << name;
-  query(g.socket, pq, tc_in, tc_out);
-
-  if (tc_out & socket_t::tc_bad_result) {
-    throw runtime_error("Failed to send name to server.");
   }
 
   if (!(g.socket -> data >> g.socket -> id)){

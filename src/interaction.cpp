@@ -11,6 +11,7 @@
 
 using namespace std;
 using namespace st3;
+using namespace server;
 
 const class_t target_condition::no_target = "no target";
 const string interaction::trade_to = "trade to";
@@ -24,12 +25,6 @@ const string interaction::colonize = "colonize";
 const string interaction::pickup = "pickup";
 const string interaction::terraform = "terraform";
 const string interaction::hive_support = "hive support";
-
-void output(string v) {
-#ifdef VERBOSE
-  cout << v << endl;
-#endif
-}
 
 const hm_t<string, interaction> &interaction::table() {
   static bool init = false;

@@ -21,26 +21,26 @@ void end_thread(thread *&t) {
   t = 0;
 }
 
-com *handler::access_game(string gid) {
+com *handler::access_game(string gid, bool do_lock) {
   com *g = 0;
-  game_ring.lock();
+  if (do_lock) game_ring.lock();
   if (games.count(gid)) {
     g = &games[gid];
   }
-  game_ring.unlock();
+  if (do_lock) game_ring.unlock();
   return g;
 }
 
-com *handler::create_game(string gid, client_game_settings set) {
+com *handler::create_game(string gid, client_game_settings set, bool do_lock) {
   com *g;
-  game_ring.lock();
+  if (do_lock) game_ring.lock();
   if (games.count(gid)) {
     throw runtime_error("Attempted to create game but id alread in use!");
   } else {
     g = &games[gid];
     static_cast<client_game_settings&>(g -> settings) = set;
   }
-  game_ring.unlock();
+  if (do_lock) game_ring.unlock();
   return g;
 }
 
@@ -90,8 +90,7 @@ handler::handler() {
 }
 
 void handler::dispatch_client(client_t *c) {
-
-  cout << "dispatch client:" << endl;
+  output("dispatch_client: start");
 
   query_handler join_handler = [this, c] (int cid, sf::Packet p) -> handler_result {
     handler_result res;
@@ -100,6 +99,8 @@ void handler::dispatch_client(client_t *c) {
     string name;
     client_game_settings c_settings;
     bool test = p >> gid >> name >> c_settings;
+    output("join_handler: start");
+    if (!test) output("join_handler: failed to unpack");
 
     // guarantee server status does not change until the game has been
     // created
@@ -113,40 +114,48 @@ void handler::dispatch_client(client_t *c) {
     res_invalid.response << protocol::invalid;
 
     if (!(test && status == socket_t::tc_run)) {
+      output("join_handler: failed condition");
       game_ring.unlock();
       return res_invalid;
     }
 
-    com *link = access_game(gid);
+    com *link = access_game(gid, false);
     bool game_is_new = false;
     
     if (!link) {
+      output("join_handler: creating new game");
       game_is_new = true;
-      link = create_game(gid, c_settings);
+      link = create_game(gid, c_settings, false);
     }
 	  
     link -> lock();
 
     // test if joinable
     if (link -> can_join()) {
+      output("join_handler: can join!");
       link -> add_client(c);
       c -> name = name;
       c -> game_id = gid;
       res.response << c -> id;
     } else {
+      output("join_handler: can not join!");
       res = res_invalid;
     }
     
     link -> unlock();
     game_ring.unlock();
+
+    output("join_handler: complete");
     return res;
   };
 
   // temporarily use server status as thread com
   c -> thread_com = &status;
   if (c -> check_protocol(protocol::connect, join_handler)) {
+    output("dispatch_client: starting join thread");
     c -> wfg_thread = new thread([this,c] () {wfg(c);});
   } else {
+    output("dispatch_client: failed protocol, deallocating");
     delete c;
   }
 }
@@ -198,15 +207,17 @@ void handler::handle_sigint() {
   game_ring.unlock();
     
   while (games.size()) {
-    cout << "Waiting for clients to terminate..." << endl;
+    output("Waiting for clients to terminate...");
     sf::sleep(sf::milliseconds(100));
   }
-    
+
+  cout << "server: all games terminated! Exiting." << endl;
   status = socket_t::tc_complete;
 }
 
 void handler::game_dispatcher() {
   list<string> rbuf;
+  output("game_dispatcher: start");
   
   while (status != socket_t::tc_complete) {
     rbuf.clear();
@@ -223,6 +234,7 @@ void handler::game_dispatcher() {
       if (game.thread_com == socket_t::tc_init) {
 	for (auto c : clients) {
 	  if (c -> wfg_thread && !c -> is_connected()) {
+	    output("game_dispatcher: removing disconnected client " + to_string(c -> id) + " from game " + gid);
 	    end_thread(c -> wfg_thread);
 	    game.clients.erase(c -> id);
 	  }
@@ -230,11 +242,13 @@ void handler::game_dispatcher() {
       }
       
       if (game.ready_to_launch()) {
+	output("game_dispatcher: setting game " + gid + " to run status!");
 	game.thread_com = socket_t::tc_run;
 	game.active_thread = new thread([this, gid] () {dispatch_game(gid);});
       }
 
       if (game.clients.empty()) {
+	output("game_dispatcher: game " + gid + " has no clients, listing for removal.");
 	rbuf.push_back(gid);
       }
     }
@@ -242,11 +256,11 @@ void handler::game_dispatcher() {
 
     // remove games
     for (auto v : rbuf) {
-      cout << "register game " << v << " for termination." << endl;
+      output("game_dispatcher: register game " + v + " for termination.");
       com *g = access_game(v);
       if (g -> active_thread) end_thread(g -> active_thread);
       games.erase(v);
-      cout << "completed terminating game " << v << endl;
+      output("game_dispatcher: completed terminating game " + v);
     }
       
     sf::sleep(sf::milliseconds(100));

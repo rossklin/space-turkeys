@@ -24,8 +24,8 @@ namespace st3 {
       void dispatch_client(client_t *c);
       void wfg(client_t *c);
       void handle_sigint();
-      com *access_game(std::string gid);
-      com *create_game(std::string gid, client_game_settings s);
+      com *access_game(std::string gid, bool do_lock = true);
+      com *create_game(std::string gid, client_game_settings s, bool do_lock = true);
     };
   };
 };
