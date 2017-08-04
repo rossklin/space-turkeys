@@ -178,9 +178,9 @@ void ship::update_data(game_data *g) {
   fleet::ptr f = g -> get_fleet(fleet_id);
   fleet::suggestion suggest = f -> suggest(id, g);
 
-  auto output = [this] (string v) {
+  auto local_output = [this] (string v) {
 #ifdef VERBOSE
-    cout << id << ": update data: " << v << endl;
+    output(id + ": update_data: " + v);
 #endif
   };
 
@@ -235,30 +235,30 @@ void ship::update_data(game_data *g) {
   auto compute_summon = [=] (float &a, float &s) {
     if (travel) {
       float test = abs(utility::angle_difference(fleet_target_angle, fleet_angle));
-      output("summon: travel:");
+      local_output("summon: travel:");
       if (test > 2 * M_PI / 3) {
 	// in front of fleet
 	if (check_space(fleet_target_angle + M_PI)) {
 	  // slow down
 	  s = fmin(0.6 * f -> stats.speed_limit, base_stats.stats[sskey::key::speed]);
-	  output("summon: in fron of fleet, slowing down");
+	  local_output("summon: in fron of fleet, slowing down");
 	}
       } else if (test > M_PI / 3) {
 	// side of fleet
 	if (check_space(fleet_angle)) {
 	  a = fleet_target_angle + 0.15 * utility::angle_difference(fleet_angle, fleet_target_angle);
-	  output("summon: to side of fleet, angling in");
+	  local_output("summon: to side of fleet, angling in");
 	}
       } else {
 	// back of fleet
 	if (check_space(fleet_target_angle)) {
 	  s = base_stats.stats[sskey::key::speed];
-	  output("summon: behind fleet, speeding up");
+	  local_output("summon: behind fleet, speeding up");
 	}
       }
     } else {
       a = fleet_angle;
-      output("summon: not traveling - heading towards center of fleet");
+      local_output("summon: not traveling - heading towards center of fleet");
     }
   };
 
@@ -268,22 +268,22 @@ void ship::update_data(game_data *g) {
     a = utility::point_angle(local_delta);
     s = base_stats.stats[sskey::key::speed];
 
-    output("setting local target angle: " + to_string(a));
-    output("setting local target speed: " + to_string(s) + " (delta is " + to_string(utility::l2norm(local_delta)) + ")");
+    local_output("setting local target angle: " + to_string(a));
+    local_output("setting local target speed: " + to_string(s) + " (delta is " + to_string(utility::l2norm(local_delta)) + ")");
   };
 
   // compute desired angle and speed
   if (summon) {
     compute_summon(target_angle, target_speed);
-    output("summon");
+    local_output("summon");
   } else if (local) {
     compute_local(target_angle, target_speed);
-    output("local");
+    local_output("local");
   } else if (hold) {
     target_speed = 0;
-    output("hold");
+    local_output("hold");
   } else if (travel) {
-    output("travel");
+    local_output("travel");
   } else if (scatter) {
     // just avoid nearby enemies
     if (local_enemies.size()) {
@@ -291,17 +291,17 @@ void ship::update_data(game_data *g) {
       apply_ships(local_enemies, [this, &enemies, output](ship::ptr s) {
 	  int idx = utility::angle2index(na, utility::point_angle(s -> position - position));
 	  enemies[idx] += s -> stats[sskey::key::mass] * s -> stats[sskey::key::ship_damage];
-	  output("scatter: avoiding " + s -> id);
+	  local_output("scatter: avoiding " + s -> id);
 	});
 
       enemies = utility::circular_kernel(enemies, 4);
       target_angle = utility::index2angle(na, utility::vector_min(enemies, utility::identity_function<float>()));
       target_speed = base_stats.stats[sskey::key::speed];
-      output("scatter: target angle: " + to_string(target_angle));
+      local_output("scatter: target angle: " + to_string(target_angle));
     } else {
       target_speed = 0;
       target_angle = angle;
-      output("scatter: chilling");
+      local_output("scatter: chilling");
     }
   }
 
@@ -340,9 +340,9 @@ void ship::update_data(game_data *g) {
 void ship::move(game_data *g){
   if (force_refresh || utility::random_uniform() < g -> get_dt() * 0.2) update_data(g);
 
-  auto output = [this] (string v) {
+  auto local_output = [this] (string v) {
 #ifdef VERBOSE
-    cout << id << ": move: " << v << endl;
+    output(id + ": move: " + v);
 #endif
   };
 
@@ -376,9 +376,9 @@ void ship::move(game_data *g){
       info.target = target_id;
       info.interaction = interaction::space_combat;
       g -> interaction_buffer.push_back(info);
-      output("fire at " + target_id);
+      local_output("fire at " + target_id);
     }else{
-      output("can't find a good shot");
+      local_output("can't find a good shot");
     }
   }
 
@@ -393,12 +393,12 @@ void ship::move(game_data *g){
 	info.target = e -> id;
 	info.interaction = f -> com.action;
 	g -> interaction_buffer.push_back(info);
-	output("activating " + f -> com.action + " on " + e -> id);
+	local_output("activating " + f -> com.action + " on " + e -> id);
       } else {
-	output("can't activate " + f -> com.action + " on " + e -> id);
+	local_output("can't activate " + f -> com.action + " on " + e -> id);
       }
     } else {
-      output("activate: fleet target idle or missing action: " + f -> com.action);
+      local_output("activate: fleet target idle or missing action: " + f -> com.action);
     }
   }
 
@@ -417,15 +417,15 @@ void ship::move(game_data *g){
     
     if (check_space(selected_angle + check_first * spread)) {
       selected_angle = selected_angle + check_first * spread;
-      output("blocked: found new space to the right");
+      local_output("blocked: found new space to the right");
     } else {
       check_first *= -1;
       if (check_space(selected_angle + check_first * spread)) {
 	selected_angle = selected_angle + check_first * spread;
-	output("blocked: found new space to the left");
+	local_output("blocked: found new space to the left");
       } else {
 	selected_speed = 0;
-	output("blocked: failed to find free space");
+	local_output("blocked: failed to find free space");
       }
     }
   }
@@ -446,13 +446,13 @@ void ship::move(game_data *g){
       // make sure target angle is to right of angle
       if (angle_miss < 0){
 	selected_angle = angle + 0.1;
-	output("avoid collision: edge right");
+	local_output("avoid collision: edge right");
       }
     } else if (crowd_right && !crowd_left) {
       // make sure target angle is to left of angle
       if (angle_miss > 0) {
 	selected_angle = angle - 0.1;
-	output("avoid collision: edge left");
+	local_output("avoid collision: edge left");
       }
     }
   }

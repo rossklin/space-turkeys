@@ -126,9 +126,9 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
   float pref_density = 0.1;
   float pref_maxrad = fmax(sqrt(ships.size() / (M_PI * pref_density)), 20);
 
-  auto output = [this] (string v) {
+  auto local_output = [this] (string v) {
 #ifdef VERBOSE
-    cout << id << ": suggest: " << v << endl;
+    output(id + ": suggest: " + v);
 #endif
   };
 
@@ -140,47 +140,47 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
     if (!stats.can_evade) s_evade.id = suggestion::scatter;
     
     if (com.policy & policy_maintain_course) {
-      output("maintain course");
+      local_output("maintain course");
       return suggestion(suggestion::travel | unmask, stats.target_position);
     }else if (com.policy & policy_evasive) {
-      output("evade");
+      local_output("evade");
       return s_evade;
     }else{    
       if (s -> tags.count("spacecombat")) {
 	point p = stats.enemies.front().first;
 	if (com.policy & policy_aggressive) {
-	  output("aggressive engage: " + utility::point2string(p));
+	  local_output("aggressive engage: " + utility::point2string(p));
 	  return suggestion(suggestion::engage | unmask, p);
 	} else if (com.policy & policy_reasonable && stats.enemies.front().second < 1){
-	  output("local engage");
+	  local_output("local engage");
 	  return suggestion(suggestion::engage | unmask, p);
 	} else {
-	  output("evade");
+	  local_output("evade");
 	  return s_evade;
 	}
       }else{
-	output("evade");
+	local_output("evade");
 	return s_evade;
       }
     }
   }else{
     // peaceful times
     if (stats.converge) {
-      output("activate");
+      local_output("activate");
       return suggestion(suggestion::activate | unmask, stats.target_position);
     }else if (utility::l2norm(s -> position - position) > pref_maxrad) {
       if (is_idle()) {
-	output("summon");
+	local_output("summon");
 	return suggestion(suggestion::summon | unmask);
       } else {
-	output("summon and travel");
+	local_output("summon and travel");
 	return suggestion(suggestion::summon | suggestion::travel | unmask, stats.target_position);
       }
     }else if (is_idle()) {
-      output("hold");
+      local_output("hold");
       return suggestion(suggestion::hold | unmask);
     }else{
-      output("travel");
+      local_output("travel");
       return suggestion(suggestion::travel | unmask, stats.target_position);
     }
   }
@@ -195,21 +195,21 @@ void fleet::analyze_enemies(game_data *g) {
   vector<point> pos = utility::fmap<vector<point> >(t, (function<point(combid)>) [g] (combid sid) -> point {return g -> get_ship(sid) -> position;});
   vector<point> x;
 
-  auto output = [this] (string v) {
+  auto local_output = [this] (string v) {
 #ifdef VERBOSE
-    cout << id << ": analyze enemies: " << v << endl;
+    output(id + ": analyze enemies: " + v);
 #endif
   };
   
   if (t.empty()) {
     stats.can_evade = false;
-    output("no enemies");
+    local_output("no enemies");
     return;
   }
 
   x = utility::cluster_points(pos);
 
-  output("identified " + to_string(x.size()) + " clusters from " + to_string(t.size()) + " ships.");
+  local_output("identified " + to_string(x.size()) + " clusters from " + to_string(t.size()) + " ships.");
 
   int na = 10;
 
@@ -229,13 +229,13 @@ void fleet::analyze_enemies(game_data *g) {
     int idx = utility::vector_min<point>(x, [p] (point y) -> float {return utility::l2d2(y - p);});
     cc[idx] += s.get_strength();
 
-    output("assigned enemy " + sid + " to cluster " + to_string(idx) + " at " + utility::point2string(x[idx]));
+    local_output("assigned enemy " + sid + " to cluster " + to_string(idx) + " at " + utility::point2string(x[idx]));
   }
 
   // build enemy fleet stats
   for (auto i : cc) {
     stats.enemies.push_back(make_pair(x[i.first], i.second / get_strength()));
-    output("added enemy cluster value: " + utility::point2string(x[i.first]) + ": " + to_string(i.second / get_strength()));
+    local_output("added enemy cluster value: " + utility::point2string(x[i.first]) + ": " + to_string(i.second / get_strength()));
   }
   
   stats.enemies.sort([](pair<point, float> a, pair<point, float> b) {return a.second > b.second;});
@@ -268,10 +268,10 @@ void fleet::analyze_enemies(game_data *g) {
   if (evalue < 1) {
     stats.can_evade = true;
     stats.path = position + utility::scale_point(utility::normv(utility::index2angle(na, prio_idx)), 100);
-    output("selected evasion angle: " + to_string(utility::index2angle(na, prio_idx)));
+    local_output("selected evasion angle: " + to_string(utility::index2angle(na, prio_idx)));
   } else {
     stats.can_evade = false;
-    output("no good evasion priority index (best was: " + to_string(utility::index2angle(na, prio_idx)) + " at " + to_string(evalue));
+    local_output("no good evasion priority index (best was: " + to_string(utility::index2angle(na, prio_idx)) + " at " + to_string(evalue));
   }
 }
 
