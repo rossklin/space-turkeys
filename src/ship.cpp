@@ -263,7 +263,7 @@ void ship::update_data(game_data *g) {
   };
 
   // angle and speed when running local policies
-  auto compute_local = [this, suggest, output] (float &a, float &s) {
+  auto compute_local = [this, suggest, local_output] (float &a, float &s) {
     point local_delta = suggest.p - position;
     a = utility::point_angle(local_delta);
     s = base_stats.stats[sskey::key::speed];
@@ -288,7 +288,7 @@ void ship::update_data(game_data *g) {
     // just avoid nearby enemies
     if (local_enemies.size()) {
       vector<float> enemies(na, 0);
-      apply_ships(local_enemies, [this, &enemies, output](ship::ptr s) {
+      apply_ships(local_enemies, [this, &enemies, local_output](ship::ptr s) {
 	  int idx = utility::angle2index(na, utility::point_angle(s -> position - position));
 	  enemies[idx] += s -> stats[sskey::key::mass] * s -> stats[sskey::key::ship_damage];
 	  local_output("scatter: avoiding " + s -> id);
@@ -360,7 +360,7 @@ void ship::move(game_data *g){
 
   // shoot enemies if able
   if (compile_interactions().count(interaction::space_combat) && local_enemies.size()) {
-    function<float(combid)> evalfun = [this, g, output] (combid sid) -> float {
+    function<float(combid)> evalfun = [this, g, local_output] (combid sid) -> float {
       ship::ptr s = g -> get_ship(sid);
       point delta = s -> position - position;
       float h = flex_weight(utility::point_angle(delta));
