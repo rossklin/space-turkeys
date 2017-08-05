@@ -54,7 +54,7 @@
 	},
 
 	"plasma laser" : {
-	    "ship damage" : "1#1",
+	    "ship damage" : "1#1.5",
 	    "load time" : "0.7#0"
 	},
 

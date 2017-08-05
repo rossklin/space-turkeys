@@ -83,8 +83,6 @@ bool test_memory() {
   return true;
 }
 
-cost::res_t get_tech_cost(string tech);
-
 cost::res_t get_facility_cost(string fac, int lev) {
   facility f = solar::facility_table().at(fac);
   cost::res_t c = f.cost_resources;
@@ -115,14 +113,24 @@ float fair_ship_count(string ship_class, float limit) {
 }
 
 // test two initial fleets can kill each other within 1000 increments
-bool test_space_combat(string c0, string c1, float limit, float req_win){
-  cout << "****************************************" << endl;
+bool test_space_combat(string c0, string c1, float limit, float win_lower, float win_upper, set<string> add_upgrades = {}){
+  cout << "----------------------------------------" << endl;
 
   float count0 = fair_ship_count(c0, limit);
   float count1 = fair_ship_count(c1, limit);
+  int min_units = 10;
+  int max_units = 100;
+  
   float highest = fmax(count0, count1);
-  if (highest > 99) {
-    float ratio = 99 / highest;
+  if (highest > max_units) {
+    float ratio = max_units / highest;
+    count0 *= ratio;
+    count1 *= ratio;
+  }
+
+  float lowest = fmin(count0, count1);
+  if (lowest > min_units) {
+    float ratio = min_units / lowest;
     count0 *= ratio;
     count1 *= ratio;
   }
@@ -132,7 +140,7 @@ bool test_space_combat(string c0, string c1, float limit, float req_win){
 
   cout << "test combat: " << scc_0[c0] << " " << c0 << " vs " << scc_1[c1] << " " << c1 << endl;
 
-  auto test = [scc_0, scc_1, c0, c1] () {
+  auto test = [scc_0, scc_1, c0, c1, add_upgrades] () {
     game_settings set;
     set.starting_fleet = "massive";
 
@@ -142,6 +150,8 @@ bool test_space_combat(string c0, string c1, float limit, float req_win){
     point b(200, 100);  
     setup_fleet_for(g, 0, a, b, scc_0);
     setup_fleet_for(g, 1, b, a, scc_1);
+
+    for (auto s : g -> all<ship>()) s -> upgrades += add_upgrades;
 
     auto get_ratio = [&] (int pid) -> float {
       float ref = pid == 0 ? scc_0.at(c0) : scc_1.at(c1);
@@ -169,55 +179,95 @@ bool test_space_combat(string c0, string c1, float limit, float req_win){
 
   float rmean = 0;
   int nsample = 0;
-  float dev = 1;
+  float dev = 0;
   int max_sample = 10;
-  int count = 0;
+  bool significant = false;
 
   cout << "sample: ";
-  while (count++ < max_sample && (rmean == 0 || dev >= 0.25 * rmean)) {
+  while (nsample < max_sample && (nsample < 4 || !significant)) {
     float r = test();
-    if (!isfinite(r)) r = 100;
+    if (r > 10 || !isfinite(r)) r = 10;
     
-    dev = (nsample * dev + abs(r - rmean)) / (nsample + 1);
     rmean = (nsample * rmean + r) / (nsample + 1);
+    dev = (nsample * dev + abs(r - rmean)) / (nsample + 1);
     nsample++;
-    cout << r << " (" << dev << "), " << flush;
+
+    float test_value = fmin(abs(rmean - win_lower), abs(rmean - win_upper));
+    significant = test_value > dev;
+
+    cout << r << ": " << test_value << "[" << dev << "] "<< flush;
   }
   
   cout << endl;
-  bool result = rmean >= req_win;
+  bool result = rmean >= win_lower && rmean <= win_upper;
 
-  cout << (result ? "SUCCESS" : "FAILURE") << ": result: " << rmean << " (req: " << req_win << ")" << endl;
+  cout << rmean << ": "  << (result ? "SUCCESS" : "FAILURE") << endl;
+
+  if (!result) {
+    cout << "########################################" << endl;
+    if (rmean < win_lower) {
+      cout << ">>IMPROVE " << c0 << " VS " << c1 << "<<" << endl;
+    } else {
+      cout << ">>[OVERKILL] NERF " << c0 << " VS " << c1 << "<<" << endl;
+    }
+    cout << "########################################" << endl;
+  }
+  
   return result;
 }
 
-int main(){
+int main(int argc, char **argv){
   float limit = 2000;
 
+  game_data::confirm_data();
+
+  if (argc == 6) {
+    test_space_combat(argv[1], argv[2], stof(argv[3]), stof(argv[4]), stof(argv[5]));
+    return 0;
+  } else if (argc > 1) {
+    cout << "Usage: " << argv[0] << " ship1 ship2 res_limit win_lower win_upper" << endl;
+    return 0;
+  }
+
   // test early game balance
+  cout << "****************************************" << endl;
   cout << "EARLY GAME" << endl;
-  test_space_combat("fighter", "battleship", limit, 1.5);
+  cout << "****************************************" << endl;
+  test_space_combat("fighter", "battleship", limit, 4, 16);
 
   // test mid game balance
+  cout << "****************************************" << endl;
   cout << "MID GAME" << endl;
+  cout << "****************************************" << endl;
   limit = 5000;
-  test_space_combat("corsair", "fighter", limit, 4);
-  test_space_combat("fighter", "battleship", limit, 1.5);
-  test_space_combat("battleship", "corsair", limit, 4);
+  test_space_combat("corsair", "fighter", limit, 5, 16);
+  test_space_combat("fighter", "battleship", limit, 0.5, 1.5);
+  test_space_combat("battleship", "corsair", limit, 3, 6);
 
   // test late game balance
+  cout << "****************************************" << endl;
   cout << "LATE GAME" << endl;
+  cout << "****************************************" << endl;
   limit = 15000;
-  test_space_combat("corsair", "fighter", limit, 4);
-  test_space_combat("fighter", "destroyer", limit, 4);
-  test_space_combat("destroyer", "battleship", limit, 4);
-  test_space_combat("destroyer", "corsair", limit, 8);
-  test_space_combat("battleship", "corsair", limit, 4);
-  test_space_combat("battleship", "fighter", limit, 1.5);
-  test_space_combat("voyager", "fighter", limit, 1.5);
-  test_space_combat("voyager", "corsair", limit, 1.5);
-  test_space_combat("destroyer", "voyager", limit, 8);
-  test_space_combat("battleship", "voyager", limit, 4);
+  set<string> add_upgrades = {
+    "warp drive",
+    "shield",
+    "nano hull",
+    "nano torpedos",
+    "plasma laser",
+    "hive mind"
+  };
+  
+  test_space_combat("corsair", "fighter", limit, 6, 16, add_upgrades);
+  test_space_combat("fighter", "destroyer", limit, 4, 16, add_upgrades);
+  test_space_combat("destroyer", "battleship", limit, 4, 16, add_upgrades);
+  test_space_combat("destroyer", "corsair", limit, 8, 16, add_upgrades);
+  test_space_combat("battleship", "corsair", limit, 4, 8, add_upgrades);
+  test_space_combat("battleship", "fighter", limit, 2, 4, add_upgrades);
+  test_space_combat("voyager", "fighter", limit, 2, 8, add_upgrades);
+  test_space_combat("voyager", "corsair", limit, 1, 2, add_upgrades);
+  test_space_combat("destroyer", "voyager", limit, 8, 16, add_upgrades);
+  test_space_combat("battleship", "voyager", limit, 4, 8, add_upgrades);
   
   return 0;
 }

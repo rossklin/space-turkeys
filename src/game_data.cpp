@@ -507,17 +507,25 @@ void game_data::build(){
     } else if (settings.starting_fleet == "voyagers") {
       starter_fleet["voyager"] = 2;
     } else if (settings.starting_fleet == "massive") {
-      starter_fleet["fighter"] = 100;
-      starter_fleet["corsair"] = 100;
-      starter_fleet["battleship"] = 100;
-      starter_fleet["destroyer"] = 100;
+      for (auto sc : ship::all_classes()) starter_fleet[sc] = 100;
     } else {
       throw runtime_error("Invalid starting fleet option: " + settings.starting_fleet);
     }
     
+    function<set<string>(string,string)> get_tech_upgrades = [&get_tech_upgrades] (string sc, string tech) -> set<string> {
+      set<string> res;
+      research::tech t = research::data::table().at(tech);
+      res += t.ship_upgrades[sc];
+      for (auto d : t.depends_techs) res += get_tech_upgrades(sc, d);
+      return res;
+    };
+    
     for (auto sc : starter_fleet) {
       for (int j = 0; j < sc.second; j++) {
 	ship sh = rbase.build_ship(sc.first, s);
+	if ((!sh.depends_tech.empty()) && settings.starting_fleet == "massive") {
+	  sh.upgrades += get_tech_upgrades(sh.ship_class, sh.depends_tech);
+	}
 	sh.is_landed = true;
 	sh.owner = pid;
 	s -> ships.insert(sh.id);

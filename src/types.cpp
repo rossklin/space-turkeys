@@ -5,8 +5,6 @@
 #include "types.h"
 #include "waypoint.h"
 
-#define DEBUG
-
 using namespace std;
 using namespace st3;
 

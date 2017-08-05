@@ -177,7 +177,10 @@ const hm_t<string, interaction> &interaction::table() {
     if (t -> evasion_check() < s -> accuracy_check(t)) {
       output("space_combat: hit!");
       float damage = 0;
-      if (s -> stats[sskey::key::ship_damage] > 0) damage = utility::random_uniform(0, s -> stats[sskey::key::ship_damage]);
+      if (s -> stats[sskey::key::ship_damage] > 0) {
+	damage = utility::random_normal(s -> stats[sskey::key::ship_damage], 0.2 * s -> stats[sskey::key::ship_damage]);
+	damage = fmax(damage, 0);
+      }
       t -> receive_damage(g, self, damage);
     }else{
       output("space_combat: miss!");

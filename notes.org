@@ -1,119 +1,4 @@
 * current work
-** implement new client communication structure
-*** Find a thread safe structure for accepting clients
-    Consider that hm_t::operator[] is not thread safe, while at the
-    same time handle_sigint can't wait for dispatch_client before
-    setting socket_t::tc_stop.
-
-*** Server
-    safe_game_access(gid) {
-      o *lock* game ring
-      o [get|create] game
-      o *unlock* game ring
-      o return game
-    }
-
-    safe_delete(gid) {
-      o *lock* game ring
-      o cleanup and erase game gid
-      o *unlock* game ring
-    }
-
-    safe_game_count() {
-      o *lock* game ring
-      o result = games.count()
-      o *unlock* game ring
-    }
-
-    safe_state(gid) {
-      return safe_game_access(gid).state
-    }
-**** game_dispatcher
-     while (server_status == run) {
-       o *lock* game ring
-       for (auto g : games) {
-         if (g ready to launch) thread dispatch_game(g.id)
-       }
-       o *unlock* game ring
-       o sleep a bit
-     }
-***** dispatch_game gid: only runs on game in init state
-       // at this point, no more clients will pass the "can join game"
-       // condition
-
-       o game = safe_game_access(gid)
-       o *lock* game 
-       o get list of clients
-       o *unlock* game 
-       o join all client wait_for_game threads
-       o game_handler.run()
-       o disconnect clients
-       o *lock* game 
-       o set game state to complete
-       o *unlock* game 
-**** Listener
-***** dispatch_client (add timeout for introduction protocol)
-      o check server status
-      o client >> gid >> settings >> name
-      o game = safe_game_access(gid)
-      o *lock* game
-      o read game state
-      o can_join = game state == init and game not full
-      if (can_join) {
-        o write to game: add client and (if new) settings
-	o package = ok + id
-      } else {
-        o package = not ok
-      }
-      o *unlock* game gid
-      o client << package
-      o if (can_join) thread wait_for_game
-****** wait_for_game gid
-       while (safe_state(gid) == init) {
-         c -> check_protocol(load_init, standby)
-       }
-       o if (safe_state(gid) == running) set client state to running
-**** Signal Handler
-     o set server status to stop
-     o *lock* game ring
-     for each game {
-       *lock* game
-       set status to stop
-       *unlock* game
-     }
-     o *unlock* game ring
-     o while (safe_game_count()) {
-       for each game gid: if safe_state(gid) == complete: safe_delete(gid)
-       sleep
-     } 
-*** Mixed thread io on server
-    *handle_sigint* sets thread_com to tc_stop, then *cleanup_clients*
-    waits for thread_com == tc_complete.
-
-    A) If the game has not been started, thread_com will never be set
-    to tc_complete. *cleanup_clients* must check for games that have
-    waiting clients but have not been started.
-
-    B) Thread safety (low risk): if *handle_sigint* sets thread_com to tc_stop
-    after it was set to tc_complete at end of dispatch_game,
-    *cleanup_clients* will never complete.
-
-    Instead, use separate input and output com variables; this should
-    solve both problems.
-*** [J] unexpected protocol exception using protocol any
-*** [J?] client simulation step ends when all frames are loaded
-*** try to create a general structure for running com-threads
-    Something along the lines of a function that takes a communication
-    task and callbacks on_complete and on_fail, but also integrates
-    with the window_loop somehow, and also works with multiple clients
-    and datasets on the server side.
-*** client::query should take two com parameters: tr and tc
-    They should use the socket_t::tc_* protocol. tc should be passed
-    on to socket -> thread_com.
-*** window loop should take a parameter lc and return a response lr
-*** event handlers should set tc = tc_stop on abort event
-*** body callbacks should set lc = query_abort if tr == tc_stop
-*** client:::query should only call [send|receive]_packet once
 * [~] issues
 ** [~] system
 *** apply upgrades in test_space_combat
@@ -123,9 +8,6 @@
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
-*** window freezes while waiting for other clients to connect
-    Since wait_for_it() doesn't start window loop unless desktop is
-    initialized.
 *** game objects handle event before (non query window) interface widgets
     E.g. quit button or right panel
 *** [?] only allow command action if *available* ships support it
@@ -251,6 +133,124 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] window freezes while waiting for other clients to connect
+    Since wait_for_it() doesn't start window loop unless desktop is
+    initialized.
+** [J] implement new client communication structure
+*** [J] Find a thread safe structure for accepting clients
+    Consider that hm_t::operator[] is not thread safe, while at the
+    same time handle_sigint can't wait for dispatch_client before
+    setting socket_t::tc_stop.
+
+*** [J] Server
+    safe_game_access(gid) {
+      o *lock* game ring
+      o [get|create] game
+      o *unlock* game ring
+      o return game
+    }
+
+    safe_delete(gid) {
+      o *lock* game ring
+      o cleanup and erase game gid
+      o *unlock* game ring
+    }
+
+    safe_game_count() {
+      o *lock* game ring
+      o result = games.count()
+      o *unlock* game ring
+    }
+
+    safe_state(gid) {
+      return safe_game_access(gid).state
+    }
+**** game_dispatcher
+     while (server_status == run) {
+       o *lock* game ring
+       for (auto g : games) {
+         if (g ready to launch) thread dispatch_game(g.id)
+       }
+       o *unlock* game ring
+       o sleep a bit
+     }
+***** dispatch_game gid: only runs on game in init state
+       // at this point, no more clients will pass the "can join game"
+       // condition
+
+       o game = safe_game_access(gid)
+       o *lock* game 
+       o get list of clients
+       o *unlock* game 
+       o join all client wait_for_game threads
+       o game_handler.run()
+       o disconnect clients
+       o *lock* game 
+       o set game state to complete
+       o *unlock* game 
+**** Listener
+***** dispatch_client (add timeout for introduction protocol)
+      o check server status
+      o client >> gid >> settings >> name
+      o game = safe_game_access(gid)
+      o *lock* game
+      o read game state
+      o can_join = game state == init and game not full
+      if (can_join) {
+        o write to game: add client and (if new) settings
+	o package = ok + id
+      } else {
+        o package = not ok
+      }
+      o *unlock* game gid
+      o client << package
+      o if (can_join) thread wait_for_game
+****** wait_for_game gid
+       while (safe_state(gid) == init) {
+         c -> check_protocol(load_init, standby)
+       }
+       o if (safe_state(gid) == running) set client state to running
+**** Signal Handler
+     o set server status to stop
+     o *lock* game ring
+     for each game {
+       *lock* game
+       set status to stop
+       *unlock* game
+     }
+     o *unlock* game ring
+     o while (safe_game_count()) {
+       for each game gid: if safe_state(gid) == complete: safe_delete(gid)
+       sleep
+     } 
+*** [J] Mixed thread io on server
+    *handle_sigint* sets thread_com to tc_stop, then *cleanup_clients*
+    waits for thread_com == tc_complete.
+
+    A) If the game has not been started, thread_com will never be set
+    to tc_complete. *cleanup_clients* must check for games that have
+    waiting clients but have not been started.
+
+    B) Thread safety (low risk): if *handle_sigint* sets thread_com to tc_stop
+    after it was set to tc_complete at end of dispatch_game,
+    *cleanup_clients* will never complete.
+
+    Instead, use separate input and output com variables; this should
+    solve both problems.
+*** [J] unexpected protocol exception using protocol any
+*** [J?] client simulation step ends when all frames are loaded
+*** [J] try to create a general structure for running com-threads
+    Something along the lines of a function that takes a communication
+    task and callbacks on_complete and on_fail, but also integrates
+    with the window_loop somehow, and also works with multiple clients
+    and datasets on the server side.
+*** [J] client::query should take two com parameters: tr and tc
+    They should use the socket_t::tc_* protocol. tc should be passed
+    on to socket -> thread_com.
+*** [J] window loop should take a parameter lc and return a response lr
+*** [J] event handlers should set tc = tc_stop on abort event
+*** [J] body callbacks should set lc = query_abort if tr == tc_stop
+*** [J] client:::query should only call [send|receive]_packet once
 ** [J?] solars don't show player colors
 ** [J?] command_gui should not show during simulation!
    Add some kind of phase tracker variable
