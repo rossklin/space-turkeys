@@ -352,11 +352,16 @@ const hm_t<string, interaction> &interaction::table() {
   };
   data[i.name] = i;
 
-  // terraform
+  // hive support
   i.name = hive_support;
   i.perform = [] (game_object::ptr self, game_object::ptr null_pointer, game_data *g) {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
-    for (auto sid : s -> local_friends) g -> get_ship(sid) -> load++;
+    float strength = s -> local_friends.size() / 80;
+    for (auto sid : s -> local_friends) {
+      ship::ptr sh = g -> get_ship(sid);
+      sh -> load += strength;
+      sh -> stats[sskey::key::evasion] = (1 + strength) * sh -> base_stats.stats[sskey::key::evasion];
+    }
   };
   data[i.name] = i;
 

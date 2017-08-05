@@ -1,5 +1,6 @@
 * current work
-** segfault in tests after parallelizing
+** too much randomness in testing - segfault in boost::random::mersenne_twister_engine
+** warning: non-diverse leaves in grid::node::make_split!
 * [~] issues
 ** [~] system
 *** apply upgrades in test_space_combat

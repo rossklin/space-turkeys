@@ -1,5 +1,6 @@
 #include <vector>
 #include <rapidjson/document.h>
+#include <mutex>
 
 #include "research.h"
 #include "cost.h"
@@ -80,11 +81,14 @@ void data::repair_ship(ship &s, solar::ptr sol) const {
 }
 
 ship data::build_ship(string c, solar::ptr sol) const {
+  static int idc = 0;
+  static mutex m;
   ship s(ship::table().at(c));
 
-  // apply id  
-  static int idc = 0;
+  // apply id: static variable, must thread lock
+  m.lock();
   s.id = identifier::make(ship::class_id, idc++);
+  m.unlock();
 
   // apply upgrades
   repair_ship(s, sol);

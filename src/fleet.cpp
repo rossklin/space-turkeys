@@ -1,4 +1,5 @@
 #include <iostream>
+#include <mutex>
 
 #include "interaction.h"
 #include "fleet.h"
@@ -23,11 +24,15 @@ const sint fleet::policy_maintain_course = 8;
 
 fleet::fleet(idtype pid){
   static int idc = 0;
+  static mutex m;
+
+  m.lock();
   if (pid < 0){
     id = identifier::make(class_id, "S#" + to_string(idc++));
   }else{
     id = identifier::make(class_id, to_string(pid) + "#" + to_string(idc++));
   }
+  m.unlock();
 
   radius = 0;
   position = point(0,0);

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <mutex>
 
 #include "game_data.h"
 #include "waypoint.h"
@@ -12,9 +13,12 @@ const string waypoint::class_id = "waypoint";
 
 waypoint::waypoint(idtype o){
   static int idc = 0;
+  static mutex m;
   
   owner = o;
+  m.lock();
   id = identifier::make(waypoint::class_id, to_string(o) + "#" + to_string(idc++));
+  m.unlock();
   radius = 20;
 }
 

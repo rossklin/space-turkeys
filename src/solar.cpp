@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <rapidjson/document.h>
+#include <mutex>
 
 #include "research.h"
 #include "solar.h"
@@ -184,12 +185,16 @@ sfloat solar::vision(){
 
 solar::ptr solar::create(point p, float bounty) {
   static int idc = 0;
+  static mutex m;
   auto fres = [bounty] () {
     return fmax(utility::random_normal(pow(2, 10 * bounty), pow(2, 8 * bounty)), 0);
   };
 
   solar::ptr s = new solar();
+
+  m.lock();
   s -> id = identifier::make(solar::class_id, idc++);
+  m.unlock();
 
   s -> population = 0;
   s -> happiness = 1;

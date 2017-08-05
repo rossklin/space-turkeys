@@ -143,6 +143,7 @@ bool test_space_combat(string c0, string c1, float limit, float win_lower, float
   string game_stage = "early";
   if (limit > 4000) game_stage = "mid";
   if (limit > 10000) game_stage = "late";
+  if (add_upgrades.count("hive mind")) game_stage += "[HM]";
 
   ss << "test combat: " << game_stage << " game: " << scc_0[c0] << " " << c0 << " vs " << scc_1[c1] << " " << c1 << endl;
 
@@ -186,11 +187,11 @@ bool test_space_combat(string c0, string c1, float limit, float win_lower, float
   float rmean = 0;
   int nsample = 0;
   float dev = 0;
-  int max_sample = 10;
+  int max_sample = 40;
   bool significant = false;
 
   ss << "sample: ";
-  while (nsample < max_sample && (nsample < 4 || !significant)) {
+  while (nsample < max_sample && (nsample < 10 || !significant)) {
     float r = test();
     if (r > 10 || !isfinite(r)) r = 10;
     
@@ -199,7 +200,7 @@ bool test_space_combat(string c0, string c1, float limit, float win_lower, float
     nsample++;
 
     float test_value = fmin(abs(rmean - win_lower), abs(rmean - win_upper));
-    significant = test_value > dev;
+    significant = test_value > 3 * dev;
 
     ss << r << ": " << test_value << "[" << dev << "] ";
   }
@@ -212,9 +213,9 @@ bool test_space_combat(string c0, string c1, float limit, float win_lower, float
   if (!result) {
     ss << "########################################" << endl;
     if (rmean < win_lower) {
-      ss << ">>IMPROVE " << c0 << " VS " << c1 << "<<" << endl;
+      ss << ">> [" << win_lower << "] IMPROVE " << c0 << " VS " << c1 << "<<" << endl;
     } else {
-      ss << ">>[OVERKILL] NERF " << c0 << " VS " << c1 << "<<" << endl;
+      ss << ">>[" << win_upper << "] overkill, NERF " << c0 << " VS " << c1 << "<<" << endl;
     }
     ss << "########################################" << endl;
   }
@@ -243,33 +244,45 @@ int main(int argc, char **argv){
   // test early game balance
   tests.push_back(thread([limit] () {test_space_combat("fighter", "battleship", limit, 4, 16);}));
 
+  set<string> add_upgrades = {
+    "warp drive",
+    "shield",
+    "plasma laser"
+  };
+
   // test mid game balance
   limit = 5000;
   tests.push_back(thread([limit] () {test_space_combat("corsair", "fighter", limit, 5, 16);}));
-  tests.push_back(thread([limit] () {test_space_combat("fighter", "battleship", limit, 0.5, 1.5);}));
+  tests.push_back(thread([limit] () {test_space_combat("battleship", "fighter", limit, 1.5, 4);}));
   tests.push_back(thread([limit] () {test_space_combat("battleship", "corsair", limit, 3, 6);}));
 
   // test late game balance
   limit = 15000;
-  set<string> add_upgrades = {
+  add_upgrades = {
     "warp drive",
     "shield",
     "nano hull",
     "nano torpedos",
-    "plasma laser",
-    "hive mind"
+    "plasma laser"
   };
   
   tests.push_back(thread([limit, add_upgrades] () {test_space_combat("corsair", "fighter", limit, 6, 16, add_upgrades);}));
-  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("fighter", "destroyer", limit, 4, 16, add_upgrades);}));
-  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("destroyer", "battleship", limit, 4, 16, add_upgrades);}));
-  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("destroyer", "corsair", limit, 8, 16, add_upgrades);}));
-  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("battleship", "corsair", limit, 4, 8, add_upgrades);}));
-  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("battleship", "fighter", limit, 2, 4, add_upgrades);}));
-  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("voyager", "fighter", limit, 2, 8, add_upgrades);}));
-  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("voyager", "corsair", limit, 1, 2, add_upgrades);}));
+  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("fighter", "destroyer", limit, 2, 6, add_upgrades);}));
+  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("destroyer", "battleship", limit, 6, 16, add_upgrades);}));
+  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("destroyer", "corsair", limit, 6, 16, add_upgrades);}));
+  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("battleship", "corsair", limit, 2, 8, add_upgrades);}));
+  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("battleship", "fighter", limit, 6, 16, add_upgrades);}));
+  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("voyager", "fighter", limit, 6, 16, add_upgrades);}));
+  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("voyager", "corsair", limit, 1.2, 4, add_upgrades);}));
   tests.push_back(thread([limit, add_upgrades] () {test_space_combat("destroyer", "voyager", limit, 8, 16, add_upgrades);}));
   tests.push_back(thread([limit, add_upgrades] () {test_space_combat("battleship", "voyager", limit, 4, 8, add_upgrades);}));
+
+  // late game with hive mind
+  add_upgrades.insert("hive mind");
+  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("corsair", "fighter", limit, 2, 6, add_upgrades);}));
+  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("battleship", "fighter", limit, 1.5, 3, add_upgrades);}));
+  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("fighter", "destroyer", limit, 6, 16, add_upgrades);}));
+  tests.push_back(thread([limit, add_upgrades] () {test_space_combat("fighter", "voyager", limit, 2, 6, add_upgrades);}));
   
   for (auto &t : tests) t.join();
   

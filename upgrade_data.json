@@ -37,15 +37,15 @@
 	},
 
 	"shield" : {
-	    "shield" : "2#2"
+	    "shield" : "1.7#1.5"
 	},
 
 	"nano hull" : {
-	    "hp" : "3#2"
+	    "hp" : "1.5#1"
 	},
 
 	"nano torpedos" : {
-	    "ship damage" : "1#2"
+	    "ship damage" : "1#0.8"
 	},
 
 	"biohull" : {
@@ -54,12 +54,12 @@
 	},
 
 	"plasma laser" : {
-	    "ship damage" : "1#1.5",
+	    "ship damage" : "1.5#0.5",
 	    "load time" : "0.7#0"
 	},
 
 	"hive mind" : {
-	    "interactions" : ["hive support"]
+	    "on move" : ["hive support"]
 	},
 
 	"terraform" : {
