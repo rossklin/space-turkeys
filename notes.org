@@ -1,4 +1,5 @@
 * current work
+** segfault in tests after parallelizing
 * [~] issues
 ** [~] system
 *** apply upgrades in test_space_combat

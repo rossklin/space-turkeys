@@ -8,7 +8,7 @@
 
 namespace st3{
   namespace server {
-    void output(std::string v);
+    void output(std::string v, bool force = false);
   };
   
   /*! 32 bit int for network serialization */

@@ -8,13 +8,17 @@
 using namespace std;
 using namespace st3;
 
-void server::output(string v) {
+void server::output(string v, bool force) {
   static mutex m;
 #ifdef DEBUG
-  m.lock();
-  cout << v << endl;
-  m.unlock();
+  force = true;
 #endif
+
+  if (force) {
+    m.lock();
+    cout << v << endl;
+    m.unlock();
+  }
 }
 
 const vector<string> keywords::resource = {
