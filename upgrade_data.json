@@ -37,7 +37,7 @@
 	},
 
 	"shield" : {
-	    "shield" : "1.7#1.5"
+	    "shield" : "1.25#1.8"
 	},
 
 	"nano hull" : {
@@ -45,7 +45,7 @@
 	},
 
 	"nano torpedos" : {
-	    "ship damage" : "1#0.8"
+	    "ship damage" : "1#0.5"
 	},
 
 	"biohull" : {
@@ -54,8 +54,8 @@
 	},
 
 	"plasma laser" : {
-	    "ship damage" : "1.5#0.2",
-	    "load time" : "0.7#0"
+	    "ship damage" : "1.2#0",
+	    "load time" : "0.8#0"
 	},
 
 	"hive mind" : {
