@@ -10,6 +10,8 @@ namespace st3{
   namespace server {
     void output(std::string v, bool force = false);
   };
+
+  const float accuracy_distance_norm = 30;
   
   /*! 32 bit int for network serialization */
   typedef sf::Int32 sint;

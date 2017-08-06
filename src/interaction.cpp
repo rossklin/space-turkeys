@@ -210,7 +210,7 @@ const hm_t<string, interaction> &interaction::table() {
 
 	g -> log_ship_fire(s -> id, x -> id);
 	
-	if (x -> evasion_check() < t.accuracy_check(x)){
+	if (x -> evasion_check() < t.accuracy_check(x, d)){
 	  x -> receive_damage(g, s, utility::random_uniform(0, t.damage));
 	}
       }
@@ -356,7 +356,7 @@ const hm_t<string, interaction> &interaction::table() {
   i.name = hive_support;
   i.perform = [] (game_object::ptr self, game_object::ptr null_pointer, game_data *g) {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
-    float strength = s -> local_friends.size() / 80;
+    float strength = s -> local_friends.size() / 70;
     for (auto sid : s -> local_friends) {
       ship::ptr sh = g -> get_ship(sid);
       sh -> load += strength;

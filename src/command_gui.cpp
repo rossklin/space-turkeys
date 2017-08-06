@@ -74,12 +74,14 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
   };
 
   // build ship allocation tables for each available ships class
+  Box::Ptr ships_layout = Box::Create(Box::Orientation::VERTICAL, 5);
   for (string ship_class : ship::all_classes()) {
     int total = data[ship_class].available + data[ship_class].allocated;
     if (total == 0) continue;
 
     Box::Ptr box = Box::Create(Box::Orientation::HORIZONTAL, 10);
     Scale::Ptr scale = Scale::Create( sfg::Scale::Orientation::HORIZONTAL);
+    scale -> SetRequisition(sf::Vector2f(400, 10));
     data[ship_class].image = Image::Create(build_ship_label(ship_class));
     data[ship_class].adjust = scale -> GetAdjustment();
     data[ship_class].adjust -> SetLower(0);
@@ -93,8 +95,10 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
 
     box -> Pack(data[ship_class].image);
     box -> Pack(scale);
-    layout -> Pack(box);
+    ships_layout -> Pack(box);
   }
+
+  layout -> Pack(graphics::wrap_in_scroll(ships_layout, false, 300));
 
   // add ok and cancel
   Button::Ptr ok = Button::Create("OK");

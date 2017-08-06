@@ -26,7 +26,7 @@ namespace st3{
     sfloat load;
 
     turret_t();
-    float accuracy_check(ship::ptr t);
+    float accuracy_check(ship::ptr t, float d);
   };
 
   class facility : public virtual development::node{

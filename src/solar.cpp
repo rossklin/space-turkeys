@@ -640,8 +640,8 @@ turret_t::turret_t(){
   load = 0;
 }
 
-float turret_t::accuracy_check(ship::ptr t) {
-  return utility::random_uniform(0, accuracy);
+float turret_t::accuracy_check(ship::ptr t, float d) {
+  return accuracy * accuracy_distance_norm / (d + 1);
 }
 
 list<string> solar::list_facility_requirements(string v, const research::data &r_level) {

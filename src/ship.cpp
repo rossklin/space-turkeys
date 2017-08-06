@@ -362,14 +362,16 @@ void ship::move(game_data *g){
   if (compile_interactions().count(interaction::space_combat) && local_enemies.size()) {
     function<float(combid)> evalfun = [this, g, local_output] (combid sid) -> float {
       ship::ptr s = g -> get_ship(sid);
-      point delta = s -> position - position;
-      float h = flex_weight(utility::point_angle(delta));
+      float a = accuracy_check(s);
+      float b = s -> stats[sskey::key::evasion] / s -> stats[sskey::key::mass];
+      if (b < 0.01) b = 0.01;
+      float h = a / b;
       return -h;
     };
 
     combid target_id = utility::value_min(local_enemies, evalfun);
 
-    if (evalfun(target_id) < -0.5) {
+    if (evalfun(target_id) < -0.3) {
       // I've got a shot!
       interaction_info info;
       info.source = id;
@@ -525,7 +527,8 @@ float ship::flex_weight(float a) {
 
 float ship::accuracy_check(ship::ptr t) {
   float a = utility::point_angle(t -> position - position);
-  return utility::random_uniform(0, stats[sskey::key::accuracy] * flex_weight(a));
+  float d = utility::l2norm(t -> position - position);
+  return stats[sskey::key::accuracy] * flex_weight(a) * accuracy_distance_norm / (d + 1);
 }
 
 float ship::evasion_check() {
