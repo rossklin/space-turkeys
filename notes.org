@@ -1,4 +1,15 @@
 * current work
+** balancing
+   LATE
+   UP voyager vs corsair
+   NERF hm-fighter and fighter VS voyager and battleship
+   
+   (UP voyager vs battleship)
+   (UP hm-fighter vs corsair)
+   
+   MID
+   UP battleship vs fighter
+
 * [~] issues
 ** [~] system
 *** init_data sends all data - should limit to "player_any"
