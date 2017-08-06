@@ -27,7 +27,6 @@ void handle_sigint(int sig) {
 int main(int argc, char **argv){
   signal(SIGINT, handle_sigint);
   game_data::confirm_data();
-  utility::init();
   h.run();
 
   return 0;

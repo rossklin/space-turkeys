@@ -72,7 +72,6 @@ int main(int argc, char **argv){
   client_game_settings settings;
 
   game_data::confirm_data();
-  utility::init();
 
   name[utility::random_int(name.length())] = utility::random_int(256);
   name[utility::random_int(name.length())] = utility::random_int(256);

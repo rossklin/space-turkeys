@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <rapidjson/document.h>
+#include <mutex>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
@@ -22,10 +23,24 @@ using namespace std;
 using namespace st3;
 using namespace st3::utility;
 
-boost::random::mt19937 rng;
+template <typename V, typename D>
+V get_random(D &dist) {
+  static boost::random::mt19937 rng;
+  static bool init = false;
+  static mutex m;
 
-void utility::init(){
-  rng.seed(time(NULL));
+  V res;
+
+  m.lock();
+  if (!init) {
+    rng.seed(time(NULL));
+    init = true;
+  }
+
+  res = dist(rng);
+  m.unlock();
+
+  return res;
 }
 
 string get_file(ifstream& in) {
@@ -178,7 +193,7 @@ point st3::operator +(const point &a, const point &b){
 // normal ~N(m,s)
 float utility::random_normal(float m, float s){
   boost::random::normal_distribution<float> dist(m,s);
-  return dist(rng);
+  return get_random<float>(dist);
 }
 
 // random float ~U(a,b)
@@ -186,14 +201,14 @@ float utility::random_uniform(float a, float b){
   assert(isfinite(a) && isfinite(b));
   if (a == b) return a;
   boost::random::uniform_real_distribution<float> dist(a,b);
-  return dist(rng);
+  return get_random<float>(dist);
 }
 
 // random uniform int in [0, limit)
 unsigned int utility::random_int(int limit){
   if (limit < 2) return 0;
   boost::random::uniform_int_distribution<> dist(0, limit - 1);
-  return dist(rng);
+  return get_random<unsigned int>(dist);
 }
 
 int utility::angle2index(int na, float a) {
@@ -250,7 +265,7 @@ vector<float> utility::circular_kernel(const vector<float> &x, float s) {
 vector<float> utility::random_uniform_vector(int n, float a, float b){
   boost::random::uniform_real_distribution<float> dist(a,b);
   vector<float> res(n);
-  for (auto &x : res) x = dist(rng);
+  for (auto &x : res) x = get_random<float>(dist);
   return res;
 }
 
@@ -264,8 +279,8 @@ float utility::angular_hat(float x) {
 
 // random point with gaussian distribution around p, sigma = r
 point utility::random_point_polar(point p, float r){
-  boost::random::normal_distribution<float> n(0, r);
-  return point(p.x + n(rng), p.y + n(rng));
+  boost::random::normal_distribution<float> dist(0, r);
+  return point(p.x + get_random<float>(dist), p.y + get_random<float>(dist));
 }
 
 // p geq q both dims

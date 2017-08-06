@@ -67,8 +67,6 @@ namespace st3{
 
     std::string format_float(float x);
 
-    void init();
-
     rapidjson::Document *get_json(std::string filename);
     
     /* **************************************** */
