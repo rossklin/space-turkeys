@@ -28,6 +28,7 @@ namespace st3{
       hm_t<std::string, sint> facility_level;
 
       data();
+      static std::set<std::string> get_tech_upgrades(std::string sc, std::string t);
       tech &access(std::string v);
       std::list<std::string> list_tech_requirements(std::string v) const;
       std::list<std::string> available() const;

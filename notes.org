@@ -1,9 +1,14 @@
 * current work
 ** balancing
-   NERF corsair VS hm-fighter
-   UP voyager VS (fighter), hm-fighter, corsair
-   NERF voyager VS battleship
-   UP battleship VS (fighter), hm-fighter
+   UP fighter: +0.5 damage
+   DOWN destroyer: -20 hp, +10 cost
+   DOWN voyager: -10 shield
+
+
+   UP fighter, hm-fighter VS corsair, destroyer
+   DOWN fighter, hm-fighter VS battleship, voyager
+   UP battleship VS voyager
+   UP voyager VS corsair
 * [~] issues
 ** [~] system
 *** init_data sends all data - should limit to "player_any"

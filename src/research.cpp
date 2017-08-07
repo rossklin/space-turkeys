@@ -32,6 +32,14 @@ const hm_t<string, tech>& data::table(){
   init = true;
   return tree;
 }
+    
+set<string> data::get_tech_upgrades(string sc, string tech) {
+  set<string> res;
+  research::tech t = research::data::table().at(tech);
+  res += t.ship_upgrades[sc];
+  for (auto d : t.depends_techs) res += get_tech_upgrades(sc, d);
+  return res;
+};
 
 list<string> data::list_tech_requirements(string v) const {
   list<string> req;

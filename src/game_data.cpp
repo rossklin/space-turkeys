@@ -512,19 +512,11 @@ void game_data::build(){
       throw runtime_error("Invalid starting fleet option: " + settings.starting_fleet);
     }
     
-    function<set<string>(string,string)> get_tech_upgrades = [&get_tech_upgrades] (string sc, string tech) -> set<string> {
-      set<string> res;
-      research::tech t = research::data::table().at(tech);
-      res += t.ship_upgrades[sc];
-      for (auto d : t.depends_techs) res += get_tech_upgrades(sc, d);
-      return res;
-    };
-    
     for (auto sc : starter_fleet) {
       for (int j = 0; j < sc.second; j++) {
 	ship sh = rbase.build_ship(sc.first, s);
 	if ((!sh.depends_tech.empty()) && settings.starting_fleet == "massive") {
-	  sh.upgrades += get_tech_upgrades(sh.ship_class, sh.depends_tech);
+	  sh.upgrades += research::data::get_tech_upgrades(sh.ship_class, sh.depends_tech);
 	}
 	sh.is_landed = true;
 	sh.owner = pid;
