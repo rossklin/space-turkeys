@@ -267,6 +267,11 @@ namespace st3{
 	output += build_percent("Shields", get_percent(sskey::key::shield));
       }
 
+      if (upgrades.size()) {
+	output += "Upgrades:\n";
+	for (auto u : upgrades) output += u + "\n";
+      }
+
       auto maybe_include = [this, &output] (string label, int value) {
 	if (value > 0) output += label + ": " + to_string(value) + "\n";
       };

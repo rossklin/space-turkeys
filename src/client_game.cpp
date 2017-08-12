@@ -315,14 +315,20 @@ bool game::choice_step(){
       c.solar_choices[x.first] = x.second;
     }
   }
-  c.research = interface::desktop -> response.research;
-  interface::desktop -> response = c;
 
-  cout << "choice_step: start" << endl;
+  research::data &r = players[self_id].research_level;
+  c.research = r.researching;
 
   // check if we can select a technology
-  research::data &r = players[self_id].research_level;
-  if (r.researching.empty() && !r.available().empty()) {
+  if (c.research.empty() || r.access(c.research).level > 0) {
+    // somehow we have already researched this, e.g. found in seach mission
+    c.research.clear();
+  }
+
+  interface::desktop -> response = c;
+  cout << "choice_step: start" << endl;
+
+  if (c.research.empty() && !r.available().empty()) {
     interface::desktop -> reset_qw(interface::research_gui::Create());
   }
 

@@ -26,9 +26,18 @@ using namespace std;
 using namespace st3;
 using namespace st3::client;
 
-void run(string game_id, string name, game &g, client_game_settings settings) {  
+void run(string game_id, string name, game &g, client_game_settings settings, bool fullscreen = false) {  
   int width = 800;
   int height = 600;
+  sf::VideoMode vmode(width, height);
+  sf::Uint32 vstyle = sf::Style::Default;
+
+  if (fullscreen) {
+    auto test = sf::VideoMode::getFullscreenModes();
+    sort(test.begin(), test.end(), [] (sf::VideoMode a, sf::VideoMode b) {return a.width > b.width;});
+    vmode = test.front();
+    vstyle = sf::Style::Fullscreen;
+  }
 
   // create graphics
   sf::Packet pq, pr;
@@ -51,7 +60,7 @@ void run(string game_id, string name, game &g, client_game_settings settings) {
 
   sf::ContextSettings sf_settings;
   sf_settings.antialiasingLevel = 8;
-  g.window.create(sf::VideoMode(width, height), "SFML Turkeys!", sf::Style::Default, sf_settings);
+  g.window.create(vmode, "SPACE TURKEYS III ALPHA", vstyle, sf_settings);
 
   sfg::SFGUI sfgui;
 
@@ -70,6 +79,7 @@ int main(int argc, char **argv){
   string ip = "127.0.0.1";
   string name = "Name_blabla";
   client_game_settings settings;
+  bool fullscreen = false;
 
   game_data::confirm_data();
 
@@ -77,7 +87,7 @@ int main(int argc, char **argv){
   name[utility::random_int(name.length())] = utility::random_int(256);
   name[utility::random_int(name.length())] = utility::random_int(256);
 
-  auto parse_input = [&game_id, &ip, &name, &settings] (string x) {
+  auto parse_input = [&game_id, &ip, &name, &settings, &fullscreen] (string x) {
     size_t idx = x.find("=");
     if (idx == string::npos) {
       throw runtime_error("Invalid input: " + x);
@@ -92,6 +102,8 @@ int main(int argc, char **argv){
       ip = value;
     } else if (key == "name") {
       name = value;
+    } else if (key == "fullscreen") {
+      fullscreen = stoi(value);
     } else if (key == "num_players") {
       settings.num_players = stoi(value);
     } else if (key == "size") {
@@ -130,7 +142,7 @@ int main(int argc, char **argv){
   cout << "done." << endl;
 
   try {
-    run(game_id, name, g, settings);
+    run(game_id, name, g, settings, fullscreen);
   } catch (exception e) {
     cout << "Exception in client::run: " << e.what() << endl;
     cout << "Exiting..." << endl;

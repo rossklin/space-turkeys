@@ -349,6 +349,8 @@ const hm_t<string, interaction> &interaction::table() {
     t -> water = 1000;
     t -> space = 1000;
     t -> ecology = 1;
+
+    if (s -> has_fleet()) g -> get_fleet(s -> fleet_id) -> set_idle();
   };
   data[i.name] = i;
 
@@ -356,7 +358,7 @@ const hm_t<string, interaction> &interaction::table() {
   i.name = hive_support;
   i.perform = [] (game_object::ptr self, game_object::ptr null_pointer, game_data *g) {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
-    float strength = s -> local_friends.size() / 70;
+    float strength = s -> local_friends.size() / 40;
     for (auto sid : s -> local_friends) {
       ship::ptr sh = g -> get_ship(sid);
       sh -> load += strength;
