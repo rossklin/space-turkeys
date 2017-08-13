@@ -277,13 +277,16 @@ float solar::water_status(){
   return fmin((water - used) / water, 1);
 }
 
+float solar::crowding_rate() {
+  float env_factor = ecology * space * space_status();
+  return f_crowding * pow(population, 2) / (compute_boost(keywords::key_medicine) * env_factor + 1);
+}
+
 float solar::population_increment(){
   static float rate = 0.2;
   float base_growth = population * happiness * f_growth;
   float culture_growth = base_growth * compute_boost(keywords::key_culture);
-  float env_factor = ecology * space * space_status();
-  float crowding_death = f_crowding * pow(population, 2) / (compute_boost(keywords::key_medicine) * env_factor + 1);
-  return rate * (base_growth + culture_growth - crowding_death);
+  return rate * (base_growth + culture_growth - crowding_rate());
 }
 
 float solar::ecology_increment(){
@@ -292,7 +295,13 @@ float solar::ecology_increment(){
 }
 
 float solar::happiness_increment(choice::c_solar &c){
-  return 0.01 * (0.3 * compute_boost(keywords::key_culture) + c.allocation[keywords::key_culture] - c.allocation[keywords::key_military] - 0.05 * log(population) / (2 * ecology + 1) - 0.3 * (happiness - 0.5));
+  float crowding_factor = crowding_rate() / population;
+  float size_factor = 0.05 * log(population) / (2 * ecology + 1);
+  float pacifist_factor = c.allocation[keywords::key_military];
+  float culture_factor = 0.3 * compute_boost(keywords::key_culture) + c.allocation[keywords::key_culture];
+  float reg_factor = 0.3 * (happiness - 0.5);
+
+  return 0.01 * (reg_factor + culture_factor - crowding_factor - size_factor - pacifist_factor);
 }
 
 float solar::research_increment(choice::c_solar &c){

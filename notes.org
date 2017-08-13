@@ -22,13 +22,9 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play test
-   Mining is OP
-   People should be more unhappy! About crowding for example...
-   Fleets a bit hard to see
-   Small enemy ships IMPOSSIBLE to see!
-   Range of vision difficult to see
-   Solar hover_info should show ship class counts
-   Initiating action trade_to doesn't load cargo
+   [J?] Mining is OP
+   [J?] People should be more unhappy! About crowding for example...
+   [J?] Initiating action trade_to doesn't load cargo
 
    Selecting ship classes for production should be a global choice.
    Selecting facilities for development should be done automatically
@@ -37,6 +33,7 @@
    selecting enabled sectors).
 
    Allow setting governor for all selected solars.
+   Show governor as symbol next to solar.
 
    Maybe create a non-physical entity "trade route" so that freighters
    automatically use trade routes when they are produced?
@@ -171,6 +168,10 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J?] Fleets a bit hard to see
+** [J?] Small enemy ships IMPOSSIBLE to see!
+** [J?] Range of vision difficult to see
+** [J?] Solar hover_info should show ship class counts
 ** [J] better combat "feel"
     o [J?] slow down when entering combat
     o [J] make distance part of accuracy check and apply it in ship::move when checking shootability

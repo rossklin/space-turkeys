@@ -792,6 +792,13 @@ void game::reload_data(data_frame &g, bool use_animations){
     animations.clear();
   }
 
+  // update enemy cluster buffer
+  enemy_clusters.clear();
+  for (auto s : get_all<ship>()) {
+    if (s -> is_active() && !s -> owned) enemy_clusters.push_back(s -> position);
+  }
+  if (enemy_clusters.size()) enemy_clusters = utility::cluster_points(enemy_clusters, 20, 100);
+
   // add log
   interface::desktop -> push_log(players[self_id].log);
 }
@@ -1529,7 +1536,7 @@ void game::draw_window(){
 
   // draw minimap contents
   window.setView(view_minimap);
-  draw_universe();
+  draw_minimap();
 
   // draw view rectangle
   sf::RectangleShape r;
@@ -1592,6 +1599,15 @@ void game::draw_interface_components(){
 
 }
 
+void game::draw_minimap() {
+  for (auto x : entity) {
+    if (!x.second -> is_active()) continue;
+    sf::FloatRect bounds(x.second -> position, point(10, 10));
+    sf::RectangleShape buf = graphics::build_rect(bounds, 1, sf::Color::Transparent, x.second -> get_color());
+    window.draw(buf);
+  }
+}
+
 /** Draw entities, animations and stars. */
 void game::draw_universe(){
   for (auto star : fixed_stars) star.draw(window);
@@ -1602,8 +1618,14 @@ void game::draw_universe(){
     if (e.time_passed() < 4) buf.push_back(e);
   }
   animations = buf;
-  
+
   for (auto x : entity) x.second -> draw(window);
+
+  // flag clusters of enemy ships
+  float unscale = graphics::inverse_scale(window).x;
+  for (auto x : enemy_clusters) {
+    graphics::draw_flag(window, x, unscale, sf::Color::Red);
+  }
 }
 
 // ****************************************

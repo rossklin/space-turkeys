@@ -31,6 +31,23 @@ void graphics::initialize(){
   }
 }
 
+void graphics::draw_flag(sf::RenderTarget &w, point p, float s, sf::Color c) {
+  vector<sf::Vertex> svert;
+  
+  svert.resize(4);
+  svert[0].position = point(0, 0);
+  svert[1].position = point(0, -2);
+  svert[2].position = point(1, -1.5);
+  svert[3].position = point(0, -1);
+
+  for (auto &v : svert) v.color = c;
+
+  sf::Transform t;
+  t.translate(p.x, p.y);
+  t.scale(20 * s, 20 * s);
+  w.draw(&svert[0], svert.size(), sf::LinesStrip, t);
+}
+
 void graphics::draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, sf::Color cf, float b) {
   sf::CircleShape sol(r);
   float inv = inverse_scale(w).x;

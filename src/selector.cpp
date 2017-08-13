@@ -108,13 +108,24 @@ namespace st3{
     string specific_selector<solar>::hover_info(){
       string res = "solar at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
 
-      for (auto k : keywords::resource)
+      for (auto k : keywords::resource) {
 	res += "\nres:" + k + ": " + to_string((int)available_resource[k]);
+      }
 
-      if (owned){
+      if (owned) {
 	res += "\npopulation: " + to_string((int)population);
 	res += "\nfleet: " + to_string(ships.size());
 	res += "\nshield: " + to_string(compute_shield_power());
+
+	hm_t<string, int> ship_counts;
+	for (auto sid : get_ships()) ship_counts[g -> get_specific<ship>(sid) -> ship_class]++;
+
+	if (ship_counts.size()) {
+	  res += "\nShips:";
+	  for (auto v : ship_counts) {
+	    res += "\n" + to_string(v.second) + " " + v.first + "s";
+	  }
+	}
       }
 
       return res;
@@ -152,7 +163,10 @@ namespace st3{
       sf::Color outline = graphics::fleet_outline;
       if (selected) outline = graphics::fade_color(outline, sf::Color::White, 0.4);
       f(radius * unscale, graphics::fleet_fill, outline);
-      f(vision(), sf::Color::Transparent, sf::Color(40, 200, 60, 30));
+      f(vision(), sf::Color::Transparent, sf::Color(40, 200, 60, 50));
+
+      // add a flag
+      graphics::draw_flag(w, position + point(radius * unscale, -radius * unscale), unscale, get_color());
     }
 
     template<>

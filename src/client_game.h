@@ -39,6 +39,7 @@ namespace st3{
       bool area_select_active; /*!< whether area selection is active */
       sf::FloatRect srect; /*!< area selection rectangle */
       std::string phase;
+      std::vector<point> enemy_clusters;
       
       hm_t<idtype, command_selector::ptr> command_selectors; /*!< graphical representations for commands */
       int selector_queue; /*!< index for back end of selector queue */
@@ -283,6 +284,7 @@ namespace st3{
       void draw_window();
 
       /*! draw entity selectors and ships */
+      void draw_minimap();
       void draw_universe();
 
       /*! draw command selectors, area selection rect and command gui */

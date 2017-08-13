@@ -73,7 +73,7 @@ namespace st3{
     /* POINT MATHS */
     /* **************************************** */
 
-    std::vector<point> cluster_points(std::vector<point> x);
+    std::vector<point> cluster_points(std::vector<point> x, int n = 10, int rep = 10, float h = 50);
 
     std::string point2string(point p);
 

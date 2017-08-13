@@ -26,6 +26,17 @@ const string interaction::pickup = "pickup";
 const string interaction::terraform = "terraform";
 const string interaction::hive_support = "hive support";
 
+void load_resources(ship::ptr s, solar::ptr t) {
+  float total = t -> resource_storage.count();
+  float ratio = fmax(s -> stats[sskey::key::cargo_capacity] / total, 1);
+  cost::res_t move = t -> resource_storage;
+  move.scale(ratio);
+  s -> cargo.add(move);
+  move.scale(-1);
+  t -> resource_storage.add(move);
+  s -> is_loaded = true;
+}
+
 const hm_t<string, interaction> &interaction::table() {
   static bool init = false;
   static hm_t<string, interaction> data;
@@ -279,16 +290,25 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
     if (!s -> has_fleet()) return;
-    if (!s -> is_loaded) return;
+    fleet::ptr f = g -> get_fleet(s -> fleet_id);
 
-    // load resources
+    // first check if we still need to load resources
+    if (!s -> is_loaded) {
+      if (f -> com.action == interaction::trade_to && g -> entity.count(f -> com.source)) {
+	game_object::ptr h = g -> get_entity(f -> com.source);
+	if (h -> isa(solar::class_id) && h -> owner == s -> owner) {
+	  load_resources(s, utility::guaranteed_cast<solar>(h));
+	}
+      }
+      return;
+    }
+
+    // unload resources
     for (auto v : keywords::resource) {
       t -> resource_storage[v] += s -> cargo[v];
     }
     s -> cargo = cost::res_t();
     s -> is_loaded = false;
-
-    fleet::ptr f = g -> get_fleet(s -> fleet_id);
 
     // check that we are the last ship in fleet unloading
     for (auto sid : f -> ships) {
@@ -312,15 +332,7 @@ const hm_t<string, interaction> &interaction::table() {
     if (!s -> has_fleet()) return;
     if (s -> is_loaded) return;
 
-    // load resources
-    float total = t -> resource_storage.count();
-    float ratio = fmax(s -> stats[sskey::key::cargo_capacity] / total, 1);
-    cost::res_t move = t -> resource_storage;
-    move.scale(ratio);
-    s -> cargo.add(move);
-    move.scale(-1);
-    t -> resource_storage.add(move);
-    s -> is_loaded = true;
+    load_resources(s, t);
 
     // check that we are the last ship in fleet loading
     fleet::ptr f = g -> get_fleet(s -> fleet_id);

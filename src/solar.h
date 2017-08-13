@@ -110,6 +110,7 @@ namespace st3{
     void damage_facilities(float d);
     float space_status();
     float water_status();
+    float crowding_rate();
     float vision();
     bool has_defense();
     std::string get_info();
@@ -137,7 +138,7 @@ namespace st3{
   protected:
     static constexpr float f_growth = 4e-2;
     static constexpr float f_crowding = 2e-2;
-    static constexpr float f_minerate = 2e-3;
+    static constexpr float f_minerate = 4e-4;
     static constexpr float f_buildrate = 2e-3;
     static constexpr float f_devrate = 2e-3;
     static constexpr float f_resrate = 2e-3;

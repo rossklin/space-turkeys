@@ -71,9 +71,8 @@ rapidjson::Document *utility::get_json(string key) {
 // POINT ARITHMETICS
 // ****************************************
 
-vector<point> utility::cluster_points(vector<point> pos) {
-  int n = 10;
-  int rep = 10;
+vector<point> utility::cluster_points(vector<point> pos, int n, int rep, float h) {
+  if (pos.empty()) return pos;
   vector<point> x(n);
   vector<point> buf;
   
@@ -87,8 +86,8 @@ vector<point> utility::cluster_points(vector<point> pos) {
     // move points towards s
     for (int j = 0; j < x.size(); j++){
       point d = y - x[j];
-      float f = 10 * exp(-utility::l2norm(d) / 10) / (i + 1);
-      x[j] = x[j] + utility::scale_point(d, f);
+      float f = 50 * exp(-pow(utility::l2norm(d) / h, 2)) / (i + 1);
+      x[j] = x[j] + utility::normalize_and_scale(d, f);
     }
 
     // join adjacent points

@@ -48,6 +48,7 @@ namespace st3{
 
     /*! initialize static graphics i.e. default font */
     void initialize();
+    void draw_flag(sf::RenderTarget &w, point p, float s, sf::Color c);
     void draw_text(sf::RenderTarget &w, std::string v, point p, int fs, bool ul = false, sf::Color fill = sf::Color::White);
     void draw_framed_text(sf::RenderTarget &w, std::string v, sf::FloatRect r, sf::Color co, sf::Color cf = sf::Color::Transparent);
 
