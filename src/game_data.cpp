@@ -247,6 +247,10 @@ void game_data::apply_choice(choice::choice c, idtype id){
       }
     }
 
+    if (!utility::find_in(x.second.governor, keywords::sector)) {
+      throw runtime_error("validate_choice: invalid governor: " + x.second.governor);
+    }
+
     // apply
     solar::ptr s = get_solar(x.first);
     s -> choice_data = x.second;

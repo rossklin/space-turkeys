@@ -1,4 +1,3 @@
-
 #include "development_tree.h"
 #include "development_gui.h"
 #include "research_gui.h"
@@ -11,29 +10,19 @@ using namespace st3;
 using namespace sfg;
 using namespace interface;
 
-const std::string research_gui::sfg_id = "research gui";
-
-research_gui::Ptr research_gui::Create() {
-  Ptr self(new research_gui());
-  self -> Add(self -> layout);
-  self -> SetAllocation(main_interface::qw_allocation);
-  self -> SetId(sfg_id);
-  return self;
-}
 
 // main window for research choice
-research_gui::research_gui() : Window(Window::Style::BACKGROUND) {
-  layout = Box::Create(Box::Orientation::VERTICAL);
-  response = desktop -> response.research;
+Widget::Ptr research_gui() {
+  string response = desktop -> response.research;
 
   // development gui
-  development_gui::f_req_t f_req = [] (string v) -> list<string> {
+  choice_gui::f_info_t f_info = [] (string v) -> choice_info {
     list<string> res = desktop -> get_research().list_tech_requirements(v);
     if (desktop -> get_research().researched().count(v)) res.push_back("Already researched");
     return res;
   };
 
-  development_gui::f_select_t on_select = [this] (string result) {
+  choice_gui::f_result_t callback = [] (string result, bool accepted) {
     response = result;
   };
 

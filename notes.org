@@ -43,6 +43,13 @@
    [J?] builds colonizer in one turn
    [J?] ship info should list upgrades
    [J?] after terraform: reset command. Also don't allow terraforming owned solars?
+** governor
+   Make a new general gui with image buttons for selection, that takes
+   a hover callback which generates in depth information that is
+   written to a common info panel below the buttons, as well as a
+   result callback. development_gui should be able to use this
+   structure (now only for research gui) as well as military choice
+   gui and governor choice gui.
 * [~] issues
 ** [~] system
 *** init_data sends all data - should limit to "player_any"
