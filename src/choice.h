@@ -16,18 +16,20 @@ namespace st3{
 
     /*! choice of priorities for solar system */
     struct c_solar{
-      cost::sector_allocation allocation;
+      std::string governor;
       cost::ship_allocation military;
+      cost::sector_allocation allocation;
       cost::resource_allocation mining;
       std::string development;
 
       c_solar();
-      void normalize(); // normalize to proportions
-      void set_zeros();
+      c_solar normalize(); // normalize to proportions
+      c_solar set_zeros();
     };
 
     struct choice{
       std::string research;
+      cost::ship_allocation military;
       hm_t<combid, std::list<command> > commands; /*!< table of commands for game entities */
       hm_t<combid, c_solar> solar_choices; /*!< table of choices for solar system evolution */ 
       hm_t<combid, waypoint> waypoints; /*!< table of generated waypoints */

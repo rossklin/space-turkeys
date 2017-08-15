@@ -252,10 +252,13 @@ void game_data::apply_choice(choice::choice c, idtype id){
     s -> choice_data = x.second;
   }
 
+  // pass military choice to solars
+  for (auto s : all<solar>()) if (s -> owner == id) s -> choice_data.military = c.military;
+
   // commands: validate
-  for (auto x : c.commands){
+  for (auto x : c.commands) {
     auto e = get_entity(x.first);
-    if (e -> owner != id){
+    if (e -> owner != id) {
       throw runtime_error("validate_choice: error: command by player " + to_string(id) + " for " + x.first + " owned by " + to_string(e -> owner));
     }
   }

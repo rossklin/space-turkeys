@@ -64,6 +64,7 @@ namespace st3{
     static const hm_t<std::string, facility>& facility_table();
     
     choice::c_solar choice_data;
+    std::string next_ship;
     float dt;
     research::data *research_level;
 
@@ -131,8 +132,9 @@ namespace st3{
     float research_increment(choice::c_solar &c);
     float resource_increment(std::string v, choice::c_solar &c);
     float development_increment(choice::c_solar &c);
-    float ship_increment(std::string v, choice::c_solar &c);
+    float ship_increment(choice::c_solar &c);
     float compute_workers();
+    choice::c_solar government();
     void dynamics(); 
 
   protected:

@@ -9,15 +9,17 @@ c_solar::c_solar(){
   set_zeros();
 }
 
-void c_solar::set_zeros(){  
+c_solar c_solar::set_zeros(){  
   for (auto v : keywords::sector) allocation[v] = 0;
   for (auto v : ship::all_classes()) military[v] = 0;
   for (auto v : keywords::resource) mining[v] = 0;
   development = "";
+  return *this;
 }
 
-void choice::c_solar::normalize(){
+c_solar choice::c_solar::normalize(){
   allocation.normalize();
   military.normalize();
   mining.normalize();
+  return *this;
 }

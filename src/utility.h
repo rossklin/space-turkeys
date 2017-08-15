@@ -163,6 +163,27 @@ namespace st3{
     std::vector<float> random_uniform_vector(int n, float a = 0, float b = 1);
 
     template<typename C>
+    typename C::key_type weighted_sample(C &x) {
+      if (x.empty()) {
+	throw std::runtime_error("weighted_sample: empty map!");
+      }
+      
+      typename C::key_type def;
+      float sum = 0;
+      for (auto &y : x) sum += y.second;
+      if (sum == 0) return def;
+      
+      float targ = random_uniform(0, sum);
+      sum = 0;
+      for (auto &y : x) {
+	sum += y.second;
+	if (sum >= targ) return y.first;
+      }
+
+      return def;
+    };
+
+    template<typename C>
     typename C::value_type uniform_sample(C &x){
       int s = x.size();
       typename C::value_type test;

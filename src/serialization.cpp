@@ -379,6 +379,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
 // solar choice
 sf::Packet& st3::operator <<(sf::Packet& packet, const choice::c_solar &g){
   return packet
+    << g.governor
     << g.allocation
     << g.military
     << g.mining
@@ -387,6 +388,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const choice::c_solar &g){
 
 sf::Packet& st3::operator >>(sf::Packet& packet, choice::c_solar &g){
   return packet
+    >> g.governor
     >> g.allocation
     >> g.military
     >> g.mining
@@ -447,11 +449,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet::analytics &g){
 
 // choice
 sf::Packet& st3::operator <<(sf::Packet& packet, const choice::choice &c){
-  return packet << c.commands << c.solar_choices << c.waypoints << c.fleets << c.research;
+  return packet << c.commands << c.solar_choices << c.waypoints << c.fleets << c.research << c.military;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, choice::choice &c){
-  return packet >> c.commands >> c.solar_choices >> c.waypoints >> c.fleets >> c.research;
+  return packet >> c.commands >> c.solar_choices >> c.waypoints >> c.fleets >> c.research >> c.military;
 }
 
 // waypoint

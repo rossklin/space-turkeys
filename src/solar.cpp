@@ -37,6 +37,12 @@ void solar::move(game_data *g){
   if (owner < 0 || population <= 0) return;
 
   dt = g -> get_dt();
+
+  // select ship class for production
+  if (next_ship.empty()) {
+    next_ship = utility::weighted_sample(choice_data.military.data);
+  }
+  
   dynamics();
 
   // build ships
@@ -44,6 +50,7 @@ void solar::move(game_data *g){
     if (research_level -> can_build_ship(v, ptr(this))){
       float build_time = ship::table().at(v).build_time;
       while (fleet_growth[v] >= build_time) {
+	next_ship.clear();
 	fleet_growth[v] -= build_time;
 	ship sh = research_level -> build_ship(v, ptr(this));
 	sh.is_landed = true;
@@ -316,34 +323,135 @@ float solar::development_increment(choice::c_solar &c){
   return f_devrate * c.allocation[keywords::key_development] * compute_boost(keywords::key_development) * compute_workers();
 }
 
-float solar::ship_increment(string v, choice::c_solar &c){
-  return f_buildrate * compute_boost(keywords::key_military) * c.allocation[keywords::key_military] * c.military[v] * compute_workers();
+float solar::ship_increment(choice::c_solar &c){
+  return f_buildrate * compute_boost(keywords::key_military) * c.allocation[keywords::key_military] * compute_workers();
 }
 
 float solar::compute_workers(){
   return happiness * population;
 }
 
-void solar::dynamics(){
-  // disable mining if there are no resources
-  // mine more if there is less in storage
-  float rsum = 0;
-  float ssum = 0;
-  for (auto v : keywords::resource) {
-    rsum += available_resource[v];
-    ssum += resource_storage[v];
-    choice_data.mining[v] = 1 / (resource_storage[v] + 1);
-  }
-  if (!rsum) choice_data.allocation[keywords::key_mining] = 0;
-  
+choice::c_solar solar::government() {
   choice::c_solar c = choice_data;
-
-  // disable development/research if none selected
-  bool is_developing = !c.development.empty();
-  if (!is_developing) c.allocation[keywords::key_development] = 0;
-  if (research_level -> researching.empty()) c.allocation[keywords::key_research] = 0;
+  if (!utility::find_in(c.governor, keywords::sector)) {
+    throw runtime_error("Invalid governor: " + c.governor);
+  }
   
-  c.normalize();
+  // general stuff for all governors, even manual
+  for (auto v : keywords::sector) c.allocation[v] = 1;
+
+  // MINING
+  auto compute_mining = [this] (choice::c_solar c) -> choice::c_solar {
+    float rsum = 0;
+    float ssum = 0;
+    float smin = INFINITY;
+    for (auto v : keywords::resource) {
+      rsum += available_resource[v];
+      ssum += resource_storage[v];
+      smin = fmin(smin, resource_storage[v]);
+      if (c.governor == keywords::key_mining) {
+	// mine what is available
+	c.mining[v] = available_resource[v];
+      } else {
+	// mine what is needed
+	c.mining[v] = 1 / (resource_storage[v] + 1);
+      }
+    }
+
+    if (c.governor == keywords::key_mining) {
+      // always mine
+      c.allocation[keywords::key_mining] = 1;
+    } else {
+      // mine if storage is running low
+      c.allocation[keywords::key_mining] = 1 / (smin + 1);
+    }
+  
+    if (!rsum) c.allocation[keywords::key_mining] = 0;
+    return c;
+  };
+
+  c = compute_mining(c);
+
+  // RESEARCH
+  if (c.governor == keywords::key_research) c.allocation[keywords::key_research] = 1;
+  if (research_level -> researching.empty()) c.allocation[keywords::key_research] = 0;
+
+  // DEVELOPMENT
+  auto select_development = [this] (choice::c_solar c) -> choice::c_solar {
+    bool is_developing = c.development.size();
+    if (is_developing) return c;
+    
+    hm_t<string, float> score;
+    cost::res_t total = available_resource;
+    total.add(resource_storage);
+
+    // base score for facilities from relevant sector boost
+    for (auto v : available_facilities(*research_level)) {
+      facility_object test = developed(v, 1);
+      float h = 0.1;
+
+      auto add_factor = [test] (string key, float w) -> float {
+	if (test.sector_boost.count(key)) {
+	  return w * test.sector_boost.at(key);
+	} else {
+	  return 0;
+	}
+      };
+
+      // score for favorite sector boost
+      h += add_factor(c.governor, 1);
+
+      // score for medecine and ecology if needed
+      h += add_factor(keywords::key_ecology, 1 / fmax(ecology, 0.2));
+      h += add_factor(keywords::key_medicine, crowding_rate());
+
+      // reduce score for build time
+      h /= test.cost_time + 1;
+
+      // significantly reduce score if there are not sufficient resources
+      for (auto u : keywords::resource) {
+	if (total[u] < test.cost_resources[u]) {
+	  h /= 10;
+	  break;
+	}
+      }
+    
+      score[v] = h;
+    }
+
+    auto add_score = [&score] (string name, float value) {
+      if (score.count(name)) score[name] += value;
+    };
+
+    // militarist governor likes shipyard
+    if (c.governor == keywords::key_military) add_score("shipyard", 0.5);
+
+    // add score for doing nothing
+    score[""] = 0.3;
+
+    // weighted probability select
+    c.development = utility::weighted_sample(score);
+
+    // prioritize development if score is good
+    c.allocation[keywords::key_development] = score[c.development];
+    
+    return c;
+  };
+  
+  c = select_development(c);
+
+  // MILITARY
+  if (c.governor == keywords::key_military) {
+    c.allocation[keywords::key_military] = 1;
+  } else {
+    c.allocation[keywords::key_military] = 0;
+  }
+
+  return c;
+}
+
+void solar::dynamics(){
+  choice::c_solar c = government();
   
   solar buf = *this;
   float dw = sqrt(dt);
@@ -385,13 +493,13 @@ void solar::dynamics(){
     };
 
     // development
-    if (is_developing) {
+    if (c.development.size()) {
       add_cost("dev", development_increment(c) * dt, buf.facility_access(c.development) -> cost_time, developed(c.development, 1).cost_resources);
     }
     
     // military industry
-    for (auto v : ship::all_classes()) {
-      add_cost("ship:" + v, ship_increment(v, c) * dt, ship::table().at(v).build_time, ship::table().at(v).build_cost);
+    if (next_ship.size()) {
+      add_cost("ship:" + next_ship, ship_increment(c) * dt, ship::table().at(next_ship).build_time, ship::table().at(next_ship).build_cost);
     }
 
     // compute allowed production ratio
@@ -399,35 +507,18 @@ void solar::dynamics(){
     if (allowed < 1) buf.out_of_resources = true;
 
     // add production for ships
-    for (auto v : ship::all_classes()) {
-      buf.fleet_growth[v] += allowed * weight_table["ship:" + v];
+    if (next_ship.size()) {
+      buf.fleet_growth[next_ship] += allowed * weight_table["ship:" + next_ship];
     }
 
     // add production for development
-    if (is_developing) {
+    if (c.development.size()) {
       buf.facility_access(c.development) -> progress += allowed * weight_table["dev"];
     }
 
     // pay for production
     total_cost.scale(allowed);
     buf.pay_resources(total_cost);
-
-    // adaptive mining
-    float m = buf.choice_data.allocation[keywords::key_mining];
-
-    if (buf.out_of_resources) {
-      if (m < 1) {
-	m = 1;
-      } else {
-	m *= 1.2;
-      }
-    } else {
-      if (m > 1) {
-	m = fmax(0.9 * m, 1);
-      }
-    }
-
-    buf.choice_data.allocation[keywords::key_mining] = m;
   }
 
   *this = buf;
