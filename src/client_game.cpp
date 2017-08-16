@@ -17,10 +17,8 @@
 #include "upgrades.h"
 #include "research.h"
 #include "desktop.h"
-#include "development_gui.h"
-#include "solar_gui.h"
-#include "research_gui.h"
 #include "animation.h"
+#include "choice_gui.h"
 
 using namespace std;
 using namespace st3;
@@ -105,29 +103,6 @@ command_selector::ptr game::get_command_selector(idtype i){
 entity_selector::ptr game::get_entity(combid i){
   if (!entity.count(i)) throw runtime_error("client::game::get_entity: invalid id: " + i);
   return entity[i];
-}
-
-template<typename T>
-typename specific_selector<T>::ptr game::get_specific(combid i){
-  auto e = get_entity(i);
-
-  if (e -> isa(T::class_id)){
-    return utility::guaranteed_cast<specific_selector<T>, entity_selector>(e);
-  }else{
-    throw runtime_error("get_specific: " + T::class_id + ": wrong class id for: " + i);
-  }
-}
-
-template<typename T>
-set<typename specific_selector<T>::ptr> game::get_all(){
-  set<typename specific_selector<T>::ptr> s;
-  typename specific_selector<T>::ptr test;
-  
-  for (auto x : entity){
-    if (x.second -> isa(T::class_id)) s.insert(get_specific<T>(x.first));
-  }
-  
-  return s;
 }
 
 void game::clear_guis(){
@@ -329,7 +304,7 @@ bool game::choice_step(){
   cout << "choice_step: start" << endl;
 
   if (c.research.empty() && !r.available().empty()) {
-    interface::desktop -> reset_qw(interface::research_gui::Create());
+    interface::desktop -> reset_qw(interface::research_gui());
   }
 
   message = "make your choice";
@@ -1081,18 +1056,6 @@ set<combid> game::get_ready_ships(combid id){
   return s;
 }
 
-/** Get ids of selected solars */
-template<typename T>
-list<combid> game::selected_specific(){
-  list<combid> res;
-  for (auto s : get_all<T>()){
-    if (s -> selected){
-      res.push_back(s -> id);
-    }
-  }
-  return res;
-}
-
 /** Get ids of selected entities. */
 list<combid> game::selected_entities(){
   list<combid> res;
@@ -1110,10 +1073,10 @@ list<idtype> game::selected_commands(){
   return res;
 }
 
-/** Start the solar gui. */
-void game::run_solar_gui(combid key){
-  interface::desktop -> reset_qw(interface::solar_gui::Create(get_specific<solar>(key)));
-}
+// /** Start the solar gui. */
+// void game::run_solar_gui(combid key){
+//   interface::desktop -> reset_qw(interface::solar_gui::Create(get_specific<solar>(key)));
+// }
 
 void game::setup_targui(point p){
   // set up targui
@@ -1346,8 +1309,8 @@ int game::choice_event(sf::Event e){
       }
       break;
     case sf::Keyboard::Return:
-      ss = selected_specific<solar>();
-      if (ss.size() == 1) run_solar_gui(ss.front());
+      // ss = selected_specific<solar>();
+      // if (ss.size() == 1) run_solar_gui(ss.front());
       break;
     case sf::Keyboard::Delete:
       handle_delete();

@@ -1,7 +1,6 @@
 #include "desktop.h"
 #include "client_game.h"
-#include "solar_gui.h"
-#include "research_gui.h"
+#include "choice_gui.h"
 
 using namespace std;
 using namespace st3;
@@ -50,16 +49,33 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   auto w_proceed = pack_in_window(b_proceed, get_rect(0.3, 0.9, 0.4, 0.1));
   Add(w_proceed);
 
-  // hover info label
+  // right label
   Box::Ptr right_panel = Box::Create(Box::Orientation::VERTICAL, 10);
+
+  // choice guis
   Button::Ptr b_research = Button::Create("Research");
-  bind_ppc(b_research, [this] () {reset_qw(research_gui::Create());});
+  bind_ppc(b_research, [this] () {reset_qw(research_gui());});
+
+  Button::Ptr b_military = Button::Create("Military");
+  bind_ppc(b_military, [this] () {reset_qw(military_gui());});
+
+  Button::Ptr b_governor = Button::Create("Governor");
+  bind_ppc(b_governor, [this, gx] () {
+      list<solar::ptr> solars;
+      for (auto sid : gx -> selected_specific<solar>()) solars.push_back(gx -> get_specific<solar>(sid));
+      if (solars.size()) reset_qw(governor_gui(solars));
+    });
+
+  right_panel -> Pack(b_research, true, false);
+  right_panel -> Pack(b_military, true, false);
+  right_panel -> Pack(b_governor, true, false);
+
+  // hover info
   hover_label = Label::Create("Empty space");
   log_panel = Box::Create(Box::Orientation::VERTICAL);
   
-  right_panel -> Pack(b_research, true, false);
-  right_panel -> Pack(graphics::wrap_in_scroll2(log_panel, 0.17 * desktop_dims.x, 0.4 * desktop_dims.y));
-  right_panel -> Pack(graphics::wrap_in_scroll2(hover_label, 0.17 * desktop_dims.x, 0.4 * desktop_dims.y));
+  right_panel -> Pack(graphics::wrap_in_scroll2(log_panel, 0.17 * desktop_dims.x, 0.3 * desktop_dims.y));
+  right_panel -> Pack(graphics::wrap_in_scroll2(hover_label, 0.17 * desktop_dims.x, 0.3 * desktop_dims.y));
 
   auto info_rect = sf::FloatRect(0.79 * desktop_dims.x, 20, 0.2 * desktop_dims.x, desktop_dims.y - 25);
   right_panel -> SetAllocation(info_rect);
@@ -67,7 +83,7 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   Add(w_info);
 
   // set display properties
-  SetProperty("Window#" + string(solar_gui::sfg_id), "BackgroundColor", sf::Color(20, 30, 120, 100));
+  // SetProperty("Window#" + string(solar_gui::sfg_id), "BackgroundColor", sf::Color(20, 30, 120, 100));
   SetProperty("Button", "BackgroundColor", sf::Color(20, 120, 80, 140));
   SetProperty("Button", "BorderColor", sf::Color(80, 180, 120, 200));
   SetProperty("Widget", "Color", sf::Color(200, 170, 120));
@@ -81,7 +97,7 @@ void main_interface::push_log(list<string> log) {
   while (queue.size() > max_size) queue.pop_back();
 
   log_panel -> RemoveAll();
-  for (auto v : queue) log_panel -> Pack(Label::Create(v), true, false);
+  for (auto v : queue) log_panel -> Pack(Label::Create(v), false, false);
 }
 
 void main_interface::bind_ppc(Widget::Ptr w, function<void(void)> f) {

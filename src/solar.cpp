@@ -40,14 +40,14 @@ void solar::move(game_data *g){
 
   // select ship class for production
   if (next_ship.empty()) {
-    cost::ship_allocation test = choice_data.military.data;
-    for (auto &x : test) {
+    cost::ship_allocation test = choice_data.military;
+    for (auto &x : test.data) {
       if (!research_level -> can_build_ship(x.first, ptr(this))) {
 	x.second = 0;
       }
     }
     
-    next_ship = utility::weighted_sample(test);
+    next_ship = utility::weighted_sample(test.data);
   }
   
   dynamics();

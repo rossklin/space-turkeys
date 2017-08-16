@@ -223,7 +223,7 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
   }
 }
 
-sf::Image graphics::selector_card(string title, bool selected, float progress, list<string> info, list<string> requirements) {
+sf::Image graphics::selector_card(string title, bool available, float progress) {
   sf::RenderTexture tex;
   int width = 120;
   int height = 200;
@@ -243,15 +243,16 @@ sf::Image graphics::selector_card(string title, bool selected, float progress, l
 
   // draw text
   draw_text(tex, title, point(width / 2, 20), 16, false);
-  int c = 2;
-  for (auto v : requirements) draw_text(tex, v, point(width / 2, (c++) * 20), 11, false, sf::Color::Red);
-  c++;
-  for (auto v : info) draw_text(tex, v, point(width / 2, (c++) * 20), 11, false);
 
   // draw outline
   sf::Color outline = sf::Color(150,150,150);
-  if (selected) outline = sf::Color::White;
   tex.draw(build_rect(bounds, -2, outline));
+
+  // draw available
+  if (!available) {
+    auto pgrey = build_rect(sf::FloatRect(0, 0, bounds.width, bounds.height), 0, sf::Color::Transparent, sf::Color(150,150,150,50));
+    tex.draw(pfill);
+  }
   
   tex.display();
 

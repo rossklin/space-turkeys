@@ -93,7 +93,7 @@ namespace st3{
     */
     point inverse_scale(sf::RenderTarget &w);
 
-    sf::Image selector_card(std::string title, bool available, float progress, std::list<std::string> info = {}, std::list<std::string> requirements = {});
+    sf::Image selector_card(std::string title, bool available, float progress);
     void draw_frame(sf::FloatRect r, int thickness, sf::Color co, sf::Color cf = sf::Color::Transparent); 
     sf::RectangleShape build_rect(sf::FloatRect bounds, int thickness = -1, sf::Color co = sf::Color::White, sf::Color cf = sf::Color::Transparent);
     sfg::Widget::Ptr wrap_in_scroll(sfg::Widget::Ptr w, bool horizontal, int dim);

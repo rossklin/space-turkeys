@@ -29,7 +29,7 @@ namespace st3 {
       static const std::string class_normal;
       static const std::string class_selected;
 
-      static Ptr Create(std::set<std::string> options, f_info_t info, f_result_t callback);
+      static Ptr Create(std::string title, bool unique, std::set<std::string> options, f_info_t info, f_result_t callback);
 
       const std::string& GetName() const;
       sf::Vector2f CalculateRequisition();
@@ -51,6 +51,10 @@ namespace st3 {
       void update_selected();
       void setup();
     };
+
+    sfg::Widget::Ptr governor_gui(std::list<solar::ptr> solars);
+    sfg::Widget::Ptr military_gui();
+    sfg::Widget::Ptr research_gui();
   };
 };
 

@@ -4,6 +4,8 @@
 #include <set>
 #include <string>
 #include <functional>
+#include <stdexcept>
+
 #include <SFML/Graphics.hpp>
 #include <SFGUI/SFGUI.hpp>
 
@@ -70,12 +72,6 @@ namespace st3{
       void remove_entity(combid i);
 
       command_selector::ptr get_command_selector(idtype i);
-
-      template<typename T>
-      typename specific_selector<T>::ptr get_specific(combid i);
-
-      template<typename T>
-      std::set<typename specific_selector<T>::ptr> get_all();
 
       // round sections
       /*! run the game user interface */
@@ -248,9 +244,6 @@ namespace st3{
 	@return set of ship ids
       */
       std::set<combid> get_ready_ships(combid key);
-      
-      template<typename T>
-      std::list<combid> selected_specific();
 
       /*! get a list of keys of all selected entity selectors
 	@return list of keys of selected entity selectors
@@ -291,6 +284,42 @@ namespace st3{
       void draw_interface_components();
       
       void add_fixed_stars (point position, float vision);
+      
+      template<typename T>
+      typename specific_selector<T>::ptr get_specific(combid i){
+	auto e = get_entity(i);
+
+	if (e -> isa(T::class_id)){
+	  return utility::guaranteed_cast<specific_selector<T>, entity_selector>(e);
+	}else{
+	  throw std::runtime_error("get_specific: " + T::class_id + ": wrong class id for: " + i);
+	}
+      };
+
+      template<typename T>
+      std::set<typename specific_selector<T>::ptr> get_all(){
+	std::set<typename specific_selector<T>::ptr> s;
+  
+	for (auto x : entity){
+	  if (x.second -> isa(T::class_id)) s.insert(get_specific<T>(x.first));
+	}
+  
+	return s;
+      };
+
+
+      /** Get ids of selected solars */
+      template<typename T>
+      std::list<combid> selected_specific(){
+	std::list<combid> res;
+	for (auto s : get_all<T>()){
+	  if (s -> selected){
+	    res.push_back(s -> id);
+	  }
+	}
+	return res;
+      };
+
     };
   };
 };

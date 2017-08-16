@@ -1,5 +1,8 @@
 #include <set>
 #include <boost/algorithm/string/join.hpp>
+#include <SFGUI/SFGUI.hpp>
+#include <SFGUI/Widgets.hpp>
+#include <SFGUI/Selector.hpp>
 
 #include "desktop.h"
 #include "choice_gui.h"
@@ -21,8 +24,7 @@ choice_gui::Ptr choice_gui::Create(string title, bool unique, set<string> option
   return buf;
 }
 
-choice_gui::choice_gui(string _title, bool _unique, set<string> _options, f_info_t _info, f_result_t _callback) : Bin() {
-  title = _title;
+choice_gui::choice_gui(string title, bool _unique, set<string> _options, f_info_t _info, f_result_t _callback) : Bin() {
   unique = _unique;
   options = _options;
   f_info = _info;
@@ -30,12 +32,14 @@ choice_gui::choice_gui(string _title, bool _unique, set<string> _options, f_info
   width = 600;
 
   // do "css" stuff
-  Selector::Ptr sel = Selector::Create( "Button", "", class_selected);
-  SetProperty(sel, "BorderWidth", 3);
-  SetProperty(sel, "BorderColor", sf::Color::White);
-  sel = Selector::Create( "Button", "", class_normal);
-  SetProperty(sel, "BorderWidth", 1);
-  SetProperty(sel, "BorderColor", sf::Color::Grey);
+  auto hierarchy = Selector::HierarchyType::ROOT;
+  Selector::Ptr sel = Selector::Create( "Button", "", class_selected, "", hierarchy, 0);
+  string sel_string = sel -> BuildString();
+  desktop -> SetProperty(sel_string, "BorderWidth", 3);
+  desktop -> SetProperty(sel_string, "BorderColor", sf::Color::White);
+  sel = Selector::Create( "Button", "", class_normal, "", hierarchy, 0);
+  desktop -> SetProperty(sel_string, "BorderWidth", 1);
+  desktop -> SetProperty(sel_string, "BorderColor", sf::Color::Black);
 
   frame = Frame::Create(title);
   layout = Box::Create(Box::Orientation::VERTICAL, 5);
@@ -67,7 +71,6 @@ void choice_gui::setup() {
     // add image button
     auto b = Button::Create();
     buttons[v] = b;
-    set_class(v, false);
     choice_info info = f_info(v);
     b -> SetImage(Image::Create(graphics::selector_card(v, info.available, info.progress)));
 
@@ -126,4 +129,98 @@ void choice_gui::setup() {
   confirm_box -> Pack(b_accept);
 
   layout -> Pack(confirm_box);
+}
+
+// GOVERNOR
+Widget::Ptr interface::governor_gui(list<solar::ptr> solars) {
+  set<string> options;
+  for (auto v : keywords::sector) options.insert(v);
+
+  choice_gui::f_info_t f_info = [] (string v) -> choice_info {
+    choice_info res;
+    res.info.push_back("Governor focused on " + v);
+    res.available = true;
+    return res;
+  };
+
+  choice_gui::f_result_t callback = [solars] (set<string> selected, bool accepted) {
+    if (accepted) {
+      if (selected.size() == 1) {
+	string gov = *selected.begin();
+	for (auto s : solars) s -> choice_data.governor = gov;
+      } else {
+	throw runtime_error("governor_gui: invalid selection size!");
+      }
+    }
+  };
+
+  return choice_gui::Create("Governor", true, options, f_info, callback);
+}
+
+// RESEARCH
+Widget::Ptr interface::research_gui() {
+  hm_t<string, research::tech> map;
+  set<string> options;
+  for (auto &f : research::data::table()) {
+    map[f.first] = f.second;
+    options.insert(f.first);
+  }
+  
+  for (auto &t : desktop -> get_research().tech_map) map[t.first] = t.second;
+
+  // development gui
+  choice_gui::f_info_t f_info = [map] (string v) -> choice_info {
+    choice_info res;
+    research::tech n = map.at(v);
+
+    // requirements
+    res.requirements = desktop -> get_research().list_tech_requirements(v);
+    if (desktop -> get_research().researched().count(v)) res.requirements.push_back("Already researched");
+
+    res.available = res.requirements.empty();
+    res.progress = n.progress;
+
+    // info
+    for (auto b : n.sector_boost) res.info.push_back(b.first + " + " + to_string((int)(100 * (b.second - 1))) + "%");
+    for (auto su : n.ship_upgrades) res.info.push_back(su.first + " gains: " + boost::algorithm::join(su.second, ", "));
+
+    return res;
+  };
+
+  choice_gui::f_result_t callback = [] (set<string> result, bool accepted) {
+    if (accepted) {
+      if (result.size() == 1) {
+	desktop -> response.research = *result.begin();
+      } else {
+	throw runtime_error("research_gui: callback: bad result size!");
+      }
+    }
+  };
+
+  return choice_gui::Create("Research", true, options, f_info, callback);
+}
+
+// MILITARY
+Widget::Ptr interface::military_gui() {
+  set<string> options;
+  for (auto v : ship::all_classes()) options.insert(v);
+
+  // military gui
+  choice_gui::f_info_t f_info = [] (string v) -> choice_info {
+    choice_info res;
+    ship_stats s = ship::table().at(v);
+    res.available = s.depends_tech.empty() || desktop -> get_research().researched().count(s.depends_tech);
+    res.progress = 0;
+    return res;
+  };
+
+  choice_gui::f_result_t callback = [] (set<string> result, bool accepted) {
+    cost::ship_allocation res;
+    if (accepted) {
+      for (auto v : result) res[v] = 1;
+      desktop -> response.military = res;
+    }
+  };
+
+  return choice_gui::Create("Military", false, options, f_info, callback);
 }

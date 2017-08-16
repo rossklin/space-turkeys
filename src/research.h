@@ -36,7 +36,6 @@ namespace st3{
       ship build_ship(std::string v, solar::ptr sol) const;
       void repair_ship(ship &s, solar::ptr sol) const;
       bool can_build_ship(std::string v, solar::ptr s, std::list<std::string> *data = 0) const;
-      bool can_build_ship(std::string v, std::list<std::string> *data = 0) const;
     };    
   };
 };
