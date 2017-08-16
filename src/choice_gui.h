@@ -23,9 +23,11 @@ namespace st3 {
       typedef std::shared_ptr<choice_gui> Ptr;
       typedef std::shared_ptr<const choice_gui> PtrConst;
       typedef std::function<choice_info(std::string)> f_info_t;
-      typedef std::function<void(std::string, bool)> f_result_t;
+      typedef std::function<void(std::set<std::string>, bool)> f_result_t;
 
       static const std::string sfg_id;
+      static const std::string class_normal;
+      static const std::string class_selected;
 
       static Ptr Create(std::set<std::string> options, f_info_t info, f_result_t callback);
 
@@ -33,17 +35,21 @@ namespace st3 {
       sf::Vector2f CalculateRequisition();
 
     protected:
+      bool unique;
       std::set<std::string> options;
       hm_t<std::string, sfg::Button::Ptr> buttons;
+      sfg::Box::Ptr info_area;
       f_info_t f_info;
       f_result_t callback;
-      std::string selected;
+      std::set<std::string> selected;
       
       int width;
       sfg::Box::Ptr layout;
       sfg::Frame::Ptr frame;
       
-      development_gui(std::set<std::string> options, f_info_t info, f_result_t callback);
+      choice_gui(std::string title, bool unique, std::set<std::string> options, f_info_t info, f_result_t callback);
+      void update_selected();
+      void setup();
     };
   };
 };
