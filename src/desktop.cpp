@@ -60,9 +60,9 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   bind_ppc(b_military, [this] () {reset_qw(military_gui());});
 
   Button::Ptr b_governor = Button::Create("Governor");
-  bind_ppc(b_governor, [this, gx] () {
+  bind_ppc(b_governor, [this] () {
       list<solar::ptr> solars;
-      for (auto sid : gx -> selected_specific<solar>()) solars.push_back(gx -> get_specific<solar>(sid));
+      for (auto sid : g -> selected_specific<solar>()) solars.push_back(g -> get_specific<solar>(sid));
       if (solars.size()) reset_qw(governor_gui(solars));
     });
 
@@ -82,11 +82,7 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   auto w_info = pack_in_window(right_panel, info_rect);
   Add(w_info);
 
-  // set display properties
-  // SetProperty("Window#" + string(solar_gui::sfg_id), "BackgroundColor", sf::Color(20, 30, 120, 100));
-  SetProperty("Button", "BackgroundColor", sf::Color(20, 120, 80, 140));
-  SetProperty("Button", "BorderColor", sf::Color(80, 180, 120, 200));
-  SetProperty("Widget", "Color", sf::Color(200, 170, 120));
+  LoadThemeFromFile("main.theme");
 }
 
 void main_interface::push_log(list<string> log) {
@@ -116,6 +112,10 @@ void main_interface::HandleEvent(const sf::Event& event) {
 
 research::data main_interface::get_research(){
   return g -> players[g -> self_id].research_level;
+}
+
+research::data *main_interface::access_research(){
+  return &(g -> players[g -> self_id].research_level);
 }
 
 void main_interface::reset_qw(Widget::Ptr w){
