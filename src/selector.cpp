@@ -48,10 +48,8 @@ namespace st3{
 	graphics::draw_circle(w, position, vision(), sf::Color(40, 200, 60, 100));
 	graphics::draw_text(w, to_string((int)(population / 1000)), position, 16);
 
-	if (choice_data.development.empty()) {
-	  indicator_text += "*";
-	}
-
+	indicator_text = string(1, choice_data.governor[0]);
+	
 	int nships = ships.size();
 	if (nships > 0) {
 	  point p = position + point(0, -(radius + 20));
@@ -124,6 +122,18 @@ namespace st3{
 	  res += "\nShips:";
 	  for (auto v : ship_counts) {
 	    res += "\n" + to_string(v.second) + " " + v.first + "s";
+	  }
+	}
+
+	for (auto x : facility_table()) {
+	  facility_object f = developed(x.first);
+	  bool is_active = x.first == choice_data.development;
+	  if (f.level == 0 && !is_active) continue;
+	  
+	  res += "\n" + x.first + ": " + to_string(f.level);
+	  
+	  if (is_active) {
+	    res += " (" + to_string((int)(100 * f.progress / f.cost_time)) + "%)";
 	  }
 	}
       }

@@ -587,7 +587,9 @@ choice::choice game::build_choice(choice::choice c){
       c.fleets[x.first] = *get_specific<fleet>(x.first);
       cout << "build_choice: " << x.first << endl;
     } else if (x.second -> isa(solar::class_id) && x.second -> owned) {
-      c.solar_choices[x.first] = get_specific<solar>(x.first) -> choice_data;
+      choice::c_solar ch = get_specific<solar>(x.first) -> choice_data;
+      if (ch.governor.empty()) ch.governor = keywords::key_culture;
+      c.solar_choices[x.first] = ch;
       cout << "build_choice: " << x.first << endl;
     }
   }
@@ -1342,13 +1344,13 @@ void game::controls(){
   float s = view_game.getSize().x / sight_wh.x;
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
-    vel.x -= 15 * s;
+    vel.x -= 5 * s;
   } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
-    vel.x += 15 * s;
+    vel.x += 5 * s;
   } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)){
-    vel.y -= 15 * s;
+    vel.y -= 5 * s;
   } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)){
-    vel.y += 15 * s;
+    vel.y += 5 * s;
   }
 
   vel = utility::scale_point(vel, 0.8);

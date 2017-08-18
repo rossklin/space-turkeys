@@ -250,8 +250,8 @@ sf::Image graphics::selector_card(string title, bool available, float progress) 
 
   // draw available
   if (!available) {
-    auto pgrey = build_rect(sf::FloatRect(0, 0, bounds.width, bounds.height), 0, sf::Color::Transparent, sf::Color(150,150,150,50));
-    tex.draw(pfill);
+    auto pgrey = build_rect(bounds, 0, sf::Color::Transparent, sf::Color(120,120,120,120));
+    tex.draw(pgrey);
   }
   
   tex.display();

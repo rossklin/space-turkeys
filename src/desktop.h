@@ -42,6 +42,7 @@ namespace st3 {
       void reset_qw(sfg::Widget::Ptr p);
       void clear_qw();
       research::data get_research();
+      research::data *access_research();
       void bind_ppc(sfg::Widget::Ptr w, std::function<void(void)> f);
       void push_log(std::list<std::string> log);
     };

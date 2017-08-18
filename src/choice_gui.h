@@ -18,7 +18,7 @@ namespace st3 {
       std::list<std::string> requirements;
     };
     
-    class choice_gui : public sfg::Bin {
+    class choice_gui : public sfg::Window {
     public:
       typedef std::shared_ptr<choice_gui> Ptr;
       typedef std::shared_ptr<const choice_gui> PtrConst;
@@ -30,9 +30,9 @@ namespace st3 {
       static const std::string class_selected;
 
       static Ptr Create(std::string title, bool unique, std::set<std::string> options, f_info_t info, f_result_t callback);
+      static hm_t<std::string, int> calc_faclev();
 
       const std::string& GetName() const;
-      sf::Vector2f CalculateRequisition();
 
     protected:
       bool unique;

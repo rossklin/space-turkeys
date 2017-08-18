@@ -21,35 +21,11 @@
    UP corsair VS battleship, voyager
    UP battleship VS all fighter
    DOWN destroyer VS fighter
-** play test
-   [J?] Mining is OP
-   [J?] People should be more unhappy! About crowding for example...
-   [J?] Initiating action trade_to doesn't load cargo
-
-   Selecting ship classes for production should be a global choice.
-   Selecting facilities for development should be done automatically
-   based on solar's governor type el.dyl. Then solar choice reduces to
-   chosing what governor you want (could be almost the same as
-   selecting enabled sectors).
-
-   Allow setting governor for all selected solars.
-   Show governor as symbol next to solar.
-
-   Maybe create a non-physical entity "trade route" so that freighters
-   automatically use trade routes when they are produced?
-
-   [J?] INVALID RESEARCH CHOICE: already discovered by search
-   [J?] builds facility in one turn
-   [J?] builds colonizer in one turn
-   [J?] ship info should list upgrades
-   [J?] after terraform: reset command. Also don't allow terraforming owned solars?
-** governor
-   Make a new general gui with image buttons for selection, that takes
-   a hover callback which generates in depth information that is
-   written to a common info panel below the buttons, as well as a
-   result callback. development_gui should be able to use this
-   structure (now only for research gui) as well as military choice
-   gui and governor choice gui.
+** play testing
+*** governor doesn't seem to chose a development
+*** [J?] solar selector hover needs to show developments
+*** need to actively query user when new research can be chosen
+*** test that techs show fulfilled faciltiy req 
 * [~] issues
 ** [~] system
 *** init_data sends all data - should limit to "player_any"
@@ -97,6 +73,9 @@
    Maybe classes containing pointers can have a serial subclass?
 * tweaks and fixes
 ** gui
+*** show selection info instead of hover info when no hover
+*** fleet selectors a bit ugly with seperate ring and flag
+*** choice_gui buttons: graphics bugs when setting border width
 *** solar radius too large
 *** client::game::entity_at should respect zoom level
 *** protect from spacebar immediately after simulation is finished
@@ -175,6 +154,45 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** play testing
+*** choice gui
+    o [J] should sort options so available ones are to the left
+    o [J] doesn't show which options are available
+    o [J] difficult to see which option[s] is selected
+    o [J] requirements for ships are not listed
+    o [J] has no background
+    o [J] can't always close with b_accept
+*** gui general
+    o [J] arrow keys move map too fast
+    o [J] solar should show governor instead of *
+** play test
+   Selecting ship classes for production should be a global choice.
+   Selecting facilities for development should be done automatically
+   based on solar's governor type el.dyl. Then solar choice reduces to
+   chosing what governor you want (could be almost the same as
+   selecting enabled sectors).
+
+   Allow setting governor for all selected solars.
+   Show governor as symbol next to solar.
+
+   Maybe create a non-physical entity "trade route" so that freighters
+   automatically use trade routes when they are produced?
+
+   [J?] Mining is OP
+   [J?] People should be more unhappy! About crowding for example...
+   [J?] Initiating action trade_to doesn't load cargo
+   [J?] INVALID RESEARCH CHOICE: already discovered by search
+   [J?] builds facility in one turn
+   [J?] builds colonizer in one turn
+   [J?] ship info should list upgrades
+   [J?] after terraform: reset command. Also don't allow terraforming owned solars?
+** governor
+   Make a new general gui with image buttons for selection, that takes
+   a hover callback which generates in depth information that is
+   written to a common info panel below the buttons, as well as a
+   result callback. development_gui should be able to use this
+   structure (now only for research gui) as well as military choice
+   gui and governor choice gui.
 ** [J?] Fleets a bit hard to see
 ** [J?] Small enemy ships IMPOSSIBLE to see!
 ** [J?] Range of vision difficult to see

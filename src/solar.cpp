@@ -385,7 +385,7 @@ choice::c_solar solar::government() {
 
   // DEVELOPMENT
   auto select_development = [this] (choice::c_solar c) -> choice::c_solar {
-    bool is_developing = c.development.size();
+    bool is_developing = c.development.size() > 0;
     if (is_developing) return c;
     
     hm_t<string, float> score;

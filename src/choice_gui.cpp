@@ -2,11 +2,11 @@
 #include <boost/algorithm/string/join.hpp>
 #include <SFGUI/SFGUI.hpp>
 #include <SFGUI/Widgets.hpp>
-#include <SFGUI/Selector.hpp>
 
 #include "desktop.h"
 #include "choice_gui.h"
 #include "graphics.h"
+#include "client_game.h"
 
 using namespace std;
 using namespace st3;
@@ -24,22 +24,27 @@ choice_gui::Ptr choice_gui::Create(string title, bool unique, set<string> option
   return buf;
 }
 
-choice_gui::choice_gui(string title, bool _unique, set<string> _options, f_info_t _info, f_result_t _callback) : Bin() {
+hm_t<string, int> choice_gui::calc_faclev() {
+  hm_t<string, int> res;
+
+  for (auto x : solar::facility_table()) {
+    string v = x.first;
+    int faclev = 0;
+    for (auto s : desktop -> g -> get_all<solar>()) {
+      if (s -> owned) faclev = max(faclev, s -> facility_access(v) -> level);
+    }
+    res[v] = faclev;
+  }
+  
+  return res;
+}
+
+choice_gui::choice_gui(string title, bool _unique, set<string> _options, f_info_t _info, f_result_t _callback) : Window(Window::Style::BACKGROUND) {
   unique = _unique;
   options = _options;
   f_info = _info;
   callback = _callback;
   width = 600;
-
-  // do "css" stuff
-  auto hierarchy = Selector::HierarchyType::ROOT;
-  Selector::Ptr sel = Selector::Create( "Button", "", class_selected, "", hierarchy, 0);
-  string sel_string = sel -> BuildString();
-  desktop -> SetProperty(sel_string, "BorderWidth", 3);
-  desktop -> SetProperty(sel_string, "BorderColor", sf::Color::White);
-  sel = Selector::Create( "Button", "", class_normal, "", hierarchy, 0);
-  desktop -> SetProperty(sel_string, "BorderWidth", 1);
-  desktop -> SetProperty(sel_string, "BorderColor", sf::Color::Black);
 
   frame = Frame::Create(title);
   layout = Box::Create(Box::Orientation::VERTICAL, 5);
@@ -50,10 +55,6 @@ choice_gui::choice_gui(string title, bool _unique, set<string> _options, f_info_
 
 const string& choice_gui::GetName() const {
   return sfg_id;
-}
-
-sf::Vector2f choice_gui::CalculateRequisition() {
-  return frame -> GetRequisition();
 }
 
 void choice_gui::update_selected() {
@@ -90,20 +91,32 @@ void choice_gui::setup() {
 	// update info area
 	info_area -> RemoveAll();
 	Frame::Ptr about = Frame::Create(v);
-	for (auto q : info.info) about -> Add(Label::Create(q));
+	Box::Ptr buf = Box::Create(Box::Orientation::VERTICAL);
+	for (auto q : info.info) buf -> Pack(Label::Create(q));
+	about -> Add(buf);
 	info_area -> Pack(about);
 
 	Frame::Ptr req = Frame::Create("Requirements");
-	for (auto q : info.requirements) req -> Add(Label::Create(q));
+	buf = Box::Create(Box::Orientation::VERTICAL);
+	for (auto q : info.requirements) buf -> Pack(Label::Create(q));
+	req -> Add(buf);
 	info_area -> Pack(req);
+
+	Widget::RefreshAll();
       });
     
     return b;
   };
 
+  // sort options
+  vector<string> opt_buf(options.begin(), options.end());
+  sort(opt_buf.begin(), opt_buf.end(), [this] (string a, string b) -> bool {
+      return f_info(a).available > f_info(b).available;
+    });
+
   // options go in a scrolled window
   Box::Ptr window_box = Box::Create(Box::Orientation::HORIZONTAL, 5);
-  for (auto v : options) window_box -> Pack(build(v));
+  for (auto v : opt_buf) window_box -> Pack(build(v));
   update_selected();
   layout -> Pack(graphics::wrap_in_scroll(window_box, true, width));
 
@@ -121,7 +134,7 @@ void choice_gui::setup() {
   
   auto b_accept = Button::Create("Accept");
   desktop -> bind_ppc(b_accept, [this] () {
-      if (selected.size()) {
+      if (selected.size() || !unique) {
 	callback(selected, true);
 	desktop -> clear_qw();
       }
@@ -167,7 +180,8 @@ Widget::Ptr interface::research_gui() {
   }
   
   for (auto &t : desktop -> get_research().tech_map) map[t.first] = t.second;
-
+  desktop -> access_research() -> facility_level = choice_gui::calc_faclev();
+  
   // development gui
   choice_gui::f_info_t f_info = [map] (string v) -> choice_info {
     choice_info res;
@@ -205,11 +219,17 @@ Widget::Ptr interface::military_gui() {
   set<string> options;
   for (auto v : ship::all_classes()) options.insert(v);
 
+  // get highest shipyard level
+  int faclev = choice_gui::calc_faclev()["shipyard"];
+
   // military gui
-  choice_gui::f_info_t f_info = [] (string v) -> choice_info {
+  choice_gui::f_info_t f_info = [faclev] (string v) -> choice_info {
     choice_info res;
     ship_stats s = ship::table().at(v);
-    res.available = s.depends_tech.empty() || desktop -> get_research().researched().count(s.depends_tech);
+    bool tech_ok = s.depends_tech.empty() || desktop -> get_research().researched().count(s.depends_tech);
+    if (!tech_ok) res.requirements.push_back("Research " + s.depends_tech);
+    if (s.depends_facility_level > faclev) res.requirements.push_back("Shipyard level " + to_string(s.depends_facility_level));
+    res.available = res.requirements.empty();
     res.progress = 0;
     return res;
   };
