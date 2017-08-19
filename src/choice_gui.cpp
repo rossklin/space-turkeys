@@ -17,8 +17,24 @@ const string choice_gui::sfg_id = "choice_gui";
 const string choice_gui::class_selected = "choice-selected";
 const string choice_gui::class_normal = "choice-normal";
 
-choice_gui::Ptr choice_gui::Create(string title, bool unique, set<string> options, f_info_t info, f_result_t callback) {
-  Ptr buf(new choice_gui(title, unique, options, info, callback));
+bool test_unique_choice(hm_t<string, bool> options, string &res) {
+  int n = 0;
+
+  for (auto x : options) {
+    n += x.second;
+    if (x.second) res = x.first;
+  }
+
+  return n == 1;
+}
+
+choice_gui::Ptr choice_gui::Create(std::string title,
+				   std::string help_text,
+				   bool unique,
+				   hm_t<std::string, bool> options,
+				   f_info_t info,
+				   f_result_t callback) {
+  Ptr buf(new choice_gui(title, help_text, unique, options, info, callback));
   buf -> Add(buf -> frame);
   buf -> SetId(sfg_id);
   return buf;
@@ -39,7 +55,12 @@ hm_t<string, int> choice_gui::calc_faclev() {
   return res;
 }
 
-choice_gui::choice_gui(string title, bool _unique, set<string> _options, f_info_t _info, f_result_t _callback) : Window(Window::Style::BACKGROUND) {
+choice_gui::choice_gui(std::string title,
+		       std::string help_text,
+		       bool _unique,
+		       hm_t<std::string, bool> _options,
+		       f_info_t _info,
+		       f_result_t _callback) : Window(Window::Style::BACKGROUND) {
   unique = _unique;
   options = _options;
   f_info = _info;
@@ -48,26 +69,8 @@ choice_gui::choice_gui(string title, bool _unique, set<string> _options, f_info_
 
   frame = Frame::Create(title);
   layout = Box::Create(Box::Orientation::VERTICAL, 5);
-  frame -> Add(layout);
-    
-  setup();
-}
 
-const string& choice_gui::GetName() const {
-  return sfg_id;
-}
-
-void choice_gui::update_selected() {
-  for (auto x : buttons) {
-    string class_string = class_normal;
-    if (selected.count(x.first)) class_string = class_selected;
-    x.second -> SetClass(class_string);
-  }
-}
-
-void choice_gui::setup() {
-  info_area = Box::Create(Box::Orientation::VERTICAL, 10);
-
+  // build a choice button
   auto build = [this] (string v) -> Widget::Ptr {
     // add image button
     auto b = Button::Create();
@@ -78,13 +81,8 @@ void choice_gui::setup() {
     // set on_select callback
     desktop -> bind_ppc(b, [this, v, info] () {
 	if (info.available) {
-	  if (unique) selected.clear();
-	  if (selected.count(v)) {
-	    selected.erase(v);
-	  } else {
-	    selected.insert(v);
-	  }
-	  
+	  if (unique) for (auto &x : options) x.second = false;
+	  options[v] = !options[v];
 	  update_selected();
 	}
 
@@ -108,8 +106,14 @@ void choice_gui::setup() {
     return b;
   };
 
+  // help text area
+  Box::Ptr help_area = Box::Create();
+  help_area -> Pack(Label::Create(help_text));
+  layout -> Pack(help_area);
+
   // sort options
-  vector<string> opt_buf(options.begin(), options.end());
+  vector<string> opt_buf;
+  for (auto x : options) opt_buf.push_back(x.first);
   sort(opt_buf.begin(), opt_buf.end(), [this] (string a, string b) -> bool {
       return f_info(a).available > f_info(b).available;
     });
@@ -121,33 +125,57 @@ void choice_gui::setup() {
   layout -> Pack(graphics::wrap_in_scroll(window_box, true, width));
 
   // info area
+  info_area = Box::Create(Box::Orientation::VERTICAL, 10);
   layout -> Pack(info_area);
 
   // buttons for ok/cancel
   Box::Ptr confirm_box = Box::Create(Box::Orientation::HORIZONTAL, 5);
   auto b_cancel = Button::Create("Cancel");
   desktop -> bind_ppc(b_cancel, [this] () {
-      callback(selected, false);
+      callback(options, false);
       desktop -> clear_qw();
     });
   confirm_box -> Pack(b_cancel);
   
   auto b_accept = Button::Create("Accept");
   desktop -> bind_ppc(b_accept, [this] () {
-      if (selected.size() || !unique) {
-	callback(selected, true);
+      int n = 0;
+      for (auto x : options) n += x.second;
+      
+      if (n == 1 || !unique) {
+	callback(options, true);
 	desktop -> clear_qw();
       }
     });
   confirm_box -> Pack(b_accept);
 
   layout -> Pack(confirm_box);
+  
+  frame -> Add(layout);
+}
+
+const string& choice_gui::GetName() const {
+  return sfg_id;
+}
+
+void choice_gui::update_selected() {
+  for (auto x : buttons) {
+    string class_string = class_normal;
+    if (options[x.first]) class_string = class_selected;
+    x.second -> SetClass(class_string);
+  }
 }
 
 // GOVERNOR
 Widget::Ptr interface::governor_gui(list<solar::ptr> solars) {
-  set<string> options;
-  for (auto v : keywords::sector) options.insert(v);
+  hm_t<string, bool> options;
+  for (auto v : keywords::sector) options[v] = false;
+
+  // test if current governor is consistent
+  string gov = solars.front() -> choice_data.governor;
+  bool test = true;
+  for (auto s : solars) test &= s -> choice_data.governor == gov;
+  if (test) options[gov] = true;
 
   choice_gui::f_info_t f_info = [] (string v) -> choice_info {
     choice_info res;
@@ -156,10 +184,11 @@ Widget::Ptr interface::governor_gui(list<solar::ptr> solars) {
     return res;
   };
 
-  choice_gui::f_result_t callback = [solars] (set<string> selected, bool accepted) {
+  choice_gui::f_result_t callback = [solars] (hm_t<string, bool> selected, bool accepted) {
     if (accepted) {
-      if (selected.size() == 1) {
-	string gov = *selected.begin();
+      string test;      
+      if (test_unique_choice(selected, test)) {
+	string gov = test;
 	for (auto s : solars) s -> choice_data.governor = gov;
       } else {
 	throw runtime_error("governor_gui: invalid selection size!");
@@ -167,16 +196,17 @@ Widget::Ptr interface::governor_gui(list<solar::ptr> solars) {
     }
   };
 
-  return choice_gui::Create("Governor", true, options, f_info, callback);
+  return choice_gui::Create("Governor", "Chose a governor for the selected solars", true, options, f_info, callback);
 }
 
 // RESEARCH
 Widget::Ptr interface::research_gui() {
   hm_t<string, research::tech> map;
-  set<string> options;
+  hm_t<string, bool> options;
+  
   for (auto &f : research::data::table()) {
     map[f.first] = f.second;
-    options.insert(f.first);
+    options[f.first] = false;
   }
   
   for (auto &t : desktop -> get_research().tech_map) map[t.first] = t.second;
@@ -201,23 +231,29 @@ Widget::Ptr interface::research_gui() {
     return res;
   };
 
-  choice_gui::f_result_t callback = [] (set<string> result, bool accepted) {
+  choice_gui::f_result_t callback = [] (hm_t<string, bool> result, bool accepted) {
     if (accepted) {
-      if (result.size() == 1) {
-	desktop -> response.research = *result.begin();
+      string test;
+      if (test_unique_choice(result, test)) {
+	desktop -> response.research = test;
       } else {
 	throw runtime_error("research_gui: callback: bad result size!");
       }
     }
   };
 
-  return choice_gui::Create("Research", true, options, f_info, callback);
+  string suggest = desktop -> response.research;
+  if (suggest.size() && f_info(suggest).available) {
+    options[suggest] = true;
+  }
+
+  return choice_gui::Create("Research", "Chose a tech to research", true, options, f_info, callback);
 }
 
 // MILITARY
 Widget::Ptr interface::military_gui() {
-  set<string> options;
-  for (auto v : ship::all_classes()) options.insert(v);
+  hm_t<string, bool> options;
+  for (auto v : ship::all_classes()) options[v] = desktop -> response.military[v] > 0;
 
   // get highest shipyard level
   int faclev = choice_gui::calc_faclev()["shipyard"];
@@ -234,13 +270,13 @@ Widget::Ptr interface::military_gui() {
     return res;
   };
 
-  choice_gui::f_result_t callback = [] (set<string> result, bool accepted) {
+  choice_gui::f_result_t callback = [] (hm_t<string, bool> result, bool accepted) {
     cost::ship_allocation res;
     if (accepted) {
-      for (auto v : result) res[v] = 1;
+      for (auto v : result) res[v.first] = v.second;
       desktop -> response.military = res;
     }
   };
 
-  return choice_gui::Create("Military", false, options, f_info, callback);
+  return choice_gui::Create("Military", "Chose which ships should be produced in your empire", false, options, f_info, callback);
 }
