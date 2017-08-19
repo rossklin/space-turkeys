@@ -410,7 +410,8 @@ choice::c_solar solar::government() {
       // score for favorite sector boost
       h += add_factor(c.governor, 2);
 
-      // score for medecine and ecology if needed
+      // score for culture, medecine and ecology if needed
+      h += add_factor(keywords::key_culture, pow(fmax(1 - happiness, 0), 0.5));
       h += add_factor(keywords::key_ecology, pow(fmax(1 - ecology, 0), 0.5));
       h += add_factor(keywords::key_medicine, crowding_rate() / population);
 

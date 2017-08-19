@@ -22,12 +22,10 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
-*** choice_gui needs a parameter "initial selection"
-*** choice_gui needs a parameter "help text"
-*** [J] governor doesn't seem to chose a development
-*** [J] solar selector hover needs to show developments
-*** [J] need to actively query user when new research can be chosen
-*** [J] test that techs show fulfilled faciltiy req 
+*** empty option added for governor gui
+*** combat log sometimes repeats entries (at start/end of turn?)
+*** ship count box has unscaled text - unscale whole box
+*** ship count box frame gets fat when many rows
 * [~] issues
 ** [~] system
 *** init_data sends all data - should limit to "player_any"
@@ -75,7 +73,8 @@
    Maybe classes containing pointers can have a serial subclass?
 * tweaks and fixes
 ** gui
-*** show selection info instead of hover info when no hover
+*** consider making battle log be one label since building it seems to lag a bit
+*** explosion animation wave should fade faster and not turn back inwards
 *** fleet selectors a bit ugly with seperate ring and flag
 *** choice_gui buttons: graphics bugs when setting border width
 *** solar radius too large
@@ -156,6 +155,13 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** play testing
+*** [J] choice_gui needs a parameter "initial selection"
+*** [J] choice_gui needs a parameter "help text"
+*** [J] governor doesn't seem to chose a development
+*** [J] solar selector hover needs to show developments
+*** [J] need to actively query user when new research can be chosen
+*** [J] test that techs show fulfilled faciltiy req 
 ** play testing
 *** choice gui
     o [J] should sort options so available ones are to the left
