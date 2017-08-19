@@ -32,6 +32,9 @@ namespace st3{
     }
 
     template<>
+    set<combid> specific_selector<solar>::get_ships(){return ships;}
+
+    template<>
     void specific_selector<solar>::draw(window_t &w){
       // compute fill color
       sf::Color cfill;
@@ -67,6 +70,25 @@ namespace st3{
 	if (selected){
 	  graphics::draw_circle(w, position, radius + 1, graphics::solar_selected, graphics::solar_selected_fill, 2);
 
+	  hm_t<string, int> ship_counts;
+	  for (auto sid : get_ships()) ship_counts[g -> get_specific<ship>(sid) -> ship_class]++;
+
+	  if (ship_counts.size()) {
+	    string res = "";
+	    int maxlen = 0;
+	    for (auto v : ship_counts) {
+	      string buf = to_string(v.second) + " " + v.first + "s";
+	      if (maxlen) buf = "\n" + buf;
+	      maxlen = max((int)buf.length(), maxlen);
+	      res += buf;
+	    }
+
+	    int fs = 12;
+	    int n = ship_counts.size();
+	    sf::FloatRect bounds(position.x + radius + 10, position.y - (1.2 * n * fs) / 2, maxlen * fs * 0.5, 1.2 * n * fs);
+	    graphics::draw_framed_text(w, res, bounds, sf::Color::White, sf::Color(20, 30, 40, 80), fs);
+	  }
+
 	  // // draw sector boost info on top of solar
 	  // point dims(30, 20);
 	  // float spacing = 5;
@@ -100,30 +122,14 @@ namespace st3{
     }
 
     template<>
-    set<combid> specific_selector<solar>::get_ships(){return ships;}
-
-    template<>
     string specific_selector<solar>::hover_info(){
-      string res = "solar at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
-
-      for (auto k : keywords::resource) {
-	res += "\nres:" + k + ": " + to_string((int)available_resource[k]);
-      }
+      string res = id + " at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
 
       if (owned) {
 	res += "\npopulation: " + to_string((int)population);
-	res += "\nfleet: " + to_string(ships.size());
 	res += "\nshield: " + to_string(compute_shield_power());
-
-	hm_t<string, int> ship_counts;
-	for (auto sid : get_ships()) ship_counts[g -> get_specific<ship>(sid) -> ship_class]++;
-
-	if (ship_counts.size()) {
-	  res += "\nShips:";
-	  for (auto v : ship_counts) {
-	    res += "\n" + to_string(v.second) + " " + v.first + "s";
-	  }
-	}
+	res += "\necology: " + to_string(ecology);
+	res += "\ncrowding: " + to_string(crowding_rate() / population);
 
 	for (auto x : facility_table()) {
 	  facility_object f = developed(x.first);
@@ -133,9 +139,15 @@ namespace st3{
 	  res += "\n" + x.first + ": " + to_string(f.level);
 	  
 	  if (is_active) {
+	    f = developed(x.first, 1);
 	    res += " (" + to_string((int)(100 * f.progress / f.cost_time)) + "%)";
 	  }
 	}
+      }
+
+      for (auto k : keywords::resource) {
+	res += "\nres:" + k + ": " + to_string((int)available_resource[k]);
+	if (owned) res += " (storage: " + to_string((int)resource_storage[k]) + ")";
       }
 
       return res;

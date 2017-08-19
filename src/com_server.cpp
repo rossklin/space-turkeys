@@ -39,11 +39,10 @@ handler_result client_t::receive_query(protocol_t p, query_handler f){
   if (receive_packet()) {
     if (data >> input) {
       if (input == protocol::leave) {
-	cout << "client " << id << " disconnected!" << endl;
+	output("client " + to_string(id) + " disconnected!");
 	set_disconnect();
       } else if (input == p || p == protocol::any) {
 	res = f(id, data);
-	cout << "received protocol " << p << " from client " << id << endl;
       } else {
 	throw network_error("client_t::receive_query: unexpected protocol: " + to_string(input));
       }
@@ -70,7 +69,7 @@ bool client_t::check_protocol(protocol_t p, query_handler f) {
   sf::Packet p_aborted;
   p_aborted << protocol::aborted;
 
-  cout << "check protocol " << p << ": client " << id << ": begin." << endl;
+  output("check protocol " + to_string(p) + ": client " + to_string(id) + ": begin.");
 
   try {
     while (running && (*thread_com == socket_t::tc_run || *thread_com == socket_t::tc_init)) {
@@ -99,7 +98,7 @@ bool client_t::check_protocol(protocol_t p, query_handler f) {
     completed = false;
   }
 
-  cout << "check protocol " << p << ": client " << id << ": " << is_connected() << endl;
+  output("check protocol " + to_string(p) + ": client " + to_string(id) + ": " + to_string(is_connected()));
 
   return completed;
 }
@@ -159,13 +158,13 @@ bool com::cleanup_clients(){
     if (!i -> second -> is_connected()) {
       delete i -> second;
       clients.erase(i -> first);
-      cout << "removed disconnected client: " << i -> first << endl;
+      output("removed disconnected client: " + to_string(i -> first));
     }
   }
 
   if (clients.size() < 2){
     sf::Packet packet;
-    cout << "Less than two clients remaining!" << endl;
+    output("Less than two clients remaining!");
     if (!clients.empty()){
       query_handler handler = [] (int cid, sf::Packet q) -> handler_result {
 	handler_result res;

@@ -74,10 +74,10 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   hover_label = Label::Create("Empty space");
   log_panel = Box::Create(Box::Orientation::VERTICAL);
   
-  right_panel -> Pack(graphics::wrap_in_scroll2(log_panel, 0.17 * desktop_dims.x, 0.3 * desktop_dims.y));
-  right_panel -> Pack(graphics::wrap_in_scroll2(hover_label, 0.17 * desktop_dims.x, 0.3 * desktop_dims.y));
+  right_panel -> Pack(graphics::wrap_in_scroll2(log_panel, 0.26 * desktop_dims.x, 0.3 * desktop_dims.y));
+  right_panel -> Pack(graphics::wrap_in_scroll2(hover_label, 0.26 * desktop_dims.x, 0.3 * desktop_dims.y));
 
-  auto info_rect = sf::FloatRect(0.79 * desktop_dims.x, 20, 0.2 * desktop_dims.x, desktop_dims.y - 25);
+  auto info_rect = sf::FloatRect(0.71 * desktop_dims.x, 20, 0.28 * desktop_dims.x, desktop_dims.y - 25);
   right_panel -> SetAllocation(info_rect);
   auto w_info = pack_in_window(right_panel, info_rect);
   Add(w_info);

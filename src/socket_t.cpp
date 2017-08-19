@@ -24,7 +24,6 @@ bool st3::socket_t::send_packet(sf::Packet packet){
     case sf::Socket::Error:
       throw network_error("socket_t::send: error sending!");
     case sf::Socket::Done:
-      cout << "socket_t::send_packet: done" << endl;
       return true;
     case sf::Socket::NotReady:
       // continue
@@ -53,7 +52,6 @@ bool st3::socket_t::receive_packet() {
     case sf::Socket::Error:
       throw network_error("socket_t::receive: error receiving!");
     case sf::Socket::Done:
-      cout << "socket_t::receive_packet: done" << endl;
       return true;
     case sf::Socket::NotReady:
       break;

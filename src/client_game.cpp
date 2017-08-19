@@ -293,6 +293,7 @@ bool game::choice_step(){
 
   research::data &r = players[self_id].research_level;
   c.research = r.researching;
+  c.military = interface::desktop -> response.military;
 
   // check if we can select a technology
   if (c.research.empty() || r.access(c.research).level > 0) {
@@ -1147,13 +1148,14 @@ void game::control_event(sf::Event e) {
     string text = "";
       
     if (keys.empty()) {
-      text = "Empty space";
-    } else {
-      if (keys.size() > 1) text = "Multiple entities\n----------\n";
-      for (auto k : keys) {
-	text += "----------\n";
-	text += get_entity(k) -> hover_info() + "\n";
-      }
+      keys = selected_entities();
+      if (keys.empty()) return;
+    }
+    
+    if (keys.size() > 1) text = "Multiple entities\n----------\n";
+    for (auto k : keys) {
+      text += "----------\n";
+      text += get_entity(k) -> hover_info() + "\n";
     }
 
     interface::desktop -> hover_label -> SetText(text);

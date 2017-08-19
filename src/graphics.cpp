@@ -87,12 +87,12 @@ sf::RectangleShape graphics::build_rect(sf::FloatRect bounds, int thickness, sf:
   return r;
 }
 
-void graphics::draw_framed_text(sf::RenderTarget &w, string v, sf::FloatRect bounds, sf::Color co, sf::Color cf) {
+void graphics::draw_framed_text(sf::RenderTarget &w, string v, sf::FloatRect bounds, sf::Color co, sf::Color cf, int fs) {
   int margin = ceil(bounds.height / 10);
   sf::RectangleShape r = graphics::build_rect(bounds, -margin, co, cf);
   w.draw(r);
 
-  int fs = bounds.height - 2 * margin;
+  if (fs == 0) fs = bounds.height - 2 * margin;
   point p(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
   draw_text(w, v, p, fs);
 }

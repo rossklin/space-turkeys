@@ -22,10 +22,12 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
-*** governor doesn't seem to chose a development
-*** [J?] solar selector hover needs to show developments
-*** need to actively query user when new research can be chosen
-*** test that techs show fulfilled faciltiy req 
+*** choice_gui needs a parameter "initial selection"
+*** choice_gui needs a parameter "help text"
+*** [J] governor doesn't seem to chose a development
+*** [J] solar selector hover needs to show developments
+*** [J] need to actively query user when new research can be chosen
+*** [J] test that techs show fulfilled faciltiy req 
 * [~] issues
 ** [~] system
 *** init_data sends all data - should limit to "player_any"

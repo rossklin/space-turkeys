@@ -2,6 +2,7 @@
 #include <iostream>
 #include <rapidjson/document.h>
 #include <mutex>
+#include <sstream>
 
 #include "research.h"
 #include "solar.h"
@@ -340,6 +341,7 @@ float solar::compute_workers(){
 
 choice::c_solar solar::government() {
   choice::c_solar c = choice_data;
+  
   if (!utility::find_in(c.governor, keywords::sector)) {
     throw runtime_error("Invalid governor: " + c.governor);
   }
@@ -399,21 +401,21 @@ choice::c_solar solar::government() {
 
       auto add_factor = [test] (string key, float w) -> float {
 	if (test.sector_boost.count(key)) {
-	  return w * test.sector_boost.at(key);
+	  return w * (test.sector_boost.at(key) - 1);
 	} else {
 	  return 0;
 	}
       };
 
       // score for favorite sector boost
-      h += add_factor(c.governor, 1);
+      h += add_factor(c.governor, 2);
 
       // score for medecine and ecology if needed
-      h += add_factor(keywords::key_ecology, 1 / fmax(ecology, 0.2));
-      h += add_factor(keywords::key_medicine, crowding_rate());
+      h += add_factor(keywords::key_ecology, pow(fmax(1 - ecology, 0), 0.5));
+      h += add_factor(keywords::key_medicine, crowding_rate() / population);
 
       // reduce score for build time
-      h /= test.cost_time + 1;
+      h *= 4 / log(test.cost_time + 1);
 
       // significantly reduce score if there are not sufficient resources
       for (auto u : keywords::resource) {
@@ -431,16 +433,28 @@ choice::c_solar solar::government() {
     };
 
     // militarist governor likes shipyard
-    if (c.governor == keywords::key_military) add_score("shipyard", 0.5);
+    if (c.governor == keywords::key_military) add_score("shipyard", 0.4);
 
     // add score for doing nothing
-    score[""] = 0.3;
+    score[""] = 0.05;
 
     // weighted probability select
     c.development = utility::weighted_sample(score);
 
     // prioritize development if score is good
-    c.allocation[keywords::key_development] = score[c.development];
+    if (c.development.size()) {
+      c.allocation[keywords::key_development] = score[c.development];
+    } else {
+      c.allocation[keywords::key_development] = 0;
+    }
+
+    stringstream print;
+    print << "Development choice for " << id << " with " << c.governor << " governor:" << endl;
+    print << "Scores: " << endl;
+    for (auto x : score) print << " - " << x.first << ": " << x.second << endl;
+    print << "Choice: " << c.development << " (allocation = " << c.allocation[keywords::key_development] << ")" << endl;
+
+    server::output(print.str(), true);
     
     return c;
   };
@@ -448,17 +462,15 @@ choice::c_solar solar::government() {
   c = select_development(c);
 
   // MILITARY
-  if (c.governor == keywords::key_military) {
-    c.allocation[keywords::key_military] = 1;
-  } else {
-    c.allocation[keywords::key_military] = 0;
-  }
+  float militarist_factor = c.governor == keywords::key_military;
+  c.allocation[keywords::key_military] = (!next_ship.empty()) * (0.5 + militarist_factor);
 
   return c;
 }
 
 void solar::dynamics(){
-  choice::c_solar c = government();
+  choice_data = government();
+  choice::c_solar c = choice_data;
   
   solar buf = *this;
   float dw = sqrt(dt);
