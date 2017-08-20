@@ -51,8 +51,8 @@
 	    "depends facility level" : 1,
 	    "depends tech" : "plasma technology",
 	    "cost" : {
-		"metals" : 8,
-		"gases" : 5,
+		"metals" : 10,
+		"gases" : 3,
 		"time" : 120
 	    },
 	    "shape" : [
@@ -75,8 +75,8 @@
 	    "depends facility level" : 2,
 	    "depends tech" : "plasma technology",
 	    "cost" : {
-		"metals" : 16,
-		"gases" : 10,
+		"metals" : 20,
+		"gases" : 6,
 		"time" : 180
 	    },
 	    "shape" : [
@@ -107,8 +107,8 @@
 	    "depends facility level" : 3,
 	    "depends tech" : "nano weapons",
 	    "cost" : {
-		"metals" : 10,
-		"gases" : 20,
+		"metals" : 20,
+		"gases" : 10,
 		"time" : 200
 	    },
 	    "shape" : [
@@ -139,8 +139,8 @@
 	    "depends facility level" : 5,
 	    "depends tech" : "subspace projectiles",
 	    "cost" : {
-		"metals" : 30,
-		"gases" : 20,
+		"metals" : 40,
+		"gases" : 10,
 		"time" : 300
 	    },
 	    "shape" : [
@@ -170,9 +170,9 @@
 	    "depends facility level" : 3,
 	    "depends tech" : "shields",
 	    "cost" : {
-		"metals" : 120,
-		"gases" : 70,
-		"organics" : 20,
+		"metals" : 180,
+		"gases" : 20,
+		"organics" : 10,
 		"time" : 1000
 	    },
 	    "shape" : [
@@ -201,9 +201,9 @@
 	    "depends facility level" : 5,
 	    "depends tech" : "subspace technology",
 	    "cost" : {
-		"metals" : 50,
-		"gases" : 70,
-		"organics" : 50,
+		"metals" : 120,
+		"gases" : 30,
+		"organics" : 20,
 		"time" : 700
 	    },
 	    "shape" : [
@@ -226,9 +226,9 @@
 	    "upgrades" : ["colonize"],
 	    "depends facility level" : 1,
 	    "cost" : {
-		"metals" : 15,
-		"gases" : 10,
-		"organics" : 20,
+		"metals" : 30,
+		"gases" : 5,
+		"organics" : 10,
 		"time" : 240
 	    },
 	    "shape" : [
@@ -248,9 +248,9 @@
 	    "depends facility level" : 1,
 	    "cargo capacity" : 10,
 	    "cost" : {
-		"metals" : 20,
-		"gases" : 10,
-		"organics" : 10,
+		"metals" : 30,
+		"gases" : 5,
+		"organics" : 5,
 		"time" : 240
 	    },
 	    "shape" : [

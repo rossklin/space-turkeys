@@ -77,7 +77,7 @@
 	    },
 	    "cost" : {
 		"metals" : 10,
-		"gases" : 20,
+		"gases" : 30,
 		"organics" : 15
 	    },
 	    "build time" : 100,
@@ -107,7 +107,7 @@
 	    "cost" : {
 		"metals" : 3,
 		"gases" : 4,
-		"organics" : 3
+		"organics" : 20
 	    },
 	    "build time" : 400,
 	    "space provided" : 100,
@@ -126,7 +126,7 @@
 	    },
 	    "cost" : {
 		"metals" : 5,
-		"gases" : 5
+		"gases" : 2
 	    },
 	    "build time" : 70,
 	    "space usage" : 2,
@@ -141,7 +141,7 @@
 	    "shield" : 2,
 	    "cost" : {
 		"metals" : 15,
-		"gases" : 15
+		"gases" : 5
 	    },
 	    "build time" : 70,
 	    "space usage" : 2,
@@ -168,7 +168,7 @@
 	    },
 	    "cost" : {
 		"metals" : 10,
-		"gases" : 10,
+		"gases" : 30,
 		"organics" : 25
 	    },
 	    "depends technologies" : ["biomechanics"],
