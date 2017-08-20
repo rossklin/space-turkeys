@@ -363,7 +363,7 @@ choice::c_solar solar::government() {
 	c.mining[v] = available_resource[v];
       } else {
 	// mine what is needed
-	c.mining[v] = 1 / (resource_storage[v] + 1);
+	c.mining[v] = 1 / (resource_storage[v] + 0.1);
       }
     }
 
@@ -372,7 +372,7 @@ choice::c_solar solar::government() {
       c.allocation[keywords::key_mining] = 1;
     } else {
       // mine if storage is running low
-      c.allocation[keywords::key_mining] = 1 / (smin + 1);
+      c.allocation[keywords::key_mining] = 4 / (smin + 0.1);
     }
   
     if (!rsum) c.allocation[keywords::key_mining] = 0;

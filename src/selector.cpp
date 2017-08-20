@@ -50,7 +50,8 @@ namespace st3{
 	graphics::draw_circle(w, position, vision(), sf::Color(40, 200, 60, 100));
 	graphics::draw_text(w, to_string((int)(population / 1000)), position, 16);
 
-	indicator_text = string(1, choice_data.governor[0]);
+	indicator_text = choice_data.governor.substr(0, 2);
+	if (get_ships().size()) indicator_text += " <>";
   
 	if (selected){
 	  graphics::draw_circle(w, position, radius + 1, graphics::solar_selected, graphics::solar_selected_fill, 2);
