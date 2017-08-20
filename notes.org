@@ -22,10 +22,10 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
-*** empty option added for governor gui
-*** combat log sometimes repeats entries (at start/end of turn?)
-*** ship count box has unscaled text - unscale whole box
-*** ship count box frame gets fat when many rows
+*** [J] empty option added for governor gui
+*** [J?] combat log sometimes repeats entries (at start/end of turn?)
+*** [J] ship count box has unscaled text - unscale whole box
+*** [J] ship count box frame gets fat when many rows
 * [~] issues
 ** [~] system
 *** init_data sends all data - should limit to "player_any"
@@ -73,12 +73,12 @@
    Maybe classes containing pointers can have a serial subclass?
 * tweaks and fixes
 ** gui
-*** consider making battle log be one label since building it seems to lag a bit
-*** explosion animation wave should fade faster and not turn back inwards
-*** fleet selectors a bit ugly with seperate ring and flag
-*** choice_gui buttons: graphics bugs when setting border width
-*** solar radius too large
-*** client::game::entity_at should respect zoom level
+*** [J?] consider making battle log be one label since building it seems to lag a bit
+*** [J?] explosion animation wave should fade faster and not turn back inwards
+*** [J?] fleet selectors a bit ugly with seperate ring and flag
+*** [J?] choice_gui buttons: graphics bugs when setting border width
+*** [J?] solar radius too large
+*** [J?] client::game::entity_at should respect zoom level
 *** protect from spacebar immediately after simulation is finished
 *** clicking ship label in target_gui should select/deselect all 
 *** show ship health by marking ship vertices red

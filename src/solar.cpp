@@ -221,7 +221,7 @@ solar::ptr solar::create(point p, float bounty) {
 
   for (auto v : keywords::resource) s -> available_resource[v] = fres();
 
-  s -> radius = 10 + 10 * s -> available_resource.count() / 3000;
+  s -> radius = 10 + 7 * sqrt(s -> available_resource.count() / 3000);
   s -> position = p;
   s -> owner = game_object::neutral_owner;
   s -> was_discovered = false;
@@ -342,12 +342,12 @@ float solar::compute_workers(){
 choice::c_solar solar::government() {
   choice::c_solar c = choice_data;
   
-  if (!utility::find_in(c.governor, keywords::sector)) {
+  if (!utility::find_in(c.governor, keywords::governor)) {
     throw runtime_error("Invalid governor: " + c.governor);
   }
   
   // general stuff for all governors, even manual
-  for (auto v : keywords::sector) c.allocation[v] = 1;
+  for (auto v : keywords::governor) c.allocation[v] = 1;
 
   // MINING
   auto compute_mining = [this] (choice::c_solar c) -> choice::c_solar {
@@ -465,6 +465,9 @@ choice::c_solar solar::government() {
   // MILITARY
   float militarist_factor = c.governor == keywords::key_military;
   c.allocation[keywords::key_military] = (!next_ship.empty()) * (0.5 + militarist_factor);
+
+  // normalize
+  c = c.normalize();
 
   return c;
 }

@@ -10,10 +10,9 @@
 
 using namespace std;
 
-st3::client::game *st3::client::entity_selector::g = 0;
-
 namespace st3{    
   namespace client{
+
     template class specific_selector<ship>;
     template class specific_selector<fleet>;
     template class specific_selector<solar>;
@@ -52,20 +51,6 @@ namespace st3{
 	graphics::draw_text(w, to_string((int)(population / 1000)), position, 16);
 
 	indicator_text = string(1, choice_data.governor[0]);
-	
-	int nships = ships.size();
-	if (nships > 0) {
-	  point p = position + point(0, -(radius + 20));
-	  float s = 7;
-	  int ndig = log10(nships) + 1;
-	  sf::RectangleShape bkg = graphics::build_rect(sf::FloatRect(p.x, p.y, (3 + ndig) * s, 3 * s), 0, sf::Color::Transparent, sf::Color(200,200,200,50));
-	  w.draw(bkg);
-	  ship sbuf = ship::table().at(ship::starting_ship);
-	  sbuf.position = p + point(s, s);
-	  sbuf.angle = M_PI;
-	  graphics::draw_ship(w, sbuf, get_color(), s);
-	  graphics::draw_text(w, to_string(nships), p + point(3 * s, 0), 14, true);
-	}
   
 	if (selected){
 	  graphics::draw_circle(w, position, radius + 1, graphics::solar_selected, graphics::solar_selected_fill, 2);
@@ -74,6 +59,7 @@ namespace st3{
 	  for (auto sid : get_ships()) ship_counts[g -> get_specific<ship>(sid) -> ship_class]++;
 
 	  if (ship_counts.size()) {
+	    
 	    string res = "";
 	    int maxlen = 0;
 	    for (auto v : ship_counts) {
@@ -85,27 +71,11 @@ namespace st3{
 
 	    int fs = 12;
 	    int n = ship_counts.size();
-	    sf::FloatRect bounds(position.x + radius + 10, position.y - (1.2 * n * fs) / 2, maxlen * fs * 0.5, 1.2 * n * fs);
+	    float width = graphics::unscale() * maxlen * fs * 0.5;
+	    float height = graphics::unscale() * 1.2 * n * fs;
+	    sf::FloatRect bounds(position.x + radius + 10, position.y - height / 2, width, height);
 	    graphics::draw_framed_text(w, res, bounds, sf::Color::White, sf::Color(20, 30, 40, 80), fs);
 	  }
-
-	  // // draw sector boost info on top of solar
-	  // point dims(30, 20);
-	  // float spacing = 5;
-	  // point ul(position.x - (2.5 * dims.x + 2 * spacing), position.y - radius - spacing - dims.y);
-	  // sf::FloatRect bounds(ul, dims);
-	  // hm_t<string, sf::Color> cols;
-	  // cols[keywords::key_research] = sf::Color::Blue;
-	  // cols[keywords::key_development] = sf::Color::Green;
-	  // cols[keywords::key_culture] = sf::Color::Yellow;
-	  // cols[keywords::key_mining] = sf::Color::Magenta;
-	  // cols[keywords::key_military] = sf::Color::Red;
-
-	  // for (auto k : keywords::sector) {
-	  //   string v = to_string(int(100 * (compute_boost(k) - 1)));
-	  //   graphics::draw_framed_text(w, v, bounds, sf::Color::White, cols[k]);
-	  //   bounds.left += dims.x + spacing;
-	  // }
 	}
       }
 
@@ -126,11 +96,14 @@ namespace st3{
       string res = id + " at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
 
       if (owned) {
+	res += "\n<<Status>>";
 	res += "\npopulation: " + to_string((int)population);
+	res += "\nhappiness: " + to_string((int)(100 * happiness)) + "%";
+	res += "\necology: " + to_string((int)(100 * ecology)) + "%";
+	res += "\ncrowding: " + to_string((int)(100 * crowding_rate() / population)) + "%";
 	res += "\nshield: " + to_string(compute_shield_power());
-	res += "\necology: " + to_string(ecology);
-	res += "\ncrowding: " + to_string(crowding_rate() / population);
 
+	res += "\n<<Facilities>>: ";
 	for (auto x : facility_table()) {
 	  facility_object f = developed(x.first);
 	  bool is_active = x.first == choice_data.development;
@@ -143,10 +116,21 @@ namespace st3{
 	    res += " (" + to_string((int)(100 * f.progress / f.cost_time)) + "%)";
 	  }
 	}
+
+	if (fleet_growth.count()) {
+	  res += "\n<<Shipyard>>";
+	  for (auto x : fleet_growth.data) {
+	    if (x.second > 0) {
+	      ship_stats s = ship::table().at(x.first);
+	      res += "\n" + x.first + ": " + to_string((int)(100 * x.second / s.build_time)) + "%";
+	    }
+	  }
+	}
       }
 
+      res += "\n<<Resources>>:";
       for (auto k : keywords::resource) {
-	res += "\nres:" + k + ": " + to_string((int)available_resource[k]);
+	res += "\n" + k + ": " + to_string((int)available_resource[k]);
 	if (owned) res += " (storage: " + to_string((int)resource_storage[k]) + ")";
       }
 
@@ -159,7 +143,7 @@ namespace st3{
 
     template<>
     bool specific_selector<fleet>::contains_point(point p, float &d){
-      d = utility::l2norm(p - position);
+      d = utility::l2norm(p - position) / graphics::unscale();
       return d < radius;
     }
 
@@ -170,25 +154,23 @@ namespace st3{
 
     template<>
     void specific_selector<fleet>::draw(window_t &w){
-      float unscale = graphics::inverse_scale(w).x;
-      
-      auto f = [this, &w, unscale] (float r, sf::Color cf, sf::Color co) {
+      auto f = [this, &w] (float r, sf::Color cf, sf::Color co) {
 	sf::CircleShape s(r);
-	s.setPointCount(r / unscale);
+	s.setPointCount(r / graphics::unscale());
 	s.setFillColor(cf);
 	s.setOutlineColor(co);
-	s.setOutlineThickness(unscale);
+	s.setOutlineThickness(graphics::unscale());
 	s.setPosition(position - point(r, r));
 	w.draw(s);
       };
 
       sf::Color outline = graphics::fleet_outline;
       if (selected) outline = graphics::fade_color(outline, sf::Color::White, 0.4);
-      f(radius * unscale, graphics::fleet_fill, outline);
+      f(radius * graphics::unscale(), graphics::fleet_fill, outline);
       f(vision(), sf::Color::Transparent, sf::Color(40, 200, 60, 50));
 
       // add a flag
-      graphics::draw_flag(w, position + point(radius * unscale, -radius * unscale), unscale, get_color());
+      graphics::draw_flag(w, position, graphics::unscale(), get_color());
     }
 
     template<>
@@ -214,7 +196,7 @@ namespace st3{
 
     template<>
     bool specific_selector<waypoint>::contains_point(point p, float &d){
-      d = utility::l2norm(p - position);
+      d = utility::l2norm(p - position) / graphics::unscale();
       return d < radius;
     }
 
@@ -225,12 +207,11 @@ namespace st3{
 
     template<>
     void specific_selector<waypoint>::draw(window_t &w){
-      float unscale = graphics::inverse_scale(w).x;
-      float r = radius * unscale;
+      float r = radius * graphics::unscale();
       sf::CircleShape s(r);
       s.setFillColor(selected ? sf::Color(255,255,255,100) : sf::Color(0,0,0,0));
       s.setOutlineColor(get_color());
-      s.setOutlineThickness(unscale);
+      s.setOutlineThickness(graphics::unscale());
       s.setPosition(position - point(r,r));
       w.draw(s);
     }
@@ -256,7 +237,7 @@ namespace st3{
     template<>
     bool specific_selector<ship>::contains_point(point p, float &d){
       static float rad = 10;
-      d = utility::l2norm(p - position);
+      d = utility::l2norm(p - position) / graphics::unscale();
       return d < rad;
     }
 
@@ -387,7 +368,6 @@ typename specific_selector<T>::ptr specific_selector<T>::create(T &s, sf::Color 
   return typename specific_selector<T>::ptr(new specific_selector<T>(s, c, o));
 }
 
-
 // ****************************************
 // COMMAND SELECTOR
 // ****************************************
@@ -408,16 +388,14 @@ command_selector::command_selector(command &c, point s, point d) : command(c){
 command_selector::~command_selector(){}
 
 bool command_selector::contains_point(point p, float &d){
-  d = utility::dpoint2line(p, from, to);
+  d = utility::dpoint2line(p, from, to) / graphics::unscale();
 
   // todo: command size?
   return d < 5;
 }
 
 void command_selector::draw(window_t &w){
-
-  float unscale = graphics::inverse_scale(w).x;
-  float body_length = 1 - 0.1 * unscale;
+  float body_length = 1 - 0.1 * graphics::unscale();
 
   sf::Vertex c_head[3] = {
     sf::Vertex(sf::Vector2f(1, 0)),
@@ -438,7 +416,7 @@ void command_selector::draw(window_t &w){
   text.setCharacterSize(14);
   // text.setStyle(sf::Text::Underlined);
   sf::FloatRect text_dims = text.getLocalBounds();
-  text.setPosition(utility::scale_point(to + from, 0.5) - utility::scale_point(point(text_dims.width/2, text_dims.height + 10), unscale));
+  text.setPosition(utility::scale_point(to + from, 0.5) - utility::scale_point(point(text_dims.width/2, text_dims.height + 10), graphics::unscale()));
   text.setScale(graphics::inverse_scale(w));
 
   // setup arrow colors
@@ -466,7 +444,7 @@ void command_selector::draw(window_t &w){
   float scale = utility::l2norm(delta);
   t.translate(from);
   t.rotate(utility::point_angle(delta) / (2 * M_PI) * 360);
-  t.scale(scale, unscale);
+  t.scale(scale, graphics::unscale());
 
   w.draw(c_head, 3, sf::Triangles, t);
   w.draw(c_body, 3, sf::Triangles, t);

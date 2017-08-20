@@ -28,6 +28,11 @@ bool test_unique_choice(hm_t<string, bool> options, string &res) {
   return n == 1;
 }
 
+choice_info::choice_info() {
+  available = false;
+  progress = 0;
+}
+
 choice_gui::Ptr choice_gui::Create(std::string title,
 				   std::string help_text,
 				   bool unique,
@@ -77,6 +82,8 @@ choice_gui::choice_gui(std::string title,
     buttons[v] = b;
     choice_info info = f_info(v);
     b -> SetImage(Image::Create(graphics::selector_card(v, info.available, info.progress)));
+    string class_string = options[v] ? class_selected : class_normal;
+    b -> SetClass(class_string);
 
     // set on_select callback
     desktop -> bind_ppc(b, [this, v, info] () {
@@ -169,13 +176,15 @@ void choice_gui::update_selected() {
 // GOVERNOR
 Widget::Ptr interface::governor_gui(list<solar::ptr> solars) {
   hm_t<string, bool> options;
-  for (auto v : keywords::sector) options[v] = false;
+  for (auto v : keywords::governor) options[v] = false;
 
   // test if current governor is consistent
   string gov = solars.front() -> choice_data.governor;
-  bool test = true;
-  for (auto s : solars) test &= s -> choice_data.governor == gov;
-  if (test) options[gov] = true;
+  if (gov.size()) {
+    bool test = true;
+    for (auto s : solars) test &= s -> choice_data.governor == gov;
+    if (test) options[gov] = true;
+  }
 
   choice_gui::f_info_t f_info = [] (string v) -> choice_info {
     choice_info res;

@@ -26,7 +26,7 @@ using namespace std;
 using namespace st3;
 using namespace st3::client;
 
-void run(string game_id, string name, game &g, client_game_settings settings, bool fullscreen = false) {  
+void run(string game_id, string name, client_game_settings settings, bool fullscreen = false) {  
   int width = 800;
   int height = 600;
   sf::VideoMode vmode(width, height);
@@ -46,31 +46,30 @@ void run(string game_id, string name, game &g, client_game_settings settings, bo
 
   cout << "sending game id..." << endl;
   pq << protocol::connect << game_id << name << settings;
-  query(g.socket, pq, tc_in, tc_out);
+  query(g -> socket, pq, tc_in, tc_out);
 
   if (tc_out & socket_t::tc_bad_result) {
     throw runtime_error("Failed to send game id to server.");
   }
 
-  if (!(g.socket -> data >> g.socket -> id)){
+  if (!(g -> socket -> data >> g -> socket -> id)){
     throw runtime_error("server failed to provide id");
   }
 
-  cout << "received player id: " << g.socket -> id << endl;
+  cout << "received player id: " << g -> socket -> id << endl;
 
   sf::ContextSettings sf_settings;
   sf_settings.antialiasingLevel = 8;
-  g.window.create(vmode, "SPACE TURKEYS III ALPHA", vstyle, sf_settings);
+  g -> window.create(vmode, "SPACE TURKEYS III ALPHA", vstyle, sf_settings);
 
   sfg::SFGUI sfgui;
 
-  g.sfgui = &sfgui;
-  g.window.setActive();
+  g -> sfgui = &sfgui;
+  g -> window.setActive();  
   
   graphics::initialize();
 
-  entity_selector::g = &g;
-  g.run();
+  g -> run();
 
 }
 
@@ -129,27 +128,28 @@ int main(int argc, char **argv){
     exit(0);
   }
 
-  game g;
+  game g_obj;
+  g = &g_obj;
 
   // connect
   cout << "connecting...";
-  g.socket = new socket_t();
-  if (g.socket -> connect(ip, 53000) != sf::Socket::Done){
+  g -> socket = new socket_t();
+  if (g -> socket -> connect(ip, 53000) != sf::Socket::Done){
     cout << "client: connection failed." << endl;
     return -1;
   }
-  g.socket -> setBlocking(false);
+  g -> socket -> setBlocking(false);
   cout << "done." << endl;
 
   try {
-    run(game_id, name, g, settings, fullscreen);
+    run(game_id, name, settings, fullscreen);
   } catch (exception e) {
     cout << "Exception in client::run: " << e.what() << endl;
     cout << "Exiting..." << endl;
   }
 
-  g.socket -> disconnect();
-  delete g.socket;
+  g -> socket -> disconnect();
+  delete g -> socket;
 
   return 0;
 }

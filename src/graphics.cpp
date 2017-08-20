@@ -13,8 +13,13 @@
 using namespace std;
 using namespace st3;
 using namespace graphics;
+using namespace client;
 
 sf::Font graphics::default_font;
+
+float graphics::unscale() {
+  return inverse_scale(g -> window).x;
+}
 
 sf::Color graphics::fade_color(sf::Color from, sf::Color to, float r){
   return sf::Color(from.r + r * (to.r - from.r), 
@@ -88,8 +93,8 @@ sf::RectangleShape graphics::build_rect(sf::FloatRect bounds, int thickness, sf:
 }
 
 void graphics::draw_framed_text(sf::RenderTarget &w, string v, sf::FloatRect bounds, sf::Color co, sf::Color cf, int fs) {
-  int margin = ceil(bounds.height / 10);
-  sf::RectangleShape r = graphics::build_rect(bounds, -margin, co, cf);
+  float margin = ceil(unscale() * 2);
+  sf::RectangleShape r = graphics::build_rect(bounds, margin, co, cf);
   w.draw(r);
 
   if (fs == 0) fs = bounds.height - 2 * margin;
@@ -186,8 +191,8 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
   int alpha_wave = 1000 * t * exp(-pow(3 * t,2));
 
   auto fexpl = [&w, e, t, c, alpha_wave] (sf::Color ct) {
-    float rad = e.magnitude * t * exp(-pow(4 * t,2));
-    sf::Color col = fade_color(c, ct, 0.5);
+    float rad = e.magnitude * t;
+    sf::Color col = fade_color(c, ct, t / animation::tmax);
     col.a = alpha_wave;
   
     sf::CircleShape s(rad);

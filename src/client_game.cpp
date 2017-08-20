@@ -24,6 +24,8 @@ using namespace std;
 using namespace st3;
 using namespace client;
 
+game *client::g = 0;
+
 // local utility functions
 sf::FloatRect fixrect(sf::FloatRect r);
 bool add2selection();
@@ -969,7 +971,7 @@ combid game::entity_at(point p, int &q){
   // limit to owned selectable entities
   for (auto id : buf) {
     auto e = get_entity(id);
-    if (e -> owner == self_id && e -> is_selectable()) keys.push_back(id);
+    if (e -> owned && e -> is_selectable()) keys.push_back(id);
   }
 
   if (keys.empty()) return identifier::source_none;
@@ -1582,7 +1584,7 @@ void game::draw_universe(){
   list<animation> buf;
   for (auto e : animations) {
     graphics::draw_animation(window, e);
-    if (e.time_passed() < 4) buf.push_back(e);
+    if (e.time_passed() < animation::tmax) buf.push_back(e);
   }
   animations = buf;
 

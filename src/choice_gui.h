@@ -16,6 +16,8 @@ namespace st3 {
       float progress;
       std::list<std::string> info;
       std::list<std::string> requirements;
+
+      choice_info();
     };
     
     class choice_gui : public sfg::Window {

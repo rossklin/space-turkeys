@@ -51,6 +51,7 @@ namespace st3{
   namespace keywords{
     extern const std::vector<std::string> resource;
     extern const std::vector<std::string> sector;
+    extern const std::vector<std::string> governor;
 
     const std::string key_metals = "metals";
     const std::string key_organics = "organics";

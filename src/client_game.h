@@ -321,6 +321,8 @@ namespace st3{
       };
 
     };
+
+    extern game *g;
   };
 };
 #endif

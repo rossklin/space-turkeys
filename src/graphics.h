@@ -38,6 +38,8 @@ namespace st3{
     const sf::Color fleet_outline(40,60,180,200); /*!< color for fleet border */
     const float ship_scale_factor = 0.1;
 
+    float unscale();
+
     /*! compute a linear interpolation between two colors
       @param from first color
       @param to second color

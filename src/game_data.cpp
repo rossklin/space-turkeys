@@ -247,7 +247,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
       }
     }
 
-    if (!utility::find_in(x.second.governor, keywords::sector)) {
+    if (!utility::find_in(x.second.governor, keywords::governor)) {
       throw runtime_error("validate_choice: invalid governor: " + x.second.governor);
     }
 
@@ -588,6 +588,9 @@ void game_data::end_step(){
     remove_entity(i);
     cout << "end_step: removed " << i << endl;
   }
+
+  // clear log
+  for (auto &x : players) x.second.log.clear();
 
   // pool research
   hm_t<idtype, float> pool;
