@@ -17,7 +17,6 @@ namespace st3{
     /*! choice of priorities for solar system */
     struct c_solar{
       std::string governor;
-      cost::ship_allocation military;
       cost::sector_allocation allocation;
       cost::resource_allocation mining;
       std::string development;

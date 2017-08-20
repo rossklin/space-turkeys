@@ -41,14 +41,21 @@ void solar::move(game_data *g){
 
   // select ship class for production
   if (next_ship.empty()) {
-    cost::ship_allocation test = choice_data.military;
+    stringstream ss;
+    ss << id << ": selecting next_ship: " << endl;
+    cost::ship_allocation test = g -> players[owner].military;
     for (auto &x : test.data) {
+      ss << x.first << ": " << x.second;
       if (!research_level -> can_build_ship(x.first, ptr(this))) {
 	x.second = 0;
+	ss << " (unset)";
       }
+      ss << endl;
     }
     
     next_ship = utility::weighted_sample(test.data);
+    ss << "chose: " << next_ship << endl;
+    if (next_ship.size()) server::output(ss.str(), true);
   }
   
   dynamics();
@@ -408,7 +415,7 @@ choice::c_solar solar::government() {
       };
 
       // score for favorite sector boost
-      h += add_factor(c.governor, 2);
+      h += add_factor(c.governor, 3);
 
       // score for culture, medecine and ecology if needed
       h += add_factor(keywords::key_culture, pow(fmax(1 - happiness, 0), 0.5));

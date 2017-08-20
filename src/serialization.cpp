@@ -381,7 +381,6 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const choice::c_solar &g){
   return packet
     << g.governor
     << g.allocation
-    << g.military
     << g.mining
     << g.development;
 }
@@ -390,7 +389,6 @@ sf::Packet& st3::operator >>(sf::Packet& packet, choice::c_solar &g){
   return packet
     >> g.governor
     >> g.allocation
-    >> g.military
     >> g.mining
     >> g.development;
 }

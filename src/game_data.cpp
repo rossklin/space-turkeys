@@ -256,8 +256,8 @@ void game_data::apply_choice(choice::choice c, idtype id){
     s -> choice_data = x.second;
   }
 
-  // pass military choice to solars
-  for (auto s : all<solar>()) if (s -> owner == id) s -> choice_data.military = c.military;
+  // pass military choice to player object
+  players[id].military = c.military;
 
   // commands: validate
   for (auto x : c.commands) {

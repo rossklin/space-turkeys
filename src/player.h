@@ -5,6 +5,7 @@
 #include "types.h"
 #include "research.h"
 #include "animation_data.h"
+#include "cost.h"
 
 namespace st3{
   /*! player data */
@@ -14,6 +15,7 @@ namespace st3{
     research::data research_level; /*!< the player's research level */
     std::list<animation_data> animations;
     std::list<std::string> log;
+    cost::ship_allocation military;
   };
 };
 #endif
