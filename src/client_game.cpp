@@ -1139,6 +1139,10 @@ void game::setup_targui(point p){
 }
 
 void game::control_event(sf::Event e) {
+  static bool drag_waypoint_active = false;
+  static bool did_drag = false;
+  static combid drag_id;
+  
   point p;
   sf::Vector2i mpos;
   sf::FloatRect minirect;
@@ -1166,8 +1170,16 @@ void game::control_event(sf::Event e) {
   // event reaction functions
   auto init_area_select = [this] (sf::Event e) {
     point p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
-    area_select_active = true;
-    srect = sf::FloatRect(p.x, p.y, 0, 0);
+    int qent;
+    combid key = entity_at(p, qent);
+
+    if (phase == "choice" && identifier::get_type(key) == waypoint::class_id) {
+      drag_waypoint_active = true;
+      drag_id = key;
+    } else {
+      area_select_active = true;
+      srect = sf::FloatRect(p.x, p.y, 0, 0);
+    }
   };
   
   window.setView(view_game);
@@ -1175,11 +1187,24 @@ void game::control_event(sf::Event e) {
   case sf::Event::MouseMoved:
     p = window.mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
     
-    if (area_select_active){
+    if (area_select_active) {
       // update area selection
       srect.width = p.x - srect.left;
       srect.height = p.y - srect.top;
-    }else{
+    } else if (phase == "choice" && drag_waypoint_active) {
+      // update position
+      auto wp = get_specific<waypoint>(drag_id);
+      wp -> position = p;
+
+      // update target for incident commands
+      list<idtype> inc = incident_commands(drag_id);
+      for (auto cid : inc) get_command_selector(cid) -> to = p;
+
+      // update source for owned commands
+      for (auto cid : wp -> commands) get_command_selector(cid) -> from = p;
+      
+      did_drag = true;
+    } else {
       update_hover_info(p);
     }
     break;
@@ -1191,7 +1216,9 @@ void game::control_event(sf::Event e) {
     p = window.mapPixelToCoords(mpos);
     
     if (e.mouseButton.button == sf::Mouse::Left){
-      if (abs(srect.width) > 5 || abs(srect.height) > 5){
+      if (drag_waypoint_active && did_drag) {
+	// do nothing
+      } else if (abs(srect.width) > 5 || abs(srect.height) > 5){
 	area_select();
       }else{
 	// check if on minimap
@@ -1207,6 +1234,8 @@ void game::control_event(sf::Event e) {
     }
 
     // clear selection rect
+    drag_waypoint_active = false;
+    did_drag = false;
     area_select_active = false;
     srect = sf::FloatRect(0, 0, 0, 0);
     break;

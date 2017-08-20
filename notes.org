@@ -86,9 +86,9 @@
 *** allow dragging waypoints
 *** name and indicators for solars so you can tell them apart
 ** system
-*** make fleet move at below speed limit so ships can catch up
-*** decrease likelihood of finding treasure
-*** ships should stop when they hit converge on a waypoint
+*** [J?] make fleet move at below speed limit so ships can catch up
+*** ?decrease likelihood of finding treasure
+*** ?ships should stop when they hit converge on a waypoint
 * optimization
 ** drawing client side stuff starts taking time
    Consider not drawing complete universe on minimap
