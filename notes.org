@@ -22,12 +22,12 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
-*** show "leads to" in tech choice info
-*** update hover info panel on reload_data
-    Need to track if this should load selected or hovered entities,
-    i.e. track current "info" entities.
-*** solar keeps building new ships even though military choice is "none"
-    Also builds freighter when told to build colonizer..?
+*** some network error after ~20 turns
+*** option to override solar's development? Annoying when e.g. first shipyard doesn't get built
+*** mining too nerfed? Considering how mining weighting works, shouldn't get empty storage
+*** fleet flags should be filled (and outlined?) so you can always see them
+*** Can't scroll sideways in log when drawn with single label.
+*** [J] show "leads to" in tech choice info
 * [~] issues
 ** [~] system
 *** init_data sends all data - should limit to "player_any"
@@ -75,6 +75,9 @@
    Maybe classes containing pointers can have a serial subclass?
 * tweaks and fixes
 ** gui
+*** update hover info panel on reload_data
+    Need to track if this should load selected or hovered entities,
+    i.e. track current "info" entities.
 *** protect from spacebar immediately after simulation is finished
 *** clicking ship label in target_gui should select/deselect all 
 *** show ship health by marking ship vertices red
@@ -149,6 +152,9 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] solar keeps building new ships even though military choice is "none"
+    Also builds freighter when told to build colonizer..? Empty choice
+    was being reinitialized when normalized.
 ** play testing
 *** [J] empty option added for governor gui
 *** [J?] combat log sometimes repeats entries (at start/end of turn?)

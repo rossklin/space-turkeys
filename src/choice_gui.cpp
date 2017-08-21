@@ -212,17 +212,19 @@ Widget::Ptr interface::governor_gui(list<solar::ptr> solars) {
 Widget::Ptr interface::research_gui() {
   hm_t<string, research::tech> map;
   hm_t<string, bool> options;
+  hm_t<string, set<string> > leads_to;
   
   for (auto &f : research::data::table()) {
     map[f.first] = f.second;
     options[f.first] = false;
+    for (auto v : f.second.depends_techs) leads_to[v].insert(f.first);
   }
   
   for (auto &t : desktop -> get_research().tech_map) map[t.first] = t.second;
   desktop -> access_research() -> facility_level = choice_gui::calc_faclev();
   
   // development gui
-  choice_gui::f_info_t f_info = [map] (string v) -> choice_info {
+  choice_gui::f_info_t f_info = [map, leads_to] (string v) -> choice_info {
     choice_info res;
     research::tech n = map.at(v);
 
@@ -236,6 +238,7 @@ Widget::Ptr interface::research_gui() {
     // info
     for (auto b : n.sector_boost) res.info.push_back(b.first + " + " + to_string((int)(100 * (b.second - 1))) + "%");
     for (auto su : n.ship_upgrades) res.info.push_back(su.first + " gains: " + boost::algorithm::join(su.second, ", "));
+    if (leads_to.count(v)) res.info.push_back("Leads to: " + boost::algorithm::join(leads_to.at(v), ", "));
 
     return res;
   };

@@ -389,7 +389,8 @@ choice::c_solar solar::government() {
   c = compute_mining(c);
 
   // RESEARCH
-  if (c.governor == keywords::key_research) c.allocation[keywords::key_research] = 1;
+  if (c.governor == keywords::key_research) c.allocation[keywords::key_research] = 2;
+  if (c.governor == keywords::key_mining) c.allocation[keywords::key_research] = 0;
   if (research_level -> researching.empty()) c.allocation[keywords::key_research] = 0;
 
   // DEVELOPMENT
@@ -445,6 +446,7 @@ choice::c_solar solar::government() {
 
     // add score for doing nothing
     score[""] = 0.05;
+    if (c.governor == keywords::key_mining) score[""] = 10;
 
     // weighted probability select
     c.development = utility::weighted_sample(score);
