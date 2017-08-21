@@ -8,8 +8,13 @@
 using namespace std;
 using namespace st3;
 
+bool server::silent_mode = false;
+
 void server::output(string v, bool force) {
   static mutex m;
+
+  if (silent_mode) return;
+  
 #ifdef DEBUG
   force = true;
 #endif

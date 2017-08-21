@@ -507,6 +507,7 @@ void game_data::build(){
     s -> radius = settings.solar_meanrad;
     s -> choice_data.allocation = cost::sector_allocation::base_allocation();
     s -> facility_access("shipyard") -> level = 1;
+    s -> facility_access("research facility") -> level = 1;
 
     // debug: start with some ships
     hm_t<string, int> starter_fleet;

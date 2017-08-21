@@ -22,11 +22,24 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
-*** some network error after ~20 turns
-*** option to override solar's development? Annoying when e.g. first shipyard doesn't get built
+*** governor
+**** add research facility to initial solar
+**** shipyard and research facility should have special priority
+    So the weight on primary sector can be reduced somewhat in favor
+    of situational weights.
+**** add weight if a development would increase empire's max facility level
+*** annoying that enemy cluster flags update on unseen units
+*** population quickly grows to limit 
+    Increase crowding limit and reduce population increment. Consider
+    also increasing effect of hospital and ecosystem int.
+*** residual client side waypoints (?when incoming units die?)
 *** mining too nerfed? Considering how mining weighting works, shouldn't get empty storage
 *** fleet flags should be filled (and outlined?) so you can always see them
 *** Can't scroll sideways in log when drawn with single label.
+*** [J] some network error after ~20 turns
+    Colonize action caused invalid governor
+*** [J?] option to override solar's development? Annoying when e.g. first shipyard doesn't get built
+    Home solar starts with shipyard level 1
 *** [J] show "leads to" in tech choice info
 * [~] issues
 ** [~] system

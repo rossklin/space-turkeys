@@ -112,6 +112,7 @@ namespace st3{
     float space_status();
     float water_status();
     float crowding_rate();
+    float base_growth();
     float vision();
     bool has_defense();
     std::string get_info();
@@ -138,12 +139,12 @@ namespace st3{
     void dynamics(); 
 
   protected:
-    static constexpr float f_growth = 4e-2;
-    static constexpr float f_crowding = 2e-2;
-    static constexpr float f_minerate = 4e-4;
-    static constexpr float f_buildrate = 2e-3;
-    static constexpr float f_devrate = 2e-3;
-    static constexpr float f_resrate = 2e-3;
+    static const float f_growth;
+    static const float f_crowding;
+    static const float f_minerate;
+    static const float f_buildrate;
+    static const float f_devrate;
+    static const float f_resrate;
 
     void pay_resources(cost::res_t r);
     float resource_constraint(cost::res_t r);

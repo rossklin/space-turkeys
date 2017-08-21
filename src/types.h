@@ -8,6 +8,7 @@
 
 namespace st3{
   namespace server {
+    extern bool silent_mode;
     void output(std::string v, bool force = false);
   };
 

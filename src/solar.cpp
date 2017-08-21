@@ -17,6 +17,12 @@ using namespace std;
 using namespace st3;
 
 const string solar::class_id = "solar";
+const float solar::f_growth = 4e-2;
+const float solar::f_crowding = 4e-3;
+const float solar::f_minerate = 4e-4;
+const float solar::f_buildrate = 2e-3;
+const float solar::f_devrate = 2e-3;
+const float solar::f_resrate = 2e-3;
 
 solar::solar(const solar &s) : game_object(s) {
   *this = s;
@@ -304,11 +310,14 @@ float solar::crowding_rate() {
   return f_crowding * pow(population, 2) / (compute_boost(keywords::key_medicine) * env_factor + 1);
 }
 
+float solar::base_growth() {
+  return population * happiness * f_growth;
+}
+
 float solar::population_increment(){
   static float rate = 0.2;
-  float base_growth = population * happiness * f_growth;
-  float culture_growth = base_growth * compute_boost(keywords::key_culture);
-  return rate * (base_growth + culture_growth - crowding_rate());
+  float culture_growth = base_growth() * compute_boost(keywords::key_culture);
+  return rate * (base_growth() + culture_growth - crowding_rate());
 }
 
 float solar::ecology_increment(){
@@ -317,11 +326,11 @@ float solar::ecology_increment(){
 }
 
 float solar::happiness_increment(choice::c_solar &c){
-  float crowding_factor = crowding_rate() / population;
-  float size_factor = 0.05 * log(population) / (2 * ecology + 1);
-  float pacifist_factor = c.allocation[keywords::key_military];
-  float culture_factor = 0.3 * compute_boost(keywords::key_culture) + c.allocation[keywords::key_culture];
-  float reg_factor = 0.3 * (happiness - 0.5);
+  float crowding_factor = 3 * crowding_rate() / population; // < 0.28
+  float size_factor = 0.5 * log(population) / (2 * ecology + 1); // < 0.02
+  float pacifist_factor = 0.5 * c.allocation[keywords::key_military]; // 0.2ish?
+  float culture_factor = 10 * pow(compute_boost(keywords::key_culture), 2) * c.allocation[keywords::key_culture]; // 0.3ish?
+  float reg_factor = 0.3 * (happiness - 0.5); // 0.1ish?
 
   return 0.01 * (reg_factor + culture_factor - crowding_factor - size_factor - pacifist_factor);
 }
@@ -353,7 +362,7 @@ choice::c_solar solar::government() {
     throw runtime_error("Invalid governor: " + c.governor);
   }
   
-  // general stuff for all governors, even manual
+  // general stuff for all governors
   for (auto v : keywords::governor) c.allocation[v] = 1;
 
   // MINING
@@ -376,7 +385,7 @@ choice::c_solar solar::government() {
 
     if (c.governor == keywords::key_mining) {
       // always mine
-      c.allocation[keywords::key_mining] = 1;
+      c.allocation[keywords::key_mining] = 4;
     } else {
       // mine if storage is running low
       c.allocation[keywords::key_mining] = 4 / (smin + 0.1);
@@ -393,8 +402,15 @@ choice::c_solar solar::government() {
   if (c.governor == keywords::key_mining) c.allocation[keywords::key_research] = 0;
   if (research_level -> researching.empty()) c.allocation[keywords::key_research] = 0;
 
+  float care_factor = 1;
+  if (c.governor == keywords::key_mining || c.governor == keywords::key_military) {
+    care_factor = 0.5;
+  } else if (c.governor == keywords::key_culture) {
+    care_factor = 2;
+  }
+
   // DEVELOPMENT
-  auto select_development = [this] (choice::c_solar c) -> choice::c_solar {
+  auto select_development = [this, care_factor] (choice::c_solar c) -> choice::c_solar {
     bool is_developing = c.development.size() > 0;
     if (is_developing) return c;
     
@@ -419,12 +435,12 @@ choice::c_solar solar::government() {
       h += add_factor(c.governor, 3);
 
       // score for culture, medecine and ecology if needed
-      h += add_factor(keywords::key_culture, pow(fmax(1 - happiness, 0), 0.5));
-      h += add_factor(keywords::key_ecology, pow(fmax(1 - ecology, 0), 0.5));
-      h += add_factor(keywords::key_medicine, crowding_rate() / population);
+      h += add_factor(keywords::key_culture, care_factor * pow(fmax(1 - happiness, 0), 0.5));
+      h += add_factor(keywords::key_ecology, care_factor * pow(fmax(1 - ecology, 0), 0.3));
+      h += add_factor(keywords::key_medicine, care_factor * pow(crowding_rate() / base_growth(), 0.3));
 
       // reduce score for build time
-      h *= 4 / log(test.cost_time + 1);
+      h *= 4 / log(test.cost_time + test.cost_resources.count() + 1);
 
       // significantly reduce score if there are not sufficient resources
       for (auto u : keywords::resource) {
@@ -441,8 +457,11 @@ choice::c_solar solar::government() {
       if (score.count(name)) score[name] += value;
     };
 
-    // militarist governor likes shipyard
+    // special score for shipyard and research facility
+    add_score("shipyard", 0.2);
+    add_score("research facility", 0.2);
     if (c.governor == keywords::key_military) add_score("shipyard", 0.4);
+    if (c.governor == keywords::key_research) add_score("research facility", 0.4);
 
     // add score for doing nothing
     score[""] = 0.05;
@@ -453,7 +472,15 @@ choice::c_solar solar::government() {
 
     // prioritize development if score is good
     if (c.development.size()) {
-      c.allocation[keywords::key_development] = score[c.development];
+      float devprio = score[c.development];
+
+      if (c.governor == keywords::key_development) {
+	devprio *= 2;
+      } else if (c.governor == keywords::key_military || c.governor == keywords::key_mining) {
+	devprio *= 0.5;
+      }
+      
+      c.allocation[keywords::key_development] = devprio;
     } else {
       c.allocation[keywords::key_development] = 0;
     }
@@ -621,12 +648,14 @@ facility_object solar::developed(string key, int lev_inc) {
   base.cost_resources.scale(lm);
 
   // scale boosts
-  base.vision *= pow(1.5, level);
+  base.vision *= pow(1.3, level);
   base.turret.range *= level;
   base.turret.damage *= level;
   base.shield *= level;
   base.water_provided *= level;
   base.space_provided *= level;
+  base.water_usage *= level;
+  base.space_usage *= level;
 
   for (auto &x : base.sector_boost) x.second = pow(x.second, level);
   base.level = level;

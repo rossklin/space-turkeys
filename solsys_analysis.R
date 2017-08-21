@@ -1,15 +1,27 @@
 library(ggplot2)
 library(reshape2)
+library(plyr)
 
-display <- function(v){
-    filename <- paste0("solsys_", v, ".csv")
-    df <- read.csv(filename)
-    df$happiness = 1000 * df$happiness
-    df$culture = 1000 * df$culture
-    df$storage = 1000 * df$storage
-    df$ships = 100 * df$ships
+load.gov <- function(g) {
+    filename <- paste0("solsys_", g, ".csv")
+    read.csv(filename)
+}
 
-    x <- melt(df, id.vars = c('entity', 'step'), measure.vars = c('population', 'happiness', 'ships', 'resource', 'culture', 'storage'))
+display <- function(v, facs){
+    df <- load.gov(v)
+    x <- melt(df, id.vars = c('entity', 'step'), measure.vars = facs)
+    x$entity = as.factor(x$entity)
 
-    ggplot(x, aes(x = step, y = value, group = variable, color = variable)) + geom_path(aes(group = interaction(entity, variable)))
+    ggplot(x, aes(x = step, y = value, group = variable, color = entity, shape = variable)) + geom_path(aes(group = interaction(entity, variable)))
+}
+
+compare.governors <- function(fac, govs) {
+    get <- function(g) {
+        df <- load.gov(g)
+        data.frame(governor = g, entity = df$entity, step = df$step, value = df[,fac])
+    }
+
+    data <- ldply(govs, get)
+
+    ggplot(data, aes(x = step, y = value, color = governor, group = interaction(governor, entity))) + geom_path()
 }
