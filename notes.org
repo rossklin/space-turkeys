@@ -23,12 +23,12 @@
    DOWN destroyer VS fighter
 ** play testing
 *** governor
-**** add research facility to initial solar
-**** shipyard and research facility should have special priority
+**** [J] add research facility to initial solar
+**** [J] shipyard and research facility should have special priority
     So the weight on primary sector can be reduced somewhat in favor
     of situational weights.
 **** add weight if a development would increase empire's max facility level
-*** annoying that enemy cluster flags update on unseen units
+*** [J?] annoying that enemy cluster flags update on unseen units
 *** population quickly grows to limit 
     Increase crowding limit and reduce population increment. Consider
     also increasing effect of hospital and ecosystem int.

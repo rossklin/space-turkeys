@@ -315,7 +315,7 @@ float solar::base_growth() {
 }
 
 float solar::population_increment(){
-  static float rate = 0.2;
+  static float rate = 0.4;
   float culture_growth = base_growth() * compute_boost(keywords::key_culture);
   return rate * (base_growth() + culture_growth - crowding_rate());
 }
@@ -369,11 +369,15 @@ choice::c_solar solar::government() {
   auto compute_mining = [this] (choice::c_solar c) -> choice::c_solar {
     float rsum = 0;
     float ssum = 0;
-    float smin = INFINITY;
+    pair<string, float> smin("",INFINITY);
+    
     for (auto v : keywords::resource) {
       rsum += available_resource[v];
       ssum += resource_storage[v];
-      smin = fmin(smin, resource_storage[v]);
+      if (resource_storage[v] < smin.second) {
+	smin = make_pair(v, resource_storage[v]);
+      }
+      
       if (c.governor == keywords::key_mining) {
 	// mine what is available
 	c.mining[v] = available_resource[v];
@@ -387,8 +391,9 @@ choice::c_solar solar::government() {
       // always mine
       c.allocation[keywords::key_mining] = 4;
     } else {
-      // mine if storage is running low
-      c.allocation[keywords::key_mining] = 4 / (smin + 0.1);
+      // mine if storage is running low, but chill if available
+      // resources run out
+      c.allocation[keywords::key_mining] = fmin(available_resource[smin.first] / 4, 4) / (smin.second + 0.1);
     }
   
     if (!rsum) c.allocation[keywords::key_mining] = 0;
@@ -408,6 +413,9 @@ choice::c_solar solar::government() {
   } else if (c.governor == keywords::key_culture) {
     care_factor = 2;
   }
+
+  // CULTURE
+  c.allocation[keywords::key_culture] = care_factor / (happiness + 0.1);
 
   // DEVELOPMENT
   auto select_development = [this, care_factor] (choice::c_solar c) -> choice::c_solar {

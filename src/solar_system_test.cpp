@@ -36,6 +36,7 @@ int main(int argc, char **argv){
   int steps = 4000;
   string gov = "culture";
   research::data rdata;
+  rdata.researching = "warp technology";
 
   if (argc > 1) gov = argv[1];
   if (argc > 2) entities = atoi(argv[2]);
@@ -56,7 +57,7 @@ int main(int argc, char **argv){
   };
 
   stat["crowding"] = [] (solar::ptr s) -> float {
-    return s -> crowding_rate() / s -> population;
+    return s -> crowding_rate() / (s -> base_growth() + 1);
   };
 
   stat["resources"] = [] (solar::ptr s) -> float {
@@ -70,7 +71,7 @@ int main(int argc, char **argv){
   };
 
   stat["culture"] = [] (solar::ptr s) -> float {
-    return s -> compute_boost(keywords::key_culture) - 1;
+    return s -> choice_data.allocation[keywords::key_culture] * s -> compute_boost(keywords::key_culture);
   };
 
   stat["medicine"] = [] (solar::ptr s) -> float {
@@ -79,6 +80,10 @@ int main(int argc, char **argv){
 
   stat["ecology"] = [] (solar::ptr s) -> float {
     return s -> compute_boost(keywords::key_ecology) - 1;
+  };
+
+  stat["research"] = [] (solar::ptr s) -> float {
+    return s -> research_points;
   };
 
   cout << "entity, step, ";

@@ -775,7 +775,7 @@ void game::reload_data(data_frame &g, bool use_animations){
   // update enemy cluster buffer
   enemy_clusters.clear();
   for (auto s : get_all<ship>()) {
-    if (s -> is_active() && !s -> owned) enemy_clusters.push_back(s -> position);
+    if (s -> seen && !s -> owned) enemy_clusters.push_back(s -> position);
   }
   if (enemy_clusters.size()) enemy_clusters = utility::cluster_points(enemy_clusters, 20, 100);
 

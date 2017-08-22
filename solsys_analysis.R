@@ -7,12 +7,13 @@ load.gov <- function(g) {
     read.csv(filename)
 }
 
-display <- function(v, facs){
+display <- function(v, facs, eids = NULL){
     df <- load.gov(v)
+    if (!is.null(eids)) df <- subset(df, entity %in% eids)
     x <- melt(df, id.vars = c('entity', 'step'), measure.vars = facs)
     x$entity = as.factor(x$entity)
 
-    ggplot(x, aes(x = step, y = value, group = variable, color = entity, shape = variable)) + geom_path(aes(group = interaction(entity, variable)))
+    ggplot(x, aes(x = step, y = value, group = variable, color = variable, shape = variable)) + geom_path(aes(group = interaction(entity, variable))) + ylim(0, 5)
 }
 
 compare.governors <- function(fac, govs) {
