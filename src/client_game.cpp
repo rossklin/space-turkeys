@@ -1375,14 +1375,15 @@ void game::controls(){
   }
 
   float s = view_game.getSize().x / sight_wh.x;
+  sf::Vector2i mpos = sf::Mouse::getPosition(window);
 
-  if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
+  if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || mpos.x == 0){
     vel.x -= 5 * s;
-  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
+  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || mpos.x == window.getSize().x - 1){
     vel.x += 5 * s;
-  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)){
+  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || mpos.y == 0){
     vel.y -= 5 * s;
-  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)){
+  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || mpos.y == window.getSize().y - 1){
     vel.y += 5 * s;
   }
 

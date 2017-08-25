@@ -23,15 +23,15 @@
    DOWN destroyer VS fighter
 ** play testing
 *** governor
+**** figure out why population grows ~10x faster in real game than in tests
 **** [J] add research facility to initial solar
 **** [J] shipyard and research facility should have special priority
     So the weight on primary sector can be reduced somewhat in favor
     of situational weights.
 **** add weight if a development would increase empire's max facility level
 *** [J?] annoying that enemy cluster flags update on unseen units
-*** population quickly grows to limit 
-    Increase crowding limit and reduce population increment. Consider
-    also increasing effect of hospital and ecosystem int.
+*** Consider increasing effect of hospital and ecosystem int
+*** [J?] population quickly grows to limit 
 *** residual client side waypoints (?when incoming units die?)
 *** mining too nerfed? Considering how mining weighting works, shouldn't get empty storage
 *** fleet flags should be filled (and outlined?) so you can always see them

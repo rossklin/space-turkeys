@@ -315,7 +315,7 @@ float solar::base_growth() {
 }
 
 float solar::population_increment(){
-  static float rate = 0.4;
+  static float rate = 0.2;
   float culture_growth = base_growth() * compute_boost(keywords::key_culture);
   return rate * (base_growth() + culture_growth - crowding_rate());
 }

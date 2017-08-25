@@ -2,6 +2,7 @@
 
 #ifndef _STK_TYPES
 #define _STK_TYPES
+#include <vector>
 #include <string>
 #include <unordered_map>
 #include <SFML/System.hpp>

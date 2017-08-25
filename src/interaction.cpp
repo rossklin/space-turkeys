@@ -78,8 +78,10 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
     stringstream ss;
+    stringstream sshort;
 
     ss << "Your " << s -> ship_class << " searched " << t -> id;
+    sshort << "Search: ";
 
     float test = utility::random_uniform();
     bool message_set = false;
@@ -96,6 +98,7 @@ const hm_t<string, interaction> &interaction::table() {
 	string tech = utility::uniform_sample(keys);
 	level.access(tech).level = 1;
 	ss << " and discovered an ancient technology: " << tech << "!";
+	sshort << "discovered tech: " << tech << "!";
 	message_set = true;
       }
     } else if (test < 0.2) {
@@ -105,8 +108,10 @@ const hm_t<string, interaction> &interaction::table() {
 	float pop = fmax(utility::random_normal(500, 200), 10);
 	csol -> population += pop;
 	ss << " and encountered a group of " << int(pop) << " people who join your civilization at " << t -> id << "!";
+	sshort << (int)pop << " people join " << t -> id << "!";
       } else {
 	ss << " and encountered a group of people who can't join you because you control no solars!";
+	sshort << "a group of people can't join!";
       }
       message_set = true;
     } else if (test < 0.3) {
@@ -142,6 +147,7 @@ const hm_t<string, interaction> &interaction::table() {
 	g -> generate_fleet(t -> position, s -> owner, c, new_ships);
 
 	ss << " and encountered a band of " << new_ships.size() << " renegade ships who join your civilization.";
+	sshort << new_ships.size() << " ships join!";
 	message_set = true;
       }
     } else if (test < 0.5) {
@@ -152,6 +158,7 @@ const hm_t<string, interaction> &interaction::table() {
 	string u = utility::uniform_sample(keys);
 	s -> upgrades.insert(u);
 	ss << " and discovers an upgrade: " << u << "!";
+	sshort << "upgrade: " << u << "!";
 	message_set = true;
       }
     } else {
@@ -160,10 +167,11 @@ const hm_t<string, interaction> &interaction::table() {
 
     if (!message_set) {
       ss << " but found nothing of interest.";
+      sshort << "nothing of interest.";
     }
 
     // log message to player
-    g -> players[s -> owner].log.push_back(ss.str());
+    g -> log_message(s -> id, ss.str(), sshort.str());
 
     // this solar can't be searched again
     t -> was_discovered = true;

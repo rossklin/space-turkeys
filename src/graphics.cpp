@@ -64,7 +64,7 @@ void graphics::draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, 
   w.draw(sol);
 };
 
-void graphics::draw_text(sf::RenderTarget &w, string v, point p, int fs, bool ul, sf::Color fill) {
+void graphics::draw_text(sf::RenderTarget &w, string v, point p, int fs, bool ul, sf::Color fill, bool do_inv) {
   point inv = graphics::inverse_scale(w);
   sf::Text text;
   text.setString(v);
@@ -78,7 +78,7 @@ void graphics::draw_text(sf::RenderTarget &w, string v, point p, int fs, bool ul
   }
   text.setPosition(p); 
   text.setFillColor(fill);
-  text.setScale(inv);
+  if (do_inv) text.setScale(inv);
   w.draw(text);
 };
 
@@ -99,7 +99,7 @@ void graphics::draw_framed_text(sf::RenderTarget &w, string v, sf::FloatRect bou
 
   if (fs == 0) fs = bounds.height - 2 * margin;
   point p(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
-  draw_text(w, v, p, fs);
+  draw_text(w, v, p, fs, false, co, false);
 }
 
 sf::Image graphics::ship_image(string ship_class, float width, float height, sf::Color col) {
@@ -225,6 +225,12 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
     svert[1].color = c;
 
     w.draw(&svert[0], svert.size(), sf::LinesStrip);
+  } else if (e.cat == animation_data::category::message) {
+    point p = e.t1.p + point(10, -20);
+    sf::FloatRect bounds(p, unscale() * point(200, 40));
+    sf::Color co = sf::Color::White;
+    sf::Color cf(40, 40, 40, 180);
+    draw_framed_text(w, e.text, bounds, co, cf);
   }
 }
 

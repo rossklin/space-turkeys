@@ -71,6 +71,7 @@ namespace st3{
     void log_ship_fire(combid a, combid b);
     void log_ship_destroyed(combid a, combid b);
     void log_bombard(combid a, combid b);
+    void log_message(combid a, std::string v_full, std::string v_short);
     float get_dt();
 
     // access

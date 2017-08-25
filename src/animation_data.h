@@ -1,6 +1,7 @@
 #ifndef _STK_ANIMATION_DATA
 #define _STK_ANIMATION_DATA
 
+#include <string>
 #include "types.h"
 
 namespace st3 {
@@ -12,7 +13,7 @@ namespace st3 {
   
   struct animation_data {
     enum category {
-      explosion, shot, shield, bomb
+      explosion, shot, shield, bomb, message
     };
 
     animation_tracker_info t1;
@@ -22,6 +23,7 @@ namespace st3 {
     sfloat radius;
     sint color;
     sint cat;
+    std::string text;
   };
 };
 

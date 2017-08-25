@@ -827,6 +827,20 @@ void game_data::log_ship_destroyed(combid a, combid b) {
   }
 }
 
+void game_data::log_message(combid a, string v_full, string v_short) {
+  ship::ptr s = get_ship(a);
+
+  players[s -> owner].log.push_back(v_full);
+
+  animation_data x;
+  x.t1 = get_tracker(s -> id);
+  x.cat = animation_data::category::message;
+  x.text = v_short;
+  x.color = players[s -> owner].color;
+  x.delay = 0;
+  players[s -> owner].animations.push_back(x);
+}
+
 float game_data::get_dt() {
   return sub_frames * settings.dt;
 }
