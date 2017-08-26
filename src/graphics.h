@@ -51,8 +51,8 @@ namespace st3{
     /*! initialize static graphics i.e. default font */
     void initialize();
     void draw_flag(sf::RenderTarget &w, point p, float s, sf::Color c);
-    void draw_text(sf::RenderTarget &w, std::string v, point p, int fs, bool ul = false, sf::Color fill = sf::Color::White, bool do_inv = true);
-    void draw_framed_text(sf::RenderTarget &w, std::string v, sf::FloatRect r, sf::Color co, sf::Color cf = sf::Color::Transparent, int fs = 0);
+    void draw_text(sf::RenderTarget &w, std::string v, point p, float fs, bool ul = false, sf::Color fill = sf::Color::White, bool do_inv = true);
+    void draw_framed_text(sf::RenderTarget &w, std::string v, sf::FloatRect r, sf::Color co, sf::Color cf = sf::Color::Transparent, float fs = 0);
 
     void draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, sf::Color cf = sf::Color::Transparent, float b = -1);
 
@@ -97,7 +97,7 @@ namespace st3{
 
     sf::Image selector_card(std::string title, bool available, float progress);
     void draw_frame(sf::FloatRect r, int thickness, sf::Color co, sf::Color cf = sf::Color::Transparent); 
-    sf::RectangleShape build_rect(sf::FloatRect bounds, int thickness = -1, sf::Color co = sf::Color::White, sf::Color cf = sf::Color::Transparent);
+    sf::RectangleShape build_rect(sf::FloatRect bounds, float thickness = -1, sf::Color co = sf::Color::White, sf::Color cf = sf::Color::Transparent);
     sfg::Widget::Ptr wrap_in_scroll(sfg::Widget::Ptr w, bool horizontal, int dim);
     sfg::Widget::Ptr wrap_in_scroll2(sfg::Widget::Ptr w, int width, int height);
  };

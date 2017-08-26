@@ -64,12 +64,14 @@ void graphics::draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, 
   w.draw(sol);
 };
 
-void graphics::draw_text(sf::RenderTarget &w, string v, point p, int fs, bool ul, sf::Color fill, bool do_inv) {
-  point inv = graphics::inverse_scale(w);
+void graphics::draw_text(sf::RenderTarget &w, string v, point p, float fs, bool ul, sf::Color fill, bool do_inv) {
   sf::Text text;
+  float charsize = 16;
+  float scale = fs / charsize;
+  if (do_inv) scale *= unscale();
   text.setString(v);
   text.setFont(graphics::default_font); 
-  text.setCharacterSize(fs);
+  text.setCharacterSize(charsize);
   sf::FloatRect text_dims = text.getLocalBounds();
   if (ul) {
     text.setOrigin(point(text_dims.left, text_dims.top));
@@ -78,11 +80,11 @@ void graphics::draw_text(sf::RenderTarget &w, string v, point p, int fs, bool ul
   }
   text.setPosition(p); 
   text.setFillColor(fill);
-  if (do_inv) text.setScale(inv);
+  text.setScale(point(scale, scale));
   w.draw(text);
 };
 
-sf::RectangleShape graphics::build_rect(sf::FloatRect bounds, int thickness, sf::Color co, sf::Color cf) {
+sf::RectangleShape graphics::build_rect(sf::FloatRect bounds, float thickness, sf::Color co, sf::Color cf) {
   sf::RectangleShape r;
   r.setSize(sf::Vector2f(bounds.width, bounds.height));
   r.setPosition(sf::Vector2f(bounds.left, bounds.top));
@@ -92,12 +94,17 @@ sf::RectangleShape graphics::build_rect(sf::FloatRect bounds, int thickness, sf:
   return r;
 }
 
-void graphics::draw_framed_text(sf::RenderTarget &w, string v, sf::FloatRect bounds, sf::Color co, sf::Color cf, int fs) {
-  float margin = ceil(unscale() * 2);
+void graphics::draw_framed_text(sf::RenderTarget &w, string v, sf::FloatRect bounds, sf::Color co, sf::Color cf, float fs) {
+  float margin = unscale() * 1;
   sf::RectangleShape r = graphics::build_rect(bounds, margin, co, cf);
   w.draw(r);
 
-  if (fs == 0) fs = bounds.height - 2 * margin;
+  if (fs == 0) {
+    float h_limit = bounds.height - 2 * margin;
+    float w_limit = (bounds.width - 2 * margin) / (v.length() * 1.2);
+    fs = fmin(h_limit, w_limit);
+  }
+  
   point p(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
   draw_text(w, v, p, fs, false, co, false);
 }
@@ -226,11 +233,14 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
 
     w.draw(&svert[0], svert.size(), sf::LinesStrip);
   } else if (e.cat == animation_data::category::message) {
-    point p = e.t1.p + point(10, -20);
-    sf::FloatRect bounds(p, unscale() * point(200, 40));
+    float fs = graphics::unscale() * 16;
+    float width = e.text.length() * fs * 0.6;
+    float height = 1.3 * fs;
+    point p = e.t1.p + point(10, -height/2);
+    sf::FloatRect bounds(p, point(width, height));
     sf::Color co = sf::Color::White;
     sf::Color cf(40, 40, 40, 180);
-    draw_framed_text(w, e.text, bounds, co, cf);
+    draw_framed_text(w, e.text, bounds, co, cf, fs);
   }
 }
 

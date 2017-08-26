@@ -70,10 +70,10 @@ namespace st3{
 	      res += buf;
 	    }
 
-	    float fs = graphics::unscale() * 32;
+	    float fs = graphics::unscale() * 16;
 	    int n = ship_counts.size();
-	    float width = maxlen * fs * 0.5;
-	    float height = 1.2 * n * fs;
+	    float width = maxlen * fs * 0.6;
+	    float height = 1.3 * n * fs;
 	    sf::FloatRect bounds(position.x + radius + 10, position.y - height / 2, width, height);
 	    graphics::draw_framed_text(w, res, bounds, sf::Color::White, sf::Color(20, 30, 40, 80), fs);
 	  }
