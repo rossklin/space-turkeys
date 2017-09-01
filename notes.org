@@ -22,6 +22,12 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
+*** reduce research facility level req to level 3
+*** military should also prefer building defensive facilities
+*** start with missile turret level 1
+*** fleet hover info should show ship counts
+*** don't give orders to send 0 units
+*** after game complete, client pre-step failed to load game data
 *** [!] terminated with network error
     After submitting first choice after discovering shields and
     selecting battleships. Probably an exception on server which

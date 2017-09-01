@@ -571,7 +571,6 @@ void game_data::update_research_facility_level() {
       for (auto &f : i -> development) {
 	level[i -> owner][f.first] = max(level[i -> owner][f.first], f.second.level);
       }
-      i -> research_points = 0;
     }
   }
 
