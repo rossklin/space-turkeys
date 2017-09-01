@@ -1,4 +1,11 @@
 #include <iostream>
+#include <fstream>
+
+#include <chrono>  // chrono::system_clock
+#include <ctime>   // localtime
+#include <sstream> // stringstream
+#include <iomanip> // put_time
+#include <string>  // string
 
 #include "game_handler.h"
 #include "game_data.h"
@@ -24,6 +31,33 @@ void end_thread(thread *&t) {
   t -> join();
   delete t;
   t = 0;
+}
+
+string current_time_and_date() {
+  auto now = chrono::system_clock::now();
+  auto in_time_t = chrono::system_clock::to_time_t(now);
+
+  stringstream ss;
+  ss << put_time(localtime(&in_time_t), "%Y-%m-%d %X");
+  return ss.str();
+}
+
+void handler::log(string v) {
+  static mutex m;
+  string log_file = "server.log";
+
+  m.lock();
+  fstream f(log_file, ios::app);
+
+  if (!f.is_open()) {
+    cerr << "Failed to open log file!" << endl;
+    throw runtime_error("Failed to open log file!");
+  }
+
+  f << current_time_and_date() << ": " << v << endl;
+  f.close();
+  
+  m.unlock();
 }
 
 com *handler::access_game(string gid, bool do_lock) {
@@ -83,8 +117,10 @@ void handler::dispatch_game(string gid) {
     g.build_players(c -> access_clients());
     g.build();  
     game_handler(*c, g);
-  } catch (exception e) {
-    cout << "Unhandled exception in game_handler: " << e.what() << endl;
+  } catch (exception &e) {
+    log(e.what());
+  } catch (...) {
+    log("Unknown object thrown by game handler");
   }
 
   c -> disconnect();

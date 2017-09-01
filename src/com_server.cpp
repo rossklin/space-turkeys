@@ -6,6 +6,7 @@
 #include "protocol.h"
 #include "serialization.h"
 #include "game_data.h"
+#include "server_handler.h"
 
 using namespace std;
 using namespace st3;
@@ -92,10 +93,11 @@ bool client_t::check_protocol(protocol_t p, query_handler f) {
       running = res.status == socket_t::tc_run;
       completed = !running;
     }
-  } catch (network_error e) {
+  } catch (network_error &e) {
     // network error
     set_disconnect();
     completed = false;
+    server::handler::log(e.what());
   }
 
   output("check protocol " + to_string(p) + ": client " + to_string(id) + ": " + to_string(is_connected()));

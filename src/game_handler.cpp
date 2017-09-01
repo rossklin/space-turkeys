@@ -11,6 +11,7 @@
 #include "serialization.h"
 #include "game_handler.h"
 #include "utility.h"
+#include "server_handler.h"
 
 using namespace std;
 using namespace st3;
@@ -59,7 +60,8 @@ void simulation_step(com &c, game_data &g) {
 	frames[frame_count].copy_from(g);
 	if (c.thread_com != socket_t::tc_run) break;
       }
-    } catch (exception e) {
+    } catch (exception &e) {
+      server::handler::log(e.what());
       c.thread_com = socket_t::tc_stop;
     }
   };

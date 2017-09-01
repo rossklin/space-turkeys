@@ -1,15 +1,10 @@
 #ifndef _STK_SOCKETT
 #define _STK_SOCKETT
 
-#include <stdexcept>
 #include <SFML/Network.hpp>
 #include "types.h"
 
 namespace st3{
-  class network_error : public std::runtime_error {
-  public:
-    network_error(std::string v);
-  };
   
   /*! struct to handle data and status for sfml's tcp socket */
   struct socket_t : public sf::TcpSocket{

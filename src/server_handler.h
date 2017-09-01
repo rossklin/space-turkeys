@@ -16,6 +16,7 @@ namespace st3 {
       hm_t<std::string, com> games;
       int status;
       std::mutex game_ring;
+      static void log(std::string v);
 
       handler();  
       void run();

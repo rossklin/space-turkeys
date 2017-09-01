@@ -5,9 +5,21 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <stdexcept>
 #include <SFML/System.hpp>
 
 namespace st3{
+  class classified_error : public std::runtime_error {
+  public:
+    std::string severity;
+    classified_error(std::string v, std::string severity = "notice");
+  };
+  
+  class network_error : public classified_error {
+  public:
+    network_error(std::string v, std::string severity = "notice");
+  };
+  
   namespace server {
     extern bool silent_mode;
     void output(std::string v, bool force = false);

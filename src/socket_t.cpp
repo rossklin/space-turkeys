@@ -4,8 +4,6 @@
 using namespace std;
 using namespace st3;
 
-network_error::network_error(string v) : runtime_error(v) {}
-
 st3::socket_t::socket_t(){
   thread_com = NULL;
   id = -1;

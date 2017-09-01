@@ -10,6 +10,12 @@ using namespace st3;
 
 bool server::silent_mode = false;
 
+classified_error::classified_error(string v, string s) : runtime_error(v) {
+  severity = s;
+}
+
+network_error::network_error(string v, string s) : classified_error(v, s) {}
+
 void server::output(string v, bool force) {
   static mutex m;
 
