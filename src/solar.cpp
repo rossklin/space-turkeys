@@ -215,7 +215,7 @@ solar::ptr solar::create(point p, float bounty) {
   static int idc = 0;
   static mutex m;
   auto fres = [bounty] () {
-    return fmax(utility::random_normal(pow(2, 10 * bounty), pow(2, 8 * bounty)), 0);
+    return fmax(utility::random_normal(pow(2, 10 * bounty), pow(2, 9 * bounty)), 0);
   };
 
   solar::ptr s = new solar();
@@ -415,7 +415,7 @@ choice::c_solar solar::government() {
   }
 
   // CULTURE
-  c.allocation[keywords::key_culture] = care_factor / (happiness + 0.1);
+  c.allocation[keywords::key_culture] = fmax(10 * care_factor * (1 - happiness), 0);
 
   // DEVELOPMENT
   auto select_development = [this, care_factor] (choice::c_solar c) -> choice::c_solar {
@@ -443,9 +443,9 @@ choice::c_solar solar::government() {
       h += add_factor(c.governor, 3);
 
       // score for culture, medecine and ecology if needed
-      h += add_factor(keywords::key_culture, care_factor * pow(fmax(1 - happiness, 0), 0.5));
-      h += add_factor(keywords::key_ecology, care_factor * pow(fmax(1 - ecology, 0), 0.3));
-      h += add_factor(keywords::key_medicine, care_factor * pow(crowding_rate() / base_growth(), 0.3));
+      h += add_factor(keywords::key_culture, 10 * care_factor * fmax(1 - happiness, 0));
+      h += add_factor(keywords::key_ecology, 10 * care_factor * fmax(1 - ecology, 0));
+      h += add_factor(keywords::key_medicine, 10 * care_factor * crowding_rate() / base_growth());
 
       // reduce score for build time
       h *= 4 / log(test.cost_time + test.cost_resources.count() + 1);
@@ -473,7 +473,7 @@ choice::c_solar solar::government() {
 
     // add score for doing nothing
     score[""] = 0.05;
-    if (c.governor == keywords::key_mining) score[""] = 10;
+    if (c.governor == keywords::key_mining) score[""] = 20;
 
     // weighted probability select
     c.development = utility::weighted_sample(score);
