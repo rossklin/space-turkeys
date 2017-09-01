@@ -51,7 +51,7 @@ void handler::log(string v) {
 
   if (!f.is_open()) {
     cerr << "Failed to open log file!" << endl;
-    throw runtime_error("Failed to open log file!");
+    throw classified_error("Failed to open log file!");
   }
 
   f << current_time_and_date() << ": " << v << endl;
@@ -74,7 +74,7 @@ com *handler::create_game(string gid, client_game_settings set, bool do_lock) {
   com *g;
   if (do_lock) game_ring.lock();
   if (games.count(gid)) {
-    throw runtime_error("Attempted to create game but id alread in use!");
+    throw classified_error("Attempted to create game but id alread in use!");
   } else {
     g = &games[gid];
     static_cast<client_game_settings&>(g -> settings) = set;

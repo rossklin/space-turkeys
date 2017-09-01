@@ -200,7 +200,7 @@ Widget::Ptr interface::governor_gui(list<solar::ptr> solars) {
 	string gov = test;
 	for (auto s : solars) s -> choice_data.governor = gov;
       } else {
-	throw runtime_error("governor_gui: invalid selection size!");
+	throw classified_error("governor_gui: invalid selection size!");
       }
     }
   };
@@ -249,7 +249,7 @@ Widget::Ptr interface::research_gui() {
       if (test_unique_choice(result, test)) {
 	desktop -> response.research = test;
       } else {
-	throw runtime_error("research_gui: callback: bad result size!");
+	throw classified_error("research_gui: callback: bad result size!");
       }
     }
   };

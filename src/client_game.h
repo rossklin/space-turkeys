@@ -292,7 +292,7 @@ namespace st3{
 	if (e -> isa(T::class_id)){
 	  return utility::guaranteed_cast<specific_selector<T>, entity_selector>(e);
 	}else{
-	  throw std::runtime_error("get_specific: " + T::class_id + ": wrong class id for: " + i);
+	  throw classified_error("get_specific: " + T::class_id + ": wrong class id for: " + i);
 	}
       };
 

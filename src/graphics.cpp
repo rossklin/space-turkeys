@@ -32,7 +32,7 @@ void graphics::initialize(){
   
   // setup load text
   if (!default_font.loadFromFile("fonts/AjarSans-Regular.ttf")){
-    throw runtime_error("error loading font");
+    throw classified_error("error loading font");
   }
 }
 
@@ -116,7 +116,7 @@ sf::Image graphics::ship_image(string ship_class, float width, float height, sf:
 sf::Image graphics::ship_image_label(string text, string ship_class, float width, float height, sf::Color l_col, sf::Color s_col) {
   sf::RenderTexture tex;
   if (!tex.create(width, height)) {
-    throw runtime_error("Failed to create render texture!");
+    throw classified_error("Failed to create render texture!");
   }
 
   tex.clear();
@@ -253,7 +253,7 @@ sf::Image graphics::selector_card(string title, bool available, float progress) 
   cout << "selector card: " << title << ": progress = " << progress << endl;
   
   if (!tex.create(width, height)) {
-    throw runtime_error("Failed to create render texture!");
+    throw classified_error("Failed to create render texture!");
   }
 
   tex.clear();

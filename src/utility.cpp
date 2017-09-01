@@ -63,7 +63,7 @@ rapidjson::Document *utility::get_json(string key) {
     exit(-1);
   }
   
-  if (!(doc -> HasMember(key.c_str()) && (*doc)[key.c_str()].IsObject())) throw runtime_error("Invalid data in " + filename + "!");
+  if (!(doc -> HasMember(key.c_str()) && (*doc)[key.c_str()].IsObject())) throw classified_error("Invalid data in " + filename + "!");
   return doc;
 }
 
@@ -334,7 +334,7 @@ float utility::vl2norm(vector<float> const &x){
 // vector difference
 vector<float> utility::vdiff(vector<float> const &a, vector<float> const &b){
   if (a.size() != b.size()){
-    throw runtime_error("vdiff: dimension mismatch");
+    throw classified_error("vdiff: dimension mismatch");
   }
 
   vector<float> res = a;
@@ -348,7 +348,7 @@ vector<float> utility::vdiff(vector<float> const &a, vector<float> const &b){
 // vector addition
 vector<float> utility::vadd(vector<float> const &a, vector<float> const &b){
   if (a.size() != b.size()){
-    throw runtime_error("vdiff: dimension mismatch");
+    throw classified_error("vdiff: dimension mismatch");
   }
 
   vector<float> res = a;

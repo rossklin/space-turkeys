@@ -58,7 +58,7 @@ bool development::node::parse(string name, const rapidjson::Value &v) {
 	      float upper = stof(limits[1]);
 	      if (s.second.stats[sskey::key::mass] < lower || s.second.stats[sskey::key::mass] > upper) pass = false;
 	    } else {
-	      throw runtime_error("invalid condition: " + cond);
+	      throw classified_error("invalid condition: " + cond);
 	    }
 	  }
 	  if (pass) ship_classes.push_back(s.first);
@@ -66,7 +66,7 @@ bool development::node::parse(string name, const rapidjson::Value &v) {
       } else if (utility::find_in(ship_name, ship::all_classes())) {
 	ship_classes.push_back(ship_name);
       } else {
-	throw runtime_error("invalid upgrade ship class specifier: " + ship_name);
+	throw classified_error("invalid upgrade ship class specifier: " + ship_name);
       }
       
       for (auto sc : ship_classes) {

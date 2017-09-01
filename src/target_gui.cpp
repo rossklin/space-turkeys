@@ -20,7 +20,7 @@ st3::target_gui::target_gui(point p, list<target_gui::option_t> opts, list<combi
   selected_entities(sel),
   position(p){
   
-  if (opts.empty()) throw runtime_error("attempting to build target gui without options!");
+  if (opts.empty()) throw classified_error("attempting to build target gui without options!");
 
   options.insert(options.begin(), opts.begin(), opts.end());
   window = w;

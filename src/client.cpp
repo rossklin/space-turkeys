@@ -49,11 +49,11 @@ void run(string game_id, string name, client_game_settings settings, bool fullsc
   query(g -> socket, pq, tc_in, tc_out);
 
   if (tc_out & socket_t::tc_bad_result) {
-    throw runtime_error("Failed to send game id to server.");
+    throw classified_error("Failed to send game id to server.");
   }
 
   if (!(g -> socket -> data >> g -> socket -> id)){
-    throw runtime_error("server failed to provide id");
+    throw classified_error("server failed to provide id");
   }
 
   cout << "received player id: " << g -> socket -> id << endl;
@@ -89,7 +89,7 @@ int main(int argc, char **argv){
   auto parse_input = [&game_id, &ip, &name, &settings, &fullscreen] (string x) {
     size_t idx = x.find("=");
     if (idx == string::npos) {
-      throw runtime_error("Invalid input: " + x);
+      throw classified_error("Invalid input: " + x);
     }
 
     string key = x.substr(0, idx);
@@ -113,10 +113,10 @@ int main(int argc, char **argv){
       if (starting_options.count(value)) {
 	settings.starting_fleet = value;
       } else {
-	throw runtime_error("Invalid starting fleet option: " + value);
+	throw classified_error("Invalid starting fleet option: " + value);
       }
     } else {
-      throw runtime_error("Invalid input: " + x);
+      throw classified_error("Invalid input: " + x);
     }
   };
 

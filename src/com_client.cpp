@@ -103,7 +103,7 @@ void client::deserialize(data_frame &f, sf::Packet &p, sint id){
   sint n;
 
   if (f.entity.size()) {
-    throw runtime_error("client::deserialize: data frame contains entities!");
+    throw classified_error("client::deserialize: data frame contains entities!");
   }
   
   if (!(p >> f.players >> f.settings >> f.remove_entities >> n)){

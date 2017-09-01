@@ -20,13 +20,13 @@ sfloat& allocation::operator[](const string &v){
   if (data.count(v)){
     return data[v];
   }else{
-    throw runtime_error("allocation access: invalid index: " + v);
+    throw classified_error("allocation access: invalid index: " + v);
   }
 }
 
 void allocation::confirm_content(vector<string> x){
   for (auto v : x) {
-    if (!data.count(v)) throw runtime_error("allocation: unconfirmed content: " + v);
+    if (!data.count(v)) throw classified_error("allocation: unconfirmed content: " + v);
   }
 }
 
@@ -52,7 +52,7 @@ void allocation::scale(float a){
 void allocation::add(allocation a){
   for (auto &x : a.data){
     if (!data.count(x.first)) {
-      throw runtime_error("countable_allocation::add: element mismatch: "  + x.first);
+      throw classified_error("countable_allocation::add: element mismatch: "  + x.first);
     }
     data[x.first] += x.second;
   }
@@ -60,19 +60,19 @@ void allocation::add(allocation a){
 
 // specific allocations
 ship_allocation::ship_allocation() {
-  if (ship::all_classes().empty()) throw runtime_error("ship_allocation(): no keywords!");
+  if (ship::all_classes().empty()) throw classified_error("ship_allocation(): no keywords!");
   auto buf = ship::all_classes();
   vector<string> classes(buf.begin(), buf.end());
   setup(classes);
 }
 
 resource_allocation::resource_allocation() {
-  if (keywords::resource.empty()) throw runtime_error("resource_allocation(): no keywords!");
+  if (keywords::resource.empty()) throw classified_error("resource_allocation(): no keywords!");
   setup(keywords::resource);
 }
 
 sector_allocation::sector_allocation() {
-  if (keywords::sector.empty()) throw runtime_error("sector_allocation(): no keywords!");
+  if (keywords::sector.empty()) throw classified_error("sector_allocation(): no keywords!");
   setup(keywords::sector);
 }
 

@@ -18,14 +18,14 @@ namespace st3{
 
     template<typename T, typename F = game_object>
     typename T::ptr guaranteed_cast(typename F::ptr p){
-      if (p == 0) throw std::runtime_error("attempt_cast: null pointer!");
+      if (p == 0) throw classified_error("attempt_cast: null pointer!");
   
       typename T::ptr res = dynamic_cast<typename T::ptr>(p);
 
       if (res){
 	return res;
       }else{
-	throw std::runtime_error("Failed to downcast");
+	throw classified_error("Failed to downcast");
       }
     }
 
@@ -165,7 +165,7 @@ namespace st3{
     template<typename C>
     typename C::key_type weighted_sample(C x) {
       if (x.empty()) {
-	throw std::runtime_error("weighted_sample: empty map!");
+	throw classified_error("weighted_sample: empty map!");
       }
       
       typename C::key_type def;
@@ -207,7 +207,7 @@ namespace st3{
     template<typename T>
     int vector_min(std::vector<T> &x, std::function<float(T)> h) {
       if (x.empty()) {
-	throw std::runtime_error("Can not call vector_min with empty vector!");
+	throw classified_error("Can not call vector_min with empty vector!");
       }
   
       float best = INFINITY;
@@ -221,7 +221,7 @@ namespace st3{
       }
 
       if (idx == -1) {
-	throw std::runtime_error("vector_min: no finite values found!");
+	throw classified_error("vector_min: no finite values found!");
       }
 
       return idx;
@@ -230,7 +230,7 @@ namespace st3{
     template<typename C, typename T = typename C::value_type>
     T value_min(const C &x, std::function<float(T)> h) {
       if (x.empty()) {
-	throw std::runtime_error("Can not call value_min with empty vector!");
+	throw classified_error("Can not call value_min with empty vector!");
       }
   
       float best = INFINITY;
@@ -244,7 +244,7 @@ namespace st3{
       }
 
       if (!std::isfinite(best)) {
-	throw std::runtime_error("value_min: no finite value found!");
+	throw classified_error("value_min: no finite value found!");
       }
 
       return result;

@@ -82,7 +82,7 @@ idtype identifier::get_multid_owner(combid v){
   try{
     return stoi(x);
   }catch(...){
-    throw runtime_error("get multid owner: invalid id from " + v + ": " + x);
+    throw classified_error("get multid owner: invalid id from " + v + ": " + x);
   }
 }
 

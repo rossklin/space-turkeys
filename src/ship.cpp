@@ -91,7 +91,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
 	  }
 
 	  if (rmax == 0) {
-	    throw runtime_error("Invalid ship shape for " + a.ship_class);
+	    throw classified_error("Invalid ship shape for " + a.ship_class);
 	  }
 
 	  for (auto &x : a.shape) x.first = utility::scale_point(x.first, 1 / rmax);
@@ -114,7 +114,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
 	    }
 
 	    if (!sub_success) {
-	      throw runtime_error("Invalid cost specification for ship " + a.ship_class + " in: " + res_name);
+	      throw classified_error("Invalid cost specification for ship " + a.ship_class + " in: " + res_name);
 	    }
 	  }
 	  success = true;
@@ -122,7 +122,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
       }
 
       if (!success) {
-	throw runtime_error("Invalid ship term: " + name);
+	throw classified_error("Invalid ship term: " + name);
       }
     }
     

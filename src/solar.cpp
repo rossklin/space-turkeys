@@ -165,7 +165,7 @@ void solar::give_commands(list<command> c, game_data *g) {
   for (auto &x : c){
     buf.clear();
     for (auto i : x.ships){
-      if (!ships.count(i)) throw runtime_error("solar::give_commands: invalid ship id: " + i);
+      if (!ships.count(i)) throw classified_error("solar::give_commands: invalid ship id: " + i);
       buf.push_back(i);
       ships.erase(i);
     }
@@ -287,7 +287,7 @@ float solar::space_status(){
     used -= t.space_provided;
   }
 
-  if (used > space) throw runtime_error("space_status: used more than space");
+  if (used > space) throw classified_error("space_status: used more than space");
   return fmin((space - used) / space, 1);
 }
 
@@ -301,7 +301,7 @@ float solar::water_status(){
     used -= t.water_provided;
   }
 
-  if (used > water) throw runtime_error("water status: used more than water!");
+  if (used > water) throw classified_error("water status: used more than water!");
   return fmin((water - used) / water, 1);
 }
 
@@ -359,7 +359,7 @@ choice::c_solar solar::government() {
   choice::c_solar c = choice_data;
   
   if (!utility::find_in(c.governor, keywords::governor)) {
-    throw runtime_error("Invalid governor: " + c.governor);
+    throw classified_error("Invalid governor: " + c.governor);
   }
   
   // general stuff for all governors
@@ -719,7 +719,7 @@ void facility::read_from_json(const rapidjson::Value &x) {
 	  }else if (t_name == "load"){
 	    turret.load = t -> value.GetDouble();
 	  }else{
-	    throw runtime_error("Failed to parse turret stats: " + t_name);
+	    throw classified_error("Failed to parse turret stats: " + t_name);
 	  }
 	}
 	success = true;
@@ -727,7 +727,7 @@ void facility::read_from_json(const rapidjson::Value &x) {
       }else if (name == "cost"){
 	for (auto t = i -> value.MemberBegin(); t != i -> value.MemberEnd(); t++) {
 	  if (!cost::parse_resource(t -> name.GetString(), t -> value.GetDouble(), cost_resources)) {
-	    throw runtime_error("Failed to parse facility cost: " + string(t -> name.GetString()));
+	    throw classified_error("Failed to parse facility cost: " + string(t -> name.GetString()));
 	  }
 	}
 	success = true;
@@ -759,7 +759,7 @@ void facility::read_from_json(const rapidjson::Value &x) {
     }
 
     if (!success) {
-      throw runtime_error("Failed to parse facility: " + name);
+      throw classified_error("Failed to parse facility: " + name);
     }
   }
 }

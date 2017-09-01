@@ -98,12 +98,12 @@ function<int()> game::generate_loop_body(function<int()> task) {
 }
 
 command_selector::ptr game::get_command_selector(idtype i){
-  if (!command_selectors.count(i)) throw runtime_error("client::game::get_command_selectors: invalid id: " + to_string(i));
+  if (!command_selectors.count(i)) throw classified_error("client::game::get_command_selectors: invalid id: " + to_string(i));
   return command_selectors[i];
 }
 
 entity_selector::ptr game::get_entity(combid i){
-  if (!entity.count(i)) throw runtime_error("client::game::get_entity: invalid id: " + i);
+  if (!entity.count(i)) throw classified_error("client::game::get_entity: invalid id: " + i);
   return entity[i];
 }
 
@@ -207,7 +207,7 @@ bool game::init_data(){
   };
 
   if (!wait_for_it(pq, callback)) {
-    throw runtime_error("pre_step: failed to load/deserialize init_data");
+    throw classified_error("pre_step: failed to load/deserialize init_data");
   }
 
   players = data.players;
@@ -579,7 +579,7 @@ choice::choice game::build_choice(choice::choice c){
 	c.commands[x.first].push_back(*get_command_selector(y));
 	cout << "Adding command for entity " << x.first << endl;
       }else{
-	throw runtime_error("Attempting to build invalid command: " + y);
+	throw classified_error("Attempting to build invalid command: " + y);
       }
     }
 
@@ -930,7 +930,7 @@ void game::area_select(){
     @param selected_entities selected entities
 */
 void game::command2entity(combid key, string act, list<combid> e_selected){
-  if (!entity.count(key)) throw runtime_error("command2entity: invalid key: " + key);
+  if (!entity.count(key)) throw classified_error("command2entity: invalid key: " + key);
 
   command c;
   point from, to;
@@ -1052,7 +1052,7 @@ bool game::exists_selected(){
 
 /** Get ids of non-allocated ships for entity selector */
 set<combid> game::get_ready_ships(combid id){
-  if (!entity.count(id)) throw runtime_error("get ready ships: entity selector " + id + " not found!");
+  if (!entity.count(id)) throw classified_error("get ready ships: entity selector " + id + " not found!");
 
   entity_selector::ptr e = get_entity(id);
   set<combid> s = e -> get_ships();
