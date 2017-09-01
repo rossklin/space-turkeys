@@ -3,6 +3,8 @@
 #include <queue>
 #include <type_traits>
 #include <stdexcept>
+#include <thread>
+#include <chrono>
 
 #include <SFML/Graphics.hpp>
 
@@ -1488,9 +1490,10 @@ string game::popup_options(string header_text, hm_t<string, string> options) {
 
 /** Core loop for gui. */
 void game::window_loop(function<int(sf::Event)> event_handler, function<int(void)> body, int &tc_in, int &tc_out) {
-  sf::Clock clock;
+  chrono::time_point<chrono::system_clock> start;
 
   while ((tc_in | tc_out) == socket_t::tc_run) {
+    start = chrono::system_clock::now();
     sf::Event event;
     while (window.pollEvent(event)){
       tc_out |= event_handler(event);
@@ -1507,9 +1510,8 @@ void game::window_loop(function<int(sf::Event)> event_handler, function<int(void
     sfgui -> Display(window);
     window.display();
 
-    float elapsed_seconds = clock.getElapsedTime().asSeconds();
-    sf::Time wait_for = sf::seconds(fmax(frame_time - elapsed_seconds, 0));
-    sf::sleep(wait_for);
+    long int millis = 1000 * frame_time;
+    this_thread::sleep_until(start + chrono::milliseconds(millis));
   }
 }
 
