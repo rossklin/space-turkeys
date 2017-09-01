@@ -114,6 +114,7 @@ namespace st3{
     void remove_entity(combid id);
     void distribute_ships(std::list<combid> sh, point p);
     void allocate_grid();
+    void update_research_facility_level();
   };
 };
 #endif

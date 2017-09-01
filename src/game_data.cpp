@@ -559,6 +559,25 @@ void game_data::pre_step(){
 
   // force grid to rebuild
   rehash_grid();
+
+  // update research facility level for use in validate choice
+  update_research_facility_level();
+}
+
+void game_data::update_research_facility_level() {
+  hm_t<idtype, hm_t<string, int> > level;
+  for (auto i : all<solar>()){
+    if (i -> owner > -1){
+      for (auto &f : i -> development) {
+	level[i -> owner][f.first] = max(level[i -> owner][f.first], f.second.level);
+      }
+      i -> research_points = 0;
+    }
+  }
+
+  for (auto &x : players) {
+    x.second.research_level.facility_level = level[x.first];
+  }
 }
 
 // pool research and remove unused waypoints
@@ -595,14 +614,12 @@ void game_data::end_step(){
   for (auto &x : players) x.second.log.clear();
 
   // pool research
+  update_research_facility_level();
+  
   hm_t<idtype, float> pool;
-  hm_t<idtype, hm_t<string, int> > level;
   for (auto i : all<solar>()){
     if (i -> owner > -1){
       pool[i -> owner] += i -> research_points;
-      for (auto &f : i -> development) {
-	level[i -> owner][f.first] = max(level[i -> owner][f.first], f.second.level);
-      }
       i -> research_points = 0;
     }
   }
@@ -610,7 +627,6 @@ void game_data::end_step(){
   for (auto x : players) {
     idtype id = x.first;
     research::data &r = players[id].research_level;
-    r.facility_level = level[id];
     
     // apply
     if (r.researching.length() > 0) {
