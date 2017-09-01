@@ -106,7 +106,7 @@ ship data::build_ship(string c, solar::ptr sol) const {
 
 bool data::can_build_ship(string v, solar::ptr sol, list<string> *data) const {
   if (!ship::table().count(v)) {
-    throw classified_error("Military template: no such ship class: " + v);
+    throw logical_error("Military template: no such ship class: " + v);
   }
   
   int facility = sol -> facility_access("shipyard") -> level;
@@ -137,7 +137,7 @@ set<string> data::researched() const {
 tech &data::access(string v) {
   auto &rtab = table();
   if (!rtab.count(v)) {
-    throw classified_error("Attempted to access invalid tech: " + v);
+    throw logical_error("Attempted to access invalid tech: " + v);
   } else if (!tech_map.count(v)) {
     tech_map[v] = rtab.at(v);
   }
@@ -149,13 +149,13 @@ void tech::read_from_json(const rapidjson::Value &x) {
   for (auto i = x.MemberBegin(); i != x.MemberEnd(); i++) {
     string name = i -> name.GetString();
     if (!development::node::parse(name, i -> value)) {
-      throw classified_error("Failed to parse tech: " + name);
+      throw parse_error("Failed to parse tech: " + name);
     }
   }
 
   // sanity check
   if (cost_time <= 0) {
-    throw classified_error("tech::read_from_json: invalid build time!");
+    throw parse_error("tech::read_from_json: invalid build time!");
   }
 }
 

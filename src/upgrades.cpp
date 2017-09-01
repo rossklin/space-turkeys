@@ -60,7 +60,7 @@ const hm_t<string, upgrade> &upgrade::table(){
       }
 
       if (!success) {
-	throw classified_error("Invalid upgrade stat for " + name + ": " + stat_name);
+	throw parse_error("Invalid upgrade stat for " + name + ": " + stat_name);
       }
     }      
 

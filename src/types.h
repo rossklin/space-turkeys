@@ -15,9 +15,24 @@ namespace st3{
     classified_error(std::string v, std::string severity = "notice");
   };
   
+  class logical_error : public classified_error {
+  public:
+    logical_error(std::string v, std::string severity = "logic-error");
+  };
+  
+  class player_error : public classified_error {
+  public:
+    player_error(std::string v, std::string severity = "player-input");
+  };
+  
+  class parse_error : public classified_error {
+  public:
+    parse_error(std::string v, std::string severity = "parse");
+  };
+  
   class network_error : public classified_error {
   public:
-    network_error(std::string v, std::string severity = "notice");
+    network_error(std::string v, std::string severity = "network");
   };
   
   namespace server {

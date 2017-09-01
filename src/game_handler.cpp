@@ -54,16 +54,15 @@ void simulation_step(com &c, game_data &g) {
   };
 
   auto generate_frames = [&c, &g, &frames, &frame_count, n] () {
-    try {
-      for (frame_count = 0; frame_count < n; frame_count++){
-	g.increment();
-	frames[frame_count].copy_from(g);
-	if (c.thread_com != socket_t::tc_run) break;
-      }
-    } catch (exception &e) {
-      server::handler::log(e.what());
-      c.thread_com = socket_t::tc_stop;
-    }
+    handler::safely([&] () {
+	for (frame_count = 0; frame_count < n; frame_count++){
+	  g.increment();
+	  frames[frame_count].copy_from(g);
+	  if (c.thread_com != socket_t::tc_run) break;
+	}
+      }, [&] () {
+	c.thread_com = socket_t::tc_stop;
+      });
   };
 
   thread t(generate_frames);

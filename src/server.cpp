@@ -21,12 +21,21 @@ using namespace st3::server;
 handler h;
 
 void handle_sigint(int sig) {
+  handler::log("STARTING SHUTDOWN");
   h.handle_sigint();
+  handler::log("COMPLETED SHUTDOWN");
 }
 
 int main(int argc, char **argv){
+  handler::log("BOOTING");
   signal(SIGINT, handle_sigint);
-  game_data::confirm_data();
+  try {
+    game_data::confirm_data();
+  } catch (parse_error &e) {
+    cerr << "Parse error loading data: " << e.what() << endl;
+    exit(-1);
+  }
+  
   h.run();
 
   return 0;

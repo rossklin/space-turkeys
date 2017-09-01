@@ -4,6 +4,7 @@
 #include <string>
 #include <thread>
 #include <mutex>
+#include <functional>
 #include <SFML/Network.hpp>
 
 #include "types.h"
@@ -17,6 +18,7 @@ namespace st3 {
       int status;
       std::mutex game_ring;
       static void log(std::string v);
+      static void safely(std::function<void()> f, std::function<void()> on_fail = 0);
 
       handler();  
       void run();

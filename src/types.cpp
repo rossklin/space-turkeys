@@ -15,6 +15,9 @@ classified_error::classified_error(string v, string s) : runtime_error(v) {
 }
 
 network_error::network_error(string v, string s) : classified_error(v, s) {}
+logical_error::logical_error(string v, string s) : classified_error(v, s) {}
+player_error::player_error(string v, string s) : classified_error(v, s) {}
+parse_error::parse_error(string v, string s) : classified_error(v, s) {}
 
 void server::output(string v, bool force) {
   static mutex m;

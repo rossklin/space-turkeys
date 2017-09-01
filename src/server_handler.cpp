@@ -7,6 +7,7 @@
 #include <iomanip> // put_time
 #include <string>  // string
 
+#include "types.h"
 #include "game_handler.h"
 #include "game_data.h"
 #include "server_handler.h"
@@ -18,8 +19,14 @@ using namespace st3;
 using namespace server;
 
 // show server handler output even though DEBUG is not defined
-void local_output(string v) {
-  output(v, true);
+void local_output(string v, int cid = -1, string gid = "") {
+  string mes = "handler: ";
+  if (cid > -1) mes += "client " + to_string(cid);
+  if (gid.size()) mes += " (game " + gid + ")";
+  mes += ": " + v;
+  
+  output(mes, true);
+  handler::log(mes);
 }
 
 bool valid_string(string v) {
@@ -42,6 +49,21 @@ string current_time_and_date() {
   return ss.str();
 }
 
+void handler::safely(function<void()> f, function<void()> g) {
+  try {
+    f();
+  } catch (classified_error &e) {
+    log("error: " + e.severity + ": " + e.what());
+    if (g) g();
+  } catch (exception &e) {
+    log(string("error: ") + e.what());
+    if (g) g();
+  } catch(...) {
+    log("error: unknown error");
+    if (g) g();
+  }
+}
+
 void handler::log(string v) {
   static mutex m;
   string log_file = "server.log";
@@ -50,8 +72,9 @@ void handler::log(string v) {
   fstream f(log_file, ios::app);
 
   if (!f.is_open()) {
+    cerr << "Error: " << v << endl;
     cerr << "Failed to open log file!" << endl;
-    throw classified_error("Failed to open log file!");
+    exit(-1);
   }
 
   f << current_time_and_date() << ": " << v << endl;
@@ -111,17 +134,13 @@ void handler::dispatch_game(string gid) {
   // wait for client wfg threads to finish
   for (auto cl : c -> access_clients()) if (cl -> wfg_thread) end_thread(cl -> wfg_thread);
 
-  try {
-    game_data g;
-    g.settings = c -> settings;
-    g.build_players(c -> access_clients());
-    g.build();  
-    game_handler(*c, g);
-  } catch (exception &e) {
-    log(e.what());
-  } catch (...) {
-    log("Unknown object thrown by game handler");
-  }
+  safely([c] () {
+      game_data g;
+      g.settings = c -> settings;
+      g.build_players(c -> access_clients());
+      g.build();  
+      game_handler(*c, g);
+    });
 
   c -> disconnect();
 }
@@ -131,7 +150,7 @@ handler::handler() {
 }
 
 void handler::dispatch_client(client_t *c) {
-  local_output("dispatch_client: start");
+  local_output("dispatch_client: start", c -> id);
 
   query_handler join_handler = [this, c] (int cid, sf::Packet p) -> handler_result {
     handler_result res;
@@ -140,8 +159,8 @@ void handler::dispatch_client(client_t *c) {
     string name;
     client_game_settings c_settings;
     bool test = p >> gid >> name >> c_settings;
-    local_output("join_handler: start");
-    if (!test) local_output("join_handler: failed to unpack");
+    local_output("join_handler: start", c -> id);
+    if (!test) local_output("join_handler: failed to unpack", c -> id);
 
     // guarantee server status does not change until the game has been
     // created
@@ -155,7 +174,7 @@ void handler::dispatch_client(client_t *c) {
     res_invalid.response << protocol::invalid;
 
     if (!(test && status == socket_t::tc_run)) {
-      local_output("join_handler: failed condition");
+      local_output("failed join condition", c -> id, gid);
       game_ring.unlock();
       return res_invalid;
     }
@@ -164,7 +183,7 @@ void handler::dispatch_client(client_t *c) {
     bool game_is_new = false;
     
     if (!link) {
-      local_output("join_handler: creating new game");
+      local_output("join_handler: creating new game", c -> id, gid);
       game_is_new = true;
       link = create_game(gid, c_settings, false);
     }
@@ -173,30 +192,30 @@ void handler::dispatch_client(client_t *c) {
 
     // test if joinable
     if (link -> can_join()) {
-      local_output("join_handler: can join!");
+      local_output("join_handler: can join!", c -> id, gid);
       link -> add_client(c);
       c -> name = name;
       c -> game_id = gid;
       res.response << c -> id;
     } else {
-      local_output("join_handler: can not join!");
+      local_output("can not join game", c -> id, gid);
       res = res_invalid;
     }
     
     link -> unlock();
     game_ring.unlock();
 
-    local_output("join_handler: complete");
+    local_output("join_handler: complete", c -> id, gid);
     return res;
   };
 
   // temporarily use server status as thread com
   c -> thread_com = &status;
   if (c -> check_protocol(protocol::connect, join_handler)) {
-    local_output("dispatch_client: starting join thread");
+    local_output("dispatch_client: starting join thread", c -> id);
     c -> wfg_thread = new thread([this,c] () {wfg(c);});
   } else {
-    local_output("dispatch_client: failed protocol, deallocating");
+    local_output("dispatch_client: failed protocol, deallocating", c -> id);
     delete c;
   }
 }
@@ -275,7 +294,7 @@ void handler::game_dispatcher() {
       if (game.thread_com == socket_t::tc_init) {
 	for (auto c : clients) {
 	  if (c -> wfg_thread && !c -> is_connected()) {
-	    local_output("game_dispatcher: removing disconnected client " + to_string(c -> id) + " from game " + gid);
+	    local_output("game_dispatcher: removing disconnected client", c -> id, gid);
 	    end_thread(c -> wfg_thread);
 	    game.clients.erase(c -> id);
 	  }

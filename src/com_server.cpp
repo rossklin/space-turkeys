@@ -56,6 +56,7 @@ handler_result client_t::receive_query(protocol_t p, query_handler f){
 }
 
 void client_t::set_disconnect() {
+  handler::log("disconnecting client " + to_string(id));
   disconnect();
   status = sf::Socket::Status::Disconnected;
 }
@@ -72,33 +73,32 @@ bool client_t::check_protocol(protocol_t p, query_handler f) {
 
   output("check protocol " + to_string(p) + ": client " + to_string(id) + ": begin.");
 
-  try {
-    while (running && (*thread_com == socket_t::tc_run || *thread_com == socket_t::tc_init)) {
-      handler_result res = receive_query(p, f);
+  handler::safely([&,this] () {
+      while (running && (*thread_com == socket_t::tc_run || *thread_com == socket_t::tc_init)) {
+	handler_result res = receive_query(p, f);
 
-      if (res.status == socket_t::tc_failed && is_connected()) {
-	send_packet(p_aborted);
-	set_disconnect();
+	if (res.status == socket_t::tc_failed && is_connected()) {
+	  send_packet(p_aborted);
+	  set_disconnect();
+	}
+
+	if (!is_connected()) break;
+
+	send_packet(res.response);
+
+	if (res.status == socket_t::tc_stop) {
+	  set_disconnect();
+	  break;
+	}
+
+	running = res.status == socket_t::tc_run;
+	completed = !running;
       }
-
-      if (!is_connected()) break;
-
-      send_packet(res.response);
-
-      if (res.status == socket_t::tc_stop) {
-	set_disconnect();
-	break;
-      }
-
-      running = res.status == socket_t::tc_run;
-      completed = !running;
-    }
-  } catch (network_error &e) {
-    // network error
-    set_disconnect();
-    completed = false;
-    server::handler::log(e.what());
-  }
+    }, [&,this] () {
+      // on error
+      set_disconnect();
+      completed = false;
+    });
 
   output("check protocol " + to_string(p) + ": client " + to_string(id) + ": " + to_string(is_connected()));
 

@@ -84,7 +84,7 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
   list<combid> res;
   game_object::ptr self = get_entity(self_id);
   if (!self -> isa(physical_object::class_id)) {
-    throw classified_error("Non-physical entity called search targets: " + self_id);
+    throw logical_error("Non-physical entity called search targets: " + self_id);
   }
   physical_object::ptr s = utility::guaranteed_cast<physical_object>(self);
     
@@ -187,7 +187,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
   // commands based there can be validated
   for (auto &x : c.waypoints){
     if (identifier::get_multid_owner(x.second.id) != id){
-      throw classified_error("apply_choice: player " + to_string(id) + " tried to insert waypoint owned by " + to_string(identifier::get_multid_owner(x.second.id)));
+      throw player_error("apply_choice: player " + to_string(id) + " tried to insert waypoint owned by " + to_string(identifier::get_multid_owner(x.second.id)));
     }
     add_entity(x.second.clone());
     cout << "apply_choice: player " << id << ": added " << x.first << endl;
@@ -196,7 +196,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
   for (auto &x : c.fleets){
     string sym = identifier::get_multid_owner_symbol(x.second.id);
     if (sym != to_string(id) && sym != "S"){
-      throw classified_error("apply_choice: player " + to_string(id) + " tried to insert fleet owned by " + sym);
+      throw player_error("apply_choice: player " + to_string(id) + " tried to insert fleet owned by " + sym);
     }
     
     x.second.owner = id;
@@ -208,7 +208,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
       if (s -> owner == id) {
 	s -> fleet_id = f -> id;
       }else{
-	throw classified_error("apply_choice: player " + to_string(id) + " tried to construct a fleet with a non-owned ship!");
+	throw player_error("apply_choice: player " + to_string(id) + " tried to construct a fleet with a non-owned ship!");
       }
     }
 
@@ -222,7 +222,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
   // research
   if (c.research.length() > 0) {
     if (!utility::find_in(c.research, players[id].research_level.available())) {
-      throw classified_error("Invalid research choice submitted by player " + to_string(id) + ": " + c.research);
+      throw player_error("Invalid research choice submitted by player " + to_string(id) + ": " + c.research);
     }
   }
   players[id].research_level.researching = c.research;
@@ -233,22 +233,22 @@ void game_data::apply_choice(choice::choice c, idtype id){
     auto e = get_entity(x.first);
     
     if (e -> owner != id){
-      throw classified_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + x.first + " owned by " + to_string(e -> owner));
+      throw player_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + x.first + " owned by " + to_string(e -> owner));
     }
     
     if (!e -> isa(solar::class_id)){
-      throw classified_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + x.first + ": not a solar!");
+      throw player_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + x.first + ": not a solar!");
     }
 
     if (!x.second.development.empty()){
       list<string> av = get_solar(x.first) -> available_facilities(players[id].research_level);
       if (!utility::find_in(x.second.development, av)) {
-	throw classified_error("validate_choice: error: solar choice contained invalid development: " + x.second.development);
+	throw player_error("validate_choice: error: solar choice contained invalid development: " + x.second.development);
       }
     }
 
     if (!utility::find_in(x.second.governor, keywords::governor)) {
-      throw classified_error("validate_choice: invalid governor: " + x.second.governor);
+      throw player_error("validate_choice: invalid governor: " + x.second.governor);
     }
 
     // apply
@@ -263,7 +263,7 @@ void game_data::apply_choice(choice::choice c, idtype id){
   for (auto x : c.commands) {
     auto e = get_entity(x.first);
     if (e -> owner != id) {
-      throw classified_error("validate_choice: error: command by player " + to_string(id) + " for " + x.first + " owned by " + to_string(e -> owner));
+      throw player_error("validate_choice: error: command by player " + to_string(id) + " for " + x.first + " owned by " + to_string(e -> owner));
     }
   }
 
@@ -275,13 +275,13 @@ void game_data::apply_choice(choice::choice c, idtype id){
 }
 
 void game_data::add_entity(game_object::ptr p){
-  if (entity.count(p -> id)) throw classified_error("add_entity: already exists: " + p -> id);  
+  if (entity.count(p -> id)) throw logical_error("add_entity: already exists: " + p -> id);  
   entity[p -> id] = p;
   p -> on_add(this);
 }
 
 void game_data::remove_entity(combid i){
-  if (!entity.count(i)) throw classified_error("remove_entity: " + i + ": doesn't exist!");
+  if (!entity.count(i)) throw logical_error("remove_entity: " + i + ": doesn't exist!");
   get_entity(i) -> on_remove(this);
   delete get_entity(i);
   entity.erase(i);
@@ -489,7 +489,7 @@ void game_data::build_players(list<server::client_t*> clients){
 void game_data::build(){
   static research::data rbase;
   
-  if (players.empty()) throw classified_error("game_data: build: no players!");
+  if (players.empty()) throw classified_error("game_data: build: no players!", "error");
 
   auto make_home_solar = [this] (point p, idtype pid) {
     cost::res_t initial_resources;
@@ -518,7 +518,7 @@ void game_data::build(){
     } else if (settings.starting_fleet == "massive") {
       for (auto sc : ship::all_classes()) starter_fleet[sc] = 100;
     } else {
-      throw classified_error("Invalid starting fleet option: " + settings.starting_fleet);
+      throw player_error("Invalid starting fleet option: " + settings.starting_fleet);
     }
     
     for (auto sc : starter_fleet) {
@@ -635,7 +635,7 @@ game_object::ptr entity_package::get_entity(combid i){
   if (entity.count(i)){
     return entity[i];
   }else{
-    throw classified_error("game_data::get_entity: not found: " + i);
+    throw logical_error("game_data::get_entity: not found: " + i);
   }
 }
 
@@ -659,7 +659,7 @@ void entity_package::limit_to(idtype id){
 }
 
 void entity_package::copy_from(const game_data &g){
-  if (entity.size()) throw classified_error("Attempting to assign game_data: has entities!");
+  if (entity.size()) throw logical_error("Attempting to assign game_data: has entities!");
 
   for (auto x : g.entity) entity[x.first] = x.second -> clone();
   players = g.players;
