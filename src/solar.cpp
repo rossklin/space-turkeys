@@ -45,6 +45,14 @@ void solar::move(game_data *g){
 
   dt = g -> get_dt();
 
+  // update threat level
+  list<combid> enemy_ships = g -> search_targets(id, position, 100, target_condition(target_condition::enemy, ship::class_id).owned_by(owner));
+  float self_strength = 0;
+  float enemy_strength = 0;
+  for (auto t : developed()) if (t.is_turret) self_strength += t.hp * t.turret.damage * t.turret.accuracy / t.turret.load;
+  for (auto sid : enemy_ships) enemy_strength += g -> get_ship(sid) -> get_strength();
+  threat_level = enemy_strength / (self_strength + 1);
+
   // select ship class for production
   if (next_ship.empty()) {
     stringstream ss;
@@ -446,6 +454,16 @@ choice::c_solar solar::government() {
       h += add_factor(keywords::key_culture, 10 * care_factor * fmax(1 - happiness, 0));
       h += add_factor(keywords::key_ecology, 10 * care_factor * fmax(1 - ecology, 0));
       h += add_factor(keywords::key_medicine, 10 * care_factor * crowding_rate() / base_growth());
+
+      if (test.is_turret) {
+	// score for defensive facilities
+	float threat_weight = threat_level;
+	if (c.governor == keywords::key_military) {
+	  threat_weight += 0.3;
+	}
+
+	h += threat_weight * test.turret.damage * test.turret.range * test.turret.accuracy / test.turret.load;
+      }
 
       // reduce score for build time
       h *= 4 / log(test.cost_time + test.cost_resources.count() + 1);

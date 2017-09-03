@@ -184,8 +184,11 @@ namespace st3{
       string res = "fleet at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
 
       if (owned){
-	res += "\nships: " + to_string(ships.size());
+	hm_t<string, int> ship_counts;
+	for (auto sid : get_ships()) ship_counts[g -> get_specific<ship>(sid) -> ship_class]++;
+
 	res += "\naction: " + com.action;
+	for (auto x : ship_counts) res += "\n" + x.first + "s: " + to_string(x.second);
       }
 
       return res;

@@ -379,7 +379,7 @@ float utility::linsig(float x) {
 // from black (background) and grey (neutral solar) colors
 vector<sint> utility::different_colors(int n){
   int rep = 40;
-  int ncheck = n+2;
+  int ncheck = n+3;
   vector<vector<float> > buf(ncheck);
 
   for (auto &x : buf) {
@@ -388,6 +388,7 @@ vector<sint> utility::different_colors(int n){
 
   buf[n] = {0,0,0}; // space color
   buf[n+1] = {150 / (float)256, 150 / (float)256, 150 / (float)256}; // neutral color
+  buf[n+2] = {1, 0, 0};
 
   for (int i = 0; i < rep; i++){
     for (int j = 0; j < n; j++){

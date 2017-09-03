@@ -806,6 +806,13 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
     return;
   }
 
+  // check that there is at least one ship available
+  set<combid> ready_ships = get_ready_ships(c.source);
+  if (ready_ships.empty()) {
+    cout << "add_command: attempted to create empty command!" << endl;
+    return;
+  }
+
   // set default fleet policy
   if (default_policy) c.policy = fleet::default_policy(c.action);
 
@@ -816,7 +823,6 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
 
   // add ships to command
   if (fill_ships) {
-    set<combid> ready_ships = get_ready_ships(c.source);
     set<string> fleet_actions = {fleet_action::go_to, interaction::land, interaction::space_combat, interaction::bombard};
 
     // check if special action

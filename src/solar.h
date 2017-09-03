@@ -66,6 +66,7 @@ namespace st3{
     choice::c_solar choice_data;
     std::string next_ship;
     float dt;
+    float threat_level;
     research::data *research_level;
 
     hm_t<std::string, facility_object> development;

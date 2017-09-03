@@ -22,7 +22,7 @@
 
 	"detection" : {
 	    "build time" : 400,
-	    "depends facilities" : {"research facility" : 4},
+	    "depends facilities" : {"research facility" : 3},
 	    "depends technologies" : ["warp technology"],
 	    "ship upgrades" : {
 		"#scout" : ["detection"]
@@ -31,7 +31,7 @@
 
 	"shields" : {
 	    "build time" : 400,
-	    "depends facilities" : {"research facility" : 4},
+	    "depends facilities" : {"research facility" : 3},
 	    "depends technologies" : ["warp technology", "plasma technology"],
 	    "ship upgrades" : {
 		"upgrade all ships" : ["shield"]
