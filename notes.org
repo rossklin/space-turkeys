@@ -48,20 +48,6 @@
 *** residual client side waypoints (?when incoming units die?)
 *** mining too nerfed? Considering how mining weighting works, shouldn't get empty storage
 *** Can't scroll sideways in log when drawn with single label.
-*** [J] reduce research facility level req to level 3
-*** [J] military should also prefer building defensive facilities
-*** [J] start with missile turret level 1
-*** [J] fleet hover info should show ship counts
-*** [J] red should not be a player color
-*** [J] people become *very* unhappy under military and development governors
-*** [J] population quickly grows to limit 
-*** [J] some network error after ~20 turns
-    Colonize action caused invalid governor
-*** [J] option to override solar's development? Annoying when e.g. first shipyard doesn't get built
-    Home solar starts with shipyard level 1
-*** [J] show "leads to" in tech choice info
-*** [J?] annoying that enemy cluster flags update on unseen units
-*** [J?] don't give orders to send 0 units
 * [~] issues
 ** [~] system
 *** init_data sends all data - should limit to "player_any"
@@ -186,6 +172,20 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] reduce research facility level req to level 3
+** [J] military should also prefer building defensive facilities
+** [J] start with missile turret level 1
+** [J] fleet hover info should show ship counts
+** [J] red should not be a player color
+** [J] people become *very* unhappy under military and development governors
+** [J] population quickly grows to limit 
+** [J] some network error after ~20 turns
+    Colonize action caused invalid governor
+** [J] option to override solar's development? Annoying when e.g. first shipyard doesn't get built
+    Home solar starts with shipyard level 1
+** [J] show "leads to" in tech choice info
+** [J?] annoying that enemy cluster flags update on unseen units
+** [J?] don't give orders to send 0 units
 ** [J] solar keeps building new ships even though military choice is "none"
     Also builds freighter when told to build colonizer..? Empty choice
     was being reinitialized when normalized.
