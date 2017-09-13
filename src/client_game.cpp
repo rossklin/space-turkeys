@@ -1105,13 +1105,18 @@ void game::setup_targui(point p){
   set<string> possible_actions;
 
   // add possible actions from available ship interactions
+  bool exists_ships = false;
   for (auto k : keys_selected){
+    exists_ships |= get_ready_ships(k).size() > 0;
     entity_selector::ptr e = get_entity(k);
     for (auto i : e -> get_ships()){
       ship::ptr s = get_specific<ship>(i);
       for (auto u : s -> upgrades) possible_actions += upgrade::table().at(u).inter;
     }
   }
+
+  // never generate command if there are no ships
+  if (!exists_ships) return;
 
   // check if actions are allowed per target
   auto itab = interaction::table();
