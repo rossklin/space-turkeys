@@ -15,6 +15,7 @@
 namespace st3{
   /*! Arithmetics for points, vectors, sets and sfml objects. */
   namespace utility{
+    const std::string root_path = "/usr/share/spaceturkeys-3/";
 
     template<typename T, typename F = game_object>
     typename T::ptr guaranteed_cast(typename F::ptr p){

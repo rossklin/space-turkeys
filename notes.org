@@ -22,34 +22,29 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
-*** creating order with 0 ships still creates waypoint 
-*** creating order with 0 ships still shows action gui
-*** [!] after game complete, client pre-step failed to load game data
+*** [!] Server segfaults if client disconnects during introduction
+*** choice_gui should not scale text!
+*** distinct abbreviations for governors
+*** fleeing units freeze in panic
+*** Can't scroll sideways in log when drawn with single label.
+*** treasure should only discover techs that are "next in line"
+*** draw fleets' primary ship and count in flag
+*** commands from a waypoint should if possible respect the incoming fleet policy
+*** after game complete, client pre-step failed to load game data
+*** show unhappy smiley by solar when unhappy
+*** quick key to show missing resources at solars
+*** pressing f should merge selected fleets
+*** governor: add weight if a development would increase empire's max facility level
+*** governor: figure out why population grows ~10x faster in real game than in tests
+*** Consider increasing effect of hospital and ecosystem int
+*** residual client side waypoints (?when incoming units die?)
+*** mining too nerfed? Considering how mining weighting works, shouldn't get empty storage
+*** [J] creating order with 0 ships still creates waypoint 
+*** [J] creating order with 0 ships still shows action gui
 *** [!] terminated with network error
     After submitting first choice after discovering shields and
     selecting battleships. Probably an exception on server which
     didn't show again..?
-*** pressing f should merge selected fleets
-*** show unhappy smiley by solar when unhappy
-*** choice_gui should not scale text!
-*** commands from a waypoint should if possible respect the incoming fleet policy
-*** quick key to show missing resources at solars
-*** distinct abbreviations for governors
-*** draw fleets' primary ship and count in flag
-*** fleeing units freeze in panic
-*** treasure should only discover techs that are "next in line"
-*** governor
-**** [J] happiness and population change too fast
-**** figure out why population grows ~10x faster in real game than in tests
-**** [J] add research facility to initial solar
-**** [J] shipyard and research facility should have special priority
-    So the weight on primary sector can be reduced somewhat in favor
-    of situational weights.
-**** add weight if a development would increase empire's max facility level
-*** Consider increasing effect of hospital and ecosystem int
-*** residual client side waypoints (?when incoming units die?)
-*** mining too nerfed? Considering how mining weighting works, shouldn't get empty storage
-*** Can't scroll sideways in log when drawn with single label.
 * [~] issues
 ** [~] system
 *** init_data sends all data - should limit to "player_any"

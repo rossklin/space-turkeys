@@ -29,9 +29,10 @@ sf::Color graphics::fade_color(sf::Color from, sf::Color to, float r){
 }
 
 void graphics::initialize(){
-  
-  // setup load text
-  if (!default_font.loadFromFile("fonts/AjarSans-Regular.ttf")){
+  bool loaded = default_font.loadFromFile("/fonts/AjarSans-Regular.ttf");
+  if (!loaded) loaded = default_font.loadFromFile(utility::root_path + "/fonts/AjarSans-Regular.ttf");
+
+  if (!loaded) {
     throw classified_error("error loading font");
   }
 }

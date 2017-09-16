@@ -50,12 +50,11 @@ string get_file(ifstream& in) {
 }
 
 rapidjson::Document *utility::get_json(string key) {
-  string root_path = "/usr/share/spaceturkeys-3/";
   string filename = key + "_data.json";
   ifstream file(filename);
 
   if (!file.is_open()) {
-    file.open(root_path + filename);
+    file.open(root_path + "/" + filename);
   }
 
   if (!file.is_open()) {

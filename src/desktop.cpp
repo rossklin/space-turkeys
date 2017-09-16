@@ -82,7 +82,7 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   auto w_info = pack_in_window(right_panel, info_rect);
   Add(w_info);
 
-  LoadThemeFromFile("main.theme");
+  LoadThemeFromFile("main.theme") || LoadThemeFromFile(utility::root_path + "/main.theme");
 }
 
 void main_interface::push_log(list<string> log) {
