@@ -43,6 +43,7 @@ void graphics::draw_flag(sf::RenderTarget &w, point p, sf::Color c, int count, s
 
   ship sh = ship::table().at(ship_class);
   sh.position = p + s * point(0.5, -1.5);
+  sh.angle = 0;
   draw_ship(w, sh, c, 0.5 * s);
   
   svert.resize(4);

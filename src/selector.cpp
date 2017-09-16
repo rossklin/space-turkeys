@@ -195,8 +195,10 @@ namespace st3{
 	  ship_stats ssb = ship::table().at(b);
 	  return ssa.get_strength() > ssb.get_strength();
 	});
-      
-      graphics::draw_flag(w, position, get_color(), get_ships().size(), keys.front(), keys.size() > 1);
+
+      string ship_key = "scout";
+      if (keys.size() > 0) ship_key = keys.front();
+      graphics::draw_flag(w, position, get_color(), get_ships().size(), ship_key, keys.size() > 1);
     }
 
     template<>

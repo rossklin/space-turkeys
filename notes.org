@@ -22,13 +22,11 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
+*** custom key bindings och eller wasd kontroller
+*** commands between waypoints shown/not shown randomly during simulate
 *** [!] Server segfaults if client disconnects during introduction
 *** [windows] choice_gui should not scale text!
-*** [J] distinct abbreviations for governors
 *** fleeing units freeze in panic
-*** [J] Can't scroll sideways in log when drawn with single label.
-*** [J] treasure should only discover techs that are "next in line"
-*** [J] draw fleets' primary ship and count in flag
 *** commands from a waypoint should if possible respect the incoming fleet policy
 *** after game complete, client pre-step failed to load game data
 *** show unhappy smiley by solar when unhappy
@@ -39,8 +37,6 @@
 *** Consider increasing effect of hospital and ecosystem int
 *** residual client side waypoints (?when incoming units die?)
 *** mining too nerfed? Considering how mining weighting works, shouldn't get empty storage
-*** [J] creating order with 0 ships still creates waypoint 
-*** [J] creating order with 0 ships still shows action gui
 *** [!] terminated with network error
     After submitting first choice after discovering shields and
     selecting battleships. Probably an exception on server which
@@ -169,6 +165,12 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] distinct abbreviations for governors
+** [J] Can't scroll sideways in log when drawn with single label.
+** [J] treasure should only discover techs that are "next in line"
+** [J] draw fleets' primary ship and count in flag
+** [J] creating order with 0 ships still creates waypoint 
+** [J] creating order with 0 ships still shows action gui
 ** [J] reduce research facility level req to level 3
 ** [J] military should also prefer building defensive facilities
 ** [J] start with missile turret level 1
