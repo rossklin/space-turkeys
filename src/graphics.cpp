@@ -44,7 +44,7 @@ void graphics::draw_flag(sf::RenderTarget &w, point p, sf::Color c, int count, s
   ship sh = ship::table().at(ship_class);
   sh.position = p + s * point(0.5, -1.5);
   sh.angle = 0;
-  draw_ship(w, sh, c, 0.5 * s);
+  draw_ship(w, sh, c, 0.3 * s);
   
   svert.resize(4);
   svert[0].position = point(0, 0);
@@ -206,7 +206,7 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
   int alpha_wave = 1000 * t * exp(-pow(3 * t,2));
 
   auto fexpl = [&w, e, t, c, alpha_wave] (sf::Color ct) {
-    float rad = e.magnitude * t;
+    float rad = sqrt(e.magnitude) * t;
     sf::Color col = fade_color(c, ct, t / animation::tmax);
     col.a = alpha_wave;
   

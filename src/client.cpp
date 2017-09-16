@@ -143,7 +143,7 @@ int main(int argc, char **argv){
 
   try {
     run(game_id, name, settings, fullscreen);
-  } catch (exception e) {
+  } catch (exception &e) {
     cout << "Exception in client::run: " << e.what() << endl;
     cout << "Exiting..." << endl;
   }
