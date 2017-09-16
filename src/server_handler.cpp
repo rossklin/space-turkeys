@@ -35,7 +35,7 @@ bool valid_string(string v) {
 }
 
 void end_thread(thread *&t) {
-  t -> join();
+  if (t -> joinable()) t -> join();
   delete t;
   t = 0;
 }

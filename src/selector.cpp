@@ -47,23 +47,29 @@ namespace st3{
       if (!was_discovered) indicator_text += "!";
 
       if (owned){
+	hm_t<string, string> gov_abr;
+	gov_abr[keywords::key_military] = "MY";
+	gov_abr[keywords::key_research] = "R";
+	gov_abr[keywords::key_mining] = "MG";
+	gov_abr[keywords::key_development] = "D";
+	gov_abr[keywords::key_culture] = "C";
+	
 	graphics::draw_circle(w, position, vision(), sf::Color(40, 200, 60, 100));
 	graphics::draw_text(w, to_string((int)(population / 1000)), position, 16);
 
-	indicator_text = choice_data.governor.substr(0, 2);
+	indicator_text = gov_abr[choice_data.governor];
 	if (get_ships().size()) indicator_text += " <>";
   
 	if (selected){
 	  graphics::draw_circle(w, position, radius + 1, graphics::solar_selected, graphics::solar_selected_fill, 2);
 
-	  hm_t<string, int> ship_counts;
-	  for (auto sid : get_ships()) ship_counts[g -> get_specific<ship>(sid) -> ship_class]++;
+	  auto counts = ship_counts();
 
-	  if (ship_counts.size()) {
+	  if (counts.size()) {
 	    
 	    string res = "";
 	    int maxlen = 0;
-	    for (auto v : ship_counts) {
+	    for (auto v : counts) {
 	      string buf = to_string(v.second) + " " + v.first + "s";
 	      if (maxlen) buf = "\n" + buf;
 	      maxlen = max((int)buf.length(), maxlen);
@@ -71,7 +77,7 @@ namespace st3{
 	    }
 
 	    float fs = graphics::unscale() * 16;
-	    int n = ship_counts.size();
+	    int n = counts.size();
 	    float width = maxlen * fs * 0.6;
 	    float height = 1.3 * n * fs;
 	    sf::FloatRect bounds(position.x + radius + 10, position.y - height / 2, width, height);
@@ -144,13 +150,24 @@ namespace st3{
 
     template<>
     bool specific_selector<fleet>::contains_point(point p, float &d){
-      d = utility::l2norm(p - position) / graphics::unscale();
+      float us = graphics::unscale();
+      float flag_scale = 30 * us;
+      point flag_point = position + flag_scale * point(0.5, -1.5);
+      float dc = utility::l2norm(p - position);
+      float df = utility::l2norm(p - flag_point);
+      
+      d = fmin(df, dc) / us;
       return d < radius;
     }
 
     template<>
     bool specific_selector<fleet>::is_selectable() {
       return true;
+    }
+
+    template<>
+    set<combid> specific_selector<fleet>::get_ships(){
+      return ships;
     }
 
     template<>
@@ -171,12 +188,15 @@ namespace st3{
       f(vision(), sf::Color::Transparent, sf::Color(40, 200, 60, 50));
 
       // add a flag
-      graphics::draw_flag(w, position, graphics::unscale(), get_color());
-    }
-
-    template<>
-    set<combid> specific_selector<fleet>::get_ships(){
-      return ships;
+      auto counts = ship_counts();
+      list<string> keys = utility::get_map_keys(counts);
+      keys.sort([this](string a, string b) {
+	  ship_stats ssa = ship::table().at(a);
+	  ship_stats ssb = ship::table().at(b);
+	  return ssa.get_strength() > ssb.get_strength();
+	});
+      
+      graphics::draw_flag(w, position, get_color(), get_ships().size(), keys.front(), keys.size() > 1);
     }
 
     template<>
@@ -184,11 +204,10 @@ namespace st3{
       string res = "fleet at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
 
       if (owned){
-	hm_t<string, int> ship_counts;
-	for (auto sid : get_ships()) ship_counts[g -> get_specific<ship>(sid) -> ship_class]++;
+	hm_t<string, int> counts = ship_counts();
 
 	res += "\naction: " + com.action;
-	for (auto x : ship_counts) res += "\n" + x.first + "s: " + to_string(x.second);
+	for (auto x : counts) res += "\n" + x.first + "s: " + to_string(x.second);
       }
 
       return res;
@@ -327,6 +346,13 @@ entity_selector::entity_selector(sf::Color c, bool o){
   seen = owned;
   selected = false;
   queue_level = 0;
+}
+
+
+hm_t<string, int> entity_selector::ship_counts() {
+  hm_t<string, int> counts;
+  for (auto sid : get_ships()) counts[g -> get_specific<ship>(sid) -> ship_class]++;
+  return counts;
 }
 
 bool entity_selector::is_area_selectable() {

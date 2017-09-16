@@ -89,13 +89,38 @@ const hm_t<string, interaction> &interaction::table() {
       // nothing happens
     } else if (test < 0.1) {
       // random tech
-      auto keys = utility::get_map_keys(research::data::table());
+      auto rtab = research::data::table();
+      auto keys = utility::get_map_keys(rtab);
       research::data &level = g -> players[s -> owner].research_level;
       auto researched = level.researched();
       for (auto v : researched) keys.remove(v);
+      set<string> frontier;
+
+      for (auto k : keys) {
+	research::tech t = rtab[k];
+	bool avail = true;
+	for (auto d : t.depends_techs) {
+	  if (!researched.count(d)) {
+	    avail = false;
+	    break;
+	  }
+	}
+
+	if (avail) frontier.insert(k);
+      }
 
       if (keys.size() > 0) {
-	string tech = utility::uniform_sample(keys);
+	float sub_test = utility::random_uniform();
+	string tech;
+
+	if (sub_test < 0.1) {
+	  // low likelihood: sample from all techs
+	  tech = utility::uniform_sample(keys);
+	} else {
+	  // high likelihood: sample from next in line techs
+	  tech = utility::uniform_sample(frontier);
+	}
+	
 	level.access(tech).level = 1;
 	ss << " and discovered an ancient technology: " << tech << "!";
 	sshort << "discovered tech: " << tech << "!";

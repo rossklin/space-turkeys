@@ -92,11 +92,10 @@ void main_interface::push_log(list<string> log) {
   for (auto v : log) queue.push_front(v);
   while (queue.size() > max_size) queue.pop_back();
 
-  string output = "";
-
-  for (auto v : queue) output += v + "\n";
   log_panel -> RemoveAll();
-  log_panel -> Pack(Label::Create(output));
+  for (auto v : queue) {
+    log_panel -> Pack(Label::Create(v));
+  }
 }
 
 void main_interface::bind_ppc(Widget::Ptr w, function<void(void)> f) {

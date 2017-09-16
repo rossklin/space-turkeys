@@ -23,12 +23,12 @@
    DOWN destroyer VS fighter
 ** play testing
 *** [!] Server segfaults if client disconnects during introduction
-*** choice_gui should not scale text!
-*** distinct abbreviations for governors
+*** [windows] choice_gui should not scale text!
+*** [J] distinct abbreviations for governors
 *** fleeing units freeze in panic
-*** Can't scroll sideways in log when drawn with single label.
-*** treasure should only discover techs that are "next in line"
-*** draw fleets' primary ship and count in flag
+*** [J] Can't scroll sideways in log when drawn with single label.
+*** [J] treasure should only discover techs that are "next in line"
+*** [J] draw fleets' primary ship and count in flag
 *** commands from a waypoint should if possible respect the incoming fleet policy
 *** after game complete, client pre-step failed to load game data
 *** show unhappy smiley by solar when unhappy

@@ -1634,9 +1634,8 @@ void game::draw_universe(){
   for (auto x : entity) x.second -> draw(window);
 
   // flag clusters of enemy ships
-  float unscale = graphics::inverse_scale(window).x;
   for (auto x : enemy_clusters) {
-    graphics::draw_flag(window, x, unscale, sf::Color::Red);
+    graphics::draw_flag(window, x, sf::Color::Red, 0, "scout", false);
   }
 }
 

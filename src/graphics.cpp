@@ -29,7 +29,7 @@ sf::Color graphics::fade_color(sf::Color from, sf::Color to, float r){
 }
 
 void graphics::initialize(){
-  bool loaded = default_font.loadFromFile("/fonts/AjarSans-Regular.ttf");
+  bool loaded = default_font.loadFromFile("fonts/AjarSans-Regular.ttf");
   if (!loaded) loaded = default_font.loadFromFile(utility::root_path + "/fonts/AjarSans-Regular.ttf");
 
   if (!loaded) {
@@ -37,8 +37,13 @@ void graphics::initialize(){
   }
 }
 
-void graphics::draw_flag(sf::RenderTarget &w, point p, float s, sf::Color c) {
+void graphics::draw_flag(sf::RenderTarget &w, point p, sf::Color c, int count, string ship_class, bool multiple) {
   vector<sf::Vertex> svert;
+  float s = 30 * unscale();
+
+  ship sh = ship::table().at(ship_class);
+  sh.position = p + s * point(0.5, -1.5);
+  draw_ship(w, sh, c, 0.5 * s);
   
   svert.resize(4);
   svert[0].position = point(0, 0);
@@ -50,7 +55,7 @@ void graphics::draw_flag(sf::RenderTarget &w, point p, float s, sf::Color c) {
 
   sf::Transform t;
   t.translate(p.x, p.y);
-  t.scale(20 * s, 20 * s);
+  t.scale(s, s);
   w.draw(&svert[0], svert.size(), sf::LinesStrip, t);
 }
 
@@ -65,7 +70,7 @@ void graphics::draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, 
   w.draw(sol);
 };
 
-void graphics::draw_text(sf::RenderTarget &w, string v, point p, float fs, bool ul, sf::Color fill, bool do_inv) {
+void graphics::draw_text(sf::RenderTarget &w, string v, point p, float fs, bool ul, sf::Color fill, bool do_inv, float rotate) {
   sf::Text text;
   float charsize = 16;
   float scale = fs / charsize;
@@ -82,6 +87,7 @@ void graphics::draw_text(sf::RenderTarget &w, string v, point p, float fs, bool 
   text.setPosition(p); 
   text.setFillColor(fill);
   text.setScale(point(scale, scale));
+  text.setRotation(rotate * 360 / (2 * M_PI));
   w.draw(text);
 };
 
@@ -264,7 +270,7 @@ sf::Image graphics::selector_card(string title, bool available, float progress) 
   tex.draw(pfill);
 
   // draw text
-  draw_text(tex, title, point(width / 2, 20), 16, false);
+  draw_text(tex, title, point(width / 2, height / 2), 16, false, sf::Color::White, true, M_PI / 2);
 
   // draw outline
   sf::Color outline = sf::Color(150,150,150);
