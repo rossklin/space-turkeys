@@ -33,8 +33,8 @@ void solar::pre_phase(game_data *g){
   
   research_level = &g -> players[owner].research_level;
   for (auto t : facility_access()){
-    if (t -> is_turret){
-      t -> turret.load += 0.02 * t -> level;
+    if (t -> is_turret && t -> turret.load_time > 0){
+      t -> turret.load += t -> level / t -> turret.load_time;
     }
   }
 }
@@ -49,7 +49,7 @@ void solar::move(game_data *g){
   list<combid> enemy_ships = g -> search_targets(id, position, 100, target_condition(target_condition::enemy, ship::class_id).owned_by(owner));
   float self_strength = 0;
   float enemy_strength = 0;
-  for (auto t : developed()) if (t.is_turret) self_strength += t.hp * t.turret.damage * t.turret.accuracy / t.turret.load;
+  for (auto t : developed()) if (t.is_turret) self_strength += t.hp * t.turret.damage * t.turret.accuracy / t.turret.load_time;
   for (auto sid : enemy_ships) enemy_strength += g -> get_ship(sid) -> get_strength();
   threat_level = enemy_strength / (self_strength + 1);
 
@@ -462,7 +462,7 @@ choice::c_solar solar::government() {
 	  threat_weight += 0.3;
 	}
 
-	h += threat_weight * test.turret.damage * test.turret.range * test.turret.accuracy / test.turret.load;
+	h += threat_weight * test.turret.damage * test.turret.range * test.turret.accuracy / test.turret.load_time;
       }
 
       // reduce score for build time
@@ -627,6 +627,20 @@ bool solar::can_see(game_object::ptr x) {
   return d < r;
 }
 
+float solar::compute_hp_ratio() {
+  float sum1 = 0;
+  float sum2 = 0;
+
+  for (auto f : developed()) {
+    if (f.is_turret) {
+      sum1 += f.hp;
+      sum2 += f.base_hp;
+    }
+  }
+  
+  return sum2 > 0 ? sum1 / sum2 : 1;
+}
+
 float solar::compute_shield_power() {
   float sum = 0;
   for (auto f : developed()) sum += f.shield;
@@ -702,7 +716,11 @@ list<facility_object> solar::developed() {
 }
 
 facility_object *solar::facility_access(string key) {
-  if (!development.count(key)) development[key] = facility_table().at(key);
+  if (!development.count(key)) {
+    development[key] = facility_table().at(key);
+    development[key].hp = development[key].base_hp;
+  }
+  
   return &development[key];
 }
 
@@ -735,7 +753,7 @@ void facility::read_from_json(const rapidjson::Value &x) {
 	  }else if (t_name == "accuracy"){
 	    turret.accuracy = t -> value.GetDouble();
 	  }else if (t_name == "load"){
-	    turret.load = t -> value.GetDouble();
+	    turret.load_time = t -> value.GetDouble();
 	  }else{
 	    throw parse_error("Failed to parse turret stats: " + t_name);
 	  }

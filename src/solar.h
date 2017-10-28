@@ -24,6 +24,7 @@ namespace st3{
     sfloat damage; /*!< turret's damage */
     sfloat accuracy;
     sfloat load;
+    sfloat load_time;
 
     turret_t();
     float accuracy_check(ship::ptr t, float d);
@@ -119,6 +120,7 @@ namespace st3{
     std::string get_info();
     float compute_boost(std::string sector);
     float compute_shield_power();
+    float compute_hp_ratio();
     std::list<std::string> list_facility_requirements(std::string v, const research::data &r);
     std::list<std::string> available_facilities(const research::data &r);
     bool develop(std::string fac);

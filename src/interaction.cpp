@@ -241,16 +241,16 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr x = utility::guaranteed_cast<ship>(target);
     float d = utility::l2norm(s -> position - x -> position);
 
-    for (auto &buf : s -> development){
-      if (!buf.second.is_turret) continue;
+    for (auto buf : s -> facility_access()){
+      if (!buf -> is_turret) continue;
 
-      turret_t &t = buf.second.turret;
+      turret_t t = s -> developed(buf -> name, 0).turret;
 
       // don't overdo it
       if (x -> remove) break;
 
       if (t.damage > 0 && t.load >= 1 && d <= t.range){
-	t.load = 0;
+	buf -> turret.load = 0;
 
 	g -> log_ship_fire(s -> id, x -> id);
 	

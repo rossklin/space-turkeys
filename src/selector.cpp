@@ -86,10 +86,19 @@ namespace st3{
 	}
       }
 
-      // draw defense indicator
+      // draw shield indicator
       float sp = compute_shield_power();
       if (sp > 0) {
 	graphics::draw_circle(w, position, radius + 4, sf::Color(100, 140, 200, 150), sf::Color::Transparent, sp);
+      }
+
+      // draw health indicator
+      float hp_ratio = compute_hp_ratio();
+      if (hp_ratio < 1) {
+	sf::FloatRect bounds(position.x - radius, position.y + radius + 5, 2 * radius, 2);
+	w.draw(graphics::build_rect(bounds, 0.5, sf::Color::White, sf::Color::Transparent));
+	bounds.width *= hp_ratio;
+	w.draw(graphics::build_rect(bounds, 0, sf::Color::Transparent, sf::Color::Red));
       }
 
       // draw symbol indicators

@@ -22,8 +22,14 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
+*** test that turrets work
 *** custom key bindings och eller wasd kontroller
 *** commands between waypoints shown/not shown randomly during simulate
+*** initial missile turret gets shot down by initial fighter
+*** progress bars for production
+*** possibility to manually override production at solar
+*** warp drive not listed for colonizers
+*** ship attack trajectories update too slow
 *** [!] Server segfaults if client disconnects during introduction
 *** [windows] choice_gui should not scale text!
 *** fleeing units freeze in panic

@@ -69,7 +69,7 @@
 	    "speed" : 3,
 	    "hp" : 8,
 	    "mass" : 10,
-	    "solar damage" : 5,
+	    "solar damage" : 4,
 	    "accuracy" : 0.8,
 	    "upgrades" : ["bombard"],
 	    "depends facility level" : 2,

@@ -817,13 +817,14 @@ void game_data::log_ship_fire(combid a, combid b) {
 }
 
 void game_data::log_ship_destroyed(combid a, combid b) {
-  ship::ptr s = get_ship(a);
+  game_object::ptr s = get_entity(a);
   ship::ptr t = get_ship(b);
   int delay = utility::random_int(sub_frames);
 
   // text log
-  string log_p1 = "Your " + s -> ship_class + " destroyed an enemy " + t -> ship_class;
-  string log_p2 = "Your " + t -> ship_class + " was shot down by an enemy " + s -> ship_class;
+  string self_identifier = s -> isa(ship::class_id) ? get_ship(a) -> ship_class : "solar";
+  string log_p1 = "Your " + self_identifier + " destroyed an enemy " + t -> ship_class;
+  string log_p2 = "Your " + t -> ship_class + " was shot down by an enemy " + self_identifier;
   
   players[s -> owner].log.push_back(log_p1);
   players[t -> owner].log.push_back(log_p2);

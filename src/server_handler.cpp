@@ -142,6 +142,7 @@ void handler::dispatch_game(string gid) {
       game_handler(*c, g);
     });
 
+  local_output("dispatch_game: complete, disconnecting", -1, gid);
   c -> disconnect();
 }
 

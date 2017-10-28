@@ -75,7 +75,10 @@ void simulation_step(com &c, game_data &g) {
 void server::game_handler(com &c, game_data &g){
 
   auto check_end = [&c, &g] () -> bool{
-    if (c.thread_com != socket_t::tc_run) return true;
+    if (c.thread_com != socket_t::tc_run) {
+      cout << "game_handler::check_end: server shut down!" << endl;
+      return true;
+    }
     
     int pid = -1;
     int psum = 0;
@@ -112,6 +115,7 @@ void server::game_handler(com &c, game_data &g){
       return true;
     }
 
+    cout << "game_handler::check_end: false" << endl;
     return false;
   };
 
@@ -142,13 +146,19 @@ void server::game_handler(com &c, game_data &g){
   while (true) {
     if (check_end()) return;
     
-    if (!c.check_protocol(protocol::game_round, pack_g(true))) return;
+    if (!c.check_protocol(protocol::game_round, pack_g(true))) {
+      cout << "game_handler: failed check protocol: game_round!" << endl;
+      return;
+    }
 
     // idle the fleets and clear waypoints
     g.pre_step();
 
     // choices, expects: query + choice
-    if (!c.check_protocol(protocol::choice, load_client_choice)) return;
+    if (!c.check_protocol(protocol::choice, load_client_choice)) {
+      cout << "game_handler: failed check protocol: choice!" << endl;
+      return;
+    }
 
     // simulation
     simulation_step(c, g);

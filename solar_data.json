@@ -117,12 +117,12 @@
 
 	"missile turret" : {
 	    "vision" : 10,
-	    "hp" : 2,
+	    "hp" : 6,
 	    "turret" : {
-		"damage" : 1,
+		"damage" : 2,
 		"range" : 50,
-		"accuracy" : 0.4,
-		"load" : 10
+		"accuracy" : 0.7,
+		"load" : 5
 	    },
 	    "cost" : {
 		"metals" : 5,
@@ -134,6 +134,25 @@
 	    "depends facilities" : {
 		"shipyard" : 1
 	    }
+	},
+
+	"ground regiment" : {
+	    "vision" : 1,
+	    "hp" : 12,
+	    "turret" : {
+		"damage" : 0.1,
+		"range" : 20,
+		"accuracy" : 0.4,
+		"load" : 10
+	    },
+	    "cost" : {
+		"metals" : 10,
+		"gases" : 2,
+		"organics" : 10
+	    },
+	    "build time" : 120,
+	    "space usage" : 5,
+	    "water usage" : 4
 	},
 
 	"shield generator" : {
