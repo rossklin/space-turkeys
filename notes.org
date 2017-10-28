@@ -22,31 +22,31 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
-*** test that turrets work
-*** custom key bindings och eller wasd kontroller
-*** commands between waypoints shown/not shown randomly during simulate
-*** initial missile turret gets shot down by initial fighter
-*** progress bars for production
-*** possibility to manually override production at solar
-*** warp drive not listed for colonizers
-*** ship attack trajectories update too slow
-*** [!] Server segfaults if client disconnects during introduction
-*** [windows] choice_gui should not scale text!
-*** fleeing units freeze in panic
-*** commands from a waypoint should if possible respect the incoming fleet policy
-*** after game complete, client pre-step failed to load game data
-*** show unhappy smiley by solar when unhappy
-*** quick key to show missing resources at solars
-*** pressing f should merge selected fleets
-*** governor: add weight if a development would increase empire's max facility level
-*** governor: figure out why population grows ~10x faster in real game than in tests
-*** Consider increasing effect of hospital and ecosystem int
-*** residual client side waypoints (?when incoming units die?)
-*** mining too nerfed? Considering how mining weighting works, shouldn't get empty storage
+** bugs
 *** [!] terminated with network error
     After submitting first choice after discovering shields and
     selecting battleships. Probably an exception on server which
     didn't show again..?
+*** after game complete, client pre-step failed to load game data
+*** warp drive not listed for colonizers, mass 30 should match [10,100]?
+*** fleeing units freeze in panic
+*** commands between waypoints shown/not shown randomly during simulate
+*** mining too nerfed? Considering how mining weighting works, shouldn't get empty storage
+*** [windows] choice_gui should not scale text!
+*** governor: figure out why population grows ~10x faster in real game than in tests
+*** residual client side waypoints (?when incoming units die?)
+** further dev
+*** add symbol for command fleet policy
+*** show unhappy smiley by solar when unhappy
+*** progress bars for production
+*** ship attack trajectories update too slow
+*** commands from a waypoint should if possible respect the incoming fleet policy
+*** custom key bindings och eller wasd kontroller
+*** possibility to manually override production at solar
+*** quick key to show missing resources at solars
+*** pressing f should merge selected fleets
+*** add weight if a development would increase empire's max facility level
+*** Consider increasing effect of hospital and ecosystem int
 * [~] issues
 ** [~] system
 *** init_data sends all data - should limit to "player_any"
@@ -171,6 +171,9 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] Server segfaults if client disconnects during introduction
+** [J] test that turrets work
+** [J] initial missile turret gets shot down by initial fighter
 ** [J] distinct abbreviations for governors
 ** [J] Can't scroll sideways in log when drawn with single label.
 ** [J] treasure should only discover techs that are "next in line"

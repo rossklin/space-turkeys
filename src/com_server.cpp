@@ -112,6 +112,7 @@ bool client_t::check_protocol(protocol_t p, query_handler f) {
 com::com() {
   idc = 0;
   thread_com = socket_t::tc_init;
+  active_thread = NULL;
 }
 
 void com::add_client(client_t *c) {
