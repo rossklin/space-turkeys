@@ -115,6 +115,8 @@ int main(int argc, char **argv){
       } else {
 	throw classified_error("Invalid starting fleet option: " + value);
       }
+    } else if (key == "skip_sub") {
+      sub_frames = 1;
     } else {
       throw classified_error("Invalid input: " + x);
     }

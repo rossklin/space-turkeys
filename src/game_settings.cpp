@@ -5,6 +5,7 @@ using namespace std;
 using namespace st3;
 
 const set<string> st3::starting_options = {"single", "voyagers", "massive"};
+int st3::sub_frames = 10;
 
 game_settings::game_settings(){
   solar_minrad = 10;
