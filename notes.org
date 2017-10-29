@@ -23,15 +23,13 @@
    DOWN destroyer VS fighter
 ** play testing
 ** bugs
-*** [!] terminated with network error
+*** [?] terminated with network error
     After submitting first choice after discovering shields and
     selecting battleships. Probably an exception on server which
     didn't show again..?
-*** fleeing units freeze in panic
-*** mining too nerfed? Considering how mining weighting works, shouldn't get empty storage
+*** [?] fleeing units freeze in panic
+*** [?] governor: figure out why population grows ~10x faster in real game than in tests
 *** [windows] choice_gui should not scale text!
-*** governor: figure out why population grows ~10x faster in real game than in tests
-*** residual client side waypoints (?when incoming units die?)
 ** further dev
 *** add symbol for command fleet policy
 *** show unhappy smiley by solar when unhappy
@@ -169,6 +167,8 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] mining too nerfed? Considering how mining weighting works, shouldn't get empty storage
+** [J] residual client side waypoints (?when incoming units die?)
 ** [J] warp drive not listed for colonizers, mass 30 should match [10,100]?
 ** [J] commands between waypoints shown/not shown randomly during simulate
 ** [J] after game complete, client pre-step failed to load game data

@@ -37,27 +37,39 @@ void graphics::initialize(){
   }
 }
 
-void graphics::draw_flag(sf::RenderTarget &w, point p, sf::Color c, int count, string ship_class, bool multiple) {
+void graphics::draw_flag(sf::RenderTarget &w, point p, sf::Color c, int count, string ship_class, int nstack) {
   vector<sf::Vertex> svert;
-  float s = 30 * unscale();
+  float s = 35 * unscale();
+  float bt = 0.05;
 
-  ship sh = ship::table().at(ship_class);
-  sh.position = p + s * point(0.5, -1.5);
-  sh.angle = 0;
-  draw_ship(w, sh, c, 0.3 * s);
-  
-  svert.resize(4);
-  svert[0].position = point(0, 0);
-  svert[1].position = point(0, -2);
-  svert[2].position = point(1, -1.5);
-  svert[3].position = point(0, -1);
+  // flag
+  auto make_flag = [bt, c] (float shift) -> sf::ConvexShape {
+    sf::ConvexShape flag;
+    flag.setPointCount(3);
+    flag.setPoint(0, point(bt/2 + shift, -2 - shift));
+    flag.setPoint(1, point(1 + shift, -1.5 - shift));
+    flag.setPoint(2, point(bt/2 + shift, -1 - shift));
+    flag.setFillColor(shift > 0 ? sf::Color(200,200,200) : sf::Color::White);
+    flag.setOutlineColor(c);
+    flag.setOutlineThickness(bt);
+    return flag;
+  };
 
-  for (auto &v : svert) v.color = c;
+  // pole
+  sf::RectangleShape pole = build_rect(sf::FloatRect(-bt/2, -1, bt, 1), 0, sf::Color::Transparent, c);  
 
   sf::Transform t;
   t.translate(p.x, p.y);
   t.scale(s, s);
-  w.draw(&svert[0], svert.size(), sf::LinesStrip, t);
+
+  for (int i = nstack - 1; i >= 0; i--) w.draw(make_flag(3 * i * bt), t);
+  w.draw(pole, t);
+
+  // draw ship symbol
+  ship sh = ship::table().at(ship_class);
+  sh.position = p + s * point(0.5, -1.5);
+  sh.angle = 0;
+  draw_ship(w, sh, sf::Color::Black, 0.35 * s, false);
 }
 
 void graphics::draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, sf::Color cf, float b) {
@@ -152,7 +164,7 @@ sfg::Button::Ptr graphics::ship_button(string ship_class, float width, float hei
 };
 
 
-void graphics::draw_ship(sf::RenderTarget &w, ship s, sf::Color col, float sc){
+void graphics::draw_ship(sf::RenderTarget &w, ship s, sf::Color col, float sc, bool multicolor){
   vector<sf::Vertex> svert;
 
   sf::Color cnose(255,200,180,200);
@@ -160,7 +172,7 @@ void graphics::draw_ship(sf::RenderTarget &w, ship s, sf::Color col, float sc){
   svert.resize(s.shape.size());
   for (int i = 0; i < s.shape.size(); i++) {
     svert[i].position = s.shape[i].first;
-    svert[i].color = s.shape[i].second == 'p' ? col : cnose;
+    svert[i].color = s.shape[i].second == 'p' || !multicolor ? col : cnose;
   }
 
   sf::Transform t;

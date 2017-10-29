@@ -1631,11 +1631,13 @@ void game::draw_universe(){
   }
   animations = buf;
 
-  for (auto x : entity) x.second -> draw(window);
+  // draw fleets last
+  for (auto x : entity) if (!x.second -> isa(fleet::class_id)) x.second -> draw(window);
+  for (auto x : entity) if (x.second -> isa(fleet::class_id)) x.second -> draw(window);
 
   // flag clusters of enemy ships
   for (auto x : enemy_clusters) {
-    graphics::draw_flag(window, x, sf::Color::Red, 0, "scout", false);
+    graphics::draw_flag(window, x, sf::Color::Red, 0, "scout");
   }
 }
 

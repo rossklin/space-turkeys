@@ -207,7 +207,7 @@ namespace st3{
 
       string ship_key = "scout";
       if (keys.size() > 0) ship_key = keys.front();
-      graphics::draw_flag(w, position, get_color(), get_ships().size(), ship_key, keys.size() > 1);
+      graphics::draw_flag(w, position, get_color(), get_ships().size(), ship_key, (int)log(ships.size() + 1) + 1);
     }
 
     template<>
