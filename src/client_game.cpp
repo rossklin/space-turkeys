@@ -808,7 +808,7 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
 
   // check that there is at least one ship available
   set<combid> ready_ships = get_ready_ships(c.source);
-  if (ready_ships.empty()) {
+  if (fill_ships && ready_ships.empty()) {
     cout << "add_command: attempted to create empty command!" << endl;
     return;
   }

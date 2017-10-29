@@ -29,7 +29,6 @@
     didn't show again..?
 *** warp drive not listed for colonizers, mass 30 should match [10,100]?
 *** fleeing units freeze in panic
-*** commands between waypoints shown/not shown randomly during simulate
 *** mining too nerfed? Considering how mining weighting works, shouldn't get empty storage
 *** [windows] choice_gui should not scale text!
 *** governor: figure out why population grows ~10x faster in real game than in tests
@@ -171,6 +170,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] commands between waypoints shown/not shown randomly during simulate
 ** [J] after game complete, client pre-step failed to load game data
 ** [J] Server segfaults if client disconnects during introduction
 ** [J] test that turrets work
