@@ -150,10 +150,6 @@ list<string> ship::all_classes() {
   return utility::get_map_keys(table());
 }
 
-void ship::set_stats(ship_stats s){
-  static_cast<ship_stats&>(*this) = s;
-}
-
 void ship::pre_phase(game_data *g){
   // load stuff
   float dt = g -> get_dt();

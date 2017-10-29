@@ -117,6 +117,12 @@ float ssfloat_t::get_strength() {
   return get_hp() * get_dps();
 }
 
+void ssfloat_t::modify_with(const ssmod_t &b) {
+  for (int i = 0; i < sskey::key::count; i++) {
+    stats[i] = b.stats[i].apply(stats[i]);
+  }
+}
+
 // ship_stats
 ship_stats::ship_stats() : ssfloat_t(){
   depends_facility_level = 0;
@@ -133,10 +139,4 @@ ship_stats::ship_stats(const ship_stats &s) : ssfloat_t(s) {
   build_cost = s.build_cost;
   build_time = s.build_time;
   shape = s.shape;
-}
-
-void ship_stats::modify_with(const ssmod_t &b) {
-  for (int i = 0; i < sskey::key::count; i++) {
-    stats[i] = b.stats[i].apply(stats[i]);
-  }
 }

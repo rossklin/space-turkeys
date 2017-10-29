@@ -54,6 +54,7 @@ namespace st3{
     float get_dps();
     float get_hp();
     float get_strength();
+    void modify_with(const ssmod_t &m);
   };
     
   class ship_stats : public ssfloat_t {
@@ -75,7 +76,6 @@ namespace st3{
 
     ship_stats();
     ship_stats(const ship_stats &s);
-    void modify_with(const ssmod_t &m);
   };
 };
 #endif

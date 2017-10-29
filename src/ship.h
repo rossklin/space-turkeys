@@ -27,7 +27,7 @@ namespace st3{
     combid fleet_id; /*!< id of the ship's fleet */
     sfloat angle; /*!< ship's angle */
     sfloat load;
-    ship_stats base_stats;
+    ssfloat_t base_stats;
     sint passengers;
     sint is_landed;
     cost::res_t cargo;
@@ -69,7 +69,6 @@ namespace st3{
     
     float flex_weight(float a);
     void update_data(game_data *g);
-    void set_stats(ship_stats s);
     void receive_damage(game_data *g, game_object::ptr from, float damage);
     void on_liftoff(solar *from, game_data *g);
     bool has_fleet();

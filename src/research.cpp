@@ -80,12 +80,12 @@ void data::repair_ship(ship &s, solar::ptr sol) const {
 
   // evaluate upgrades
   auto &utab = upgrade::table();
-  s.base_stats = base_stats;
   ssmod_t mod_stats;
   for (auto u : s.upgrades) mod_stats.combine(utab.at(u).modify);
-  s.base_stats.modify_with(mod_stats);
 
-  s.set_stats(s.base_stats);
+  s.base_stats.stats = base_stats.stats;
+  s.base_stats.modify_with(mod_stats);
+  s.stats = s.base_stats.stats;
 }
 
 ship data::build_ship(string c, solar::ptr sol) const {
