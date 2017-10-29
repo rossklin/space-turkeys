@@ -28,6 +28,8 @@ const string interaction::hive_support = "hive support";
 
 void load_resources(ship::ptr s, solar::ptr t) {
   float total = t -> resource_storage.count();
+  if (total == 0) return;
+  
   float ratio = fmax(s -> stats[sskey::key::cargo_capacity] / total, 1);
   cost::res_t move = t -> resource_storage;
   move.scale(ratio);
