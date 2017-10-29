@@ -27,7 +27,6 @@
     After submitting first choice after discovering shields and
     selecting battleships. Probably an exception on server which
     didn't show again..?
-*** after game complete, client pre-step failed to load game data
 *** warp drive not listed for colonizers, mass 30 should match [10,100]?
 *** fleeing units freeze in panic
 *** commands between waypoints shown/not shown randomly during simulate
@@ -39,6 +38,7 @@
 *** add symbol for command fleet policy
 *** show unhappy smiley by solar when unhappy
 *** progress bars for production
+*** add interaction "conquer" so only some ship classes can conquer a solar
 *** ship attack trajectories update too slow
 *** commands from a waypoint should if possible respect the incoming fleet policy
 *** custom key bindings och eller wasd kontroller
@@ -171,6 +171,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] after game complete, client pre-step failed to load game data
 ** [J] Server segfaults if client disconnects during introduction
 ** [J] test that turrets work
 ** [J] initial missile turret gets shot down by initial fighter

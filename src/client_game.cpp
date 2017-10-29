@@ -181,7 +181,7 @@ bool game::wait_for_it(sf::Packet &p, std::function<bool(sf::Packet)> callback){
   t.join();
 
   if ((w2c | c2w) & socket_t::tc_bad_result) {
-    cout << "wait_for_it: finished/aborted" << endl;
+    cout << "wait_for_it: finished/aborted" << endl;    
     return false;
   }
 
@@ -1440,7 +1440,7 @@ void game::popup_message(string title, string message){
       return 0;
     });
 
-  int result;
+  int result = socket_t::tc_run;
   window_loop(event_handler, default_body, done, result);
 
   interface::desktop -> Remove(w);
