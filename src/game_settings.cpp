@@ -13,6 +13,7 @@ game_settings::game_settings(){
   solar_density = 1e-4;
   fleet_default_radius = 10;
   dt = 0.1;
+  space_index_ratio = 400;
 }
 
 client_game_settings::client_game_settings(){

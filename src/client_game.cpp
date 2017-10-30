@@ -690,6 +690,7 @@ void game::reload_data(data_frame &g, bool use_animations){
   clear_selectors();  
   players = g.players;
   settings = g.settings;
+  terrain = g.terrain;
 
   // update entities: fleets, solars and waypoints
   for (auto x : g.entity){
@@ -1623,6 +1624,19 @@ void game::draw_minimap() {
 /** Draw entities, animations and stars. */
 void game::draw_universe(){
   for (auto star : fixed_stars) star.draw(window);
+
+  // draw terrain
+  for (auto x : terrain) {
+    terrain_object obj = x.second;
+    sf::VertexArray polygon(sf::TriangleFan, obj.border.size() + 1);
+    polygon[0].position = obj.center;
+    polygon[0].color = sf::Color::Black;
+    for (int i = 0; i < obj.border.size(); i++) {
+      polygon[i + 1].position = obj.border[i];
+      polygon[i + 1].color = sf::Color::Red;
+    }
+    window.draw(polygon);
+  }
 
   list<animation> buf;
   for (auto e : animations) {

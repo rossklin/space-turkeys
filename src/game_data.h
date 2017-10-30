@@ -65,6 +65,7 @@ namespace st3{
     std::list<combid> search_targets(combid self_id, point p, float r, target_condition c);
     std::list<combid> search_targets_nophys(combid self_id, point p, float r, target_condition c);
     void rebuild_evm();
+    void extend_universe(int i, int j, bool starting_area = false);
     void discover(point x, float r, bool starting_area = false);
     void update_discover();
     solar::ptr closest_solar(point p, idtype id);

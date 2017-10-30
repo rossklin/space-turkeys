@@ -311,128 +311,130 @@ void game_data::distribute_ships(list<combid> sh, point p){
   }
 }
 
+void game_data::extend_universe(int i, int j, bool starting_area) {
+  pair<int, int> idx = make_pair(i, j);
+  if (discovered_universe.count(idx)) return;  
+  discovered_universe.insert(idx);
+
+  float ratio = settings.space_index_ratio; 
+  point ul(i * ratio, j * ratio);
+  point br((i + 1) * ratio, (j + 1) * ratio);
+  point center = utility::scale_point(ul + br, 0.5);
+  float distance = utility::l2norm(center);
+  float bounty = exp(-pow(distance / settings.galaxy_radius, 2));
+  bounty = utility::linsig(utility::random_normal(bounty, 0.2 * bounty));
+  float nbuf = bounty * pow(ratio, 2) * settings.solar_density;
+  int n_solar = fmax(utility::random_normal(nbuf, 0.2 * nbuf), 0);
+    
+  if (starting_area) {
+    n_solar = 10;
+    bounty = 1;
+  }
+
+  if (n_solar == 0) return;
+
+  // select positions
+  vector<point> static_pos;    
+  for (auto test : entity_grid -> search(center, ratio)) {
+    if (identifier::get_type(test.first) == solar::class_id) static_pos.push_back(test.second);
+  }
+
+  vector<point> x(n_solar);
+  vector<point> v(n_solar, point(0, 0));
+    
+  auto point_init = [ul, br] () {
+    return point(utility::random_uniform(ul.x, br.x), utility::random_uniform(ul.y, br.y));
+  };
+    
+  for (auto &y : x) y = point_init();
+
+  if (n_solar > 1) {
+    // shake positions so solars don't end up on top of each other
+    vector<point> all_points;
+
+    for (float e = 10; e >= 1; e *= 0.95) {
+      all_points = x;
+      all_points.insert(all_points.end(), static_pos.begin(), static_pos.end());
+
+      for (int i = 0; i < n_solar; i++) {
+	for (int j = i + 1; j < all_points.size(); j++) {
+	  point d = x[i] - all_points[j];
+	  if (utility::l2norm(d) < 50) {
+	    x[i] += utility::normalize_and_scale(d, e);
+	  }
+	}
+      }
+    }
+  }
+
+  // make solars
+  for (auto p : x) add_entity(solar::create(p, bounty));
+
+  // add impassable terrain
+  static int terrain_idc = 0;
+  static mutex m;
+
+  list<solar::ptr> all_solars = all<solar>();
+  int n_terrain = utility::random_int(4);
+  for (int i = 0; i < n_terrain; i++) {
+    terrain_object obj;
+
+    // select center sufficiently far from any solars
+    bool passed = false;
+    int count = 0;
+    while (count++ < 100 && !passed) {
+      obj.center = point_init();
+      passed = true;
+      for (auto p : all_solars) passed &= utility::l2norm(obj.center - p -> position) > p -> radius;
+    }
+
+    if (!passed) break;
+
+    // generate random border
+    for (float angle = 0; angle < 2 * M_PI; angle += utility::random_uniform(0.01, 0.5)) {
+      float rad = fmax(utility::random_normal(80, 40), 0);
+      obj.border.push_back(obj.center + rad * utility::normv(angle));
+    }
+    obj.border.push_back(obj.border.front());
+
+    // go through solars and make sure we don't cover them
+    for (auto p : all_solars) {
+      for (int j = 0; j < obj.border.size() - 1; j++) {
+	float a_sol = utility::point_angle(p -> position - obj.center);
+	float a1 = utility::point_angle(obj.border[j] - obj.center);
+	float a2 = utility::point_angle(obj.border[j + 1] - obj.center);
+	if (utility::angle_difference(a_sol, a1) > 0 && utility::angle_difference(a2, a_sol) > 0) {
+	  float r = utility::angle_difference(a_sol, a1) / utility::angle_difference(a2, a1);
+	  float lim = r * utility::l2norm(obj.border[j + 1] - obj.center) + (1 - r) * utility::l2norm(obj.border[j] - obj.center);
+	  float dist = fmax(utility::l2norm(p -> position - obj.center) - p -> radius, 0);
+	  if (dist < lim) {
+	    obj.border[j] = obj.center + dist / lim * utility::normv(a1);
+	    obj.border[j + 1] = obj.center + dist / lim * utility::normv(a2);
+	  }
+	}
+      }
+    }
+
+    // safely generate terrain object id
+    int tid;
+    m.lock();
+    tid = terrain_idc++;
+    m.unlock();
+    terrain[tid] = obj;
+  }
+}
+
 void game_data::discover(point x, float r, bool starting_area) {
-  float ratio = 400; // space units per index
+  float ratio = settings.space_index_ratio; 
   auto point2idx = [ratio] (float u) {return floor(u / ratio);};
   int x1 = point2idx(x.x - r);
   int y1 = point2idx(x.y - r);
   int x2 = point2idx(x.x + r);
   int y2 = point2idx(x.y + r);
 
-  auto extend_universe = [this, ratio, starting_area] (int i, int j) {
-    point ul(i * ratio, j * ratio);
-    point br((i + 1) * ratio, (j + 1) * ratio);
-    point center = utility::scale_point(ul + br, 0.5);
-    float distance = utility::l2norm(center);
-    float bounty = exp(-pow(distance / settings.galaxy_radius, 2));
-    bounty = utility::linsig(utility::random_normal(bounty, 0.2 * bounty));
-    float nbuf = bounty * pow(ratio, 2) * settings.solar_density;
-    int n_solar = fmax(utility::random_normal(nbuf, 0.2 * nbuf), 0);
-    
-    if (starting_area) {
-      n_solar = 10;
-      bounty = 1;
-    }
-
-    if (n_solar == 0) return;
-
-    // select positions
-    vector<point> static_pos;    
-    for (auto test : entity_grid -> search(center, ratio)) {
-      if (identifier::get_type(test.first) == solar::class_id) static_pos.push_back(test.second);
-    }
-
-    vector<point> x(n_solar);
-    vector<point> v(n_solar, point(0, 0));
-    
-    auto point_init = [ul, br] () {
-      return point(utility::random_uniform(ul.x, br.x), utility::random_uniform(ul.y, br.y));
-    };
-    
-    for (auto &y : x) y = point_init();
-
-    if (n_solar > 1) {
-      // shake positions so solars don't end up on top of each other
-      vector<point> all_points;
-
-      for (float e = 10; e >= 1; e *= 0.95) {
-	all_points = x;
-	all_points.insert(all_points.end(), static_pos.begin(), static_pos.end());
-
-	for (int i = 0; i < n_solar; i++) {
-	  for (int j = i + 1; j < all_points.size(); j++) {
-	    point d = x[i] - all_points[j];
-	    if (utility::l2norm(d) < 50) {
-	      x[i] += utility::normalize_and_scale(d, e);
-	    }
-	  }
-	}
-      }
-    }
-
-    // make solars
-    for (auto p : x) add_entity(solar::create(p, bounty));
-
-    // add impassable terrain
-    static int terrain_idc = 0;
-    static mutex m;
-
-    list<solar::ptr> all_solars = all<solar>();
-    int n_terrain = utility::random_int(4);
-    for (int i = 0; i < n_terrain; i++) {
-      terrain_object obj;
-
-      // select center sufficiently far from any solars
-      bool passed = false;
-      int count = 0;
-      while (count++ < 100 && !passed) {
-	obj.center = point_init();
-	passed = true;
-	for (auto p : all_solars) passed &= utility::l2norm(obj.center - p -> position) > p -> radius;
-      }
-
-      if (!passed) break;
-
-      // generate random border
-      for (float angle = 0; angle < 2 * M_PI; angle += utility::random_uniform(0.01, 0.5)) {
-	float rad = fmax(utility::random_normal(80, 40), 0);
-	obj.border.push_back(obj.center + rad * utility::normv(angle));
-      }
-
-      // go through solars and make sure we don't cover them
-      for (auto p : all_solars) {
-	for (int j = 0; j < obj.border.size() - 1; j++) {
-	  float a_sol = utility::point_angle(p -> position - obj.center);
-	  float a1 = utility::point_angle(obj.border[j] - obj.center);
-	  float a2 = utility::point_angle(obj.border[j + 1] - obj.center);
-	  if (utility::angle_difference(a_sol, a1) > 0 && utility::angle_difference(a2, a_sol) > 0) {
-	    float r = utility::angle_difference(a_sol, a1) / utility::angle_difference(a2, a1);
-	    float lim = r * utility::l2norm(obj.border[j + 1] - obj.center) + (1 - r) * utility::l2norm(obj.border[j] - obj.center);
-	    float dist = fmax(utility::l2norm(p -> position - obj.center) - p -> radius, 0);
-	    if (dist < lim) {
-	      obj.border[j] = obj.center + dist / lim * utility::normv(a1);
-	      obj.border[j + 1] = obj.center + dist / lim * utility::normv(a2);
-	    }
-	  }
-	}
-      }
-
-      // safely generate terrain object id
-      int tid;
-      m.lock();
-      tid = terrain_idc++;
-      m.unlock();
-      terrain[tid] = obj;
-    }
-  };
-
   for (int i = x1; i <= x2; i++) {
     for (int j = y1; j <= y2; j++) {
-      pair<int, int> idx = make_pair(i, j);
-      if (!discovered_universe.count(idx)) {
-	discovered_universe.insert(idx);
-	extend_universe(i, j);
-      }
+      extend_universe(i, j, starting_area);
     }
   }
 }
@@ -599,6 +601,14 @@ void game_data::build(){
     make_home_solar(p_start, p.first);
     angle += 2 * M_PI / np;
   }
+
+  // generate universe between players
+  int idx_max = floor(settings.galaxy_radius / settings.space_index_ratio);
+  for (int i = -idx_max; i <= idx_max; i++) {
+    for (int j = -idx_max; j <= idx_max; j++) {
+      extend_universe(i, j);
+    }
+  }
 }
 
 // clean up things that will be reloaded from client
@@ -733,6 +743,7 @@ void entity_package::copy_from(const game_data &g){
   players = g.players;
   settings = g.settings;
   remove_entities = g.remove_entities;
+  terrain = g.terrain;
   evm = g.evm;
 }
 

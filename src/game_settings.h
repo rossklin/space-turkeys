@@ -26,6 +26,7 @@ namespace st3{
     sfloat solar_density; /*!< solars per space unit */
     sfloat fleet_default_radius; /*!< default radius for fleets */
     sfloat dt; /*!< game time per iteration step */
+    int space_index_ratio;
 
     game_settings();
   };
