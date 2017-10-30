@@ -33,6 +33,7 @@ namespace st3{
     hm_t<idtype, player> players; /*!< table of players */
     game_settings settings; /*! game settings */
     hm_t<combid, game_object::ptr> entity;
+    hm_t<idtype, terrain_object> terrain;
     std::list<combid> remove_entities; 
     hm_t<idtype, std::set<combid> > evm;
 

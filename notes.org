@@ -30,19 +30,6 @@
 *** [?] fleeing units freeze in panic
 *** [?] governor: figure out why population grows ~10x faster in real game than in tests
 *** [windows] choice_gui should not scale text!
-** further dev
-*** add symbol for command fleet policy
-*** show unhappy smiley by solar when unhappy
-*** progress bars for production
-*** add interaction "conquer" so only some ship classes can conquer a solar
-*** ship attack trajectories update too slow
-*** commands from a waypoint should if possible respect the incoming fleet policy
-*** custom key bindings och eller wasd kontroller
-*** possibility to manually override production at solar
-*** quick key to show missing resources at solars
-*** pressing f should merge selected fleets
-*** add weight if a development would increase empire's max facility level
-*** Consider increasing effect of hospital and ecosystem int
 * [~] issues
 ** [~] system
 *** init_data sends all data - should limit to "player_any"
@@ -65,40 +52,49 @@
     choice from client 2.
 *** [redesign] client allows multiple development choices - server does not
 * system design ideas
-** make ships have to go around territories and neutral solars
-** generalize game_settings::starting_fleet to some "starting bonus" 
+** impassable terrain
+*** impassable polygons on map
 ** add expansion limitations e.g. nr of fleets and solar distance penalty
+** add interaction "conquer" so only some ship classes can conquer a solar
+** generalize game_settings::starting_fleet to some "starting bonus" 
 ** make detection stat determine which object stats are seen by client
-** add a command buffer so commands reach entities with distance based delay
-** add terrain
-   For starters: impassable areas. This requires fleets to do path
-   finding.
-** make ship cost scale with upgrades
-** allow "fortification" so units can block other units and hold a position?
 ** add trigger system for e.g. upgrades, techs and solar facilities
 *** hm_t<string, function> on_interaction (and prevent_interaction)
 *** on_takeoff (for e.g. freighter ship)
 *** extra_solar_dynamics
+** ?add a command buffer so commands reach entities with distance based delay?
+** ?make ship cost scale with upgrades?
 ** ?add a "dynamic data" hash map to game object
    For stuff like "has cargo x", "is jammed", "was scanned by player i" etc.
 
    No particular reason to not put this in normal class members?
-** add a vision map, build in client on reload_data
-** [?] make angular acceleration an attribute
-** [?] consider letting fleet suggestion contain an angle
 ** [?] try making a memcpy based serialization
    Maybe classes containing pointers can have a serial subclass?
 * tweaks and fixes
 ** gui
+*** add symbol for command fleet policy
+*** show unhappy smiley by solar when unhappy
+*** clicking ship label in target_gui should select/deselect all 
+*** progress bars for production
 *** update hover info panel on reload_data
     Need to track if this should load selected or hovered entities,
     i.e. track current "info" entities.
+*** quick key to show missing resources at solars
+*** pressing f should merge selected fleets
+*** commands from a waypoint should if possible respect the incoming fleet policy
+*** custom key bindings och eller wasd kontroller
 *** protect from spacebar immediately after simulation is finished
-*** clicking ship label in target_gui should select/deselect all 
+*** add a vision map, build on reload_data
 *** show ship health by marking ship vertices red
 *** allow double-clicking ship to select all of same type
 *** name and indicators for solars so you can tell them apart
 ** system
+*** check whether non-culture governors should deprioritise pop-growth in relation to resources
+    E.g. don't spend all resources on growing population.
+*** possibility to manually override production at solar
+*** add weight if a development would increase empire's max facility level
+*** Consider increasing effect of hospital and ecosystem int
+*** ship attack trajectories update too slow
 *** ?decrease likelihood of finding treasure
 *** ?ships should stop when they hit converge on a waypoint
 * optimization

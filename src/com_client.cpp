@@ -106,7 +106,7 @@ void client::deserialize(data_frame &f, sf::Packet &p, sint id){
     throw classified_error("client::deserialize: data frame contains entities!");
   }
   
-  if (!(p >> f.players >> f.settings >> f.remove_entities >> n)){
+  if (!(p >> f.players >> f.settings >> f.remove_entities >> f.terrain >> n)){
     throw network_error("deserialize: package empty!");
   }
 

@@ -372,6 +372,58 @@ void game_data::discover(point x, float r, bool starting_area) {
 
     // make solars
     for (auto p : x) add_entity(solar::create(p, bounty));
+
+    // add impassable terrain
+    static int terrain_idc = 0;
+    static mutex m;
+
+    list<solar::ptr> all_solars = all<solar>();
+    int n_terrain = utility::random_int(4);
+    for (int i = 0; i < n_terrain; i++) {
+      terrain_object obj;
+
+      // select center sufficiently far from any solars
+      bool passed = false;
+      int count = 0;
+      while (count++ < 100 && !passed) {
+	obj.center = point_init();
+	passed = true;
+	for (auto p : all_solars) passed &= utility::l2norm(obj.center - p -> position) > p -> radius;
+      }
+
+      if (!passed) break;
+
+      // generate random border
+      for (float angle = 0; angle < 2 * M_PI; angle += utility::random_uniform(0.01, 0.5)) {
+	float rad = fmax(utility::random_normal(80, 40), 0);
+	obj.border.push_back(obj.center + rad * utility::normv(angle));
+      }
+
+      // go through solars and make sure we don't cover them
+      for (auto p : all_solars) {
+	for (int j = 0; j < obj.border.size() - 1; j++) {
+	  float a_sol = utility::point_angle(p -> position - obj.center);
+	  float a1 = utility::point_angle(obj.border[j] - obj.center);
+	  float a2 = utility::point_angle(obj.border[j + 1] - obj.center);
+	  if (utility::angle_difference(a_sol, a1) > 0 && utility::angle_difference(a2, a_sol) > 0) {
+	    float r = utility::angle_difference(a_sol, a1) / utility::angle_difference(a2, a1);
+	    float lim = r * utility::l2norm(obj.border[j + 1] - obj.center) + (1 - r) * utility::l2norm(obj.border[j] - obj.center);
+	    float dist = fmax(utility::l2norm(p -> position - obj.center) - p -> radius, 0);
+	    if (dist < lim) {
+	      obj.border[j] = obj.center + dist / lim * utility::normv(a1);
+	      obj.border[j + 1] = obj.center + dist / lim * utility::normv(a2);
+	    }
+	  }
+	}
+      }
+
+      // safely generate terrain object id
+      int tid;
+      m.lock();
+      tid = terrain_idc++;
+      m.unlock();
+      terrain[tid] = obj;
+    }
   };
 
   for (int i = x1; i <= x2; i++) {

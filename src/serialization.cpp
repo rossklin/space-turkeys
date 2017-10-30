@@ -7,85 +7,6 @@
 using namespace std;
 using namespace st3;
 
-// ****************************************
-// GENERAL TEMPLATE STREAM OPS
-// ****************************************
-
-// packet stream ops for hm_t
-template<typename ID, typename T>
-sf::Packet& st3::operator <<(sf::Packet& packet, const hm_t<ID, T> &g){
-  bool res = true;
-  res &= (bool)(packet << (sint)g.size());
-  for (auto i = g.begin(); i != g.end() && res; i++){
-    res &= (bool)(packet << i -> first << i -> second);
-  }
-  
-  return packet;
-}
-
-template<typename ID, typename T>
-sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<ID, T> &g){
-  sint n;
-  bool res = true;
-  res &= (bool)(packet >> n);
-  g.clear();
-  for (sint i = 0; i < n && res; i++){
-    ID k;
-    T v;
-    res &= (bool)(packet >> k >> v);
-    g[k] = v;
-  }
-
-  return packet;
-}
-
-// packet stream ops for list-like container
-template<typename T>
-sf::Packet& st3::inner_iterated_insert(sf::Packet& packet, const T &container){
-  bool res = true;
-  sint n = container.size();
-  res &= (bool)(packet << n);
-  for (auto i = container.begin(); i != container.end() && res; i++){
-    res &= (bool)(packet << *i);
-  }
-  
-  return packet;
-}
-
-template<typename T>
-sf::Packet& st3::inner_iterated_extract(sf::Packet& packet, T &container){
-  sint n;
-  bool res = true;
-
-  container.clear();
-  res &= (bool)(packet >> n);
-  for (sint i = 0; i < n && res; i++){
-    typename T::value_type v;
-    res &= (bool)(packet >> v);
-    container.insert(container.end(), v);
-  }
-
-  return packet;
-}
-
-template<typename T>
-sf::Packet& st3::operator <<(sf::Packet& packet, const std::list<T> &container){return inner_iterated_insert(packet, container);}
-
-template<typename T>
-sf::Packet& st3::operator >>(sf::Packet& packet, std::list<T> &container){return inner_iterated_extract(packet, container);}
-
-template<typename T>
-sf::Packet& st3::operator <<(sf::Packet& packet, const std::vector<T> &container){return inner_iterated_insert(packet, container);}
-
-template<typename T>
-sf::Packet& st3::operator >>(sf::Packet& packet, std::vector<T> &container){return inner_iterated_extract(packet, container);}
-
-template<typename T>
-sf::Packet& st3::operator <<(sf::Packet& packet, const std::set<T> &container){return inner_iterated_insert(packet, container);}
-
-template<typename T>
-sf::Packet& st3::operator >>(sf::Packet& packet, std::set<T> &container){return inner_iterated_extract(packet, container);}
-
 // packet stream ops for cost::allocation
 sf::Packet& st3::operator <<(sf::Packet& packet, const cost::allocation &g){
   return packet << g.data;
@@ -95,31 +16,21 @@ sf::Packet& st3::operator >>(sf::Packet& packet, cost::allocation &g){
   return packet >> g.data;
 }
 
-template<typename F, typename S>
-sf::Packet& st3::operator <<(sf::Packet& packet, const pair<F,S> &g){
-  return packet << g.first << g.second;
-}
-
-template<typename F, typename S>
-sf::Packet& st3::operator >>(sf::Packet& packet, pair<F,S> &g){
-  return packet >> g.first >> g.second;
-}
-
-// instantiation to support external extraction calls in com_client
-template sf::Packet& st3::operator >>(sf::Packet& packet, hm_t<int, player> &g);
-template sf::Packet& st3::operator >>(sf::Packet& packet, list<combid> &container);
-
-// ****************************************
-// SPECIFIC STRUCT STREAM OPS
-// ****************************************
-
 // entity_package
 sf::Packet& st3::operator <<(sf::Packet& packet, const entity_package &g){
   sint n = g.entity.size();
-  packet << g.players << g.settings << g.remove_entities << n;
+  packet << g.players << g.settings << g.remove_entities << g.terrain << n;
   // polymorphic serialization
   for (auto x : g.entity) x.second -> serialize(packet);
   return packet;
+}
+
+sf::Packet& st3::operator << (sf::Packet& packet, const terrain_object &g){
+  return packet << g.type << g.center << g.border;
+}
+
+sf::Packet& st3::operator >> (sf::Packet& packet, terrain_object &g){
+  return packet >> g.type >> g.center >> g.border;
 }
 
 sf::Packet& st3::operator << (sf::Packet& packet, const commandable_object &g){

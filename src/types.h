@@ -74,6 +74,12 @@ namespace st3{
 
     id_pair(combid x, combid y);
   };
+  
+  struct terrain_object {
+    class_t type;
+    point center;
+    std::vector<point> border;
+  };
 
   bool operator<(const id_pair &x, const id_pair &y);
 

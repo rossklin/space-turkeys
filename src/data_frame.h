@@ -12,6 +12,7 @@ namespace st3{
     hm_t<idtype, player> players; /*!< data for players in the game */
     hm_t<combid, client::entity_selector::ptr> entity; /*!< graphical representations for solars, fleets and waypoints */
     std::list<combid> remove_entities;
+    hm_t<idtype, terrain_object> terrain;
   };
 };
 

@@ -1,6 +1,8 @@
 #ifndef _STK_SERIALIZATION
 #define _STK_SERIALIZATION
 
+#include <utility>
+
 #include "research.h"
 #include "development_tree.h"
 #include "game_data.h"
@@ -11,61 +13,91 @@ namespace st3{
   /* **************************************** */
   /*   CONTAINERS */
   /* **************************************** */
-
-  /*! stream a list-like container into a packet
-    @param packet the packet
-    @param container the container
-    @return reference to the resulting packet
-  */
-  template<typename T>
-  sf::Packet& inner_iterated_insert(sf::Packet& packet, const T &container);
-
-  /*! stream a list-like container out of a packet
-    @param packet the packet
-    @param container the container
-    @return reference to the resulting packet
-  */
-  template<typename T>
-  sf::Packet& inner_iterated_extract(sf::Packet& packet, T &container);
-
-  // testing container specific templates to avoid selection ambiguity
-  template<typename T>
-  sf::Packet& operator <<(sf::Packet& packet, const std::list<T> &container);
-  template<typename T>
-  sf::Packet& operator >>(sf::Packet& packet, std::list<T> &container);
-
-  template<typename T>
-  sf::Packet& operator <<(sf::Packet& packet, const std::vector<T> &container);
-  template<typename T>
-  sf::Packet& operator >>(sf::Packet& packet, std::vector<T> &container);
-
-  template<typename T>
-  sf::Packet& operator <<(sf::Packet& packet, const std::set<T> &container);
-  template<typename T>
-  sf::Packet& operator >>(sf::Packet& packet, std::set<T> &container);
-
-  // stream ops for hm_t
-  /*! stream a hm_t into a packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
-  template<typename ID, typename T>
-  sf::Packet& operator <<(sf::Packet& packet, const hm_t<ID, T> &g);
-
-  /*! stream a hm_t out of a packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
-  template<typename ID, typename T>
-  sf::Packet& operator >>(sf::Packet& packet, hm_t<ID, T> &g);
-
-  template<typename F, typename S>
-  sf::Packet& operator <<(sf::Packet& packet, const std::pair<F,S> &g);
   
+  // packet stream ops for hm_t
+  template<typename ID, typename T>
+  sf::Packet& operator <<(sf::Packet& packet, const hm_t<ID, T> &g){
+    bool res = true;
+    res &= (bool)(packet << (sint)g.size());
+    for (auto i = g.begin(); i != g.end() && res; i++){
+      res &= (bool)(packet << i -> first << i -> second);
+    }
+  
+    return packet;
+  };
+
+  template<typename ID, typename T>
+  sf::Packet& operator >>(sf::Packet& packet, hm_t<ID, T> &g){
+    sint n;
+    bool res = true;
+    res &= (bool)(packet >> n);
+    g.clear();
+    for (sint i = 0; i < n && res; i++){
+      ID k;
+      T v;
+      res &= (bool)(packet >> k >> v);
+      g[k] = v;
+    }
+
+    return packet;
+  };
+  
+  // packet stream ops for list-like container
+  template<typename T>
+  sf::Packet& inner_iterated_insert(sf::Packet& packet, const T &container){
+    bool res = true;
+    sint n = container.size();
+    res &= (bool)(packet << n);
+    for (auto i = container.begin(); i != container.end() && res; i++){
+      res &= (bool)(packet << *i);
+    }
+  
+    return packet;
+  }
+
+  template<typename T>
+  sf::Packet& inner_iterated_extract(sf::Packet& packet, T &container){
+    sint n;
+    bool res = true;
+
+    container.clear();
+    res &= (bool)(packet >> n);
+    for (sint i = 0; i < n && res; i++){
+      typename T::value_type v;
+      res &= (bool)(packet >> v);
+      container.insert(container.end(), v);
+    }
+
+    return packet;
+  }
+
+  template<typename T>
+  sf::Packet& operator <<(sf::Packet& packet, const std::list<T> &container){return inner_iterated_insert(packet, container);}
+
+  template<typename T>
+  sf::Packet& operator >>(sf::Packet& packet, std::list<T> &container){return inner_iterated_extract(packet, container);}
+
+  template<typename T>
+  sf::Packet& operator <<(sf::Packet& packet, const std::vector<T> &container){return inner_iterated_insert(packet, container);}
+
+  template<typename T>
+  sf::Packet& operator >>(sf::Packet& packet, std::vector<T> &container){return inner_iterated_extract(packet, container);}
+
+  template<typename T>
+  sf::Packet& operator <<(sf::Packet& packet, const std::set<T> &container){return inner_iterated_insert(packet, container);}
+
+  template<typename T>
+  sf::Packet& operator >>(sf::Packet& packet, std::set<T> &container){return inner_iterated_extract(packet, container);}
+
   template<typename F, typename S>
-  sf::Packet& operator >>(sf::Packet& packet, std::pair<F,S> &g);
+  sf::Packet& operator <<(sf::Packet& packet, const std::pair<F,S> &g){
+    return packet << g.first << g.second;
+  }
+
+  template<typename F, typename S>
+  sf::Packet& operator >>(sf::Packet& packet, std::pair<F,S> &g){
+    return packet >> g.first >> g.second;
+  }
 
   /* **************************************** */
   /*   GAME DATA OBJECTS */
@@ -75,6 +107,9 @@ namespace st3{
   sf::Packet& operator >>(sf::Packet& packet, cost::allocation &g);
 
   sf::Packet& operator <<(sf::Packet& packet, const entity_package &g);
+
+  sf::Packet& operator << (sf::Packet& packet, const terrain_object &g);
+  sf::Packet& operator >> (sf::Packet& packet, terrain_object &g);
 
   sf::Packet& operator << (sf::Packet& packet, const commandable_object &g);
   sf::Packet& operator >> (sf::Packet& packet, commandable_object &g);
