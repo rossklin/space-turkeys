@@ -1169,7 +1169,11 @@ void game::control_event(sf::Event e) {
       
     if (keys.empty()) {
       keys = selected_entities();
-      if (keys.empty()) return;
+      if (keys.empty()) {
+	text = "Position: " + to_string(p.x) + "x" + to_string(p.y);
+	interface::desktop -> hover_label -> SetText(text);
+	return;
+      }
     }
     
     if (keys.size() > 1) text = "Multiple entities\n----------\n";

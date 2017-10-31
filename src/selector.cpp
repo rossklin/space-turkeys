@@ -208,6 +208,21 @@ namespace st3{
       string ship_key = "scout";
       if (keys.size() > 0) ship_key = keys.front();
       graphics::draw_flag(w, position, get_color(), get_ships().size(), ship_key, (int)log(ships.size() + 1) + 1);
+
+      // add path
+      sf::Vertex line[] = {
+	position,
+	heading,
+	stats.target_position
+      };
+      w.draw(line, 3, sf::LineStrip);
+      
+      sf::CircleShape s(4);
+      s.setOutlineColor(sf::Color::White);
+      s.setOutlineThickness(graphics::unscale());
+      s.setFillColor(sf::Color::Transparent);
+      s.setPosition(heading - point(4,4));
+      w.draw(s);
     }
 
     template<>

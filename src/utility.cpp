@@ -176,6 +176,41 @@ float utility::angle_distance(float a, float b){
   return fabs(angle_difference(a,b));
 }
 
+
+bool utility::line_intersect(point a, point b, point p1, point p2) {
+
+  // ax + t dx = px + s qx
+  // ay + t dy = py + s qy
+  // (ay + t dy) / qy = py / qy + s
+  // (ax + t dx) / qx = px / qx + s
+  // (ax + t dx) / qx - (ay + t dy) / qy = px / qx - py / qy
+  // qy (ax + t dx) - qx (ay + t dy) = px qy - py qx
+  // qy (ax + t dx - px) = qx (ay + t dy - py)
+  // t (qy dx - qx dy) = qx (ay - py) - qy (ax - px)
+  // t = (qx (ay - p1y) - qy (ax - p1x)) / (qy dx - qx dy)
+  // s = (ay + t dy) / qy - p1y / qy
+
+  // check same point
+  if (a == b || p2 == p1) {
+    cout << "line_intersect: same point!" << endl;
+    return false;
+  }
+
+  // check same gradient
+  point d = b - a;
+  point q = p2 - p1;
+  if (q.y * d.x == q.x * d.y) {
+    cout << "line_intersect: same gradient!" << endl;
+    return false;
+  }
+
+  // check point of intersection
+  float t = (q.x * (a.y - p1.y) - q.y * (a.x - p1.x)) / (q.y * d.x - q.x * d.y);
+  float s = q.x == 0 ? (a.y + t * d.y) / q.y - p1.y / q.y : (a.x + t * d.x) / q.x - p1.x / q.x;
+
+  return s >= 0 && s <= 1 && t >= 0 && t <= 1;
+}
+
 // shortest distance between p and line from a to b
 float utility::dpoint2line(point p, point a, point b){
   if (angle_distance(point_angle(p - a), point_angle(b - a)) > M_PI/2){

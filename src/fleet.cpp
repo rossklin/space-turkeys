@@ -70,7 +70,7 @@ void fleet::pre_phase(game_data *g){
 
 void fleet::move(game_data *g){
   // linear extrapolation of position estimate
-  if (!is_idle()) position += stats.speed_limit * utility::normv(utility::point_angle(stats.target_position - position));
+  if (!is_idle()) position += stats.speed_limit * utility::normv(utility::point_angle(heading - position));
 }
 
 void fleet::post_phase(game_data *g){}
@@ -132,21 +132,19 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
   float pref_maxrad = fmax(sqrt(ships.size() / (M_PI * pref_density)), 20);
 
   auto local_output = [this] (string v) {
-#ifdef VERBOSE
-    output(id + ": suggest: " + v);
-#endif
+    server::output(id + ": suggest: " + v);
   };
 
   int unmask = 0;
   if (stats.converge) unmask |= suggestion::activate;
   
   if (stats.enemies.size()) {
-    suggestion s_evade(suggestion::evade | unmask, stats.path);
+    suggestion s_evade(suggestion::evade | unmask, stats.evade_path);
     if (!stats.can_evade) s_evade.id = suggestion::scatter;
     
     if (com.policy & policy_maintain_course) {
       local_output("maintain course");
-      return suggestion(suggestion::travel | unmask, stats.target_position);
+      return suggestion(suggestion::travel | unmask, heading);
     }else if (com.policy & policy_evasive) {
       local_output("evade");
       return s_evade;
@@ -172,21 +170,21 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
     // peaceful times
     if (stats.converge) {
       local_output("activate");
-      return suggestion(suggestion::activate | unmask, stats.target_position);
+      return suggestion(suggestion::activate | unmask, heading);
     }else if (utility::l2norm(s -> position - position) > pref_maxrad) {
       if (is_idle()) {
 	local_output("summon");
 	return suggestion(suggestion::summon | unmask);
       } else {
 	local_output("summon and travel");
-	return suggestion(suggestion::summon | suggestion::travel | unmask, stats.target_position);
+	return suggestion(suggestion::summon | suggestion::travel | unmask, heading);
       }
     }else if (is_idle()) {
       local_output("hold");
       return suggestion(suggestion::hold | unmask);
     }else{
       local_output("travel");
-      return suggestion(suggestion::travel | unmask, stats.target_position);
+      return suggestion(suggestion::travel | unmask, heading);
     }
   }
 }
@@ -201,9 +199,7 @@ void fleet::analyze_enemies(game_data *g) {
   vector<point> x;
 
   auto local_output = [this] (string v) {
-#ifdef VERBOSE
-    output(id + ": analyze enemies: " + v);
-#endif
+    server::output(id + ": analyze enemies: " + v);
   };
   
   if (t.empty()) {
@@ -249,7 +245,7 @@ void fleet::analyze_enemies(game_data *g) {
 
   // define prioritized directions
   vector<float> dw(na, 1);
-  int idx_previous = utility::angle2index(na, utility::point_angle(stats.path - position));
+  int idx_previous = utility::angle2index(na, utility::point_angle(stats.evade_path - position));
   int idx_target = utility::angle2index(na, utility::point_angle(stats.target_position - position));
   int idx_closest = 0;
 
@@ -272,7 +268,7 @@ void fleet::analyze_enemies(game_data *g) {
   // only allow evasion if there exists a path with low enemy strength
   if (evalue < 1) {
     stats.can_evade = true;
-    stats.path = position + utility::scale_point(utility::normv(utility::index2angle(na, prio_idx)), 100);
+    stats.evade_path = position + utility::scale_point(utility::normv(utility::index2angle(na, prio_idx)), 100);
     local_output("selected evasion angle: " + to_string(utility::index2angle(na, prio_idx)));
   } else {
     stats.can_evade = false;
@@ -280,7 +276,20 @@ void fleet::analyze_enemies(game_data *g) {
   }
 }
 
-void fleet::update_data(game_data *g, bool force_refresh){
+void fleet::update_data(game_data *g, bool force_refresh) {
+  stringstream ss;
+  // always update heading if needed
+  if (force_refresh || utility::l2norm(position - heading) < 30) {
+    if (g -> target_position(com.target, stats.target_position)) {
+      heading = g -> get_heading(position, stats.target_position);
+      ss << "fleet " << id << " updated heading to " << heading << endl;
+      server::output(ss.str());
+    } else {
+      ss << "fleet " << id << " unset heading." << endl;
+      server::output(ss.str());
+      heading = position;
+    }
+  }
 
   // need to update fleet data?
   bool should_update = force_refresh || utility::random_uniform() < 1 / (float)fleet::update_period;
@@ -403,7 +412,7 @@ fleet::analytics::analytics() {
   spread_radius = 0;
   spread_density = 0;
   target_position = point(0,0);
-  path = point(0,0);
+  evade_path = point(0,0);
   can_evade = false;
   vision_buf = 0;
 }

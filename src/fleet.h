@@ -51,14 +51,14 @@ namespace st3{
       point target_position;
       float spread_radius;
       float spread_density;
-      point path;
+      point evade_path;
       sbool can_evade;
 
       analytics();
     };
 
     static const idtype server_pid = -1;
-    static const int update_period = 10; /*!< number of increments between fleet data updates */
+    static const int update_period = 3; /*!< number of increments between fleet data updates */
     static const int interact_d2 = 100; /*!< distance from target at which the fleet converges */
     static constexpr float min_radius = 10; /*!< smallest allowed fleet radius (for visibility) */
 
@@ -74,6 +74,7 @@ namespace st3{
     std::set<combid> ships; /*!< ids of ships in fleet */
     std::set<std::string> interactions; /*!< set of available interactions */
     command com; /*!< the fleet's command (currently this only holds the target) */
+    point heading;
 
     // mechanical components
     int update_counter; /*!< counter for updating fleet data */

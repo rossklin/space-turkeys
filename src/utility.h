@@ -131,6 +131,8 @@ namespace st3{
       @return shortest (forward or backward) distance between a and b
     */
     float angle_distance(float a, float b);
+    
+    bool line_intersect(point a, point b, point p1, point p2);
 
     /*!
       computes the shortest distance between a point and a line

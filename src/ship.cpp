@@ -175,9 +175,7 @@ void ship::update_data(game_data *g) {
   fleet::suggestion suggest = f -> suggest(id, g);
 
   auto local_output = [this] (string v) {
-#ifdef VERBOSE
-    output(id + ": update_data: " + v);
-#endif
+    server::output(id + ": update_data: " + v);
   };
 
   bool summon = suggest.id & fleet::suggestion::summon;
@@ -189,7 +187,7 @@ void ship::update_data(game_data *g) {
   bool evade = suggest.id & fleet::suggestion::evade;
   bool local = engage || evade || activate;
 
-  float fleet_target_angle = utility::point_angle(f -> stats.target_position - f -> position);
+  float fleet_target_angle = utility::point_angle(f -> heading - f -> position);
   point fleet_delta = f -> position - position;
   float fleet_angle = utility::point_angle(fleet_delta);
   target_angle = fleet_target_angle;
@@ -337,9 +335,7 @@ void ship::move(game_data *g){
   if (force_refresh || utility::random_uniform() < g -> get_dt() * 0.2) update_data(g);
 
   auto local_output = [this] (string v) {
-#ifdef VERBOSE
-    output(id + ": move: " + v);
-#endif
+    server::output(id + ": move: " + v);
   };
 
   // clean up local_*

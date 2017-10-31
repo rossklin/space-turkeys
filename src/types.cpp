@@ -8,6 +8,8 @@
 using namespace std;
 using namespace st3;
 
+#define DEBUG true
+
 bool server::silent_mode = false;
 
 classified_error::classified_error(string v, string s) : runtime_error(v) {

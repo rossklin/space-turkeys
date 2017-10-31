@@ -3,6 +3,7 @@
 #include <cmath>
 #include <memory>
 #include <cassert>
+#include <queue>
 
 #include "types.h"
 #include "game_data.h"
@@ -94,6 +95,115 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
   }
 
   return res;
+}
+
+point game_data::get_heading(point a, point b) {
+  cout << "get_heading: START: " << a << " to " << b << endl;
+  
+  auto test = get_heading_cost(a, b, 0, INFINITY);
+  if (test.second >= 0) {
+    return test.first;
+  } else {
+    return a;
+  }
+}
+
+pair<point, float> game_data::get_heading_cost(point a, point b, int d, float max_use) {
+  pair<point, float> result_failure(point(), -1);
+  cout << "get_heading_cost: begin: " << a << " to " << b << endl;
+  
+  if (d > 100) {
+    cout << "get_heading_cost: reached recursion limit!" << endl;
+    return result_failure;
+  }
+
+  // no way to find this path
+  if (utility::l2norm(b - a) > max_use) {
+    return result_failure;
+  }
+  
+  // find all intersected terrain objects
+  list<idtype> tids;
+  for (auto &x : terrain) {
+    for (int i = 0; i < x.second.border.size() - 1; i++) {
+      point p1 = x.second.border[i];
+      point p2 = x.second.border[i+1];
+      if (utility::line_intersect(a, b, p1, p2)) {
+	cout << "get_heading: intersecting terrain " << x.first << " at " << x.second.center << endl;
+	tids.push_back(x.first);
+	break;
+      }
+    }
+  }
+
+  if (tids.empty()) {
+    cout << "get_heading: found straight path from " << a << " to " << b << endl;
+    return make_pair(b, utility::l2norm(b - a));
+  }
+
+  // find highest and lowest relative angle
+  float lowest = 0;
+  float highest = 0;
+  point plow = b, phigh = b;
+  for (auto tid : tids) {
+    float aref = utility::point_angle(terrain[tid].center - a);
+    for (auto x : terrain[tid].border) {
+      float test = utility::point_angle(x - a);
+      float diff = utility::angle_difference(test, aref);
+      
+      if (diff < lowest) {
+	lowest = diff;
+	plow = x + utility::normalize_and_scale(x - terrain[tid].center, 10);
+      }
+
+      if (diff > highest) {
+	highest = diff;
+	phigh = x + utility::normalize_and_scale(x - terrain[tid].center, 10);
+      }
+    }
+  }
+
+  cout << "get_heading_cost: points: " << plow << " and " << phigh << endl;
+
+  list<point> test_points;
+  float alow = utility::point_angle(plow - a);
+  float ahigh = utility::point_angle(phigh - a);
+  float atarg = utility::point_angle(b - a);
+  if (abs(utility::angle_difference(alow, atarg)) < abs(utility::angle_difference(ahigh, atarg))) {
+    test_points.push_back(plow);
+    test_points.push_back(phigh);
+  } else {
+    test_points.push_back(phigh);
+    test_points.push_back(plow);
+  }
+
+  float best = max_use;
+  point best_point = a;
+  bool found = false;
+  for (auto x : test_points) {
+    float pre_use = utility::l2norm(x - a);
+    if (pre_use + utility::l2norm(b - x) < max_use) {
+      auto test = get_heading_cost(x, b, d + 1, max_use - pre_use);
+      if (test.second >= 0) {
+	test.second += pre_use;
+	max_use = fmin(max_use, test.second);
+      }
+
+      if (test.second < best) {
+	best = test.second;
+	best_point = x;
+	found = true;
+      }
+    }
+  }
+
+  if (found) {
+    cout << "get_heading: from " << a << " to " << b << " via " << best_point << endl;
+    return make_pair(best_point, best);
+  } else {
+    cout << "get_heading: did not find any better paths." << endl;
+    return result_failure;
+  }
 }
 
 // create a new fleet and add ships from command c

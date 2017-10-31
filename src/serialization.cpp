@@ -313,7 +313,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const fleet &g){
     << g.position
     << g.radius
     << g.owner
-    << g.ships;
+    << g.ships
+    << g.heading;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
@@ -324,7 +325,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
     >> g.position
     >> g.radius
     >> g.owner
-    >> g.ships;
+    >> g.ships
+    >> g.heading;
 }
 
 // fleet analytics
@@ -335,7 +337,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const fleet::analytics &g){
     << g.spread_radius
     << g.spread_density
     << g.target_position
-    << g.path
+    << g.evade_path
     << g.can_evade
     << g.vision_buf
     << g.enemies
@@ -349,7 +351,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet::analytics &g){
     >> g.spread_radius
     >> g.spread_density
     >> g.target_position
-    >> g.path
+    >> g.evade_path
     >> g.can_evade
     >> g.vision_buf
     >> g.enemies
