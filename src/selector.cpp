@@ -215,7 +215,10 @@ namespace st3{
       s.setOutlineColor(sf::Color::White);
       s.setOutlineThickness(graphics::unscale());
       s.setFillColor(sf::Color::Transparent);
-      for (auto x : path) {
+      list<point> buf = path;
+      buf.push_front(heading);
+      buf.push_front(position);
+      for (auto x : buf) {
 	line.push_back(sf::Vertex(x));
 	s.setPosition(x - point(4,4));
 	w.draw(s);

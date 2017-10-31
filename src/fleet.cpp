@@ -278,11 +278,15 @@ void fleet::analyze_enemies(game_data *g) {
 
 void fleet::update_data(game_data *g, bool force_refresh) {
   stringstream ss;
+
+  // need to update fleet data?
+  bool should_update = force_refresh || utility::random_uniform() < 1 / (float)fleet::update_period;
+
   // always update heading if needed
   bool update_heading = utility::l2norm(position - heading) < 5;
-  if (force_refresh || update_heading) {
+  if (force_refresh || update_heading || should_update) {
     if (g -> target_position(com.target, stats.target_position)) {
-      if (force_refresh || path.empty()) {
+      if (force_refresh || path.empty() || should_update) {
 	path = g -> get_path(position, stats.target_position);
 	update_heading = true;
       }
@@ -301,8 +305,6 @@ void fleet::update_data(game_data *g, bool force_refresh) {
     }
   }
 
-  // need to update fleet data?
-  bool should_update = force_refresh || utility::random_uniform() < 1 / (float)fleet::update_period;
   if (!should_update) return;
   
   float speed = INFINITY;

@@ -189,9 +189,9 @@ list<point> game_data::get_path(point a, point b) {
 
     if (n < 3) return path;
 
-    auto start = path.begin();
-    while (did_fix && start != path.end()) {
+    while (did_fix) {
       did_fix = false;
+      auto start = path.begin();
       auto check = start;
       check++;
       if (check == path.end()) break;
@@ -210,7 +210,6 @@ list<point> game_data::get_path(point a, point b) {
       check--;
       start++;
       path.erase(start, check);
-      start = check;
     }
 
     // finally, remove starting point
@@ -529,8 +528,8 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
     terrain_object obj;
 
     auto avoid_point = [] (terrain_object &obj, point p, float rad) {
+      float a_sol = utility::point_angle(p - obj.center);
       for (int j = 0; j < obj.border.size() - 1; j++) {
-	float a_sol = utility::point_angle(p - obj.center);
 	float a1 = utility::point_angle(obj.border[j] - obj.center);
 	float a2 = utility::point_angle(obj.border[j + 1] - obj.center);
 	if (utility::angle_difference(a_sol, a1) > 0 && utility::angle_difference(a2, a_sol) > 0) {
@@ -538,8 +537,8 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 	  float lim = r * utility::l2norm(obj.border[j + 1] - obj.center) + (1 - r) * utility::l2norm(obj.border[j] - obj.center);
 	  float dist = fmax(utility::l2norm(p - obj.center) - rad, 0);
 	  if (dist < lim) {
-	    obj.border[j] = obj.center + dist / lim * utility::normv(a1);
-	    obj.border[j + 1] = obj.center + dist / lim * utility::normv(a2);
+	    obj.border[j] = obj.center + dist * utility::normv(a1);
+	    obj.border[j + 1] = obj.center + dist * utility::normv(a2);
 	  }
 	}
       }
@@ -560,8 +559,9 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
     for (auto &x : terrain) avoid_point(x.second, obj.center, 30);
 
     // generate random border
-    for (float angle = 0; angle < 2 * M_PI; angle += utility::random_uniform(0.01, 0.5)) {
-      float rad = fmax(utility::random_normal(80, 40), 1);
+    float min_length = 1;
+    for (float angle = 0; angle < 2 * M_PI - 0.1; angle += utility::random_uniform(0.2, 0.5)) {
+      float rad = fmax(utility::random_normal(80, 40), min_length);
       obj.border.push_back(obj.center + rad * utility::normv(angle));
     }
     obj.border.push_back(obj.border.front());
@@ -570,7 +570,36 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
     for (auto p : all_solars) avoid_point(obj, p -> position, p -> radius);
 
     // go through terrain so we don't overlap
-    for (auto x : terrain) for (auto y : x.second.border) avoid_point(obj, y, 30);
+    bool failed = false;
+    for (auto &x : terrain) {
+      for (int i = 0; i < x.second.border.size() - 1 && !failed; i++) {
+	point p1 = x.second.border[i];
+	point p2 = x.second.border[i+1];
+	avoid_point(obj, p1, 30);
+	
+	for (int j = 0; j < obj.border.size() - 1 && !failed; j++) {
+	  point q1 = obj.border[j];
+	  point q2 = obj.border[j+1];
+	  while (utility::line_intersect(p1, p2, q1, q2)) {
+	    point d1 = q1 - obj.center;
+	    point d2 = q2 - obj.center;
+	    if (fmin(utility::l2norm(d1), utility::l2norm(d2)) < min_length) {
+	      failed = true;
+	      break;
+	    }
+
+	    obj.border[j] = obj.center + utility::normalize_and_scale(d1, 0.9 * utility::l2norm(d1));
+	    obj.border[j+1] = obj.center + utility::normalize_and_scale(d2, 0.9 * utility::l2norm(d2));
+	    q1 = obj.border[j];
+	    q2 = obj.border[j+1];
+	  }
+	}
+      }
+
+      for (auto y : obj.border) avoid_point(x.second, y, 30);
+    }
+
+    if (failed) continue;
 
     // safely generate terrain object id
     int tid;

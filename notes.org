@@ -1,11 +1,6 @@
 * current work
 ** path search
-   For some reason, the same point gets extracted from the frontier
-   multiple times, even though it seems like it is not
-   reinserted. Also, path search fails.
-
-   Consider just recursively passing outer sight-point of intersecting
-   polygons instead.
+   Handle infinite recursion when there is no viable path.
 ** balancing
    UP fighter: +0.5 damage
    DOWN destroyer: -20 hp, +10 cost
@@ -39,6 +34,8 @@
 *** [windows] choice_gui should not scale text!
 * [~] issues
 ** [~] system
+*** ships should not be able to enter impassable terrain
+*** ships should move slower and rotate faster in order to navigate geometries
 *** init_data sends all data - should limit to "player_any"
 *** socket_t routines should have a timeout
 *** weird that solar systems aren't automatically searched when colonized?
