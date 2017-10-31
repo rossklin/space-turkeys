@@ -75,6 +75,7 @@ namespace st3{
     std::set<std::string> interactions; /*!< set of available interactions */
     command com; /*!< the fleet's command (currently this only holds the target) */
     point heading;
+    std::list<point> path;
 
     // mechanical components
     int update_counter; /*!< counter for updating fleet data */

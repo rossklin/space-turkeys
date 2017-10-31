@@ -64,8 +64,7 @@ namespace st3{
     bool target_position(combid t, point &p);
     std::list<combid> search_targets(combid self_id, point p, float r, target_condition c);
     std::list<combid> search_targets_nophys(combid self_id, point p, float r, target_condition c);
-    std::pair<point, float> get_heading_cost(point a, point b, int d, float max_use);
-    point get_heading(point a, point b);
+    std::list<point> get_path(point a, point b);
     void rebuild_evm();
     void extend_universe(int i, int j, bool starting_area = false);
     void discover(point x, float r, bool starting_area = false);

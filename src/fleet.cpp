@@ -279,15 +279,25 @@ void fleet::analyze_enemies(game_data *g) {
 void fleet::update_data(game_data *g, bool force_refresh) {
   stringstream ss;
   // always update heading if needed
-  if (force_refresh || utility::l2norm(position - heading) < 30) {
+  bool update_heading = utility::l2norm(position - heading) < 5;
+  if (force_refresh || update_heading) {
     if (g -> target_position(com.target, stats.target_position)) {
-      heading = g -> get_heading(position, stats.target_position);
-      ss << "fleet " << id << " updated heading to " << heading << endl;
-      server::output(ss.str());
+      if (force_refresh || path.empty()) {
+	path = g -> get_path(position, stats.target_position);
+	update_heading = true;
+      }
+
+      if (update_heading) {
+	heading = path.front();
+	path.pop_front();
+	ss << "fleet " << id << " updated heading to " << heading << endl;
+	server::output(ss.str());
+      }
     } else {
       ss << "fleet " << id << " unset heading." << endl;
       server::output(ss.str());
       heading = position;
+      path.clear();
     }
   }
 

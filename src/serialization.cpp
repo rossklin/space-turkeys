@@ -314,7 +314,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const fleet &g){
     << g.radius
     << g.owner
     << g.ships
-    << g.heading;
+    << g.heading
+    << g.path;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
@@ -326,7 +327,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
     >> g.radius
     >> g.owner
     >> g.ships
-    >> g.heading;
+    >> g.heading
+    >> g.path;
 }
 
 // fleet analytics

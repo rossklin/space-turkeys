@@ -209,20 +209,18 @@ namespace st3{
       if (keys.size() > 0) ship_key = keys.front();
       graphics::draw_flag(w, position, get_color(), get_ships().size(), ship_key, (int)log(ships.size() + 1) + 1);
 
-      // add path
-      sf::Vertex line[] = {
-	position,
-	heading,
-	stats.target_position
-      };
-      w.draw(line, 3, sf::LineStrip);
-      
+      // add path      
       sf::CircleShape s(4);
+      vector<sf::Vertex> line;
       s.setOutlineColor(sf::Color::White);
       s.setOutlineThickness(graphics::unscale());
       s.setFillColor(sf::Color::Transparent);
-      s.setPosition(heading - point(4,4));
-      w.draw(s);
+      for (auto x : path) {
+	line.push_back(sf::Vertex(x));
+	s.setPosition(x - point(4,4));
+	w.draw(s);
+      }
+      w.draw(&line[0], line.size(), sf::LineStrip);
     }
 
     template<>

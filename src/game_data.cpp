@@ -97,112 +97,151 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
   return res;
 }
 
-point game_data::get_heading(point a, point b) {
-  cout << "get_heading: START: " << a << " to " << b << endl;
+list<point> game_data::get_path(point a, point b) {
+  cout << "get_raw_path: begin: " << a << " to " << b << endl;
   
-  auto test = get_heading_cost(a, b, 0, INFINITY);
-  if (test.second >= 0) {
-    return test.first;
-  } else {
-    return a;
-  }
-}
+  auto first_intersect = [this] (point a, point b) {
 
-pair<point, float> game_data::get_heading_cost(point a, point b, int d, float max_use) {
-  pair<point, float> result_failure(point(), -1);
-  cout << "get_heading_cost: begin: " << a << " to " << b << endl;
-  
-  if (d > 100) {
-    cout << "get_heading_cost: reached recursion limit!" << endl;
-    return result_failure;
-  }
-
-  // no way to find this path
-  if (utility::l2norm(b - a) > max_use) {
-    return result_failure;
-  }
-  
-  // find all intersected terrain objects
-  list<idtype> tids;
-  for (auto &x : terrain) {
-    for (int i = 0; i < x.second.border.size() - 1; i++) {
-      point p1 = x.second.border[i];
-      point p2 = x.second.border[i+1];
-      if (utility::line_intersect(a, b, p1, p2)) {
-	cout << "get_heading: intersecting terrain " << x.first << " at " << x.second.center << endl;
-	tids.push_back(x.first);
-	break;
+    // find first intersected terrain object
+    list<int> tids;
+    for (auto &x : terrain) {
+      for (int i = 0; i < x.second.border.size() - 1; i++) {
+	point p1 = x.second.border[i];
+	point p2 = x.second.border[i+1];
+	if (utility::line_intersect(a, b, p1, p2)) {
+	  cout << "get_heading: intersecting terrain " << x.first << " at " << x.second.center << endl;
+	  tids.push_back(x.first);
+	  break;
+	}
       }
     }
+
+    // find starting point
+    int tid = -1;
+    float closest = INFINITY;
+
+    for (auto j : tids) {
+      for (int i = 0; i < terrain[j].border.size(); i++) {
+	float d = utility::l2norm(terrain[j].border[i] - a);
+	if (d < closest) {
+	  closest = d;
+	  tid = j;
+	}
+      }
+    }
+
+    return tid;
+  };
+
+  // find a path around the polygon
+  auto path_around = [] (point center, vector<point> border, point a, point b, int dir) {
+    list<point> path;
+    path.push_back(a);
+
+    int pid = -1;
+    int n = border.size();
+    float best = INFINITY;
+    for (int i = 0; i < n; i++) {
+      float d = utility::l2norm(border[i] - a);
+      if (d < best) {
+	best = d;
+	pid = i;
+      }
+    }
+
+    auto visible_from = [border, b, n] (int pid) {
+      for (int i = 1; i < n - 1; i++) {
+	point p1 = border[(pid + i) % n];
+	point p2 = border[(pid + i + 1) % n];
+	if (pid + i != n - 1 && utility::line_intersect(border[pid], b, p1, p2)) return false;
+      }
+      return true;
+    };
+
+    point p = border[pid];
+    path.push_back(p + utility::normalize_and_scale(p - center, 10));
+    do {
+      pid = (pid + n + dir) % n;
+      p = border[pid];
+      path.push_back(p + utility::normalize_and_scale(p - center, 10));
+    } while (!visible_from(pid));
+
+    return path;
+  };
+
+  int tid = first_intersect(a, b);
+
+  if (tid == -1) {
+    cout << "get_path: direct path from " << a << " to " << b << endl;
+    return list<point>(1, b);
   }
 
-  if (tids.empty()) {
-    cout << "get_heading: found straight path from " << a << " to " << b << endl;
-    return make_pair(b, utility::l2norm(b - a));
-  }
+  // join path around with remaining path
+  list<point> path_left = path_around(terrain[tid].center, terrain[tid].border, a, b, -1);
+  list<point> path_right = path_around(terrain[tid].center, terrain[tid].border, a, b, 1);
+  path_left.splice(path_left.end(), get_path(path_left.back(), b));
+  path_right.splice(path_right.end(), get_path(path_right.back(), b));
 
-  // find highest and lowest relative angle
-  float lowest = 0;
-  float highest = 0;
-  point plow = b, phigh = b;
-  for (auto tid : tids) {
-    float aref = utility::point_angle(terrain[tid].center - a);
-    for (auto x : terrain[tid].border) {
-      float test = utility::point_angle(x - a);
-      float diff = utility::angle_difference(test, aref);
+  // optimize the path
+  auto fix_path = [this, first_intersect] (list<point> path) {
+    bool did_fix = true;
+    int n = path.size();
+
+    if (n < 3) return path;
+
+    auto start = path.begin();
+    while (did_fix && start != path.end()) {
+      did_fix = false;
+      auto check = start;
+      check++;
+      if (check == path.end()) break;
+      check++;
       
-      if (diff < lowest) {
-	lowest = diff;
-	plow = x + utility::normalize_and_scale(x - terrain[tid].center, 10);
+      while (first_intersect(*start, *check) > -1 && check != path.end()) {
+	start++;
+	check++;
+      }
+      
+      while (first_intersect(*start, *check) == -1 && check != path.end()) {
+	did_fix = true;
+	check++;
       }
 
-      if (diff > highest) {
-	highest = diff;
-	phigh = x + utility::normalize_and_scale(x - terrain[tid].center, 10);
-      }
+      check--;
+      start++;
+      path.erase(start, check);
+      start = check;
     }
-  }
 
-  cout << "get_heading_cost: points: " << plow << " and " << phigh << endl;
+    // finally, remove starting point
+    path.pop_front();
+    return path;
+  };
 
-  list<point> test_points;
-  float alow = utility::point_angle(plow - a);
-  float ahigh = utility::point_angle(phigh - a);
-  float atarg = utility::point_angle(b - a);
-  if (abs(utility::angle_difference(alow, atarg)) < abs(utility::angle_difference(ahigh, atarg))) {
-    test_points.push_back(plow);
-    test_points.push_back(phigh);
-  } else {
-    test_points.push_back(phigh);
-    test_points.push_back(plow);
-  }
+  auto count_path = [] (list<point> path) {
+    if (path.size() < 3) return utility::l2norm(path.back() - path.front());
+    
+    auto i = path.begin();
+    auto j = i;
+    j++;
 
-  float best = max_use;
-  point best_point = a;
-  bool found = false;
-  for (auto x : test_points) {
-    float pre_use = utility::l2norm(x - a);
-    if (pre_use + utility::l2norm(b - x) < max_use) {
-      auto test = get_heading_cost(x, b, d + 1, max_use - pre_use);
-      if (test.second >= 0) {
-	test.second += pre_use;
-	max_use = fmin(max_use, test.second);
-      }
-
-      if (test.second < best) {
-	best = test.second;
-	best_point = x;
-	found = true;
-      }
+    float d = 0;
+    while (j != path.end()) {
+      d += utility::l2norm((*j) - (*i));
+      i++;
+      j++;
     }
-  }
 
-  if (found) {
-    cout << "get_heading: from " << a << " to " << b << " via " << best_point << endl;
-    return make_pair(best_point, best);
+    return d;
+  };
+
+  path_right = fix_path(path_right);
+  path_left = fix_path(path_left);
+
+  if (count_path(path_right) < count_path(path_left)) {
+    return path_right;
   } else {
-    cout << "get_heading: did not find any better paths." << endl;
-    return result_failure;
+    return path_left;
   }
 }
 
@@ -489,6 +528,23 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   for (int i = 0; i < n_terrain; i++) {
     terrain_object obj;
 
+    auto avoid_point = [] (terrain_object &obj, point p, float rad) {
+      for (int j = 0; j < obj.border.size() - 1; j++) {
+	float a_sol = utility::point_angle(p - obj.center);
+	float a1 = utility::point_angle(obj.border[j] - obj.center);
+	float a2 = utility::point_angle(obj.border[j + 1] - obj.center);
+	if (utility::angle_difference(a_sol, a1) > 0 && utility::angle_difference(a2, a_sol) > 0) {
+	  float r = utility::angle_difference(a_sol, a1) / utility::angle_difference(a2, a1);
+	  float lim = r * utility::l2norm(obj.border[j + 1] - obj.center) + (1 - r) * utility::l2norm(obj.border[j] - obj.center);
+	  float dist = fmax(utility::l2norm(p - obj.center) - rad, 0);
+	  if (dist < lim) {
+	    obj.border[j] = obj.center + dist / lim * utility::normv(a1);
+	    obj.border[j + 1] = obj.center + dist / lim * utility::normv(a2);
+	  }
+	}
+      }
+    };
+
     // select center sufficiently far from any solars
     bool passed = false;
     int count = 0;
@@ -500,30 +556,21 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 
     if (!passed) break;
 
+    // adapt other terrain to not cover the center
+    for (auto &x : terrain) avoid_point(x.second, obj.center, 30);
+
     // generate random border
     for (float angle = 0; angle < 2 * M_PI; angle += utility::random_uniform(0.01, 0.5)) {
-      float rad = fmax(utility::random_normal(80, 40), 0);
+      float rad = fmax(utility::random_normal(80, 40), 1);
       obj.border.push_back(obj.center + rad * utility::normv(angle));
     }
     obj.border.push_back(obj.border.front());
 
     // go through solars and make sure we don't cover them
-    for (auto p : all_solars) {
-      for (int j = 0; j < obj.border.size() - 1; j++) {
-	float a_sol = utility::point_angle(p -> position - obj.center);
-	float a1 = utility::point_angle(obj.border[j] - obj.center);
-	float a2 = utility::point_angle(obj.border[j + 1] - obj.center);
-	if (utility::angle_difference(a_sol, a1) > 0 && utility::angle_difference(a2, a_sol) > 0) {
-	  float r = utility::angle_difference(a_sol, a1) / utility::angle_difference(a2, a1);
-	  float lim = r * utility::l2norm(obj.border[j + 1] - obj.center) + (1 - r) * utility::l2norm(obj.border[j] - obj.center);
-	  float dist = fmax(utility::l2norm(p -> position - obj.center) - p -> radius, 0);
-	  if (dist < lim) {
-	    obj.border[j] = obj.center + dist / lim * utility::normv(a1);
-	    obj.border[j + 1] = obj.center + dist / lim * utility::normv(a2);
-	  }
-	}
-      }
-    }
+    for (auto p : all_solars) avoid_point(obj, p -> position, p -> radius);
+
+    // go through terrain so we don't overlap
+    for (auto x : terrain) for (auto y : x.second.border) avoid_point(obj, y, 30);
 
     // safely generate terrain object id
     int tid;
