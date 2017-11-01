@@ -17,6 +17,7 @@ namespace st3{
     static const int tc_game_complete = 32;
     static const int tc_ok_result = tc_run | tc_complete;
     static const int tc_bad_result = ~tc_ok_result;
+    static const int timeout = 1000;
     
     /*! client id */
     sint id;

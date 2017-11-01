@@ -1,4 +1,5 @@
 #include <iostream>
+#include <chrono>
 #include "socket_t.h"
 
 using namespace std;
@@ -14,8 +15,15 @@ bool socket_t::check_com() {
 }
 
 bool st3::socket_t::send_packet(sf::Packet packet){
+  chrono::time_point<chrono::system_clock> start = chrono::system_clock::now();
+  
   setBlocking(false);
   while (check_com()) {
+    std::chrono::duration<double> elapsed = (chrono::system_clock::now() - start);
+    if (elapsed.count() > timeout) {
+      throw network_error("socket_t::send: timeout");
+    }
+    
     switch(status = send(packet)){
     case sf::Socket::Disconnected:
       throw network_error("socket_t::send: disconnected.");
@@ -41,9 +49,16 @@ bool st3::socket_t::send_packet(sf::Packet packet){
 }
 
 bool st3::socket_t::receive_packet() {
+  chrono::time_point<chrono::system_clock> start = chrono::system_clock::now();
+
   data.clear();
   setBlocking(false);
   while (check_com()) {
+    std::chrono::duration<double> elapsed = (chrono::system_clock::now() - start);
+    if (elapsed.count() > timeout) {
+      throw network_error("socket_t::receive: timeout");
+    }
+
     switch(status = receive(data)){
     case sf::Socket::Disconnected:
       throw network_error("socket_t::receive: disconnected.");

@@ -1,6 +1,5 @@
 * current work
 ** path search
-   Handle infinite recursion when there is no viable path.
 ** balancing
    UP fighter: +0.5 damage
    DOWN destroyer: -20 hp, +10 cost
@@ -34,8 +33,6 @@
 *** [windows] choice_gui should not scale text!
 * [~] issues
 ** [~] system
-*** ships should not be able to enter impassable terrain
-*** ships should move slower and rotate faster in order to navigate geometries
 *** init_data sends all data - should limit to "player_any"
 *** socket_t routines should have a timeout
 *** weird that solar systems aren't automatically searched when colonized?
@@ -167,6 +164,9 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] Handle infinite recursion when there is no viable path.
+** [J] ships should not be able to enter impassable terrain
+** [J] ships should move slower and rotate faster in order to navigate geometries
 ** [J] mining too nerfed? Considering how mining weighting works, shouldn't get empty storage
 ** [J] residual client side waypoints (?when incoming units die?)
 ** [J] warp drive not listed for colonizers, mass 30 should match [10,100]?
