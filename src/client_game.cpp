@@ -1092,7 +1092,21 @@ list<idtype> game::selected_commands(){
 //   interface::desktop -> reset_qw(interface::solar_gui::Create(get_specific<solar>(key)));
 // }
 
+bool game::in_terrain(point p) {
+  // check if there is terrain here
+  for (auto &x : terrain) {
+    int j = x.second.triangle(p, 0);
+    if (j > -1) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void game::setup_targui(point p){
+  if (in_terrain(p)) return;
+  
   // set up targui
   auto keys_targeted = entities_at(p);
   auto keys_selected = selected_entities();
@@ -1209,7 +1223,7 @@ void game::control_event(sf::Event e) {
       // update area selection
       srect.width = p.x - srect.left;
       srect.height = p.y - srect.top;
-    } else if (phase == "choice" && drag_waypoint_active) {
+    } else if (phase == "choice" && drag_waypoint_active && !in_terrain(p)) {
       // update position
       auto wp = get_specific<waypoint>(drag_id);
       wp -> position = p;

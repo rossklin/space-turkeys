@@ -470,20 +470,10 @@ void game_data::distribute_ships(list<combid> sh, point p){
     entity_grid -> insert(s -> id, s -> position);
   }
 }
-  
-int game_data::terrain_triangle(terrain_object obj, point p, float rad) {
-  float a_sol = utility::point_angle(p - obj.center);
-  for (int j = 0; j < obj.border.size() - 1; j++) {
-    float test = utility::triangle_relative_distance(obj.center, obj.border[j], obj.border[j+1], p, rad);
-    if (test > -1 && test < 1) return j;
-  }
-
-  return -1;
-}
 
 point game_data::terrain_forcing(point p) {
   for (auto &x : terrain) {
-    int j = terrain_triangle(x.second, p, 10);
+    int j = x.second.triangle(p, 10);
     if (j > -1) {
       float test = utility::triangle_relative_distance(x.second.center, x.second.border[j], x.second.border[j+1], p, 10);
       if (test > -1) {
@@ -563,7 +553,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   static mutex m;
   
   auto avoid_point = [this] (terrain_object &obj, point p, float rad) {
-    auto j = terrain_triangle(obj, p, rad);
+    auto j = obj.triangle(p, rad);
     if (j > -1) {
       float test = utility::triangle_relative_distance(obj.center, obj.border[j], obj.border[j+1], p, rad);
       if (test > -1 && test < 1) {

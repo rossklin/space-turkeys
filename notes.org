@@ -23,18 +23,15 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
-** bugs
+* [~] issues
+** [~] system
+*** terrain still creates intersections and unreachable areas which bug out the path search algorithm
 *** [?] terminated with network error
     After submitting first choice after discovering shields and
     selecting battleships. Probably an exception on server which
     didn't show again..?
 *** [?] fleeing units freeze in panic
-*** [J] governor: figure out why population grows ~10x faster in real game than in tests
-*** [windows] choice_gui should not scale text!
-* [~] issues
-** [~] system
 *** init_data sends all data - should limit to "player_any"
-*** [J] socket_t routines should have a timeout
 *** weird that solar systems aren't automatically searched when colonized?
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
@@ -43,6 +40,7 @@
     E.g. quit button or right panel
 *** [?] only allow command action if *available* ships support it
 *** Clicking interface response button also triggers click on minimap
+*** [windows] choice_gui should not scale text!
 *** sfg window does not resize on sfml window resize
 *** command selectors drawn on top of each other
 *** simulation step hangs on key escape abort game
@@ -164,6 +162,8 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] socket_t routines should have a timeout
+** [J] governor: figure out why population grows ~10x faster in real game than in tests
 ** [J] Handle infinite recursion when there is no viable path.
 ** [J] ships should not be able to enter impassable terrain
 ** [J] ships should move slower and rotate faster in order to navigate geometries

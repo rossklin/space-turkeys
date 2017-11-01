@@ -126,6 +126,8 @@ namespace st3{
       /*! select selectors in the selection rectangle */
       void area_select();
 
+      bool in_terrain(point p);
+
       /*! get the keys of all entity selectors at a point
 
 	@param p the point

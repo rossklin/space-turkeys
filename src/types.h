@@ -79,6 +79,8 @@ namespace st3{
     class_t type;
     point center;
     std::vector<point> border;
+
+    int triangle(point p, float r);
   };
 
   bool operator<(const id_pair &x, const id_pair &y);

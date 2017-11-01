@@ -4,6 +4,7 @@
 
 #include "types.h"
 #include "waypoint.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -109,4 +110,14 @@ id_pair::id_pair(combid x, combid y) {
 
 bool st3::operator < (const id_pair &x, const id_pair &y) {
   return hash<string>{}(x.a)^hash<string>{}(x.b) < hash<string>{}(y.a)^hash<string>{}(y.b);
+}
+  
+int terrain_object::triangle(point p, float rad) {
+  float a_sol = utility::point_angle(p - center);
+  for (int j = 0; j < border.size() - 1; j++) {
+    float test = utility::triangle_relative_distance(center, border[j], border[j+1], p, rad);
+    if (test > -1 && test < 1) return j;
+  }
+
+  return -1;
 }

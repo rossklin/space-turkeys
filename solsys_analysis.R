@@ -13,7 +13,7 @@ display <- function(v, facs, eids = NULL){
     x <- melt(df, id.vars = c('entity', 'step'), measure.vars = facs)
     x$entity = as.factor(x$entity)
 
-    ggplot(x, aes(x = step, y = value, group = variable, color = variable, shape = variable)) + geom_path(aes(group = interaction(entity, variable))) + ylim(0, 5)
+    ggplot(x, aes(x = step, y = value, group = variable, color = variable, shape = variable)) + geom_path(aes(group = interaction(entity, variable)))
 }
 
 compare.governors <- function(fac, govs) {
