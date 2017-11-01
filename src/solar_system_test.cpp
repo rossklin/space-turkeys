@@ -28,6 +28,10 @@ solar::ptr build_solar(){
     s -> resource_storage[v] = 0;
   }
 
+  s -> facility_access("shipyard") -> level = 1;
+  s -> facility_access("research facility") -> level = 1;
+  s -> facility_access("missile turret") -> level = 1;
+
   return s;
 }
 
@@ -88,6 +92,18 @@ int main(int argc, char **argv){
 
   stat["mining"] = [] (solar::ptr s) -> float {
     return s -> choice_data.allocation[keywords::key_mining];
+  };
+
+  stat["buildings"] = [] (solar::ptr s) -> float {
+    int sum = 0;
+    for (auto f : s -> developed()) {
+      sum += f.level;
+    }
+    return sum - 3;
+  };
+
+  stat["research_facility"] = [] (solar::ptr s) -> float {
+    return s -> developed("research facility").level;
   };
 
   cout << "entity, step, ";

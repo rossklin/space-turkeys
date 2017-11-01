@@ -19,10 +19,10 @@ using namespace st3;
 const string solar::class_id = "solar";
 const float solar::f_growth = 1e-2;
 const float solar::f_crowding = 2e-3;
-const float solar::f_minerate = 1e-4;
-const float solar::f_buildrate = 2e-4;
-const float solar::f_devrate = 2e-4;
-const float solar::f_resrate = 2e-4;
+const float solar::f_minerate = 1.5e-4;
+const float solar::f_buildrate = 3e-4;
+const float solar::f_devrate = 3e-4;
+const float solar::f_resrate = 3e-4;
 
 solar::solar(const solar &s) : game_object(s) {
   *this = s;
@@ -411,15 +411,15 @@ choice::c_solar solar::government() {
   c = compute_mining(c);
 
   // RESEARCH
-  if (c.governor == keywords::key_research) c.allocation[keywords::key_research] = 2;
+  if (c.governor == keywords::key_research) c.allocation[keywords::key_research] = 3;
   if (c.governor == keywords::key_mining) c.allocation[keywords::key_research] = 0;
   if (research_level -> researching.empty()) c.allocation[keywords::key_research] = 0;
 
   float care_factor = 1;
   if (c.governor == keywords::key_mining || c.governor == keywords::key_military) {
-    care_factor = 0.5;
+    care_factor = 0.3;
   } else if (c.governor == keywords::key_culture) {
-    care_factor = 2;
+    care_factor = 3;
   }
 
   // CULTURE
