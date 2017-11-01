@@ -17,12 +17,12 @@ using namespace std;
 using namespace st3;
 
 const string solar::class_id = "solar";
-const float solar::f_growth = 4e-2;
-const float solar::f_crowding = 4e-3;
-const float solar::f_minerate = 1e-3;
-const float solar::f_buildrate = 2e-3;
-const float solar::f_devrate = 2e-3;
-const float solar::f_resrate = 2e-3;
+const float solar::f_growth = 1e-2;
+const float solar::f_crowding = 2e-3;
+const float solar::f_minerate = 1e-4;
+const float solar::f_buildrate = 2e-4;
+const float solar::f_devrate = 2e-4;
+const float solar::f_resrate = 2e-4;
 
 solar::solar(const solar &s) : game_object(s) {
   *this = s;
@@ -463,6 +463,7 @@ choice::c_solar solar::government() {
 	}
 
 	h += threat_weight * test.turret.damage * test.turret.range * test.turret.accuracy / test.turret.load_time;
+	h += threat_weight * test.base_hp;
       }
 
       // reduce score for build time

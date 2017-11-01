@@ -29,12 +29,12 @@
     selecting battleships. Probably an exception on server which
     didn't show again..?
 *** [?] fleeing units freeze in panic
-*** [?] governor: figure out why population grows ~10x faster in real game than in tests
+*** [J] governor: figure out why population grows ~10x faster in real game than in tests
 *** [windows] choice_gui should not scale text!
 * [~] issues
 ** [~] system
 *** init_data sends all data - should limit to "player_any"
-*** socket_t routines should have a timeout
+*** [J] socket_t routines should have a timeout
 *** weird that solar systems aren't automatically searched when colonized?
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents

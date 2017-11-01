@@ -14,7 +14,7 @@ using namespace st3;
 solar::ptr build_solar(){
   solar::ptr s = solar::create(point(0, 0), 1);
 
-  s -> dt = 0.1;
+  s -> dt = 1; // sub_frames * dt
   s -> population = 1000;
   s -> happiness = 1;
   s -> research_points = 0;
@@ -84,6 +84,10 @@ int main(int argc, char **argv){
 
   stat["research"] = [] (solar::ptr s) -> float {
     return s -> research_points;
+  };
+
+  stat["mining"] = [] (solar::ptr s) -> float {
+    return s -> choice_data.allocation[keywords::key_mining];
   };
 
   cout << "entity, step, ";
