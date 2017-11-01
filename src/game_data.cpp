@@ -575,7 +575,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 
   list<solar::ptr> all_solars = all<solar>();
   int n_terrain = utility::random_int(4);
-  float min_length = 2;
+  float min_length = 10;
   float min_dist = 40;
   for (int i = 0; i < n_terrain; i++) {
     terrain_object obj;
@@ -597,7 +597,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 
     // generate random border
     for (float angle = 0; angle < 2 * M_PI - 0.1; angle += utility::random_uniform(0.2, 0.5)) {
-      float rad = fmax(utility::random_normal(120, 40), min_length);
+      float rad = fmax(utility::random_normal(120, 20), min_length);
       obj.border.push_back(obj.center + rad * utility::normv(angle));
     }
     obj.border.push_back(obj.border.front());
