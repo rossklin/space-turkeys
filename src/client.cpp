@@ -126,7 +126,7 @@ int main(int argc, char **argv){
     for (int i = 1; i < argc; i++) parse_input(argv[i]);
   } catch (exception e) {
     cout << e.what() << endl;
-    cout << "usage: " << argv[0] << " [game_id=...] [ip=...] [name=...] [num_players=...] [size=...] [round_length=...] [starting_fleet=single|voyagers|massive]" << endl;
+    cout << "usage: " << argv[0] << " [game_id=...] [ip=...] [name=...] [num_players=...] [size=...] [round_length=...] [starting_fleet=single|voyagers|battleships|massive]" << endl;
     exit(0);
   }
 

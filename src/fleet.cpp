@@ -128,7 +128,7 @@ void fleet::give_commands(list<command> c, game_data *g){
 
 fleet::suggestion fleet::suggest(combid sid, game_data *g) {
   ship::ptr s = g -> get_ship(sid);
-  float pref_density = 0.1;
+  float pref_density = 0.2;
   float pref_maxrad = fmax(sqrt(ships.size() / (M_PI * pref_density)), 20);
 
   auto local_output = [this] (string v) {
@@ -292,8 +292,12 @@ void fleet::update_data(game_data *g, bool force_refresh) {
       }
 
       if (update_heading) {
-	heading = path.front();
-	path.pop_front();
+	if (path.size()) {
+	  heading = path.front();
+	  path.pop_front();
+	} else {
+	  heading = position;
+	}
 	ss << "fleet " << id << " updated heading to " << heading << endl;
 	server::output(ss.str());
       }

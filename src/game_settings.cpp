@@ -4,7 +4,7 @@
 using namespace std;
 using namespace st3;
 
-const set<string> st3::starting_options = {"single", "voyagers", "massive"};
+const set<string> st3::starting_options = {"single", "voyagers", "battleships", "massive"};
 int st3::sub_frames = 10;
 
 game_settings::game_settings(){

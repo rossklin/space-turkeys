@@ -8,7 +8,7 @@
 using namespace std;
 using namespace st3;
 
-#define DEBUG true
+// #define DEBUG true
 
 bool server::silent_mode = false;
 

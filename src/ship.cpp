@@ -232,20 +232,17 @@ void ship::update_data(game_data *g) {
       local_output("summon: travel:");
       if (test > 2 * M_PI / 3) {
 	// in front of fleet
-	if (check_space(fleet_target_angle + M_PI)) {
-	  // slow down
-	  s = fmin(0.6 * f -> stats.speed_limit, base_stats.stats[sskey::key::speed]);
-	  local_output("summon: in fron of fleet, slowing down");
-	}
+	// slow down
+	s = fmin(0.6 * f -> stats.speed_limit, base_stats.stats[sskey::key::speed]);
+	local_output("summon: in fron of fleet, slowing down");
       } else if (test > M_PI / 3) {
 	// side of fleet
-	if (check_space(fleet_angle)) {
-	  a = fleet_target_angle + 0.15 * utility::angle_difference(fleet_angle, fleet_target_angle);
-	  local_output("summon: to side of fleet, angling in");
-	}
+	a = fleet_angle;
+	local_output("summon: to side of fleet, angling in");
       } else {
 	// back of fleet
-	if (check_space(fleet_target_angle)) {
+	a = fleet_angle;
+	if (check_space(a)) {
 	  s = base_stats.stats[sskey::key::speed];
 	  local_output("summon: behind fleet, speeding up");
 	}
@@ -426,7 +423,7 @@ void ship::move(game_data *g){
 
   // move
   float dt = g -> get_dt();
-  float angle_increment = fmin(1.2 / sqrt(stats[sskey::key::mass]), 0.6);
+  float angle_increment = fmin(2 / pow(stats[sskey::key::mass], 0.33), 1);
   float acceleration = 0.1 * base_stats.stats[sskey::key::speed] / sqrt(stats[sskey::key::mass]);
   float epsilon = dt * 0.01;
   float angle_miss = utility::angle_difference(selected_angle, angle);
@@ -460,6 +457,9 @@ void ship::move(game_data *g){
   angle += fmin(dt * angle_increment, fabs(angle_miss)) * angle_sign;
   position += dt * stats[sskey::key::speed] * utility::normv(angle);
 
+  // push out of impassable terrain
+  position += float(dt * 0.3) * g -> terrain_forcing(position);
+  
   g -> entity_grid -> move(id, position);
 }
 

@@ -97,8 +97,11 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
   return res;
 }
 
-list<point> game_data::get_path(point a, point b) {
-  cout << "get_raw_path: begin: " << a << " to " << b << endl;
+list<point> game_data::get_path(point a, point b, int d) {
+  if (d > 10) {
+    server::output("get_path: max recursion depth reached!");
+    return {};
+  }
   
   auto first_intersect = [this] (point a, point b) {
 
@@ -109,7 +112,6 @@ list<point> game_data::get_path(point a, point b) {
 	point p1 = x.second.border[i];
 	point p2 = x.second.border[i+1];
 	if (utility::line_intersect(a, b, p1, p2)) {
-	  cout << "get_heading: intersecting terrain " << x.first << " at " << x.second.center << endl;
 	  tids.push_back(x.first);
 	  break;
 	}
@@ -172,15 +174,25 @@ list<point> game_data::get_path(point a, point b) {
   int tid = first_intersect(a, b);
 
   if (tid == -1) {
-    cout << "get_path: direct path from " << a << " to " << b << endl;
     return list<point>(1, b);
   }
 
   // join path around with remaining path
   list<point> path_left = path_around(terrain[tid].center, terrain[tid].border, a, b, -1);
   list<point> path_right = path_around(terrain[tid].center, terrain[tid].border, a, b, 1);
-  path_left.splice(path_left.end(), get_path(path_left.back(), b));
-  path_right.splice(path_right.end(), get_path(path_right.back(), b));
+  list<point> sub_left = get_path(path_left.back(), b, d + 1);
+  list<point> sub_right = get_path(path_right.back(), b, d + 1);
+  if (sub_left.size()) {
+    path_left.splice(path_left.end(), sub_left);
+  } else {
+    path_left.clear();
+  }
+
+  if (sub_right.size()) {
+    path_right.splice(path_right.end(), sub_right);
+  } else {
+    path_right.clear();
+  }
 
   // optimize the path
   auto fix_path = [this, first_intersect] (list<point> path) {
@@ -218,7 +230,7 @@ list<point> game_data::get_path(point a, point b) {
   };
 
   auto count_path = [] (list<point> path) {
-    if (path.size() < 3) return utility::l2norm(path.back() - path.front());
+    if (path.size() < 3) return path.size() ? utility::l2norm(path.back() - path.front()) : INFINITY;
     
     auto i = path.begin();
     auto j = i;
@@ -458,6 +470,34 @@ void game_data::distribute_ships(list<combid> sh, point p){
     entity_grid -> insert(s -> id, s -> position);
   }
 }
+  
+int game_data::terrain_triangle(terrain_object obj, point p, float rad) {
+  float a_sol = utility::point_angle(p - obj.center);
+  for (int j = 0; j < obj.border.size() - 1; j++) {
+    float test = utility::triangle_relative_distance(obj.center, obj.border[j], obj.border[j+1], p, rad);
+    if (test > -1 && test < 1) return j;
+  }
+
+  return -1;
+}
+
+point game_data::terrain_forcing(point p) {
+  for (auto &x : terrain) {
+    int j = terrain_triangle(x.second, p, 10);
+    if (j > -1) {
+      float test = utility::triangle_relative_distance(x.second.center, x.second.border[j], x.second.border[j+1], p, 10);
+      if (test > -1) {
+	if (test < 1) {
+	  return (1 - test) * (p - x.second.center);
+	}
+      } else {
+	throw logical_error("Forcing triangle without relative distance value!");
+      }
+    }
+  }
+
+  return point(0,0);
+}
 
 void game_data::extend_universe(int i, int j, bool starting_area) {
   pair<int, int> idx = make_pair(i, j);
@@ -521,28 +561,24 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   // add impassable terrain
   static int terrain_idc = 0;
   static mutex m;
+  
+  auto avoid_point = [this] (terrain_object &obj, point p, float rad) {
+    auto j = terrain_triangle(obj, p, rad);
+    if (j > -1) {
+      float test = utility::triangle_relative_distance(obj.center, obj.border[j], obj.border[j+1], p, rad);
+      if (test > -1 && test < 1) {
+	obj.border[j] = obj.center + test * (obj.border[j] - obj.center);
+	obj.border[j + 1] = obj.center + test * (obj.border[j + 1] - obj.center);
+      }
+    }    
+  };
 
   list<solar::ptr> all_solars = all<solar>();
   int n_terrain = utility::random_int(4);
+  float min_length = 2;
+  float min_dist = 40;
   for (int i = 0; i < n_terrain; i++) {
     terrain_object obj;
-
-    auto avoid_point = [] (terrain_object &obj, point p, float rad) {
-      float a_sol = utility::point_angle(p - obj.center);
-      for (int j = 0; j < obj.border.size() - 1; j++) {
-	float a1 = utility::point_angle(obj.border[j] - obj.center);
-	float a2 = utility::point_angle(obj.border[j + 1] - obj.center);
-	if (utility::angle_difference(a_sol, a1) > 0 && utility::angle_difference(a2, a_sol) > 0) {
-	  float r = utility::angle_difference(a_sol, a1) / utility::angle_difference(a2, a1);
-	  float lim = r * utility::l2norm(obj.border[j + 1] - obj.center) + (1 - r) * utility::l2norm(obj.border[j] - obj.center);
-	  float dist = fmax(utility::l2norm(p - obj.center) - rad, 0);
-	  if (dist < lim) {
-	    obj.border[j] = obj.center + dist * utility::normv(a1);
-	    obj.border[j + 1] = obj.center + dist * utility::normv(a2);
-	  }
-	}
-      }
-    };
 
     // select center sufficiently far from any solars
     bool passed = false;
@@ -551,17 +587,17 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
       obj.center = point_init();
       passed = true;
       for (auto p : all_solars) passed &= utility::l2norm(obj.center - p -> position) > p -> radius;
+      for (auto p : terrain) passed &= utility::l2norm(obj.center - p.second.center) > min_dist + 2 * min_length;
     }
 
-    if (!passed) break;
+    if (!passed) continue;
 
     // adapt other terrain to not cover the center
-    for (auto &x : terrain) avoid_point(x.second, obj.center, 30);
+    for (auto &x : terrain) avoid_point(x.second, obj.center, min_dist + 2 * min_length);
 
     // generate random border
-    float min_length = 1;
     for (float angle = 0; angle < 2 * M_PI - 0.1; angle += utility::random_uniform(0.2, 0.5)) {
-      float rad = fmax(utility::random_normal(80, 40), min_length);
+      float rad = fmax(utility::random_normal(120, 40), min_length);
       obj.border.push_back(obj.center + rad * utility::normv(angle));
     }
     obj.border.push_back(obj.border.front());
@@ -575,7 +611,6 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
       for (int i = 0; i < x.second.border.size() - 1 && !failed; i++) {
 	point p1 = x.second.border[i];
 	point p2 = x.second.border[i+1];
-	avoid_point(obj, p1, 30);
 	
 	for (int j = 0; j < obj.border.size() - 1 && !failed; j++) {
 	  point q1 = obj.border[j];
@@ -596,7 +631,10 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 	}
       }
 
-      for (auto y : obj.border) avoid_point(x.second, y, 30);
+      if (!failed) {
+	for (auto y : x.second.border) avoid_point(obj, y, min_dist);
+	for (auto y : obj.border) avoid_point(x.second, y, min_dist);
+      }
     }
 
     if (failed) continue;
@@ -756,6 +794,8 @@ void game_data::build(){
       starter_fleet["fighter"] = 1;
     } else if (settings.starting_fleet == "voyagers") {
       starter_fleet["voyager"] = 2;
+    } else if (settings.starting_fleet == "battleships") {
+      starter_fleet["battleship"] = 40;
     } else if (settings.starting_fleet == "massive") {
       for (auto sc : ship::all_classes()) starter_fleet[sc] = 100;
     } else {
