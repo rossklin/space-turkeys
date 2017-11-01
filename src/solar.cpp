@@ -19,10 +19,10 @@ using namespace st3;
 const string solar::class_id = "solar";
 const float solar::f_growth = 1e-2;
 const float solar::f_crowding = 2e-3;
-const float solar::f_minerate = 1.5e-4;
-const float solar::f_buildrate = 3e-4;
-const float solar::f_devrate = 3e-4;
-const float solar::f_resrate = 3e-4;
+const float solar::f_minerate = 2e-4;
+const float solar::f_buildrate = 5e-4;
+const float solar::f_devrate = 5e-4;
+const float solar::f_resrate = 5e-4;
 
 solar::solar(const solar &s) : game_object(s) {
   *this = s;
@@ -219,11 +219,12 @@ sfloat solar::vision(){
   return res + radius;
 }
 
-solar::ptr solar::create(point p, float bounty) {
+solar::ptr solar::create(point p, float bounty, float var) {
   static int idc = 0;
   static mutex m;
-  auto fres = [bounty] () {
-    return fmax(utility::random_normal(pow(2, 10 * bounty), pow(2, 9 * bounty)), 0);
+  auto fres = [bounty, var] () {
+    float level = pow(2, 10 * bounty);
+    return fmax(utility::random_normal(level, var * level), 0);
   };
 
   solar::ptr s = new solar();

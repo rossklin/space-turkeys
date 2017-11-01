@@ -207,7 +207,8 @@ namespace st3{
 
       string ship_key = "scout";
       if (keys.size() > 0) ship_key = keys.front();
-      graphics::draw_flag(w, position, get_color(), get_ships().size(), ship_key, (int)log(ships.size() + 1) + 1);
+      sf::Color bg = is_idle() ? sf::Color::Yellow : sf::Color::White;
+      graphics::draw_flag(w, position, get_color(), bg, get_ships().size(), ship_key, (int)log(ships.size() + 1) + 1);
 
       // add path      
       sf::CircleShape s(4);

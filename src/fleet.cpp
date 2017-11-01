@@ -276,8 +276,20 @@ void fleet::analyze_enemies(game_data *g) {
   }
 }
 
-void fleet::update_data(game_data *g, bool force_refresh) {
+void fleet::update_data(game_data *g, bool set_force_refresh) {
   stringstream ss;
+  force_refresh |= set_force_refresh;
+
+  // position, radius, speed and vision
+  point p(0,0);
+
+  for (auto k : ships) {
+    ship::ptr s = g -> get_ship(k);
+    p = p + s -> position;
+  }
+  
+  radius = g -> settings.fleet_default_radius;
+  position = utility::scale_point(p, 1 / (float)ships.size());
 
   // need to update fleet data?
   bool should_update = force_refresh || utility::random_uniform() < 1 / (float)fleet::update_period;
@@ -296,7 +308,7 @@ void fleet::update_data(game_data *g, bool force_refresh) {
 	  heading = path.front();
 	  path.pop_front();
 	} else {
-	  heading = position;
+	  heading = stats.target_position;
 	}
 	ss << "fleet " << id << " updated heading to " << heading << endl;
 	server::output(ss.str());
@@ -304,28 +316,19 @@ void fleet::update_data(game_data *g, bool force_refresh) {
     } else {
       ss << "fleet " << id << " unset heading." << endl;
       server::output(ss.str());
-      heading = position;
       path.clear();
     }
   }
 
+  force_refresh = false;
   if (!should_update) return;
-  
+    
   float speed = INFINITY;
   int count;
 
   // position, radius, speed and vision
-  point p(0,0);
   float r2 = 0;
   stats.vision_buf = 0;
-
-  for (auto k : ships) {
-    ship::ptr s = g -> get_ship(k);
-    p = p + s -> position;
-  }
-  
-  radius = g -> settings.fleet_default_radius;
-  position = utility::scale_point(p, 1 / (float)ships.size());
 
   stats.average_ship = ssfloat_t();
   for (auto k : ships){

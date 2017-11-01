@@ -80,6 +80,7 @@ namespace st3{
     // mechanical components
     int update_counter; /*!< counter for updating fleet data */
     analytics stats;
+    bool force_refresh;
 
     // game_object stuff
     void pre_phase(game_data *g);
@@ -102,7 +103,7 @@ namespace st3{
     bool is_idle();
     void set_idle();
     void analyze_enemies(game_data *g);
-    void update_data(game_data *g, bool force_refresh = false);
+    void update_data(game_data *g, bool set_force_refresh = false);
     void remove_ship(combid i);
     suggestion suggest(combid i, game_data *g);
     float get_hp();

@@ -50,7 +50,7 @@ namespace st3{
 
     /*! initialize static graphics i.e. default font */
     void initialize();
-    void draw_flag(sf::RenderTarget &w, point p, sf::Color c, int count, std::string ship_class, int nstack = 1);
+    void draw_flag(sf::RenderTarget &w, point p, sf::Color c, sf::Color bg, int count, std::string ship_class, int nstack = 1);
     void draw_text(sf::RenderTarget &w, std::string v, point p, float fs, bool ul = false, sf::Color fill = sf::Color::White, bool do_inv = true, float rotate = 0);
     void draw_framed_text(sf::RenderTarget &w, std::string v, sf::FloatRect r, sf::Color co, sf::Color cf = sf::Color::Transparent, float fs = 0);
 

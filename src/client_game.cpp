@@ -1669,7 +1669,7 @@ void game::draw_universe(){
 
   // flag clusters of enemy ships
   for (auto x : enemy_clusters) {
-    graphics::draw_flag(window, x, sf::Color::Red, 0, "scout");
+    graphics::draw_flag(window, x, sf::Color::Red, sf::Color::White, 0, "scout");
   }
 }
 

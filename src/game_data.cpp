@@ -337,6 +337,7 @@ void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &
   
   distribute_ships(sh, f -> position);
   add_entity(f);
+  f -> heading = f -> position;
   f -> update_data(this, true);
 }
 
@@ -503,10 +504,12 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   bounty = utility::linsig(utility::random_normal(bounty, 0.2 * bounty));
   float nbuf = bounty * pow(ratio, 2) * settings.solar_density;
   int n_solar = fmax(utility::random_normal(nbuf, 0.2 * nbuf), 0);
+  float var = utility::random_uniform(0.3, 2);
     
   if (starting_area) {
     n_solar = 10;
     bounty = 1;
+    var = 0.3;
   }
 
   if (n_solar == 0) return;
@@ -546,7 +549,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   }
 
   // make solars
-  for (auto p : x) add_entity(solar::create(p, bounty));
+  for (auto p : x) add_entity(solar::create(p, bounty, var));
 
   // add impassable terrain
   static int terrain_idc = 0;

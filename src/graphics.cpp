@@ -37,19 +37,19 @@ void graphics::initialize(){
   }
 }
 
-void graphics::draw_flag(sf::RenderTarget &w, point p, sf::Color c, int count, string ship_class, int nstack) {
+void graphics::draw_flag(sf::RenderTarget &w, point p, sf::Color c, sf::Color bg, int count, string ship_class, int nstack) {
   vector<sf::Vertex> svert;
   float s = 35 * unscale();
   float bt = 0.05;
 
   // flag
-  auto make_flag = [bt, c] (float shift) -> sf::ConvexShape {
+  auto make_flag = [bt, c, bg] (float shift) -> sf::ConvexShape {
     sf::ConvexShape flag;
     flag.setPointCount(3);
     flag.setPoint(0, point(bt/2 + shift, -2 - shift));
     flag.setPoint(1, point(1 + shift, -1.5 - shift));
     flag.setPoint(2, point(bt/2 + shift, -1 - shift));
-    flag.setFillColor(shift > 0 ? sf::Color(200,200,200) : sf::Color::White);
+    flag.setFillColor(shift > 0 ? sf::Color(200,200,200) : bg);
     flag.setOutlineColor(c);
     flag.setOutlineThickness(bt);
     return flag;

@@ -33,6 +33,7 @@ namespace st3{
     static const std::string trade_from;
     static const std::string land;
     static const std::string search;
+    static const std::string auto_search;
     static const std::string turret_combat;
     static const std::string space_combat;
     static const std::string bombard;

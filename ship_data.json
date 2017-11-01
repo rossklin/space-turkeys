@@ -189,7 +189,7 @@
 	"voyager" : {
 	    "hp" : 30,
 	    "mass" : 30,
-	    "speed" : 15,
+	    "speed" : 10,
 	    "solar damage" : 5,
 	    "ship damage" : 10,
 	    "accuracy" : 40,

@@ -17,7 +17,7 @@
 	    "interactions" : ["trade to", "trade from"]
 	},
 	"search" : {
-	    "interactions" : ["search"]
+	    "interactions" : ["search", "auto search"]
 	},
 
 	"warp drive" : {
