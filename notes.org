@@ -23,7 +23,7 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
-*** auto search for scouts
+*** [J] auto search for scouts
 *** somewhat faster general dev rate
 *** first path point doesn't seem to get fixed by fix path
 * [~] issues

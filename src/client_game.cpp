@@ -1646,13 +1646,15 @@ void game::draw_universe(){
   // draw terrain
   for (auto x : terrain) {
     terrain_object obj = x.second;
-    sf::VertexArray polygon(sf::TriangleFan, obj.border.size() + 1);
+    int n = obj.border.size();
+    sf::VertexArray polygon(sf::TriangleFan, n + 2);
     polygon[0].position = obj.center;
     polygon[0].color = sf::Color::Black;
-    for (int i = 0; i < obj.border.size(); i++) {
+    for (int i = 0; i < n; i++) {
       polygon[i + 1].position = obj.border[i];
       polygon[i + 1].color = sf::Color::Red;
     }
+    polygon[n+1] = polygon[1];
     window.draw(polygon);
   }
 

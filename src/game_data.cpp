@@ -108,9 +108,9 @@ list<point> game_data::get_path(point a, point b, int d) {
     // find first intersected terrain object
     list<int> tids;
     for (auto &x : terrain) {
-      for (int i = 0; i < x.second.border.size() - 1; i++) {
-	point p1 = x.second.border[i];
-	point p2 = x.second.border[i+1];
+      for (int i = 0; i < x.second.border.size(); i++) {
+	point p1 = x.second.get_vertice(i);
+	point p2 = x.second.get_vertice(i+1);
 	if (utility::line_intersect(a, b, p1, p2)) {
 	  tids.push_back(x.first);
 	  break;
@@ -124,7 +124,7 @@ list<point> game_data::get_path(point a, point b, int d) {
 
     for (auto j : tids) {
       for (int i = 0; i < terrain[j].border.size(); i++) {
-	float d = utility::l2norm(terrain[j].border[i] - a);
+	float d = utility::l2norm(terrain[j].get_vertice(i) - a);
 	if (d < closest) {
 	  closest = d;
 	  tid = j;
@@ -136,36 +136,36 @@ list<point> game_data::get_path(point a, point b, int d) {
   };
 
   // find a path around the polygon
-  auto path_around = [] (point center, vector<point> border, point a, point b, int dir) {
+  auto path_around = [] (terrain_object obj, point a, point b, int dir) {
     list<point> path;
     path.push_back(a);
 
     int pid = -1;
-    int n = border.size();
+    int n = obj.border.size();
     float best = INFINITY;
     for (int i = 0; i < n; i++) {
-      float d = utility::l2norm(border[i] - a);
+      float d = utility::l2norm(obj.get_vertice(i) - a);
       if (d < best) {
 	best = d;
 	pid = i;
       }
     }
 
-    auto visible_from = [border, b, n] (int pid) {
+    auto visible_from = [obj, b, n] (int pid) {
       for (int i = 1; i < n - 1; i++) {
-	point p1 = border[(pid + i) % n];
-	point p2 = border[(pid + i + 1) % n];
-	if (pid + i != n - 1 && utility::line_intersect(border[pid], b, p1, p2)) return false;
+	point p1 = obj.get_vertice(pid + i);
+	point p2 = obj.get_vertice(pid + i + 1);
+	if (utility::line_intersect(obj.get_vertice(pid), b, p1, p2)) return false;
       }
       return true;
     };
 
-    point p = border[pid];
-    path.push_back(p + utility::normalize_and_scale(p - center, 10));
+    point p = obj.get_vertice(pid);
+    path.push_back(p + utility::normalize_and_scale(p - obj.center, 10));
     do {
-      pid = (pid + n + dir) % n;
-      p = border[pid];
-      path.push_back(p + utility::normalize_and_scale(p - center, 10));
+      pid = utility::int_modulus(pid + dir, n);
+      p = obj.get_vertice(pid);
+      path.push_back(p + utility::normalize_and_scale(p - obj.center, 10));
     } while (!visible_from(pid));
 
     return path;
@@ -178,8 +178,8 @@ list<point> game_data::get_path(point a, point b, int d) {
   }
 
   // join path around with remaining path
-  list<point> path_left = path_around(terrain[tid].center, terrain[tid].border, a, b, -1);
-  list<point> path_right = path_around(terrain[tid].center, terrain[tid].border, a, b, 1);
+  list<point> path_left = path_around(terrain[tid], a, b, -1);
+  list<point> path_right = path_around(terrain[tid], a, b, 1);
   list<point> sub_left = get_path(path_left.back(), b, d + 1);
   list<point> sub_right = get_path(path_right.back(), b, d + 1);
   if (sub_left.size()) {
@@ -476,7 +476,7 @@ point game_data::terrain_forcing(point p) {
   for (auto &x : terrain) {
     int j = x.second.triangle(p, 10);
     if (j > -1) {
-      float test = utility::triangle_relative_distance(x.second.center, x.second.border[j], x.second.border[j+1], p, 10);
+      float test = utility::triangle_relative_distance(x.second.center, x.second.get_vertice(j), x.second.get_vertice(j+1), p, 10);
       if (test > -1) {
 	if (test < 1) {
 	  return (1 - test) * (p - x.second.center);
@@ -555,20 +555,27 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   static int terrain_idc = 0;
   static mutex m;
   
-  auto avoid_point = [this] (terrain_object &obj, point p, float rad) {
+  float min_length = 10;
+  auto avoid_point = [this, min_length] (terrain_object &obj, point p, float rad) -> bool {
     auto j = obj.triangle(p, rad);
     if (j > -1) {
-      float test = utility::triangle_relative_distance(obj.center, obj.border[j], obj.border[j+1], p, rad);
+      float test = utility::triangle_relative_distance(obj.center, obj.get_vertice(j), obj.get_vertice(j+1), p, rad);
       if (test > -1 && test < 1) {
-	obj.border[j] = obj.center + test * (obj.border[j] - obj.center);
-	obj.border[j + 1] = obj.center + test * (obj.border[j + 1] - obj.center);
+	point d1 = obj.get_vertice(j) - obj.center;
+	point d2 = obj.get_vertice(j + 1) - obj.center;
+	float shortest = fmin(utility::l2norm(d1), utility::l2norm(d2));
+	if (test * shortest <= min_length) {
+	  return false;
+	}
+	obj.set_vertice(j, obj.center + test * d1);
+	obj.set_vertice(j + 1, obj.center + test * d2);
       }
-    }    
+    }
+    return true;
   };
 
   list<solar::ptr> all_solars = all<solar>();
   int n_terrain = utility::random_int(4);
-  float min_length = 10;
   float min_dist = 40;
   for (int i = 0; i < n_terrain; i++) {
     terrain_object obj;
@@ -586,47 +593,39 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
     if (!passed) continue;
 
     // adapt other terrain to not cover the center
-    for (auto &x : terrain) avoid_point(x.second, obj.center, min_dist + 2 * min_length);
+    for (auto &x : terrain) if (!avoid_point(x.second, obj.center, min_dist + 2 * min_length)) continue;
 
     // generate random border
     for (float angle = 0; angle < 2 * M_PI - 0.1; angle += utility::random_uniform(0.2, 0.5)) {
       float rad = fmax(utility::random_normal(120, 20), min_length);
       obj.border.push_back(obj.center + rad * utility::normv(angle));
     }
-    obj.border.push_back(obj.border.front());
 
     // go through solars and make sure we don't cover them
-    for (auto p : all_solars) avoid_point(obj, p -> position, p -> radius);
+    for (auto p : all_solars) if (!avoid_point(obj, p -> position, p -> radius)) continue;
 
     // go through terrain so we don't overlap
     bool failed = false;
     for (auto &x : terrain) {
-      for (int i = 0; i < x.second.border.size() - 1 && !failed; i++) {
-	point p1 = x.second.border[i];
-	point p2 = x.second.border[i+1];
-	
-	for (int j = 0; j < obj.border.size() - 1 && !failed; j++) {
-	  point q1 = obj.border[j];
-	  point q2 = obj.border[j+1];
-	  while (utility::line_intersect(p1, p2, q1, q2)) {
-	    point d1 = q1 - obj.center;
-	    point d2 = q2 - obj.center;
-	    if (fmin(utility::l2norm(d1), utility::l2norm(d2)) < min_length) {
-	      failed = true;
-	      break;
-	    }
+      pair<int,int> test;
+      while ((test = obj.intersects_with(x.second)).first > -1) {
+	int i = test.first;
+	point d1 = obj.get_vertice(i) - obj.center;
+	point d2 = obj.get_vertice(i+1) - obj.center;
 
-	    obj.border[j] = obj.center + utility::normalize_and_scale(d1, 0.9 * utility::l2norm(d1));
-	    obj.border[j+1] = obj.center + utility::normalize_and_scale(d2, 0.9 * utility::l2norm(d2));
-	    q1 = obj.border[j];
-	    q2 = obj.border[j+1];
-	  }
+	obj.set_vertice(i, obj.center + utility::normalize_and_scale(d1, 0.9 * utility::l2norm(d1)));
+	obj.set_vertice(i+1, obj.center + utility::normalize_and_scale(d2, 0.9 * utility::l2norm(d2)));
+	if (fmin(utility::l2norm(d1), utility::l2norm(d2)) < min_length) {
+	  failed = true;
+	  break;
 	}
       }
 
       if (!failed) {
-	for (auto y : x.second.border) avoid_point(obj, y, min_dist);
-	for (auto y : obj.border) avoid_point(x.second, y, min_dist);
+	for (auto y : x.second.border) if (!avoid_point(obj, y, min_dist)) continue;
+	for (auto y : obj.border) if (!avoid_point(x.second, y, min_dist)) continue;
+      } else {
+	break;
       }
     }
 
@@ -638,6 +637,16 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
     tid = terrain_idc++;
     m.unlock();
     terrain[tid] = obj;
+  }
+
+  // finally check all terrain
+  for (auto x : terrain) {
+    for (auto y : terrain) {
+      if (x.first == y.first) continue;
+      if (x.second.intersects_with(y.second).first > -1) {
+	throw logical_error("Generated intersecting terrain!");
+      }
+    }
   }
 }
 

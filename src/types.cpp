@@ -111,11 +111,35 @@ id_pair::id_pair(combid x, combid y) {
 bool st3::operator < (const id_pair &x, const id_pair &y) {
   return hash<string>{}(x.a)^hash<string>{}(x.b) < hash<string>{}(y.a)^hash<string>{}(y.b);
 }
+
+pair<int, int> terrain_object::intersects_with(terrain_object obj) {
+  for (int i = 0; i < border.size(); i++) {
+    point p1 = get_vertice(i);
+    point p2 = get_vertice(i+1);
+	
+    for (int j = 0; j < obj.border.size(); j++) {
+      point q1 = obj.get_vertice(j);
+      point q2 = obj.get_vertice(j+1);
+
+      if (utility::line_intersect(p1, p2, q1, q2)) return make_pair(i, j);
+    }
+  }
+
+  return make_pair(-1, -1);
+}
+
+point terrain_object::get_vertice(int idx) const {
+  return border[utility::int_modulus(idx, border.size())];
+}
+
+void terrain_object::set_vertice(int idx, point p) {
+  border[utility::int_modulus(idx, border.size())] = p;
+}
   
 int terrain_object::triangle(point p, float rad) {
   float a_sol = utility::point_angle(p - center);
-  for (int j = 0; j < border.size() - 1; j++) {
-    float test = utility::triangle_relative_distance(center, border[j], border[j+1], p, rad);
+  for (int j = 0; j < border.size(); j++) {
+    float test = utility::triangle_relative_distance(center, get_vertice(j), get_vertice(j+1), p, rad);
     if (test > -1 && test < 1) return j;
   }
 
