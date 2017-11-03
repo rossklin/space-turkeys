@@ -16,7 +16,7 @@ display <- function(v, facs, eids = NULL){
     ggplot(x, aes(x = step, y = value, group = variable, color = variable, shape = variable)) + geom_path(aes(group = interaction(entity, variable)))
 }
 
-compare.governors <- function(fac, govs) {
+compare.governors <- function(fac, govs, rounds = 160) {
     get <- function(g) {
         df <- load.gov(g)
         data.frame(governor = g, entity = df$entity, step = df$step, value = df[,fac])
@@ -24,5 +24,5 @@ compare.governors <- function(fac, govs) {
 
     data <- ldply(govs, get)
 
-    ggplot(data, aes(x = step, y = value, color = governor, group = interaction(governor, entity))) + geom_path()
+    ggplot(data, aes(x = step, y = value, color = governor, group = interaction(governor, entity))) + xlim(c(0, 50 * rounds)) + geom_path()
 }

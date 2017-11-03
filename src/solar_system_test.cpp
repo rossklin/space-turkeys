@@ -112,15 +112,17 @@ int main(int argc, char **argv){
 
   research::data r;
   server::silent_mode = true;
+  float init_pop_lim = 5000;
   for (int i = 0; i < entities; i++){
     solar::ptr s = build_solar();
 
     s -> research_level = &rdata;
     s -> choice_data.allocation = cost::sector_allocation::base_allocation();
-    s -> choice_data.governor = gov;
+    s -> choice_data.governor = "culture";
     s -> next_ship = "fighter";
     
     for (int j = 0; j < steps; j++){
+      if (s -> population > init_pop_lim) s -> choice_data.governor = gov;
       s -> dynamics();
 
       // build facilities (hacked from solar.cpp)

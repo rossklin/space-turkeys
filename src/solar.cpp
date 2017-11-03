@@ -361,7 +361,7 @@ float solar::ship_increment(choice::c_solar &c){
 }
 
 float solar::compute_workers(){
-  return happiness * population;
+  return population;
 }
 
 choice::c_solar solar::government() {
@@ -528,7 +528,7 @@ choice::c_solar solar::government() {
 
   // MILITARY
   float militarist_factor = c.governor == keywords::key_military;
-  c.allocation[keywords::key_military] = (!next_ship.empty()) * (0.5 + militarist_factor);
+  c.allocation[keywords::key_military] = (!next_ship.empty()) * (0.3 + militarist_factor);
 
   // normalize
   c = c.normalize();
