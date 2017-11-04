@@ -16,6 +16,7 @@ using namespace graphics;
 using namespace client;
 
 sf::Font graphics::default_font;
+const float graphics::ship_scale_factor = 1;
 
 float graphics::unscale() {
   return inverse_scale(g -> window).x;

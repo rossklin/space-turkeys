@@ -142,7 +142,7 @@ ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   passengers = 0;
   is_landed = false;
   is_loaded = false;
-  radius = pow(stats[sskey::key::mass], 2/(float)3);
+  radius = sqrt(stats[sskey::key::mass]);
   force_refresh = true;
 }
 

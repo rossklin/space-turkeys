@@ -23,9 +23,18 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
+*** add standby communication so socket_t doesn't timeout during choice step
+*** research gui
+**** distinguish between already researched and can't research
+**** show progress
+*** minimap too transparent
+*** solars stuck in terrain
+*** [J?] validate choice: error: contained invalid development: hospital
+    Possibly happened when the solar was conquered..? Fixed by
+    ignoring invalid devs
 *** [J] auto search for scouts
-*** somewhat faster general dev rate
-*** first path point doesn't seem to get fixed by fix path
+*** [J] somewhat faster general dev rate
+*** [J?] first path point doesn't seem to get fixed by fix path
 * [~] issues
 ** [~] system
 *** terrain still creates intersections and unreachable areas which bug out the path search algorithm

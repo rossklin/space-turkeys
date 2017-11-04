@@ -24,7 +24,7 @@
 	    "cost" : {
 		"metals" : 1,
 		"gases" : 1,
-		"time" : 40
+		"time" : 20
 	    },
 	    "shape" : [
 		{"x" : 2, "y" : 0, "c" : "p"},
@@ -37,9 +37,9 @@
 
 	"fighter" : {
 	    "speed" : 4.5,
-	    "hp" : 2,
+	    "hp" : 1,
 	    "mass" : 3,
-	    "ship damage" : 4,
+	    "ship damage" : 2,
 	    "solar damage" : 1,
 	    "accuracy" : 2,
 	    "evasion" : 2,
@@ -51,9 +51,9 @@
 	    "depends facility level" : 1,
 	    "depends tech" : "plasma technology",
 	    "cost" : {
-		"metals" : 10,
-		"gases" : 3,
-		"time" : 120
+		"metals" : 5,
+		"gases" : 1,
+		"time" : 40
 	    },
 	    "shape" : [
 		{"x" : 2, "y" : 0, "c" : "n"},
@@ -67,7 +67,7 @@
 
 	"bomber" : {
 	    "speed" : 3,
-	    "hp" : 8,
+	    "hp" : 4,
 	    "mass" : 10,
 	    "solar damage" : 4,
 	    "accuracy" : 0.8,
@@ -75,9 +75,9 @@
 	    "depends facility level" : 2,
 	    "depends tech" : "plasma technology",
 	    "cost" : {
-		"metals" : 20,
-		"gases" : 6,
-		"time" : 180
+		"metals" : 10,
+		"gases" : 3,
+		"time" : 90
 	    },
 	    "shape" : [
 		{"x" : 2, "y" : 0, "c" : "p"},
@@ -109,7 +109,7 @@
 	    "cost" : {
 		"metals" : 20,
 		"gases" : 10,
-		"time" : 200
+		"time" : 100
 	    },
 	    "shape" : [
 		{"x" : 1, "y" : 0, "c" : "p"},
@@ -229,7 +229,7 @@
 		"metals" : 30,
 		"gases" : 5,
 		"organics" : 10,
-		"time" : 240
+		"time" : 140
 	    },
 	    "shape" : [
 		{"x" : 2, "y" : 1, "c" : "p"},
@@ -251,7 +251,7 @@
 		"metals" : 30,
 		"gases" : 5,
 		"organics" : 5,
-		"time" : 240
+		"time" : 140
 	    },
 	    "shape" : [
 		{"x" : 2, "y" : 1, "c" : "p"},

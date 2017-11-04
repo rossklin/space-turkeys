@@ -36,7 +36,7 @@ namespace st3{
     const sf::Color solar_selected_fill(200,225,255,80); /*!< color for selected solar interior */
     const sf::Color fleet_fill(200,200,200,50); /*!< color for fleet interior */
     const sf::Color fleet_outline(40,60,180,200); /*!< color for fleet border */
-    const float ship_scale_factor = 0.1;
+    extern const float ship_scale_factor;
 
     float unscale();
 

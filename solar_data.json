@@ -7,8 +7,8 @@
 	    },
 	    "hp" : 2,
 	    "cost" : {
-		"metals" : 20,
-		"gases" : 10,
+		"metals" : 10,
+		"gases" : 5,
 		"organics" : 5
 	    },
 	    "build time" : 100,
@@ -29,9 +29,9 @@
 		"development" : 1.2
 	    },
 	    "cost" : {
-		"metals" : 30,
-		"gases" : 20,
-		"organics" : 20
+		"metals" : 20,
+		"gases" : 10,
+		"organics" : 10
 	    },
 	    "build time" : 100,
 	    "space usage" : 60,
@@ -48,7 +48,7 @@
 		"gases" : 30,
 		"organics" : 20
 	    },
-	    "build time" : 500,
+	    "build time" : 300,
 	    "space usage" : 50,
 	    "water usage" : 40,
 	    "depends facilities" : {"factories" : 1},
@@ -64,7 +64,7 @@
 		"gases" : 20,
 		"organics" : 40
 	    },
-	    "build time" : 400,
+	    "build time" : 200,
 	    "space usage" : 40,
 	    "water usage" : 60,
 	    "depends facilities" : {"factories" : 1},
@@ -204,6 +204,7 @@
 		"gases" : 80,
 		"organics" : 80
 	    },
+	    "build time" : 1000,
 	    "depends facilities" : {"nano factories" : 2, "shipyard" : 5}
 	}
     }

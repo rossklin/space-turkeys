@@ -19,10 +19,10 @@ using namespace st3;
 const string solar::class_id = "solar";
 const float solar::f_growth = 1e-2;
 const float solar::f_crowding = 2e-3;
-const float solar::f_minerate = 2e-4;
-const float solar::f_buildrate = 5e-4;
-const float solar::f_devrate = 5e-4;
-const float solar::f_resrate = 5e-4;
+const float solar::f_minerate = 3e-4;
+const float solar::f_buildrate = 7e-4;
+const float solar::f_devrate = 7e-4;
+const float solar::f_resrate = 7e-4;
 
 solar::solar(const solar &s) : game_object(s) {
   *this = s;
@@ -375,7 +375,8 @@ choice::c_solar solar::government() {
   for (auto v : keywords::governor) c.allocation[v] = 1;
 
   // MINING
-  auto compute_mining = [this] (choice::c_solar c) -> choice::c_solar {
+  float lowest_resource = INFINITY;
+  auto compute_mining = [this,&lowest_resource] (choice::c_solar c) -> choice::c_solar {
     float rsum = 0;
     float ssum = 0;
     pair<string, float> smin("",INFINITY);
@@ -395,6 +396,7 @@ choice::c_solar solar::government() {
 	c.mining[v] = 1 / (resource_storage[v] + 0.1);
       }
     }
+    lowest_resource = smin.second;
 
     if (c.governor == keywords::key_mining) {
       // always mine
@@ -427,7 +429,7 @@ choice::c_solar solar::government() {
   c.allocation[keywords::key_culture] = fmax(10 * care_factor * (1 - happiness), 0);
 
   // DEVELOPMENT
-  auto select_development = [this, care_factor] (choice::c_solar c) -> choice::c_solar {
+  auto select_development = [this, care_factor, lowest_resource] (choice::c_solar c) -> choice::c_solar {
     bool is_developing = c.development.size() > 0;
     if (is_developing) return c;
     
@@ -455,6 +457,9 @@ choice::c_solar solar::government() {
       h += add_factor(keywords::key_culture, 10 * care_factor * fmax(1 - happiness, 0));
       h += add_factor(keywords::key_ecology, 10 * care_factor * fmax(1 - ecology, 0));
       h += add_factor(keywords::key_medicine, 10 * care_factor * crowding_rate() / base_growth());
+
+      // add score for mining
+      h += add_factor(keywords::key_mining, 3 / (lowest_resource + 0.1));
 
       if (test.is_turret) {
 	// score for defensive facilities

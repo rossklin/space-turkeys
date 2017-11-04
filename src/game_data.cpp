@@ -404,7 +404,8 @@ void game_data::apply_choice(choice::choice c, idtype id){
     if (!x.second.development.empty()){
       list<string> av = get_solar(x.first) -> available_facilities(players[id].research_level);
       if (!utility::find_in(x.second.development, av)) {
-	throw player_error("validate_choice: error: solar choice contained invalid development: " + x.second.development);
+	// maybe a dependency got bombed or something...
+	x.second.development.clear();
       }
     }
 
@@ -624,6 +625,9 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
       if (!failed) {
 	for (auto y : x.second.border) if (!avoid_point(obj, y, min_dist)) continue;
 	for (auto y : obj.border) if (!avoid_point(x.second, y, min_dist)) continue;
+	if (obj.intersects_with(x.second).first > -1) {
+	  throw logical_error("add terrain: avoid point caused intersection!");
+	}
       } else {
 	break;
       }
@@ -645,6 +649,16 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
       if (x.first == y.first) continue;
       if (x.second.intersects_with(y.second).first > -1) {
 	throw logical_error("Generated intersecting terrain!");
+      }
+    }
+  }
+
+  // check waypoints so they aren't covered
+  for (auto w : all<waypoint>()) {
+    for (auto &x : terrain) {
+      int j = x.second.triangle(w -> position, w -> radius);
+      if (j > -1) {
+	remove_entity(w -> id);
       }
     }
   }

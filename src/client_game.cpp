@@ -289,11 +289,6 @@ bool game::choice_step(){
 
   // keep solar and research choices
   choice::choice c;
-  for (auto x : interface::desktop -> response.solar_choices){
-    if (entity.count(x.first) && get_entity(x.first) -> owned) {
-      c.solar_choices[x.first] = x.second;
-    }
-  }
 
   research::data &r = players[self_id].research_level;
   c.research = r.researching;
