@@ -65,7 +65,6 @@ namespace st3{
     static const hm_t<std::string, facility>& facility_table();
     
     choice::c_solar choice_data;
-    std::string next_ship;
     float dt;
     float threat_level;
     research::data *research_level;
@@ -85,7 +84,7 @@ namespace st3{
 
     cost::res_t available_resource; 
     cost::res_t resource_storage;
-    cost::ship_allocation fleet_growth;
+    float ship_progress;
     std::set<combid> ships;
 
     solar() = default;

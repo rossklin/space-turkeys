@@ -253,7 +253,6 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
   return packet
     << static_cast<const commandable_object &> (g)
     << g.choice_data
-    << g.fleet_growth
     << g.research_points
     << g.water
     << g.space
@@ -272,7 +271,6 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
   return packet
     >> static_cast<commandable_object &> (g)
     >> g.choice_data
-    >> g.fleet_growth
     >> g.research_points
     >> g.water
     >> g.space
@@ -293,7 +291,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const choice::c_solar &g){
     << g.governor
     << g.allocation
     << g.mining
-    << g.development;
+    << g.building_queue
+    << g.ship_queue;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, choice::c_solar &g){
@@ -301,7 +300,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, choice::c_solar &g){
     >> g.governor
     >> g.allocation
     >> g.mining
-    >> g.development;
+    >> g.building_queue
+    >> g.ship_queue;
 }
 
 // fleet

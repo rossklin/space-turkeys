@@ -19,6 +19,26 @@ namespace st3 {
 
       choice_info();
     };
+
+    class solar_gui : public sfg::Window {
+    public:
+      typedef std::shared_ptr<solar_gui> Ptr;
+      typedef std::shared_ptr<const solar_gui> PtrConst;
+      static const std::string sfg_id;
+
+      static Ptr Create(solar::ptr s);
+
+    protected:
+      sfg::Box::Ptr wrapper, layout_left, layout_left_q, layout_right, layout_right_q;
+      hm_t<std::string, int> available_buildings;
+      hm_t<std::string, sfg::Button::Ptr> available_buildings_b;
+      hm_t<int, std::pair<std::string, sfg::Button::Ptr> > building_queue;
+      solar::ptr sol;
+
+      solar_gui(solar::ptr s);
+      void update_available_button(std::string v);
+      void extend_building_queue(std::string v);
+    };
     
     class choice_gui : public sfg::Window {
     public:

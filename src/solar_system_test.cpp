@@ -71,7 +71,7 @@ int main(int argc, char **argv){
   };
 
   stat["ships"] = [] (solar::ptr s) -> float {
-    return s -> fleet_growth.count() / 1000;
+    return s -> ship_progress / 1000;
   };
 
   stat["culture"] = [] (solar::ptr s) -> float {
@@ -119,18 +119,18 @@ int main(int argc, char **argv){
     s -> research_level = &rdata;
     s -> choice_data.allocation = cost::sector_allocation::base_allocation();
     s -> choice_data.governor = "culture";
-    s -> next_ship = "fighter";
+    s -> choice_data.ship_queue.push_back("fighter");
     
     for (int j = 0; j < steps; j++){
       if (s -> population > init_pop_lim) s -> choice_data.governor = gov;
       s -> dynamics();
 
       // build facilities (hacked from solar.cpp)
-      if (s -> choice_data.development.length() > 0) {
-	string dev = s -> choice_data.development;
-	if (s -> list_facility_requirements(dev, rdata).empty()) {
+      if (s -> choice_data.do_develop()) {
+	string dev = s -> choice_data.building_queue.front();
+	if (s -> list_facility_requirements(dev, r).empty()) {
 	  if (s -> develop(dev)) {
-	    s -> choice_data.development.clear();
+	    s -> choice_data.building_queue.pop_front();
 	  }
 	}
       }

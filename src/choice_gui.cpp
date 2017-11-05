@@ -13,6 +13,8 @@ using namespace st3;
 using namespace sfg;
 using namespace interface;
 
+const string solar_gui::sfg_id = "solar_gui";
+
 const string choice_gui::sfg_id = "choice_gui";
 const string choice_gui::class_selected = "choice-selected";
 const string choice_gui::class_normal = "choice-normal";
@@ -291,4 +293,98 @@ Widget::Ptr interface::military_gui() {
   };
 
   return choice_gui::Create("Military", "Chose which ships should be produced in your empire", false, options, f_info, callback);
+}
+
+solar_gui::Ptr solar_gui::Create(solar::ptr s) {
+  Ptr buf(new solar_gui(s));
+  buf -> Add(buf -> wrapper);
+  buf -> SetId(sfg_id);
+  return buf;
+}
+
+solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
+  wrapper = Box::Create(Box::Orientation::VERTICAL, 5);
+  auto layout = Box::Create(Box::Orientation::HORIZONTAL, 5);
+  auto frame_left = Frame::Create("Available buildings");
+  auto frame_left_q = Frame::Create("Building queue");
+  auto frame_right = Frame::Create("Available ships");
+  auto frame_right_q = Frame::Create("Ship queue");
+  layout_left = Box::Create(Box::Orientation::VERTICAL, 5);
+  layout_left_q = Box::Create(Box::Orientation::VERTICAL, 5);
+  layout_right = Box::Create(Box::Orientation::VERTICAL, 5);
+  layout_right_q = Box::Create(Box::Orientation::VERTICAL, 5);
+  
+  wrapper -> Pack(layout);
+  layout -> Pack(frame_left);
+  layout -> Pack(frame_left_q);
+  layout -> Pack(frame_right);
+  layout -> Pack(frame_right_q);
+  frame_right -> Add(layout_right);
+  frame_right_q -> Add(layout_right_q);
+  frame_left -> Add(layout_left);
+  frame_left_q -> Add(layout_left_q);
+
+  for (auto v : s -> available_facilities(desktop -> get_research())) {
+    auto f = s -> developed(v, 0);
+    available_buildings[v] = f.level;
+  }
+
+  for (auto v : s -> choice_data.building_queue) extend_building_queue(v);
+
+  for (auto x : available_buildings) {
+    string v = x.first;
+    Button::Ptr b = Button::Create(v + " level " + to_string(x.second + 1));
+    desktop -> bind_ppc(b, [this,v] () {
+	extend_building_queue(v);
+	update_available_button(v);
+      });
+    available_buildings_b[v] = b;
+    layout_left -> Pack(b);
+  }
+
+  Button::Ptr b_ok = Button::Create("OK");
+  Button::Ptr b_cancel = Button::Create("Cancel");
+
+  desktop -> bind_ppc(b_ok, [this, s] () {
+      s -> choice_data.building_queue.clear();
+      for (auto x : building_queue) s -> choice_data.building_queue.push_back(x.second.first);
+      desktop -> clear_qw();
+    });
+  
+  desktop -> bind_ppc(b_cancel, [] () {
+      desktop -> clear_qw();
+    });
+  
+  Box::Ptr b_layout = Box::Create(Box::Orientation::HORIZONTAL, 5);
+  b_layout -> Pack(b_ok);
+  b_layout -> Pack(b_cancel);
+  wrapper -> Pack(b_layout);
+}
+
+void solar_gui::update_available_button(string v) {
+  available_buildings_b[v] -> SetLabel(v + " level " + to_string(available_buildings[v] + 1));
+}
+
+void solar_gui::extend_building_queue(string v) {
+  static int bid = 0;
+  
+  available_buildings[v]++;
+  string name = v + " level " + to_string(available_buildings[v]);
+  if (building_queue.empty() && sol -> facility_access(v) -> progress > 0) {
+    facility_object f = sol -> developed(v, 1);
+    int percent = 100 * f.progress / f.cost_time;
+    name += ": " + to_string(percent) + "%";
+  }
+  
+  Button::Ptr b = Button::Create(name);
+  int id = bid++;
+  building_queue[id] = make_pair(v, b);
+  desktop -> bind_ppc(b, [this, v, id, name] () {
+      cout << "building_queue: remove called on " << name << endl;
+      layout_left_q -> Remove(building_queue[id].second);
+      building_queue.erase(id);
+      available_buildings[v]--;
+      update_available_button(v);
+    });
+  layout_left_q -> Pack(b);
 }

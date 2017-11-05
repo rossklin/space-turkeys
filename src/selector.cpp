@@ -122,7 +122,7 @@ namespace st3{
 	res += "\n<<Facilities>>: ";
 	for (auto x : facility_table()) {
 	  facility_object f = developed(x.first);
-	  bool is_active = x.first == choice_data.development;
+	  bool is_active = choice_data.do_develop() && x.first == choice_data.building_queue.front();
 	  if (f.level == 0 && !is_active) continue;
 	  
 	  res += "\n" + x.first + ": " + to_string(f.level);
@@ -133,13 +133,12 @@ namespace st3{
 	  }
 	}
 
-	if (fleet_growth.count()) {
+	if (choice_data.do_produce()) {
 	  res += "\n<<Shipyard>>";
-	  for (auto x : fleet_growth.data) {
-	    if (x.second > 0) {
-	      ship_stats s = ship::table().at(x.first);
-	      res += "\n" + x.first + ": " + to_string((int)(100 * x.second / s.build_time)) + "%";
-	    }
+	  if (ship_progress > 0) {
+	    string sc = choice_data.ship_queue.front();
+	    ship_stats s = ship::table().at(sc);
+	    res += "\n" + sc + ": " + to_string((int)(100 * ship_progress / s.build_time)) + "%";
 	  }
 	}
       }

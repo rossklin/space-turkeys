@@ -19,11 +19,14 @@ namespace st3{
       std::string governor;
       cost::sector_allocation allocation;
       cost::resource_allocation mining;
-      std::string development;
+      std::list<std::string> building_queue;
+      std::list<std::string> ship_queue;
 
       c_solar();
       c_solar normalize(); // normalize to proportions
       c_solar set_zeros();
+      bool do_develop();
+      bool do_produce();
     };
 
     struct choice{

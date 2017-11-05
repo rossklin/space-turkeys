@@ -401,11 +401,13 @@ void game_data::apply_choice(choice::choice c, idtype id){
       throw player_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + x.first + ": not a solar!");
     }
 
-    if (!x.second.development.empty()){
+    if (x.second.do_develop()){
       list<string> av = get_solar(x.first) -> available_facilities(players[id].research_level);
-      if (!utility::find_in(x.second.development, av)) {
-	// maybe a dependency got bombed or something...
-	x.second.development.clear();
+      for (auto i = x.second.building_queue.begin(); i != x.second.building_queue.end(); i++) {
+	if (!utility::find_in(*i, av)) {
+	  // maybe a dependency got bombed or something...
+	  x.second.building_queue.erase(i--);
+	}
       }
     }
 

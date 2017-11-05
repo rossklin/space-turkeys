@@ -54,7 +54,7 @@ void solar::move(game_data *g){
   threat_level = enemy_strength / (self_strength + 1);
 
   // select ship class for production
-  if (next_ship.empty()) {
+  if (choice_data.ship_queue.empty()) {
     stringstream ss;
     ss << id << ": selecting next_ship: " << endl;
     cost::ship_allocation test = g -> players[owner].military;
@@ -67,36 +67,42 @@ void solar::move(game_data *g){
       ss << endl;
     }
     
-    next_ship = utility::weighted_sample(test.data);
+    string next_ship = utility::weighted_sample(test.data);
     ss << "chose: " << next_ship << endl;
-    if (next_ship.size()) server::output(ss.str(), true);
+    if (next_ship.size()) {
+      server::output(ss.str(), true);
+      choice_data.ship_queue.push_back(next_ship);
+    }
   }
   
   dynamics();
 
   // build ships
-  for (auto v : ship::all_classes()) {
-    if (research_level -> can_build_ship(v, ptr(this))){
+  if (choice_data.do_produce()) {
+    string v = choice_data.ship_queue.front();
+    if (research_level -> can_build_ship(v, ptr(this))) {
       float build_time = ship::table().at(v).build_time;
-      while (fleet_growth[v] >= build_time) {
-	next_ship.clear();
-	fleet_growth[v] -= build_time;
+      if (ship_progress >= build_time) {
+	choice_data.ship_queue.pop_front();
+	ship_progress -= build_time;
 	ship sh = research_level -> build_ship(v, ptr(this));
 	sh.is_landed = true;
 	sh.owner = owner;
 	ships.insert(sh.id);
 	g -> add_entity(ship::ptr(new ship(sh)));
       }
+    } else {
+      choice_data.ship_queue.pop_front();
     }
   }
 
   // build facilities
-  if (choice_data.development.length() > 0) {
-    string dev = choice_data.development;
+  if (choice_data.do_develop()) {
+    string dev = choice_data.building_queue.front();
     if (list_facility_requirements(dev, *research_level).empty()) {
       if (develop(dev)) {
 	g -> players[owner].log.push_back("Completed building " + dev);
-	choice_data.development = "";
+	choice_data.building_queue.pop_front();
       }
     }
   }
@@ -203,12 +209,7 @@ void solar::pay_resources(cost::res_t total){
 
 string solar::get_info(){
   stringstream ss;
-  // ss << "fleet_growth: " << fleet_growth << endl;
-  // ss << "new_research: " << new_research << endl;
-  // ss << "industry: " << industry << endl;
-  // ss << "resource storage: " << resource_storage << endl;
   ss << "pop: " << population << "(" << happiness << ")" << endl;
-  // ss << "resource: " << resource << endl;
   ss << "ships: " << ships.size() << endl;
   return ss.str();
 }
@@ -430,8 +431,7 @@ choice::c_solar solar::government() {
 
   // DEVELOPMENT
   auto select_development = [this, care_factor, lowest_resource] (choice::c_solar c) -> choice::c_solar {
-    bool is_developing = c.development.size() > 0;
-    if (is_developing) return c;
+    if (c.do_develop()) return c;
     
     hm_t<string, float> score;
     cost::res_t total = available_resource;
@@ -501,11 +501,12 @@ choice::c_solar solar::government() {
     if (c.governor == keywords::key_mining) score[""] = 20;
 
     // weighted probability select
-    c.development = utility::weighted_sample(score);
+    string dev_choice = utility::weighted_sample(score);
+    if (!dev_choice.empty()) c.building_queue.push_back(dev_choice);
 
     // prioritize development if score is good
-    if (c.development.size()) {
-      float devprio = score[c.development];
+    if (c.building_queue.size()) {
+      float devprio = score[dev_choice];
 
       if (c.governor == keywords::key_development) {
 	devprio *= 2;
@@ -522,7 +523,7 @@ choice::c_solar solar::government() {
     print << "Development choice for " << id << " with " << c.governor << " governor:" << endl;
     print << "Scores: " << endl;
     for (auto x : score) print << " - " << x.first << ": " << x.second << endl;
-    print << "Choice: " << c.development << " (allocation = " << c.allocation[keywords::key_development] << ")" << endl;
+    print << "Choice: " << dev_choice << " (allocation = " << c.allocation[keywords::key_development] << ")" << endl;
 
     server::output(print.str(), true);
     
@@ -533,7 +534,7 @@ choice::c_solar solar::government() {
 
   // MILITARY
   float militarist_factor = c.governor == keywords::key_military;
-  c.allocation[keywords::key_military] = (!next_ship.empty()) * (0.3 + militarist_factor);
+  c.allocation[keywords::key_military] = (c.do_produce()) * (0.3 + militarist_factor);
 
   // normalize
   c = c.normalize();
@@ -585,13 +586,15 @@ void solar::dynamics(){
     };
 
     // development
-    if (c.development.size()) {
-      add_cost("dev", development_increment(c) * dt, buf.facility_access(c.development) -> cost_time, developed(c.development, 1).cost_resources);
+    if (c.do_develop()) {
+      add_cost("dev", development_increment(c) * dt, buf.facility_access(c.building_queue.front()) -> cost_time, developed(c.building_queue.front(), 1).cost_resources);
     }
     
     // military industry
-    if (next_ship.size()) {
-      add_cost("ship:" + next_ship, ship_increment(c) * dt, ship::table().at(next_ship).build_time, ship::table().at(next_ship).build_cost);
+    string sid = "";
+    if (c.do_produce()) {
+      sid = c.ship_queue.front();
+      add_cost("ship:" + sid, ship_increment(c) * dt, ship::table().at(sid).build_time, ship::table().at(sid).build_cost);
     }
 
     // compute allowed production ratio
@@ -599,13 +602,13 @@ void solar::dynamics(){
     if (allowed < 1) buf.out_of_resources = true;
 
     // add production for ships
-    if (next_ship.size()) {
-      buf.fleet_growth[next_ship] += allowed * weight_table["ship:" + next_ship];
+    if (c.do_produce()) {
+      buf.ship_progress += allowed * weight_table["ship:" + sid];
     }
 
     // add production for development
-    if (c.development.size()) {
-      buf.facility_access(c.development) -> progress += allowed * weight_table["dev"];
+    if (c.do_develop()) {
+      buf.facility_access(c.building_queue.front()) -> progress += allowed * weight_table["dev"];
     }
 
     // pay for production
@@ -715,7 +718,7 @@ list<facility_object> solar::developed() {
 
   for (auto &x : development) {
     if (x.second.level == 0) continue;
-    facility_object f = developed(x.first);
+    facility_object f = developed(x.first, 0);
     d.push_back(f);
   }
   

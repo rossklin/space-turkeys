@@ -103,6 +103,7 @@ namespace st3{
     const std::string key_military = "military";
     const std::string key_medicine = "medicine";
     const std::string key_ecology = "ecology";
+    const std::string build_disabled = "disabled";
   };
 
   /*! utilities for source and target identifiers */

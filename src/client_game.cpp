@@ -1389,8 +1389,10 @@ int game::choice_event(sf::Event e){
       }
       break;
     case sf::Keyboard::Return:
-      // ss = selected_specific<solar>();
-      // if (ss.size() == 1) run_solar_gui(ss.front());
+      ss = selected_specific<solar>();
+      if (ss.size() == 1) {
+	interface::desktop -> reset_qw(interface::solar_gui::Create(get_specific<solar>(ss.front())));
+      }
       break;
     case sf::Keyboard::Delete:
       handle_delete();
