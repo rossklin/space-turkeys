@@ -33,11 +33,13 @@ namespace st3 {
       hm_t<std::string, int> available_buildings;
       hm_t<std::string, sfg::Button::Ptr> available_buildings_b;
       hm_t<int, std::pair<std::string, sfg::Button::Ptr> > building_queue;
+      hm_t<int, std::pair<std::string, sfg::Button::Ptr> > ship_queue;
       solar::ptr sol;
 
       solar_gui(solar::ptr s);
       void update_available_button(std::string v);
       void extend_building_queue(std::string v);
+      void extend_ship_queue(std::string v);
     };
     
     class choice_gui : public sfg::Window {

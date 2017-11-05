@@ -324,6 +324,7 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
   frame_left -> Add(layout_left);
   frame_left_q -> Add(layout_left_q);
 
+  // add buildings
   for (auto v : s -> available_facilities(desktop -> get_research())) {
     auto f = s -> developed(v, 0);
     available_buildings[v] = f.level;
@@ -342,12 +343,38 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
     layout_left -> Pack(b);
   }
 
+  // add ships
+  for (auto x : ship_stats::table()) {
+    string v = x.first;
+    if (desktop -> get_research().can_build_ship(v, s)) {
+      Button::Ptr b = Button::Create(v);
+      desktop -> bind_ppc(b, [this,v] () {
+	  extend_ship_queue(v);
+	});
+      layout_right -> Pack(b);
+    }
+  }
+
+  for (auto v : s -> choice_data.ship_queue) extend_ship_queue(v);
+  
+  // add response buttons
   Button::Ptr b_ok = Button::Create("OK");
   Button::Ptr b_cancel = Button::Create("Cancel");
 
   desktop -> bind_ppc(b_ok, [this, s] () {
-      s -> choice_data.building_queue.clear();
-      for (auto x : building_queue) s -> choice_data.building_queue.push_back(x.second.first);
+      auto process = [] (hm_t<int, pair<string, sfg::Button::Ptr> > data) {
+	list<pair<int, string> > buf;
+	for (auto x : data) buf.push_back(make_pair(x.first, x.second.first));
+	buf.sort([] (pair<int,string> a, pair<int,string> b) {return a.first < b.first;});
+
+	list<string> result;
+	for (auto x : buf) result.push_back(x.second);
+	return result;
+      };
+
+      s -> choice_data.building_queue = process(building_queue);
+      s -> choice_data.ship_queue = process(ship_queue);
+
       desktop -> clear_qw();
     });
   
@@ -387,4 +414,30 @@ void solar_gui::extend_building_queue(string v) {
       update_available_button(v);
     });
   layout_left_q -> Pack(b);
+}
+
+void solar_gui::extend_ship_queue(string v) {
+  static int bid = 0;  
+
+  string name = v;
+  if (ship_queue.empty() && sol -> ship_progress > 0) {
+    if (sol -> choice_data.do_produce() && sol -> choice_data.ship_queue.front() == v) {
+      float build_time = ship::table().at(v).build_time;
+      int percent = 100 * sol -> ship_progress / build_time;
+      name += ": " + to_string(percent) + "%";
+    } else {
+      // we just changed the order (if there was one)
+      sol -> ship_progress = 0;
+    }
+  }
+  
+  Button::Ptr b = Button::Create(name);
+  int id = bid++;
+  ship_queue[id] = make_pair(v, b);
+  desktop -> bind_ppc(b, [this, v, id, name] () {
+      cout << "ship_queue: remove called on " << name << endl;
+      layout_right_q -> Remove(ship_queue[id].second);
+      ship_queue.erase(id);
+    });
+  layout_right_q -> Pack(b);
 }

@@ -417,6 +417,9 @@ void game_data::apply_choice(choice::choice c, idtype id){
 
     // apply
     solar::ptr s = get_solar(x.first);
+    if (!(s -> choice_data.do_produce() && x.second.do_produce() && s -> choice_data.ship_queue.front() == x.second.ship_queue.front())) {
+      s -> ship_progress = 0;
+    }
     s -> choice_data = x.second;
   }
 
