@@ -42,6 +42,9 @@ handler_result client_t::receive_query(protocol_t p, query_handler f){
       if (input == protocol::leave) {
 	output("client " + to_string(id) + " disconnected!");
 	set_disconnect();
+      } else if (input == protocol::standby) {
+	res.status = socket_t::tc_run;
+	res.response << protocol::confirm;
       } else if (input == p || p == protocol::any) {
 	res = f(id, data);
       } else {

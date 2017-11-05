@@ -21,6 +21,7 @@
 #include "desktop.h"
 #include "animation.h"
 #include "choice_gui.h"
+#include "socket_t.h"
 
 using namespace std;
 using namespace st3;
@@ -353,9 +354,26 @@ bool game::choice_step(){
       }
     });
 
-  int result = 0;
+  int result = socket_t::tc_run;
   int tc_in = socket_t::tc_run;
+
+  // start standby com thread
+  auto standby_com = [this, &tc_in, &result] () {
+    sf::Packet p;
+    p << protocol::standby;
+    
+    while (result == socket_t::tc_run) {
+      int buf = 0;
+      query(socket, p, tc_in, buf);
+      if (buf != socket_t::tc_complete) tc_in = buf;
+      sf::sleep(sf::milliseconds(500));
+    }
+  };
+
+  thread ts(standby_com);
+  
   window_loop(event_handler, body, tc_in, result);
+  ts.join();
 
   sf::Packet pq;
 
