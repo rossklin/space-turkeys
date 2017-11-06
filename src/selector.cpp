@@ -468,17 +468,30 @@ void command_selector::draw(window_t &w){
   
   // setup text
   sf::Text text;
+  hm_t<int, string> policy_symbols;
+  hm_t<int, sf::Color> policy_colors;
+  
+  policy_symbols[fleet::policy_aggressive] = "A";
+  policy_symbols[fleet::policy_evasive] = "E";
+  policy_symbols[fleet::policy_reasonable] = "R";
+  policy_symbols[fleet::policy_maintain_course] = "M";
+
+  policy_colors[fleet::policy_aggressive] = sf::Color::Red;
+  policy_colors[fleet::policy_evasive] = sf::Color::Yellow;
+  policy_colors[fleet::policy_reasonable] = sf::Color::Green;
+  policy_colors[fleet::policy_maintain_course] = sf::Color::Blue;
+  
   text.setFont(graphics::default_font); 
-  text.setString(to_string(ships.size()));
-  text.setCharacterSize(14);
+  text.setString(policy_symbols[policy] + ": " + to_string(ships.size()));
+  text.setCharacterSize(16);
   // text.setStyle(sf::Text::Underlined);
   sf::FloatRect text_dims = text.getLocalBounds();
   text.setPosition(utility::scale_point(to + from, 0.5) - utility::scale_point(point(text_dims.width/2, text_dims.height + 10), graphics::unscale()));
   text.setScale(graphics::inverse_scale(w));
+  text.setFillColor(sf::Color::Black);
 
   // setup arrow colors
   if (selected){
-    text.setFillColor(graphics::command_selected_text);
     c_head[0].color = graphics::command_selected_head;
     c_head[1].color = graphics::command_selected_body;
     c_head[2].color = graphics::command_selected_body;
@@ -486,7 +499,6 @@ void command_selector::draw(window_t &w){
     c_body[1].color = graphics::command_selected_body;
     c_body[2].color = graphics::command_selected_tail;
   }else{
-    text.setFillColor(graphics::command_normal_text);
     c_head[0].color = graphics::command_normal_head;
     c_head[1].color = graphics::command_normal_body;
     c_head[2].color = graphics::command_normal_body;
@@ -505,5 +517,12 @@ void command_selector::draw(window_t &w){
 
   w.draw(c_head, 3, sf::Triangles, t);
   w.draw(c_body, 3, sf::Triangles, t);
+
+  sf::Color text_bg = graphics::fade_color(sf::Color::White, policy_colors[policy], 0.1);
+  sf::RectangleShape r = graphics::build_rect(text_dims, 2, policy_colors[policy], text_bg);
+  r.setPosition(text.getPosition());
+  r.setSize(point(1.5 * text_dims.width, 1.5 * text_dims.height));
+  r.setScale(graphics::inverse_scale(w));
+  w.draw(r);
   w.draw(text);
 }

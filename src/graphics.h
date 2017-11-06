@@ -22,20 +22,20 @@ namespace st3{
     /*! a default font */
     extern sf::Font default_font;
 
-    const sf::Color solar_neutral(150,150,150); /*!< color for neutral solars */
-    const sf::Color command_selected_head(255,255,255,255);/*!< color for selected command head */
-    const sf::Color command_selected_body(150,240,150,230);/*!< color for selected command body */
-    const sf::Color command_selected_tail(80,200,80,130);/*!< color for selected command tail */
-    const sf::Color command_selected_text(200,200,200);/*!< color for selected command text */
-    const sf::Color command_normal_head(255,255,255,200);/*!< color for normal command head */
-    const sf::Color command_normal_body(100,200,100,200);/*!< color for normal command body */
-    const sf::Color command_normal_tail(50,100,50,100);/*!< color for normal command tail */
-    const sf::Color command_normal_text(200,200,200,100);/*!< color for normal command text */
-    const sf::Color solar_fill(10,20,30,40); /*!< color for solar interior */
-    const sf::Color solar_selected(255,255,255,180); /*!< color for selected solar border */
-    const sf::Color solar_selected_fill(200,225,255,80); /*!< color for selected solar interior */
-    const sf::Color fleet_fill(200,200,200,50); /*!< color for fleet interior */
-    const sf::Color fleet_outline(40,60,180,200); /*!< color for fleet border */
+    extern const sf::Color solar_neutral; /*!< color for neutral solars */
+    extern const sf::Color command_selected_head;/*!< color for selected command head */
+    extern const sf::Color command_selected_body;/*!< color for selected command body */
+    extern const sf::Color command_selected_tail;/*!< color for selected command tail */
+    extern const sf::Color command_selected_text;/*!< color for selected command text */
+    extern const sf::Color command_normal_head;/*!< color for normal command head */
+    extern const sf::Color command_normal_body;/*!< color for normal command body */
+    extern const sf::Color command_normal_tail;/*!< color for normal command tail */
+    extern const sf::Color command_normal_text;/*!< color for normal command text */
+    extern const sf::Color solar_fill; /*!< color for solar interior */
+    extern const sf::Color solar_selected; /*!< color for selected solar border */
+    extern const sf::Color solar_selected_fill; /*!< color for selected solar interior */
+    extern const sf::Color fleet_fill; /*!< color for fleet interior */
+    extern const sf::Color fleet_outline; /*!< color for fleet border */
     extern const float ship_scale_factor;
 
     float unscale();

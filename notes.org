@@ -1,43 +1,8 @@
 * current work
-** path search
-** balancing
-   UP fighter: +0.5 damage
-   DOWN destroyer: -20 hp, +10 cost
-   DOWN voyager: -10 shield
-
-
-   UP fighter, hm-fighter VS corsair, destroyer
-    o corsair: -2 hp
-    o destroyer: +30 cost
-
-   DOWN fighter, hm-fighter VS battleship, voyager
-   UP battleship VS voyager
-   UP voyager VS corsair
-    o battleship: +3 shield, +5 damage
-    o voyager: +5 shield, -1 load time
-
-   DOWN destroyer
-   UP HM
-
-   UP corsair VS battleship, voyager
-   UP battleship VS all fighter
-   DOWN destroyer VS fighter
-** play testing
-*** [J] add standby communication so socket_t doesn't timeout during choice step
-*** [J] research gui
-**** distinguish between already researched and can't research
-**** show progress
-*** [J] minimap too transparent
-*** solars stuck in terrain
-*** [J?] validate choice: error: contained invalid development: hospital
-    Possibly happened when the solar was conquered..? Fixed by
-    ignoring invalid devs
-*** [J] auto search for scouts
-*** [J] somewhat faster general dev rate
-*** [J?] first path point doesn't seem to get fixed by fix path
 * [~] issues
 ** [~] system
-*** terrain still creates intersections and unreachable areas which bug out the path search algorithm
+*** Got logic error: "avoid point caused intersection" in add terrain
+*** [J] terrain still creates intersections and unreachable areas which bug out the path search algorithm
 *** [?] terminated with network error
     After submitting first choice after discovering shields and
     selecting battleships. Probably an exception on server which
@@ -63,8 +28,6 @@
     choice from client 2.
 *** [redesign] client allows multiple development choices - server does not
 * system design ideas
-** impassable terrain
-*** impassable polygons on map
 ** add expansion limitations e.g. nr of fleets and solar distance penalty
 ** add interaction "conquer" so only some ship classes can conquer a solar
 ** generalize game_settings::starting_fleet to some "starting bonus" 
@@ -174,6 +137,21 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] impassable terrain
+*** impassable polygons on map
+** play testing
+*** [J] add standby communication so socket_t doesn't timeout during choice step
+*** [J] research gui
+**** distinguish between already researched and can't research
+**** show progress
+*** [J] minimap too transparent
+*** [J] solars stuck in terrain
+*** [J?] validate choice: error: contained invalid development: hospital
+    Possibly happened when the solar was conquered..? Fixed by
+    ignoring invalid devs
+*** [J] auto search for scouts
+*** [J] somewhat faster general dev rate
+*** [J?] first path point doesn't seem to get fixed by fix path
 ** [J] socket_t routines should have a timeout
 ** [J] governor: figure out why population grows ~10x faster in real game than in tests
 ** [J] Handle infinite recursion when there is no viable path.
