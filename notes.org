@@ -24,10 +24,10 @@
    DOWN destroyer VS fighter
 ** play testing
 *** [J] add standby communication so socket_t doesn't timeout during choice step
-*** research gui
+*** [J] research gui
 **** distinguish between already researched and can't research
 **** show progress
-*** minimap too transparent
+*** [J] minimap too transparent
 *** solars stuck in terrain
 *** [J?] validate choice: error: contained invalid development: hospital
     Possibly happened when the solar was conquered..? Fixed by

@@ -544,12 +544,21 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
       all_points.insert(all_points.end(), static_pos.begin(), static_pos.end());
 
       for (int i = 0; i < n_solar; i++) {
+	// check against other solars
 	for (int j = i + 1; j < all_points.size(); j++) {
 	  point d = x[i] - all_points[j];
 	  if (utility::l2norm(d) < 50) {
 	    x[i] += utility::normalize_and_scale(d, e);
 	  }
 	}
+
+	// check against terrain
+	for (auto &t : terrain) {
+	  int j = t.second.triangle(x[i], 50);
+	  if (j > -1) {
+	    x[i] += utility::normalize_and_scale(x[i] - t.second.center, e);
+	  }
+	}	
       }
     }
   }
