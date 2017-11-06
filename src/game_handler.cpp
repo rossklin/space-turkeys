@@ -76,7 +76,7 @@ void server::game_handler(com &c, game_data &g){
 
   auto check_end = [&c, &g] () -> bool{
     if (c.thread_com != socket_t::tc_run) {
-      cout << "game_handler::check_end: server shut down!" << endl;
+      server::log("game_handler::check_end: server shut down!");
       return true;
     }
     
@@ -90,8 +90,6 @@ void server::game_handler(com &c, game_data &g){
     }
 
     if (psum < 2){
-      cout << "game complete" << endl;
-
       query_handler h = [&c, psum, pid] (int cid, sf::Packet data) -> handler_result {
 	handler_result res;
 	string message;
@@ -115,7 +113,6 @@ void server::game_handler(com &c, game_data &g){
       return true;
     }
 
-    cout << "game_handler::check_end: false" << endl;
     return false;
   };
 
@@ -147,7 +144,7 @@ void server::game_handler(com &c, game_data &g){
     if (check_end()) return;
     
     if (!c.check_protocol(protocol::game_round, pack_g(true))) {
-      cout << "game_handler: failed check protocol: game_round!" << endl;
+      server::log("game_handler: failed check protocol: game_round!", "warning");
       return;
     }
 
@@ -156,17 +153,15 @@ void server::game_handler(com &c, game_data &g){
 
     // choices, expects: query + choice
     if (!c.check_protocol(protocol::choice, load_client_choice)) {
-      cout << "game_handler: failed check protocol: choice!" << endl;
+      server::log("game_handler: failed check protocol: choice!", "warning");
       return;
     }
 
     // simulation
     simulation_step(c, g);
-    cout << "cleaning up game_data..." << endl;
 
     // cleanup
     g.end_step();
-    cout << "post cleanup size: " << g.entity.size() << endl;
   }
 }
 

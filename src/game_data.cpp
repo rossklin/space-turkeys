@@ -99,7 +99,7 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
 
 list<point> game_data::get_path(point a, point b, int d) {
   if (d > 10) {
-    server::output("get_path: max recursion depth reached!");
+    server::log("get_path: max recursion depth reached!", "warning");
     return {};
   }
   
@@ -275,7 +275,6 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner){
   }
 
   if (reassign){
-    cout << "relocate: reassign" << endl;
     c.source = f -> com.source;
     c.origin = f -> com.origin;
     f -> com = c;
@@ -310,7 +309,6 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner){
   }
 
   f -> update_data(this, true);
-  cout << "relocate ships: added fleet " << f -> id << endl;
 }
 
 // generate a fleet with given ships, set owner and fleet_id of ships
@@ -342,8 +340,6 @@ void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &
 }
 
 void game_data::apply_choice(choice::choice c, idtype id){
-  cout << "apply_choice: player " << id << endl;
-
   // build waypoints and fleets before validating the choice, so that
   // commands based there can be validated
   for (auto &x : c.waypoints){
@@ -351,7 +347,6 @@ void game_data::apply_choice(choice::choice c, idtype id){
       throw player_error("apply_choice: player " + to_string(id) + " tried to insert waypoint owned by " + to_string(identifier::get_multid_owner(x.second.id)));
     }
     add_entity(x.second.clone());
-    cout << "apply_choice: player " << id << ": added " << x.first << endl;
   }
 
   for (auto &x : c.fleets){
@@ -376,8 +371,6 @@ void game_data::apply_choice(choice::choice c, idtype id){
     // idle the fleet so it only acts if the client updates the command
     f -> set_idle();
     f -> update_data(this, true);
-
-    cout << "apply_choice: player " << id << ": added " << x.first << endl;
   }
 
   // research
@@ -639,7 +632,8 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
       if (!failed) {
 	for (auto y : x.second.border) if (!avoid_point(obj, y, min_dist)) continue;
 	for (auto y : obj.border) if (!avoid_point(x.second, y, min_dist)) continue;
-	if (obj.intersects_with(x.second).first > -1) {
+	auto test = obj.intersects_with(x.second);
+	if (test.first > -1) {
 	  throw logical_error("add terrain: avoid point caused intersection!");
 	}
       } else {
@@ -673,6 +667,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
       int j = x.second.triangle(w -> position, w -> radius);
       if (j > -1) {
 	remove_entity(w -> id);
+	break;
       }
     }
   }
@@ -900,8 +895,6 @@ void game_data::update_research_facility_level() {
 
 // pool research and remove unused waypoints
 void game_data::end_step(){
-  cout << "end_step:" << endl;
-
   bool check;
   list<combid> remove;
 
@@ -925,7 +918,6 @@ void game_data::end_step(){
 
   for (auto i : remove) {
     remove_entity(i);
-    cout << "end_step: removed " << i << endl;
   }
 
   // clear log

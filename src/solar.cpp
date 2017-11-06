@@ -149,12 +149,9 @@ void solar::receive_damage(game_object::ptr s, float damage, game_data *g){
 
   if (owner != game_object::neutral_owner && !has_defense()){
     owner = s -> owner;
-    cout << "player " << owner << " conquers " << id << endl;
 
     // switch owners for ships on solar
     for (auto sid : ships) g -> get_ship(sid) -> owner = owner;
-  }else{
-    cout << "resulting defense for " << id << ": " << has_defense() << endl;
   }
 }
 

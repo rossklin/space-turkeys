@@ -363,7 +363,7 @@ void fleet::check_action(game_data *g) {
     if (itab.count(com.action)) {
       target_condition c = itab[com.action].condition.owned_by(owner);
       if (!c.valid_on(g -> get_entity(com.target))) {
-	cout << "target " << com.target << " no longer valid for " << id << endl;
+	server::output("target " + com.target + " no longer valid for " + id);
 	set_idle();
 	should_refresh = true;
       }
@@ -400,7 +400,7 @@ void fleet::check_in_sight(game_data *g){
 
   // target left sight?
   if (!(seen || solar || owned)){
-    cout << "fleet " << id << " looses sight of " << com.target << endl;
+    server::output("fleet " + id + " looses sight of " + com.target);
 
     // creating a waypoint here causes id collision with waypoints
     // created on client side

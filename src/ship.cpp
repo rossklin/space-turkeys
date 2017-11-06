@@ -160,7 +160,7 @@ void ship::pre_phase(game_data *g){
 
 bool ship::check_space(float a) {
   if (free_angle.empty()) {
-    cout << "check_space: no precomputed angles!" << endl;
+    server::log("check_space: no precomputed angles!", "warning");
     return false;
   }
   return free_angle[utility::angle2index(na, a)] > 2;

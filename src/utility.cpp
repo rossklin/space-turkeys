@@ -206,7 +206,7 @@ bool utility::line_intersect(point a, point b, point p1, point p2) {
 
   // check same point
   if (a == b || p2 == p1) {
-    cout << "line_intersect: same point!" << endl;
+    server::log("line_intersect: same point!");
     return false;
   }
 
@@ -214,7 +214,7 @@ bool utility::line_intersect(point a, point b, point p1, point p2) {
   point d = b - a;
   point q = p2 - p1;
   if (q.y * d.x == q.x * d.y) {
-    cout << "line_intersect: same gradient!" << endl;
+    server::log("line_intersect: same gradient!");
     return false;
   }
 

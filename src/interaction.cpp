@@ -209,16 +209,13 @@ const hm_t<string, interaction> &interaction::table() {
   i.name = interaction::auto_search;
   i.condition = target_condition(target_condition::neutral, solar::class_id);
   i.perform = [do_search] (game_object::ptr self, game_object::ptr target, game_data *g) {
-    cout << "auto search: start" << endl;
     do_search(self, target, g);
 
     // check ship has fleet
     if (!self -> isa(ship::class_id)) return;
     ship::ptr s = utility::guaranteed_cast<ship>(self);
-    cout << "auto search: is ship" << endl;
     if (!s -> has_fleet()) return;
     fleet::ptr f = g -> get_fleet(s -> fleet_id);
-    cout << "auto search: has fleet" << endl;
     
     // find new target
     target_condition cond(target_condition::neutral, solar::class_id);
@@ -226,7 +223,6 @@ const hm_t<string, interaction> &interaction::table() {
     for (auto i = test.begin(); i != test.end(); i++) if (g -> get_solar(*i) -> was_discovered) test.erase(i--);
     if (test.empty()) return;
 
-    cout << "auto search: setting new target" << endl;
     // update fleet command
     f -> com.action = interaction::auto_search;
     f -> com.target = utility::uniform_sample(test);

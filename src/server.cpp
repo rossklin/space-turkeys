@@ -21,13 +21,13 @@ using namespace st3::server;
 handler h;
 
 void handle_sigint(int sig) {
-  handler::log("STARTING SHUTDOWN");
+  server::log("STARTING SHUTDOWN");
   h.handle_sigint();
-  handler::log("COMPLETED SHUTDOWN");
+  server::log("COMPLETED SHUTDOWN");
 }
 
 int main(int argc, char **argv){
-  handler::log("BOOTING");
+  server::log("BOOTING");
   signal(SIGINT, handle_sigint);
   try {
     game_data::confirm_data();

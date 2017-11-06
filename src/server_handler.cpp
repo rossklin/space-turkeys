@@ -1,10 +1,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <chrono>  // chrono::system_clock
-#include <ctime>   // localtime
 #include <sstream> // stringstream
-#include <iomanip> // put_time
 #include <string>  // string
 
 #include "types.h"
@@ -26,7 +23,7 @@ void local_output(string v, int cid = -1, string gid = "") {
   mes += ": " + v;
   
   output(mes, true);
-  handler::log(mes);
+  server::log(mes);
 }
 
 bool valid_string(string v) {
@@ -40,47 +37,19 @@ void end_thread(thread *&t) {
   t = 0;
 }
 
-string current_time_and_date() {
-  auto now = chrono::system_clock::now();
-  auto in_time_t = chrono::system_clock::to_time_t(now);
-
-  stringstream ss;
-  ss << put_time(localtime(&in_time_t), "%Y-%m-%d %X");
-  return ss.str();
-}
-
 void handler::safely(function<void()> f, function<void()> g) {
   try {
     f();
   } catch (classified_error &e) {
-    log("error: " + e.severity + ": " + e.what());
+    server::log(e.what(), e.severity);
     if (g) g();
   } catch (exception &e) {
-    log(string("error: ") + e.what());
+    server::log(e.what(), "unknown exception");
     if (g) g();
   } catch(...) {
-    log("error: unknown error");
+    server::log("unknown error", "unknown error");
     if (g) g();
   }
-}
-
-void handler::log(string v) {
-  static mutex m;
-  string log_file = "server.log";
-
-  m.lock();
-  fstream f(log_file, ios::app);
-
-  if (!f.is_open()) {
-    cerr << "Error: " << v << endl;
-    cerr << "Failed to open log file!" << endl;
-    exit(-1);
-  }
-
-  f << current_time_and_date() << ": " << v << endl;
-  f.close();
-  
-  m.unlock();
 }
 
 com *handler::access_game(string gid, bool do_lock) {
@@ -224,15 +193,13 @@ void handler::dispatch_client(client_t *c) {
 void handler::run() {    
   sf::TcpListener listener;
 
-  cout << "binding listener ...";
+  local_output("Binding listener...");
   // bind the listener to a port
   if (listener.listen(53000) != sf::Socket::Done) {
-    cout << "failed." << endl;
+    local_output("Failed to bind listener!");
     return;
   }
   listener.setBlocking(false);
-
-  cout << "done." << endl;
 
   // start worker threads
   thread t_game_dispatch([this] () {game_dispatcher();});
@@ -253,14 +220,14 @@ void handler::run() {
     sf::sleep(sf::milliseconds(500));
   }
 
-  cout << "server: handler: waiting for threads." << endl;
+  local_output("handler: terminate: waiting for threads.");
   t_game_dispatch.join();
   listener.close();
-  cout << "server: handler: completed!" << endl;
+  local_output("handler: completed!");
 }
 
 void handler::handle_sigint() {
-  cout << "server: caught signal SIGINT, stopping..." << endl;
+  local_output("handler: caught signal SIGINT, stopping...");
 
   game_ring.lock();
   status = socket_t::tc_stop;
@@ -268,11 +235,11 @@ void handler::handle_sigint() {
   game_ring.unlock();
     
   while (games.size()) {
-    local_output("Waiting for clients to terminate...");
+    local_output("handler: waiting for clients to terminate...");
     sf::sleep(sf::milliseconds(100));
   }
 
-  cout << "server: all games terminated! Exiting." << endl;
+  local_output("handler: all games terminated! Exiting.");
   status = socket_t::tc_complete;
 }
 

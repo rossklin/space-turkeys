@@ -85,7 +85,7 @@ void node::make_split(){
   };
 
   if (!(test_diverse(xvalues) || test_diverse(yvalues))) {
-    cout << "warning: non-diverse leaves in grid::node::make_split!" << endl;
+    server::log("Non-diverse leaves in grid::node::make_split!", "warning");
     return;
   }
 

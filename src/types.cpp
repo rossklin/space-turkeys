@@ -1,10 +1,15 @@
 #include <sstream>
 #include <iostream>
 #include <mutex>
+#include <fstream>
+#include <chrono>  // chrono::system_clock
+#include <ctime>   // localtime
+#include <iomanip> // put_time
 
 #include "types.h"
 #include "waypoint.h"
 #include "utility.h"
+#include "server_handler.h"
 
 using namespace std;
 using namespace st3;
@@ -21,6 +26,34 @@ network_error::network_error(string v, string s) : classified_error(v, s) {}
 logical_error::logical_error(string v, string s) : classified_error(v, s) {}
 player_error::player_error(string v, string s) : classified_error(v, s) {}
 parse_error::parse_error(string v, string s) : classified_error(v, s) {}
+
+string current_time_and_date() {
+  auto now = chrono::system_clock::now();
+  auto in_time_t = chrono::system_clock::to_time_t(now);
+
+  stringstream ss;
+  ss << put_time(localtime(&in_time_t), "%Y-%m-%d %X");
+  return ss.str();
+}
+
+void server::log(string v, string severity) {
+  static mutex m;
+  string log_file = "server.log";
+
+  m.lock();
+  fstream f(log_file, ios::app);
+
+  if (!f.is_open()) {
+    cerr << "Error: " << v << endl;
+    cerr << "Failed to open log file!" << endl;
+    exit(-1);
+  }
+
+  f << current_time_and_date() << ": " << severity << ": " << v << endl;
+  f.close();
+  
+  m.unlock();
+}
 
 void server::output(string v, bool force) {
   static mutex m;

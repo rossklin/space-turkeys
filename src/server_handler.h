@@ -17,7 +17,6 @@ namespace st3 {
       hm_t<std::string, com> games;
       int status;
       std::mutex game_ring;
-      static void log(std::string v);
       static void safely(std::function<void()> f, std::function<void()> on_fail = 0);
 
       handler();  

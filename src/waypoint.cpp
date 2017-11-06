@@ -56,7 +56,6 @@ void waypoint::post_phase(game_data *g){
 
     if (check){
       ready_ships = y.ships & arrived_ships;
-      cout << "waypoint trigger: command targeting " << y.target << " ready with " << ready_ships.size() << " ships!" << endl;
       g -> relocate_ships(y, ready_ships, owner);
       pending_commands.remove(y);
     }

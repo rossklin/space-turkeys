@@ -1,4 +1,10 @@
 * current work
+** play testing
+*** solars still get stuck in terrain
+*** got large number of "line_intersect: same point" at one point
+    This was before waypoint cleanup segfault was fixed though
+*** shield and detection techs were researched in two turns
+    10 pop, faccility level 3
 * [~] issues
 ** [~] system
 *** Got logic error: "avoid point caused intersection" in add terrain
@@ -46,7 +52,6 @@
    Maybe classes containing pointers can have a serial subclass?
 * tweaks and fixes
 ** gui
-*** add symbol for command fleet policy
 *** show unhappy smiley by solar when unhappy
 *** clicking ship label in target_gui should select/deselect all 
 *** progress bars for production
@@ -137,6 +142,7 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] add symbol for command fleet policy
 ** [J] impassable terrain
 *** impassable polygons on map
 ** play testing

@@ -59,7 +59,7 @@ handler_result client_t::receive_query(protocol_t p, query_handler f){
 }
 
 void client_t::set_disconnect() {
-  handler::log("disconnecting client " + to_string(id));
+  server::log("disconnecting client " + to_string(id));
   disconnect();
   status = sf::Socket::Status::Disconnected;
 }
