@@ -23,7 +23,7 @@
    UP battleship VS all fighter
    DOWN destroyer VS fighter
 ** play testing
-*** add standby communication so socket_t doesn't timeout during choice step
+*** [J] add standby communication so socket_t doesn't timeout during choice step
 *** research gui
 **** distinguish between already researched and can't research
 **** show progress

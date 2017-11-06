@@ -45,7 +45,7 @@ list<string> data::list_tech_requirements(string v) const {
   list<string> req;
   tech t = table().at(v);
   if (researched().count(v)) {
-    req.push_back("already researched");
+    req.push_back("Already researched");
   }else{
     for (auto d : t.depends_techs) if (!researched().count(d)) req.push_back("technology " + d);
     for (auto f : t.depends_facilities) {

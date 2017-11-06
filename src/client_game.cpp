@@ -1611,7 +1611,7 @@ void game::draw_window(){
   r.setPosition(fr.left, fr.top);
   r.setSize(sf::Vector2f(fr.width, fr.height));
   r.setOutlineColor(sf::Color(255,255,255));
-  r.setFillColor(sf::Color(0,0,25,100));
+  r.setFillColor(sf::Color(0,0,25,200));
   r.setOutlineThickness(1);
   window.draw(r);
 }

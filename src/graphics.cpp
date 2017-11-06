@@ -281,6 +281,10 @@ sf::Image graphics::selector_card(string title, bool available, float progress) 
 
   // draw progress
   auto pfill = build_rect(sf::FloatRect(0, (1 - progress) * bounds.height, bounds.width, progress * bounds.height), 0, sf::Color::Transparent, sf::Color(50,50,80));
+  if (progress < 0) {
+    // already complete
+    pfill = build_rect(sf::FloatRect(0, 0, bounds.width, bounds.height), 0, sf::Color::Transparent, sf::Color(50,100,50));
+  }
   tex.draw(pfill);
 
   // draw text

@@ -124,6 +124,8 @@ choice_gui::choice_gui(std::string title,
   vector<string> opt_buf;
   for (auto x : options) opt_buf.push_back(x.first);
   sort(opt_buf.begin(), opt_buf.end(), [this] (string a, string b) -> bool {
+      if (f_info(a).progress < 0) return true;
+      if (f_info(b).progress < 0) return false;
       return f_info(a).available > f_info(b).available;
     });
 
@@ -232,10 +234,15 @@ Widget::Ptr interface::research_gui() {
 
     // requirements
     res.requirements = desktop -> get_research().list_tech_requirements(v);
-    if (desktop -> get_research().researched().count(v)) res.requirements.push_back("Already researched");
 
     res.available = res.requirements.empty();
-    res.progress = n.progress;
+
+    if (desktop -> get_research().researched().count(v)) {
+      res.available = false;
+      res.progress = -1;
+    } else {
+      res.progress = n.progress / n.cost_time;
+    }
 
     // info
     for (auto b : n.sector_boost) res.info.push_back(b.first + " + " + to_string((int)(100 * (b.second - 1))) + "%");
