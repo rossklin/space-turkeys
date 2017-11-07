@@ -634,7 +634,9 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 	for (auto y : obj.border) if (!avoid_point(x.second, y, min_dist)) continue;
 	auto test = obj.intersects_with(x.second);
 	if (test.first > -1) {
-	  throw logical_error("add terrain: avoid point caused intersection!");
+	  server::log("add terrain: avoid point caused intersection!", "warning");
+	  failed = true;
+	  break;
 	}
       } else {
 	break;
@@ -664,7 +666,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   // check waypoints so they aren't covered
   for (auto w : all<waypoint>()) {
     for (auto &x : terrain) {
-      int j = x.second.triangle(w -> position, w -> radius);
+      int j = x.second.triangle(w -> position, 0);
       if (j > -1) {
 	remove_entity(w -> id);
 	break;

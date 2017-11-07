@@ -1,7 +1,7 @@
 {
     "research" : {
 	"warp technology" : {
-	    "build time" : 200,
+	    "build time" : 300,
 	    "depends facilities" : {"research facility" : 2},
 	    "ship upgrades" : {
 		"[10,100]" : ["warp drive"]
@@ -21,7 +21,7 @@
 	},
 
 	"detection" : {
-	    "build time" : 400,
+	    "build time" : 700,
 	    "depends facilities" : {"research facility" : 3},
 	    "depends technologies" : ["warp technology"],
 	    "ship upgrades" : {
@@ -30,7 +30,7 @@
 	},
 
 	"shields" : {
-	    "build time" : 400,
+	    "build time" : 800,
 	    "depends facilities" : {"research facility" : 3},
 	    "depends technologies" : ["warp technology", "plasma technology"],
 	    "ship upgrades" : {
@@ -39,7 +39,7 @@
 	},
 
 	"nano weapons" : {
-	    "build time" : 500,
+	    "build time" : 1200,
 	    "depends facilities" : {
 		"research facility" : 4,
 		"nano factories" : 1
@@ -49,7 +49,7 @@
 	},
 
 	"biomechanics" : {
-	    "build time" : 400,
+	    "build time" : 2000,
 	    "depends facilities" : {
 		"research facility" : 5
 	    },
@@ -57,7 +57,7 @@
 	},
 
 	"stealth" : {
-	    "build time" : 700,
+	    "build time" : 2500,
 	    "depends facilities" : {"research facility" : 5},
 	    "depends technologies" : ["warp technology", "plasma technology"],
 	    "ship upgrades" : {
@@ -66,7 +66,7 @@
 	},
 
 	"subspace technology" : {
-	    "build time" : 800,
+	    "build time" : 8000,
 	    "depends facilities" : {
 		"research facility" : 6
 	    },
@@ -74,7 +74,7 @@
 	},
 
 	"nano plating" : {
-	    "build time" : 800,
+	    "build time" : 8000,
 	    "depends facilities" : {
 		"research facility" : 6,
 		"nano factories" : 2
@@ -84,7 +84,7 @@
 	},
 
 	"biohull" : {
-	    "build time" : 700,
+	    "build time" : 7000,
 	    "depends facilities" : {
 		"research facility" : 6,
 		"biomechanics facility" : 1
@@ -94,7 +94,7 @@
 	},
 
 	"subspace projectiles" : {
-	    "build time" : 1500,
+	    "build time" : 50000,
 	    "depends facilities" : {
 		"research facility" : 8
 	    },
@@ -102,7 +102,7 @@
 	},
 
 	"subspace travel" : {
-	    "build time" : 1600,
+	    "build time" : 16000,
 	    "depends facilities" : {
 		"research facility" : 7,
 		"advanced shipyard" : 2
@@ -112,7 +112,7 @@
 	},
 
 	"hive fleet" : {
-	    "build time" : 2000,
+	    "build time" : 40000,
 	    "depends facilities" : {
 		"research facility" : 8,
 		"biomechanics facility" : 3
@@ -122,7 +122,7 @@
 	},
 
 	"terraform" : {
-	    "build time" : 1800,
+	    "build time" : 18000,
 	    "depends facilities" : {
 		"research facility" : 7,
 		"biomechanics facility" : 4

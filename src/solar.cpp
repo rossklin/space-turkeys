@@ -277,7 +277,7 @@ void solar::damage_facilities(float d){
 	i -> hp -= k;
 	if (i -> hp <= 0) remove.push_back(i -> name);
       } else {
-	if (utility::random_uniform(-(i -> level), k) > 0) remove.push_back(i -> name);
+	if (utility::random_uniform(-4 * (i -> level), k) > 0) remove.push_back(i -> name);
       }
     }
     for (auto r : remove) development[r] = facility_table().at(r);

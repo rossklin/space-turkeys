@@ -1,19 +1,34 @@
 * current work
 ** play testing
+*** update battleship shape vertices
+*** fleet should slow down and wait for ships that need time to accelerate
+    Or ships should not need time to accelerate
+*** mining colony should really not build stuff unless explicitly requested
+*** track nr of kills for ships
+*** projectiles from fighters don't show, set minimum?
+*** drag map with right mouse
+*** show available buildings in alphabetical order
+*** set limits for zoom
+*** set limits for build queues
+*** client side fleet form needs to set heading
 *** solars still get stuck in terrain
 *** got large number of "line_intersect: same point" at one point
     This was before waypoint cleanup segfault was fixed though
-*** shield and detection techs were researched in two turns
+*** [J] shield and detection techs were researched in two turns
     10 pop, faccility level 3
 * [~] issues
 ** [~] system
+*** fleeing units freeze in panic
+*** residual waypoints when ship is killed
+    Also residual path node indicators - maybe fleet was not removed on client side?
+*** auto search should target nearest available solar
+*** ships slow down when in engage mode so you can't chase someone
 *** Got logic error: "avoid point caused intersection" in add terrain
 *** [J] terrain still creates intersections and unreachable areas which bug out the path search algorithm
 *** [?] terminated with network error
     After submitting first choice after discovering shields and
     selecting battleships. Probably an exception on server which
     didn't show again..?
-*** [?] fleeing units freeze in panic
 *** init_data sends all data - should limit to "player_any"
 *** weird that solar systems aren't automatically searched when colonized?
 *** Ships validate their action using target information that the player can't see
