@@ -1,11 +1,5 @@
 * current work
 ** play testing
-*** update battleship shape vertices
-*** fleet should slow down and wait for ships that need time to accelerate
-    Or ships should not need time to accelerate
-*** mining colony should really not build stuff unless explicitly requested
-*** track nr of kills for ships
-*** projectiles from fighters don't show, set minimum?
 *** drag map with right mouse
 *** show available buildings in alphabetical order
 *** set limits for zoom
@@ -14,8 +8,6 @@
 *** solars still get stuck in terrain
 *** got large number of "line_intersect: same point" at one point
     This was before waypoint cleanup segfault was fixed though
-*** [J] shield and detection techs were researched in two turns
-    10 pop, faccility level 3
 * [~] issues
 ** [~] system
 *** fleeing units freeze in panic
@@ -157,6 +149,16 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** play testing
+*** [J] update battleship shape vertices
+*** [J] fleet should slow down and wait for ships that need time to accelerate
+    Or ships should not need time to accelerate
+*** [J] mining colony should really not build stuff unless explicitly requested
+*** [J] track nr of kills for ships
+*** [J] projectiles from fighters don't show, set minimum?
+*** [J] shield and detection techs were researched in two turns
+    10 pop, faccility level 3
+*** [J] consistent size for drawing objects on minimap
 ** [J] add symbol for command fleet policy
 ** [J] impassable terrain
 *** impassable polygons on map

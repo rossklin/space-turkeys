@@ -334,17 +334,10 @@ namespace st3{
 	output += build_percent("Shields", get_percent(sskey::key::shield));
       }
 
-      if (upgrades.size()) {
-	output += "Upgrades:\n";
-	for (auto u : upgrades) output += u + "\n";
-      }
-
       auto maybe_include = [this, &output] (string label, int value) {
 	if (value > 0) output += label + ": " + to_string(value) + "\n";
       };
-
-      maybe_include("Passengers", passengers);
-
+      
       if (is_loaded) {
 	if (cargo.count()) {
 	  maybe_include("Cargo: metals", cargo[keywords::key_metals]);
@@ -353,6 +346,14 @@ namespace st3{
 	} else {
 	  output += "Cargo: empty\n";
 	}
+      }
+
+      maybe_include("Passengers", passengers);
+      maybe_include("Kills", nkills);
+
+      if (upgrades.size()) {
+	output += "Upgrades:\n";
+	for (auto u : upgrades) output += u + "\n";
       }
 
       return output;

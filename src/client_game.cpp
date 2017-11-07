@@ -1309,6 +1309,11 @@ void game::do_zoom(float factor, point p) {
   point delta_br = br - p;
   point new_ul = p + utility::scale_point(delta_ul, factor);
   point new_br = p + utility::scale_point(delta_br, factor);
+  point delta = new_br - new_ul;
+
+  // check limits
+  if (utility::l2norm(delta) < 50 || utility::l2norm(delta) > 10000) return;
+  
   view_game.setCenter(utility::scale_point(new_ul + new_br, 0.5));
   view_game.setSize(new_br - new_ul);
 }
@@ -1648,8 +1653,8 @@ void game::draw_interface_components(){
 void game::draw_minimap() {
   for (auto x : entity) {
     if (!x.second -> is_active()) continue;
-    sf::FloatRect bounds(x.second -> position, point(10, 10));
-    sf::RectangleShape buf = graphics::build_rect(bounds, 1, sf::Color::Transparent, x.second -> get_color());
+    sf::FloatRect bounds(x.second -> position, point(0.05 * window.getSize().x, 0.05 * window.getSize().y));
+    sf::RectangleShape buf = graphics::build_rect(bounds, 0, sf::Color::Transparent, x.second -> get_color());
     window.draw(buf);
   }
 }

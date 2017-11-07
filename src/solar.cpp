@@ -54,7 +54,7 @@ void solar::move(game_data *g){
   threat_level = enemy_strength / (self_strength + 1);
 
   // select ship class for production
-  if (choice_data.ship_queue.empty()) {
+  if (choice_data.ship_queue.empty() && choice_data.governor != keywords::key_mining) {
     stringstream ss;
     ss << id << ": selecting next_ship: " << endl;
     cost::ship_allocation test = g -> players[owner].military;
@@ -428,7 +428,7 @@ choice::c_solar solar::government() {
 
   // DEVELOPMENT
   auto select_development = [this, care_factor, lowest_resource] (choice::c_solar c) -> choice::c_solar {
-    if (c.do_develop()) return c;
+    if (c.do_develop() || c.governor == keywords::key_mining) return c;
     
     hm_t<string, float> score;
     cost::res_t total = available_resource;

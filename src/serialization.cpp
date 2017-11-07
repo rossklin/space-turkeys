@@ -148,7 +148,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
     << g.cargo
     << g.is_landed
     << g.is_loaded
-    << g.passengers;
+    << g.passengers
+    << g.nkills;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
@@ -162,7 +163,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
     >> g.cargo
     >> g.is_landed
     >> g.is_loaded
-    >> g.passengers;
+    >> g.passengers
+    >> g.nkills;
 }
 
 // turret

@@ -259,7 +259,7 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e){
     w.draw(s);
   } else if (e.cat == animation_data::category::shot) {
     vector<sf::Vertex> svert;
-    c.a = utility::sigmoid(30 * e.magnitude * exp(-pow(7 * t,2)), 255);
+    c.a = utility::sigmoid(60 * e.magnitude * exp(-pow(7 * t,2)), 255);
 
     svert.resize(2);
     svert[0].position = e.t1.p;

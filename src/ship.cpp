@@ -139,6 +139,7 @@ ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   fleet_id = identifier::source_none;
   remove = false;
   load = 0;
+  nkills = 0;
   passengers = 0;
   is_landed = false;
   is_loaded = false;
@@ -424,7 +425,7 @@ void ship::move(game_data *g){
   // move
   float dt = g -> get_dt();
   float angle_increment = fmin(2 / pow(stats[sskey::key::mass], 0.33), 1);
-  float acceleration = 0.1 * base_stats.stats[sskey::key::speed] / sqrt(stats[sskey::key::mass]);
+  float acceleration = 0.1 * base_stats.stats[sskey::key::speed] / pow(stats[sskey::key::mass], 0.33);
   float epsilon = dt * 0.01;
   float angle_miss = utility::angle_difference(selected_angle, angle);
   float angle_sign = utility::signum(angle_miss, epsilon);
@@ -472,7 +473,15 @@ void ship::receive_damage(game_data *g, game_object::ptr from, float damage) {
   stats[sskey::key::hp] -= damage;
   remove = stats[sskey::key::hp] <= 0;
 
-  if (remove) g -> log_ship_destroyed(from -> id, id);
+  if (remove) {
+    // register kill
+    if (from -> isa(ship::class_id)) {
+      ship::ptr s = utility::guaranteed_cast<ship>(from);
+      s -> nkills++;
+    }
+    
+    g -> log_ship_destroyed(from -> id, id);
+  }
 }
 
 void ship::on_remove(game_data *g){
