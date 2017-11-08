@@ -1,10 +1,5 @@
 * current work
 ** play testing
-*** drag map with right mouse
-*** show available buildings in alphabetical order
-*** set limits for zoom
-*** set limits for build queues
-*** client side fleet form needs to set heading
 *** solars still get stuck in terrain
 *** got large number of "line_intersect: same point" at one point
     This was before waypoint cleanup segfault was fixed though
@@ -26,6 +21,7 @@
 *** Ships validate their action using target information that the player can't see
 *** look through all copy constructors to make sure they explicitly call parents
 ** [~] gui 
+*** occasional segfault on client startup
 *** game objects handle event before (non query window) interface widgets
     E.g. quit button or right panel
 *** [?] only allow command action if *available* ships support it
@@ -150,6 +146,11 @@
 * git pending
 * fixed
 ** play testing
+*** [J] drag map with right mouse
+*** [J] show available buildings in alphabetical order
+*** [J] set limits for zoom
+*** [J] set limits for build queues
+*** [J] client side fleet form needs to set heading
 *** [J] update battleship shape vertices
 *** [J] fleet should slow down and wait for ships that need time to accelerate
     Or ships should not need time to accelerate

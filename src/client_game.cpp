@@ -1180,6 +1180,8 @@ void game::setup_targui(point p){
 }
 
 void game::control_event(sf::Event e) {
+  static point p_prev(0,0);
+  static bool drag_map_active = false;
   static bool drag_waypoint_active = false;
   static bool did_drag = false;
   static combid drag_id;
@@ -1197,8 +1199,6 @@ void game::control_event(sf::Event e) {
     if (keys.empty()) {
       keys = selected_entities();
       if (keys.empty()) {
-	text = "Position: " + to_string(p.x) + "x" + to_string(p.y);
-	interface::desktop -> hover_label -> SetText(text);
 	return;
       }
     }
@@ -1249,12 +1249,21 @@ void game::control_event(sf::Event e) {
       for (auto cid : wp -> commands) get_command_selector(cid) -> from = p;
       
       did_drag = true;
+    } else if (drag_map_active) {
+      view_game.move(p_prev - p);
     } else {
       update_hover_info(p);
     }
     break;
   case sf::Event::MouseButtonPressed:
-    if (e.mouseButton.button == sf::Mouse::Left) init_area_select(e);
+    mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
+    p = window.mapPixelToCoords(mpos);
+    if (e.mouseButton.button == sf::Mouse::Left) {
+      init_area_select(e);
+    } else if (e.mouseButton.button == sf::Mouse::Right && !exists_selected()) {
+      p_prev = p;
+      drag_map_active = true;
+    }
     break;
   case sf::Event::MouseButtonReleased:
     mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
@@ -1276,13 +1285,16 @@ void game::control_event(sf::Event e) {
 	  select_at(p);
 	}
       }
+      
+      // clear selection rect
+      drag_waypoint_active = false;
+      did_drag = false;
+      area_select_active = false;
+      srect = sf::FloatRect(0, 0, 0, 0);      
+    } else if (e.mouseButton.button == sf::Mouse::Right) {
+      drag_map_active = false;
     }
-
-    // clear selection rect
-    drag_waypoint_active = false;
-    did_drag = false;
-    area_select_active = false;
-    srect = sf::FloatRect(0, 0, 0, 0);
+    
     break;
   case sf::Event::MouseWheelMoved:
     p = window.mapPixelToCoords(sf::Vector2i(e.mouseWheel.x, e.mouseWheel.y));
@@ -1364,6 +1376,7 @@ int game::choice_event(sf::Event e){
       f -> radius = settings.fleet_default_radius;
       f -> stats.vision_buf = vis;
       f -> position = utility::scale_point(pos, 1 / (float)buf.size());
+      f -> heading = f -> position;
       f -> selected = true;
       
       entity[f -> id] = f;

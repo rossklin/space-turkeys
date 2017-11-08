@@ -339,9 +339,10 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
 
   for (auto v : s -> choice_data.building_queue) extend_building_queue(v);
 
-  for (auto x : available_buildings) {
-    string v = x.first;
-    Button::Ptr b = Button::Create(v + " level " + to_string(x.second + 1));
+  auto bkeys = utility::get_map_keys(available_buildings);
+  bkeys.sort();
+  for (auto v : bkeys) {
+    Button::Ptr b = Button::Create(v + " level " + to_string(available_buildings[v] + 1));
     desktop -> bind_ppc(b, [this,v] () {
 	extend_building_queue(v);
 	update_available_button(v);
@@ -351,8 +352,9 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
   }
 
   // add ships
-  for (auto x : ship_stats::table()) {
-    string v = x.first;
+  auto skey = utility::get_map_keys(ship_stats::table());
+  skey.sort();
+  for (auto v : skey) {
     if (desktop -> get_research().can_build_ship(v, s)) {
       Button::Ptr b = Button::Create(v);
       desktop -> bind_ppc(b, [this,v] () {
@@ -401,6 +403,7 @@ void solar_gui::update_available_button(string v) {
 
 void solar_gui::extend_building_queue(string v) {
   static int bid = 0;
+  if (building_queue.size() >= 10) return;
   
   available_buildings[v]++;
   string name = v + " level " + to_string(available_buildings[v]);
@@ -424,7 +427,8 @@ void solar_gui::extend_building_queue(string v) {
 }
 
 void solar_gui::extend_ship_queue(string v) {
-  static int bid = 0;  
+  static int bid = 0;
+  if (ship_queue.size() >= 10) return;
 
   string name = v;
   if (ship_queue.empty() && sol -> ship_progress > 0) {
