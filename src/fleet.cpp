@@ -22,6 +22,18 @@ const sint fleet::policy_reasonable = 2;
 const sint fleet::policy_evasive = 4;
 const sint fleet::policy_maintain_course = 8;
 
+const idtype fleet::server_pid = -1;
+const int fleet::update_period = 3; /*!< number of increments between fleet data updates */
+const int fleet::interact_d2 = 100; /*!< squared distance from target at which the fleet converges */
+
+const sint fleet::suggestion::summon = 1;
+const sint fleet::suggestion::engage = 2;
+const sint fleet::suggestion::scatter = 4;
+const sint fleet::suggestion::travel = 8;
+const sint fleet::suggestion::activate = 16;
+const sint fleet::suggestion::hold = 32;
+const sint fleet::suggestion::evade = 64;
+
 fleet::fleet(idtype pid){
   static int idc = 0;
   static mutex m;
@@ -126,65 +138,51 @@ void fleet::give_commands(list<command> c, game_data *g){
   }
 }
 
-fleet::suggestion fleet::suggest(combid sid, game_data *g) {
-  ship::ptr s = g -> get_ship(sid);
-  float pref_density = 0.2;
-  float pref_maxrad = fmax(sqrt(ships.size() / (M_PI * pref_density)), 20);
-
+fleet::suggestion fleet::suggest(game_data *g) {
   auto local_output = [this] (string v) {
     server::output(id + ": suggest: " + v);
   };
-
-  int unmask = 0;
-  if (stats.converge) unmask |= suggestion::activate;
   
   if (stats.enemies.size()) {
-    suggestion s_evade(suggestion::evade | unmask, stats.evade_path);
+    suggestion s_evade(suggestion::evade, stats.evade_path);
     if (!stats.can_evade) s_evade.id = suggestion::scatter;
     
-    if (com.policy & policy_maintain_course) {
+    if (com.policy == policy_maintain_course) {
       local_output("maintain course");
-      return suggestion(suggestion::travel | unmask, heading);
-    }else if (com.policy & policy_evasive) {
+      return suggestion(suggestion::travel, heading);
+    }else if (com.policy == policy_evasive) {
       local_output("evade");
       return s_evade;
-    }else{    
-      if (s -> tags.count("spacecombat")) {
-	point p = stats.enemies.front().first;
-	if (com.policy & policy_aggressive) {
-	  local_output("aggressive engage: " + utility::point2string(p));
-	  return suggestion(suggestion::engage | unmask, p);
-	} else if (com.policy & policy_reasonable && stats.enemies.front().second < 1){
+    }else{
+      point p = stats.enemies.front().first;
+      if (com.policy == policy_aggressive) {
+	local_output("aggressive engage: " + utility::point2string(p));
+	return suggestion(suggestion::engage, p);
+      } else if (com.policy == policy_reasonable) {
+	float h = stats.enemies.front().second / (stats.facing_ratio + 1);
+	if (suggest_buf.id == suggestion::engage) h *= 0.8;
+	if (suggest_buf.id == suggestion::evade) h /= 0.8;
+
+	if (h < 0.5) {
 	  local_output("local engage");
-	  return suggestion(suggestion::engage | unmask, p);
-	} else {
-	  local_output("evade");
-	  return s_evade;
+	  return suggestion(suggestion::engage, p);
 	}
-      }else{
-	local_output("evade");
-	return s_evade;
       }
+      
+      local_output("evade");
+      return s_evade;
     }
   }else{
     // peaceful times
     if (stats.converge) {
       local_output("activate");
-      return suggestion(suggestion::activate | unmask, heading);
-    }else if (utility::l2norm(s -> position - position) > pref_maxrad) {
-      if (is_idle()) {
-	local_output("summon");
-	return suggestion(suggestion::summon | unmask);
-      } else {
-	local_output("summon and travel");
-	return suggestion(suggestion::summon | suggestion::travel | unmask, heading);
-      }
+      return suggestion(suggestion::activate, heading);
     }else if (is_idle()) {
       local_output("hold");
-      return suggestion(suggestion::hold | unmask);
+      return suggestion(suggestion::hold);
     }else{
       local_output("travel");
-      return suggestion(suggestion::travel | unmask, heading);
+      return suggestion(suggestion::travel, heading);
     }
   }
 }
@@ -192,6 +190,8 @@ fleet::suggestion fleet::suggest(combid sid, game_data *g) {
 // cluster enemy ships
 void fleet::analyze_enemies(game_data *g) {
   stats.enemies.clear();
+  if (ships.empty()) return;
+  
   float r = stats.spread_radius + vision();
   target_condition cond(target_condition::enemy, ship::class_id);
   list<combid> t = g -> search_targets_nophys(id, position, r, cond.owned_by(owner));
@@ -241,6 +241,15 @@ void fleet::analyze_enemies(game_data *g) {
   
   stats.enemies.sort([](pair<point, float> a, pair<point, float> b) {return a.second > b.second;});
 
+  // find to what degree we are currently facing the enemy
+  vector<float> enemy_ckde = utility::circular_kernel(scatter_data, 2);
+  float facing = 0;
+  for (auto sid : ships) {
+    facing += enemy_ckde[utility::angle2index(na, g -> get_ship(sid) -> angle)];
+  }
+  facing /= ships.size();
+  stats.facing_ratio = facing / (utility::vsum(enemy_ckde) / na);
+
   // find best evade direction
 
   // define prioritized directions
@@ -260,7 +269,7 @@ void fleet::analyze_enemies(game_data *g) {
   dw[idx_target] = 0.5;
 
   // merge direction priorities with enemy strength data via circular kernel
-  vector<float> heuristics = utility::elementwise_product(utility::circular_kernel(scatter_data, 2), utility::circular_kernel(dw, 1));
+  vector<float> heuristics = utility::elementwise_product(enemy_ckde, utility::circular_kernel(dw, 1));
 
   int prio_idx = utility::vector_min<float>(heuristics, utility::identity_function<float>());
   float evalue = heuristics[prio_idx];
@@ -340,12 +349,13 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
   }
   
   for (int i = 0; i < sskey::key::count; i++) stats.average_ship.stats[i] /= ships.size();
-  stats.spread_radius = fmax(sqrt(r2), fleet::min_radius);
+  stats.spread_radius = fmax(sqrt(r2), 10);
   stats.spread_density = ships.size() / (M_PI * pow(stats.spread_radius, 2));
   stats.speed_limit = 0.9 * speed;
 
   analyze_enemies(g);
   check_action(g);
+  suggest_buf = suggest(g);
   refresh_ships(g);
 }
 

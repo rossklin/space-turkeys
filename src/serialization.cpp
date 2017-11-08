@@ -319,7 +319,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const fleet &g){
     << g.owner
     << g.ships
     << g.heading
-    << g.path;
+    << g.path
+    << g.suggest_buf;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
@@ -332,7 +333,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
     >> g.owner
     >> g.ships
     >> g.heading
-    >> g.path;
+    >> g.path
+    >> g.suggest_buf;
 }
 
 // fleet analytics
@@ -347,7 +349,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const fleet::analytics &g){
     << g.can_evade
     << g.vision_buf
     << g.enemies
-    << g.average_ship;
+    << g.average_ship
+    << g.facing_ratio;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, fleet::analytics &g){
@@ -361,7 +364,18 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet::analytics &g){
     >> g.can_evade
     >> g.vision_buf
     >> g.enemies
-    >> g.average_ship;
+    >> g.average_ship
+    >> g.facing_ratio;
+}
+
+
+// fleet suggestion
+sf::Packet& st3::operator <<(sf::Packet& packet, const fleet::suggestion &g){
+  return packet << g.id << g.p;
+}
+
+sf::Packet& st3::operator >>(sf::Packet& packet, fleet::suggestion &g){
+  return packet >> g.id >> g.p;
 }
 
 // choice

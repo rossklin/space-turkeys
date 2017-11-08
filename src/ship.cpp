@@ -173,20 +173,28 @@ void ship::update_data(game_data *g) {
   
   if (!has_fleet()) return;
   fleet::ptr f = g -> get_fleet(fleet_id);
-  fleet::suggestion suggest = f -> suggest(id, g);
+  fleet::suggestion suggest = f -> suggest_buf;
 
   auto local_output = [this] (string v) {
     server::output(id + ": update_data: " + v);
   };
 
-  bool summon = suggest.id & fleet::suggestion::summon;
+  float pref_density = 0.2;
+  float pref_maxrad = fmax(sqrt(f -> ships.size() / (M_PI * pref_density)), 20);
+
   bool engage = suggest.id & fleet::suggestion::engage;
   bool scatter = suggest.id & fleet::suggestion::scatter;
   bool travel = suggest.id & fleet::suggestion::travel;
-  activate = suggest.id & fleet::suggestion::activate;
+  activate = f -> stats.converge;
   bool hold = suggest.id & fleet::suggestion::hold;
   bool evade = suggest.id & fleet::suggestion::evade;
   bool local = engage || evade || activate;
+  bool summon = (!engage) && utility::l2norm(f -> position - position) > pref_maxrad;
+
+  if (engage && !tags.count("spacecombat")) {
+    engage = false;
+    scatter = true;
+  }
 
   float fleet_target_angle = utility::point_angle(f -> heading - f -> position);
   point fleet_delta = f -> position - position;

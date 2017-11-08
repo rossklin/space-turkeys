@@ -26,13 +26,13 @@ namespace st3{
     class suggestion {
     public:
       // fleet to ship suggestions
-      static const sint summon = 1;
-      static const sint engage = 2;
-      static const sint scatter = 4;
-      static const sint travel = 8;
-      static const sint activate = 16;
-      static const sint hold = 32;
-      static const sint evade = 64;
+      static const sint summon;
+      static const sint engage;
+      static const sint scatter;
+      static const sint travel;
+      static const sint activate;
+      static const sint hold;
+      static const sint evade;
 
       sint id;
       point p;
@@ -53,14 +53,14 @@ namespace st3{
       float spread_density;
       point evade_path;
       sbool can_evade;
+      float facing_ratio;
 
       analytics();
     };
 
-    static const idtype server_pid = -1;
-    static const int update_period = 3; /*!< number of increments between fleet data updates */
-    static const int interact_d2 = 100; /*!< distance from target at which the fleet converges */
-    static constexpr float min_radius = 10; /*!< smallest allowed fleet radius (for visibility) */
+    static const idtype server_pid;
+    static const int update_period; /*!< number of increments between fleet data updates */
+    static const int interact_d2; /*!< distance from target at which the fleet converges */
 
     // fleet policies
     static const sint policy_aggressive;
@@ -76,6 +76,7 @@ namespace st3{
     command com; /*!< the fleet's command (currently this only holds the target) */
     point heading;
     std::list<point> path;
+    suggestion suggest_buf;
 
     // mechanical components
     int update_counter; /*!< counter for updating fleet data */
@@ -105,7 +106,7 @@ namespace st3{
     void analyze_enemies(game_data *g);
     void update_data(game_data *g, bool set_force_refresh = false);
     void remove_ship(combid i);
-    suggestion suggest(combid i, game_data *g);
+    suggestion suggest(game_data *g);
     float get_hp();
     float get_dps();
     float get_strength();

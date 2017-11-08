@@ -224,6 +224,28 @@ namespace st3{
 	w.draw(s);
       }
       w.draw(&line[0], line.size(), sf::LineStrip);
+
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::L)) {
+	// debug: add suggestion
+	hm_t<int, string> suggest_names;
+	suggest_names[suggestion::summon] = "summon";
+	suggest_names[fleet::suggestion::engage] = "engage";
+	suggest_names[fleet::suggestion::scatter] = "scatter";
+	suggest_names[fleet::suggestion::travel] = "travel";
+	suggest_names[fleet::suggestion::activate] = "activate";
+	suggest_names[fleet::suggestion::hold] = "hold";
+	suggest_names[fleet::suggestion::evade] = "evade";
+
+	graphics::draw_text(w, suggest_names[suggest_buf.id], position, 26);
+
+	// debug: add evade path
+	if (stats.can_evade) {
+	  line.clear();
+	  line.push_back(sf::Vertex(position, sf::Color::Blue));
+	  line.push_back(sf::Vertex(stats.evade_path, sf::Color::Blue));
+	  w.draw(&line[0], line.size(), sf::LineStrip);
+	}
+      }
     }
 
     template<>

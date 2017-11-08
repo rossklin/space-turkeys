@@ -66,6 +66,13 @@ namespace st3{
       return res;
     }
 
+    template<typename C>
+    typename C::value_type vsum(C &x) {
+      typename C::value_type sum = 0;
+      for (auto y : x) sum += y;
+      return sum;
+    }
+
     std::string format_float(float x);
 
     rapidjson::Document *get_json(std::string filename);
