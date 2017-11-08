@@ -298,10 +298,6 @@ void ship::update_data(game_data *g) {
       target_angle = utility::index2angle(na, utility::vector_min(enemies, utility::identity_function<float>()));
       target_speed = base_stats.stats[sskey::key::speed];
       local_output("scatter: target angle: " + to_string(target_angle));
-    } else {
-      target_speed = 0;
-      target_angle = angle;
-      local_output("scatter: chilling");
     }
   }
 
