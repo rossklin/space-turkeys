@@ -1,4 +1,29 @@
 * current work
+** balancing
+   late hm:
+   [improved] !corsair > fighter
+   [unchanged] !fighter > voyager
+
+   late game:
+   [fixed] !voyager > corsair
+   [fixed] !battleship > corsair
+   [unchanged] battleship > destroyer
+   [unchanged] corsair > destroyer
+
+   mid game:
+   [unchanged] fighter > battleship
+   [fixed] battleship > corsair
+
+   Attempt to fix relationships: 
+   corsair < voyager < HMfighter < corsair
+   corsair < battleship
+
+   Changes:
+   fighter + 0.2 ship_damage
+   corsair + 1 accuracy
+   battleship + 5 ship_damage, - 2 accuracy, + 2 shield
+   voyager - 5 accuracy, + 5 shield
+   
 ** play testing
 *** solars still get stuck in terrain
 *** got large number of "line_intersect: same point" at one point

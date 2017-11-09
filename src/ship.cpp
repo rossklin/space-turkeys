@@ -537,7 +537,7 @@ float ship::accuracy_check(ship::ptr t) {
 }
 
 float ship::evasion_check() {
-  return utility::random_uniform(0, stats[sskey::key::evasion] / stats[sskey::key::mass]);
+  return utility::random_uniform(0, stats[sskey::key::evasion] * evasion_mass_norm / stats[sskey::key::mass]);
 }
 
 float ship::interaction_radius() {

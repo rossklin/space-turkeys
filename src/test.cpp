@@ -155,11 +155,11 @@ bool test_space_combat(string c0, string c1, float limit, float win_lower, float
   int max_units = 100;
   
   float highest = fmax(count0, count1);
-  if (highest > max_units) {
-    float ratio = max_units / highest;
-    count0 *= ratio;
-    count1 *= ratio;
-  }
+  // if (highest > max_units) {
+  //   float ratio = max_units / highest;
+  //   count0 *= ratio;
+  //   count1 *= ratio;
+  // }
 
   float lowest = fmin(count0, count1);
   if (lowest > min_units) {
@@ -178,8 +178,8 @@ bool test_space_combat(string c0, string c1, float limit, float win_lower, float
   }
   
   string game_stage = "early";
-  if (limit > 4000) game_stage = "mid";
-  if (limit > 10000) game_stage = "late";
+  if (limit > 3000) game_stage = "mid";
+  if (limit > 7000) game_stage = "late";
   if (add_techs.count("hive fleet")) game_stage += "[HM]";
 
   ss << "test combat: " << game_stage << " game: " << scc_0[c0] << " " << c0 << " vs " << scc_1[c1] << " " << c1 << endl;
@@ -234,7 +234,7 @@ bool test_space_combat(string c0, string c1, float limit, float win_lower, float
   ss << "sample: ";
   while (nsample < max_sample && (nsample < 10 || !significant)) {
     float r = test();
-    if (r > 10 || !isfinite(r)) r = 10;
+    if (r > 100 || !isfinite(r)) r = 100;
     
     rmean = (nsample * rmean + r) / (nsample + 1);
     dev = (nsample * dev + abs(r - rmean)) / (nsample + 1);
@@ -267,7 +267,7 @@ bool test_space_combat(string c0, string c1, float limit, float win_lower, float
 }
 
 int main(int argc, char **argv){
-  float limit = 2000;
+  float limit = 1000;
 
   game_data::confirm_data();
 
@@ -293,9 +293,9 @@ int main(int argc, char **argv){
 
   // test mid game balance
   limit = 5000;
-  tests.push_back(thread([limit] () {test_space_combat("corsair", "fighter", limit, 5, 16);}));
-  tests.push_back(thread([limit] () {test_space_combat("battleship", "fighter", limit, 1.5, 4);}));
-  tests.push_back(thread([limit] () {test_space_combat("battleship", "corsair", limit, 3, 6);}));
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("corsair", "fighter", limit, 5, 16, add_techs);}));
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("battleship", "fighter", limit, 1.5, 4, add_techs);}));
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("battleship", "corsair", limit, 3, 6, add_techs);}));
 
   // test late game balance
   limit = 15000;

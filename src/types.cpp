@@ -17,6 +17,8 @@ using namespace st3;
 // #define DEBUG true
 
 bool server::silent_mode = false;
+const float st3::accuracy_distance_norm = 30;
+const float st3::evasion_mass_norm = 10;
 
 classified_error::classified_error(string v, string s) : runtime_error(v) {
   severity = s;

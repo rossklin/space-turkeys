@@ -41,7 +41,8 @@ namespace st3{
     void log(std::string v, std::string severity = "notice");
   };
 
-  const float accuracy_distance_norm = 30;
+  extern const float accuracy_distance_norm;
+  extern const float evasion_mass_norm;
   
   /*! 32 bit int for network serialization */
   typedef sf::Int32 sint;

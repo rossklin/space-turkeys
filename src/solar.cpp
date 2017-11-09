@@ -70,7 +70,7 @@ void solar::move(game_data *g){
     string next_ship = utility::weighted_sample(test.data);
     ss << "chose: " << next_ship << endl;
     if (next_ship.size()) {
-      server::output(ss.str(), true);
+      server::output(ss.str());
       choice_data.ship_queue.push_back(next_ship);
     }
   }
@@ -522,7 +522,7 @@ choice::c_solar solar::government() {
     for (auto x : score) print << " - " << x.first << ": " << x.second << endl;
     print << "Choice: " << dev_choice << " (allocation = " << c.allocation[keywords::key_development] << ")" << endl;
 
-    server::output(print.str(), true);
+    server::output(print.str());
     
     return c;
   };

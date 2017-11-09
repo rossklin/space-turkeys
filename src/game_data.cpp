@@ -811,6 +811,7 @@ void game_data::build(){
     s -> ecology = 1;
     s -> radius = settings.solar_meanrad;
     s -> choice_data.allocation = cost::sector_allocation::base_allocation();
+    s -> choice_data.governor = keywords::key_culture;
     s -> facility_access("shipyard") -> level = 1;
     s -> facility_access("research facility") -> level = 1;
     s -> facility_access("missile turret") -> level = 1;
