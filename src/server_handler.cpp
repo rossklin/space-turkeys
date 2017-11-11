@@ -78,7 +78,7 @@ com *handler::create_game(string gid, client_game_settings set, bool do_lock) {
 void handler::wfg(client_t *c) {
   query_handler handler = [] (int cid, sf::Packet p) -> handler_result {
     handler_result res;
-    res.status << socket_t::tc_complete;
+    res.status = socket_t::tc_complete;
     res.response << protocol::standby;
     return res;
   };
