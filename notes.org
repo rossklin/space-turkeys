@@ -25,9 +25,12 @@
    voyager - 5 accuracy, + 5 shield
    
 ** play testing
+*** confusing that you can't give fleets with orders orders
+*** [J] confusing that right mouse both targets and drags map
+*** [J] can't see when fleets are selected
 *** solars still get stuck in terrain
 *** got large number of "line_intersect: same point" at one point
-    This was before waypoint cleanup segfault was fixed though
+    Possibly caused when ship enters impassable terrain?
 * [~] issues
 ** [~] system
 *** fleeing units freeze in panic

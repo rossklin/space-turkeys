@@ -180,20 +180,19 @@ namespace st3{
 
     template<>
     void specific_selector<fleet>::draw(window_t &w){
-      auto f = [this, &w] (float r, sf::Color cf, sf::Color co) {
+      auto f = [this, &w] (float r, sf::Color cf, sf::Color co, float th = 1) {
 	sf::CircleShape s(r);
 	s.setPointCount(r / graphics::unscale());
 	s.setFillColor(cf);
 	s.setOutlineColor(co);
-	s.setOutlineThickness(graphics::unscale());
+	s.setOutlineThickness(graphics::unscale() * th);
 	s.setPosition(position - point(r, r));
 	w.draw(s);
       };
 
-      sf::Color outline = graphics::fleet_outline;
-      if (selected) outline = graphics::fade_color(outline, sf::Color::White, 0.4);
-      f(radius * graphics::unscale(), graphics::fleet_fill, outline);
+      f(radius * graphics::unscale(), graphics::fleet_fill, graphics::fleet_outline);
       f(vision(), sf::Color::Transparent, sf::Color(40, 200, 60, 50));
+      if (selected) f(2 * radius * graphics::unscale(), sf::Color::Transparent, sf::Color::White, 3);
 
       // add a flag
       auto counts = ship_counts();

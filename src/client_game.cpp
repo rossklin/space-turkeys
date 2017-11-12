@@ -1144,7 +1144,10 @@ void game::setup_targui(point p){
   }
 
   // never generate command if there are no ships
-  if (!exists_ships) return;
+  if (!exists_ships) {
+    popup_message("Invalid command!", "All ships already assigned.");
+    return;
+  }
 
   // check if actions are allowed per target
   auto itab = interaction::table();
@@ -1191,6 +1194,8 @@ void game::control_event(sf::Event e) {
   sf::FloatRect minirect;
   point delta;
   point target;
+
+  drag_map_active &= sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
 
   auto update_hover_info = [this] (point p) {
     auto keys = entities_at(p);
@@ -1259,10 +1264,12 @@ void game::control_event(sf::Event e) {
     mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
     p = window.mapPixelToCoords(mpos);
     if (e.mouseButton.button == sf::Mouse::Left) {
-      init_area_select(e);
-    } else if (e.mouseButton.button == sf::Mouse::Right && !exists_selected()) {
-      p_prev = p;
-      drag_map_active = true;
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
+	p_prev = p;
+	drag_map_active = true;
+      } else {
+	init_area_select(e);
+      }
     }
     break;
   case sf::Event::MouseButtonReleased:
@@ -1291,7 +1298,6 @@ void game::control_event(sf::Event e) {
       did_drag = false;
       area_select_active = false;
       srect = sf::FloatRect(0, 0, 0, 0);      
-    } else if (e.mouseButton.button == sf::Mouse::Right) {
       drag_map_active = false;
     }
     
