@@ -25,21 +25,16 @@
    voyager - 5 accuracy, + 5 shield
    
 ** play testing
-*** confusing that you can't give fleets with orders orders
-*** [J] confusing that right mouse both targets and drags map
-*** [J] can't see when fleets are selected
 *** solars still get stuck in terrain
 *** got large number of "line_intersect: same point" at one point
     Possibly caused when ship enters impassable terrain?
 * [~] issues
 ** [~] system
-*** fleeing units freeze in panic
 *** residual waypoints when ship is killed
     Also residual path node indicators - maybe fleet was not removed on client side?
 *** auto search should target nearest available solar
-*** ships slow down when in engage mode so you can't chase someone
+*** [J?] ships slow down when in engage mode so you can't chase someone
 *** Got logic error: "avoid point caused intersection" in add terrain
-*** [J] terrain still creates intersections and unreachable areas which bug out the path search algorithm
 *** [?] terminated with network error
     After submitting first choice after discovering shields and
     selecting battleships. Probably an exception on server which
@@ -173,6 +168,11 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] fleeing units freeze in panic
+** [J] terrain still creates intersections and unreachable areas which bug out the path search algorithm
+** [J] confusing that you can't give fleets with orders orders
+** [J] confusing that right mouse both targets and drags map
+** [J] can't see when fleets are selected
 ** play testing
 *** [J] drag map with right mouse
 *** [J] show available buildings in alphabetical order

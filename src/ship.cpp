@@ -314,12 +314,12 @@ void ship::update_data(game_data *g) {
 	ship::ptr s = g -> get_ship(tid);
 	point delta = s -> position - position;
 	target_angle = utility::point_angle(delta);
-	target_speed = fmax(0, utility::sigmoid(utility::l2norm(delta) - 0.8 * nrad));
+	target_speed = fmax(0, utility::sigmoid(utility::l2norm(delta) - 0.8 * nrad)) / g -> get_dt();
       }
     }
   }
 
-  if (activate || engage) {
+  if (activate || (engage && local_enemies.size() > 0)) {
     // keep it slow when engaging
     target_speed = fmin(target_speed, max_local_speed);
   }
