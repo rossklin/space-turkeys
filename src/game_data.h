@@ -66,6 +66,7 @@ namespace st3{
     std::list<combid> search_targets_nophys(combid self_id, point p, float r, target_condition c);
     std::list<point> get_path(point a, point b, int d = 0);
     void rebuild_evm();
+    std::list<idtype> terrain_at(point p, float r);
     point terrain_forcing(point p);
     void extend_universe(int i, int j, bool starting_area = false);
     void discover(point x, float r, bool starting_area = false);

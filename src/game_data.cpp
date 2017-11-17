@@ -97,9 +97,23 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
   return res;
 }
 
+list<idtype> game_data::terrain_at(point p, float r) {
+  list<idtype> res;
+  for (auto &x : terrain) {
+    int j = x.second.triangle(p, r);
+    if (j > -1) res.push_back(j);
+  }
+  return res;
+}
+
 list<point> game_data::get_path(point a, point b, int d) {
   if (d > 10) {
     server::log("get_path: max recursion depth reached!", "warning");
+    return {};
+  }
+
+  if (terrain_at(a, 1).size() || terrain_at(b, 1).size()) {
+    server::log("get_path: end point covered by terrain!", "warning");
     return {};
   }
   
@@ -472,13 +486,15 @@ void game_data::distribute_ships(list<combid> sh, point p){
 }
 
 point game_data::terrain_forcing(point p) {
-  for (auto &x : terrain) {
-    int j = x.second.triangle(p, 10);
+  list<idtype> tids = terrain_at(p, 10);
+  if (tids.size()) {
+    terrain_object x = terrain[tids.front()];
+    int j = x.triangle(p, 10);
     if (j > -1) {
-      float test = utility::triangle_relative_distance(x.second.center, x.second.get_vertice(j), x.second.get_vertice(j+1), p, 10);
+      float test = utility::triangle_relative_distance(x.center, x.get_vertice(j), x.get_vertice(j+1), p, 10);
       if (test > -1) {
 	if (test < 1) {
-	  return (1 - test) * (p - x.second.center);
+	  return (1 - test) * (p - x.center);
 	}
       } else {
 	throw logical_error("Forcing triangle without relative distance value!");
@@ -546,10 +562,10 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 	}
 
 	// check against terrain
-	for (auto &t : terrain) {
-	  int j = t.second.triangle(x[i], 50);
-	  if (j > -1) {
-	    x[i] += utility::normalize_and_scale(x[i] - t.second.center, e);
+	list<idtype> tids = terrain_at(x[i], 50);
+	for (auto tid : tids) {
+	  if (terrain[tid].triangle(x[i], 50) > -1) {
+	    x[i] += utility::normalize_and_scale(x[i] - terrain[tid].center, e);
 	  }
 	}	
       }
@@ -665,9 +681,9 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 
   // check waypoints so they aren't covered
   for (auto w : all<waypoint>()) {
-    for (auto &x : terrain) {
-      int j = x.second.triangle(w -> position, 0);
-      if (j > -1) {
+    list<idtype> tids = terrain_at(w -> position, 0);
+    for (auto tid : tids) {
+      if (terrain[tid].triangle(w -> position, 0) > -1) {
 	remove_entity(w -> id);
 	break;
       }
