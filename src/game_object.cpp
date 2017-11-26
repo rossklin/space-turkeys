@@ -4,6 +4,7 @@
 #include "game_object.h"
 #include "game_data.h"
 #include "utility.h"
+#include "serialization.h"
 
 using namespace std;
 using namespace st3;
@@ -42,6 +43,36 @@ bool game_object::is_active(){
 
 bool game_object::isa(string c){
   return identifier::get_type(id) == c;
+}
+
+game_object::ptr game_object::deserialize(sf::Packet &p) {
+  game_object::ptr res;
+  class_t key;
+  bool success = (p >> key);
+  
+  if (!success) {
+    throw network_error("deserialize: failed to extract key!");
+  } else if (key == ship::class_id){
+    ship::ptr buf = ship::ptr(new ship());
+    success = (p >> *buf);
+    res = buf;
+  }else if (key == fleet::class_id){
+    fleet::ptr buf = fleet::ptr(new fleet());
+    success = (p >> *buf);
+    res = buf;
+  }else if (key == solar::class_id){
+    solar::ptr buf = solar::ptr(new solar());
+    success = (p >> *buf);
+    res = buf; 
+  }else if (key == waypoint::class_id){
+    waypoint::ptr buf = waypoint::ptr(new waypoint());
+    success = (p >> *buf);
+    res = buf;
+  }else{
+    throw network_error("deserialize: key " + key + " not recognized!");
+  }
+
+  return success ? res : 0;
 }
 
 // commandable object

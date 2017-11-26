@@ -976,49 +976,6 @@ void game_data::end_step(){
   }
 }
 
-game_object::ptr entity_package::get_entity(combid i){
-  if (entity.count(i)){
-    return entity[i];
-  }else{
-    throw logical_error("game_data::get_entity: not found: " + i);
-  }
-}
-
-list<game_object::ptr> entity_package::all_owned_by(idtype id){
-  list<game_object::ptr> res;
-
-  for (auto p : entity) {
-    if (p.second -> owner == id) res.push_back(p.second);
-  }
-
-  return res;
-}
-
-// limit_to without deallocating
-void entity_package::limit_to(idtype id){
-  list<combid> remove_buf;
-  for (auto i : entity) {
-    if (!(i.second -> owner == id || evm[id].count(i.first))) remove_buf.push_back(i.first);
-  }
-  for (auto i : remove_buf) entity.erase(i);
-}
-
-void entity_package::copy_from(const game_data &g){
-  if (entity.size()) throw logical_error("Attempting to assign game_data: has entities!");
-
-  for (auto x : g.entity) entity[x.first] = x.second -> clone();
-  players = g.players;
-  settings = g.settings;
-  remove_entities = g.remove_entities;
-  terrain = g.terrain;
-  evm = g.evm;
-}
-
-void entity_package::clear_entities(){
-  for (auto x : entity) delete x.second;
-  entity.clear();
-}
-
 // load data tables and confirm data references
 void game_data::confirm_data() {
   auto &itab = interaction::table();
@@ -1191,3 +1148,48 @@ void game_data::log_message(combid a, string v_full, string v_short) {
 float game_data::get_dt() {
   return sub_frames * settings.dt;
 }
+
+
+game_object::ptr entity_package::get_entity(combid i){
+  if (entity.count(i)){
+    return entity[i];
+  }else{
+    throw logical_error("game_data::get_entity: not found: " + i);
+  }
+}
+
+list<game_object::ptr> entity_package::all_owned_by(idtype id){
+  list<game_object::ptr> res;
+
+  for (auto p : entity) {
+    if (p.second -> owner == id) res.push_back(p.second);
+  }
+
+  return res;
+}
+
+// limit_to without deallocating
+void entity_package::limit_to(idtype id){
+  list<combid> remove_buf;
+  for (auto i : entity) {
+    if (!(i.second -> owner == id || evm[id].count(i.first))) remove_buf.push_back(i.first);
+  }
+  for (auto i : remove_buf) entity.erase(i);
+}
+
+void entity_package::copy_from(const game_data &g){
+  if (entity.size()) throw logical_error("Attempting to assign game_data: has entities!");
+
+  for (auto x : g.entity) entity[x.first] = x.second -> clone();
+  players = g.players;
+  settings = g.settings;
+  remove_entities = g.remove_entities;
+  terrain = g.terrain;
+  evm = g.evm;
+}
+
+void entity_package::clear_entities(){
+  for (auto x : entity) delete x.second;
+  entity.clear();
+}
+

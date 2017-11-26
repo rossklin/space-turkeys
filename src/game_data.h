@@ -36,6 +36,7 @@ namespace st3{
     hm_t<idtype, terrain_object> terrain;
     std::list<combid> remove_entities; 
     hm_t<idtype, std::set<combid> > evm;
+    std::set<std::pair<int, int> > discovered_universe;
 
     virtual ~entity_package() = default;
     void clear_entities();
@@ -52,7 +53,6 @@ namespace st3{
     
     grid::tree::ptr entity_grid;
     std::vector<interaction_info> interaction_buffer;
-    std::set<std::pair<int, int> > discovered_universe;
 
     game_data();
     ~game_data();

@@ -5,6 +5,7 @@
 #include "protocol.h"
 #include "serialization.h"
 #include "utility.h"
+#include "game_object.h"
 
 using namespace std;
 using namespace st3;
@@ -82,58 +83,49 @@ void st3::client::query(socket_t *socket, sf::Packet &pq, int &com_in, int &com_
   }
 }
 
-
-template<typename T> 
-entity_selector::ptr client::deserialize_object(sf::Packet &p, sint id){
-  // assure that T is a properly setup entity selector
-  static_assert(is_base_of<client::entity_selector, T>::value, "deserialize entity_selector");
-  static_assert(is_base_of<game_object, typename T::base_object_t>::value, "selector base object type must inherit game_object");
-
-  sf::Color col;
-  typename T::base_object_t s;
-  
-  if (!(p >> s)) {
-    throw network_error("deserialize_object: package empty!");
-  }
-  
-  return T::create(s, col, s.owner == id);
-}
-
+// unpack entity package and generate corresponding selector objects in data frame
 void client::deserialize(data_frame &f, sf::Packet &p, sint id){
-  sint n;
+  entity_package ep;
 
   if (f.entity.size()) {
     throw classified_error("client::deserialize: data frame contains entities!");
   }
   
-  if (!(p >> f.players >> f.settings >> f.remove_entities >> f.terrain >> n)){
+  if (!(p >> ep)){
     throw network_error("deserialize: package empty!");
   }
 
-  // "polymorphic" deserialization
-  for (int i = 0; i < n; i++){
-    class_t key;
-    entity_selector::ptr obj;
-    p >> key;
-    if (key == ship::class_id){
-      obj = deserialize_object<client::ship_selector>(p, id);
-    }else if (key == fleet::class_id){
-      obj = deserialize_object<client::fleet_selector>(p, id);
-    }else if (key == solar::class_id){
-      obj = deserialize_object<client::solar_selector>(p, id);
-    }else if (key == waypoint::class_id){
-      obj = deserialize_object<client::waypoint_selector>(p, id);
-    }else{
-      throw network_error("deserialize: key " + key + " not recognized!");
-    }
+  f.settings = ep.settings;
+  f.players = ep.players;
+  f.remove_entities = ep.remove_entities;
 
-    if (obj -> owner >= 0) {
-      obj -> color = sf::Color(f.players[obj -> owner].color);
+  for (auto buf : ep.entity) {
+    game_object::ptr x = buf.second;
+    sf::Color col;
+
+    if (x -> owner >= 0) {
+      col = sf::Color(f.players[x -> owner].color);
     } else {
-      obj -> color = sf::Color(150,150,150);
+      col = sf::Color(150,150,150);
+    }
+    
+    entity_selector::ptr obj;
+    if (x -> isa(ship::class_id)){
+      obj = client::ship_selector::create(*utility::guaranteed_cast<ship>(x), col, x -> owner == id);
+    }else if (x -> isa(fleet::class_id)){
+      obj = client::fleet_selector::create(*utility::guaranteed_cast<fleet>(x), col, x -> owner == id);
+    }else if (x -> isa(solar::class_id)){
+      obj = client::solar_selector::create(*utility::guaranteed_cast<solar>(x), col, x -> owner == id);
+    }else if (x -> isa(waypoint::class_id)){
+      obj = client::waypoint_selector::create(*utility::guaranteed_cast<waypoint>(x), col, x -> owner == id);
+    }else{
+      throw network_error("com_client::deserialize: Failed sanity check: class not recognized!");
     }
     
     f.entity[obj -> id] = obj;
   }
+
+  // deallocate temporary entity data
+  ep.clear_entities();
 }
 
