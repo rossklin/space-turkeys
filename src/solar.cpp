@@ -85,7 +85,7 @@ void solar::move(game_data *g){
       if (ship_progress >= build_time) {
 	choice_data.ship_queue.pop_front();
 	ship_progress -= build_time;
-	ship sh = research_level -> build_ship(v, ptr(this));
+	ship sh = research_level -> build_ship(g -> next_id(ship::class_id), v, ptr(this));
 	sh.is_landed = true;
 	sh.owner = owner;
 	ships.insert(sh.id);
@@ -217,9 +217,7 @@ sfloat solar::vision(){
   return res + radius;
 }
 
-solar::ptr solar::create(point p, float bounty, float var) {
-  static int idc = 0;
-  static mutex m;
+solar::ptr solar::create(idtype id, point p, float bounty, float var) {
   auto fres = [bounty, var] () {
     float level = pow(2, 10 * bounty);
     return fmax(utility::random_normal(level, var * level), 0);
@@ -227,9 +225,7 @@ solar::ptr solar::create(point p, float bounty, float var) {
 
   solar::ptr s = new solar();
 
-  m.lock();
-  s -> id = identifier::make(solar::class_id, idc++);
-  m.unlock();
+  s -> id = identifier::make(solar::class_id, id);
 
   s -> population = 0;
   s -> happiness = 1;

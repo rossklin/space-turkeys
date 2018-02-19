@@ -134,6 +134,22 @@ string identifier::get_multid_owner_symbol(combid v){
   return v.substr(split1 + 1, split2 - split1 - 1);
 }
 
+// get the owner id of waypoint symbol string id v
+idtype identifier::get_multid_index(combid v){
+  string x = get_multid_index_symbol(v);
+  try{
+    return stoi(x);
+  }catch(...){
+    throw classified_error("get multid index: invalid id from " + v + ": " + x);
+  }
+}
+
+// get the owner id of waypoint symbol string id v
+string identifier::get_multid_index_symbol(combid v){
+  size_t split = v.find('#');
+  return v.substr(split + 1);
+}
+
 combid identifier::make_waypoint_id(idtype owner, idtype id){
   return identifier::make(waypoint::class_id, to_string(owner) + "#" + to_string(id));
 }

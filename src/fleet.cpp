@@ -34,15 +34,14 @@ const sint fleet::suggestion::activate = 16;
 const sint fleet::suggestion::hold = 32;
 const sint fleet::suggestion::evade = 64;
 
-fleet::fleet(idtype pid){
-  static int idc = 0;
+fleet::fleet(idtype pid, idtype idx){
   static mutex m;
 
   m.lock();
   if (pid < 0){
-    id = identifier::make(class_id, "S#" + to_string(idc++));
+    id = identifier::make(class_id, "S#" + to_string(idx));
   }else{
-    id = identifier::make(class_id, to_string(pid) + "#" + to_string(idc++));
+    id = identifier::make(class_id, to_string(pid) + "#" + to_string(idx));
   }
   m.unlock();
 
@@ -91,8 +90,8 @@ float fleet::vision(){
   return stats.vision_buf;
 }
 
-fleet::ptr fleet::create(idtype pid){
-  return ptr(new fleet(pid));
+fleet::ptr fleet::create(idtype pid, idtype idx){
+  return ptr(new fleet(pid, idx));
 }
 
 game_object::ptr fleet::clone(){
@@ -117,7 +116,7 @@ void fleet::give_commands(list<command> c, game_data *g){
   random_shuffle(buf.begin(), buf.end());
 
   for (auto &x : buf){
-    ptr f = create(fleet::server_pid);
+    ptr f = create(fleet::server_pid, g -> next_id(fleet::class_id));
     f -> com = x;
     f -> com.source = f -> id;
     if (f -> com.origin.empty()) f -> com.origin = com.origin;

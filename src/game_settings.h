@@ -15,6 +15,7 @@ namespace st3{
     sint num_players;
     sint frames_per_round; /*!< number of frames in the simulation step */
     sfloat galaxy_radius;
+    sint restart;
 
     client_game_settings();
     bool validate();

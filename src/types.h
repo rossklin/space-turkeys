@@ -143,6 +143,9 @@ namespace st3{
     idtype get_multid_owner(combid v);
     std::string get_multid_owner_symbol(combid v);
 
+    idtype get_multid_index(combid v);
+    std::string get_multid_index_symbol(combid v);
+
     combid make_waypoint_id(idtype owner, idtype id);
   };
 };

@@ -29,7 +29,8 @@ namespace st3{
   };
 
   class entity_package {
-  public: 
+  public:
+    hm_t<class_t, idtype> idc;
     hm_t<idtype, player> players; /*!< table of players */
     game_settings settings; /*! game settings */
     hm_t<combid, game_object::ptr> entity;
@@ -39,6 +40,7 @@ namespace st3{
     std::set<std::pair<int, int> > discovered_universe;
 
     virtual ~entity_package() = default;
+    int next_id(class_t x);
     void clear_entities();
     game_object::ptr get_entity(combid i);
     void limit_to(idtype pid);

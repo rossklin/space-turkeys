@@ -20,7 +20,7 @@ namespace st3{
   class fleet : public virtual commandable_object{
   public:
     typedef fleet* ptr;
-    static ptr create(idtype pid);
+    static ptr create(idtype pid, idtype idx);
     static const std::string class_id;
 
     class suggestion {
@@ -96,7 +96,7 @@ namespace st3{
     void give_commands(std::list<command> c, game_data *g);
 
     // fleet stuff
-    fleet(idtype pid);
+    fleet(idtype pid, idtype idx);
     fleet() = default;
     ~fleet() = default;
     fleet(const fleet &f);

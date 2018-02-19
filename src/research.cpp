@@ -88,15 +88,10 @@ void data::repair_ship(ship &s, solar::ptr sol) const {
   s.stats = s.base_stats.stats;
 }
 
-ship data::build_ship(string c, solar::ptr sol) const {
-  static int idc = 0;
-  static mutex m;
+ship data::build_ship(idtype id, string c, solar::ptr sol) const {
   ship s(ship::table().at(c));
 
-  // apply id: static variable, must thread lock
-  m.lock();
-  s.id = identifier::make(ship::class_id, idc++);
-  m.unlock();
+  s.id = identifier::make(ship::class_id, id);
 
   // apply upgrades
   repair_ship(s, sol);

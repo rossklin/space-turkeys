@@ -69,6 +69,7 @@ com *handler::create_game(string gid, client_game_settings set, bool do_lock) {
     throw classified_error("Attempted to create game but id alread in use!");
   } else {
     g = &games[gid];
+    g -> gid = gid;
     static_cast<client_game_settings&>(g -> settings) = set;
   }
   if (do_lock) game_ring.unlock();

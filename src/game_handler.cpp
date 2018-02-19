@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iostream>
 #include <thread>
+#include <fstream>
 
 #include "protocol.h"
 #include "game_data.h"
@@ -129,6 +130,32 @@ void server::game_handler(com &c, game_data &g){
     };
   };
 
+  auto autosave = [&g, &c] () {
+    if (c.gid.empty()) {
+      throw classified_error("autosave: server com object missing gid!");
+    }
+
+    entity_package ep = g;
+    sf::Packet p;
+
+    if (!(p << ep)) {
+      throw classified_error("autosave: failed to serialize!");
+    }
+    
+    const void *data = p.getData();
+    int n = p.getDataSize();
+
+    string filename = c.gid + ".auto.save";
+    ofstream of(filename, ios::binary);
+    of.write((const char*)data, n);
+    bool success = !of.fail();
+    of.close();
+
+    if (!success) {
+      throw classified_error("autosave: failed to write to file!");
+    }
+  };
+
   query_handler load_client_choice = [&g] (int cid, sf::Packet query) -> handler_result {
     choice::choice ch;
     
@@ -137,10 +164,61 @@ void server::game_handler(com &c, game_data &g){
       });
   };
 
+  // check if we are loading an autosave
+  string filename = c.gid + ".auto.save";
+
+  ifstream file(filename, ios::binary | ios::ate);
+
+  if (file.good() && !g.settings.restart) {
+    streamsize size = file.tellg();
+    file.seekg(0, ios::beg);
+    vector<char> buffer(size);
+    if (file.read(buffer.data(), size)) {
+      sf::Packet p;
+      p.append((const void*)buffer.data(), size);
+      
+      entity_package ep;
+      if (!(p >> ep)) {
+	throw classified_error("autoload: failed to deserialize!");
+      }
+
+      // map players by name
+      hm_t<int, client_t*> new_clients;
+      for (auto x : g.players) {
+	bool success = false;
+	for (auto y : ep.players) {
+	  if (x.second.name == y.second.name) {
+	    if (new_clients.count(y.first)) {
+	      throw classified_error("autoload: attempted to register multiple players on the same name!");
+	    }
+	    
+	    new_clients[y.first] = c.clients[x.first];
+	    new_clients[y.first] -> id = y.first;
+	    server::log("autoload: mapped player " + y.second.name + " from id " + to_string(x.first) + " to id " + to_string(y.first));
+	    success = true;
+	  }
+	}
+
+	if (!success) {
+	  throw classified_error("Failed to map id for player " + to_string(x.first));
+	}
+      }
+
+      c.clients = new_clients;
+
+      g.settings = ep.settings;
+      g.terrain = ep.terrain;
+      g.discovered_universe = ep.discovered_universe;
+      g.entity = ep.entity;
+    }
+  }
+  
+  g.rehash_grid();
   g.rebuild_evm();
   if (!c.check_protocol(protocol::load_init, pack_g(false))) return;
 
   while (true) {
+    autosave();
     if (check_end()) return;
     
     if (!c.check_protocol(protocol::game_round, pack_g(true))) {

@@ -14,8 +14,9 @@ namespace st3{
   class waypoint : public virtual commandable_object {
   public:
     typedef waypoint* ptr;
-    static ptr create(idtype owner);
+    static ptr create(idtype owner, idtype id);
     static const std::string class_id;
+    static int idc;
     
     /*! List of commands waiting to trigger when all ships have arrived */
     std::list<command> pending_commands;
@@ -33,7 +34,7 @@ namespace st3{
     void give_commands(std::list<command> c, game_data *g);
 
     // waypoint
-    waypoint(idtype o);
+    waypoint(idtype o, idtype id);
     waypoint() = default;
     ~waypoint() = default;
     waypoint(const waypoint &w);

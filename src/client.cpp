@@ -117,6 +117,8 @@ int main(int argc, char **argv){
       }
     } else if (key == "skip_sub") {
       sub_frames = 1;
+    } else if (key == "restart") {
+      settings.restart = stoi(value);
     } else {
       throw classified_error("Invalid input: " + x);
     }

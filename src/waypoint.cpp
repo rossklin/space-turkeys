@@ -11,14 +11,9 @@ using namespace st3;
 
 const string waypoint::class_id = "waypoint";
 
-waypoint::waypoint(idtype o){
-  static int idc = 0;
-  static mutex m;
-  
+waypoint::waypoint(idtype o, idtype idx){
   owner = o;
-  m.lock();
-  id = identifier::make(waypoint::class_id, to_string(o) + "#" + to_string(idc++));
-  m.unlock();
+  id = identifier::make(waypoint::class_id, to_string(o) + "#" + to_string(idx));
   radius = 20;
 }
 
@@ -66,8 +61,8 @@ void waypoint::give_commands(list<command> c, game_data *g){
   pending_commands.insert(pending_commands.end(), c.begin(), c.end());
 }
 
-waypoint::ptr waypoint::create(idtype o){
-  return ptr(new waypoint(o));
+waypoint::ptr waypoint::create(idtype o, idtype id){
+  return ptr(new waypoint(o, id));
 }
 
 game_object::ptr waypoint::clone(){

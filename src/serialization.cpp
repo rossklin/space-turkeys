@@ -90,7 +90,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, game_settings &g){
 
 // game_settings
 sf::Packet& st3::operator <<(sf::Packet& packet, const client_game_settings &g){
-  return packet 
+  return packet
+    << g.restart
     << g.frames_per_round /*!< number of frames in the simulation step */
     << g.galaxy_radius
     << g.num_players
@@ -99,6 +100,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const client_game_settings &g){
 
 sf::Packet& st3::operator >>(sf::Packet& packet, client_game_settings &g){
   return packet
+    >> g.restart
     >> g.frames_per_round /*!< number of frames in the simulation step */
     >> g.galaxy_radius
     >> g.num_players

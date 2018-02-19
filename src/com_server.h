@@ -46,6 +46,7 @@ namespace st3{
       game_settings settings;
       int idc;
       int thread_com;
+      std::string gid;
       std::mutex m_lock;
       std::thread *active_thread;
 

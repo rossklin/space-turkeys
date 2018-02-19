@@ -30,6 +30,8 @@ game_data *test_setup(game_settings set = game_settings()) {
 }
 
 void setup_fleet_for(game_data *g, idtype pid, point at, point targ, hm_t<string, int> scc = hm_t<string, int>()) {
+  static int idc = 0;
+  
   list<combid> ships;
   for (auto x : g -> all_owned_by(pid)) {
     if (x -> isa(ship::class_id)) {
@@ -39,7 +41,7 @@ void setup_fleet_for(game_data *g, idtype pid, point at, point targ, hm_t<string
     }
   }
 
-  waypoint::ptr w = waypoint::create(pid);
+  waypoint::ptr w = waypoint::create(idc++, pid);
   w -> position = targ;
   command c;
   c.target = w -> id;

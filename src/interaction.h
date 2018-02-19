@@ -1,6 +1,8 @@
 #ifndef _STK_INTERACTION
 #define _STK_INTERACTION
 
+#include <functional>
+
 #include "game_object.h"
 
 namespace st3{

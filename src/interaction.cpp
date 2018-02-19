@@ -158,7 +158,7 @@ const hm_t<string, interaction> &interaction::table() {
       for (auto m : prob) {
 	int count = utility::random_normal(m.second, 0.2 * m.second);
 	for (int j = 0; j < count; j++) {
-	  ship sh = rbase.build_ship(m.first, t);
+	  ship sh = rbase.build_ship(g -> next_id(ship::class_id), m.first, t);
 	  new_ships.push_back(sh.id);
 	  sh.owner = s -> owner;
 	  g -> add_entity(ship::ptr(new ship(sh)));

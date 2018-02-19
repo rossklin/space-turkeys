@@ -1,5 +1,8 @@
 * current work
 ** save game
+*** client: logical_error: add_entity: already exists: fleet:S#1
+    After loading a game, then client adds a waypoint, then server
+    tries to add fleet with same id..?
 ** balancing
    late hm:
    [improved] !corsair > fighter

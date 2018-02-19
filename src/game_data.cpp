@@ -293,7 +293,7 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner){
     c.origin = f -> com.origin;
     f -> com = c;
   }else{
-    f = fleet::create(fleet::server_pid);
+    f = fleet::create(fleet::server_pid, next_id(fleet::class_id));
 
     f -> com = c;
     f -> owner = owner;
@@ -329,7 +329,7 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner){
 void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &sh){
   if (sh.empty()) return;
 
-  fleet::ptr f = fleet::create(fleet::server_pid);
+  fleet::ptr f = fleet::create(fleet::server_pid, next_id(fleet::class_id));
   f -> com = c;
   f -> com.source = f -> id;
   f -> position = p;
@@ -573,7 +573,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   }
 
   // make solars
-  for (auto p : x) add_entity(solar::create(p, bounty, var));
+  for (auto p : x) add_entity(solar::create(next_id(solar::class_id), p, bounty, var));
 
   // add impassable terrain
   static int terrain_idc = 0;
@@ -816,7 +816,7 @@ void game_data::build(){
     cost::res_t initial_resources;
     for (auto v : keywords::resource) initial_resources[v] = 1000;
 
-    solar::ptr s = solar::create(p, 1);
+    solar::ptr s = solar::create(next_id(solar::class_id), p, 1);
     s -> owner = pid;
     s -> was_discovered = true;
     s -> available_resource = initial_resources;
@@ -848,7 +848,7 @@ void game_data::build(){
     
     for (auto sc : starter_fleet) {
       for (int j = 0; j < sc.second; j++) {
-	ship sh = rbase.build_ship(sc.first, s);
+	ship sh = rbase.build_ship(next_id(ship::class_id), sc.first, s);
 	if ((!sh.depends_tech.empty()) && settings.starting_fleet == "massive") {
 	  sh.upgrades += research::data::get_tech_upgrades(sh.ship_class, sh.depends_tech);
 	}
@@ -1149,6 +1149,10 @@ float game_data::get_dt() {
   return sub_frames * settings.dt;
 }
 
+int entity_package::next_id(class_t x) {
+  if (!idc.count(x)) idc[x] = 0;
+  return idc[x]++;
+}
 
 game_object::ptr entity_package::get_entity(combid i){
   if (entity.count(i)){

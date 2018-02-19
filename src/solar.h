@@ -60,7 +60,7 @@ namespace st3{
   class solar : public virtual physical_object, public virtual commandable_object{
   public:
     typedef solar* ptr;
-    static ptr create(point p, float bounty, float var = 0.3);
+    static ptr create(idtype id, point p, float bounty, float var = 0.3);
     static const std::string class_id;
     static const hm_t<std::string, facility>& facility_table();
     

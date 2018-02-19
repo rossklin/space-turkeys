@@ -33,7 +33,7 @@ namespace st3{
       std::list<std::string> list_tech_requirements(std::string v) const;
       std::list<std::string> available() const;
       std::set<std::string> researched() const;
-      ship build_ship(std::string v, solar::ptr sol) const;
+      ship build_ship(idtype id, std::string v, solar::ptr sol) const;
       void repair_ship(ship &s, solar::ptr sol) const;
       bool can_build_ship(std::string v, solar::ptr s, std::list<std::string> *data = 0) const;
     };    

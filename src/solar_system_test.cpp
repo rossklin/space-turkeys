@@ -12,7 +12,8 @@ using namespace std;
 using namespace st3;
 
 solar::ptr build_solar(){
-  solar::ptr s = solar::create(point(0, 0), 1);
+  static int idc = 0;
+  solar::ptr s = solar::create(idc++, point(0, 0), 1);
 
   s -> dt = 1; // sub_frames * dt
   s -> population = 1000;

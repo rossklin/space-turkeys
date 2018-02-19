@@ -17,6 +17,7 @@ game_settings::game_settings(){
 }
 
 client_game_settings::client_game_settings(){
+  restart = 0;
   frames_per_round = 50;
   galaxy_radius = 600;
   num_players = 2;

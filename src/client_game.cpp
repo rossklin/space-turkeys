@@ -28,6 +28,8 @@ using namespace st3;
 using namespace client;
 
 game *client::g = 0;
+int wp_idc = 0;
+int fleet_idc = 0;
 
 // local utility functions
 sf::FloatRect fixrect(sf::FloatRect r);
@@ -568,8 +570,8 @@ bool game::simulation_step(){
     @param p the point
     @return the waypoint id
 */
-combid game::add_waypoint(point p){
-  waypoint buf(self_id);
+combid game::add_waypoint(point p) {  
+  waypoint buf(self_id, wp_idc++);
   buf.position = p;
   waypoint_selector::ptr w = waypoint_selector::create(buf, col, true);
   entity[w -> id] = w;
@@ -749,6 +751,8 @@ void game::reload_data(data_frame &g, bool use_animations){
 
   // update commands for owned fleets
   for (auto f : get_all<fleet>()) {
+    fleet_idc = max(fleet_idc, identifier::get_multid_index(f -> id) + 1);
+
     if (entity.count(f -> com.target) && f -> owned){
       // include commands even if f is idle e.g. to waypoint
       command c = f -> com;
@@ -763,7 +767,9 @@ void game::reload_data(data_frame &g, bool use_animations){
   }
 
   // update commands for waypoints
-  for (auto w : get_all<waypoint>()){
+  for (auto w : get_all<waypoint>()) {
+    wp_idc = max(wp_idc, identifier::get_multid_index(w -> id) + 1);
+    
     for (auto c : w -> pending_commands){
       if (entity.count(c.target)){
 	add_command(c, w -> get_position(), get_entity(c.target) -> get_position(), false, false);
@@ -1367,7 +1373,7 @@ int game::choice_event(sf::Event e){
     deselect_all();
     
     if (!buf.empty()) {
-      fleet fb(self_id);
+      fleet fb(self_id, fleet_idc++);
       fleet_selector::ptr f = fleet_selector::create(fb, sf::Color(players[self_id].color), true);
       f -> ships = set<combid>(buf.begin(), buf.end());
       float vis = 0;

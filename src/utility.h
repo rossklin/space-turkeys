@@ -6,6 +6,7 @@
 #include <set>
 #include <cassert>
 #include <cmath>
+#include <functional>
 
 #include <rapidjson/document.h>
 
