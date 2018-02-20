@@ -42,22 +42,6 @@ void game_data::rehash_grid() {
   }
 }
 
-ship::ptr game_data::get_ship(combid i){
-  return utility::guaranteed_cast<ship>(get_entity(i));
-}
-
-fleet::ptr game_data::get_fleet(combid i){
-  return utility::guaranteed_cast<fleet>(get_entity(i));
-}
-
-solar::ptr game_data::get_solar(combid i){
-  return utility::guaranteed_cast<solar>(get_entity(i));
-}
-
-waypoint::ptr game_data::get_waypoint(combid i){
-  return utility::guaranteed_cast<waypoint>(get_entity(i));
-}
-
 bool game_data::target_position(combid t, point &p){
   if (entity.count(t)) {
     p = get_entity(t) -> position;
@@ -729,6 +713,9 @@ void game_data::rebuild_evm() {
 	  // only see other players' entities if they are physical and active
 	  if (t -> isa(physical_object::class_id) && t -> is_active() && e -> can_see(t)) {
 	    evm[e -> owner].insert(t -> id);
+
+	    // the player will remember seing this solar
+	    if (t -> isa(solar::class_id)) get_solar(t -> id) -> known_by.insert(e -> owner);
 	  }
 	}
       }
@@ -831,6 +818,8 @@ void game_data::build(){
     s -> facility_access("shipyard") -> level = 1;
     s -> facility_access("research facility") -> level = 1;
     s -> facility_access("missile turret") -> level = 1;
+
+    for (auto px : players) s -> known_by.insert(px.first);
 
     // debug: start with some ships
     hm_t<string, int> starter_fleet;
@@ -1162,6 +1151,22 @@ game_object::ptr entity_package::get_entity(combid i){
   }
 }
 
+ship::ptr entity_package::get_ship(combid i){
+  return utility::guaranteed_cast<ship>(get_entity(i));
+}
+
+fleet::ptr entity_package::get_fleet(combid i){
+  return utility::guaranteed_cast<fleet>(get_entity(i));
+}
+
+solar::ptr entity_package::get_solar(combid i){
+  return utility::guaranteed_cast<solar>(get_entity(i));
+}
+
+waypoint::ptr entity_package::get_waypoint(combid i){
+  return utility::guaranteed_cast<waypoint>(get_entity(i));
+}
+
 list<game_object::ptr> entity_package::all_owned_by(idtype id){
   list<game_object::ptr> res;
 
@@ -1176,7 +1181,10 @@ list<game_object::ptr> entity_package::all_owned_by(idtype id){
 void entity_package::limit_to(idtype id){
   list<combid> remove_buf;
   for (auto i : entity) {
-    if (!(i.second -> owner == id || evm[id].count(i.first))) remove_buf.push_back(i.first);
+    bool known = i.second -> isa(solar::class_id) && get_solar(i.first) -> known_by.count(id);
+    bool owned = i.second -> owner == id;
+    bool seen = evm[id].count(i.first);
+    if (!(known || owned || seen)) remove_buf.push_back(i.first);
   }
   for (auto i : remove_buf) entity.erase(i);
 }

@@ -81,6 +81,7 @@ namespace st3{
     sfloat happiness;
     sbool out_of_resources;
     sbool was_discovered;
+    std::set<idtype> known_by;
 
     cost::res_t available_resource; 
     cost::res_t resource_storage;

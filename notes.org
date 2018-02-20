@@ -28,6 +28,8 @@
    voyager - 5 accuracy, + 5 shield
    
 ** play testing
+*** corsairs got weapons: -2934193417934% on client side
+*** ships sometimes pass through terrain without being pushed out
 *** solars still get stuck in terrain
 *** got large number of "line_intersect: same point" at one point
     Possibly caused when ship enters impassable terrain?

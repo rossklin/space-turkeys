@@ -217,6 +217,8 @@ void server::game_handler(com &c, game_data &g){
   
   g.rehash_grid();
   g.rebuild_evm();
+
+  // all players know about other players' home solars
   if (!c.check_protocol(protocol::load_init, pack_g(false))) return;
 
   while (true) {

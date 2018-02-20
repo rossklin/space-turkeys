@@ -42,7 +42,14 @@ namespace st3{
     virtual ~entity_package() = default;
     int next_id(class_t x);
     void clear_entities();
+
+    // access
+    ship::ptr get_ship(combid i);
+    fleet::ptr get_fleet(combid i);
+    solar::ptr get_solar(combid i);
+    waypoint::ptr get_waypoint(combid i);
     game_object::ptr get_entity(combid i);
+
     void limit_to(idtype pid);
     void copy_from(const game_data &g);
     std::list<game_object::ptr> all_owned_by(idtype pid);
@@ -80,12 +87,6 @@ namespace st3{
     void log_bombard(combid a, combid b);
     void log_message(combid a, std::string v_full, std::string v_short);
     float get_dt();
-
-    // access
-    ship::ptr get_ship(combid i);
-    fleet::ptr get_fleet(combid i);
-    solar::ptr get_solar(combid i);
-    waypoint::ptr get_waypoint(combid i);
 
     template<typename T>
     std::list<typename T::ptr> all(){

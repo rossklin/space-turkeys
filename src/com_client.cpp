@@ -98,6 +98,7 @@ void client::deserialize(data_frame &f, sf::Packet &p, sint id){
   f.settings = ep.settings;
   f.players = ep.players;
   f.remove_entities = ep.remove_entities;
+  f.terrain = ep.terrain;
 
   for (auto buf : ep.entity) {
     game_object::ptr x = buf.second;
