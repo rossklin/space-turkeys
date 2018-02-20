@@ -19,7 +19,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, cost::allocation &g){
 // entity_package
 sf::Packet& st3::operator <<(sf::Packet& packet, const entity_package &g){
   sint n = g.entity.size();
-  packet << g.players << g.settings << g.remove_entities << g.terrain << g.discovered_universe << n;
+  packet << g.idc << g.players << g.settings << g.remove_entities << g.terrain << g.discovered_universe << n;
   // polymorphic serialization
   for (auto x : g.entity) x.second -> serialize(packet);
   return packet;
@@ -27,7 +27,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const entity_package &g){
 
 sf::Packet& st3::operator >>(sf::Packet& packet, entity_package &g){
   sint n;
-  packet >> g.players >> g.settings >> g.remove_entities >> g.terrain >> g.discovered_universe >> n;
+  packet >> g.idc >> g.players >> g.settings >> g.remove_entities >> g.terrain >> g.discovered_universe >> n;
   // polymorphic deserialization
   g.entity.clear();
   for (int i = 0; i < n; i++) {

@@ -206,10 +206,12 @@ void server::game_handler(com &c, game_data &g){
 
       c.clients = new_clients;
 
+      g.idc = ep.idc;
       g.settings = ep.settings;
       g.terrain = ep.terrain;
       g.discovered_universe = ep.discovered_universe;
       g.entity = ep.entity;
+      g.players = ep.players;
     }
   }
   
