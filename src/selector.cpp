@@ -348,8 +348,9 @@ namespace st3{
       };
       
       string output = ship_class + "\n";
+      int load_percent = stats[sskey::key::load_time] > 0 ? 100 * load / stats[sskey::key::load_time] : 100;
       output += build_percent("Hull", get_percent(sskey::key::hp));
-      output += build_percent("Weapons", 100 * load / stats[sskey::key::load_time]);
+      output += build_percent("Weapons", load_percent);
       
       if (base_stats.stats[sskey::key::shield] > 0) {
 	output += build_percent("Shields", get_percent(sskey::key::shield));

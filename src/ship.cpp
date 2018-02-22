@@ -460,10 +460,56 @@ void ship::move(game_data *g){
   stats[sskey::key::speed] += fmin(acceleration, fabs(speed_miss)) * speed_sign;
   stats[sskey::key::speed] = fmin(fmax(stats[sskey::key::speed], 0), base_stats.stats[sskey::key::speed]);
   angle += fmin(dt * angle_increment, fabs(angle_miss)) * angle_sign;
-  position += dt * stats[sskey::key::speed] * utility::normv(angle);
+  point new_position = position + dt * stats[sskey::key::speed] * utility::normv(angle);
 
   // push out of impassable terrain
-  position += float(dt * 0.3) * g -> terrain_forcing(position);
+  list<idtype> tids = g -> terrain_at(new_position, radius);
+  if (tids.size()) {
+    int tid = tids.front();
+    terrain_object x = g -> terrain[tid];
+    float d_best = INFINITY;
+    int bid = -1;
+    point inter, a, b;
+    for (int i = 0; i < x.border.size() - 1; i++) {
+      a = x.get_vertice(i);
+      b = x.get_vertice(i + 1);
+      point r;
+      if (utility::line_intersect(position, new_position, a, b, &r)) {
+	float d = utility::l2d2(position - r);
+	if (d < d_best) {
+	  d_best = d;
+	  bid = i;
+	  inter = r;
+	}
+      }
+    }
+
+    if (bid == -1) {
+      // failed; ship already in terrain
+      server::log("ship::move: terrain correction: ship already inside terrain!", "warning");
+      bid = x.triangle(new_position, radius);
+      a = x.get_vertice(bid);
+      b = x.get_vertice(bid + 1);
+      inter = (float)0.5 * (a + b);
+    }
+
+    point d = b - a;
+    point n = d.y == 0 ? point(0, 1) : point(1, d.x / d.y);
+    if (utility::l2d2(inter + n - x.center) < utility::l2d2(inter - n - x.center)) {
+      // chose the normal pointing outwards
+      n = -n;
+    }
+
+    new_position = inter + utility::normalize_and_scale(n, radius + 5);
+    float test = utility::point_angle(d);
+    if (utility::angle_difference(angle, test) > M_PI / 2) {
+      angle = test + M_PI;
+    } else {
+      angle = test;
+    }
+  }
+
+  position = new_position;
   
   g -> entity_grid -> move(id, position);
 }

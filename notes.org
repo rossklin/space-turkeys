@@ -1,7 +1,4 @@
 * current work
-** save game
-*** client: logical_error: add_entity: already exists: fleet:S#1
-    Add game_object::idc to serialization.
 ** balancing
    late hm:
    [improved] !corsair > fighter
@@ -28,8 +25,9 @@
    voyager - 5 accuracy, + 5 shield
    
 ** play testing
-*** corsairs got weapons: -2934193417934% on client side
-*** ships sometimes pass through terrain without being pushed out
+*** [J] corsairs got weapons: -2934193417934% on client side
+*** [J] ships sometimes pass through terrain without being pushed out
+*** ship terrain interaction: dumps ship at triangle midpoint, probably goes to fallback case
 *** solars still get stuck in terrain
 *** got large number of "line_intersect: same point" at one point
     Possibly caused when ship enters impassable terrain?
@@ -174,6 +172,9 @@
 ** when updating a struct/class, also update serialization
 * git pending
 * fixed
+** [J] save game
+*** client: logical_error: add_entity: already exists: fleet:S#1
+    Add game_object::idc to serialization.
 ** [J] fleeing units freeze in panic
 ** [J] terrain still creates intersections and unreachable areas which bug out the path search algorithm
 ** [J] confusing that you can't give fleets with orders orders

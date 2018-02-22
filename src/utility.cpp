@@ -191,7 +191,7 @@ float utility::triangle_relative_distance(point c, point b1, point b2, point x, 
   return -1;
 }
 
-bool utility::line_intersect(point a, point b, point p1, point p2) {
+bool utility::line_intersect(point a, point b, point p1, point p2, point *r) {
 
   // ax + t dx = px + s qx
   // ay + t dy = py + s qy
@@ -222,7 +222,12 @@ bool utility::line_intersect(point a, point b, point p1, point p2) {
   float t = (q.x * (a.y - p1.y) - q.y * (a.x - p1.x)) / (q.y * d.x - q.x * d.y);
   float s = q.x == 0 ? (a.y + t * d.y) / q.y - p1.y / q.y : (a.x + t * d.x) / q.x - p1.x / q.x;
 
-  return s >= 0 && s <= 1 && t >= 0 && t <= 1;
+  if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+    if (r) *r = a + t * (b - a);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 // shortest distance between p and line from a to b

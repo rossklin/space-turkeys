@@ -140,7 +140,7 @@ namespace st3{
     */
     float angle_distance(float a, float b);
     float triangle_relative_distance(point c, point b1, point b2, point x, float rad);
-    bool line_intersect(point a, point b, point p1, point p2);
+    bool line_intersect(point a, point b, point p1, point p2, point *r = NULL);
 
     /*!
       computes the shortest distance between a point and a line

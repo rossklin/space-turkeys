@@ -85,7 +85,7 @@ list<idtype> game_data::terrain_at(point p, float r) {
   list<idtype> res;
   for (auto &x : terrain) {
     int j = x.second.triangle(p, r);
-    if (j > -1) res.push_back(j);
+    if (j > -1) res.push_back(x.first);
   }
   return res;
 }
