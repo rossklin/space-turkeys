@@ -90,7 +90,7 @@ list<idtype> game_data::terrain_at(point p, float r) {
   return res;
 }
 
-list<point> game_data::get_path(point a, point b, int d) {
+list<point> game_data::get_path(point a, point b, float r, int d) {
   if (d > 10) {
     server::log("get_path: max recursion depth reached!", "warning");
     return {};
@@ -101,14 +101,14 @@ list<point> game_data::get_path(point a, point b, int d) {
     return {};
   }
   
-  auto first_intersect = [this] (point a, point b) {
+  auto first_intersect = [this,r] (point a, point b) {
 
     // find first intersected terrain object
     list<int> tids;
     for (auto &x : terrain) {
       for (int i = 0; i < x.second.border.size(); i++) {
-	point p1 = x.second.get_vertice(i);
-	point p2 = x.second.get_vertice(i+1);
+	point p1 = x.second.get_vertice(i, r);
+	point p2 = x.second.get_vertice(i + 1, r);
 	if (utility::line_intersect(a, b, p1, p2)) {
 	  tids.push_back(x.first);
 	  break;
@@ -122,7 +122,7 @@ list<point> game_data::get_path(point a, point b, int d) {
 
     for (auto j : tids) {
       for (int i = 0; i < terrain[j].border.size(); i++) {
-	float d = utility::l2norm(terrain[j].get_vertice(i) - a);
+	float d = utility::l2norm(terrain[j].get_vertice(i, r) - a);
 	if (d < closest) {
 	  closest = d;
 	  tid = j;
@@ -134,7 +134,7 @@ list<point> game_data::get_path(point a, point b, int d) {
   };
 
   // find a path around the polygon
-  auto path_around = [] (terrain_object obj, point a, point b, int dir) {
+  auto path_around = [r] (terrain_object obj, point a, point b, int dir) {
     list<point> path;
     path.push_back(a);
 
@@ -142,27 +142,27 @@ list<point> game_data::get_path(point a, point b, int d) {
     int n = obj.border.size();
     float best = INFINITY;
     for (int i = 0; i < n; i++) {
-      float d = utility::l2norm(obj.get_vertice(i) - a);
+      float d = utility::l2norm(obj.get_vertice(i, r) - a);
       if (d < best) {
 	best = d;
 	pid = i;
       }
     }
 
-    auto visible_from = [obj, b, n] (int pid) {
+    auto visible_from = [obj, b, n, r] (int pid) {
       for (int i = 1; i < n - 1; i++) {
-	point p1 = obj.get_vertice(pid + i);
-	point p2 = obj.get_vertice(pid + i + 1);
-	if (utility::line_intersect(obj.get_vertice(pid), b, p1, p2)) return false;
+	point p1 = obj.get_vertice(pid + i, r);
+	point p2 = obj.get_vertice(pid + i + 1, r);
+	if (utility::line_intersect(obj.get_vertice(pid, r), b, p1, p2)) return false;
       }
       return true;
     };
 
-    point p = obj.get_vertice(pid);
+    point p = obj.get_vertice(pid, r);
     path.push_back(p + utility::normalize_and_scale(p - obj.center, 10));
     do {
       pid = utility::int_modulus(pid + dir, n);
-      p = obj.get_vertice(pid);
+      p = obj.get_vertice(pid, r);
       path.push_back(p + utility::normalize_and_scale(p - obj.center, 10));
     } while (!visible_from(pid));
 
@@ -178,8 +178,8 @@ list<point> game_data::get_path(point a, point b, int d) {
   // join path around with remaining path
   list<point> path_left = path_around(terrain[tid], a, b, -1);
   list<point> path_right = path_around(terrain[tid], a, b, 1);
-  list<point> sub_left = get_path(path_left.back(), b, d + 1);
-  list<point> sub_right = get_path(path_right.back(), b, d + 1);
+  list<point> sub_left = get_path(path_left.back(), b, r, d + 1);
+  list<point> sub_right = get_path(path_right.back(), b, r, d + 1);
   if (sub_left.size()) {
     path_left.splice(path_left.end(), sub_left);
   } else {
@@ -469,26 +469,6 @@ void game_data::distribute_ships(list<combid> sh, point p){
   }
 }
 
-point game_data::terrain_forcing(point p) {
-  list<idtype> tids = terrain_at(p, 10);
-  if (tids.size()) {
-    terrain_object x = terrain[tids.front()];
-    int j = x.triangle(p, 10);
-    if (j > -1) {
-      float test = utility::triangle_relative_distance(x.center, x.get_vertice(j), x.get_vertice(j+1), p, 10);
-      if (test > -1) {
-	if (test < 1) {
-	  return (1 - test) * (p - x.center);
-	}
-      } else {
-	throw logical_error("Forcing triangle without relative distance value!");
-      }
-    }
-  }
-
-  return point(0,0);
-}
-
 void game_data::extend_universe(int i, int j, bool starting_area) {
   pair<int, int> idx = make_pair(i, j);
   if (discovered_universe.count(idx)) return;  
@@ -567,7 +547,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   auto avoid_point = [this, min_length] (terrain_object &obj, point p, float rad) -> bool {
     auto j = obj.triangle(p, rad);
     if (j > -1) {
-      float test = utility::triangle_relative_distance(obj.center, obj.get_vertice(j), obj.get_vertice(j+1), p, rad);
+      float test = utility::triangle_relative_distance(obj.center, obj.get_vertice(j, rad), obj.get_vertice(j+1, rad), p);
       if (test > -1 && test < 1) {
 	point d1 = obj.get_vertice(j) - obj.center;
 	point d2 = obj.get_vertice(j + 1) - obj.center;
@@ -614,9 +594,10 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 
     // go through terrain so we don't overlap
     bool failed = false;
+    float rad = 10;
     for (auto &x : terrain) {
       pair<int,int> test;
-      while ((test = obj.intersects_with(x.second)).first > -1) {
+      while ((test = obj.intersects_with(x.second, rad)).first > -1) {
 	int i = test.first;
 	point d1 = obj.get_vertice(i) - obj.center;
 	point d2 = obj.get_vertice(i+1) - obj.center;
@@ -632,7 +613,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
       if (!failed) {
 	for (auto y : x.second.border) if (!avoid_point(obj, y, min_dist)) continue;
 	for (auto y : obj.border) if (!avoid_point(x.second, y, min_dist)) continue;
-	auto test = obj.intersects_with(x.second);
+	auto test = obj.intersects_with(x.second, rad);
 	if (test.first > -1) {
 	  server::log("add terrain: avoid point caused intersection!", "warning");
 	  failed = true;

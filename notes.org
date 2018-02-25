@@ -27,7 +27,12 @@
 ** play testing
 *** [J] corsairs got weapons: -2934193417934% on client side
 *** [J] ships sometimes pass through terrain without being pushed out
-*** ship terrain interaction: dumps ship at triangle midpoint, probably goes to fallback case
+*** [J] ship terrain interaction: dumps ship at triangle midpoint, probably goes to fallback case
+    Calculation discrepancy between triangle_relative_distance and
+    line_intersect, introduced new utility::in_triangle.
+*** [J] get_path produces paths far from vertice points which risk intersecting adjacent terrain
+*** still get occasional fallback case "ship already in terrain"
+*** looks like ships get pushed to wrong angle when they hit terrain
 *** solars still get stuck in terrain
 *** got large number of "line_intersect: same point" at one point
     Possibly caused when ship enters impassable terrain?
@@ -68,6 +73,10 @@
 ** add interaction "conquer" so only some ship classes can conquer a solar
 ** generalize game_settings::starting_fleet to some "starting bonus" 
 ** make detection stat determine which object stats are seen by client
+   When an entity sees another entity, let evm update the highest
+   "detection level" the owner has on that entity. In
+   entity_package::limit_to, pass entities through a filter function
+   parameterised by detection_level.
 ** add trigger system for e.g. upgrades, techs and solar facilities
 *** hm_t<string, function> on_interaction (and prevent_interaction)
 *** on_takeoff (for e.g. freighter ship)

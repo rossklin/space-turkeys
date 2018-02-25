@@ -163,14 +163,15 @@ bool st3::operator < (const id_pair &x, const id_pair &y) {
   return hash<string>{}(x.a)^hash<string>{}(x.b) < hash<string>{}(y.a)^hash<string>{}(y.b);
 }
 
-pair<int, int> terrain_object::intersects_with(terrain_object obj) {
+pair<int, int> terrain_object::intersects_with(terrain_object obj, float r) {
+  r *= 0.5;
   for (int i = 0; i < border.size(); i++) {
-    point p1 = get_vertice(i);
-    point p2 = get_vertice(i+1);
+    point p1 = get_vertice(i, r);
+    point p2 = get_vertice(i+1, r);
 	
     for (int j = 0; j < obj.border.size(); j++) {
-      point q1 = obj.get_vertice(j);
-      point q2 = obj.get_vertice(j+1);
+      point q1 = obj.get_vertice(j, r);
+      point q2 = obj.get_vertice(j+1, r);
 
       if (utility::line_intersect(p1, p2, q1, q2)) return make_pair(i, j);
     }
@@ -179,8 +180,9 @@ pair<int, int> terrain_object::intersects_with(terrain_object obj) {
   return make_pair(-1, -1);
 }
 
-point terrain_object::get_vertice(int idx) const {
-  return border[utility::int_modulus(idx, border.size())];
+point terrain_object::get_vertice(int idx, float rbuf) const {
+  point p = border[utility::int_modulus(idx, border.size())];
+  return p + utility::normalize_and_scale(p - center, rbuf);
 }
 
 void terrain_object::set_vertice(int idx, point p) {
@@ -190,8 +192,7 @@ void terrain_object::set_vertice(int idx, point p) {
 int terrain_object::triangle(point p, float rad) {
   float a_sol = utility::point_angle(p - center);
   for (int j = 0; j < border.size(); j++) {
-    float test = utility::triangle_relative_distance(center, get_vertice(j), get_vertice(j+1), p, rad);
-    if (test > -1 && test < 1) return j;
+    if (utility::in_triangle(center, get_vertice(j, rad), get_vertice(j+1, rad), p)) return j;
   }
 
   return -1;

@@ -176,15 +176,24 @@ float utility::angle_distance(float a, float b){
   return fabs(angle_difference(a,b));
 }
 
+bool utility::in_triangle(point a, point b, point c, point x) {
+  point p_inf(min(a.x, min(b.x, c.x)) - 1, min(a.y, min(b.y, c.y)) - 1);
+  int count = 0;
+  count += line_intersect(a, b, x, p_inf);
+  count += line_intersect(b, c, x, p_inf);
+  count += line_intersect(c, a, x, p_inf);
+  return count == 1;
+}
+
 // note: points b1 and b2 in ascending order of angle vs c
-float utility::triangle_relative_distance(point c, point b1, point b2, point x, float rad) {
+float utility::triangle_relative_distance(point c, point b1, point b2, point x) {
   float a1 = utility::point_angle(b1 - c);
   float a2 = utility::point_angle(b2 - c);
   float a_sol = utility::point_angle(x - c);
   if (utility::angle_difference(a_sol, a1) > 0 && utility::angle_difference(a2, a_sol) > 0) {
     float r = utility::angle_difference(a_sol, a1) / utility::angle_difference(a2, a1);
     float lim = r * utility::l2norm(b2 - c) + (1 - r) * utility::l2norm(b1 - c);
-    float dist = fmax(utility::l2norm(x - c) - rad, 0);
+    float dist = fmax(utility::l2norm(x - c), 0);
     return dist / lim;
   }
 

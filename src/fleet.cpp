@@ -291,11 +291,13 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
   // position, radius, speed and vision
   point p(0,0);
 
+  float rbuf = 0;
   for (auto k : ships) {
     ship::ptr s = g -> get_ship(k);
     p = p + s -> position;
+    rbuf = max(rbuf, s -> radius);
   }
-  
+
   radius = g -> settings.fleet_default_radius;
   position = utility::scale_point(p, 1 / (float)ships.size());
 
@@ -307,7 +309,7 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
   if (force_refresh || update_heading || should_update) {
     if (g -> target_position(com.target, stats.target_position)) {
       if (force_refresh || path.empty() || should_update) {
-	path = g -> get_path(position, stats.target_position);
+	path = g -> get_path(position, stats.target_position, 5);
 	update_heading = true;
       }
 

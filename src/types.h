@@ -82,8 +82,8 @@ namespace st3{
     point center;
     std::vector<point> border;
 
-    std::pair<int, int> intersects_with(terrain_object b);
-    point get_vertice(int idx) const;
+    std::pair<int, int> intersects_with(terrain_object b, float r = 0);
+    point get_vertice(int idx, float rbuf = 0) const;
     void set_vertice(int idx, point p);
     int triangle(point p, float r);
   };

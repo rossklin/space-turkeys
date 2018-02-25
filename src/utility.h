@@ -139,7 +139,8 @@ namespace st3{
       @return shortest (forward or backward) distance between a and b
     */
     float angle_distance(float a, float b);
-    float triangle_relative_distance(point c, point b1, point b2, point x, float rad);
+    bool in_triangle(point a, point b, point c, point x);
+    float triangle_relative_distance(point c, point b1, point b2, point x);
     bool line_intersect(point a, point b, point p1, point p2, point *r = NULL);
 
     /*!
