@@ -149,7 +149,7 @@ namespace st3{
       @param a,b end points of the line
       @return shortest distance between p and the line from a to b
     */
-    float dpoint2line(point p, point a, point b);
+    float dpoint2line(point p, point a, point b, point *r = NULL);
 
     unsigned int random_int(int limit);
 

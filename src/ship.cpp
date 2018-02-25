@@ -463,7 +463,7 @@ void ship::move(game_data *g){
   point new_position = position + dt * stats[sskey::key::speed] * utility::normv(angle);
 
   // push out of impassable terrain
-  float t_rad = 5;
+  float t_rad = radius;
   list<idtype> tids = g -> terrain_at(new_position, t_rad);
   if (tids.size()) {
     int tid = tids.front();
@@ -485,13 +485,19 @@ void ship::move(game_data *g){
       }
     }
 
+    float dist = -1;
     if (bid == -1) {
-      // failed; ship already in terrain
-      server::log("ship::move: terrain correction: ship already inside terrain!", "warning");
+      if (x.triangle(position, t_rad)) {
+      	server::log("ship::move: terrain correction: ship already inside terrain!", "warning");
+      } else {
+      	server::log("ship::move: terrain correction: no intersection on travel line!", "warning");
+      }
+      
+      // ship already in terrain
       bid = x.triangle(new_position, t_rad);
       a = x.get_vertice(bid, t_rad);
       b = x.get_vertice(bid + 1, t_rad);
-      inter = (float)0.5 * (a + b);
+      dist = utility::dpoint2line(new_position, a, b, &inter);
     }
 
     point d = b - a;
@@ -501,13 +507,19 @@ void ship::move(game_data *g){
       n = -n;
     }
 
-    new_position = inter + utility::normalize_and_scale(n, 1);
-    float test = utility::point_angle(d);
-    if (utility::angle_difference(angle, test) > M_PI / 2) {
-      angle = test + M_PI;
-    } else {
-      angle = test;
+    new_position = inter + utility::normalize_and_scale(n, 0.1) + utility::sproject(new_position - inter, d) * d;
+    // float test = utility::point_angle(d);
+    // if (utility::angle_difference(angle, test) > M_PI / 2) {
+    //   angle = test + M_PI;
+    // } else {
+    //   angle = test;
+    // }
+
+    
+    if (utility::l2d2(new_position - position) > 10) {
+      server::log("ship::move: jump!", "warning");
     }
+
   }
 
   position = new_position;

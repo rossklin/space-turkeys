@@ -240,14 +240,17 @@ bool utility::line_intersect(point a, point b, point p1, point p2, point *r) {
 }
 
 // shortest distance between p and line from a to b
-float utility::dpoint2line(point p, point a, point b){
+float utility::dpoint2line(point p, point a, point b, point *r){
   if (angle_distance(point_angle(p - a), point_angle(b - a)) > M_PI/2){
+    if (r) *r = a;
     return l2norm(p - a);
   }else if (angle_distance(point_angle(p - b), point_angle(a - b)) > M_PI/2){
+    if (r) *r = b;
     return l2norm(p - b);
   }else{
-    float s = sproject(p-a,b-a) / sproject(b-a, b-a);
-    return l2norm(p - scale_point(b - a, s) - a);
+    point inter = a + sproject(p-a, b-a) * (b-a);
+    if (r) *r = inter;
+    return l2norm(p - inter);
   }
 }
 
