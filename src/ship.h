@@ -39,6 +39,9 @@ namespace st3{
     float target_speed;
     bool activate;
     bool force_refresh;
+    bool require_private_path;
+    path_t private_path;
+    
     std::list<combid> neighbours;
     std::list<combid> local_enemies;
     std::list<combid> local_friends;

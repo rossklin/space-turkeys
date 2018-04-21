@@ -172,8 +172,20 @@ void ship::update_data(game_data *g) {
   force_refresh = false;
   
   if (!has_fleet()) return;
+  
   fleet::ptr f = g -> get_fleet(fleet_id);
   fleet::suggestion suggest = f -> suggest_buf;
+
+  bool disable_private_path = utility::l2norm(position - f -> position) < 20;
+
+  if (require_private_path) {
+    require_private_path = false;
+    if (f -> path.size() && !disable_private_path) {
+      private_path = g -> get_path(position, f -> path.back(), radius);
+    }
+  }
+
+  if (disable_private_path) private_path.clear();
 
   auto local_output = [this] (string v) {
     server::output(id + ": update_data: " + v);
@@ -201,6 +213,20 @@ void ship::update_data(game_data *g) {
   float fleet_angle = utility::point_angle(fleet_delta);
   target_angle = fleet_target_angle;
   target_speed = f -> stats.speed_limit;
+
+  if (private_path.size()) {
+    point p = private_path.front();
+    if (utility::l2norm(p - position) < 10) {
+      private_path.pop_front();
+    }
+    
+    if (private_path.size()) {
+      p = private_path.front();
+
+      // cause ship to be "behind fleet" and speed up
+      fleet_target_angle = fleet_angle = target_angle = utility::point_angle(p - position);
+    }
+  }
 
   // analyze neighbourhood
   float nrad = interaction_radius();
@@ -525,10 +551,8 @@ void ship::move(game_data *g){
 
     float an = utility::point_angle(-n);
     float test = utility::angle_difference(selected_angle, an);
-    if (test > 0 && test < M_PI / 2) {
-      angle = an + M_PI / 2;
-    } else if (test <= 0 && test > -M_PI / 2) {
-      angle = an - M_PI / 2;
+    if (fabs(test) < M_PI / 4) {
+      require_private_path = true;
     }
     
     if (utility::l2d2(new_position - position) > 40) {

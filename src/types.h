@@ -4,6 +4,7 @@
 #define _STK_TYPES
 #include <vector>
 #include <string>
+#include <list>
 #include <unordered_map>
 #include <stdexcept>
 #include <SFML/System.hpp>
@@ -69,6 +70,7 @@ namespace st3{
 
   /*! type used to represent a point in coordinate space */
   typedef sf::Vector2f point;
+  typedef std::list<point> path_t;
 
   struct id_pair {
     combid a;

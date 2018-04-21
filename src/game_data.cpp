@@ -90,7 +90,51 @@ list<idtype> game_data::terrain_at(point p, float r) {
   return res;
 }
 
-list<point> game_data::get_path(point a, point b, float r, int d) {
+path_t game_data::get_path(point a, point b, float r) {
+
+  int tid = first_intersect(a, b, r);
+
+  if (tid == -1) {
+    return path_t(1, b);
+  } else {
+    path_t x = get_path_around(tid, a, b, r);
+    if (x.size()) x.pop_front();
+    return x;
+  }
+}
+
+int game_data::first_intersect(point a, point b, float r) {
+  // find first intersected terrain object
+  list<int> tids;
+  for (auto &x : terrain) {
+    for (int i = 0; i < x.second.border.size(); i++) {
+      point p1 = x.second.get_vertice(i, r);
+      point p2 = x.second.get_vertice(i + 1, r);
+      if (utility::line_intersect(a, b, p1, p2)) {
+	tids.push_back(x.first);
+	break;
+      }
+    }
+  }
+
+  // find starting point
+  int tid = -1;
+  float closest = INFINITY;
+
+  for (auto j : tids) {
+    for (int i = 0; i < terrain[j].border.size(); i++) {
+      float d = utility::l2norm(terrain[j].get_vertice(i, r) - a);
+      if (d < closest) {
+	closest = d;
+	tid = j;
+      }
+    }
+  }
+
+  return tid;
+}
+
+path_t game_data::get_path_around(int tid, point a, point b, float r, int d) {
   if (d > 10) {
     server::log("get_path: max recursion depth reached!", "warning");
     return {};
@@ -101,43 +145,55 @@ list<point> game_data::get_path(point a, point b, float r, int d) {
     return {};
   }
   
-  auto first_intersect = [this,r] (point a, point b) {
+  // merge border path to follow convex hull of object
+  auto convex_path = [this, r] (path_t path, terrain_object obj) {
+    bool did_fix = true;
+    int n = path.size();
 
-    // find first intersected terrain object
-    list<int> tids;
-    for (auto &x : terrain) {
-      for (int i = 0; i < x.second.border.size(); i++) {
-	point p1 = x.second.get_vertice(i, r);
-	point p2 = x.second.get_vertice(i + 1, r);
-	if (utility::line_intersect(a, b, p1, p2)) {
-	  tids.push_back(x.first);
-	  break;
-	}
+    if (n < 3) return path;
+
+    auto does_intersect = [obj, r] (point a, point b) -> bool {
+      // fix this - can't check the current edge!
+      for (int i = 0; i < obj.border.size(); i++) {
+	point p1 = obj.get_vertice(i, r / 2);
+	point p2 = obj.get_vertice(i + 1, r / 2);
+	if (utility::line_intersect(a, b, p1, p2)) return true;
       }
+      return false;
+    };
+
+    while (did_fix) {
+      did_fix = false;
+      auto start = path.begin();
+      auto check = start;
+      check++;
+      if (check == path.end()) break;
+      check++;
+      
+      while (does_intersect(*start, *check) && check != path.end()) {
+	start++;
+	check++;
+      }
+      
+      while (!does_intersect(*start, *check) && check != path.end()) {
+	did_fix = true;
+	check++;
+      }
+
+      check--;
+      start++;
+      path.erase(start, check);
     }
 
-    // find starting point
-    int tid = -1;
-    float closest = INFINITY;
-
-    for (auto j : tids) {
-      for (int i = 0; i < terrain[j].border.size(); i++) {
-	float d = utility::l2norm(terrain[j].get_vertice(i, r) - a);
-	if (d < closest) {
-	  closest = d;
-	  tid = j;
-	}
-      }
-    }
-
-    return tid;
+    return path;
   };
 
-  // find a path around the polygon
-  auto path_around = [r] (terrain_object obj, point a, point b, int dir) {
-    list<point> path;
+  // find a path around the polygon following the edges
+  auto border_path = [r] (terrain_object obj, point a, point b, int dir) {
+    path_t path;
     path.push_back(a);
 
+    // find closest vertice
     int pid = -1;
     int n = obj.border.size();
     float best = INFINITY;
@@ -149,6 +205,7 @@ list<point> game_data::get_path(point a, point b, float r, int d) {
       }
     }
 
+    // is desination visible from vertice pid?
     auto visible_from = [obj, b, n, r] (int pid) {
       for (int i = 1; i < n - 1; i++) {
 	point p1 = obj.get_vertice(pid + i, r);
@@ -159,75 +216,53 @@ list<point> game_data::get_path(point a, point b, float r, int d) {
     };
 
     point p = obj.get_vertice(pid, r);
-    path.push_back(p + utility::normalize_and_scale(p - obj.center, 10));
+    path.push_back(p);
     do {
-      pid = utility::int_modulus(pid + dir, n);
+      pid += dir;
       p = obj.get_vertice(pid, r);
-      path.push_back(p + utility::normalize_and_scale(p - obj.center, 10));
+      path.push_back(p);
     } while (!visible_from(pid));
 
+    path.push_back(b);
     return path;
   };
 
-  int tid = first_intersect(a, b);
+  auto process_direction = [=] (int dir) -> path_t {
+    terrain_object obj = terrain[tid];
+    path_t convex = convex_path(border_path(obj, a, b, dir), obj);
+    if (convex.size() < 2) return convex;
 
-  if (tid == -1) {
-    return list<point>(1, b);
-  }
+    // check if convex path intersects other terrain
+    auto start = convex.begin();
+    auto check = start;
+    check++;
 
-  // join path around with remaining path
-  list<point> path_left = path_around(terrain[tid], a, b, -1);
-  list<point> path_right = path_around(terrain[tid], a, b, 1);
-  list<point> sub_left = get_path(path_left.back(), b, r, d + 1);
-  list<point> sub_right = get_path(path_right.back(), b, r, d + 1);
-  if (sub_left.size()) {
-    path_left.splice(path_left.end(), sub_left);
-  } else {
-    path_left.clear();
-  }
-
-  if (sub_right.size()) {
-    path_right.splice(path_right.end(), sub_right);
-  } else {
-    path_right.clear();
-  }
-
-  // optimize the path
-  auto fix_path = [this, first_intersect] (list<point> path) {
-    bool did_fix = true;
-    int n = path.size();
-
-    if (n < 3) return path;
-
-    while (did_fix) {
-      did_fix = false;
-      auto start = path.begin();
-      auto check = start;
-      check++;
-      if (check == path.end()) break;
-      check++;
-      
-      while (first_intersect(*start, *check) > -1 && check != path.end()) {
-	start++;
-	check++;
-      }
-      
-      while (first_intersect(*start, *check) == -1 && check != path.end()) {
-	did_fix = true;
-	check++;
-      }
-
-      check--;
+    int sub_id = -1;
+    auto pass_id = [tid] (int xid) {return xid == -1 || xid == tid;};
+    while (check != convex.end() && pass_id(sub_id = first_intersect(*start, *check, r))) {
       start++;
-      path.erase(start, check);
+      check++;
     }
 
-    // finally, remove starting point
-    path.pop_front();
-    return path;
-  };
+    if (check == convex.end()) {
+      // path does not intersect other terrain
+      return convex;
+    } else if (sub_id > -1) {
+      // part up to start is ok
+      path_t result;
+      result.splice(result.end(), convex, convex.begin(), start);
 
-  auto count_path = [] (list<point> path) {
+      path_t continuation = get_path_around(sub_id, *start, b, r, d + 1);
+      result.splice(result.end(), continuation);
+      
+      return result;
+    } else {
+      // should never go here
+      throw logical_error("Process direction aborted without sub_id!");
+    }
+  };
+  
+  auto count_path = [] (path_t path) {
     if (path.size() < 3) return path.size() ? utility::l2norm(path.back() - path.front()) : INFINITY;
     
     auto i = path.begin();
@@ -244,13 +279,13 @@ list<point> game_data::get_path(point a, point b, float r, int d) {
     return d;
   };
 
-  path_right = fix_path(path_right);
-  path_left = fix_path(path_left);
+  path_t path1 = process_direction(-1);
+  path_t path2 = process_direction(1);
 
-  if (count_path(path_right) < count_path(path_left)) {
-    return path_right;
+  if (count_path(path1) < count_path(path2)) {
+    return path1;
   } else {
-    return path_left;
+    return path2;
   }
 }
 
