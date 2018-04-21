@@ -460,7 +460,8 @@ void ship::move(game_data *g){
   stats[sskey::key::speed] += fmin(acceleration, fabs(speed_miss)) * speed_sign;
   stats[sskey::key::speed] = fmin(fmax(stats[sskey::key::speed], 0), base_stats.stats[sskey::key::speed]);
   angle += fmin(dt * angle_increment, fabs(angle_miss)) * angle_sign;
-  point new_position = position + dt * stats[sskey::key::speed] * utility::normv(angle);
+  float current_speed = dt * stats[sskey::key::speed];
+  point new_position = position + current_speed * utility::normv(angle);
 
   // push out of impassable terrain
   float t_rad = radius;
@@ -485,7 +486,6 @@ void ship::move(game_data *g){
       }
     }
 
-    float dist = -1;
     if (bid == -1) {
       if (x.triangle(position, t_rad)) {
       	server::log("ship::move: terrain correction: ship already inside terrain!", "warning");
@@ -493,11 +493,21 @@ void ship::move(game_data *g){
       	server::log("ship::move: terrain correction: no intersection on travel line!", "warning");
       }
       
-      // ship already in terrain
-      bid = x.triangle(new_position, t_rad);
-      a = x.get_vertice(bid, t_rad);
-      b = x.get_vertice(bid + 1, t_rad);
-      dist = utility::dpoint2line(new_position, a, b, &inter);
+      // ship already in terrain, chose closest border
+      d_best = INFINITY;
+      bid = -1;
+      inter, a, b;
+      for (int i = 0; i < x.border.size() - 1; i++) {
+	a = x.get_vertice(i, t_rad);
+	b = x.get_vertice(i + 1, t_rad);
+	point r;
+	float d = utility::dpoint2line(new_position, a, b, &r);
+	if (d < d_best) {
+	  d_best = d;
+	  bid = i;
+	  inter = r;
+	}
+      }
     }
 
     point d = b - a;
@@ -507,19 +517,25 @@ void ship::move(game_data *g){
       n = -n;
     }
 
-    new_position = inter + utility::normalize_and_scale(n, 0.1) + utility::sproject(new_position - inter, d) * d;
-    // float test = utility::point_angle(d);
-    // if (utility::angle_difference(angle, test) > M_PI / 2) {
-    //   angle = test + M_PI;
-    // } else {
-    //   angle = test;
-    // }
+    point corrected_position = inter + utility::normalize_and_scale(n, 0.1) + utility::sproject(new_position - position, d) * d;
 
+    if (utility::l2norm(corrected_position - position) > current_speed) {
+      corrected_position = position + utility::normalize_and_scale(corrected_position - position, current_speed);
+    }
+
+    float an = utility::point_angle(-n);
+    float test = utility::angle_difference(selected_angle, an);
+    if (test > 0 && test < M_PI / 2) {
+      angle = an + M_PI / 2;
+    } else if (test <= 0 && test > -M_PI / 2) {
+      angle = an - M_PI / 2;
+    }
     
-    if (utility::l2d2(new_position - position) > 10) {
+    if (utility::l2d2(new_position - position) > 40) {
       server::log("ship::move: jump!", "warning");
     }
 
+    new_position = corrected_position;
   }
 
   position = new_position;

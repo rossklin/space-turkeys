@@ -31,8 +31,9 @@
     Calculation discrepancy between triangle_relative_distance and
     line_intersect, introduced new utility::in_triangle.
 *** [J] get_path produces paths far from vertice points which risk intersecting adjacent terrain
+*** [J] looks like ships get pushed to wrong angle when they hit terrain
+*** get_path creates multiples of same point, probably in "path_around", causing "same point" in line intersect
 *** still get occasional fallback case "ship already in terrain"
-*** looks like ships get pushed to wrong angle when they hit terrain
 *** solars still get stuck in terrain
 *** got large number of "line_intersect: same point" at one point
     Possibly caused when ship enters impassable terrain?
