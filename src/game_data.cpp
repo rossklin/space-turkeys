@@ -103,16 +103,18 @@ path_t game_data::get_path(point a, point b, float r) {
   }
 }
 
-int game_data::first_intersect(point a, point b, float r) {
+int game_data::first_intersect(point a, point b, float r, int exclude) {
   // find first intersected terrain object
-  list<int> tids;
+  hm_t<idtype, list<point> > intersects;
+  point inter;
+  r *= 0.9;
   for (auto &x : terrain) {
+    if (x.first == exclude) continue;
     for (int i = 0; i < x.second.border.size(); i++) {
       point p1 = x.second.get_vertice(i, r);
       point p2 = x.second.get_vertice(i + 1, r);
-      if (utility::line_intersect(a, b, p1, p2)) {
-	tids.push_back(x.first);
-	break;
+      if (utility::line_intersect(a, b, p1, p2, &inter)) {
+	intersects[x.first].push_back(inter);
       }
     }
   }
@@ -121,12 +123,12 @@ int game_data::first_intersect(point a, point b, float r) {
   int tid = -1;
   float closest = INFINITY;
 
-  for (auto j : tids) {
-    for (int i = 0; i < terrain[j].border.size(); i++) {
-      float d = utility::l2norm(terrain[j].get_vertice(i, r) - a);
+  for (auto &x : intersects) {
+    for (auto p : x.second) {
+      float d = utility::l2norm(p - a);
       if (d < closest) {
 	closest = d;
-	tid = j;
+	tid = x.first;
       }
     }
   }
@@ -238,8 +240,8 @@ path_t game_data::get_path_around(int tid, point a, point b, float r, int d) {
     check++;
 
     int sub_id = -1;
-    auto pass_id = [tid] (int xid) {return xid == -1 || xid == tid;};
-    while (check != convex.end() && pass_id(sub_id = first_intersect(*start, *check, r))) {
+    auto pass_id = [tid] (int xid) {return xid == -1;};
+    while (check != convex.end() && pass_id(sub_id = first_intersect(*start, *check, r, tid))) {
       start++;
       check++;
     }

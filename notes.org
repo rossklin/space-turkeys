@@ -25,6 +25,11 @@
    voyager - 5 accuracy, + 5 shield
    
 ** play testing
+*** Identified error in path search algorithm
+    Convex path around sub object may intersect "parent" object,
+    causing infinite recursion. Need to step to next parent vertice
+    somehow, or possibly include parent vertices when building convex
+    path.
 *** [J] corsairs got weapons: -2934193417934% on client side
 *** [J] ships sometimes pass through terrain without being pushed out
 *** [J] ship terrain interaction: dumps ship at triangle midpoint, probably goes to fallback case
@@ -33,7 +38,7 @@
 *** [J] get_path produces paths far from vertice points which risk intersecting adjacent terrain
 *** [J] looks like ships get pushed to wrong angle when they hit terrain
 *** [J] get_path creates multiples of same point, probably in "path_around", causing "same point" in line intersect
-*** new get_path not working, intersects objects in recursion
+*** [J] new get_path not working, intersects objects in recursion
 *** still get occasional fallback case "ship already in terrain"
 *** solars still get stuck in terrain
 *** got large number of "line_intersect: same point" at one point
