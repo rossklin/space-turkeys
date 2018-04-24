@@ -502,7 +502,7 @@ void ship::move(game_data *g){
       a = x.get_vertice(i, t_rad);
       b = x.get_vertice(i + 1, t_rad);
       point r;
-      if (utility::line_intersect(position, new_position, a, b, &r)) {
+      if (position != new_position && utility::line_intersect(position, new_position, a, b, &r)) {
 	float d = utility::l2d2(position - r);
 	if (d < d_best) {
 	  d_best = d;

@@ -103,18 +103,18 @@ path_t game_data::get_path(point a, point b, float r) {
   }
 }
 
-int game_data::first_intersect(point a, point b, float r, int exclude) {
+int game_data::first_intersect(point a, point b, float r, int exclude, point *inter) {
   // find first intersected terrain object
   hm_t<idtype, list<point> > intersects;
-  point inter;
+  point inter_buf;
   r *= 0.9;
   for (auto &x : terrain) {
     if (x.first == exclude) continue;
     for (int i = 0; i < x.second.border.size(); i++) {
       point p1 = x.second.get_vertice(i, r);
       point p2 = x.second.get_vertice(i + 1, r);
-      if (utility::line_intersect(a, b, p1, p2, &inter)) {
-	intersects[x.first].push_back(inter);
+      if (utility::line_intersect(a, b, p1, p2, &inter_buf)) {
+	intersects[x.first].push_back(inter_buf);
       }
     }
   }
@@ -129,6 +129,7 @@ int game_data::first_intersect(point a, point b, float r, int exclude) {
       if (d < closest) {
 	closest = d;
 	tid = x.first;
+	if (inter) *inter = p;
       }
     }
   }
@@ -155,7 +156,6 @@ path_t game_data::get_path_around(int tid, point a, point b, float r, int d) {
     if (n < 3) return path;
 
     auto does_intersect = [obj, r] (point a, point b) -> bool {
-      // fix this - can't check the current edge!
       for (int i = 0; i < obj.border.size(); i++) {
 	point p1 = obj.get_vertice(i, r / 2);
 	point p2 = obj.get_vertice(i + 1, r / 2);
@@ -239,9 +239,11 @@ path_t game_data::get_path_around(int tid, point a, point b, float r, int d) {
     auto check = start;
     check++;
 
-    int sub_id = -1;
-    auto pass_id = [tid] (int xid) {return xid == -1;};
-    while (check != convex.end() && pass_id(sub_id = first_intersect(*start, *check, r, tid))) {
+    int block_id = -1;
+    point inter_buf;
+    while (check != convex.end()) {
+      block_id = first_intersect(*start, *check, r, tid, &inter_buf);
+      if (utility::l2norm(inter_buf - a) > r && utility::l2norm(inter_buf - b) > r && block_id > -1) break;
       start++;
       check++;
     }
@@ -249,18 +251,33 @@ path_t game_data::get_path_around(int tid, point a, point b, float r, int d) {
     if (check == convex.end()) {
       // path does not intersect other terrain
       return convex;
-    } else if (sub_id > -1) {
+    } else if (block_id > -1) {
       // part up to start is ok
       path_t result;
+      point pstart = *start;
+      point pcheck = *check;
       result.splice(result.end(), convex, convex.begin(), start);
 
-      path_t continuation = get_path_around(sub_id, *start, b, r, d + 1);
-      result.splice(result.end(), continuation);
+      // now we need to get past the obstacle
+      path_t continuation1 = get_path_around(block_id, pstart, pcheck, r, d + 1);
+      result.splice(result.end(), continuation1);
+
+      if (utility::l2norm(pcheck - b) > 1) {
+	// now continue
+	idtype sub_id = first_intersect(pcheck, b, 0);
+	if (sub_id > -1) {
+	  path_t continuation2 = get_path_around(tid, pcheck, b, r, d + 1);
+	  continuation2.pop_front();
+	  result.splice(result.end(), continuation2);
+	} else {
+	  result.push_back(b);
+	}
+      }
       
       return result;
     } else {
       // should never go here
-      throw logical_error("Process direction aborted without sub_id!");
+      throw logical_error("Process direction aborted without block_id!");
     }
   };
   
