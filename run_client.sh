@@ -1,1 +1,1 @@
-LD_LIBRARY_PATH=rsk-sfml/lib:SFGUI/lib ./st_client "$@"
+LD_LIBRARY_PATH=SFGUI/lib ./st_client "$@"

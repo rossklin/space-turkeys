@@ -65,7 +65,7 @@ void run(string game_id, string name, client_game_settings settings, bool fullsc
   sfg::SFGUI sfgui;
 
   g -> sfgui = &sfgui;
-  g -> window.setActive();  
+  // g -> window.setActive();  
   
   graphics::initialize();
 

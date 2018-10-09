@@ -22,7 +22,7 @@ fi
 
 # Checks for libraries.
 AC_CHECK_LIB([pthread], [pthread_create])
-AC_CHECK_LIB([sfml-graphics], [sfml-window], [sfml-system] [sfml-network] [sfgui])
+AC_CHECK_LIB([sfml-graphics], [sfml-window], [sfml-system], [sfml-network], [sfgui])
 
 # Checks for header files.
 AC_PATH_X
@@ -51,8 +51,8 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([clock_gettime floor inet_ntoa memmove memset pow select socket sqrt strchr strstr strtol strtoul])
 
 # set include paths
-CXXFLAGS="$CXXFLAGS -O0 -std=c++14 -Wno-virtual-move-assign -I../rsk-sfml/include -I../SFGUI/include -L../rsk-sfml/lib -L../SFGUI/lib"
-LIBS="$LIBS -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -lsfgui"
+CXXFLAGS="$CXXFLAGS -O0 -std=c++14 -Wno-virtual-move-assign -I../SFGUI/include -L../SFGUI/lib"
+LIBS="$LIBS -lsfml-network -lsfml-graphics -lsfml-window -lsfml-system -lsfgui"
 
 AC_CONFIG_FILES([Makefile docs/Makefile src/Makefile])
 
