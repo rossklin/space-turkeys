@@ -185,6 +185,12 @@ point terrain_object::get_vertice(int idx, float rbuf) const {
   return p + utility::normalize_and_scale(p - center, rbuf);
 }
 
+vector<point> terrain_object::get_border(float r) const {
+  vector<point> res(border.size());
+  for (int i = 0; i < border.size(); i++) res[i] = get_vertice(i, r);
+  return res;
+}
+
 void terrain_object::set_vertice(int idx, point p) {
   border[utility::int_modulus(idx, border.size())] = p;
 }

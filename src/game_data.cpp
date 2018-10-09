@@ -91,21 +91,103 @@ list<idtype> game_data::terrain_at(point p, float r) {
 }
 
 path_t game_data::get_path(point a, point b, float r) {
-
   int tid = first_intersect(a, b, r);
+  if (tid == -1) return path_t(1, b);
 
-  if (tid == -1) {
-    return path_t(1, b);
-  } else {
-    path_t x = get_path_around(tid, a, b, r);
-    if (x.size()) x.pop_front();
-    return x;
+  struct ptest {
+    float h;
+    path_t p;
+  };
+
+  // generate a path test for frontier with heuristic cost
+  auto gen_ptest = [b] (path_t p) {
+    if (p.empty()) {
+      throw logical_error("Empty path in gen_ptest!");
+    }
+
+    float h = 0;
+    
+    auto i = p.begin();
+    auto j = i;
+    j++;
+
+    while (j != p.end()) {
+      h += utility::l2norm(*j - *i);
+      i++;
+      j++;
+    }
+
+    h += utility::l2norm(b - p.back());
+
+    return ptest{h, p};
+  };
+
+  auto terrain_horizon = [this] (point a, int tid, float r) -> pair<point, point> {
+    terrain_object obj = terrain[tid];
+    float theta = utility::point_angle(obj.center - a);
+    float amax = 0;
+    float amin = 0;
+    point pmin, pmax;
+    
+    for (int i = 0; i < obj.border.size(); i++) {
+      point p = obj.get_vertice(i, r/2);
+      float adiff = utility::angle_difference(utility::point_angle(p - a), theta);
+      if (adiff > amax) {
+	amax = adiff;
+	pmax = obj.get_vertice(i, r);
+      }
+      if (adiff < amin) {
+	amin = adiff;
+	pmin = obj.get_vertice(i, r);
+      }
+    }
+
+    return make_pair(pmin, pmax);
+  };
+
+  auto ptest_comp = [] (ptest a, ptest b) {return a.h > b.h;};
+
+  priority_queue<ptest, vector<ptest>, decltype(ptest_comp)> frontier(ptest_comp);
+
+  frontier.push(gen_ptest(path_t(1, a)));
+
+  while (!frontier.empty()) {
+    ptest x = frontier.top();
+    frontier.pop();
+    path_t res = x.p;
+
+    tid = first_intersect(res.back(), b, r);
+    if (tid == -1) {
+      res.push_back(b);
+      res.pop_front();
+      return res;
+    }
+
+    pair<point, point> horizon = terrain_horizon(res.back(), tid, r);
+
+    path_t left = res;
+    path_t step = get_path(res.back(), horizon.first, r);
+    left.insert(left.end(), step.begin(), step.end());
+    
+    path_t right = res;
+    step = get_path(res.back(), horizon.second, r);
+    right.insert(left.end(), step.begin(), step.end());
+
+    frontier.push(gen_ptest(left));
+    frontier.push(gen_ptest(right));
+
+    if (frontier.size() > 1000) {
+      // todo: we end up here
+      throw logical_error("Get path: frontier overflow!");
+    }
   }
+
+  throw logical_error("Get path reached end of frontier!");
 }
 
-int game_data::first_intersect(point a, point b, float r, int exclude, point *inter) {
+int game_data::first_intersect(point a, point b, float r, int exclude, point *inter, int *border_idx) {
   // find first intersected terrain object
-  hm_t<idtype, list<point> > intersects;
+  hm_t<idtype, list<pair<int, point> > > intersects;
   point inter_buf;
   r *= 0.9;
   for (auto &x : terrain) {
@@ -114,7 +196,7 @@ int game_data::first_intersect(point a, point b, float r, int exclude, point *in
       point p1 = x.second.get_vertice(i, r);
       point p2 = x.second.get_vertice(i + 1, r);
       if (utility::line_intersect(a, b, p1, p2, &inter_buf)) {
-	intersects[x.first].push_back(inter_buf);
+	intersects[x.first].push_back(make_pair(i, inter_buf));
       }
     }
   }
@@ -124,12 +206,15 @@ int game_data::first_intersect(point a, point b, float r, int exclude, point *in
   float closest = INFINITY;
 
   for (auto &x : intersects) {
-    for (auto p : x.second) {
+    for (auto y : x.second) {
+      int bid = y.first;
+      point p = y.second;
       float d = utility::l2norm(p - a);
       if (d < closest) {
 	closest = d;
 	tid = x.first;
 	if (inter) *inter = p;
+	if (border_idx) *border_idx = bid;
       }
     }
   }
@@ -137,176 +222,176 @@ int game_data::first_intersect(point a, point b, float r, int exclude, point *in
   return tid;
 }
 
-path_t game_data::get_path_around(int tid, point a, point b, float r, int d) {
-  if (d > 10) {
-    server::log("get_path: max recursion depth reached!", "warning");
-    return {};
-  }
+// path_t game_data::get_path_around(int tid, point a, point b, float r, int d) {
+//   if (d > 10) {
+//     server::log("get_path: max recursion depth reached!", "warning");
+//     return {};
+//   }
 
-  if (terrain_at(a, 1).size() || terrain_at(b, 1).size()) {
-    server::log("get_path: end point covered by terrain!", "warning");
-    return {};
-  }
+//   if (terrain_at(a, 1).size() || terrain_at(b, 1).size()) {
+//     server::log("get_path: end point covered by terrain!", "warning");
+//     return {};
+//   }
   
-  // merge border path to follow convex hull of object
-  auto convex_path = [this, r] (path_t path, terrain_object obj) {
-    bool did_fix = true;
-    int n = path.size();
+//   // merge border path to follow convex hull of object
+//   auto convex_path = [this, r] (path_t path, terrain_object obj) {
+//     bool did_fix = true;
+//     int n = path.size();
 
-    if (n < 3) return path;
+//     if (n < 3) return path;
 
-    auto does_intersect = [obj, r] (point a, point b) -> bool {
-      for (int i = 0; i < obj.border.size(); i++) {
-	point p1 = obj.get_vertice(i, r / 2);
-	point p2 = obj.get_vertice(i + 1, r / 2);
-	if (utility::line_intersect(a, b, p1, p2)) return true;
-      }
-      return false;
-    };
+//     auto does_intersect = [obj, r] (point a, point b) -> bool {
+//       for (int i = 0; i < obj.border.size(); i++) {
+// 	point p1 = obj.get_vertice(i, r / 2);
+// 	point p2 = obj.get_vertice(i + 1, r / 2);
+// 	if (utility::line_intersect(a, b, p1, p2)) return true;
+//       }
+//       return false;
+//     };
 
-    while (did_fix) {
-      did_fix = false;
-      auto start = path.begin();
-      auto check = start;
-      check++;
-      if (check == path.end()) break;
-      check++;
+//     while (did_fix) {
+//       did_fix = false;
+//       auto start = path.begin();
+//       auto check = start;
+//       check++;
+//       if (check == path.end()) break;
+//       check++;
       
-      while (does_intersect(*start, *check) && check != path.end()) {
-	start++;
-	check++;
-      }
+//       while (does_intersect(*start, *check) && check != path.end()) {
+// 	start++;
+// 	check++;
+//       }
       
-      while (!does_intersect(*start, *check) && check != path.end()) {
-	did_fix = true;
-	check++;
-      }
+//       while (!does_intersect(*start, *check) && check != path.end()) {
+// 	did_fix = true;
+// 	check++;
+//       }
 
-      check--;
-      start++;
-      path.erase(start, check);
-    }
+//       check--;
+//       start++;
+//       path.erase(start, check);
+//     }
 
-    return path;
-  };
+//     return path;
+//   };
 
-  // find a path around the polygon following the edges
-  auto border_path = [r] (terrain_object obj, point a, point b, int dir) {
-    path_t path;
-    path.push_back(a);
+//   // find a path around the polygon following the edges
+//   auto border_path = [r] (terrain_object obj, point a, point b, int dir) {
+//     path_t path;
+//     path.push_back(a);
 
-    // find closest vertice
-    int pid = -1;
-    int n = obj.border.size();
-    float best = INFINITY;
-    for (int i = 0; i < n; i++) {
-      float d = utility::l2norm(obj.get_vertice(i, r) - a);
-      if (d < best) {
-	best = d;
-	pid = i;
-      }
-    }
+//     // find closest vertice
+//     int pid = -1;
+//     int n = obj.border.size();
+//     float best = INFINITY;
+//     for (int i = 0; i < n; i++) {
+//       float d = utility::l2norm(obj.get_vertice(i, r) - a);
+//       if (d < best) {
+// 	best = d;
+// 	pid = i;
+//       }
+//     }
 
-    // is desination visible from vertice pid?
-    auto visible_from = [obj, b, n, r] (int pid) {
-      for (int i = 1; i < n - 1; i++) {
-	point p1 = obj.get_vertice(pid + i, r);
-	point p2 = obj.get_vertice(pid + i + 1, r);
-	if (utility::line_intersect(obj.get_vertice(pid, r), b, p1, p2)) return false;
-      }
-      return true;
-    };
+//     // is desination visible from vertice pid?
+//     auto visible_from = [obj, b, n, r] (int pid) {
+//       for (int i = 1; i < n - 1; i++) {
+// 	point p1 = obj.get_vertice(pid + i, r);
+// 	point p2 = obj.get_vertice(pid + i + 1, r);
+// 	if (utility::line_intersect(obj.get_vertice(pid, r), b, p1, p2)) return false;
+//       }
+//       return true;
+//     };
 
-    point p = obj.get_vertice(pid, r);
-    path.push_back(p);
-    do {
-      pid += dir;
-      p = obj.get_vertice(pid, r);
-      path.push_back(p);
-    } while (!visible_from(pid));
+//     point p = obj.get_vertice(pid, r);
+//     path.push_back(p);
+//     do {
+//       pid += dir;
+//       p = obj.get_vertice(pid, r);
+//       path.push_back(p);
+//     } while (!visible_from(pid));
 
-    path.push_back(b);
-    return path;
-  };
+//     path.push_back(b);
+//     return path;
+//   };
 
-  auto process_direction = [=] (int dir) -> path_t {
-    terrain_object obj = terrain[tid];
-    path_t convex = convex_path(border_path(obj, a, b, dir), obj);
-    if (convex.size() < 2) return convex;
+//   auto process_direction = [=] (int dir) -> path_t {
+//     terrain_object obj = terrain[tid];
+//     path_t convex = convex_path(border_path(obj, a, b, dir), obj);
+//     if (convex.size() < 2) return convex;
 
-    // check if convex path intersects other terrain
-    auto start = convex.begin();
-    auto check = start;
-    check++;
+//     // check if convex path intersects other terrain
+//     auto start = convex.begin();
+//     auto check = start;
+//     check++;
 
-    int block_id = -1;
-    point inter_buf;
-    while (check != convex.end()) {
-      block_id = first_intersect(*start, *check, r, tid, &inter_buf);
-      if (utility::l2norm(inter_buf - a) > r && utility::l2norm(inter_buf - b) > r && block_id > -1) break;
-      start++;
-      check++;
-    }
+//     int block_id = -1;
+//     point inter_buf;
+//     while (check != convex.end()) {
+//       block_id = first_intersect(*start, *check, r, tid, &inter_buf);
+//       if (utility::l2norm(inter_buf - a) > r && utility::l2norm(inter_buf - b) > r && block_id > -1) break;
+//       start++;
+//       check++;
+//     }
 
-    if (check == convex.end()) {
-      // path does not intersect other terrain
-      return convex;
-    } else if (block_id > -1) {
-      // part up to start is ok
-      path_t result;
-      point pstart = *start;
-      point pcheck = *check;
-      result.splice(result.end(), convex, convex.begin(), start);
+//     if (check == convex.end()) {
+//       // path does not intersect other terrain
+//       return convex;
+//     } else if (block_id > -1) {
+//       // part up to start is ok
+//       path_t result;
+//       point pstart = *start;
+//       point pcheck = *check;
+//       result.splice(result.end(), convex, convex.begin(), start);
 
-      // now we need to get past the obstacle
-      path_t continuation1 = get_path_around(block_id, pstart, pcheck, r, d + 1);
-      result.splice(result.end(), continuation1);
+//       // now we need to get past the obstacle
+//       path_t continuation1 = get_path_around(block_id, pstart, pcheck, r, d + 1);
+//       result.splice(result.end(), continuation1);
 
-      if (utility::l2norm(pcheck - b) > 1) {
-	// now continue
-	idtype sub_id = first_intersect(pcheck, b, 0);
-	if (sub_id > -1) {
-	  path_t continuation2 = get_path_around(tid, pcheck, b, r, d + 1);
-	  continuation2.pop_front();
-	  result.splice(result.end(), continuation2);
-	} else {
-	  result.push_back(b);
-	}
-      }
+//       if (utility::l2norm(pcheck - b) > 1) {
+// 	// now continue
+// 	idtype sub_id = first_intersect(pcheck, b, 0);
+// 	if (sub_id > -1) {
+// 	  path_t continuation2 = get_path_around(tid, pcheck, b, r, d + 1);
+// 	  continuation2.pop_front();
+// 	  result.splice(result.end(), continuation2);
+// 	} else {
+// 	  result.push_back(b);
+// 	}
+//       }
       
-      return result;
-    } else {
-      // should never go here
-      throw logical_error("Process direction aborted without block_id!");
-    }
-  };
+//       return result;
+//     } else {
+//       // should never go here
+//       throw logical_error("Process direction aborted without block_id!");
+//     }
+//   };
   
-  auto count_path = [] (path_t path) {
-    if (path.size() < 3) return path.size() ? utility::l2norm(path.back() - path.front()) : INFINITY;
+//   auto count_path = [] (path_t path) {
+//     if (path.size() < 3) return path.size() ? utility::l2norm(path.back() - path.front()) : INFINITY;
     
-    auto i = path.begin();
-    auto j = i;
-    j++;
+//     auto i = path.begin();
+//     auto j = i;
+//     j++;
 
-    float d = 0;
-    while (j != path.end()) {
-      d += utility::l2norm((*j) - (*i));
-      i++;
-      j++;
-    }
+//     float d = 0;
+//     while (j != path.end()) {
+//       d += utility::l2norm((*j) - (*i));
+//       i++;
+//       j++;
+//     }
 
-    return d;
-  };
+//     return d;
+//   };
 
-  path_t path1 = process_direction(-1);
-  path_t path2 = process_direction(1);
+//   path_t path1 = process_direction(-1);
+//   path_t path2 = process_direction(1);
 
-  if (count_path(path1) < count_path(path2)) {
-    return path1;
-  } else {
-    return path2;
-  }
-}
+//   if (count_path(path1) < count_path(path2)) {
+//     return path1;
+//   } else {
+//     return path2;
+//   }
+// }
 
 // create a new fleet and add ships from command c
 void game_data::relocate_ships(command c, set<combid> &sh, idtype owner){

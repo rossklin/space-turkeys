@@ -88,6 +88,7 @@ namespace st3{
     point get_vertice(int idx, float rbuf = 0) const;
     void set_vertice(int idx, point p);
     int triangle(point p, float r);
+    std::vector<point> get_border(float r) const;
   };
 
   bool operator<(const id_pair &x, const id_pair &y);
