@@ -91,8 +91,23 @@ list<idtype> game_data::terrain_at(point p, float r) {
 }
 
 path_t game_data::get_path(point a, point b, float r) {
-  int tid = first_intersect(a, b, r);
+  float eps = 1e-4;
+  float r_inside = (1 - eps) * r;
+  float r_horizon = (1 - 2 * eps) * r;
+  float r_intersect = (1 - 3 * eps) * r;
+  
+  int tid = first_intersect(a, b, r_intersect);
   if (tid == -1) return path_t(1, b);
+
+  // check if we're inside terrain
+  auto tids = terrain_at(a, r_inside);
+  if (tids.size() > 0) {
+    tid = tids.front();
+    point p0 = terrain[tid].closest_exit(a, r);
+    path_t res = get_path(p0, b, r);
+    res.push_front(p0);
+    return res;
+  }
 
   struct ptest {
     float h;
@@ -122,7 +137,7 @@ path_t game_data::get_path(point a, point b, float r) {
     return ptest{h, p};
   };
 
-  auto terrain_horizon = [this] (point a, int tid, float r) -> pair<point, point> {
+  auto terrain_horizon = [this, r, r_horizon] (point a, int tid) -> pair<point, point> {
     terrain_object obj = terrain[tid];
     float theta = utility::point_angle(obj.center - a);
     float amax = 0;
@@ -130,7 +145,7 @@ path_t game_data::get_path(point a, point b, float r) {
     point pmin, pmax;
     
     for (int i = 0; i < obj.border.size(); i++) {
-      point p = obj.get_vertice(i, r/2);
+      point p = obj.get_vertice(i, r_horizon);
       float adiff = utility::angle_difference(utility::point_angle(p - a), theta);
       if (adiff > amax) {
 	amax = adiff;
@@ -156,14 +171,14 @@ path_t game_data::get_path(point a, point b, float r) {
     frontier.pop();
     path_t res = x.p;
 
-    tid = first_intersect(res.back(), b, r);
+    tid = first_intersect(res.back(), b, r_intersect);
     if (tid == -1) {
       res.push_back(b);
       res.pop_front();
       return res;
     }
 
-    pair<point, point> horizon = terrain_horizon(res.back(), tid, r);
+    pair<point, point> horizon = terrain_horizon(res.back(), tid);
 
     path_t left = res;
     path_t step = get_path(res.back(), horizon.first, r);
@@ -171,14 +186,20 @@ path_t game_data::get_path(point a, point b, float r) {
     
     path_t right = res;
     step = get_path(res.back(), horizon.second, r);
-    right.insert(left.end(), step.begin(), step.end());
+    right.insert(right.end(), step.begin(), step.end());
 
     frontier.push(gen_ptest(left));
     frontier.push(gen_ptest(right));
 
     if (frontier.size() > 1000) {
+      stringstream ss;
+      ss << "Get path: frontier overflow!" << endl;
+      for (auto p : left) ss << p << ", ";
+      ss << endl << "------------------------------" << endl;
+      for (auto p : right) ss << p << ", ";
+      ss << endl;
       // todo: we end up here
-      throw logical_error("Get path: frontier overflow!");
+      throw logical_error(ss.str());
     }
   }
 

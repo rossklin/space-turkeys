@@ -203,3 +203,21 @@ int terrain_object::triangle(point p, float rad) {
 
   return -1;
 }
+
+point terrain_object::closest_exit(point p, float r) const {
+  float dmin = INFINITY;
+  point res;
+
+  for (int i = 0; i < border.size(); i++) {
+    point a = get_vertice(i, r);
+    point b = get_vertice(i+1, r);
+    point x;
+    float d = utility::dpoint2line(p, a, b, &x);
+    if (d < dmin) {
+      dmin = d;
+      res = x;
+    }
+  }
+
+  return res;
+}
