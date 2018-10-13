@@ -137,68 +137,112 @@ path_t game_data::get_path(point a, point b, float r) {
     return ptest{h, p};
   };
 
-  auto terrain_horizon = [this, r, r_horizon] (point a, int tid) -> pair<point, point> {
+  auto hash_point = [] (int i, int j) -> string {
+    return to_string(i) + ":" + to_string(j);
+  };
+
+  auto parse_hash = [] (string v) -> pair<int, int> {
+    size_t split = v.find(':');
+    return make_pair(stoi(v.substr(0, split)), stoi(v.substr(split+1)));
+  };
+
+  auto terrain_horizon = [this, r, r_horizon] (point a, int tid) -> pair<int, int> {
     terrain_object obj = terrain[tid];
     float theta = utility::point_angle(obj.center - a);
     float amax = 0;
     float amin = 0;
-    point pmin, pmax;
+    int pmin, pmax;
     
     for (int i = 0; i < obj.border.size(); i++) {
       point p = obj.get_vertice(i, r_horizon);
       float adiff = utility::angle_difference(utility::point_angle(p - a), theta);
       if (adiff > amax) {
 	amax = adiff;
-	pmax = obj.get_vertice(i, r);
+	pmax = i;
       }
       if (adiff < amin) {
 	amin = adiff;
-	pmin = obj.get_vertice(i, r);
+	pmin = i;
       }
     }
 
     return make_pair(pmin, pmax);
   };
 
+  // // remove unnessecary vertices
+  // auto flatten_path = [this, r_intersect] (path_t x) -> path_t {
+  //   if (x.size() < 2) return x;
+    
+  //   auto i = x.begin();
+  //   auto j = i;
+  //   j++;
+  //   j++;
+
+  //   while (j != x.end()) {
+  //     if (first_intersect(*i, *j, r_intersect) > -1) {
+  // 	i++;
+  // 	j++;
+  //     } else {
+  // 	auto idx = i;
+  // 	idx++;
+  // 	x.erase(idx);
+  // 	j++;
+  //     }
+  //   }
+
+  //   return x;
+  // };
+
   auto ptest_comp = [] (ptest a, ptest b) {return a.h > b.h;};
 
   priority_queue<ptest, vector<ptest>, decltype(ptest_comp)> frontier(ptest_comp);
-
   frontier.push(gen_ptest(path_t(1, a)));
 
   while (!frontier.empty()) {
     ptest x = frontier.top();
     frontier.pop();
     path_t res = x.p;
+    point sub_a = res.back();
 
-    tid = first_intersect(res.back(), b, r_intersect);
-    if (tid == -1) {
+    if ((tid = first_intersect(sub_a, b, r_intersect)) == -1) {
       res.push_back(b);
+      // res = flatten_path(res);
       res.pop_front();
       return res;
     }
 
-    pair<point, point> horizon = terrain_horizon(res.back(), tid);
+    // build set of possible state transitions
+    pair<int, int> sub_init = terrain_horizon(sub_a, tid);
+    queue<string> sub_frontier;
+    set<string> sub_processed;
+    sub_frontier.push(hash_point(tid, sub_init.first));
+    sub_frontier.push(hash_point(tid, sub_init.second));
 
-    path_t left = res;
-    path_t step = get_path(res.back(), horizon.first, r);
-    left.insert(left.end(), step.begin(), step.end());
-    
-    path_t right = res;
-    step = get_path(res.back(), horizon.second, r);
-    right.insert(right.end(), step.begin(), step.end());
+    while (!sub_frontier.empty()) {
+      string test = sub_frontier.front();
+      sub_frontier.pop();
 
-    frontier.push(gen_ptest(left));
-    frontier.push(gen_ptest(right));
+      if (sub_processed.count(test)) continue;
+      sub_processed.insert(test);
 
+      pair<int, int> sub_idx = parse_hash(test);
+      point sub_b = terrain[sub_idx.first].get_vertice(sub_idx.second, r);
+      int sub_tid = first_intersect(sub_a, sub_b, r_intersect);
+
+      if (sub_tid > -1) {
+	sub_init = terrain_horizon(sub_a, sub_tid);
+	sub_frontier.push(hash_point(sub_tid, sub_init.first));
+	sub_frontier.push(hash_point(sub_tid, sub_init.second));
+      } else {
+	path_t sub_path = res;
+	sub_path.push_back(sub_b);
+	frontier.push(gen_ptest(sub_path));
+      }
+    }
+   
     if (frontier.size() > 1000) {
       stringstream ss;
       ss << "Get path: frontier overflow!" << endl;
-      for (auto p : left) ss << p << ", ";
-      ss << endl << "------------------------------" << endl;
-      for (auto p : right) ss << p << ", ";
-      ss << endl;
-      // todo: we end up here
       throw logical_error(ss.str());
     }
   }
