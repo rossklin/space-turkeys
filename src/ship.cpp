@@ -240,15 +240,19 @@ void ship::update_data(game_data *g) {
 
   // let neighbours influence angle and speed
   point tbase = target_speed * utility::normv(target_angle);
-  point tn(0, 0);
-  apply_ships(local_friends, [this, &tn, max_speed] (ship::ptr s) {
-      tn += fmin(s -> stats[sskey::key::speed], max_speed) * utility::normv(s -> target_angle);
-    });
-  tn = 1 / (float)local_friends.size() * tn;
 
-  point t_sel = (float)0.2 * tn + (float)0.8 * tbase;
-  target_speed = utility::l2norm(t_sel);
-  target_angle = utility::point_angle(t_sel);
+  if (local_friends.size() > 0) {
+    point tn(0, 0);
+    apply_ships(local_friends, [this, &tn, max_speed] (ship::ptr s) {
+	tn += fmin(s -> stats[sskey::key::speed], max_speed) * utility::normv(s -> target_angle);
+      });
+    tn = 1 / (float)local_friends.size() * tn;
+
+    tbase = (float)0.2 * tn + (float)0.8 * tbase;
+  } 
+    
+  target_speed = utility::l2norm(tbase);
+  target_angle = utility::point_angle(tbase);
 
   // precompute available angles
   free_angle = vector<float>(na, INFINITY);
