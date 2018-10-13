@@ -177,8 +177,8 @@ void ship::update_data(game_data *g) {
   activate = f -> stats.converge;
 
   private_path.clear();
-  if (f -> path.size() > 0 && g -> first_intersect(position, f -> path.back(), radius) > -1) {
-    private_path = g -> get_path(position, f -> path.back(), radius);
+  if (f -> path.size() > 0 && g -> first_intersect(position, f -> path.front(), radius) > -1) {
+    private_path = g -> get_path(position, f -> path.front(), radius);
   }
 
   auto local_output = [this] (string v) {server::output(id + ": update_data: " + v);};
@@ -188,7 +188,7 @@ void ship::update_data(game_data *g) {
   bool evade = f -> com.policy == fleet::policy_evasive;
 
   float fleet_target_angle = utility::point_angle(f -> heading - f -> position);
-  float target_angle = fleet_target_angle;
+  target_angle = fleet_target_angle;
   point fleet_delta = f -> position - position;
   float fleet_angle = utility::point_angle(fleet_delta);
   float max_speed = base_stats.stats[sskey::key::speed];
@@ -196,7 +196,7 @@ void ship::update_data(game_data *g) {
   target_speed = f -> stats.speed_limit;
 
   if (private_path.size() > 0) {
-    target_angle = utility::point_angle(private_path.back() - position);
+    target_angle = utility::point_angle(private_path.front() - position);
     target_speed = max_speed;
   }
 
