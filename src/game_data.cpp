@@ -109,6 +109,15 @@ path_t game_data::get_path(point a, point b, float r) {
     return res;
   }
 
+  // check if target is inside terrain
+  tids = terrain_at(b, r_inside);
+  if (tids.size() > 0) {
+    tid = tids.front();
+    point p0 = terrain[tid].closest_exit(b, r);
+    path_t res = get_path(a, p0, r);
+    return res;
+  }
+
   struct ptest {
     float h;
     path_t p;
@@ -169,30 +178,6 @@ path_t game_data::get_path(point a, point b, float r) {
     return make_pair(pmin, pmax);
   };
 
-  // // remove unnessecary vertices
-  // auto flatten_path = [this, r_intersect] (path_t x) -> path_t {
-  //   if (x.size() < 2) return x;
-    
-  //   auto i = x.begin();
-  //   auto j = i;
-  //   j++;
-  //   j++;
-
-  //   while (j != x.end()) {
-  //     if (first_intersect(*i, *j, r_intersect) > -1) {
-  // 	i++;
-  // 	j++;
-  //     } else {
-  // 	auto idx = i;
-  // 	idx++;
-  // 	x.erase(idx);
-  // 	j++;
-  //     }
-  //   }
-
-  //   return x;
-  // };
-
   auto ptest_comp = [] (ptest a, ptest b) {return a.h > b.h;};
 
   priority_queue<ptest, vector<ptest>, decltype(ptest_comp)> frontier(ptest_comp);
@@ -206,7 +191,6 @@ path_t game_data::get_path(point a, point b, float r) {
 
     if ((tid = first_intersect(sub_a, b, r_intersect)) == -1) {
       res.push_back(b);
-      // res = flatten_path(res);
       res.pop_front();
       return res;
     }
