@@ -73,8 +73,7 @@ namespace st3{
     bool target_position(combid t, point &p);
     std::list<combid> search_targets(combid self_id, point p, float r, target_condition c);
     std::list<combid> search_targets_nophys(combid self_id, point p, float r, target_condition c);
-    int first_intersect(point a, point b, float r, int exclude = -1, point *inter = NULL, int *border_idx = NULL);
-    /* path_t get_path_around(int tid, point a, point b, float r, int d = 0); */
+    int first_intersect(point a, point b, float r);
     path_t get_path(point a, point b, float r);
     void rebuild_evm();
     std::list<idtype> terrain_at(point p, float r);

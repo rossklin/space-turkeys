@@ -168,64 +168,36 @@ bool ship::check_space(float a) {
 };
 
 void ship::update_data(game_data *g) {
-  const float max_local_speed = 3;
   force_refresh = false;
+  activate = false;
   
   if (!has_fleet()) return;
   
   fleet::ptr f = g -> get_fleet(fleet_id);
-  fleet::suggestion suggest = f -> suggest_buf;
-
-  bool disable_private_path = utility::l2norm(position - f -> position) < 20;
-
-  if (require_private_path) {
-    require_private_path = false;
-    if (f -> path.size() && !disable_private_path) {
-      private_path = g -> get_path(position, f -> path.back(), radius);
-    }
-  }
-
-  if (disable_private_path) private_path.clear();
-
-  auto local_output = [this] (string v) {
-    server::output(id + ": update_data: " + v);
-  };
-
-  float pref_density = 0.2;
-  float pref_maxrad = fmax(sqrt(f -> ships.size() / (M_PI * pref_density)), 20);
-
-  bool engage = suggest.id & fleet::suggestion::engage;
-  bool scatter = suggest.id & fleet::suggestion::scatter;
-  bool travel = suggest.id & fleet::suggestion::travel;
   activate = f -> stats.converge;
-  bool hold = suggest.id & fleet::suggestion::hold;
-  bool evade = suggest.id & fleet::suggestion::evade;
-  bool local = engage || evade || activate;
-  bool summon = (!engage) && utility::l2norm(f -> position - position) > pref_maxrad;
 
-  if (engage && !tags.count("spacecombat")) {
-    engage = false;
-    scatter = true;
+  private_path.clear();
+  if (f -> path.size() > 0 && g -> first_intersect(position, f -> path.back(), radius) > -1) {
+    private_path = g -> get_path(position, f -> path.back(), radius);
   }
+
+  auto local_output = [this] (string v) {server::output(id + ": update_data: " + v);};
+
+  bool travel = f -> com.policy == fleet::policy_maintain_course;
+  bool engage = f -> com.policy == fleet::policy_aggressive && tags.count("spacecombat");
+  bool evade = f -> com.policy == fleet::policy_evasive;
 
   float fleet_target_angle = utility::point_angle(f -> heading - f -> position);
+  float target_angle = fleet_target_angle;
   point fleet_delta = f -> position - position;
   float fleet_angle = utility::point_angle(fleet_delta);
-  target_angle = fleet_target_angle;
+  float max_speed = base_stats.stats[sskey::key::speed];
+
   target_speed = f -> stats.speed_limit;
 
-  if (private_path.size()) {
-    point p = private_path.front();
-    if (utility::l2norm(p - position) < 10) {
-      private_path.pop_front();
-    }
-    
-    if (private_path.size()) {
-      p = private_path.front();
-
-      // cause ship to be "behind fleet" and speed up
-      fleet_target_angle = fleet_angle = target_angle = utility::point_angle(p - position);
-    }
+  if (private_path.size() > 0) {
+    target_angle = utility::point_angle(private_path.back() - position);
+    target_speed = max_speed;
   }
 
   // analyze neighbourhood
@@ -250,121 +222,168 @@ void ship::update_data(game_data *g) {
       }
     });
 
+  // engage local enemies
+  if (engage && local_enemies.size() > 0) {
+    // head towards a random local enemy
+    combid sid = utility::uniform_sample(local_enemies);
+    point p = g -> get_ship(sid) -> position;
+    float d = utility::l2norm(p - position);
+    target_angle = utility::point_angle(p - position);
+    target_speed = max_speed * exp(-interaction_radius() / (d + 1));
+  }
+
+  // flee from fleet enemies
+  if (evade && f -> stats.can_evade) {
+    target_angle = utility::point_angle(f -> stats.evade_path - position);
+    target_speed = max_speed;
+  }
+
+  // let neighbours influence angle and speed
+  point tbase = target_speed * utility::normv(target_angle);
+  point tn(0, 0);
+  apply_ships(local_friends, [this, &tn, max_speed] (ship::ptr s) {
+      tn += fmin(s -> stats[sskey::key::speed], max_speed) * utility::normv(s -> target_angle);
+    });
+  tn = 1 / (float)local_friends.size() * tn;
+
+  point t_sel = (float)0.2 * tn + (float)0.8 * tbase;
+  target_speed = utility::l2norm(t_sel);
+  target_angle = utility::point_angle(t_sel);
+
   // precompute available angles
   free_angle = vector<float>(na, INFINITY);
   apply_ships(neighbours, [this] (ship::ptr s) {
       point delta = s -> position - position;
       float a = utility::point_angle(delta);
-      float d = utility::l2norm(delta);
+      float d = utility::l2norm(delta) - radius - s -> radius;
       int i = utility::angle2index(na, a);
       free_angle[i] = fmin(free_angle[i], d);
     });
 
-  // angle and speed for summon
-  auto compute_summon = [=] (float &a, float &s) {
-    if (travel) {
-      float test = abs(utility::angle_difference(fleet_target_angle, fleet_angle));
-      local_output("summon: travel:");
-      if (test > 2 * M_PI / 3) {
-	// in front of fleet
-	// slow down
-	s = fmin(0.6 * f -> stats.speed_limit, base_stats.stats[sskey::key::speed]);
-	local_output("summon: in fron of fleet, slowing down");
-      } else if (test > M_PI / 3) {
-	// side of fleet
-	a = fleet_angle;
-	local_output("summon: to side of fleet, angling in");
-      } else {
-	// back of fleet
-	a = fleet_angle;
-	if (check_space(a)) {
-	  s = base_stats.stats[sskey::key::speed];
-	  local_output("summon: behind fleet, speeding up");
-	}
-      }
-    } else {
-      a = fleet_angle;
-      local_output("summon: not traveling - heading towards center of fleet");
-    }
-  };
+  // float pref_density = 0.2;
+  // float pref_maxrad = fmax(sqrt(f -> ships.size() / (M_PI * pref_density)), 20);
 
-  // angle and speed when running local policies
-  auto compute_local = [this, suggest, local_output] (float &a, float &s) {
-    point local_delta = suggest.p - position;
-    a = utility::point_angle(local_delta);
-    s = base_stats.stats[sskey::key::speed];
+  
 
-    local_output("setting local target angle: " + to_string(a));
-    local_output("setting local target speed: " + to_string(s) + " (delta is " + to_string(utility::l2norm(local_delta)) + ")");
-  };
+  // if (engage && !tags.count("spacecombat")) {
+  //   engage = false;
+  //   scatter = true;
+  // }
+  // target_angle = fleet_target_angle;
+  // target_speed = f -> stats.speed_limit;
 
-  // compute desired angle and speed
-  if (summon) {
-    compute_summon(target_angle, target_speed);
-    local_output("summon");
-  } else if (local) {
-    compute_local(target_angle, target_speed);
-    local_output("local");
-  } else if (hold) {
-    target_speed = 0;
-    local_output("hold");
-  } else if (travel) {
-    local_output("travel");
-  } else if (scatter) {
-    // just avoid nearby enemies
-    if (local_enemies.size()) {
-      vector<float> enemies(na, 0);
-      apply_ships(local_enemies, [this, &enemies, local_output](ship::ptr s) {
-	  int idx = utility::angle2index(na, utility::point_angle(s -> position - position));
-	  enemies[idx] += s -> stats[sskey::key::mass] * s -> stats[sskey::key::ship_damage];
-	  local_output("scatter: avoiding " + s -> id);
-	});
+  // if (private_path.size()) {
+  //   point p = private_path.front();
+  //   if (utility::l2norm(p - position) < 10) {
+  //     private_path.pop_front();
+  //   }
+    
+  //   if (private_path.size()) {
+  //     p = private_path.front();
 
-      enemies = utility::circular_kernel(enemies, 4);
-      target_angle = utility::index2angle(na, utility::vector_min(enemies, utility::identity_function<float>()));
-      target_speed = base_stats.stats[sskey::key::speed];
-      local_output("scatter: target angle: " + to_string(target_angle));
-    }
-  }
+  //     // cause ship to be "behind fleet" and speed up
+  //     fleet_target_angle = fleet_angle = target_angle = utility::point_angle(p - position);
+  //   }
+  // }
 
-  // allow engage to override local target
-  if (engage) {
-    if (local_enemies.empty()) {
-      // look for enemies a bit further away
-      list<combid> t = g -> search_targets(id, position, 2 * nrad, target_condition(target_condition::enemy, ship::class_id).owned_by(owner));
-      if (!t.empty()) {
-	// target closest
-	combid tid = utility::value_min(t, (function<float(combid)>) [this, g] (combid sid) -> float {
-	    return utility::l2d2(g -> get_ship(sid) -> position - position);
-	  });
-	ship::ptr s = g -> get_ship(tid);
-	point delta = s -> position - position;
-	target_angle = utility::point_angle(delta);
-	target_speed = fmax(0, utility::sigmoid(utility::l2norm(delta) - 0.8 * nrad)) / g -> get_dt();
-      }
-    }
-  }
+  // // angle and speed for summon
+  // auto compute_summon = [=] (float &a, float &s) {
+  //   float test = abs(utility::angle_difference(fleet_target_angle, fleet_angle));
+  //   local_output("summon: travel:");
+  //   if (test > 2 * M_PI / 3) {
+  //     // in front of fleet
+  //     // slow down
+  //     s = fmin(0.6 * f -> stats.speed_limit, base_stats.stats[sskey::key::speed]);
+  //     local_output("summon: in fron of fleet, slowing down");
+  //   } else if (test > M_PI / 3) {
+  //     // side of fleet
+  //     a = fleet_angle;
+  //     local_output("summon: to side of fleet, angling in");
+  //   } else {
+  //     // back of fleet
+  //     a = fleet_angle;
+  //     if (check_space(a)) {
+  // 	s = base_stats.stats[sskey::key::speed];
+  // 	local_output("summon: behind fleet, speeding up");
+  //     }
+  //   }
+  // };
 
-  if (activate || (engage && local_enemies.size() > 0)) {
-    // keep it slow when engaging
-    target_speed = fmin(target_speed, max_local_speed);
-  }
+  // // angle and speed when running local policies
+  // auto compute_local = [this, local_output] (float &a, float &s) {
+  //   point local_delta = suggest.p - position;
+  //   a = utility::point_angle(local_delta);
+  //   s = base_stats.stats[sskey::key::speed];
 
-  // try to follow ships in front of you
-  apply_ships(local_friends, [this](ship::ptr s) {
-      float shift = utility::angle_difference(utility::point_angle(s -> position - position), angle);
-      float delta = utility::angle_difference(s -> angle, target_angle);
-      float w = 0.1;
-      target_angle += w * utility::angular_hat(shift) * utility::angular_hat(delta) * delta;
-    });   
+  //   local_output("setting local target angle: " + to_string(a));
+  //   local_output("setting local target speed: " + to_string(s) + " (delta is " + to_string(utility::l2norm(local_delta)) + ")");
+  // };
+
+  // // compute desired angle and speed
+  // if (summon) {
+  //   compute_summon(target_angle, target_speed);
+  //   local_output("summon");
+  // } else if (local) {
+  //   compute_local(target_angle, target_speed);
+  //   local_output("local");
+  // } else if (hold) {
+  //   target_speed = 0;
+  //   local_output("hold");
+  // } else if (travel) {
+  //   local_output("travel");
+  // } else if (scatter) {
+  //   // just avoid nearby enemies
+  //   if (local_enemies.size()) {
+  //     vector<float> enemies(na, 0);
+  //     apply_ships(local_enemies, [this, &enemies, local_output](ship::ptr s) {
+  // 	  int idx = utility::angle2index(na, utility::point_angle(s -> position - position));
+  // 	  enemies[idx] += s -> stats[sskey::key::mass] * s -> stats[sskey::key::ship_damage];
+  // 	  local_output("scatter: avoiding " + s -> id);
+  // 	});
+
+  //     enemies = utility::circular_kernel(enemies, 4);
+  //     target_angle = utility::index2angle(na, utility::vector_min(enemies, utility::identity_function<float>()));
+  //     target_speed = base_stats.stats[sskey::key::speed];
+  //     local_output("scatter: target angle: " + to_string(target_angle));
+  //   }
+  // }
+
+  // // allow engage to override local target
+  // if (engage) {
+  //   if (local_enemies.empty()) {
+  //     // look for enemies a bit further away
+  //     list<combid> t = g -> search_targets(id, position, 2 * nrad, target_condition(target_condition::enemy, ship::class_id).owned_by(owner));
+  //     if (!t.empty()) {
+  // 	// target closest
+  // 	combid tid = utility::value_min(t, (function<float(combid)>) [this, g] (combid sid) -> float {
+  // 	    return utility::l2d2(g -> get_ship(sid) -> position - position);
+  // 	  });
+  // 	ship::ptr s = g -> get_ship(tid);
+  // 	point delta = s -> position - position;
+  // 	target_angle = utility::point_angle(delta);
+  // 	target_speed = fmax(0, utility::sigmoid(utility::l2norm(delta) - 0.8 * nrad)) / g -> get_dt();
+  //     }
+  //   }
+  // }
+
+  // if (activate || (engage && local_enemies.size() > 0)) {
+  //   // keep it slow when engaging
+  //   target_speed = fmin(target_speed, max_local_speed);
+  // }
+
+  // // try to follow ships in front of you
+  // apply_ships(local_friends, [this](ship::ptr s) {
+  //     float shift = utility::angle_difference(utility::point_angle(s -> position - position), angle);
+  //     float delta = utility::angle_difference(s -> angle, target_angle);
+  //     float w = 0.1;
+  //     target_angle += w * utility::angular_hat(shift) * utility::angular_hat(delta) * delta;
+  //   });   
 }
 
 void ship::move(game_data *g){
   if (force_refresh || utility::random_uniform() < g -> get_dt() * 0.2) update_data(g);
 
-  auto local_output = [this] (string v) {
-    server::output(id + ": move: " + v);
-  };
+  auto local_output = [this] (string v) {server::output(id + ": move: " + v);};
 
   // clean up local_*
   list<combid> rbuf;
@@ -381,6 +400,7 @@ void ship::move(game_data *g){
   // shoot enemies if able
   if (compile_interactions().count(interaction::space_combat) && local_enemies.size()) {
     function<float(combid)> evalfun = [this, g, local_output] (combid sid) -> float {
+      // todo: don't cheat, use ship class template instead of actual ship!
       ship::ptr s = g -> get_ship(sid);
       float a = accuracy_check(s);
       float b = s -> stats[sskey::key::evasion] / s -> stats[sskey::key::mass];
@@ -424,7 +444,7 @@ void ship::move(game_data *g){
     }
   }
 
-  // check upgrade on_move hooks so they can modify target speed and angle  
+  // check upgrade on_move hooks
   for (auto v : upgrades) {
     upgrade u = upgrade::table().at(v);
     for (auto i : u.on_move) interaction::table().at(i).perform(this, NULL, g);
@@ -489,78 +509,78 @@ void ship::move(game_data *g){
   float current_speed = dt * stats[sskey::key::speed];
   point new_position = position + current_speed * utility::normv(angle);
 
-  // push out of impassable terrain
-  float t_rad = radius;
-  list<idtype> tids = g -> terrain_at(new_position, t_rad);
-  if (tids.size()) {
-    int tid = tids.front();
-    terrain_object x = g -> terrain[tid];
-    float d_best = INFINITY;
-    int bid = -1;
-    point inter, a, b;
-    for (int i = 0; i < x.border.size() - 1; i++) {
-      a = x.get_vertice(i, t_rad);
-      b = x.get_vertice(i + 1, t_rad);
-      point r;
-      if (position != new_position && utility::line_intersect(position, new_position, a, b, &r)) {
-	float d = utility::l2d2(position - r);
-	if (d < d_best) {
-	  d_best = d;
-	  bid = i;
-	  inter = r;
-	}
-      }
-    }
+  // // push out of impassable terrain
+  // float t_rad = radius;
+  // list<idtype> tids = g -> terrain_at(new_position, t_rad);
+  // if (tids.size()) {
+  //   int tid = tids.front();
+  //   terrain_object x = g -> terrain[tid];
+  //   float d_best = INFINITY;
+  //   int bid = -1;
+  //   point inter, a, b;
+  //   for (int i = 0; i < x.border.size() - 1; i++) {
+  //     a = x.get_vertice(i, t_rad);
+  //     b = x.get_vertice(i + 1, t_rad);
+  //     point r;
+  //     if (position != new_position && utility::line_intersect(position, new_position, a, b, &r)) {
+  // 	float d = utility::l2d2(position - r);
+  // 	if (d < d_best) {
+  // 	  d_best = d;
+  // 	  bid = i;
+  // 	  inter = r;
+  // 	}
+  //     }
+  //   }
 
-    if (bid == -1) {
-      if (x.triangle(position, t_rad)) {
-      	server::log("ship::move: terrain correction: ship already inside terrain!", "warning");
-      } else {
-      	server::log("ship::move: terrain correction: no intersection on travel line!", "warning");
-      }
+  //   if (bid == -1) {
+  //     if (x.triangle(position, t_rad)) {
+  //     	server::log("ship::move: terrain correction: ship already inside terrain!", "warning");
+  //     } else {
+  //     	server::log("ship::move: terrain correction: no intersection on travel line!", "warning");
+  //     }
       
-      // ship already in terrain, chose closest border
-      d_best = INFINITY;
-      bid = -1;
-      inter, a, b;
-      for (int i = 0; i < x.border.size() - 1; i++) {
-	a = x.get_vertice(i, t_rad);
-	b = x.get_vertice(i + 1, t_rad);
-	point r;
-	float d = utility::dpoint2line(new_position, a, b, &r);
-	if (d < d_best) {
-	  d_best = d;
-	  bid = i;
-	  inter = r;
-	}
-      }
-    }
+  //     // ship already in terrain, chose closest border
+  //     d_best = INFINITY;
+  //     bid = -1;
+  //     inter, a, b;
+  //     for (int i = 0; i < x.border.size() - 1; i++) {
+  // 	a = x.get_vertice(i, t_rad);
+  // 	b = x.get_vertice(i + 1, t_rad);
+  // 	point r;
+  // 	float d = utility::dpoint2line(new_position, a, b, &r);
+  // 	if (d < d_best) {
+  // 	  d_best = d;
+  // 	  bid = i;
+  // 	  inter = r;
+  // 	}
+  //     }
+  //   }
 
-    point d = b - a;
-    point n = d.y == 0 ? point(0, 1) : point(1, d.x / d.y);
-    if (utility::l2d2(inter + n - x.center) < utility::l2d2(inter - n - x.center)) {
-      // chose the normal pointing outwards
-      n = -n;
-    }
+  //   point d = b - a;
+  //   point n = d.y == 0 ? point(0, 1) : point(1, d.x / d.y);
+  //   if (utility::l2d2(inter + n - x.center) < utility::l2d2(inter - n - x.center)) {
+  //     // chose the normal pointing outwards
+  //     n = -n;
+  //   }
 
-    point corrected_position = inter + utility::normalize_and_scale(n, 0.1) + utility::sproject(new_position - position, d) * d;
+  //   point corrected_position = inter + utility::normalize_and_scale(n, 0.1) + utility::sproject(new_position - position, d) * d;
 
-    if (utility::l2norm(corrected_position - position) > current_speed) {
-      corrected_position = position + utility::normalize_and_scale(corrected_position - position, current_speed);
-    }
+  //   if (utility::l2norm(corrected_position - position) > current_speed) {
+  //     corrected_position = position + utility::normalize_and_scale(corrected_position - position, current_speed);
+  //   }
 
-    float an = utility::point_angle(-n);
-    float test = utility::angle_difference(selected_angle, an);
-    if (fabs(test) < M_PI / 4) {
-      require_private_path = true;
-    }
+  //   float an = utility::point_angle(-n);
+  //   float test = utility::angle_difference(selected_angle, an);
+  //   if (fabs(test) < M_PI / 4) {
+  //     require_private_path = true;
+  //   }
     
-    if (utility::l2d2(new_position - position) > 40) {
-      server::log("ship::move: jump!", "warning");
-    }
+  //   if (utility::l2d2(new_position - position) > 40) {
+  //     server::log("ship::move: jump!", "warning");
+  //   }
 
-    new_position = corrected_position;
-  }
+  //   new_position = corrected_position;
+  // }
 
   position = new_position;
   

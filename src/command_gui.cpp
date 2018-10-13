@@ -38,10 +38,9 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
   layout -> Pack(Separator::Create());
 
   hm_t<int, RadioButton::Ptr> policy;
-  policy[fleet::policy_reasonable] = RadioButton::Create("Reasonable");
-  policy[fleet::policy_aggressive] = RadioButton::Create("Aggressive", policy[fleet::policy_reasonable] -> GetGroup());
-  policy[fleet::policy_evasive] = RadioButton::Create("Evasive", policy[fleet::policy_reasonable] -> GetGroup());
-  policy[fleet::policy_maintain_course] = RadioButton::Create("Maintain Course", policy[fleet::policy_reasonable] -> GetGroup());
+  policy[fleet::policy_aggressive] = RadioButton::Create("Aggressive");
+  policy[fleet::policy_evasive] = RadioButton::Create("Evasive", policy[fleet::policy_aggressive] -> GetGroup());
+  policy[fleet::policy_maintain_course] = RadioButton::Create("Maintain Course", policy[fleet::policy_aggressive] -> GetGroup());
 
   selected_policy = c -> policy;
   policy[selected_policy] -> SetActive(true);

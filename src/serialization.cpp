@@ -340,8 +340,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const fleet &g){
     << g.owner
     << g.ships
     << g.heading
-    << g.path
-    << g.suggest_buf;
+    << g.path;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
@@ -354,8 +353,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet &g){
     >> g.owner
     >> g.ships
     >> g.heading
-    >> g.path
-    >> g.suggest_buf;
+    >> g.path;
 }
 
 // fleet analytics
@@ -390,14 +388,14 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet::analytics &g){
 }
 
 
-// fleet suggestion
-sf::Packet& st3::operator <<(sf::Packet& packet, const fleet::suggestion &g){
-  return packet << g.id << g.p;
-}
+// // fleet suggestion
+// sf::Packet& st3::operator <<(sf::Packet& packet, const fleet::suggestion &g){
+//   return packet << g.id << g.p;
+// }
 
-sf::Packet& st3::operator >>(sf::Packet& packet, fleet::suggestion &g){
-  return packet >> g.id >> g.p;
-}
+// sf::Packet& st3::operator >>(sf::Packet& packet, fleet::suggestion &g){
+//   return packet >> g.id >> g.p;
+// }
 
 // choice
 sf::Packet& st3::operator <<(sf::Packet& packet, const choice::choice &c){

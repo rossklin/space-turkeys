@@ -260,9 +260,9 @@ namespace st3{
   sf::Packet& operator <<(sf::Packet& packet, const fleet::analytics &g);
   sf::Packet& operator >>(sf::Packet& packet, fleet::analytics &g);
   
-  // fleet suggestion
-  sf::Packet& operator <<(sf::Packet& packet, const fleet::suggestion &g);
-  sf::Packet& operator >>(sf::Packet& packet, fleet::suggestion &g);
+  /* // fleet suggestion */
+  /* sf::Packet& operator <<(sf::Packet& packet, const fleet::suggestion &g); */
+  /* sf::Packet& operator >>(sf::Packet& packet, fleet::suggestion &g); */
 
   /*! stream a point into packet
     @param packet the packet

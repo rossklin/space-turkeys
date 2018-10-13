@@ -234,13 +234,12 @@ path_t game_data::get_path(point a, point b, float r) {
   throw logical_error("Get path reached end of frontier!");
 }
 
-int game_data::first_intersect(point a, point b, float r, int exclude, point *inter, int *border_idx) {
+int game_data::first_intersect(point a, point b, float r) {
   // find first intersected terrain object
   hm_t<idtype, list<pair<int, point> > > intersects;
   point inter_buf;
   r *= 0.9;
   for (auto &x : terrain) {
-    if (x.first == exclude) continue;
     for (int i = 0; i < x.second.border.size(); i++) {
       point p1 = x.second.get_vertice(i, r);
       point p2 = x.second.get_vertice(i + 1, r);
@@ -262,8 +261,6 @@ int game_data::first_intersect(point a, point b, float r, int exclude, point *in
       if (d < closest) {
 	closest = d;
 	tid = x.first;
-	if (inter) *inter = p;
-	if (border_idx) *border_idx = bid;
       }
     }
   }

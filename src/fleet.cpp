@@ -18,7 +18,7 @@ const string fleet_action::go_to = "go to";
 const string fleet_action::idle = "idle";
 
 const sint fleet::policy_aggressive = 1;
-const sint fleet::policy_reasonable = 2;
+// const sint fleet::policy_reasonable = 2;
 const sint fleet::policy_evasive = 4;
 const sint fleet::policy_maintain_course = 8;
 
@@ -26,13 +26,13 @@ const idtype fleet::server_pid = -1;
 const int fleet::update_period = 3; /*!< number of increments between fleet data updates */
 const int fleet::interact_d2 = 100; /*!< squared distance from target at which the fleet converges */
 
-const sint fleet::suggestion::summon = 1;
-const sint fleet::suggestion::engage = 2;
-const sint fleet::suggestion::scatter = 4;
-const sint fleet::suggestion::travel = 8;
-const sint fleet::suggestion::activate = 16;
-const sint fleet::suggestion::hold = 32;
-const sint fleet::suggestion::evade = 64;
+// const sint fleet::suggestion::summon = 1;
+// const sint fleet::suggestion::engage = 2;
+// const sint fleet::suggestion::scatter = 4;
+// const sint fleet::suggestion::travel = 8;
+// const sint fleet::suggestion::activate = 16;
+// const sint fleet::suggestion::hold = 32;
+// const sint fleet::suggestion::evade = 64;
 
 fleet::fleet(idtype pid, idtype idx){
   static mutex m;
@@ -61,7 +61,7 @@ sint fleet::default_policy(string action) {
   if (action == interaction::space_combat) {
     return policy_aggressive;
   } else {
-    return policy_reasonable;
+    return policy_maintain_course;
   }
 }
 
@@ -137,54 +137,54 @@ void fleet::give_commands(list<command> c, game_data *g){
   }
 }
 
-fleet::suggestion fleet::suggest(game_data *g) {
-  auto local_output = [this] (string v) {
-    server::output(id + ": suggest: " + v);
-  };
+// fleet::suggestion fleet::suggest(game_data *g) {
+//   auto local_output = [this] (string v) {
+//     server::output(id + ": suggest: " + v);
+//   };
   
-  if (stats.enemies.size()) {
-    suggestion s_evade(suggestion::evade, stats.evade_path);
-    if (!stats.can_evade) s_evade.id = suggestion::scatter;
+//   if (stats.enemies.size()) {
+//     suggestion s_evade(suggestion::evade, stats.evade_path);
+//     if (!stats.can_evade) s_evade.id = suggestion::scatter;
     
-    if (com.policy == policy_maintain_course) {
-      local_output("maintain course");
-      return suggestion(suggestion::travel, heading);
-    }else if (com.policy == policy_evasive) {
-      local_output("evade");
-      return s_evade;
-    }else{
-      point p = stats.enemies.front().first;
-      if (com.policy == policy_aggressive) {
-	local_output("aggressive engage: " + utility::point2string(p));
-	return suggestion(suggestion::engage, p);
-      } else if (com.policy == policy_reasonable) {
-	float h = stats.enemies.front().second / (stats.facing_ratio + 1);
-	if (suggest_buf.id == suggestion::engage) h *= 0.8;
-	if (suggest_buf.id == suggestion::evade) h /= 0.8;
+//     if (com.policy == policy_maintain_course) {
+//       local_output("maintain course");
+//       return suggestion(suggestion::travel, heading);
+//     }else if (com.policy == policy_evasive) {
+//       local_output("evade");
+//       return s_evade;
+//     }else{
+//       point p = stats.enemies.front().first;
+//       if (com.policy == policy_aggressive) {
+// 	local_output("aggressive engage: " + utility::point2string(p));
+// 	return suggestion(suggestion::engage, p);
+//       } else if (com.policy == policy_reasonable) {
+// 	float h = stats.enemies.front().second / (stats.facing_ratio + 1);
+// 	if (suggest_buf.id == suggestion::engage) h *= 0.8;
+// 	if (suggest_buf.id == suggestion::evade) h /= 0.8;
 
-	if (h < 0.5) {
-	  local_output("local engage");
-	  return suggestion(suggestion::engage, p);
-	}
-      }
+// 	if (h < 0.5) {
+// 	  local_output("local engage");
+// 	  return suggestion(suggestion::engage, p);
+// 	}
+//       }
       
-      local_output("evade");
-      return s_evade;
-    }
-  }else{
-    // peaceful times
-    if (stats.converge) {
-      local_output("activate");
-      return suggestion(suggestion::activate, heading);
-    }else if (is_idle()) {
-      local_output("hold");
-      return suggestion(suggestion::hold);
-    }else{
-      local_output("travel");
-      return suggestion(suggestion::travel, heading);
-    }
-  }
-}
+//       local_output("evade");
+//       return s_evade;
+//     }
+//   }else{
+//     // peaceful times
+//     if (stats.converge) {
+//       local_output("activate");
+//       return suggestion(suggestion::activate, heading);
+//     }else if (is_idle()) {
+//       local_output("hold");
+//       return suggestion(suggestion::hold);
+//     }else{
+//       local_output("travel");
+//       return suggestion(suggestion::travel, heading);
+//     }
+//   }
+// }
 
 // cluster enemy ships
 void fleet::analyze_enemies(game_data *g) {
@@ -356,7 +356,7 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
 
   analyze_enemies(g);
   check_action(g);
-  suggest_buf = suggest(g);
+  // suggest_buf = suggest(g);
   refresh_ships(g);
 }
 
@@ -459,16 +459,16 @@ float fleet::get_strength() {
   return stats.average_ship.get_dps() * stats.average_ship.get_hp() * ships.size();
 }
 
-fleet::suggestion::suggestion() {
-  id = 0;
-}
+// fleet::suggestion::suggestion() {
+//   id = 0;
+// }
 
-fleet::suggestion::suggestion(sint i) {
-  id = i;
-}
+// fleet::suggestion::suggestion(sint i) {
+//   id = i;
+// }
 
-fleet::suggestion::suggestion(sint i, point x) {
-  id = i;
-  p = x;
-}
+// fleet::suggestion::suggestion(sint i, point x) {
+//   id = i;
+//   p = x;
+// }
 

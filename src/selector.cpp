@@ -226,16 +226,16 @@ namespace st3{
 
       if (sf::Keyboard::isKeyPressed(sf::Keyboard::L)) {
 	// debug: add suggestion
-	hm_t<int, string> suggest_names;
-	suggest_names[suggestion::summon] = "summon";
-	suggest_names[fleet::suggestion::engage] = "engage";
-	suggest_names[fleet::suggestion::scatter] = "scatter";
-	suggest_names[fleet::suggestion::travel] = "travel";
-	suggest_names[fleet::suggestion::activate] = "activate";
-	suggest_names[fleet::suggestion::hold] = "hold";
-	suggest_names[fleet::suggestion::evade] = "evade";
+	// hm_t<int, string> suggest_names;
+	// suggest_names[suggestion::summon] = "summon";
+	// suggest_names[fleet::suggestion::engage] = "engage";
+	// suggest_names[fleet::suggestion::scatter] = "scatter";
+	// suggest_names[fleet::suggestion::travel] = "travel";
+	// suggest_names[fleet::suggestion::activate] = "activate";
+	// suggest_names[fleet::suggestion::hold] = "hold";
+	// suggest_names[fleet::suggestion::evade] = "evade";
 
-	graphics::draw_text(w, suggest_names[suggest_buf.id], position, 26);
+	// graphics::draw_text(w, suggest_names[suggest_buf.id], position, 26);
 
 	// debug: add evade path
 	if (stats.can_evade) {
@@ -496,12 +496,10 @@ void command_selector::draw(window_t &w){
   
   policy_symbols[fleet::policy_aggressive] = "A";
   policy_symbols[fleet::policy_evasive] = "E";
-  policy_symbols[fleet::policy_reasonable] = "R";
   policy_symbols[fleet::policy_maintain_course] = "M";
 
   policy_colors[fleet::policy_aggressive] = sf::Color::Red;
   policy_colors[fleet::policy_evasive] = sf::Color::Yellow;
-  policy_colors[fleet::policy_reasonable] = sf::Color::Green;
   policy_colors[fleet::policy_maintain_course] = sf::Color::Blue;
   
   text.setFont(graphics::default_font); 

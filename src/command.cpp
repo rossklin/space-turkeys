@@ -9,7 +9,7 @@ st3::command::command(){
   target = "";
   action = "";
   origin = "";
-  policy = fleet::policy_reasonable;
+  policy = fleet::policy_maintain_course;
 }
 
 bool st3::operator ==(const command &a, const command &b){

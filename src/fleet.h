@@ -23,24 +23,24 @@ namespace st3{
     static ptr create(idtype pid, idtype idx);
     static const std::string class_id;
 
-    class suggestion {
-    public:
-      // fleet to ship suggestions
-      static const sint summon;
-      static const sint engage;
-      static const sint scatter;
-      static const sint travel;
-      static const sint activate;
-      static const sint hold;
-      static const sint evade;
+    /* class suggestion { */
+    /* public: */
+    /*   // fleet to ship suggestions */
+    /*   static const sint summon; */
+    /*   static const sint engage; */
+    /*   static const sint scatter; */
+    /*   static const sint travel; */
+    /*   static const sint activate; */
+    /*   static const sint hold; */
+    /*   static const sint evade; */
 
-      sint id;
-      point p;
+    /*   sint id; */
+    /*   point p; */
 
-      suggestion();
-      suggestion(sint i);
-      suggestion(sint i, point p);
-    };
+    /*   suggestion(); */
+    /*   suggestion(sint i); */
+    /*   suggestion(sint i, point p); */
+    /* }; */
 
     struct analytics {
       std::list<std::pair<point, float> > enemies;
@@ -64,7 +64,6 @@ namespace st3{
 
     // fleet policies
     static const sint policy_aggressive;
-    static const sint policy_reasonable;
     static const sint policy_evasive;
     static const sint policy_maintain_course;
 
@@ -76,7 +75,7 @@ namespace st3{
     command com; /*!< the fleet's command (currently this only holds the target) */
     point heading;
     std::list<point> path;
-    suggestion suggest_buf;
+    /* suggestion suggest_buf; */
 
     // mechanical components
     int update_counter; /*!< counter for updating fleet data */
@@ -106,7 +105,7 @@ namespace st3{
     void analyze_enemies(game_data *g);
     void update_data(game_data *g, bool set_force_refresh = false);
     void remove_ship(combid i);
-    suggestion suggest(game_data *g);
+    /* suggestion suggest(game_data *g); */
     float get_hp();
     float get_dps();
     float get_strength();

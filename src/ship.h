@@ -1,5 +1,4 @@
-#ifndef _STK_SHIP
-#define _STK_SHIP
+#pragma once
 
 #include <string>
 #include <set>
@@ -39,7 +38,6 @@ namespace st3{
     float target_speed;
     bool activate;
     bool force_refresh;
-    bool require_private_path;
     path_t private_path;
     
     std::list<combid> neighbours;
@@ -80,4 +78,3 @@ namespace st3{
     float accuracy_check(ship::ptr a);
   };
 };
-#endif
