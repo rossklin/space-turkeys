@@ -1,4 +1,8 @@
 * current work
+** ship movement
+*** let each ship track which fleet path nodes it has passed
+    Only compute private path if next fleet path node is not in sight
+*** test movement of different ship classes, with upgrades etc
 ** balancing
    late hm:
    [improved] !corsair > fighter
@@ -25,7 +29,9 @@
    voyager - 5 accuracy, + 5 shield
    
 ** play testing
-*** Identified error in path search algorithm
+*** [J] Ships get stuck in "traffic jam" (perhaps resolving avoid collision stuff?)
+*** [J] Need to move ships out of terrain
+*** [J] Identified error in path search algorithm
     Convex path around sub object may intersect "parent" object,
     causing infinite recursion. Need to step to next parent vertice
     somehow, or possibly include parent vertices when building convex
@@ -39,7 +45,7 @@
 *** [J] looks like ships get pushed to wrong angle when they hit terrain
 *** [J] get_path creates multiples of same point, probably in "path_around", causing "same point" in line intersect
 *** [J] new get_path not working, intersects objects in recursion
-*** still get occasional fallback case "ship already in terrain"
+*** [J] still get occasional fallback case "ship already in terrain"
 *** solars still get stuck in terrain
 *** got large number of "line_intersect: same point" at one point
     Possibly caused when ship enters impassable terrain?

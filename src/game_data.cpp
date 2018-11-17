@@ -81,13 +81,12 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
   return res;
 }
 
-list<idtype> game_data::terrain_at(point p, float r) {
-  list<idtype> res;
+idtype game_data::terrain_at(point p, float r) {
   for (auto &x : terrain) {
     int j = x.second.triangle(p, r);
-    if (j > -1) res.push_back(x.first);
+    if (j > -1) return x.first;
   }
-  return res;
+  return -1;
 }
 
 path_t game_data::get_path(point a, point b, float r) {
@@ -100,20 +99,28 @@ path_t game_data::get_path(point a, point b, float r) {
   if (tid == -1) return path_t(1, b);
 
   // check if we're inside terrain
-  auto tids = terrain_at(a, r_inside);
-  if (tids.size() > 0) {
-    tid = tids.front();
+  tid = terrain_at(a, r_inside);
+  if (tid > -1) {
     point p0 = terrain[tid].closest_exit(a, r);
+
+    if (terrain_at(p0, r_inside) > -1) {
+      throw logical_error("Closest exit still inside terrain!");
+    }
+
     path_t res = get_path(p0, b, r);
     res.push_front(p0);
     return res;
   }
 
   // check if target is inside terrain
-  tids = terrain_at(b, r_inside);
-  if (tids.size() > 0) {
-    tid = tids.front();
+  tid = terrain_at(b, r_inside);
+  if (tid > -1) {
     point p0 = terrain[tid].closest_exit(b, r);
+
+    if (terrain_at(p0, r_inside) > -1) {
+      throw logical_error("Closest exit for target still inside terrain!");
+    }
+
     path_t res = get_path(a, p0, r);
     return res;
   }
@@ -645,12 +652,19 @@ void game_data::distribute_ships(list<combid> sh, point p){
   float density = 0.1;
   float area = sh.size() / density;
   float radius = sqrt(area / M_PI);
+
+  auto sample_position = [this,p,radius] (float r) -> point {
+    point x;
+    do {
+      x = {utility::random_normal(p.x, radius), utility::random_normal(p.y, radius)};
+    } while (terrain_at(x, r) > -1);
+    return x;
+  };
   
   for (auto x : sh){
     ship::ptr s = get_ship(x);
-    s -> position.x = utility::random_normal(p.x, radius);
-    s -> position.y = utility::random_normal(p.y, radius);
-    entity_grid -> insert(s -> id, s -> position);
+    s->position = sample_position(s->radius);
+    entity_grid->insert(s->id, s->position);
   }
 }
 
@@ -711,11 +725,9 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 	}
 
 	// check against terrain
-	list<idtype> tids = terrain_at(x[i], 50);
-	for (auto tid : tids) {
-	  if (terrain[tid].triangle(x[i], 50) > -1) {
-	    x[i] += utility::normalize_and_scale(x[i] - terrain[tid].center, e);
-	  }
+	int tid = terrain_at(x[i], 50);
+	if (tid > -1 && terrain[tid].triangle(x[i], 50) > -1) {
+	  x[i] += utility::normalize_and_scale(x[i] - terrain[tid].center, e);
 	}	
       }
     }
@@ -831,12 +843,10 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 
   // check waypoints so they aren't covered
   for (auto w : all<waypoint>()) {
-    list<idtype> tids = terrain_at(w -> position, 0);
-    for (auto tid : tids) {
-      if (terrain[tid].triangle(w -> position, 0) > -1) {
-	remove_entity(w -> id);
-	break;
-      }
+    int tid = terrain_at(w -> position, 0);
+    if (tid > -1 && terrain[tid].triangle(w -> position, 0) > -1) {
+      remove_entity(w -> id);
+      break;
     }
   }
 }
@@ -1181,7 +1191,7 @@ animation_tracker_info game_data::get_tracker(combid id) {
 
     if (get_entity(id) -> isa(ship::class_id)) {
       ship::ptr s = get_ship(id);
-      info.v = s -> stats[sskey::key::speed] * utility::normv(s -> angle);
+      info.v = s->velocity;
     } else {
       info.v = point(0, 0);
     }

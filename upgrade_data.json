@@ -21,7 +21,7 @@
 	},
 
 	"warp drive" : {
-	    "speed" : "2#1"
+	    "thrust" : "2#1"
 	},
 
 	"nano scout" : {
@@ -67,7 +67,7 @@
 	},
 
 	"subspace drive" : {
-	    "speed" : "2#0"
+	    "thrust" : "2#0"
 	}
     }
 }

@@ -22,9 +22,13 @@ namespace st3{
     static std::list<std::string> all_classes();
     static std::string starting_ship;
     static const int na;
+    static const float friction;
 
     combid fleet_id; /*!< id of the ship's fleet */
     sfloat angle; /*!< ship's angle */
+    sfloat thrust;
+    point force;
+    point velocity;
     sfloat load;
     ssfloat_t base_stats;
     sint passengers;
@@ -68,7 +72,9 @@ namespace st3{
     ship(const ship_stats &s);
     ship() = default;
     ~ship() = default;
-    
+
+    float speed();
+    float max_speed();
     float flex_weight(float a);
     void update_data(game_data *g);
     void receive_damage(game_data *g, game_object::ptr from, float damage);

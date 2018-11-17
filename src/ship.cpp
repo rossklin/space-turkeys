@@ -12,7 +12,13 @@ using namespace st3;
 
 const string ship::class_id = "ship";
 const int ship::na = 10;
+const float ship::friction = 0.3;
 string ship::starting_ship;
+
+// utility
+void apply_ships(game_data *g, list<combid> sids, function<void(ship::ptr)> f) {
+  for (combid sid : sids) f(g -> get_ship(sid));
+}
 
 ship::ship(const ship &s) : game_object(s), ship_stats(s) {
   *this = s;
@@ -31,7 +37,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
   bool success;
 
   // base stats
-  s.stats[sskey::key::speed] = 0.5;
+  s.stats[sskey::key::thrust] = 0.5;
   s.stats[sskey::key::hp] = 1;
   s.stats[sskey::key::mass] = 1;
   s.stats[sskey::key::accuracy] = 1;
@@ -136,6 +142,7 @@ const hm_t<string, ship_stats>& ship_stats::table(){
 
 ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   base_stats = s;
+  velocity = {0, 0};
   fleet_id = identifier::source_none;
   remove = false;
   load = 0;
@@ -143,7 +150,7 @@ ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   passengers = 0;
   is_landed = false;
   is_loaded = false;
-  radius = sqrt(stats[sskey::key::mass]);
+  radius = pow(stats[sskey::key::mass], 1/(float)3);
   force_refresh = true;
 }
 
@@ -157,6 +164,34 @@ void ship::pre_phase(game_data *g){
   load = fmin(load + dt, stats[sskey::key::load_time]);
   stats[sskey::key::hp] = fmin(stats[sskey::key::hp] + dt * stats[sskey::key::regeneration], base_stats.stats[sskey::key::hp]);
   stats[sskey::key::shield] = fmin(stats[sskey::key::shield] + dt * 0.01, base_stats.stats[sskey::key::shield]);
+
+  // calculate forces
+
+  // force from drive
+  force = thrust * utility::normv(angle);
+
+  // force from neighbours
+  apply_ships(g, neighbours, [this] (ship::ptr s) {
+      point delta = position - s->position;
+      float d2 = utility::l2d2(delta);
+      float r = radius + s->radius;
+      float k = 10 * exp(-d2/pow(r, 2));
+      force += utility::normalize_and_scale(delta, k);
+    });
+  
+  // accelleration from terrain
+  int tid = g -> terrain_at(position, 2 * radius);
+  if (tid > -1) {
+    terrain_object x = g -> terrain[tid];
+    point t = x.closest_exit(position, 2 * radius);
+    point delta = t - position;
+    float d = utility::l2norm(delta);
+    float k = 10 * stats[sskey::key::mass] * utility::sigmoid(d, radius) / radius;
+    force += utility::normalize_and_scale(delta, k);
+  }
+
+  // force from friction
+  force += utility::normalize_and_scale(-velocity, pow(radius, 2) * friction * utility::l2norm(velocity));
 }
 
 bool ship::check_space(float a) {
@@ -166,6 +201,14 @@ bool ship::check_space(float a) {
   }
   return free_angle[utility::angle2index(na, a)] > 2;
 };
+
+float ship::speed() {
+  return utility::l2norm(velocity);
+}
+
+float ship::max_speed() {
+  return base_stats.stats[sskey::key::thrust] / (friction * base_stats.stats[sskey::key::mass]);
+}
 
 void ship::update_data(game_data *g) {
   force_refresh = false;
@@ -191,13 +234,12 @@ void ship::update_data(game_data *g) {
   target_angle = fleet_target_angle;
   point fleet_delta = f -> position - position;
   float fleet_angle = utility::point_angle(fleet_delta);
-  float max_speed = base_stats.stats[sskey::key::speed];
 
   target_speed = f -> stats.speed_limit;
 
   if (private_path.size() > 0) {
     target_angle = utility::point_angle(private_path.front() - position);
-    target_speed = max_speed;
+    target_speed = max_speed();
   }
 
   // analyze neighbourhood
@@ -209,12 +251,8 @@ void ship::update_data(game_data *g) {
   local_enemies.clear();
   local_friends.clear();
 
-  auto apply_ships = [this, g] (list<combid> sids, function<void(ship::ptr)> f) {
-    for (combid sid : sids) f(g -> get_ship(sid));
-  };
-
   // precompute enemies and friends
-  apply_ships(neighbours, [this] (ship::ptr s) {
+  apply_ships(g, neighbours, [this] (ship::ptr s) {
       if (s -> owner == owner){
 	local_friends.push_back(s -> id);
       }else{
@@ -229,13 +267,13 @@ void ship::update_data(game_data *g) {
     point p = g -> get_ship(sid) -> position;
     float d = utility::l2norm(p - position);
     target_angle = utility::point_angle(p - position);
-    target_speed = max_speed * exp(-interaction_radius() / (d + 1));
+    target_speed = max_speed() * exp(-interaction_radius() / (d + 1));
   }
 
   // flee from fleet enemies
   if (evade && f -> stats.can_evade) {
     target_angle = utility::point_angle(f -> stats.evade_path - position);
-    target_speed = max_speed;
+    target_speed = max_speed();
   }
 
   // let neighbours influence angle and speed
@@ -243,8 +281,8 @@ void ship::update_data(game_data *g) {
 
   if (local_friends.size() > 0) {
     point tn(0, 0);
-    apply_ships(local_friends, [this, &tn, max_speed] (ship::ptr s) {
-	tn += fmin(s -> stats[sskey::key::speed], max_speed) * utility::normv(s -> target_angle);
+    apply_ships(g, local_friends, [this, &tn] (ship::ptr s) {
+	tn += fmin(s->speed(), max_speed()) * utility::normv(s->angle);
       });
     tn = 1 / (float)local_friends.size() * tn;
 
@@ -256,7 +294,7 @@ void ship::update_data(game_data *g) {
 
   // precompute available angles
   free_angle = vector<float>(na, INFINITY);
-  apply_ships(neighbours, [this] (ship::ptr s) {
+  apply_ships(g, neighbours, [this] (ship::ptr s) {
       point delta = s -> position - position;
       float a = utility::point_angle(delta);
       float d = utility::l2norm(delta) - radius - s -> radius;
@@ -339,7 +377,7 @@ void ship::update_data(game_data *g) {
   //   // just avoid nearby enemies
   //   if (local_enemies.size()) {
   //     vector<float> enemies(na, 0);
-  //     apply_ships(local_enemies, [this, &enemies, local_output](ship::ptr s) {
+  //     apply_ships(g, local_enemies, [this, &enemies, local_output](ship::ptr s) {
   // 	  int idx = utility::angle2index(na, utility::point_angle(s -> position - position));
   // 	  enemies[idx] += s -> stats[sskey::key::mass] * s -> stats[sskey::key::ship_damage];
   // 	  local_output("scatter: avoiding " + s -> id);
@@ -376,7 +414,7 @@ void ship::update_data(game_data *g) {
   // }
 
   // // try to follow ships in front of you
-  // apply_ships(local_friends, [this](ship::ptr s) {
+  // apply_ships(g, local_friends, [this](ship::ptr s) {
   //     float shift = utility::angle_difference(utility::point_angle(s -> position - position), angle);
   //     float delta = utility::angle_difference(s -> angle, target_angle);
   //     float w = 0.1;
@@ -454,64 +492,71 @@ void ship::move(game_data *g){
     for (auto i : u.on_move) interaction::table().at(i).perform(this, NULL, g);
   }
 
-  // check if there is free space at target angle
-  float selected_angle = target_angle;
-  float selected_speed = target_speed;
-  if (!check_space(selected_angle)) {
-    float check_first = 1 - 2 * utility::random_int(2);
-    float spread = 0.2 * M_PI;
+  // // check if there is free space at target angle
+  // float selected_angle = target_angle;
+  // float selected_speed = target_speed;
+  // if (!check_space(selected_angle)) {
+  //   float check_first = 1 - 2 * utility::random_int(2);
+  //   float spread = 0.2 * M_PI;
     
-    if (check_space(selected_angle + check_first * spread)) {
-      selected_angle = selected_angle + check_first * spread;
-      local_output("blocked: found new space to the right");
-    } else {
-      check_first *= -1;
-      if (check_space(selected_angle + check_first * spread)) {
-	selected_angle = selected_angle + check_first * spread;
-	local_output("blocked: found new space to the left");
-      } else {
-	selected_speed = 0;
-	local_output("blocked: failed to find free space");
-      }
-    }
-  }
+  //   if (check_space(selected_angle + check_first * spread)) {
+  //     selected_angle = selected_angle + check_first * spread;
+  //     local_output("blocked: found new space to the right");
+  //   } else {
+  //     check_first *= -1;
+  //     if (check_space(selected_angle + check_first * spread)) {
+  // 	selected_angle = selected_angle + check_first * spread;
+  // 	local_output("blocked: found new space to the left");
+  //     } else {
+  // 	selected_speed = 0;
+  // 	local_output("blocked: failed to find free space");
+  //     }
+  //   }
+  // }
+
+  // if (target_speed > 0) {
+  //   // check if either side is crowded
+  //   bool crowd_left = !check_space(angle - M_PI / 2);
+  //   bool crowd_right = !check_space(angle + M_PI / 2);
+  //   if (crowd_left && !crowd_right) {
+  //     // make sure target angle is to right of angle
+  //     if (angle_miss < 0){
+  // 	target_angle = angle + 0.1;
+  // 	local_output("avoid collision: edge right");
+  //     }
+  //   } else if (crowd_right && !crowd_left) {
+  //     // make sure target angle is to left of angle
+  //     if (angle_miss > 0) {
+  // 	target_angle = angle - 0.1;
+  // 	local_output("avoid collision: edge left");
+  //     }
+  //   }
+  // }
 
   // move
   float dt = g -> get_dt();
   float angle_increment = fmin(2 / pow(stats[sskey::key::mass], 0.33), 1);
-  float acceleration = 0.1 * base_stats.stats[sskey::key::speed] / pow(stats[sskey::key::mass], 0.33);
   float epsilon = dt * 0.01;
-  float angle_miss = utility::angle_difference(selected_angle, angle);
+  float angle_miss = utility::angle_difference(target_angle, angle);
   float angle_sign = utility::signum(angle_miss, epsilon);
 
-  if (selected_speed > 0) {
-    // check if either side is crowded
-    bool crowd_left = !check_space(angle - M_PI / 2);
-    bool crowd_right = !check_space(angle + M_PI / 2);
-    if (crowd_left && !crowd_right) {
-      // make sure target angle is to right of angle
-      if (angle_miss < 0){
-	selected_angle = angle + 0.1;
-	local_output("avoid collision: edge right");
-      }
-    } else if (crowd_right && !crowd_left) {
-      // make sure target angle is to left of angle
-      if (angle_miss > 0) {
-	selected_angle = angle - 0.1;
-	local_output("avoid collision: edge left");
-      }
-    }
-  }
+  // slow down if missing angle or going too fast
+  float forward_speed = utility::scalar_mult(velocity, utility::normv(target_angle));
 
-  // slow down if missing angle
-  float speed_value = fmax(cos(angle_miss), 0) * selected_speed;
-  float speed_miss = speed_value - stats[sskey::key::speed];
-  float speed_sign = utility::signum(speed_miss, epsilon);
-  stats[sskey::key::speed] += fmin(acceleration, fabs(speed_miss)) * speed_sign;
-  stats[sskey::key::speed] = fmin(fmax(stats[sskey::key::speed], 0), base_stats.stats[sskey::key::speed]);
+  // update thrust, angle, velocity and position
+  thrust = fmax(cos(angle_miss), 0) * utility::sigmoid(target_speed - 0.8 * forward_speed) * (target_speed > 0.8 * forward_speed) * stats[sskey::key::thrust];
   angle += fmin(dt * angle_increment, fabs(angle_miss)) * angle_sign;
-  float current_speed = dt * stats[sskey::key::speed];
-  point new_position = position + current_speed * utility::normv(angle);
+  velocity += dt / stats[sskey::key::mass] * force;
+  position += dt * velocity;
+  
+  g -> entity_grid -> move(id, position);
+
+  // float speed_miss = speed_value - stats[sskey::key::speed];
+  // float speed_sign = utility::signum(speed_miss, epsilon);
+  // stats[sskey::key::speed] += fmin(acceleration, fabs(speed_miss)) * speed_sign;
+  // stats[sskey::key::speed] = fmin(fmax(stats[sskey::key::speed], 0), base_stats.stats[sskey::key::speed]);
+  // float current_speed = dt * stats[sskey::key::speed];
+  // point new_position = position + current_speed * utility::normv(angle);
 
   // // push out of impassable terrain
   // float t_rad = radius;
@@ -586,9 +631,9 @@ void ship::move(game_data *g){
   //   new_position = corrected_position;
   // }
 
-  position = new_position;
+  // position = new_position;
   
-  g -> entity_grid -> move(id, position);
+  // g -> entity_grid -> move(id, position);
 }
 
 void ship::post_phase(game_data *g){}
@@ -679,7 +724,9 @@ void ship::on_liftoff(solar::ptr from, game_data *g){
   g -> players[owner].research_level.repair_ship(*this, from);
   is_landed = false;
   force_refresh = true;
-  stats[sskey::key::speed] = 0;
+  thrust = 0;
+  velocity = {0,0};
+  force = {0,0};
 
   for (auto v : upgrades) {
     upgrade u = upgrade::table().at(v);

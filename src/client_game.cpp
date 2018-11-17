@@ -510,7 +510,7 @@ bool game::simulation_step(){
 	      sh -> position = utility::cubic_interpolation(pbuf, t - offset);
 	      sh -> angle = utility::cubic_interpolation(abuf, t - offset);
 	    } else {
-	      sh -> position += sub_ratio * sh -> stats[sskey::key::speed] * utility::normv(sh -> angle);
+	      sh -> position += sub_ratio * sh->velocity;
 	    }
 	  }
 	}

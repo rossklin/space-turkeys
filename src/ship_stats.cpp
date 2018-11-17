@@ -43,7 +43,7 @@ typename sskey::key modifiable_ship_stats<T>::lookup_key(string name) {
   static bool init = false;
 
   if (!init) {
-    map["speed"] = sskey::key::speed;
+    map["thrust"] = sskey::key::thrust;
     map["hp"] = sskey::key::hp;
     map["mass"] = sskey::key::mass;
     map["accuracy"] = sskey::key::accuracy;

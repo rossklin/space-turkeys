@@ -76,7 +76,7 @@ namespace st3{
     int first_intersect(point a, point b, float r);
     path_t get_path(point a, point b, float r);
     void rebuild_evm();
-    std::list<idtype> terrain_at(point p, float r);
+    idtype terrain_at(point p, float r);
     void extend_universe(int i, int j, bool starting_area = false);
     void discover(point x, float r, bool starting_area = false);
     void update_discover();

@@ -343,7 +343,7 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
   stats.average_ship = ssfloat_t();
   for (auto k : ships){
     ship::ptr s = g -> get_ship(k);
-    speed = fmin(speed, s -> base_stats.stats[sskey::key::speed]);
+    speed = fmin(speed, s->max_speed());
     r2 = fmax(r2, utility::l2d2(s -> position - position));
     stats.vision_buf = fmax(stats.vision_buf, s -> vision());
     for (int i = 0; i < sskey::key::count; i++) stats.average_ship.stats[i] += s -> stats[i];

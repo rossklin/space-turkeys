@@ -12,7 +12,7 @@ game_settings::game_settings(){
   solar_meanrad = 15;
   solar_density = 1e-4;
   fleet_default_radius = 10;
-  dt = 0.1;
+  dt = 0.05;
   space_index_ratio = 400;
 }
 

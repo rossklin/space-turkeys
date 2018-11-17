@@ -1,7 +1,7 @@
 {
     "ship" : {
 	"scout" : {
-	    "speed" : 6,
+	    "thrust" : 0.6,
 	    "hp" : 1,
 	    "mass" : 1,
 	    "accuracy" : 0.5,
@@ -36,7 +36,7 @@
 	},
 
 	"fighter" : {
-	    "speed" : 4.5,
+	    "thrust" : 1.3,
 	    "hp" : 1,
 	    "mass" : 3,
 	    "ship damage" : 2.2,
@@ -66,7 +66,7 @@
 	},
 
 	"bomber" : {
-	    "speed" : 3,
+	    "thrust" : 3,
 	    "hp" : 4,
 	    "mass" : 10,
 	    "solar damage" : 4,
@@ -94,7 +94,7 @@
 	"corsair" : {
 	    "hp" : 10,
 	    "mass" : 15,
-	    "speed" : 6,
+	    "thrust" : 9,
 	    "solar damage" : 0,
 	    "ship damage" : 0.9,
 	    "accuracy" : 2,
@@ -126,7 +126,7 @@
 	"destroyer" : {
 	    "hp" : 100,
 	    "mass" : 55,
-	    "speed" : 5,
+	    "thrust" : 26,
 	    "solar damage" : 0,
 	    "ship damage" : 100,
 	    "accuracy" : 2,
@@ -158,7 +158,7 @@
 	"battleship" : {
 	    "hp" : 120,
 	    "mass" : 120,
-	    "speed" : 6,
+	    "thrust" : 60,
 	    "solar damage" : 20,
 	    "ship damage" : 20,
 	    "accuracy" : 5,
@@ -193,7 +193,7 @@
 	"voyager" : {
 	    "hp" : 30,
 	    "mass" : 30,
-	    "speed" : 10,
+	    "thrust" : 30,
 	    "solar damage" : 5,
 	    "ship damage" : 10,
 	    "accuracy" : 35,
@@ -224,7 +224,7 @@
 	},
 
 	"colonizer" : {
-	    "speed" : 3,
+	    "thrust" : 9,
 	    "hp" : 20,
 	    "mass" : 30,
 	    "upgrades" : ["colonize"],
@@ -245,7 +245,7 @@
 	},
 
 	"freighter" : {
-	    "speed" : 4.5,
+	    "thrust" : 13,
 	    "hp" : 20,
 	    "mass" : 30,
 	    "upgrades" : ["trade"],

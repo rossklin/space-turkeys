@@ -162,6 +162,8 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const ship &g){
     << static_cast<const ship_stats &> (g)
     << g.fleet_id
     << g.angle
+    << g.thrust
+    << g.velocity
     << g.load
     << g.base_stats
     << g.cargo
@@ -177,6 +179,8 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
     >> static_cast<ship_stats &> (g)
     >> g.fleet_id
     >> g.angle
+    >> g.thrust
+    >> g.velocity
     >> g.load
     >> g.base_stats
     >> g.cargo
