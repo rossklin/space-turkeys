@@ -1,7 +1,9 @@
 * current work
 ** ship movement
-*** let each ship track which fleet path nodes it has passed
-    Only compute private path if next fleet path node is not in sight
+*** [done] combat: stay on target till not available
+*** [test] collide with enemy ships
+*** distribute ships so they don't collide
+*** check that ships actually use private path
 *** test movement of different ship classes, with upgrades etc
 ** balancing
    late hm:

@@ -74,6 +74,7 @@ namespace st3{
     std::set<std::string> interactions; /*!< set of available interactions */
     command com; /*!< the fleet's command (currently this only holds the target) */
     point heading;
+    bool pop_heading;
     std::list<point> path;
     /* suggestion suggest_buf; */
 

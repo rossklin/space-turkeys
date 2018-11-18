@@ -1005,8 +1005,10 @@ void game_data::build(){
       starter_fleet["voyager"] = 2;
     } else if (settings.starting_fleet == "battleships") {
       starter_fleet["battleship"] = 40;
+    } else if (settings.starting_fleet == "fighters") {
+      starter_fleet["fighter"] = 40;
     } else if (settings.starting_fleet == "massive") {
-      for (auto sc : ship::all_classes()) starter_fleet[sc] = 100;
+      for (auto sc : ship::all_classes()) starter_fleet[sc] = 40;
     } else {
       throw player_error("Invalid starting fleet option: " + settings.starting_fleet);
     }

@@ -195,7 +195,7 @@ void terrain_object::set_vertice(int idx, point p) {
   border[utility::int_modulus(idx, border.size())] = p;
 }
   
-int terrain_object::triangle(point p, float rad) {
+int terrain_object::triangle(point p, float rad) const {
   float a_sol = utility::point_angle(p - center);
   for (int j = 0; j < border.size(); j++) {
     if (utility::in_triangle(center, get_vertice(j, rad), get_vertice(j+1, rad), p)) return j;
@@ -207,10 +207,11 @@ int terrain_object::triangle(point p, float rad) {
 point terrain_object::closest_exit(point p, float r) const {
   float dmin = INFINITY;
   point res;
+  float rbuf = 1.0001 * r;
 
   for (int i = 0; i < border.size(); i++) {
-    point a = get_vertice(i, r);
-    point b = get_vertice(i+1, r);
+    point a = get_vertice(i, rbuf);
+    point b = get_vertice(i+1, rbuf);
     point x;
     float d = utility::dpoint2line(p, a, b, &x);
     if (d < dmin) {
@@ -219,5 +220,11 @@ point terrain_object::closest_exit(point p, float r) const {
     }
   }
 
-  return res;
+  int test = triangle(res, r);
+
+  if (test > -1) {
+    return closest_exit(res, r);
+  } else {
+    return res;
+  }
 }

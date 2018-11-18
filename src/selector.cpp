@@ -331,8 +331,9 @@ namespace st3{
       
       graphics::draw_ship(w, *this, get_color(), graphics::ship_scale_factor * radius);
 
-      // debug
-      graphics::draw_circle(w, position, radius, sf::Color(255,255,255,50));
+      // // debug
+      // float tr = thrust / stats[sskey::key::thrust];
+      // graphics::draw_circle(w, position, radius, sf::Color(255 * (1 - tr), 0, 255 * (tr), 100));
     }
 
     template<>

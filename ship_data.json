@@ -1,7 +1,7 @@
 {
     "ship" : {
 	"scout" : {
-	    "thrust" : 0.6,
+	    "thrust" : 2,
 	    "hp" : 1,
 	    "mass" : 1,
 	    "accuracy" : 0.5,
@@ -36,7 +36,7 @@
 	},
 
 	"fighter" : {
-	    "thrust" : 1.3,
+	    "thrust" : 3,
 	    "hp" : 1,
 	    "mass" : 3,
 	    "ship damage" : 2.2,
@@ -133,6 +133,7 @@
 	    "evasion" : 2,
 	    "shield" : 2,
 	    "vision range" : 60,
+	    "interaction radius" : 60,
 	    "cannon flex" : 0.2,
 	    "load time" : 9,
 	    "upgrades" : ["space combat"],
@@ -165,6 +166,7 @@
 	    "evasion" : 5,
 	    "shield" : 17,
 	    "vision range" : 100,
+	    "interaction radius" : 80,
 	    "load time" : 7,
 	    "upgrades" : ["space combat", "bombard"],
 	    "depends facility level" : 4,
@@ -201,6 +203,7 @@
 	    "shield" : 40,
 	    "load time" : 9,
 	    "vision range" : 130,
+	    "interaction radius" : 80,
 	    "upgrades" : ["space combat", "bombard", "search"],
 	    "depends facility level" : 5,
 	    "depends tech" : "subspace technology",

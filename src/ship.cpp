@@ -150,8 +150,11 @@ ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   passengers = 0;
   is_landed = false;
   is_loaded = false;
+  skip_head = false;
   radius = pow(stats[sskey::key::mass], 1/(float)3);
   force_refresh = true;
+  current_target = "";
+  collision_damage = 0;
 }
 
 list<string> ship::all_classes() {
@@ -159,6 +162,8 @@ list<string> ship::all_classes() {
 }
 
 void ship::pre_phase(game_data *g){
+  update_data(g);
+
   // load stuff
   float dt = g -> get_dt();
   load = fmin(load + dt, stats[sskey::key::load_time]);
@@ -175,8 +180,13 @@ void ship::pre_phase(game_data *g){
       point delta = position - s->position;
       float d2 = utility::l2d2(delta);
       float r = radius + s->radius;
-      float k = 10 * exp(-d2/pow(r, 2));
-      force += utility::normalize_and_scale(delta, k);
+      float k = exp(-d2/pow(r, 2));
+      force += utility::normalize_and_scale(delta, 100 * k);
+
+      // collision damage
+      if (s->owner != owner) {
+	collision_damage += k * 0.1 * s->stats[sskey::key::mass] * utility::l2d2(s->velocity - velocity);
+      }
     });
   
   // accelleration from terrain
@@ -207,7 +217,8 @@ float ship::speed() {
 }
 
 float ship::max_speed() {
-  return base_stats.stats[sskey::key::thrust] / (friction * base_stats.stats[sskey::key::mass]);
+  // r^2 * fric * speed = T
+  return base_stats.stats[sskey::key::thrust] / (pow(radius, 2) * friction);
 }
 
 void ship::update_data(game_data *g) {
@@ -220,8 +231,10 @@ void ship::update_data(game_data *g) {
   activate = f -> stats.converge;
 
   private_path.clear();
-  if (f -> path.size() > 0 && g -> first_intersect(position, f -> path.front(), radius) > -1) {
-    private_path = g -> get_path(position, f -> path.front(), radius);
+  if (utility::l2norm(f->heading - position) < 2 * radius) {
+    f->pop_heading = true;
+  } else if (g->first_intersect(position, f->heading, radius) > -1) {
+    private_path = g->get_path(position, f->heading, radius);
   }
 
   auto local_output = [this] (string v) {server::output(id + ": update_data: " + v);};
@@ -231,11 +244,19 @@ void ship::update_data(game_data *g) {
   bool evade = f -> com.policy == fleet::policy_evasive;
 
   float fleet_target_angle = utility::point_angle(f -> heading - f -> position);
-  target_angle = fleet_target_angle;
+  target_angle = utility::point_angle(f->heading - position);
   point fleet_delta = f -> position - position;
   float fleet_angle = utility::point_angle(fleet_delta);
 
-  target_speed = f -> stats.speed_limit;
+  target_speed = f->stats.speed_limit;
+
+  if (hpos < -1) {
+    // behind fleet
+    target_speed = max_speed();
+  } else if (hpos > 1) {
+    // ahead of fleet
+    target_speed = 0.9 * f->stats.speed_limit;
+  }
 
   if (private_path.size() > 0) {
     target_angle = utility::point_angle(private_path.front() - position);
@@ -263,8 +284,11 @@ void ship::update_data(game_data *g) {
   // engage local enemies
   if (engage && local_enemies.size() > 0) {
     // head towards a random local enemy
-    combid sid = utility::uniform_sample(local_enemies);
-    point p = g -> get_ship(sid) -> position;
+    if (find(local_enemies.begin(), local_enemies.end(), current_target) == local_enemies.end()) {
+      current_target = utility::uniform_sample(local_enemies);
+    }
+    
+    point p = g -> get_ship(current_target) -> position;
     float d = utility::l2norm(p - position);
     target_angle = utility::point_angle(p - position);
     target_speed = max_speed() * exp(-interaction_radius() / (d + 1));
@@ -292,15 +316,15 @@ void ship::update_data(game_data *g) {
   target_speed = utility::l2norm(tbase);
   target_angle = utility::point_angle(tbase);
 
-  // precompute available angles
-  free_angle = vector<float>(na, INFINITY);
-  apply_ships(g, neighbours, [this] (ship::ptr s) {
-      point delta = s -> position - position;
-      float a = utility::point_angle(delta);
-      float d = utility::l2norm(delta) - radius - s -> radius;
-      int i = utility::angle2index(na, a);
-      free_angle[i] = fmin(free_angle[i], d);
-    });
+  // // precompute available angles
+  // free_angle = vector<float>(na, INFINITY);
+  // apply_ships(g, neighbours, [this] (ship::ptr s) {
+  //     point delta = s -> position - position;
+  //     float a = utility::point_angle(delta);
+  //     float d = utility::l2norm(delta) - radius - s -> radius;
+  //     int i = utility::angle2index(na, a);
+  //     free_angle[i] = fmin(free_angle[i], d);
+  //   });
 
   // float pref_density = 0.2;
   // float pref_maxrad = fmax(sqrt(f -> ships.size() / (M_PI * pref_density)), 20);
@@ -314,18 +338,19 @@ void ship::update_data(game_data *g) {
   // target_angle = fleet_target_angle;
   // target_speed = f -> stats.speed_limit;
 
+  // // pop private path
   // if (private_path.size()) {
   //   point p = private_path.front();
   //   if (utility::l2norm(p - position) < 10) {
   //     private_path.pop_front();
   //   }
     
-  //   if (private_path.size()) {
-  //     p = private_path.front();
+  //   // if (private_path.size()) {
+  //   //   p = private_path.front();
 
-  //     // cause ship to be "behind fleet" and speed up
-  //     fleet_target_angle = fleet_angle = target_angle = utility::point_angle(p - position);
-  //   }
+  //   //   // cause ship to be "behind fleet" and speed up
+  //   //   fleet_target_angle = fleet_angle = target_angle = utility::point_angle(p - position);
+  //   // }
   // }
 
   // // angle and speed for summon
@@ -422,9 +447,7 @@ void ship::update_data(game_data *g) {
   //   });   
 }
 
-void ship::move(game_data *g){
-  if (force_refresh || utility::random_uniform() < g -> get_dt() * 0.2) update_data(g);
-
+void ship::move(game_data *g) {
   auto local_output = [this] (string v) {server::output(id + ": move: " + v);};
 
   // clean up local_*
@@ -636,7 +659,13 @@ void ship::move(game_data *g){
   // g -> entity_grid -> move(id, position);
 }
 
-void ship::post_phase(game_data *g){}
+void ship::post_phase(game_data *g) {
+  // take collision damage
+  if (collision_damage > 0) {
+    receive_damage(g, this, collision_damage);
+  }
+  collision_damage = 0;
+}
 
 void ship::receive_damage(game_data *g, game_object::ptr from, float damage) {
   float shield_value = stats[sskey::key::shield];
@@ -652,7 +681,7 @@ void ship::receive_damage(game_data *g, game_object::ptr from, float damage) {
       s -> nkills++;
     }
     
-    g -> log_ship_destroyed(from -> id, id);
+    g -> log_ship_destroyed(from->id, id);
   }
 }
 

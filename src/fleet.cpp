@@ -45,6 +45,7 @@ fleet::fleet(idtype pid, idtype idx){
   }
   m.unlock();
 
+  pop_heading = false;
   radius = 0;
   position = point(0,0);
   update_counter = 0;
@@ -286,6 +287,7 @@ void fleet::analyze_enemies(game_data *g) {
 
 void fleet::update_data(game_data *g, bool set_force_refresh) {
   stringstream ss;
+  int n = ships.size();
   force_refresh |= set_force_refresh;
 
   // position, radius, speed and vision
@@ -299,39 +301,38 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
   }
 
   radius = g -> settings.fleet_default_radius;
-  position = utility::scale_point(p, 1 / (float)ships.size());
+  position = utility::scale_point(p, 1 / (float)n);
 
-  // need to update fleet data?
-  bool should_update = force_refresh || utility::random_uniform() < 1 / (float)fleet::update_period;
+  // // need to update fleet data?
+  // bool should_update = force_refresh || utility::random_uniform() < 1 / (float)fleet::update_period;
 
   // always update heading if needed
-  bool update_heading = utility::l2norm(position - heading) < 5;
-  if (force_refresh || update_heading || should_update) {
-    if (g -> target_position(com.target, stats.target_position)) {
-      if (force_refresh || path.empty() || should_update) {
-	path = g -> get_path(position, stats.target_position, 5);
-	update_heading = true;
-      }
-
-      if (update_heading) {
-	if (path.size()) {
-	  heading = path.front();
-	  path.pop_front();
-	} else {
-	  heading = stats.target_position;
-	}
-	ss << "fleet " << id << " updated heading to " << heading << endl;
-	server::output(ss.str());
-      }
-    } else {
-      ss << "fleet " << id << " unset heading." << endl;
-      server::output(ss.str());
-      path.clear();
+  pop_heading |= utility::l2norm(position - heading) < 5;
+  if (g -> target_position(com.target, stats.target_position)) {
+    if (force_refresh) {
+      path = g->get_path(position, stats.target_position, 5);
+      pop_heading = true;
     }
+
+    if (pop_heading) {
+      pop_heading = false;
+      if (path.size()) {
+	heading = path.front();
+	path.pop_front();
+      } else {
+	heading = stats.target_position;
+      }
+      ss << "fleet " << id << " updated heading to " << heading << endl;
+      server::output(ss.str());
+    }
+  } else {
+    ss << "fleet " << id << " unset heading." << endl;
+    server::output(ss.str());
+    path.clear();
   }
 
   force_refresh = false;
-  if (!should_update) return;
+  // if (!should_update) return;
     
   float speed = INFINITY;
   int count;
@@ -341,17 +342,31 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
   stats.vision_buf = 0;
 
   stats.average_ship = ssfloat_t();
+  point dir = utility::normalize_and_scale(heading - position, 1);
+  float hpossd = 0;
   for (auto k : ships){
     ship::ptr s = g -> get_ship(k);
     speed = fmin(speed, s->max_speed());
     r2 = fmax(r2, utility::l2d2(s -> position - position));
     stats.vision_buf = fmax(stats.vision_buf, s -> vision());
     for (int i = 0; i < sskey::key::count; i++) stats.average_ship.stats[i] += s -> stats[i];
+
+    // heading position stat
+    s->hpos = utility::scalar_mult(s->position - position, dir);
+    hpossd += pow(s->hpos, 2);
+  }
+
+  if (n > 1) {
+    hpossd = sqrt(hpossd / n);
+    for (auto k : ships) {
+      ship::ptr s = g->get_ship(k);
+      s->hpos /= hpossd;
+    }
   }
   
-  for (int i = 0; i < sskey::key::count; i++) stats.average_ship.stats[i] /= ships.size();
+  for (int i = 0; i < sskey::key::count; i++) stats.average_ship.stats[i] /= n;
   stats.spread_radius = fmax(sqrt(r2), 10);
-  stats.spread_density = ships.size() / (M_PI * pow(stats.spread_radius, 2));
+  stats.spread_density = n / (M_PI * pow(stats.spread_radius, 2));
   stats.speed_limit = 0.9 * speed;
 
   analyze_enemies(g);

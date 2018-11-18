@@ -41,8 +41,12 @@ namespace st3{
     float target_angle;
     float target_speed;
     bool activate;
+    bool skip_head;
     bool force_refresh;
     path_t private_path;
+    float hpos;
+    combid current_target;
+    float collision_damage;
     
     std::list<combid> neighbours;
     std::list<combid> local_enemies;

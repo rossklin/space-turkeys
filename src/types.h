@@ -87,7 +87,7 @@ namespace st3{
     std::pair<int, int> intersects_with(terrain_object b, float r = 0);
     point get_vertice(int idx, float rbuf = 0) const;
     void set_vertice(int idx, point p);
-    int triangle(point p, float r);
+    int triangle(point p, float r) const;
     std::vector<point> get_border(float r) const;
     point closest_exit(point p, float r) const;
   };
