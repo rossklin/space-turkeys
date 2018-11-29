@@ -2,7 +2,8 @@
 ** ship movement
 *** [done] combat: stay on target till not available
 *** [test] collide with enemy ships
-*** distribute ships so they don't collide
+*** [impl] distribute ships so they don't collide
+*** when search finds ships, they also should not collide with the scout
 *** check that ships actually use private path
 *** test movement of different ship classes, with upgrades etc
 ** balancing
@@ -31,6 +32,22 @@
    voyager - 5 accuracy, + 5 shield
    
 ** play testing
+*** starting_fleet: massive, in apply choice: entity not found: ship:29
+*** make collisions conserve energy
+    e = 0.5 m v²
+    de/dt = m v dv/dt
+    dv = f / m dt
+    f = max(r0 - r, 0) {p = r²/2 - r0 r, r < r0}
+    
+    I.e. when ships collide, check what their kinetic energy is (was),
+    calculate how far into the potential they should have come. If
+    they went further in, that is a discretization error so correct
+    the position.
+*** population dynamics change too fast, e.g. switching to military gov 1 turn killed 20% of ppl
+*** auto search should select the closest next solar
+*** suggest select research first turn
+*** items that get hovered while the mouse is inside the info box should not disrupt the info
+*** [J] ships should not collide with friendly ships in other fleets
 *** [J] Ships get stuck in "traffic jam" (perhaps resolving avoid collision stuff?)
 *** [J] Need to move ships out of terrain
 *** [J] Identified error in path search algorithm
