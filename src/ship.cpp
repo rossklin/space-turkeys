@@ -178,14 +178,21 @@ void ship::pre_phase(game_data *g){
   // force from neighbours
   apply_ships(g, neighbours, [this] (ship::ptr s) {
       point delta = position - s->position;
-      float d2 = utility::l2d2(delta);
+      float dist = utility::l2norm(delta);
       float r = radius + s->radius;
-      float k = exp(-d2/pow(r, 2));
-      force += utility::normalize_and_scale(delta, 100 * k);
+      float overlap = r - dist;
+      if (overlap <= 0) return;
+
+      float f1 = stats[sskey::key::mass] * overlap / 2 / r;
+      float f2 = s->stats[sskey::key::mass] * overlap / 2 / r;
+
+      if (s->owner != owner || s->fleet_id == fleet_id) {
+	force += utility::normalize_and_scale(delta, f1 + f2);
+      }
 
       // collision damage
       if (s->owner != owner) {
-	collision_damage += k * 0.1 * s->stats[sskey::key::mass] * utility::l2d2(s->velocity - velocity);
+	collision_damage += s->stats[sskey::key::mass] * utility::l2d2(s->velocity - velocity);
       }
     });
   
@@ -196,7 +203,7 @@ void ship::pre_phase(game_data *g){
     point t = x.closest_exit(position, 2 * radius);
     point delta = t - position;
     float d = utility::l2norm(delta);
-    float k = 10 * stats[sskey::key::mass] * utility::sigmoid(d, radius) / radius;
+    float k = 5 * stats[sskey::key::mass] * utility::sigmoid(d, radius) / radius;
     force += utility::normalize_and_scale(delta, k);
   }
 
@@ -282,16 +289,25 @@ void ship::update_data(game_data *g) {
     });
 
   // engage local enemies
-  if (engage && local_enemies.size() > 0) {
-    // head towards a random local enemy
-    if (find(local_enemies.begin(), local_enemies.end(), current_target) == local_enemies.end()) {
-      current_target = utility::uniform_sample(local_enemies);
-    }
+  if (engage) {
+    point p;
+    float d;
+    if (local_enemies.size() > 0) {
+      // head towards a random local enemy
+      if (find(local_enemies.begin(), local_enemies.end(), current_target) == local_enemies.end()) {
+	current_target = utility::uniform_sample(local_enemies);
+      }
     
-    point p = g -> get_ship(current_target) -> position;
-    float d = utility::l2norm(p - position);
-    target_angle = utility::point_angle(p - position);
-    target_speed = max_speed() * exp(-interaction_radius() / (d + 1));
+      p = g -> get_ship(current_target) -> position;
+      d = utility::l2norm(p - position);
+      target_angle = utility::point_angle(p - position);
+      target_speed = max_speed() * exp(-interaction_radius() / (d + 1));
+    } else if (f->stats.enemies.size()) {
+      p = f->stats.enemies.front().first;
+      d = utility::l2norm(p - position);
+      target_angle = utility::point_angle(p - position);
+      target_speed = max_speed() * exp(-interaction_radius() / (d + 1));
+    }
   }
 
   // flee from fleet enemies
