@@ -207,7 +207,7 @@ int terrain_object::triangle(point p, float rad) const {
 point terrain_object::closest_exit(point p, float r) const {
   float dmin = INFINITY;
   point res;
-  float rbuf = 1.0001 * r;
+  float rbuf = 1.01 * r;
 
   for (int i = 0; i < border.size(); i++) {
     point a = get_vertice(i, rbuf);
