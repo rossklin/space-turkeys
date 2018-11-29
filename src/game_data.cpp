@@ -647,22 +647,32 @@ void game_data::remove_units(){
   }
 }
 
-// should set positions, update stats and add entities
 void game_data::distribute_ships(list<combid> sh, point p){
   float density = 0.1;
   float area = sh.size() / density;
   float radius = sqrt(area / M_PI);
+  vector<ship::ptr> ships(sh.size());
+  list<ship::ptr> all_ships = all<ship>();
+  
+  transform(sh.begin(), sh.end(), ships.begin(), [this] (combid sid) {
+      ship::ptr s = get_ship(sid);
+      s->position = {INFINITY, INFINITY};
+      return s;
+    });
 
-  auto sample_position = [this,p,radius] (float r) -> point {
+  auto sample_position = [this,p,radius,&all_ships] (float r) -> point {
     point x;
+    float dist;
     do {
       x = {utility::random_normal(p.x, radius), utility::random_normal(p.y, radius)};
-    } while (terrain_at(x, r) > -1);
+      dist = INFINITY;
+      for (auto s : all_ships) dist = fmin(dist, utility::l2norm(x - s->position) - 1.3 * (r + s->radius));
+    } while (terrain_at(x, r) > -1 || dist < 0);
+    
     return x;
   };
   
-  for (auto x : sh){
-    ship::ptr s = get_ship(x);
+  for (auto s : ships) {
     s->position = sample_position(s->radius);
     entity_grid->insert(s->id, s->position);
   }
