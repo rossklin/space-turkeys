@@ -5,6 +5,7 @@
 #include <iostream>
 #include <thread>
 #include <fstream>
+#include <sstream>
 
 #include "protocol.h"
 #include "game_data.h"
@@ -123,6 +124,7 @@ void server::game_handler(com &c, game_data &g){
       entity_package ep = g;
 
       if (do_limit) ep.limit_to(cid);
+      
       res.response << protocol::confirm << ep;
       res.status = socket_t::tc_complete;
 
@@ -219,6 +221,7 @@ void server::game_handler(com &c, game_data &g){
   g.rebuild_evm();
 
   // all players know about other players' home solars
+  // todo: doesn't this send all units when loading autosave?
   if (!c.check_protocol(protocol::load_init, pack_g(false))) return;
 
   while (true) {

@@ -145,15 +145,7 @@ float utility::l2norm(point p){
 
 // angle between point p and x-axis
 float utility::point_angle(point p){
-  if (p.x > 0){
-    return atan(p.y / p.x);
-  }else if (p.x < 0){
-    return M_PI + atan(p.y / p.x);
-  }else if (p.y > 0){
-    return M_PI / 2;
-  }else {
-    return -M_PI / 2;
-  }
+  return atan2(p.y, p.x);
 }
 
 // scale point p by factor a

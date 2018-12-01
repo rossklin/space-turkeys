@@ -209,11 +209,19 @@ point terrain_object::closest_exit(point p, float r) const {
   point res;
   float rbuf = 1.01 * r;
 
+  int test_init = triangle(p, r);
+
+  if (test_init == -1) {
+    server::log("closest exit: not in terrain!");
+    return p;
+  }
+
   for (int i = 0; i < border.size(); i++) {
     point a = get_vertice(i, rbuf);
     point b = get_vertice(i+1, rbuf);
     point x;
     float d = utility::dpoint2line(p, a, b, &x);
+
     if (d < dmin) {
       dmin = d;
       res = x;
@@ -223,7 +231,11 @@ point terrain_object::closest_exit(point p, float r) const {
   int test = triangle(res, r);
 
   if (test > -1) {
-    return closest_exit(res, r);
+    if (test == test_init) {
+      throw logical_error("pushed point still in same triangle!");
+    } else {
+      return closest_exit(res, r);
+    }
   } else {
     return res;
   }

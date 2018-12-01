@@ -639,12 +639,14 @@ void game_data::remove_entity(combid i){
 }
 
 void game_data::remove_units(){
-  auto buf = entity;
-  for (auto i : buf) {
-    if (i.second -> remove) {
-      remove_entity(i.first);
-    }
-  }
+  auto cl = [this] () {
+    auto buf = entity;
+    for (auto i : buf) if (i.second -> remove) remove_entity(i.first);
+  };
+
+  // run twice since fleets may set remove flag when ships are removed
+  cl();
+  cl();
 }
 
 void game_data::distribute_ships(list<combid> sh, point p){
@@ -665,9 +667,9 @@ void game_data::distribute_ships(list<combid> sh, point p){
     float dist;
     do {
       x = {utility::random_normal(p.x, radius), utility::random_normal(p.y, radius)};
-      dist = INFINITY;
-      for (auto s : all_ships) dist = fmin(dist, utility::l2norm(x - s->position) - 1.3 * (r + s->radius));
-    } while (terrain_at(x, r) > -1 || dist < 0);
+      // dist = INFINITY;
+      // for (auto s : all_ships) dist = fmin(dist, utility::l2norm(x - s->position) - 1.3 * (r + s->radius));
+    } while (terrain_at(x, r) > -1);
     
     return x;
   };
@@ -955,16 +957,9 @@ void game_data::increment(){
       i.perform(s, t, this);
     }
   }
-
-  // // perform collisions
-  // for (auto x : collision_buffer) collide_ships(x);
-
-  // remove units twice, since removing ships can cause fleets to set
-  // the remove flag
-  remove_units();
-  remove_units();
   
   for (auto x : entity) if (x.second -> is_active()) x.second -> post_phase(this);
+  remove_units();
 }
 
 void game_data::build_players(list<server::client_t*> clients){

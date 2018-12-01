@@ -5,14 +5,14 @@ using namespace std;
 using namespace st3;
 
 const set<string> st3::starting_options = {"single", "voyagers", "battleships", "massive", "fighters"};
-int st3::sub_frames = 10;
+int st3::sub_frames = 4;
 
 game_settings::game_settings(){
   solar_minrad = 10;
   solar_meanrad = 15;
   solar_density = 1e-4;
   fleet_default_radius = 10;
-  dt = 0.05;
+  dt = 0.25;
   space_index_ratio = 400;
 }
 
