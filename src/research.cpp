@@ -76,7 +76,6 @@ void data::repair_ship(ship &s, solar::ptr sol) const {
   // add upgrades from research and facilities
   auto &rtab = table();
   for (auto t : researched()) s.upgrades += maybe_asu(rtab.at(t), s.ship_class);
-  for (auto &x : sol -> development) s.upgrades += maybe_asu(x.second, s.ship_class);
 
   // evaluate upgrades
   auto &utab = upgrade::table();
@@ -104,7 +103,7 @@ bool data::can_build_ship(string v, solar::ptr sol, list<string> *data) const {
     throw logical_error("Military template: no such ship class: " + v);
   }
   
-  int facility = sol -> facility_access("shipyard") -> level;
+  int facility = sol -> development[keywords::key_shipyard];
   ship_stats s = ship::table().at(v);
   bool success = true;
 

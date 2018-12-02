@@ -1,5 +1,4 @@
-#ifndef _STK_PLAYER
-#define _STK_PLAYER
+#pragma once
 
 #include <string>
 #include "types.h"
@@ -15,7 +14,5 @@ namespace st3{
     research::data research_level; /*!< the player's research level */
     std::list<animation_data> animations;
     std::list<std::string> log;
-    cost::ship_allocation military;
   };
 };
-#endif

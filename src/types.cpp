@@ -79,22 +79,11 @@ const vector<string> keywords::resource = {
   keywords::key_gases
 };
 
-const vector<string> keywords::sector = {
+const vector<string> keywords::development = {
+  keywords::key_agriculture,
   keywords::key_research,
-  keywords::key_culture,
-  keywords::key_military,
-  keywords::key_mining,
-  keywords::key_development,
-  keywords::key_medicine,
-  keywords::key_ecology
-};
-
-const vector<string> keywords::governor = {
-  keywords::key_research,
-  keywords::key_culture,
-  keywords::key_military,
-  keywords::key_mining,
-  keywords::key_development
+  keywords::key_shipyard,
+  keywords::key_defense
 };
 
 // make a source symbol with type t and id i

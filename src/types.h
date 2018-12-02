@@ -96,19 +96,19 @@ namespace st3{
 
   namespace keywords{
     extern const std::vector<std::string> resource;
-    extern const std::vector<std::string> sector;
-    extern const std::vector<std::string> governor;
+    extern const std::vector<std::string> development;
+    extern const std::vector<std::string> solar_modifier;
 
     const std::string key_metals = "metals";
     const std::string key_organics = "organics";
     const std::string key_gases = "gases";
-    const std::string key_research = "research";
+
+    const std::string key_research = "research facility";
+    const std::string key_shipyard = "shipyard";
     const std::string key_development = "development";
-    const std::string key_culture = "culture";
-    const std::string key_mining = "mining";
-    const std::string key_military = "military";
+    const std::string key_agriculture = "agriculture";
+    const std::string key_defense = "defense";
     const std::string key_medicine = "medicine";
-    const std::string key_ecology = "ecology";
     const std::string build_disabled = "disabled";
   };
 

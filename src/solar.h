@@ -1,5 +1,4 @@
-#ifndef _STK_SOLAR
-#define _STK_SOLAR
+#pragma once
 
 #include <set>
 #include <vector>
@@ -64,36 +63,13 @@ namespace st3{
 
     // solar
     void receive_damage(game_object::ptr s, float damage, game_data *g);
-    void damage_facilities(float d);
-    float space_status();
-    float water_status();
-    float crowding_rate();
-    float base_growth();
     float vision();
-    bool has_defense();
     std::string get_info();
-    float compute_boost(std::string sector);
-    float compute_shield_power();
-    float compute_hp_ratio();
-    std::list<std::string> list_facility_requirements(std::string v, const research::data &r);
-    std::list<std::string> available_facilities(const research::data &r);
-    bool develop(std::string fac);
-    std::list<facility_object> developed();
-    facility_object developed(std::string v, int lev_inc = 0);
-    std::list<facility_object*> facility_access();
-    facility_object *facility_access(std::string key);
-    
-    // solar: increment functions
-    float population_increment();
-    float ecology_increment();
-    float happiness_increment(choice::c_solar &c);
-    float research_increment(choice::c_solar &c);
-    float resource_increment(std::string v, choice::c_solar &c);
-    float development_increment(choice::c_solar &c);
-    float ship_increment(choice::c_solar &c);
-    float compute_workers();
-    choice::c_solar government();
-    void dynamics(game_data *g); 
+    float effective_level(std::string k);
+    void dynamics(game_data *g);
+    float max_hp();
+    cost::res_t devcost(std::string k);
+    float devtime(std::string k);
 
   protected:
     static const float f_growth;
@@ -107,4 +83,3 @@ namespace st3{
     bool can_afford(cost::res_t r);
   };
 };
-#endif

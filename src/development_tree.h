@@ -1,5 +1,4 @@
-#ifndef _STK_DEVELOPMENT_TREE
-#define _STK_DEVELOPMENT_TREE
+#pragma once
 
 #include <set>
 #include <string>
@@ -13,7 +12,7 @@ namespace st3 {
     class node {
     public:
       // boosts
-      hm_t<std::string, sfloat> sector_boost;
+      hm_t<std::string, sfloat> solar_modifier;
       hm_t<std::string, std::set<std::string> > ship_upgrades;
 
       // requirements
@@ -34,5 +33,3 @@ namespace st3 {
     hm_t<std::string, T> read_from_json(const rapidjson::Value &v, T init);
   };
 };
-
-#endif

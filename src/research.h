@@ -1,5 +1,4 @@
-#ifndef _STK_RESEARCH
-#define _STK_RESEARCH
+#pragma once
 
 #include <string>
 #include <set>
@@ -36,7 +35,7 @@ namespace st3{
       ship build_ship(idtype id, std::string v, solar::ptr sol) const;
       void repair_ship(ship &s, solar::ptr sol) const;
       bool can_build_ship(std::string v, solar::ptr s, std::list<std::string> *data = 0) const;
+      float solar_modifier(std::string v) const;
     };    
   };
 };
-#endif

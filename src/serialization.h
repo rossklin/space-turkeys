@@ -191,26 +191,6 @@ namespace st3{
   */
   sf::Packet& operator >>(sf::Packet& packet, ship &g);
 
-  /*! stream a turret into packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
-  sf::Packet& operator <<(sf::Packet& packet, const turret_t &g);
-
-  /*! stream a turret out of a packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
-  sf::Packet& operator >>(sf::Packet& packet, turret_t &g);
-
-  sf::Packet& operator <<(sf::Packet& packet, const facility &g);
-  sf::Packet& operator >>(sf::Packet& packet, facility &g);
-
-  sf::Packet& operator <<(sf::Packet& packet, const facility_object &g);
-  sf::Packet& operator >>(sf::Packet& packet, facility_object &g);
-
   sf::Packet& operator <<(sf::Packet& packet, const development::node &g);
   sf::Packet& operator >>(sf::Packet& packet, development::node &g);
 

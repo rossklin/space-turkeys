@@ -62,10 +62,6 @@
 	    "on move" : ["hive support"]
 	},
 
-	"terraform" : {
-	    "interactions" : ["terraform"]
-	},
-
 	"subspace drive" : {
 	    "thrust" : "2#0"
 	}

@@ -71,19 +71,6 @@ resource_allocation::resource_allocation() {
   setup(keywords::resource);
 }
 
-sector_allocation::sector_allocation() {
-  if (keywords::sector.empty()) throw logical_error("sector_allocation(): no keywords!");
-  setup(keywords::sector);
-}
-
-sector_allocation sector_allocation::base_allocation() {
-  sector_allocation r;
-  r[keywords::key_culture] = 1;
-  r[keywords::key_development] = 1;
-  r[keywords::key_mining] = 1;
-  return r;
-}
-
 float cost::expansion_multiplier(float level){
   return pow(2, floor(fmax(level - 1, 0)));
 }

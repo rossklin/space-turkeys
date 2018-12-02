@@ -1,5 +1,4 @@
-#ifndef _STK_COST
-#define _STK_COST
+#pragma once
 
 #include "types.h"
 
@@ -23,11 +22,6 @@ namespace st3{
       ship_allocation();
     };
 
-    struct sector_allocation : public allocation {
-      static sector_allocation base_allocation();
-      sector_allocation();
-    };
-
     struct resource_allocation : public allocation{
       resource_allocation();
     };
@@ -38,4 +32,3 @@ namespace st3{
     bool parse_resource(std::string name, float value, res_t &x);
   };
 };
-#endif

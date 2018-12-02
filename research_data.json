@@ -2,7 +2,7 @@
     "research" : {
 	"warp technology" : {
 	    "build time" : 300,
-	    "depends facilities" : {"research facility" : 2},
+	    "depends facility" : {"research facility" : 2},
 	    "ship upgrades" : {
 		"[10,100]" : ["warp drive"]
 	    }
@@ -40,19 +40,14 @@
 
 	"nano weapons" : {
 	    "build time" : 1200,
-	    "depends facilities" : {
-		"research facility" : 4,
-		"nano factories" : 1
-	    },
+	    "depends facilities" : {"research facility" : 4},
 	    "depends technologies" : ["nano technology", "plasma technology"],
 	    "ship upgrades" : {"#spacecombat" : ["nano torpedos"]}
 	},
 
 	"biomechanics" : {
 	    "build time" : 2000,
-	    "depends facilities" : {
-		"research facility" : 5
-	    },
+	    "depends facilities" : {"research facility" : 5},
 	    "depends technologies" : ["nano technology"]
 	},
 
@@ -67,68 +62,42 @@
 
 	"subspace technology" : {
 	    "build time" : 8000,
-	    "depends facilities" : {
-		"research facility" : 6
-	    },
+	    "depends facilities" : {"research facility" : 6},
 	    "depends technologies" : ["detection", "shields"]
 	},
 
 	"nano plating" : {
 	    "build time" : 8000,
-	    "depends facilities" : {
-		"research facility" : 6,
-		"nano factories" : 2
-	    },
+	    "depends facilities" : {"research facility" : 6},
 	    "depends technologies" : ["nano weapons"],
 	    "ship upgrades" : {"#combat" : ["nano hull"]}
 	},
 
 	"biohull" : {
 	    "build time" : 7000,
-	    "depends facilities" : {
-		"research facility" : 6,
-		"biomechanics facility" : 1
-	    },
+	    "depends facilities" : {"research facility" : 6},
 	    "depends facilities" : {"biomechanics facility" : 1},
 	    "ship upgrades" : {"upgrade all ships" : ["biohull"]}
 	},
 
 	"subspace projectiles" : {
 	    "build time" : 50000,
-	    "depends facilities" : {
-		"research facility" : 8
-	    },
+	    "depends facilities" : {"research facility" : 8},
 	    "depends technologies" : ["nano weapons", "subspace technology"]
 	},
 
 	"subspace travel" : {
 	    "build time" : 16000,
-	    "depends facilities" : {
-		"research facility" : 7,
-		"advanced shipyard" : 2
-	    },
+	    "depends facilities" : {"research facility" : 7},
 	    "depends technologies" : ["subspace technology", "stealth"],
 	    "ship upgrades" : {"[10,100]" : ["subspace drive"]}
 	},
 
 	"hive fleet" : {
 	    "build time" : 40000,
-	    "depends facilities" : {
-		"research facility" : 8,
-		"biomechanics facility" : 3
-	    },
+	    "depends facilities" : {"research facility" : 8},
 	    "depends technologies" : ["biohull", "subspace technology"],
 	    "ship upgrades" : {"#spacecombat" : ["hive mind"]}
-	},
-
-	"terraform" : {
-	    "build time" : 18000,
-	    "depends facilities" : {
-		"research facility" : 7,
-		"biomechanics facility" : 4
-	    },
-	    "depends technologies" : ["biohull"],
-	    "ship upgrades" : {"colonizer" : ["terraform"]}
 	}
     }
 }

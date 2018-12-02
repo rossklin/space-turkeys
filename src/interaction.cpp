@@ -28,15 +28,15 @@ const string interaction::terraform = "terraform";
 const string interaction::hive_support = "hive support";
 
 void load_resources(ship::ptr s, solar::ptr t) {
-  float total = t -> resource_storage.count();
+  float total = t -> resources.count();
   if (total == 0) return;
   
   float ratio = fmax(s -> stats[sskey::key::cargo_capacity] / total, 1);
-  cost::res_t move = t -> resource_storage;
+  cost::res_t move = t -> resources;
   move.scale(ratio);
   s -> cargo.add(move);
   move.scale(-1);
-  t -> resource_storage.add(move);
+  t -> resources.add(move);
   s -> is_loaded = true;
 }
 
@@ -63,7 +63,7 @@ const hm_t<string, interaction> &interaction::table() {
     s -> fleet_id = identifier::source_none;
 
     // unload cargo
-    t -> resource_storage.add(s -> cargo);
+    t -> resources.add(s -> cargo);
     s -> cargo = cost::res_t();
     s -> is_loaded = false;
 
@@ -263,35 +263,35 @@ const hm_t<string, interaction> &interaction::table() {
   i.perform = do_search;
   data[i.name] = i;
 
-  // turret combat
-  i.name = interaction::turret_combat;
-  i.condition = target_condition(target_condition::enemy, ship::class_id);
-  i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
-    output("interaction: turret_combat: " + self -> id + " targeting " + target -> id);
-    solar::ptr s = utility::guaranteed_cast<solar>(self);
-    ship::ptr x = utility::guaranteed_cast<ship>(target);
-    float d = utility::l2norm(s -> position - x -> position);
+  // // turret combat
+  // i.name = interaction::turret_combat;
+  // i.condition = target_condition(target_condition::enemy, ship::class_id);
+  // i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
+  //   output("interaction: turret_combat: " + self -> id + " targeting " + target -> id);
+  //   solar::ptr s = utility::guaranteed_cast<solar>(self);
+  //   ship::ptr x = utility::guaranteed_cast<ship>(target);
+  //   float d = utility::l2norm(s -> position - x -> position);
 
-    for (auto buf : s -> facility_access()){
-      if (!buf -> is_turret) continue;
+  //   for (auto buf : s -> facility_access()){
+  //     if (!buf -> is_turret) continue;
 
-      turret_t t = s -> developed(buf -> name, 0).turret;
+  //     turret_t t = s -> developed(buf -> name, 0).turret;
 
-      // don't overdo it
-      if (x -> remove) break;
+  //     // don't overdo it
+  //     if (x -> remove) break;
 
-      if (t.damage > 0 && t.load >= 1 && d <= t.range){
-	buf -> turret.load = 0;
+  //     if (t.damage > 0 && t.load >= 1 && d <= t.range){
+  // 	buf -> turret.load = 0;
 
-	g -> log_ship_fire(s -> id, x -> id);
+  // 	g -> log_ship_fire(s -> id, x -> id);
 	
-	if (x -> evasion_check() < t.accuracy_check(x, d)){
-	  x -> receive_damage(g, s, utility::random_uniform(0, t.damage));
-	}
-      }
-    }
-  };
-  data[i.name] = i;
+  // 	if (x -> evasion_check() < t.accuracy_check(x, d)){
+  // 	  x -> receive_damage(g, s, utility::random_uniform(0, t.damage));
+  // 	}
+  //     }
+  //   }
+  // };
+  // data[i.name] = i;
 
   // bombard
   i.name = interaction::bombard;
@@ -320,10 +320,8 @@ const hm_t<string, interaction> &interaction::table() {
     if (s -> passengers == 0) return;
     
     t -> population = s -> passengers;
-    t -> happiness = 1;
     t -> owner = s -> owner;
-    t -> choice_data.governor = keywords::key_culture;
-    t -> choice_data.allocation = cost::sector_allocation::base_allocation();
+    t->development[keywords::key_agriculture] = 1;
 
     s -> remove = true;
   };
@@ -370,7 +368,7 @@ const hm_t<string, interaction> &interaction::table() {
 
     // unload resources
     for (auto v : keywords::resource) {
-      t -> resource_storage[v] += s -> cargo[v];
+      t -> resources[v] += s -> cargo[v];
     }
     s -> cargo = cost::res_t();
     s -> is_loaded = false;
@@ -415,23 +413,23 @@ const hm_t<string, interaction> &interaction::table() {
   };
   data[i.name] = i;
 
-  // terraform
-  i.name = terraform;
-  i.condition = target_condition(target_condition::neutral, solar::class_id);
-  i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
-    ship::ptr s = utility::guaranteed_cast<ship>(self);
-    solar::ptr t = utility::guaranteed_cast<solar>(target);
+  // // terraform
+  // i.name = terraform;
+  // i.condition = target_condition(target_condition::neutral, solar::class_id);
+  // i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
+  //   ship::ptr s = utility::guaranteed_cast<ship>(self);
+  //   solar::ptr t = utility::guaranteed_cast<solar>(target);
 
-    if (s -> load < s -> stats[sskey::key::load_time]) return;
-    s -> load = 0;
+  //   if (s -> load < s -> stats[sskey::key::load_time]) return;
+  //   s -> load = 0;
 
-    t -> water = 1000;
-    t -> space = 1000;
-    t -> ecology = 1;
+  //   t -> water = 1000;
+  //   t -> space = 1000;
+  //   t -> ecology = 1;
 
-    if (s -> has_fleet()) g -> get_fleet(s -> fleet_id) -> set_idle();
-  };
-  data[i.name] = i;
+  //   if (s -> has_fleet()) g -> get_fleet(s -> fleet_id) -> set_idle();
+  // };
+  // data[i.name] = i;
 
   // hive support
   i.name = hive_support;

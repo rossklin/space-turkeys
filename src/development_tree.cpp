@@ -21,12 +21,12 @@ development::node::node() {
 bool development::node::parse(string name, const rapidjson::Value &v) {
   auto &stab = ship::table();
     
-  if (name == "sector boost") {
+  if (name == "solar modifier") {
     for (auto u = v.MemberBegin(); u != v.MemberEnd(); u++) {
       string sec_name = u -> name.GetString();
       float sec_value = u -> value.GetDouble();
-      if (utility::find_in(sec_name, keywords::sector)) {
-	sector_boost[sec_name] = sec_value;
+      if (utility::find_in(sec_name, keywords::solar_modifier)) {
+	solar_modifier[sec_name] = sec_value;
       } else {
 	return false;
       }
@@ -110,4 +110,3 @@ hm_t<string, T> development::read_from_json(const rapidjson::Value &doc, T base)
 }
 
 template hm_t<string, research::tech> st3::development::read_from_json<research::tech>(const rapidjson::Value &v, research::tech b);
-template hm_t<string, facility> st3::development::read_from_json<facility>(const rapidjson::Value &v, facility b);

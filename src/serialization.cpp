@@ -190,27 +190,10 @@ sf::Packet& st3::operator >>(sf::Packet& packet, ship &g){
     >> g.nkills;
 }
 
-// turret
-sf::Packet& st3::operator <<(sf::Packet& packet, const turret_t &g){
-  return packet 
-    << g.range
-    << g.damage
-    << g.accuracy
-    << g.load;
-}
-
-sf::Packet& st3::operator >>(sf::Packet& packet, turret_t &g){
-  return packet 
-    >> g.range
-    >> g.damage
-    >> g.accuracy
-    >> g.load;
-}
-
 sf::Packet& st3::operator <<(sf::Packet &packet, const development::node &g) {
   return packet
     << g.name
-    << g.sector_boost
+    << g.solar_modifier
     << g.ship_upgrades
     << g.depends_facilities
     << g.depends_techs
@@ -222,7 +205,7 @@ sf::Packet& st3::operator <<(sf::Packet &packet, const development::node &g) {
 sf::Packet& st3::operator >>(sf::Packet &packet, development::node &g) {
   return packet
     >> g.name
-    >> g.sector_boost
+    >> g.solar_modifier
     >> g.ship_upgrades
     >> g.depends_facilities
     >> g.depends_techs
@@ -231,65 +214,19 @@ sf::Packet& st3::operator >>(sf::Packet &packet, development::node &g) {
     >> g.progress;
 }
 
-sf::Packet& st3::operator <<(sf::Packet& packet, const facility &g){
-  return packet
-    << static_cast<const development::node&>(g)
-    << g.vision
-    << g.base_hp
-    << g.shield
-    << g.is_turret
-    << g.turret
-    << g.cost_resources
-    << g.water_usage
-    << g.space_usage
-    << g.water_provided
-    << g.space_provided;
-}
-
-sf::Packet& st3::operator >>(sf::Packet& packet, facility &g){
-  return packet
-    >> static_cast<development::node&>(g)
-    >> g.vision
-    >> g.base_hp
-    >> g.shield
-    >> g.is_turret
-    >> g.turret
-    >> g.cost_resources
-    >> g.water_usage
-    >> g.space_usage
-    >> g.water_provided
-    >> g.space_provided;
-}
-
-sf::Packet& st3::operator <<(sf::Packet& packet, const facility_object &g){
-  return packet
-    << static_cast<const facility&> (g)
-    << g.hp;
-}
-
-sf::Packet& st3::operator >>(sf::Packet& packet, facility_object &g){
-  return packet
-    >> static_cast<facility&> (g)
-    >> g.hp;
-}
-
 // solar
 sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){  
   return packet
     << static_cast<const commandable_object &> (g)
     << g.choice_data
     << g.research_points
-    << g.water
-    << g.space
-    << g.ecology
-    << g.available_resource
-    << g.resource_storage
+    << g.resources
     << g.population
-    << g.happiness
     << g.ships
     << g.development
     << g.ship_progress
-    << g.out_of_resources
+    << g.build_progress
+    << g.hp
     << g.was_discovered
     << g.known_by;
 }
@@ -299,17 +236,13 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
     >> static_cast<commandable_object &> (g)
     >> g.choice_data
     >> g.research_points
-    >> g.water
-    >> g.space
-    >> g.ecology
-    >> g.available_resource
-    >> g.resource_storage
+    >> g.resources
     >> g.population
-    >> g.happiness
     >> g.ships
     >> g.development
     >> g.ship_progress
-    >> g.out_of_resources
+    >> g.build_progress
+    >> g.hp
     >> g.was_discovered
     >> g.known_by;
 }
@@ -317,18 +250,12 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
 // solar choice
 sf::Packet& st3::operator <<(sf::Packet& packet, const choice::c_solar &g){
   return packet
-    << g.governor
-    << g.allocation
-    << g.mining
     << g.building_queue
     << g.ship_queue;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, choice::c_solar &g){
   return packet
-    >> g.governor
-    >> g.allocation
-    >> g.mining
     >> g.building_queue
     >> g.ship_queue;
 }

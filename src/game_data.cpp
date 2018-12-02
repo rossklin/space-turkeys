@@ -585,29 +585,23 @@ void game_data::apply_choice(choice::choice c, idtype id){
     }
 
     if (x.second.do_develop()){
-      list<string> av = get_solar(x.first) -> available_facilities(players[id].research_level);
-      for (auto i = x.second.building_queue.begin(); i != x.second.building_queue.end(); i++) {
-	if (!utility::find_in(*i, av)) {
-	  // maybe a dependency got bombed or something...
-	  x.second.building_queue.erase(i--);
+      for (auto y : x.second.building_queue) {
+	if (!utility::find_in(y, keywords::development)) {
+	  throw player_error("validate_choice: error: invalid development key: " + y);
 	}
       }
     }
 
-    if (!utility::find_in(x.second.governor, keywords::governor)) {
-      throw player_error("validate_choice: invalid governor: " + x.second.governor);
-    }
-
-    // apply
     solar::ptr s = get_solar(x.first);
+
+    // reset ship production if altered
     if (!(s -> choice_data.do_produce() && x.second.do_produce() && s -> choice_data.ship_queue.front() == x.second.ship_queue.front())) {
       s -> ship_progress = 0;
     }
+
+    // apply
     s -> choice_data = x.second;
   }
-
-  // pass military choice to player object
-  players[id].military = c.military;
 
   // commands: validate
   for (auto x : c.commands) {
@@ -987,18 +981,13 @@ void game_data::build(){
     solar::ptr s = solar::create(next_id(solar::class_id), p, 1);
     s -> owner = pid;
     s -> was_discovered = true;
-    s -> available_resource = initial_resources;
-    s -> water = 1000;
-    s -> space = 1000;
+    s -> resources = initial_resources;
     s -> population = 1000;
-    s -> happiness = 1;
-    s -> ecology = 1;
     s -> radius = settings.solar_meanrad;
-    s -> choice_data.allocation = cost::sector_allocation::base_allocation();
-    s -> choice_data.governor = keywords::key_culture;
-    s -> facility_access("shipyard") -> level = 1;
-    s -> facility_access("research facility") -> level = 1;
-    s -> facility_access("missile turret") -> level = 1;
+    s -> development[keywords::key_agriculture] = 1;
+    s -> development[keywords::key_shipyard] = 1;
+    s -> development[keywords::key_research] = 1;
+    s -> development[keywords::key_defense] = 1;
 
     for (auto px : players) s -> known_by.insert(px.first);
 
@@ -1069,12 +1058,13 @@ void game_data::pre_step(){
   update_research_facility_level();
 }
 
+// compute max levels for each player and development
 void game_data::update_research_facility_level() {
   hm_t<idtype, hm_t<string, int> > level;
   for (auto i : all<solar>()){
     if (i -> owner > -1){
-      for (auto &f : i -> development) {
-	level[i -> owner][f.first] = max(level[i -> owner][f.first], f.second.level);
+      for (auto v : keywords::development) {
+	level[i -> owner][v] = max(level[i -> owner][v], i->development[v]);
       }
     }
   }
@@ -1154,7 +1144,6 @@ void game_data::confirm_data() {
   auto &utab = upgrade::table();
   auto &stab = ship::table();
   auto &rtab = research::data::table();
-  auto &dtab = solar::facility_table();
 
   auto check_ship_upgrades = [&utab, &stab] (hm_t<string, set<string> > u) {
     for (auto &x : u) {
@@ -1179,13 +1168,6 @@ void game_data::confirm_data() {
   for (auto &t : rtab) {
     for (auto v : t.second.depends_techs) assert(rtab.count(v));
     check_ship_upgrades(t.second.ship_upgrades);
-  }
-
-  // validate facilities
-  for (auto &f : dtab) {
-    check_ship_upgrades(f.second.ship_upgrades);
-    for (auto &d : f.second.depends_facilities) assert(dtab.count(d.first));
-    for (auto &d : f.second.depends_techs) assert(rtab.count(d));
   }
 }
 
@@ -1221,7 +1203,7 @@ void game_data::log_bombard(combid a, combid b) {
   x.delay = delay;
   
   animation_data sh;
-  float shield = t -> compute_shield_power();
+  float shield = t -> development[keywords::key_defense];
   sh.t1 = get_tracker(t -> id);
   sh.radius = 1.2 * t -> radius;
   sh.magnitude = shield;
