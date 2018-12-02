@@ -34,7 +34,11 @@
 ** play testing
 *** command gui is terribly laggy
 *** fleet must "activate" when first ships reach target
-*** make collisions conserve energy
+*** population dynamics change too fast, e.g. switching to military gov 1 turn killed 20% of ppl
+*** auto search should select the closest next solar
+*** suggest select research first turn
+*** items that get hovered while the mouse is inside the info box should not disrupt the info
+*** [J] make collisions conserve energy
     e = 0.5 m v²
     de/dt = m v dv/dt
     dv = f / m dt
@@ -44,10 +48,6 @@
     calculate how far into the potential they should have come. If
     they went further in, that is a discretization error so correct
     the position.
-*** population dynamics change too fast, e.g. switching to military gov 1 turn killed 20% of ppl
-*** auto search should select the closest next solar
-*** suggest select research first turn
-*** items that get hovered while the mouse is inside the info box should not disrupt the info
 *** [J] starting_fleet: massive, in apply choice: entity not found: ship:29
 *** [J] ships should not collide with friendly ships in other fleets
 *** [J] Ships get stuck in "traffic jam" (perhaps resolving avoid collision stuff?)

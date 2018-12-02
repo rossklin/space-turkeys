@@ -177,18 +177,27 @@ void ship::pre_phase(game_data *g){
 
   // force from neighbours
   apply_ships(g, neighbours, [this] (ship::ptr s) {
+      // ignore same owner, different fleet
+      if (s->owner == owner && s->fleet_id != fleet_id) return;
+
       point delta = position - s->position;
-      float dist = utility::l2norm(delta);
-      float r = radius + s->radius;
-      float overlap = r - dist;
-      if (overlap <= 0) return;
+      float r = utility::l2norm(delta);
+      float r2 = utility::l2norm(position + velocity - (s->position + s->velocity)); // look ahead
+      float rmean = 0.5 * (r + r2);
+      float r0 = radius + s->radius;
+      if (rmean >= r0) return;
 
-      float f1 = stats[sskey::key::mass] * overlap / 2 / r;
-      float f2 = s->stats[sskey::key::mass] * overlap / 2 / r;
+      float mass = (stats[sskey::key::mass] + s->stats[sskey::key::mass]) / 2;
+      float f0 = sqrt(mass);
+      float f = f0 * (r0 - rmean) / r0;
 
-      if (s->owner != owner || s->fleet_id == fleet_id) {
-	force += utility::normalize_and_scale(delta, f1 + f2);
-      }
+      // limit acceleration to 2 ship radius per unit time
+      f = fmin(f, stats[sskey::key::mass] * 2 * radius);
+      
+      point push = utility::normalize_and_scale(delta, f);
+
+      // apply force
+      force += push;
 
       // collision damage
       if (s->owner != owner) {
