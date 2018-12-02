@@ -16,15 +16,8 @@ namespace st3{
 
     /*! choice of priorities for solar system */
     struct c_solar{
-      std::string governor;
-      cost::sector_allocation allocation;
-      cost::resource_allocation mining;
       std::list<std::string> building_queue;
       std::list<std::string> ship_queue;
-
-      c_solar();
-      c_solar normalize(); // normalize to proportions
-      c_solar set_zeros();
       bool do_develop();
       bool do_produce();
     };
