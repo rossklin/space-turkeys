@@ -15,9 +15,7 @@ solar::ptr build_solar(){
   static int idc = 0;
   solar::ptr s = solar::create(idc++, point(0, 0), 1);
 
-  s -> dt = 1; // sub_frames * dt
   s -> population = 1000;
-  s -> happiness = 1;
   s -> research_points = 0;
     
   s -> water = 1000;

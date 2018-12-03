@@ -330,11 +330,11 @@ sf::Packet& st3::operator >>(sf::Packet& packet, fleet::analytics &g){
 
 // choice
 sf::Packet& st3::operator <<(sf::Packet& packet, const choice::choice &c){
-  return packet << c.commands << c.solar_choices << c.waypoints << c.fleets << c.research << c.military;
+  return packet << c.commands << c.solar_choices << c.waypoints << c.fleets << c.research;
 }
 
 sf::Packet& st3::operator >>(sf::Packet& packet, choice::choice &c){
-  return packet >> c.commands >> c.solar_choices >> c.waypoints >> c.fleets >> c.research >> c.military;
+  return packet >> c.commands >> c.solar_choices >> c.waypoints >> c.fleets >> c.research;
 }
 
 // waypoint

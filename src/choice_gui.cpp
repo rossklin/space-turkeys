@@ -50,11 +50,10 @@ choice_gui::Ptr choice_gui::Create(std::string title,
 hm_t<string, int> choice_gui::calc_faclev() {
   hm_t<string, int> res;
 
-  for (auto x : solar::facility_table()) {
-    string v = x.first;
+  for (auto v : keywords::development) {
     int faclev = 0;
     for (auto s : desktop -> g -> get_all<solar>()) {
-      if (s -> owned) faclev = max(faclev, s -> facility_access(v) -> level);
+      if (s -> owned) faclev = max(faclev, (int)s->effective_level(v));
     }
     res[v] = faclev;
   }
@@ -180,19 +179,16 @@ void choice_gui::update_selected() {
 // GOVERNOR
 Widget::Ptr interface::governor_gui(list<solar::ptr> solars) {
   hm_t<string, bool> options;
-  for (auto v : keywords::governor) options[v] = false;
+  for (auto v : keywords::development) options[v] = false;
 
   // test if current governor is consistent
-  string gov = solars.front() -> choice_data.governor;
-  if (gov.size()) {
-    bool test = true;
-    for (auto s : solars) test &= s -> choice_data.governor == gov;
-    if (test) options[gov] = true;
-  }
+  string current = solars.front() -> choice_data.devstring();
+  bool test = true;
+  for (auto s : solars) if (s->choice_data.devstring() != current) current = "mixed";
 
   choice_gui::f_info_t f_info = [] (string v) -> choice_info {
     choice_info res;
-    res.info.push_back("Governor focused on " + v);
+    res.info.push_back("Develop " + v);
     res.available = true;
     return res;
   };
@@ -201,15 +197,17 @@ Widget::Ptr interface::governor_gui(list<solar::ptr> solars) {
     if (accepted) {
       string test;      
       if (test_unique_choice(selected, test)) {
-	string gov = test;
-	for (auto s : solars) s -> choice_data.governor = gov;
+	for (auto s : solars) {
+	  s->choice_data.building_queue.clear();
+	  s->choice_data.building_queue.push_back(test);
+	}
       } else {
 	throw classified_error("governor_gui: invalid selection size!");
       }
     }
   };
 
-  return choice_gui::Create("Governor", "Chose a governor for the selected solars", true, options, f_info, callback);
+  return choice_gui::Create("Development", "Chose what to develop in the selected solars", true, options, f_info, callback);
 }
 
 // RESEARCH
@@ -245,7 +243,7 @@ Widget::Ptr interface::research_gui() {
     }
 
     // info
-    for (auto b : n.sector_boost) res.info.push_back(b.first + " + " + to_string((int)(100 * (b.second - 1))) + "%");
+    for (auto b : n.solar_modifier) res.info.push_back(b.first + " + " + to_string(b.second));
     for (auto su : n.ship_upgrades) res.info.push_back(su.first + " gains: " + boost::algorithm::join(su.second, ", "));
     if (leads_to.count(v)) res.info.push_back("Leads to: " + boost::algorithm::join(leads_to.at(v), ", "));
 
@@ -272,12 +270,13 @@ Widget::Ptr interface::research_gui() {
 }
 
 // MILITARY
-Widget::Ptr interface::military_gui() {
+Widget::Ptr interface::military_gui(list<solar::ptr> solars) {
   hm_t<string, bool> options;
-  for (auto v : ship::all_classes()) options[v] = desktop -> response.military[v] > 0;
+  for (auto v : ship::all_classes()) options[v] = false;
 
   // get highest shipyard level
-  int faclev = choice_gui::calc_faclev()["shipyard"];
+  int faclev = 0;
+  for (auto s : solars) faclev = max(faclev, (int)s->effective_level(keywords::key_shipyard));
 
   // military gui
   choice_gui::f_info_t f_info = [faclev] (string v) -> choice_info {
@@ -291,11 +290,21 @@ Widget::Ptr interface::military_gui() {
     return res;
   };
 
-  choice_gui::f_result_t callback = [] (hm_t<string, bool> result, bool accepted) {
-    cost::ship_allocation res;
+  choice_gui::f_result_t callback = [solars] (hm_t<string, bool> result, bool accepted) {
     if (accepted) {
-      for (auto v : result) res[v.first] = v.second;
-      desktop -> response.military = res;
+      string test;      
+      for (auto v : result) {
+	if (!v.second) continue;
+
+	string k = v.first;
+	for (auto s : solars) {
+	  ship_stats ss = ship::table().at(k);
+	  if (ss.depends_facility_level > s->effective_level(keywords::key_shipyard)) continue;
+	  
+	  s->choice_data.ship_queue.clear();
+	  s->choice_data.ship_queue.push_back(v.first);
+	}
+      }
     }
   };
 
@@ -332,9 +341,8 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
   frame_left_q -> Add(layout_left_q);
 
   // add buildings
-  for (auto v : s -> available_facilities(desktop -> get_research())) {
-    auto f = s -> developed(v, 0);
-    available_buildings[v] = f.level;
+  for (auto v : keywords::development) {
+    available_buildings[v] = s->development[v];
   }
 
   for (auto v : s -> choice_data.building_queue) extend_building_queue(v);
@@ -407,9 +415,8 @@ void solar_gui::extend_building_queue(string v) {
   
   available_buildings[v]++;
   string name = v + " level " + to_string(available_buildings[v]);
-  if (building_queue.empty() && sol -> facility_access(v) -> progress > 0) {
-    facility_object f = sol -> developed(v, 1);
-    int percent = 100 * f.progress / f.cost_time;
+  if (building_queue.empty() && v == sol->choice_data.devstring()) {
+    int percent = 100 * sol->build_progress / sol->devtime(v);
     name += ": " + to_string(percent) + "%";
   }
   

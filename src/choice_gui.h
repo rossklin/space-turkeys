@@ -1,5 +1,4 @@
-#ifndef _STK_CHOICE_GUI
-#define _STK_CHOICE_GUI
+#pragma once
 
 #include <string>
 #include <list>
@@ -87,9 +86,7 @@ namespace st3 {
     };
 
     sfg::Widget::Ptr governor_gui(std::list<solar::ptr> solars);
-    sfg::Widget::Ptr military_gui();
+    sfg::Widget::Ptr military_gui(std::list<solar::ptr> solars);
     sfg::Widget::Ptr research_gui();
   };
 };
-
-#endif

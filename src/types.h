@@ -99,16 +99,23 @@ namespace st3{
     extern const std::vector<std::string> development;
     extern const std::vector<std::string> solar_modifier;
 
+    // resources
     const std::string key_metals = "metals";
     const std::string key_organics = "organics";
     const std::string key_gases = "gases";
 
+    // developments
     const std::string key_research = "research facility";
     const std::string key_shipyard = "shipyard";
     const std::string key_development = "development";
     const std::string key_agriculture = "agriculture";
     const std::string key_defense = "defense";
+
+    // other solar modifiers
     const std::string key_medicine = "medicine";
+    const std::string key_agroproduce = "agriculture produce";
+
+    // disabled
     const std::string build_disabled = "disabled";
   };
 

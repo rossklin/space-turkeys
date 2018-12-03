@@ -37,9 +37,9 @@ namespace st3{
     void specific_selector<solar>::draw(window_t &w){
       // compute fill color
       sf::Color cfill;
-      cfill.r = 256 * utility::sigmoid(2 * available_resource[keywords::key_metals] / 1000);
-      cfill.g = 256 * utility::sigmoid(2 * available_resource[keywords::key_organics] / 1000);
-      cfill.b = 256 * utility::sigmoid(2 * available_resource[keywords::key_gases] / 1000);
+      cfill.r = 256 * utility::sigmoid(2 * resources[keywords::key_metals] / 1000);
+      cfill.g = 256 * utility::sigmoid(2 * resources[keywords::key_organics] / 1000);
+      cfill.b = 256 * utility::sigmoid(2 * resources[keywords::key_gases] / 1000);
       cfill.a = 160;
       graphics::draw_circle(w, position, radius, get_color(), cfill, -2);
 
@@ -47,17 +47,17 @@ namespace st3{
       if (!was_discovered) indicator_text += "!";
 
       if (owned){
-	hm_t<string, string> gov_abr;
-	gov_abr[keywords::key_military] = "MY";
-	gov_abr[keywords::key_research] = "R";
-	gov_abr[keywords::key_mining] = "MG";
-	gov_abr[keywords::key_development] = "D";
-	gov_abr[keywords::key_culture] = "C";
+	hm_t<string, string> build_abr;
+	build_abr[keywords::key_research] = "R";
+	build_abr[keywords::key_shipyard] = "S";
+	build_abr[keywords::key_agriculture] = "A";
+	build_abr[keywords::key_defense] = "D";
 	
 	graphics::draw_circle(w, position, vision(), sf::Color(40, 200, 60, 100));
 	graphics::draw_text(w, to_string((int)(population / 1000)), position, 16);
 
-	indicator_text = gov_abr[choice_data.governor];
+	indicator_text = "";
+	if (choice_data.do_develop()) indicator_text = build_abr[choice_data.building_queue.front()];
 	if (get_ships().size()) indicator_text += " <>";
   
 	if (selected){
@@ -87,13 +87,13 @@ namespace st3{
       }
 
       // draw shield indicator
-      float sp = compute_shield_power();
+      float sp = development[keywords::key_defense];
       if (sp > 0) {
 	graphics::draw_circle(w, position, radius + 4, sf::Color(100, 140, 200, 150), sf::Color::Transparent, sp);
       }
 
       // draw health indicator
-      float hp_ratio = compute_hp_ratio();
+      float hp_ratio = hp / (float)max_hp();
       if (hp_ratio < 1) {
 	sf::FloatRect bounds(position.x - radius, position.y + radius + 5, 2 * radius, 2);
 	w.draw(graphics::build_rect(bounds, 0.5, sf::Color::White, sf::Color::Transparent));
@@ -109,47 +109,36 @@ namespace st3{
 
     template<>
     string specific_selector<solar>::hover_info(){
-      string res = id + " at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
+      stringstream ss;
+      ss << id << " at " << utility::format_float(position.x) << "x" << utility::format_float(position.y);
 
       if (owned) {
-	res += "\n<<Status>>";
-	res += "\npopulation: " + to_string((int)population);
-	res += "\nhappiness: " + to_string((int)(100 * happiness)) + "%";
-	res += "\necology: " + to_string((int)(100 * ecology)) + "%";
-	res += "\ncrowding: " + to_string((int)(100 * crowding_rate() / population)) + "%";
-	res += "\nshield: " + to_string(compute_shield_power());
+	ss << "\n<<Status>>";
+	ss << "\npopulation: " << (int)population;
 
-	res += "\n<<Facilities>>: ";
-	for (auto x : facility_table()) {
-	  facility_object f = developed(x.first);
-	  bool is_active = choice_data.do_develop() && x.first == choice_data.building_queue.front();
-	  if (f.level == 0 && !is_active) continue;
+	ss << "\n<<Facilities>>: ";
+	for (auto x : development) {
+	  ss << "\n" << x.first << ": " << x.second;
 	  
-	  res += "\n" + x.first + ": " + to_string(f.level);
-	  
-	  if (is_active) {
-	    f = developed(x.first, 1);
-	    res += " (" + to_string((int)(100 * f.progress / f.cost_time)) + "%)";
+	  if (choice_data.do_develop() && x.first == choice_data.building_queue.front()) {
+	    ss << " (" << to_string((int)(100 * build_progress / devtime(x.first))) << "%)";
 	  }
 	}
 
 	if (choice_data.do_produce()) {
-	  res += "\n<<Shipyard>>";
-	  if (ship_progress > 0) {
-	    string sc = choice_data.ship_queue.front();
-	    ship_stats s = ship::table().at(sc);
-	    res += "\n" + sc + ": " + to_string((int)(100 * ship_progress / s.build_time)) + "%";
-	  }
+	  ss << "\n<<Shipyard>>";
+	  string sc = choice_data.ship_queue.front();
+	  ship_stats s = ship::table().at(sc);
+	  ss << "\n" << sc << ": " << to_string((int)(100 * ship_progress / s.build_time)) << "%";
 	}
       }
 
-      res += "\n<<Resources>>:";
+      ss << "\n<<Resources>>:";
       for (auto k : keywords::resource) {
-	res += "\n" + k + ": " + to_string((int)available_resource[k]);
-	if (owned) res += " (storage: " + to_string((int)resource_storage[k]) + ")";
+	ss << "\n" << k << ": " << (int)resources[k];
       }
 
-      return res;
+      return ss.str();
     }
 
     // ****************************************

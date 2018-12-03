@@ -57,7 +57,11 @@ main_interface::main_interface(sf::Vector2u d, client::game *gx) : g(gx) {
   bind_ppc(b_research, [this] () {reset_qw(research_gui());});
 
   Button::Ptr b_military = Button::Create("Military");
-  bind_ppc(b_military, [this] () {reset_qw(military_gui());});
+  bind_ppc(b_military, [this] () {
+      list<solar::ptr> solars;
+      for (auto sid : g -> selected_specific<solar>()) solars.push_back(g -> get_specific<solar>(sid));
+      if (solars.size()) reset_qw(military_gui(solars));
+    });
 
   Button::Ptr b_governor = Button::Create("Governor");
   bind_ppc(b_governor, [this] () {

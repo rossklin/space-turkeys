@@ -2,7 +2,7 @@
     "research" : {
 	"warp technology" : {
 	    "build time" : 300,
-	    "depends facility" : {"research facility" : 2},
+	    "depends facilities" : {"research facility" : 2},
 	    "ship upgrades" : {
 		"[10,100]" : ["warp drive"]
 	    }

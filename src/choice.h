@@ -20,11 +20,11 @@ namespace st3{
       std::list<std::string> ship_queue;
       bool do_develop();
       bool do_produce();
+      std::string devstring();
     };
 
     struct choice{
       std::string research;
-      cost::ship_allocation military;
       hm_t<combid, std::list<command> > commands; /*!< table of commands for game entities */
       hm_t<combid, c_solar> solar_choices; /*!< table of choices for solar system evolution */ 
       hm_t<combid, waypoint> waypoints; /*!< table of generated waypoints */

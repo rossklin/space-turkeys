@@ -295,7 +295,6 @@ bool game::choice_step(){
 
   research::data &r = players[self_id].research_level;
   c.research = r.researching;
-  c.military = interface::desktop -> response.military;
 
   // check if we can select a technology
   if (c.research.empty() || r.access(c.research).level > 0) {
@@ -607,9 +606,7 @@ choice::choice game::build_choice(choice::choice c){
       c.fleets[x.first] = *get_specific<fleet>(x.first);
       cout << "build_choice: " << x.first << endl;
     } else if (x.second -> isa(solar::class_id) && x.second -> owned) {
-      choice::c_solar ch = get_specific<solar>(x.first) -> choice_data;
-      if (ch.governor.empty()) ch.governor = keywords::key_culture;
-      c.solar_choices[x.first] = ch;
+      c.solar_choices[x.first] = get_specific<solar>(x.first) -> choice_data;
       cout << "build_choice: " << x.first << endl;
     }
   }

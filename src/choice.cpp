@@ -12,3 +12,7 @@ bool choice::c_solar::do_develop() {
 bool choice::c_solar::do_produce() {
   return ship_queue.size() && ship_queue.front() != keywords::build_disabled;
 }
+
+string choice::c_solar::devstring() {
+  return building_queue.size() ? building_queue.front() : keywords::build_disabled;
+}

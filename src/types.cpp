@@ -86,6 +86,15 @@ const vector<string> keywords::development = {
   keywords::key_defense
 };
 
+const vector<string> keywords::solar_modifier = {
+  keywords::key_agriculture,
+  keywords::key_research,
+  keywords::key_shipyard,
+  keywords::key_defense,
+  keywords::key_medicine,
+  keywords::key_agroproduce
+};
+
 // make a source symbol with type t and id i
 combid identifier::make(class_t t, idtype i){
   stringstream s;

@@ -184,6 +184,8 @@ solar::ptr solar::create(idtype id, point p, float bounty, float var) {
 
   s -> population = 0;
   s -> research_points = 0;
+  s -> build_progress = -1;
+  s -> ship_progress = -1;
 
   for (auto v : keywords::resource) s -> resources[v] = fres();
   for (auto v : keywords::development) s -> development[v] = 0;
@@ -485,17 +487,57 @@ bool solar::serialize(sf::Packet &p){
 //   return c;
 // }
 
+float solar::effective_level(string k) {
+  return development[k] + research_level->solar_modifier(k);
+}
+
+float solar::devtime(string k) {
+  return 10 * pow(1.5, development[k]);
+}
+
+cost::res_t solar::devcost(string k) {
+  static hm_t<string, cost::res_t> base_cost;
+  static bool init = false;
+
+  if (!init) {
+    init = true;
+    for (auto k : keywords::development) base_cost[k].setup(keywords::resource);
+
+    base_cost[keywords::key_agriculture][keywords::key_metals] = 1;
+    base_cost[keywords::key_agriculture][keywords::key_organics] = 2;
+    base_cost[keywords::key_agriculture][keywords::key_gases] = 1;
+
+    base_cost[keywords::key_research][keywords::key_metals] = 1;
+    base_cost[keywords::key_research][keywords::key_organics] = 1;
+    base_cost[keywords::key_research][keywords::key_gases] = 2;
+
+    base_cost[keywords::key_shipyard][keywords::key_metals] = 2;
+    base_cost[keywords::key_shipyard][keywords::key_organics] = 1;
+    base_cost[keywords::key_shipyard][keywords::key_gases] = 1;
+
+    base_cost[keywords::key_defense][keywords::key_metals] = 1;
+    base_cost[keywords::key_defense][keywords::key_organics] = 0;
+    base_cost[keywords::key_defense][keywords::key_gases] = 1;
+  }
+
+  int level = development[k];
+  float multiplier = pow(1.5, level);
+  cost::res_t c = base_cost[k];
+  c.scale(multiplier);
+  return c;
+}
+
 void solar::dynamics(game_data *g){
   float dt = g->get_dt();
 
   // population increment
-  float agr_ratio = research_level->solar_modifier(keywords::key_agriculture);
-  float medicine = research_level->solar_modifier(keywords::key_medicine);
+  float agr_ratio = 4 + research_level->solar_modifier(keywords::key_agroproduce);
+  float medicine = 1 + research_level->solar_modifier(keywords::key_medicine);
   float farmers = fmin(population / agr_ratio, development[keywords::key_agriculture]);
   float workers = population - farmers;
   float food = agr_ratio * farmers;
   float growth = fmin(population, food) * f_growth;
-  float crowding = f_crowding * pow(population, 2) / (medicine + 1);
+  float crowding = f_crowding * pow(population, 2) / medicine;
   population += 0.2 * (growth - crowding) * dt;
 
   // sum active worker slots in different sectors
@@ -572,6 +614,8 @@ void solar::dynamics(game_data *g){
     // check building complete
     if (build_progress >= devtime(v)) {
       build_progress = -1;
+      choice_data.building_queue.pop_front();
+      
       development[v]++;
       g -> players[owner].log.push_back("Completed building " + v);
     }

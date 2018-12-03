@@ -982,7 +982,7 @@ void game_data::build(){
     s -> owner = pid;
     s -> was_discovered = true;
     s -> resources = initial_resources;
-    s -> population = 1000;
+    s -> population = 1;
     s -> radius = settings.solar_meanrad;
     s -> development[keywords::key_agriculture] = 1;
     s -> development[keywords::key_shipyard] = 1;
@@ -1061,10 +1061,11 @@ void game_data::pre_step(){
 // compute max levels for each player and development
 void game_data::update_research_facility_level() {
   hm_t<idtype, hm_t<string, int> > level;
-  for (auto i : all<solar>()){
-    if (i -> owner > -1){
+  for (auto s : all<solar>()){
+    if (s -> owner > -1){
+      s->research_level = &players[s->owner].research_level;
       for (auto v : keywords::development) {
-	level[i -> owner][v] = max(level[i -> owner][v], i->development[v]);
+	level[s -> owner][v] = max(level[s -> owner][v], (int)s->effective_level(v));
       }
     }
   }

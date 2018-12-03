@@ -103,7 +103,7 @@ bool data::can_build_ship(string v, solar::ptr sol, list<string> *data) const {
     throw logical_error("Military template: no such ship class: " + v);
   }
   
-  int facility = sol -> development[keywords::key_shipyard];
+  int facility = sol->effective_level(keywords::key_shipyard);
   ship_stats s = ship::table().at(v);
   bool success = true;
 
@@ -137,6 +137,15 @@ tech &data::access(string v) {
   }
 
   return tech_map[v];
+}
+
+float data::solar_modifier(string k) const {
+  float sum = 0;
+  for (auto v : researched()) {
+    tech x = tech_map.at(v);
+    if (x.solar_modifier.count(k)) sum += x.solar_modifier[k];
+  }
+  return sum;
 }
 
 void tech::read_from_json(const rapidjson::Value &x) {
