@@ -55,8 +55,6 @@ const hm_t<string, ship_stats>& ship_stats::table(){
   s.stats[sskey::key::stealth] = 0;
   s.stats[sskey::key::cannon_flex] = 0.1;
 
-  s.upgrades.insert(interaction::land);
-
   // read ships from json structure
   for (auto i = doc.MemberBegin(); i != doc.MemberEnd(); i++) {
     a = s;
@@ -84,6 +82,9 @@ const hm_t<string, ship_stats>& ship_stats::table(){
       }else if (j -> value.IsArray()) {
 	if (name == "upgrades") {
 	  for (auto u = j -> value.Begin(); u != j -> value.End(); u++) a.upgrades.insert(u -> GetString());
+	  success = true;
+	} else if (name == "interactions") {
+	  for (auto u = j -> value.Begin(); u != j -> value.End(); u++) a.interactions.insert(u -> GetString());
 	  success = true;
 	} else if (name == "shape") {
 	  pair<point, unsigned char> v;
@@ -147,9 +148,6 @@ ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   remove = false;
   load = 0;
   nkills = 0;
-  passengers = 0;
-  is_landed = false;
-  is_loaded = false;
   skip_head = false;
   radius = pow(stats[sskey::key::mass], 1/(float)3);
   force_refresh = true;
@@ -159,6 +157,30 @@ ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
 
 list<string> ship::all_classes() {
   return utility::get_map_keys(table());
+}
+
+int ship::ddata_int(string k) {
+  if (dynamic_data.count(k)) {
+    return stoi(dynamic_data[k]);
+  } else {
+    return 0;
+  }
+}
+
+float ship::ddata_float(string k) {
+  if (dynamic_data.count(k)) {
+    return stof(dynamic_data[k]);
+  } else {
+    return 0;
+  }
+}
+
+string ship::ddata_string(string k) {
+  if (dynamic_data.count(k)) {
+    return dynamic_data[k];
+  } else {
+    return "";
+  }
 }
 
 void ship::pre_phase(game_data *g){
@@ -537,7 +559,7 @@ void ship::move(game_data *g) {
   // check upgrade on_move hooks
   for (auto v : upgrades) {
     upgrade u = upgrade::table().at(v);
-    for (auto i : u.on_move) interaction::table().at(i).perform(this, NULL, g);
+    for (auto i : u.hook["on move"]) interaction::table().at(i).perform(this, NULL, g);
   }
 
   // // check if there is free space at target angle
@@ -583,7 +605,7 @@ void ship::move(game_data *g) {
 
   // move
   float dt = g -> get_dt();
-  float angle_increment = fmin(2 / pow(stats[sskey::key::mass], 0.33), 1);
+  float angle_increment = fmin(stats[sskey::key::thrust] / stats[sskey::key::mass], 1);
   float epsilon = dt * 0.01;
   float angle_miss = utility::angle_difference(target_angle, angle);
   float angle_sign = utility::signum(angle_miss, epsilon);
@@ -734,7 +756,7 @@ float ship::vision(){
 }
 
 set<string> ship::compile_interactions(){
-  set<string> res;
+  set<string> res = interactions;
   auto utab = upgrade::table();
   for (auto v : upgrades) res += utab[v].inter;
   return res;
@@ -767,7 +789,7 @@ float ship::interaction_radius() {
 }
 
 bool ship::is_active(){
-  return !is_landed;
+  return !states.count("landed");
 }
 
 bool ship::has_fleet() {
@@ -776,7 +798,7 @@ bool ship::has_fleet() {
 
 void ship::on_liftoff(solar::ptr from, game_data *g){
   g -> players[owner].research_level.repair_ship(*this, from);
-  is_landed = false;
+  states.erase("landed");
   force_refresh = true;
   thrust = 0;
   velocity = {0,0};
@@ -784,7 +806,7 @@ void ship::on_liftoff(solar::ptr from, game_data *g){
 
   for (auto v : upgrades) {
     upgrade u = upgrade::table().at(v);
-    for (auto i : u.on_liftoff) interaction::table().at(i).perform(this, from, g);
+    for (auto i : u.hook["on liftoff"]) interaction::table().at(i).perform(this, from, g);
   }
 }
 

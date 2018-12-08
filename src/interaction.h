@@ -34,6 +34,7 @@ namespace st3{
     static const std::string trade_to;
     static const std::string trade_from;
     static const std::string land;
+    static const std::string deploy;
     static const std::string search;
     static const std::string auto_search;
     static const std::string turret_combat;
@@ -43,6 +44,7 @@ namespace st3{
     static const std::string pickup;
     static const std::string terraform;
     static const std::string hive_support;
+    static const std::string splash;
 
     typedef std::function<void(game_object::ptr self, game_object::ptr target, game_data *g)> perform_t;
     static const hm_t<std::string, interaction> &table();

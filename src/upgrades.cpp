@@ -40,20 +40,16 @@ const hm_t<string, upgrade> &upgrade::table(){
       if (j -> value.IsString()) {
 	string stat_value = j -> value.GetString();
 	success = a.modify.parse(stat_name, stat_value);
-      } else if (j -> value.IsArray()) {
-	if (stat_name == "interactions") {
-	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) {
-	    a.inter.insert(k -> GetString());
-	    success = true;
-	  }
-	} else if (stat_name == "on liftoff") {
-	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) {
-	    a.on_liftoff.insert(k -> GetString());
-	    success = true;
-	  }
-	} else if (stat_name == "on move") {
-	  for (auto k = j -> value.Begin(); k != j -> value.End(); k++) {
-	    a.on_move.insert(k -> GetString());
+      } else if (stat_name == "interactions") {
+	for (auto k = j -> value.Begin(); k != j -> value.End(); k++) {
+	  a.inter.insert(k -> GetString());
+	  success = true;
+	}
+      } else if (stat_name == "hook") {
+	for (auto k = j -> value.MemberBegin(); k != j -> value.MemberEnd(); k++) {
+	  string hook_name = k->name.GetString();
+	  for (auto x = k -> value.Begin(); x != k -> value.End(); x++) {
+	    a.hook[hook_name].insert(x -> GetString());
 	    success = true;
 	  }
 	}

@@ -1,35 +1,14 @@
 {
     "upgrade" : {
-	"space combat" : {
-	    "interactions" : ["space combat"]
-	},
-	"bombard" : {
-	    "interactions" : ["bombard"]
-	},
-	"land" : {
-	    "interactions" : ["land"]
-	},
 	"colonize" : {
 	    "interactions" : ["colonize"],
-	    "on liftoff" : ["pickup"]
-	},
-	"trade" : {
-	    "interactions" : ["trade to", "trade from"]
-	},
-	"search" : {
-	    "interactions" : ["search", "auto search"]
+	    "hook" : {
+		"on liftoff" : ["pickup"]
+	    }
 	},
 
 	"warp drive" : {
 	    "thrust" : "2#1"
-	},
-
-	"nano scout" : {
-	    "mass" : "0#0.1"
-	},
-
-	"detection" : {
-	    "detection" : "1#2"
 	},
 
 	"stealth" : {
@@ -40,30 +19,24 @@
 	    "shield" : "1.25#1.8"
 	},
 
-	"nano hull" : {
+	"ionized hull" : {
 	    "hp" : "1.5#1"
 	},
 
-	"nano torpedos" : {
+	"micro torpedos" : {
 	    "ship damage" : "1#0.5"
 	},
 
-	"biohull" : {
-	    "hp" : "1#1",
-	    "regeneration" : "1#0.1"
-	},
-
-	"plasma laser" : {
-	    "ship damage" : "1.2#0",
-	    "load time" : "0.8#0"
+	"splash" : {
+	    "hook" : {
+		"on hit" : ["splash"]
+	    }
 	},
 
 	"hive mind" : {
-	    "on move" : ["hive support"]
-	},
-
-	"subspace drive" : {
-	    "thrust" : "2#0"
+	    "hook" : {
+		"on move" : ["hive support"]
+	    }
 	}
     }
 }

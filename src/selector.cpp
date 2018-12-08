@@ -353,7 +353,7 @@ namespace st3{
 	if (value > 0) output += label + ": " + to_string(value) + "\n";
       };
       
-      if (is_loaded) {
+      if (states.count("loaded")) {
 	if (cargo.count()) {
 	  maybe_include("Cargo: metals", cargo[keywords::key_metals]);
 	  maybe_include("Cargo: gases", cargo[keywords::key_gases]);
@@ -363,7 +363,7 @@ namespace st3{
 	}
       }
 
-      maybe_include("Passengers", passengers);
+      maybe_include("Passengers", ddata_int("passengers"));
       maybe_include("Kills", nkills);
 
       if (upgrades.size()) {

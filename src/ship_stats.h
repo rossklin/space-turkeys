@@ -64,6 +64,7 @@ namespace st3{
     class_t ship_class; /*!< ship class */
     std::set<std::string> tags;
     std::set<std::string> upgrades;
+    std::set<std::string> interactions;
 
     // cost and req
     std::string depends_tech;

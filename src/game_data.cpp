@@ -1013,7 +1013,7 @@ void game_data::build(){
 	if ((!sh.depends_tech.empty()) && settings.starting_fleet == "massive") {
 	  sh.upgrades += research::data::get_tech_upgrades(sh.ship_class, sh.depends_tech);
 	}
-	sh.is_landed = true;
+	sh.states.insert("landed");
 	sh.owner = pid;
 	s -> ships.insert(sh.id);
 	add_entity(ship::ptr(new ship(sh)));
@@ -1109,9 +1109,11 @@ void game_data::end_step(){
   update_research_facility_level();
   
   hm_t<idtype, float> pool;
+  hm_t<idtype, int> count;
   for (auto i : all<solar>()){
     if (i -> owner > -1){
       pool[i -> owner] += i -> research_points;
+      if (i->research_points > 0) count[i->owner]++;
       i -> research_points = 0;
     }
   }
@@ -1119,16 +1121,22 @@ void game_data::end_step(){
   for (auto x : players) {
     idtype id = x.first;
     research::data &r = players[id].research_level;
+    bool rcult = r.researched().count("research culture");
     
     // apply
     if (r.researching.length() > 0) {
       if (utility::find_in(r.researching, r.available())) {
 	research::tech &t = r.access(r.researching);
-	t.progress += pool[id];
+
+	// inefficiency for multiple research centers if research culture not developed
+	float scale = pow(rcult ? 1 : 1.2, -count[id]);
+	t.progress += scale * pool[id];
+
+	// check research complete
 	if (t.progress >= t.cost_time) {
 	  t.progress = 0;
 	  t.level = 1;
-	  players[id].log.push_back("Researched " + r.researching);
+	  players[id].log.push_back("Completed researching " + r.researching);
 	  r.researching = "";
 	}
       } else {

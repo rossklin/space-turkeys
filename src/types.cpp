@@ -92,7 +92,7 @@ const vector<string> keywords::solar_modifier = {
   keywords::key_shipyard,
   keywords::key_defense,
   keywords::key_medicine,
-  keywords::key_agroproduce
+  keywords::key_population
 };
 
 // make a source symbol with type t and id i

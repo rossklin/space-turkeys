@@ -113,7 +113,7 @@ namespace st3{
 
     // other solar modifiers
     const std::string key_medicine = "medicine";
-    const std::string key_agroproduce = "agriculture produce";
+    const std::string key_population = "population";
 
     // disabled
     const std::string build_disabled = "disabled";

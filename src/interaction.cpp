@@ -17,6 +17,7 @@ const class_t target_condition::no_target = "no target";
 const string interaction::trade_to = "trade to";
 const string interaction::trade_from = "trade from";
 const string interaction::land = "land";
+const string interaction::deploy = "deploy";
 const string interaction::search = "search";
 const string interaction::auto_search = "auto search";
 const string interaction::turret_combat = "turret combat";
@@ -26,6 +27,7 @@ const string interaction::colonize = "colonize";
 const string interaction::pickup = "pickup";
 const string interaction::terraform = "terraform";
 const string interaction::hive_support = "hive support";
+const string interaction::splash = "splash";
 
 void load_resources(ship::ptr s, solar::ptr t) {
   float total = t -> resources.count();
@@ -37,7 +39,7 @@ void load_resources(ship::ptr s, solar::ptr t) {
   s -> cargo.add(move);
   move.scale(-1);
   t -> resources.add(move);
-  s -> is_loaded = true;
+  s->states.insert("loaded");
 }
 
 const hm_t<string, interaction> &interaction::table() {
@@ -65,11 +67,28 @@ const hm_t<string, interaction> &interaction::table() {
     // unload cargo
     t -> resources.add(s -> cargo);
     s -> cargo = cost::res_t();
-    s -> is_loaded = false;
+    s->states.erase("loaded");
 
     // add to solar's fleet
-    s -> is_landed = true;
+    s->states.insert("landed");
     t -> ships.insert(s -> id);
+  };
+  data[i.name] = i;
+
+  
+  // deploy
+  i.name = interaction::deploy;
+  i.condition = target_condition(target_condition::any_alignment, target_condition::no_target);
+  i.perform = [] (game_object::ptr self, game_object::ptr null_ptr, game_data *g) {
+    output("interaction: deploy: " + self -> id);
+    ship::ptr s = utility::guaranteed_cast<ship>(self);
+    if (s->states.count("deployed")) return;
+
+    s->states.insert("deployed");
+    s->stats[sskey::key::interaction_radius] = 100;
+    s->stats[sskey::key::ship_damage] = 10;
+    s->stats[sskey::key::solar_damage] = 10;
+    s->stats[sskey::key::thrust] = 0;
   };
   data[i.name] = i;
 
@@ -252,6 +271,13 @@ const hm_t<string, interaction> &interaction::table() {
 	damage = fmax(damage, 0);
       }
       t -> receive_damage(g, self, damage);
+
+      // check on hit hooks
+      for (auto v : s->upgrades) {
+	upgrade u = upgrade::table().at(v);
+	for (auto i : u.hook["on hit"]) interaction::table().at(i).perform(s, t, g);
+      }
+
     }else{
       output("space_combat: miss!");
     }
@@ -317,9 +343,9 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
 
-    if (s -> passengers == 0) return;
+    if (s->ddata_int("passengers") == 0) return;
     
-    t -> population = s -> passengers;
+    t -> population = s -> ddata_int("passengers");
     t -> owner = s -> owner;
     t->development[keywords::key_agriculture] = 1;
 
@@ -334,14 +360,14 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
 
-    if (s -> passengers > 0) return;
+    if (s -> ddata_int("passengers") > 0) return;
 
     int pickup = 1000;
     int leave = 1000;
 
     if (t -> population >= leave + pickup) {
       t -> population -= pickup;
-      s -> passengers = pickup;
+      s -> dynamic_data["passengers"] = to_string(pickup);
     }
   };
   data[i.name] = i;
@@ -356,7 +382,7 @@ const hm_t<string, interaction> &interaction::table() {
     fleet::ptr f = g -> get_fleet(s -> fleet_id);
 
     // first check if we still need to load resources
-    if (!s -> is_loaded) {
+    if (!s->states.count("loaded")) {
       if (f -> com.action == interaction::trade_to && g -> entity.count(f -> com.source)) {
 	game_object::ptr h = g -> get_entity(f -> com.source);
 	if (h -> isa(solar::class_id) && h -> owner == s -> owner) {
@@ -371,12 +397,12 @@ const hm_t<string, interaction> &interaction::table() {
       t -> resources[v] += s -> cargo[v];
     }
     s -> cargo = cost::res_t();
-    s -> is_loaded = false;
+    s->states.erase("loaded");
 
     // check that we are the last ship in fleet unloading
     for (auto sid : f -> ships) {
       ship::ptr sh = g -> get_ship(sid);
-      if (sh -> is_loaded) return;
+      if (sh->states.count("loaded")) return;
     }
     
     // go back for more
@@ -394,7 +420,7 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
     if (!s -> has_fleet()) return;
-    if (s -> is_loaded) return;
+    if (s->states.count("loaded")) return;
 
     load_resources(s, t);
 
@@ -402,7 +428,7 @@ const hm_t<string, interaction> &interaction::table() {
     fleet::ptr f = g -> get_fleet(s -> fleet_id);
     for (auto sid : f -> ships) {
       ship::ptr sh = g -> get_ship(sid);
-      if (!sh -> is_loaded) return;
+      if (!sh->states.count("loaded")) return;
     }
 
     // set target
@@ -440,6 +466,25 @@ const hm_t<string, interaction> &interaction::table() {
       ship::ptr sh = g -> get_ship(sid);
       sh -> load += strength;
       sh -> stats[sskey::key::evasion] = (1 + strength) * sh -> base_stats.stats[sskey::key::evasion];
+    }
+  };
+  data[i.name] = i;
+
+  // splash
+  i.name = splash;
+  i.condition = target_condition(target_condition::enemy, ship::class_id);
+  i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g) {
+    ship::ptr s = utility::guaranteed_cast<ship>(self);
+    ship::ptr t = utility::guaranteed_cast<ship>(target);
+
+    float damage = 0.3 * s->stats[sskey::key::ship_damage];
+    auto ns = g->entity_grid->search(t->position, 20);
+    for (auto x : ns) {
+      combid id = x.first;
+      if (identifier::get_type(id) == ship::class_id) {
+	ship::ptr t2 = g->get_ship(id);
+	t2->receive_damage(g, s, damage);
+      }
     }
   };
   data[i.name] = i;

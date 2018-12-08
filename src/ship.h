@@ -31,11 +31,15 @@ namespace st3{
     point velocity;
     sfloat load;
     ssfloat_t base_stats;
-    sint passengers;
-    sint is_landed;
-    cost::res_t cargo;
-    sbool is_loaded;
     int nkills;
+    cost::res_t cargo;
+    
+    // state trackers for specific ship types
+    std::set<std::string> states;
+    hm_t<std::string, std::string> dynamic_data;
+    int ddata_int(std::string k);
+    float ddata_float(std::string k);
+    std::string ddata_string(std::string k);
 
     // ai stats
     float target_angle;

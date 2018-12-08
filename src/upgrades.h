@@ -18,8 +18,7 @@ namespace st3{
     static const hm_t<std::string, upgrade> &table();
 
     std::set<std::string> inter;
-    std::set<std::string> on_liftoff;
-    std::set<std::string> on_move;
+    hm_t<std::string, std::set<std::string> > hook;
     ssmod_t modify;
   };
 };

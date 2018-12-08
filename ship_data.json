@@ -20,7 +20,7 @@
 	    "is starting ship" : 1,
 	    "depends facility level" : 0,
 	    "depends tech" : "",
-	    "upgrades" : ["space combat", "search"],
+	    "interactions" : ["land", "space combat", "search", "auto search"],
 	    "cost" : {
 		"metals" : 1,
 		"gases" : 1,
@@ -47,9 +47,9 @@
 	    "interaction radius" : 30,
 	    "load time" : 5,
 	    "cannon flex" : 0.2,
-	    "upgrades" : ["space combat", "bombard"],
+	    "interactions" : ["land", "space combat", "bombard"],
 	    "depends facility level" : 1,
-	    "depends tech" : "plasma technology",
+	    "depends tech" : "plasma weapons",
 	    "cost" : {
 		"metals" : 5,
 		"gases" : 1,
@@ -71,9 +71,9 @@
 	    "mass" : 10,
 	    "solar damage" : 4,
 	    "accuracy" : 0.8,
-	    "upgrades" : ["bombard"],
+	    "interactions" : ["land", "bombard"],
 	    "depends facility level" : 2,
-	    "depends tech" : "plasma technology",
+	    "depends tech" : "plasma weapons",
 	    "cost" : {
 		"metals" : 10,
 		"gases" : 3,
@@ -103,7 +103,7 @@
 	    "vision range" : 70,
 	    "cannon flex" : 0.9,
 	    "load time" : 0,
-	    "upgrades" : ["space combat"],
+	    "interactions" : ["land", "space combat"],
 	    "depends facility level" : 3,
 	    "depends tech" : "nano weapons",
 	    "cost" : {
@@ -122,7 +122,40 @@
 	    ],
 	    "tags" : ["combat", "spacecombat"]
 	},
-		
+
+	"cannon" : {
+	    "hp" : 5,
+	    "mass" : 15,
+	    "thrust" : 5,
+	    "solar damage" : 0,
+	    "ship damage" : 1,
+	    "accuracy" : 2,
+	    "evasion" : 0,
+	    "shield" : 0,
+	    "vision range" : 20,
+	    "interaction radius" : 10,
+	    "cannon flex" : 0.1,
+	    "load time" : 5,
+	    "interactions" : ["space combat", "deploy"],
+	    "depends facility level" : 2,
+	    "depends tech" : "ionized hulls",
+	    "cost" : {
+		"metals" : 5,
+		"gases" : 1,
+		"time" : 50
+	    },
+	    "shape" : [
+		{"x" : 1, "y" : 0, "c" : "p"},
+		{"x" : 2, "y" : -2, "c" : "p"},
+		{"x" : -2, "y" : -1, "c" : "n"},
+		{"x" : -3, "y" : 0, "c" : "p"},
+		{"x" : -2, "y" : 1, "c" : "n"},
+		{"x" : 2, "y" : 2, "c" : "p"},
+		{"x" : 1, "y" : 0, "c" : "p"}
+	    ],
+	    "tags" : ["combat", "spacecombat"]
+	},
+
 	"destroyer" : {
 	    "hp" : 100,
 	    "mass" : 55,
@@ -136,7 +169,7 @@
 	    "interaction radius" : 60,
 	    "cannon flex" : 0.2,
 	    "load time" : 9,
-	    "upgrades" : ["space combat"],
+	    "interactions" : ["land", "space combat"],
 	    "depends facility level" : 5,
 	    "depends tech" : "subspace projectiles",
 	    "cost" : {
@@ -146,11 +179,11 @@
 	    },
 	    "shape" : [
 		{"x" : 2, "y" : 0, "c" : "p"},
-		{"x" : 1, "y" : -1, "c" : "p"},
+		{"x" : 1, "y" : -0.5, "c" : "p"},
 		{"x" : -1, "y" : -1, "c" : "n"},
 		{"x" : -2, "y" : 0, "c" : "p"},
 		{"x" : -1, "y" : 1, "c" : "n"},
-		{"x" : 1, "y" : 1, "c" : "p"},
+		{"x" : 1, "y" : 0.5, "c" : "p"},
 		{"x" : 2, "y" : 0, "c" : "p"}
 	    ],
 	    "tags" : ["combat", "spacecombat"]
@@ -168,7 +201,7 @@
 	    "vision range" : 100,
 	    "interaction radius" : 80,
 	    "load time" : 7,
-	    "upgrades" : ["space combat", "bombard"],
+	    "interactions" : ["land", "space combat", "bombard"],
 	    "depends facility level" : 4,
 	    "depends tech" : "shields",
 	    "cost" : {
@@ -204,7 +237,7 @@
 	    "load time" : 9,
 	    "vision range" : 130,
 	    "interaction radius" : 80,
-	    "upgrades" : ["space combat", "bombard", "search"],
+	    "interactions" : ["land", "space combat", "bombard", "search", "auto search"],
 	    "depends facility level" : 5,
 	    "depends tech" : "subspace technology",
 	    "cost" : {
@@ -230,6 +263,7 @@
 	    "thrust" : 9,
 	    "hp" : 20,
 	    "mass" : 30,
+	    "interactions" : [],
 	    "upgrades" : ["colonize"],
 	    "depends facility level" : 1,
 	    "cost" : {
@@ -251,7 +285,7 @@
 	    "thrust" : 13,
 	    "hp" : 20,
 	    "mass" : 30,
-	    "upgrades" : ["trade"],
+	    "interactions" : ["land", "trade to", "trade from"],
 	    "depends facility level" : 1,
 	    "cargo capacity" : 10,
 	    "cost" : {
