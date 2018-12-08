@@ -1,5 +1,4 @@
-#ifndef _STK_SHIP_STATS
-#define _STK_SHIP_STATS
+#pragma once
 
 #include <string>
 #include <set>
@@ -79,4 +78,3 @@ namespace st3{
     ship_stats(const ship_stats &s);
   };
 };
-#endif

@@ -1141,8 +1141,7 @@ void game::setup_targui(point p){
     exists_ships |= get_ready_ships(k).size() > 0;
     entity_selector::ptr e = get_entity(k);
     for (auto i : e -> get_ships()){
-      ship::ptr s = get_specific<ship>(i);
-      for (auto u : s -> upgrades) possible_actions += upgrade::table().at(u).inter;
+      possible_actions += get_specific<ship>(i)->compile_interactions();
     }
   }
 
@@ -1160,6 +1159,9 @@ void game::setup_targui(point p){
       if (condition.valid_on(get_entity(k))){
 	options.push_back(target_gui::option_t(k, a));
       }
+    }
+    if (!condition.requires_target()) {
+      options.push_back(target_gui::option_t("", a));
     }
   }
 

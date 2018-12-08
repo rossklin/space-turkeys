@@ -150,9 +150,9 @@ const hm_t<string, interaction> &interaction::table() {
       // population boost
       solar::ptr csol = g -> closest_solar(t -> position, s -> owner);
       if (csol) {
-	float pop = fmax(utility::random_normal(500, 200), 10);
+	float pop = fmax(utility::random_normal(0.5, 0.2), 0.1);
 	csol -> population += pop;
-	ss << " and encountered a group of " << int(pop) << " people who join your civilization at " << t -> id << "!";
+	ss << " and encountered a group of people who join your civilization at " << t -> id << "!";
 	sshort << (int)pop << " people join " << t -> id << "!";
       } else {
 	ss << " and encountered a group of people who can't join you because you control no solars!";
@@ -362,8 +362,8 @@ const hm_t<string, interaction> &interaction::table() {
 
     if (s -> ddata_int("passengers") > 0) return;
 
-    int pickup = 1000;
-    int leave = 1000;
+    int pickup = 1;
+    int leave = 1;
 
     if (t -> population >= leave + pickup) {
       t -> population -= pickup;

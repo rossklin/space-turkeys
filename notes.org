@@ -32,6 +32,8 @@
    voyager - 5 accuracy, + 5 shield
    
 ** play testing
+*** vector_min: no finite values found!
+    st3::fleet::analyze_enemies (this=0x7fffec20fc00, g=0x7ffff4e4fa00) at fleet.cpp:274
 *** command gui is terribly laggy
 *** fleet must "activate" when first ships reach target
 *** population dynamics change too fast, e.g. switching to military gov 1 turn killed 20% of ppl

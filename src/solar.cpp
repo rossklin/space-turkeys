@@ -40,20 +40,22 @@ void solar::move(game_data *g){
 
   // check for turret combat interaction
   target_condition cond(target_condition::enemy, ship::class_id);
-  list<combid> buf = g -> search_targets(id, position, interaction_radius(), cond.owned_by(owner));
+  list<combid> buf = g -> search_targets_nophys(id, position, interaction_radius(), cond.owned_by(owner));
 
-  // solar combat
-  float dlev = effective_level(keywords::key_defense);
-  for (int i = 0; i < dlev; i++) {
-    combid sid = utility::uniform_sample(buf);
-    ship::ptr s = g->get_ship(sid);
+  if (buf.size()) {
+    // solar combat
+    float dlev = effective_level(keywords::key_defense);
+    for (int i = 0; i < dlev; i++) {
+      combid sid = utility::uniform_sample(buf);
+      ship::ptr s = g->get_ship(sid);
 
-    g->log_ship_fire(id, s->id);
+      g->log_ship_fire(id, s->id);
 
-    float d = utility::l2norm(s->position - position);
-    float ack = dlev * accuracy_distance_norm / (d + 1);
-    if (s->evasion_check() < ack){
-      s->receive_damage(g, this, utility::random_uniform(0, dlev));
+      float d = utility::l2norm(s->position - position);
+      float ack = dlev * accuracy_distance_norm / (d + 1);
+      if (s->evasion_check() < ack){
+	s->receive_damage(g, this, utility::random_uniform(0, dlev));
+      }
     }
   }
 }

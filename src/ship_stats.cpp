@@ -134,6 +134,7 @@ ship_stats::ship_stats(const ship_stats &s) : ssfloat_t(s) {
   ship_class = s.ship_class;
   tags = s.tags;
   upgrades = s.upgrades;
+  interactions = s.interactions;
   depends_tech = s.depends_tech;
   depends_facility_level = s.depends_facility_level;
   build_cost = s.build_cost;

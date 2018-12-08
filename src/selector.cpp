@@ -120,12 +120,12 @@ namespace st3{
 	for (auto x : development) {
 	  ss << "\n" << x.first << ": " << x.second;
 	  
-	  if (choice_data.do_develop() && x.first == choice_data.building_queue.front()) {
+	  if (build_progress >= 0 && choice_data.do_develop() && x.first == choice_data.building_queue.front()) {
 	    ss << " (" << to_string((int)(100 * build_progress / devtime(x.first))) << "%)";
 	  }
 	}
 
-	if (choice_data.do_produce()) {
+	if (ship_progress >= 0 && choice_data.do_produce()) {
 	  ss << "\n<<Shipyard>>";
 	  string sc = choice_data.ship_queue.front();
 	  ship_stats s = ship::table().at(sc);
