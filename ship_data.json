@@ -105,7 +105,7 @@
 	    "load time" : 0,
 	    "interactions" : ["land", "space combat"],
 	    "depends facility level" : 3,
-	    "depends tech" : "nano weapons",
+	    "depends tech" : "shield technology",
 	    "cost" : {
 		"metals" : 20,
 		"gases" : 10,
@@ -171,7 +171,7 @@
 	    "load time" : 9,
 	    "interactions" : ["land", "space combat"],
 	    "depends facility level" : 5,
-	    "depends tech" : "subspace projectiles",
+	    "depends tech" : "photon torpedos",
 	    "cost" : {
 		"metals" : 40,
 		"gases" : 10,
@@ -203,7 +203,7 @@
 	    "load time" : 7,
 	    "interactions" : ["land", "space combat", "bombard"],
 	    "depends facility level" : 4,
-	    "depends tech" : "shields",
+	    "depends tech" : "warp core",
 	    "cost" : {
 		"metals" : 180,
 		"gases" : 20,
@@ -239,7 +239,7 @@
 	    "interaction radius" : 80,
 	    "interactions" : ["land", "space combat", "bombard", "search", "auto search"],
 	    "depends facility level" : 5,
-	    "depends tech" : "subspace technology",
+	    "depends tech" : "warp core",
 	    "cost" : {
 		"metals" : 120,
 		"gases" : 30,
@@ -281,12 +281,13 @@
 	    ]
 	},
 
-	"freighter" : {
+	"harvester" : {
 	    "thrust" : 13,
 	    "hp" : 20,
 	    "mass" : 30,
 	    "interactions" : ["land", "trade to", "trade from"],
 	    "depends facility level" : 1,
+	    "depends tech" : "automining",
 	    "cargo capacity" : 10,
 	    "cost" : {
 		"metals" : 30,

@@ -73,7 +73,7 @@
 	    "build time" : 1600,
 	    "depends facilities" : {"research facility" : 4},
 	    "depends technologies" : ["nano technology"],
-	    "ship upgrades" : {"#spacecombat" : "micro torpedos"}
+	    "ship upgrades" : {"#spacecombat" : ["micro torpedos"]}
 	},
 
 	"micro med bots" : {
@@ -86,14 +86,14 @@
 	"photon torpedos" : {
 	    "build time" : 3200,
 	    "depends facilities" : {"research facility" : 5},
-	    "depends technologies" : ["stealth technolgoy", "warp core"]
+	    "depends technologies" : ["stealth technology", "warp core"]
 	},
 
 	"A.M. Laser" : {
 	    "build time" : 3200,
 	    "depends facilities" : {"research facility" : 5},
 	    "depends technologies" : ["warp core"],
-	    "ship upgrades" : {"[50,1000]:#spacecombat" : "splash"}
+	    "ship upgrades" : {"[50,1000]:#spacecombat" : ["splash"]}
 	},
 
 	"hive fleet" : {
