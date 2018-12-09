@@ -1,5 +1,4 @@
-#ifndef _STK_GAMESETTINGS
-#define _STK_GAMESETTINGS
+#pragma once
 
 #include <string>
 #include <set>
@@ -28,9 +27,8 @@ namespace st3{
     sfloat fleet_default_radius; /*!< default radius for fleets */
     sfloat dt; /*!< game time per iteration step */
     int space_index_ratio;
+    bool enable_extend;
 
     game_settings();
   };
 };
-#endif
-

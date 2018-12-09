@@ -63,7 +63,7 @@ list<string> data::available() const {
   return res;
 }
 
-void data::repair_ship(ship &s, solar::ptr sol) const {
+void data::repair_ship(ship &s) const {
   ship_stats base_stats = ship::table().at(s.ship_class);
 
   auto maybe_asu = [](const development::node &n, string sc) -> set<string> {
@@ -87,13 +87,13 @@ void data::repair_ship(ship &s, solar::ptr sol) const {
   s.stats = s.base_stats.stats;
 }
 
-ship data::build_ship(idtype id, string c, solar::ptr sol) const {
+ship data::build_ship(idtype id, string c) const {
   ship s(ship::table().at(c));
 
   s.id = identifier::make(ship::class_id, id);
 
   // apply upgrades
-  repair_ship(s, sol);
+  repair_ship(s);
 
   return s;
 }

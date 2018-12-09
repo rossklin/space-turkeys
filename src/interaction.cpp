@@ -177,7 +177,7 @@ const hm_t<string, interaction> &interaction::table() {
       for (auto m : prob) {
 	int count = utility::random_normal(m.second, 0.2 * m.second);
 	for (int j = 0; j < count; j++) {
-	  ship sh = rbase.build_ship(g -> next_id(ship::class_id), m.first, t);
+	  ship sh = rbase.build_ship(g -> next_id(ship::class_id), m.first);
 	  new_ships.push_back(sh.id);
 	  sh.owner = s -> owner;
 	  g -> add_entity(ship::ptr(new ship(sh)));
@@ -477,7 +477,7 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     ship::ptr t = utility::guaranteed_cast<ship>(target);
 
-    float damage = 0.3 * s->stats[sskey::key::ship_damage];
+    float damage = 0.2 * s->stats[sskey::key::ship_damage];
     auto ns = g->entity_grid->search(t->position, 20);
     for (auto x : ns) {
       combid id = x.first;

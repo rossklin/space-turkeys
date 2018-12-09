@@ -8,7 +8,7 @@
 	},
 
 	"warp drive" : {
-	    "thrust" : "2#1"
+	    "thrust" : "1.5#1"
 	},
 
 	"stealth" : {
@@ -16,15 +16,15 @@
 	},
 
 	"shield" : {
-	    "shield" : "1.25#1.8"
+	    "shield" : "1.25#0.5"
 	},
 
 	"ionized hull" : {
-	    "hp" : "1.5#1"
+	    "hp" : "1#0.3"
 	},
 
 	"micro torpedos" : {
-	    "ship damage" : "1#0.5"
+	    "ship damage" : "1#0.7"
 	},
 
 	"splash" : {

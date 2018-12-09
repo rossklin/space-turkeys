@@ -797,7 +797,7 @@ bool ship::has_fleet() {
 }
 
 void ship::on_liftoff(solar::ptr from, game_data *g){
-  g -> players[owner].research_level.repair_ship(*this, from);
+  g -> players[owner].research_level.repair_ship(*this);
   states.erase("landed");
   force_refresh = true;
   thrust = 0;

@@ -19,25 +19,31 @@ long_t check_memory() {
     return pages * page_size;
 }
 
-game_data *test_setup(game_settings set = game_settings()) {
+game_data *test_setup(game_settings set = game_settings(), research::data r = research::data()) {
   game_data *g = new game_data();
-  g -> settings = set;
   player p;
+  p.research_level = r;
+  g -> settings = set;
   g -> players[0] = p;
   g -> players[1] = p;
-  g -> build();
+  g -> allocate_grid();
   return g;
 }
 
-void setup_fleet_for(game_data *g, idtype pid, point at, point targ, hm_t<string, int> scc = hm_t<string, int>()) {
+void setup_fleet_for(game_data *g, idtype pid, point at, point targ, hm_t<string, float> scc = hm_t<string, float>()) {
   static int idc = 0;
   
   list<combid> ships;
-  for (auto x : g -> all_owned_by(pid)) {
-    if (x -> isa(ship::class_id)) {
-      if (scc.empty() || scc[g -> get_ship(x -> id) -> ship_class]-- > 0) {
-	ships.push_back(x -> id);
-      }
+  auto rbase = g->players[pid].research_level;
+
+  for (auto sc : scc) {
+    int count = max(round(utility::random_normal(sc.second, 0.5)), 1);
+    for (int j = 0; j < count; j++) {
+      ship sh = rbase.build_ship(g->next_id(ship::class_id), sc.first);
+      ships.push_back(sh.id);
+      sh.owner = pid;
+      sh.states.insert("landed");
+      g->add_entity(ship::ptr(new ship(sh)));
     }
   }
 
@@ -50,7 +56,7 @@ void setup_fleet_for(game_data *g, idtype pid, point at, point targ, hm_t<string
 
   g -> add_entity(w);
   g -> generate_fleet(at, pid, c, ships);
-  for (auto sid : ships) g -> get_ship(sid) -> is_landed = false;
+  for (auto sid : ships) g->get_ship(sid)->states.erase("landed");
 }
 
 void test_setup_fleets(game_data *g) {
@@ -104,11 +110,11 @@ cost_tracker gather(cost_tracker x) {
     add(t);
   }
 
-  // gather sub facilities
-  for (auto v : x.second) {
-    facility f = solar::facility_table().at(v.first);
-    add(f);
-  }
+  // // gather sub facilities
+  // for (auto v : x.second) {
+  //   facility f = solar::facility_table().at(v.first);
+  //   add(f);
+  // }
 
   buf = gather(buf);
   buf.first += x.first;
@@ -122,10 +128,7 @@ float get_cost(cost_tracker x) {
   float res = 0;
   
   for (auto v : data.second) {
-    facility f = solar::facility_table().at(v.first);
-    float lm = cost::expansion_multiplier(v.second);
-    float fc = f.cost_resources.count();
-    res += v.second * fc * lm / 2;
+    for (int l = 1; l < v.second; l++) res += 4 * pow(1.5, l);
   }  
 
   return res;
@@ -139,7 +142,7 @@ float fair_ship_count(string ship_class, set<string> techs, float limit, strings
   if (s.depends_facility_level > 0) facilities["shipyard"] = s.depends_facility_level;
   
   float investment = get_cost(make_pair(techs, facilities));
-  int can_build = max(floor((limit - investment) / s.build_cost.count()), 0);
+  float can_build = max((limit - investment) / (s.build_cost.count() + 0.1 * s.build_time), 0);
 
   ss << ship_class << ": investment: " << investment << ", can build: " << can_build << endl;
 
@@ -164,14 +167,14 @@ bool test_space_combat(string c0, string c1, float limit, float win_lower, float
   // }
 
   float lowest = fmin(count0, count1);
-  if (lowest > min_units) {
+  if (lowest < min_units) {
     float ratio = min_units / lowest;
     count0 *= ratio;
     count1 *= ratio;
   }
 
-  hm_t<string, int> scc_0 = {{c0, ceil(count0)}};
-  hm_t<string, int> scc_1 = {{c1, ceil(count1)}};
+  hm_t<string, float> scc_0 = {{c0, count0}};
+  hm_t<string, float> scc_1 = {{c1, count1}};
   hm_t<string, set<string> > add_upgrades;
 
   for (auto t : add_techs) {
@@ -180,28 +183,32 @@ bool test_space_combat(string c0, string c1, float limit, float win_lower, float
   }
   
   string game_stage = "early";
-  if (limit > 3000) game_stage = "mid";
-  if (limit > 7000) game_stage = "late";
-  if (add_techs.count("hive fleet")) game_stage += "[HM]";
+  if (limit > 300) game_stage = "mid";
+  if (limit > 1000) game_stage = "late";
+  if (add_techs.count("hive fleet")) game_stage += "HM";
+  if (add_techs.count("A.M. Laser")) game_stage += "SPLASH";
 
   ss << "test combat: " << game_stage << " game: " << scc_0[c0] << " " << c0 << " vs " << scc_1[c1] << " " << c1 << endl;
 
-  auto test = [scc_0, scc_1, c0, c1, add_upgrades] () {
+  auto test = [scc_0, scc_1, c0, c1, add_techs] () {
     game_settings set;
-    set.starting_fleet = "massive";
-
-    game_data *g = test_setup(set);
+    set.enable_extend = false;
+    
+    research::data r;
+    for (auto v : add_techs) r.access(v).level = 1;
+    
+    game_data *g = test_setup(set, r);
   
     point a(100, 100);
     point b(200, 100);  
     setup_fleet_for(g, 0, a, b, scc_0);
     setup_fleet_for(g, 1, b, a, scc_1);
 
-    for (auto s : g -> all<ship>()) {
-      if (add_upgrades.count(s -> ship_class)) {
-	s -> upgrades += add_upgrades.at(s -> ship_class);
-      }
-    }
+    // for (auto s : g -> all<ship>()) {
+    //   if (add_upgrades.count(s -> ship_class)) {
+    // 	s -> upgrades += add_upgrades.at(s -> ship_class);
+    //   }
+    // }
 
     auto get_ratio = [&] (int pid) -> float {
       float ref = pid == 0 ? scc_0.at(c0) : scc_1.at(c1);
@@ -269,7 +276,7 @@ bool test_space_combat(string c0, string c1, float limit, float win_lower, float
 }
 
 int main(int argc, char **argv){
-  float limit = 1000;
+  float limit;
 
   game_data::confirm_data();
 
@@ -285,43 +292,58 @@ int main(int argc, char **argv){
   list<thread> tests;
 
   // test early game balance
-  tests.push_back(thread([limit] () {test_space_combat("fighter", "battleship", limit, 4, 16);}));
+  limit = 100;
+  tests.push_back(thread([limit] () {test_space_combat("fighter", "scout", limit, 8, 16);}));
 
   set<string> add_techs = {
-    "warp technology",
-    "shields",
-    "plasma technology"
+    "ionized hulls",
+    "plasma weapons",
+    "shield technology"
   };
 
   // test mid game balance
-  limit = 5000;
+  limit = 500;
   tests.push_back(thread([limit, add_techs] () {test_space_combat("corsair", "fighter", limit, 5, 16, add_techs);}));
-  tests.push_back(thread([limit, add_techs] () {test_space_combat("battleship", "fighter", limit, 1.5, 4, add_techs);}));
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("fighter", "battleship", limit, 2, 4, add_techs);}));
   tests.push_back(thread([limit, add_techs] () {test_space_combat("battleship", "corsair", limit, 3, 6, add_techs);}));
 
   // test late game balance
-  limit = 15000;
-  add_techs.insert("nano plating");
-  add_techs.insert("nano weapons");
+  limit = 1500;
+  add_techs.insert("micro torpedos");
   
   tests.push_back(thread([limit, add_techs] () {test_space_combat("corsair", "fighter", limit, 6, 16, add_techs);}));
   tests.push_back(thread([limit, add_techs] () {test_space_combat("fighter", "destroyer", limit, 2, 6, add_techs);}));
   tests.push_back(thread([limit, add_techs] () {test_space_combat("destroyer", "battleship", limit, 6, 16, add_techs);}));
   tests.push_back(thread([limit, add_techs] () {test_space_combat("destroyer", "corsair", limit, 6, 16, add_techs);}));
   tests.push_back(thread([limit, add_techs] () {test_space_combat("battleship", "corsair", limit, 2, 8, add_techs);}));
-  tests.push_back(thread([limit, add_techs] () {test_space_combat("battleship", "fighter", limit, 6, 16, add_techs);}));
-  tests.push_back(thread([limit, add_techs] () {test_space_combat("voyager", "fighter", limit, 6, 16, add_techs);}));
-  tests.push_back(thread([limit, add_techs] () {test_space_combat("voyager", "corsair", limit, 1.2, 4, add_techs);}));
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("battleship", "fighter", limit, 2, 8, add_techs);}));
+
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("voyager", "fighter", limit, 1.5, 3, add_techs);}));
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("voyager", "corsair", limit, 1.5, 3, add_techs);}));
   tests.push_back(thread([limit, add_techs] () {test_space_combat("destroyer", "voyager", limit, 8, 16, add_techs);}));
   tests.push_back(thread([limit, add_techs] () {test_space_combat("battleship", "voyager", limit, 4, 8, add_techs);}));
 
   // late game with hive mind
   add_techs.insert("hive fleet");
-  tests.push_back(thread([limit, add_techs] () {test_space_combat("corsair", "fighter", limit, 2, 6, add_techs);}));
-  tests.push_back(thread([limit, add_techs] () {test_space_combat("battleship", "fighter", limit, 1.5, 3, add_techs);}));
+  limit = 2000;
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("corsair", "fighter", limit, 1.1, 2, add_techs);}));
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("fighter", "battleship", limit, 1.1, 4, add_techs);}));
   tests.push_back(thread([limit, add_techs] () {test_space_combat("fighter", "destroyer", limit, 6, 16, add_techs);}));
-  tests.push_back(thread([limit, add_techs] () {test_space_combat("fighter", "voyager", limit, 2, 6, add_techs);}));
-  
+
+  // late game with splash
+  add_techs.insert("A.M. Laser");
+  add_techs.erase("hive fleet");
+  limit = 2000;
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("battleship", "fighter", limit, 4, 16, add_techs);}));
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("destroyer", "fighter", limit, 2, 6, add_techs);}));
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("destroyer", "battleship", limit, 6, 16, add_techs);}));
+
+  // late game with hive mind and splash
+  add_techs.insert("hive fleet");
+  limit = 2000;
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("battleship", "fighter", limit, 2, 6, add_techs);}));
+  tests.push_back(thread([limit, add_techs] () {test_space_combat("fighter", "destroyer", limit, 1.1, 3, add_techs);}));
+
   for (auto &t : tests) t.join();
   
   return 0;

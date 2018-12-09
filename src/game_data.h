@@ -1,5 +1,4 @@
-#ifndef _STK_GAMEDATA
-#define _STK_GAMEDATA
+#pragma once
 
 #include <SFML/Network.hpp>
 
@@ -105,6 +104,7 @@ namespace st3{
     void remove_units();
     void generate_fleet(point p, idtype i, command &c, std::list<combid> &sh);
     void relocate_ships(command c, std::set<combid> &sh, idtype owner);
+    void allocate_grid();
 
     // game steps
     void pre_step(); 
@@ -121,8 +121,6 @@ namespace st3{
     // add and remove entities
     void remove_entity(combid id);
     void distribute_ships(std::list<combid> sh, point p);
-    void allocate_grid();
     void update_research_facility_level();
   };
 };
-#endif

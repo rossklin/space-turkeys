@@ -7,36 +7,80 @@
 *** check that ships actually use private path
 *** test movement of different ship classes, with upgrades etc
 ** balancing
-   late hm:
-   [improved] !corsair > fighter
-   [unchanged] !fighter > voyager
+*** early
+    +fighter vs scout (unchanged)
+**** log
+    +fighter vs scout
+**** log
+    +fighter vs scout
+**** log
+    -scout vs light: -50% scout damage
+*** mid: ionized hulls, plasma weapons, shield technology
+    ++battleship vs corsair (unchanged)
+    ++fighter vs battleship (overshot)
+**** log
+    battleship: facility level -1, accuracy +40%
 
-   late game:
-   [fixed] !voyager > corsair
-   [fixed] !battleship > corsair
-   [unchanged] battleship > destroyer
-   [unchanged] corsair > destroyer
+    ++battleship vs corsair
+    +++battleship vs fighter
+**** log
+    +++battleship vs corsair
+**** log
+    +battleship vs light, med
+    +corsair vs light
 
-   mid game:
-   [unchanged] fighter > battleship
-   [fixed] battleship > corsair
-
-   Attempt to fix relationships: 
-   corsair < voyager < HMfighter < corsair
-   corsair < battleship
-
-   Changes:
-   fighter + 0.2 ship_damage
-   corsair + 1 accuracy
-   battleship + 5 ship_damage, - 2 accuracy, + 2 shield
-   voyager - 5 accuracy, + 5 shield
-   
+    fighter: +100% hp, -60% damage
+    ionized hulls: -67% effect
+    shield: -75% effect
+*** late: micro torpedos
+    ++voyager vs [destroyer, corsair] (unchanged)
+    --voyager vs fighter (new)
+    ++battleship vs [destroyer, corsair, fighter] (unchanged)
+    ++corsair vs fighter (new)
+    ++fighter vs destroyer (improved)
+**** log
+    ++fighter vs voyager: micro torpedos +40% const bonus
+    ++voyager vs [destroyer, battleship, corsair]: +33% damage
+    +++battleship vs [corsair, fighter]: +25% shield
+    ---destroyer vs [battleship, fighter]: -50% accuracy
+**** log
+    +++voyager vs [battleship, destroyer, corsair]
+    +++battleship vs [corsair, destroyer, figther]
+    ---destroyer vs [battleship, voyager, fighter]
+    +destroyer vs corsair
+**** log
+    +voager vs heavy, med: +50% shield
+    -destroyer vs ALL: +67% load time
+    +battleship vs ALL: +3 shield
+    +corsair vs light
+*** late SPLASH
+    -destroyer vs battleship (improved)
+    --destroyer vs fighter (unchanged)
+**** log
+    ---destroyer vs battleship
+    --destroyer vs fighter
+    --battleship vs fighter
+*** late HM
+    ++corsair vs fighter (overshot)
+**** log
+    ++fighter vs corsair: -20% damage
+    -fighter vs destroyer
+    ---fighter vs battleship
+*** late HMSPLASH
+    --fighter vs destroyer (overshot)
+    ++fighter vs battleship (worsened)
+**** log
+    +fighter vs destroyer
+    +fighter vs battleship
+**** log
+    +fighter vs [corsair, voyager, battleship]: splash -33% damage
+**** log
+    +corsair vs light
 ** play testing
 *** vector_min: no finite values found!
     st3::fleet::analyze_enemies (this=0x7fffec20fc00, g=0x7ffff4e4fa00) at fleet.cpp:274
 *** command gui is terribly laggy
 *** fleet must "activate" when first ships reach target
-*** population dynamics change too fast, e.g. switching to military gov 1 turn killed 20% of ppl
 *** auto search should select the closest next solar
 *** suggest select research first turn
 *** items that get hovered while the mouse is inside the info box should not disrupt the info

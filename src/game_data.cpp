@@ -675,6 +675,7 @@ void game_data::distribute_ships(list<combid> sh, point p){
 }
 
 void game_data::extend_universe(int i, int j, bool starting_area) {
+  if (!settings.enable_extend) return;
   pair<int, int> idx = make_pair(i, j);
   if (discovered_universe.count(idx)) return;  
   discovered_universe.insert(idx);
@@ -1009,7 +1010,7 @@ void game_data::build(){
     
     for (auto sc : starter_fleet) {
       for (int j = 0; j < sc.second; j++) {
-	ship sh = rbase.build_ship(next_id(ship::class_id), sc.first, s);
+	ship sh = rbase.build_ship(next_id(ship::class_id), sc.first);
 	if ((!sh.depends_tech.empty()) && settings.starting_fleet == "massive") {
 	  sh.upgrades += research::data::get_tech_upgrades(sh.ship_class, sh.depends_tech);
 	}

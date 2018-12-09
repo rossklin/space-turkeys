@@ -14,6 +14,7 @@ game_settings::game_settings(){
   fleet_default_radius = 10;
   dt = 0.25;
   space_index_ratio = 400;
+  enable_extend = true;
 }
 
 client_game_settings::client_game_settings(){

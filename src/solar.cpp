@@ -221,7 +221,7 @@ void solar::dynamics(game_data *g){
   float farmers = fmin(population / agr_ratio, development[keywords::key_agriculture]);
   float workers = population - farmers;
   float food = agr_ratio * farmers;
-  float growth = (fmin(population, food) + research_level->solar_modifier(keywords::key_population)) * f_growth;
+  float growth = pow(1.1, effective_level(keywords::key_agriculture)) * (fmin(population, food) + research_level->solar_modifier(keywords::key_population)) * f_growth;
   float crowding = f_crowding * pow(population, 2) / medicine;
   population += 0.2 * (growth - crowding) * dt;
 
@@ -268,7 +268,7 @@ void solar::dynamics(game_data *g){
 	ship_progress = -1;
 	choice_data.ship_queue.pop_front();
 	
-	ship sh = research_level -> build_ship(g -> next_id(ship::class_id), v, ptr(this));
+	ship sh = research_level -> build_ship(g -> next_id(ship::class_id), v);
 	sh.states.insert("landed");
 	sh.owner = owner;
 	ships.insert(sh.id);
