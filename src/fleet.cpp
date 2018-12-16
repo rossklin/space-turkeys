@@ -271,7 +271,15 @@ void fleet::analyze_enemies(game_data *g) {
   // merge direction priorities with enemy strength data via circular kernel
   vector<float> heuristics = utility::elementwise_product(enemy_ckde, utility::circular_kernel(dw, 1));
 
-  int prio_idx = utility::vector_min<float>(heuristics, utility::identity_function<float>());
+  int prio_idx;
+  try {
+    prio_idx = utility::vector_min<float>(heuristics, utility::identity_function<float>());
+  } catch (logical_error e) {
+    server::log("logical error in vector_min in fleet::analyze_enemies");
+    stats.can_evade = false;
+    return;
+  }
+  
   float evalue = heuristics[prio_idx];
 
   // only allow evasion if there exists a path with low enemy strength
@@ -397,7 +405,11 @@ void fleet::check_action(game_data *g) {
 
     // have arrived?
     if (g -> target_position(com.target, stats.target_position)) {
-      bool buf = utility::l2d2(stats.target_position - position) < fleet::interact_d2;
+      bool buf = false;
+      for (auto sid : ships) {
+	ship::ptr s = g->get_ship(sid);
+	buf |= utility::l2d2(stats.target_position - s->position) < fleet::interact_d2;
+      }
       should_refresh |= buf != stats.converge;
       stats.converge = buf;
     }

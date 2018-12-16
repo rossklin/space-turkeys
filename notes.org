@@ -77,10 +77,10 @@
 **** log
     +corsair vs light
 ** play testing
-*** vector_min: no finite values found!
+*** [tempfix?] vector_min: no finite values found!
     st3::fleet::analyze_enemies (this=0x7fffec20fc00, g=0x7ffff4e4fa00) at fleet.cpp:274
 *** command gui is terribly laggy
-*** fleet must "activate" when first ships reach target
+*** [J?] fleet must "activate" when first ships reach target
 *** auto search should select the closest next solar
 *** suggest select research first turn
 *** items that get hovered while the mouse is inside the info box should not disrupt the info
