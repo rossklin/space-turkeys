@@ -77,10 +77,6 @@
 **** log
     +corsair vs light
 ** play testing
-*** gui is too small on large screen, set fixed video mode or scale text to relative size
-*** slower ships left behind
-    fleet::speed_limit and ship::max_speed seem to be correct, perhaps
-    an issue with swarm behaviour?
 *** command policy label covers unit and waypoint
 *** building first colonizer takes too long
 *** first research takes too long
@@ -93,6 +89,10 @@
 *** auto search should select the closest next solar
 *** suggest select research first turn
 *** items that get hovered while the mouse is inside the info box should not disrupt the info
+*** gui is too small on large screen, set fixed video mode or scale text to relative size
+*** [J] slower ships left behind
+    fleet::speed_limit and ship::max_speed seem to be correct, perhaps
+    an issue with swarm behaviour?
 *** [J] make collisions conserve energy
     e = 0.5 m v²
     de/dt = m v dv/dt

@@ -67,9 +67,8 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
 
   point label_dims(80, 40);
 
-  auto build_ship_label = [this, label_dims] (string ship_class) -> sf::Image {
-    string label = to_string(data[ship_class].allocated) + "/" + to_string(data[ship_class].allocated + data[ship_class].available);
-    return graphics::ship_image_label(label, ship_class, label_dims.x, label_dims.y);
+  auto build_ship_label = [this] (string ship_class) -> string {
+    return to_string(data[ship_class].allocated) + "/" + to_string(data[ship_class].allocated + data[ship_class].available);
   };
 
   // build ship allocation tables for each available ships class
@@ -81,7 +80,7 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
     Box::Ptr box = Box::Create(Box::Orientation::HORIZONTAL, 10);
     Scale::Ptr scale = Scale::Create( sfg::Scale::Orientation::HORIZONTAL);
     scale -> SetRequisition(sf::Vector2f(400, 10));
-    data[ship_class].image = Image::Create(build_ship_label(ship_class));
+    data[ship_class].alloc_label = Label::Create(build_ship_label(ship_class));
     data[ship_class].adjust = scale -> GetAdjustment();
     data[ship_class].adjust -> SetLower(0);
     data[ship_class].adjust -> SetUpper(total);
@@ -89,11 +88,12 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
     data[ship_class].adjust -> GetSignal(Adjustment::OnChange).Connect([this, build_ship_label, ship_class, total] () {
 	data[ship_class].allocated = data[ship_class].adjust -> GetValue();
 	data[ship_class].available = total - data[ship_class].allocated;
-	data[ship_class].image -> SetImage(build_ship_label(ship_class));
+	data[ship_class].alloc_label->SetText(build_ship_label(ship_class));
       });
 
-    box -> Pack(data[ship_class].image);
+    box->Pack(Label::Create(ship_class));
     box -> Pack(scale);
+    box -> Pack(data[ship_class].alloc_label);
     ships_layout -> Pack(box);
   }
 

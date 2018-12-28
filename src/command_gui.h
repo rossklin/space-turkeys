@@ -21,7 +21,7 @@ namespace st3{
 	int available;
 	int allocated;
 	sfg::Adjustment::Ptr adjust;
-	sfg::Image::Ptr image;
+	sfg::Label::Ptr alloc_label;
       };
       
       hm_t<std::string, class_info> data;
