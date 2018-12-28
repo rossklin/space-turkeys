@@ -1,7 +1,7 @@
 {
     "research" : {
 	"warp technology" : {
-	    "build time" : 200,
+	    "build time" : 50,
 	    "depends facilities" : {"research facility" : 1},
 	    "ship upgrades" : {
 		"[2,1000]" : ["warp drive"]
@@ -9,38 +9,38 @@
 	},
 
 	"plasma weapons" : {
-	    "build time" : 200,
+	    "build time" : 50,
 	    "depends facilities" : {"research facility" : 1}
 	},
 
 	"research culture" : {
-	    "build time" : 200,
+	    "build time" : 50,
 	    "depends facilities" : {"research facility" : 1}
 	},
 
 	"nano technology" : {
-	    "build time" : 400,
+	    "build time" : 100,
 	    "depends facilities" : {"research facility" : 2},
 	    "depends technologies" : ["warp technology"],
 	    "solar modifier" : {"agriculture" : 1}
 	},
 
 	"interstellar culture" : {
-	    "build time" : 500,
+	    "build time" : 100,
 	    "depends facilities" : {"research facility" : 2},
 	    "depends technologies" : ["research culture", "warp technology"],
 	    "solar modifier" : {"population" : 1}
 	},
 
 	"ionized hulls" : {
-	    "build time" : 400,
+	    "build time" : 100,
 	    "depends facilities" : {"research facility" : 2},
 	    "depends technologies" : ["plasma weapons"],
 	    "ship upgrades" : {"upgrade all ships" : ["ionized hull"]}
 	},
 
 	"shield technology" : {
-	    "build time" : 800,
+	    "build time" : 200,
 	    "depends facilities" : {"research facility" : 3},
 	    "depends technologies" : ["warp technology", "ionized hulls"],
 	    "ship upgrades" : {
@@ -49,19 +49,19 @@
 	},
 
 	"warp core" : {
-	    "build time" : 900,
+	    "build time" : 200,
 	    "depends facilities" : {"research facility" : 3},
 	    "depends technologies" : ["nano technology", "shield technology"]
 	},
 
 	"automining" : {
-	    "build time" : 800,
+	    "build time" : 200,
 	    "depends facilities" : {"research facility" : 3},
 	    "depends technologies" : ["nano technology", "interstellar culture"]
 	},
 
 	"stealth technology" : {
-	    "build time" : 1600,
+	    "build time" : 400,
 	    "depends facilities" : {"research facility" : 4},
 	    "depends technologies" : ["shield technology"],
 	    "ship upgrades" : {
@@ -70,34 +70,34 @@
 	},
 
 	"micro torpedos" : {
-	    "build time" : 1600,
+	    "build time" : 400,
 	    "depends facilities" : {"research facility" : 4},
 	    "depends technologies" : ["nano technology"],
 	    "ship upgrades" : {"#spacecombat" : ["micro torpedos"]}
 	},
 
 	"micro med bots" : {
-	    "build time" : 1600,
+	    "build time" : 400,
 	    "depends facilities" : {"research facility" : 4},
 	    "depends technologies" : ["nano technology", "automining"],
 	    "solar modifier" : {"medicine" : 1}
 	},
 
 	"photon torpedos" : {
-	    "build time" : 3200,
+	    "build time" : 800,
 	    "depends facilities" : {"research facility" : 5},
 	    "depends technologies" : ["stealth technology", "warp core"]
 	},
 
 	"A.M. Laser" : {
-	    "build time" : 3200,
+	    "build time" : 800,
 	    "depends facilities" : {"research facility" : 5},
 	    "depends technologies" : ["warp core"],
 	    "ship upgrades" : {"[50,1000]:#spacecombat" : ["splash"]}
 	},
 
 	"hive fleet" : {
-	    "build time" : 3200,
+	    "build time" : 800,
 	    "depends facilities" : {"research facility" : 5},
 	    "depends technologies" : ["micro med bots"],
 	    "ship upgrades" : {"[1,5]:#spacecombat" : ["hive mind"]}

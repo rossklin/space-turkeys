@@ -17,7 +17,7 @@ using namespace std;
 using namespace st3;
 
 const string solar::class_id = "solar";
-const float solar::f_growth = 1e-2;
+const float solar::f_growth = 2e-2;
 const float solar::f_crowding = 2e-3;
 const float solar::f_minerate = 3e-4;
 const float solar::f_buildrate = 7e-4;

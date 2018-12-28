@@ -33,9 +33,7 @@ void run(string game_id, string name, client_game_settings settings, bool fullsc
   sf::Uint32 vstyle = sf::Style::Default;
 
   if (fullscreen) {
-    auto test = sf::VideoMode::getFullscreenModes();
-    sort(test.begin(), test.end(), [] (sf::VideoMode a, sf::VideoMode b) {return a.width > b.width;});
-    vmode = test.front();
+    vmode = sf::VideoMode::getDesktopMode();
     vstyle = sf::Style::Fullscreen;
   }
 

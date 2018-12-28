@@ -614,7 +614,9 @@ void ship::move(game_data *g) {
   float forward_speed = utility::scalar_mult(velocity, utility::normv(target_angle));
 
   // update thrust, angle, velocity and position
-  thrust = fmax(cos(angle_miss), 0) * utility::sigmoid(target_speed - 0.8 * forward_speed) * (target_speed > 0.8 * forward_speed) * stats[sskey::key::thrust];
+  // r^2 * fric * speed = T
+  float required_thrust = pow(radius, 2) * friction * target_speed;
+  thrust = fmax(cos(angle_miss), 0) * fmin(required_thrust, stats[sskey::key::thrust]);
   angle += fmin(dt * angle_increment, fabs(angle_miss)) * angle_sign;
   velocity += dt / stats[sskey::key::mass] * force;
   position += dt * velocity;

@@ -77,6 +77,15 @@
 **** log
     +corsair vs light
 ** play testing
+*** gui is too small on large screen, set fixed video mode or scale text to relative size
+*** slower ships left behind
+    fleet::speed_limit and ship::max_speed seem to be correct, perhaps
+    an issue with swarm behaviour?
+*** command policy label covers unit and waypoint
+*** building first colonizer takes too long
+*** first research takes too long
+*** log is ugly
+*** population growth a bit slow
 *** [tempfix?] vector_min: no finite values found!
     st3::fleet::analyze_enemies (this=0x7fffec20fc00, g=0x7ffff4e4fa00) at fleet.cpp:274
 *** command gui is terribly laggy
