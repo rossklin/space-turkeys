@@ -49,6 +49,8 @@ game::game(){
   selector_queue = 1;
   chosen_quit = false;
   comgui_active = false;
+  activate_ship = false;
+  activate_build = false;
   sight_ul = point(0, 0);
   sight_wh = point(0, 0);
 
@@ -115,6 +117,8 @@ entity_selector::ptr game::get_entity(combid i){
 void game::clear_guis(){
   if (targui) delete targui;
   targui = 0;
+  activate_build = false;
+  activate_ship = false;
 }
 
 /* Main game entry point called after getting id from server */
@@ -1356,6 +1360,8 @@ int game::choice_event(sf::Event e){
   point delta;
   point target;
 
+  bool has_gui = !!interface::desktop -> query_window;
+
   // delete all selected fleets and commands
   auto handle_delete = [this] () {
     for (auto id : selected_commands()) remove_command(id);
@@ -1394,6 +1400,62 @@ int game::choice_event(sf::Event e){
     }
   };
 
+  auto solar_development = [this] (string key) {
+    bool ctrl = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
+    bool shift = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
+    auto ss = selected_specific<solar>();
+    for (auto sid : ss) {
+      solar_selector::ptr s = get_specific<solar>(sid);
+      if (shift && ctrl) {
+	// prepend to queue
+	s->choice_data.building_queue.push_front(key);
+      } else if (shift) {
+	// append to queue
+	s->choice_data.building_queue.push_back(key);
+      } else if (ctrl) {
+	// replace queue
+	s->choice_data.building_queue = {key};
+      }
+    }
+  };
+
+  auto solar_production = [this] (string key) {
+    bool ctrl = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
+    bool shift = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
+    auto ss = selected_specific<solar>();
+    for (auto sid : ss) {
+      solar_selector::ptr s = get_specific<solar>(sid);
+      if (shift && ctrl) {
+	// prepend to queue
+	s->choice_data.ship_queue.push_front(key);
+      } else if (shift) {
+	// append to queue
+	s->choice_data.ship_queue.push_back(key);
+      } else if (ctrl) {
+	// replace queue
+	s->choice_data.ship_queue = {key};
+      }
+    }
+  };
+
+  hm_t<int, string> ship_map;
+  hm_t<int, string> dev_map;
+
+  ship_map[sf::Keyboard::U] = "scout";
+  ship_map[sf::Keyboard::F] = "fighter";
+  ship_map[sf::Keyboard::B] = "bomber";
+  ship_map[sf::Keyboard::C] = "corsair";
+  ship_map[sf::Keyboard::A] = "cannon";
+  ship_map[sf::Keyboard::D] = "destroyer";
+  ship_map[sf::Keyboard::T] = "battleship";
+  ship_map[sf::Keyboard::V] = "voyager";
+  ship_map[sf::Keyboard::O] = "colonizer";
+  ship_map[sf::Keyboard::H] = "harvester";
+
+  dev_map[sf::Keyboard::A] = keywords::key_agriculture;
+  dev_map[sf::Keyboard::S] = keywords::key_shipyard;
+  dev_map[sf::Keyboard::D] = keywords::key_defense;
+  dev_map[sf::Keyboard::R] = keywords::key_research;
 
   // event switch
   window.setView(view_game);
@@ -1409,6 +1471,19 @@ int game::choice_event(sf::Event e){
 
     break;
   case sf::Event::KeyPressed:
+    // check build ship and development keys
+    if (activate_build && dev_map.count(e.key.code)) {
+      solar_development(dev_map[e.key.code]);
+      activate_build = false;
+      break;
+    }
+
+    if (activate_ship && ship_map.count(e.key.code)) {
+      solar_production(ship_map[e.key.code]);
+      activate_ship = false;
+      break;
+    }
+    
     switch (e.key.code){
     case sf::Keyboard::Space:
       if (targui){
@@ -1429,15 +1504,40 @@ int game::choice_event(sf::Event e){
     case sf::Keyboard::F:
       make_fleet();
       break;
+    case sf::Keyboard::B:
+      if (selected_specific<solar>().size() > 0 && !has_gui) {
+	activate_build = !activate_build;
+	activate_ship = false;
+      }
+      break;
+    case sf::Keyboard::S:
+      if (selected_specific<solar>().size() > 0 && !has_gui) {
+	activate_ship = !activate_ship;
+	activate_build = false;
+      }
+      break;
     case sf::Keyboard::Escape:
-      window.setView(view_window);
-      if(popup_query("Really quit?")){
-	chosen_quit = true;
-	return socket_t::tc_stop;
+      if (activate_ship || activate_build) {
+	activate_ship = activate_build = false;
+      } else {
+	window.setView(view_window);
+	if(popup_query("Really quit?")){
+	  chosen_quit = true;
+	  return socket_t::tc_stop;
+	}
       }
     }
     break;
   };
+  
+  // update message
+  if (activate_ship) {
+    message = "[select ship production]";
+  } else if (activate_build) {
+    message = "[select solar development]";
+  } else {
+    message = "make your choice";
+  }
 
   return 0;
 }

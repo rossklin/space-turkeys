@@ -77,19 +77,19 @@
 **** log
     +corsair vs light
 ** play testing
-*** command policy label covers unit and waypoint
-*** building first colonizer takes too long
-*** first research takes too long
-*** log is ugly
-*** population growth a bit slow
+*** [?] building first colonizer takes too long
+*** [?] first research takes too long
+*** [?] population growth a bit slow
 *** [tempfix?] vector_min: no finite values found!
     st3::fleet::analyze_enemies (this=0x7fffec20fc00, g=0x7ffff4e4fa00) at fleet.cpp:274
-*** command gui is terribly laggy
-*** [J?] fleet must "activate" when first ships reach target
+*** [?] fleet must "activate" when first ships reach target
+*** command policy label covers unit and waypoint
+*** log is ugly
 *** auto search should select the closest next solar
 *** suggest select research first turn
 *** items that get hovered while the mouse is inside the info box should not disrupt the info
 *** gui is too small on large screen, set fixed video mode or scale text to relative size
+*** [J] command gui is terribly laggy
 *** [J] slower ships left behind
     fleet::speed_limit and ship::max_speed seem to be correct, perhaps
     an issue with swarm behaviour?

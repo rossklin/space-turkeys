@@ -42,6 +42,8 @@ namespace st3{
       sf::FloatRect srect; /*!< area selection rectangle */
       std::string phase;
       std::vector<point> enemy_clusters;
+      bool activate_build;
+      bool activate_ship;
       
       hm_t<idtype, command_selector::ptr> command_selectors; /*!< graphical representations for commands */
       int selector_queue; /*!< index for back end of selector queue */
