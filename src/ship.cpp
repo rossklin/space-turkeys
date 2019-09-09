@@ -12,7 +12,7 @@ using namespace st3;
 
 const string ship::class_id = "ship";
 const int ship::na = 10;
-const float ship::friction = 0.3;
+const float ship::friction = 0.5;
 string ship::starting_ship;
 
 // utility
@@ -210,11 +210,11 @@ void ship::pre_phase(game_data *g){
       if (rmean >= r0) return;
 
       float mass = (stats[sskey::key::mass] + s->stats[sskey::key::mass]) / 2;
-      float f0 = sqrt(mass);
+      float f0 = 0.5 * sqrt(mass);
       float f = f0 * (r0 - rmean) / r0;
 
       // limit acceleration to 2 ship radius per unit time
-      f = fmin(f, stats[sskey::key::mass] * 2 * radius);
+      f = fmin(f, stats[sskey::key::mass] * radius);
       
       point push = utility::normalize_and_scale(delta, f);
 

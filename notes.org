@@ -1,4 +1,11 @@
 * current work
+** notes from game
+*** On action "deploy" in client: terminate called without an active exception
+*** solar always says "0"
+*** ship icons too similar
+*** command flags should be on bottom layer
+*** solar color not affected by resource ratio at large quantities
+*** search message for population rounds to 0 people
 ** ship movement
 *** [done] combat: stay on target till not available
 *** [test] collide with enemy ships
