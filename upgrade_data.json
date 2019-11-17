@@ -1,10 +1,7 @@
 {
     "upgrade" : {
 	"colonize" : {
-	    "interactions" : ["colonize"],
-	    "hook" : {
-		"on liftoff" : ["pickup"]
-	    }
+	    "interactions" : ["colonize"]
 	},
 
 	"warp drive" : {

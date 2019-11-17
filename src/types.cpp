@@ -80,18 +80,18 @@ const vector<string> keywords::resource = {
 };
 
 const vector<string> keywords::development = {
-  keywords::key_agriculture,
+  keywords::key_population,
   keywords::key_research,
   keywords::key_shipyard,
   keywords::key_defense
 };
 
 const vector<string> keywords::solar_modifier = {
-  keywords::key_agriculture,
+  // keywords::key_agriculture,
   keywords::key_research,
   keywords::key_shipyard,
   keywords::key_defense,
-  keywords::key_medicine,
+  // keywords::key_medicine,
   keywords::key_population
 };
 

@@ -86,6 +86,7 @@ const hm_t<string, interaction> &interaction::table() {
 
     s->states.insert("deployed");
     s->stats[sskey::key::interaction_radius] = 100;
+    s->stats[sskey::key::vision_range] = 120;
     s->stats[sskey::key::ship_damage] = 10;
     s->stats[sskey::key::solar_damage] = 10;
     s->stats[sskey::key::thrust] = 0;
@@ -150,10 +151,9 @@ const hm_t<string, interaction> &interaction::table() {
       // population boost
       solar::ptr csol = g -> closest_solar(t -> position, s -> owner);
       if (csol) {
-	float pop = fmax(utility::random_normal(0.5, 0.2), 0.1);
-	csol -> population += pop;
+	csol -> development[keywords::key_population]++;
 	ss << " and encountered a group of people who join your civilization at " << t -> id << "!";
-	sshort << (int)pop << " people join " << t -> id << "!";
+	sshort << "Some people join " << t -> id << "!";
       } else {
 	ss << " and encountered a group of people who can't join you because you control no solars!";
 	sshort << "a group of people can't join!";
@@ -343,34 +343,34 @@ const hm_t<string, interaction> &interaction::table() {
     ship::ptr s = utility::guaranteed_cast<ship>(self);
     solar::ptr t = utility::guaranteed_cast<solar>(target);
 
-    if (s->ddata_int("passengers") == 0) return;
+    // if (s->ddata_int("passengers") == 0) return;
     
-    t -> population = s -> ddata_int("passengers");
+    // t -> population = s -> ddata_int("passengers");
     t -> owner = s -> owner;
-    t->development[keywords::key_agriculture] = 1;
+    t->development[keywords::key_population] = 1;
 
     s -> remove = true;
   };
   data[i.name] = i;
 
-  // pickup
-  i.name = interaction::pickup;
-  i.condition = target_condition(target_condition::owned, solar::class_id);
-  i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
-    ship::ptr s = utility::guaranteed_cast<ship>(self);
-    solar::ptr t = utility::guaranteed_cast<solar>(target);
+  // // pickup
+  // i.name = interaction::pickup;
+  // i.condition = target_condition(target_condition::owned, solar::class_id);
+  // i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
+  //   ship::ptr s = utility::guaranteed_cast<ship>(self);
+  //   solar::ptr t = utility::guaranteed_cast<solar>(target);
 
-    if (s -> ddata_int("passengers") > 0) return;
+  //   if (s -> ddata_int("passengers") > 0) return;
 
-    int pickup = 1;
-    int leave = 1;
+  //   int pickup = 1;
+  //   int leave = 1;
 
-    if (t -> population >= leave + pickup) {
-      t -> population -= pickup;
-      s -> dynamic_data["passengers"] = to_string(pickup);
-    }
-  };
-  data[i.name] = i;
+  //   if (t -> population >= leave + pickup) {
+  //     t -> population -= pickup;
+  //     s -> dynamic_data["passengers"] = to_string(pickup);
+  //   }
+  // };
+  // data[i.name] = i;
 
   // trade_to
   i.name = interaction::trade_to;

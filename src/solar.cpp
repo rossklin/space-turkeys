@@ -17,12 +17,12 @@ using namespace std;
 using namespace st3;
 
 const string solar::class_id = "solar";
-const float solar::f_growth = 2e-2;
-const float solar::f_crowding = 2e-3;
-const float solar::f_minerate = 3e-4;
-const float solar::f_buildrate = 7e-4;
-const float solar::f_devrate = 7e-4;
-const float solar::f_resrate = 7e-4;
+// const float solar::f_growth = 2e-2;
+// const float solar::f_crowding = 2e-3;
+// const float solar::f_minerate = 3e-4;
+// const float solar::f_buildrate = 7e-4;
+// const float solar::f_devrate = 7e-4;
+// const float solar::f_resrate = 7e-4;
 
 solar::solar(const solar &s) : game_object(s) {
   *this = s;
@@ -34,7 +34,7 @@ void solar::pre_phase(game_data *g){
 
 // so far, solars don't move
 void solar::move(game_data *g){
-  if (owner < 0 || population <= 0) return;
+  if (owner < 0 || population() <= 0) return;
   
   dynamics(g);
 
@@ -76,7 +76,7 @@ void solar::receive_damage(game_object::ptr s, float damage, game_data *g){
   g -> log_bombard(s -> id, id);
 
   hp -= damage;
-  population *= 1 - 0.01 * damage;
+  // population *= 1 - 0.01 * damage;
 
   if (owner != game_object::neutral_owner && hp <= 0) {
     owner = s -> owner;
@@ -88,7 +88,7 @@ void solar::receive_damage(game_object::ptr s, float damage, game_data *g){
 }
 
 void solar::post_phase(game_data *g){
-  if (owner != game_object::neutral_owner && population == 0){
+  if (owner != game_object::neutral_owner && population() == 0){
     // everyone here is dead, this is now a neutral solar
     owner = game_object::neutral_owner;
   }
@@ -129,7 +129,7 @@ void solar::pay_resources(cost::res_t total){
 
 string solar::get_info(){
   stringstream ss;
-  ss << "pop: " << population << endl;
+  ss << "pop: " << population() << endl;
   ss << "ships: " << ships.size() << endl;
   return ss.str();
 }
@@ -148,7 +148,7 @@ solar::ptr solar::create(idtype id, point p, float bounty, float var) {
 
   s -> id = identifier::make(solar::class_id, id);
 
-  s -> population = 0;
+  // s -> population = 0;
   s -> research_points = 0;
   s -> build_progress = -1;
   s -> ship_progress = -1;
@@ -177,7 +177,7 @@ float solar::effective_level(string k) {
 }
 
 float solar::devtime(string k) {
-  return 10 * pow(1.5, development[k]);
+  return 20 * pow(2, development[k]);
 }
 
 cost::res_t solar::devcost(string k) {
@@ -188,9 +188,9 @@ cost::res_t solar::devcost(string k) {
     init = true;
     for (auto k : keywords::development) base_cost[k].setup(keywords::resource);
 
-    base_cost[keywords::key_agriculture][keywords::key_metals] = 1;
-    base_cost[keywords::key_agriculture][keywords::key_organics] = 2;
-    base_cost[keywords::key_agriculture][keywords::key_gases] = 1;
+    base_cost[keywords::key_population][keywords::key_metals] = 1;
+    base_cost[keywords::key_population][keywords::key_organics] = 2;
+    base_cost[keywords::key_population][keywords::key_gases] = 1;
 
     base_cost[keywords::key_research][keywords::key_metals] = 1;
     base_cost[keywords::key_research][keywords::key_organics] = 1;
@@ -206,45 +206,49 @@ cost::res_t solar::devcost(string k) {
   }
 
   int level = development[k];
-  float multiplier = pow(1.5, level);
+  float multiplier = pow(4, level);
   cost::res_t c = base_cost[k];
   c.scale(multiplier);
   return c;
+}
+
+float solar::population() {
+  return effective_level(keywords::key_population);
 }
 
 void solar::dynamics(game_data *g){
   float dt = g->get_dt();
 
   // population increment
-  float agr_ratio = 4 + research_level->solar_modifier(keywords::key_agriculture);
-  float medicine = 1 + research_level->solar_modifier(keywords::key_medicine);
-  float farmers = fmin(population / agr_ratio, development[keywords::key_agriculture]);
-  float workers = population - farmers;
-  float food = agr_ratio * farmers;
-  float growth = pow(1.1, effective_level(keywords::key_agriculture)) * (fmin(population, food) + research_level->solar_modifier(keywords::key_population)) * f_growth;
-  float crowding = f_crowding * pow(population, 2) / medicine;
-  population += 0.2 * (growth - crowding) * dt;
+  // float agr_ratio = 4 + research_level->solar_modifier(keywords::key_agriculture);
+  // float medicine = 1 + research_level->solar_modifier(keywords::key_medicine);
+  // float farmers = fmin(population / agr_ratio, development[keywords::key_agriculture]);
+  // float workers = population - farmers;
+  // float food = agr_ratio * farmers;
+  // float growth = pow(1.1, effective_level(keywords::key_agriculture)) * (fmin(population, food) + research_level->solar_modifier(keywords::key_population)) * f_growth;
+  // float crowding = f_crowding * pow(population, 2) / medicine;
+  // population += 0.2 * (growth - crowding) * dt;
 
-  // sum active worker slots in different sectors
-  int devsum = 0;
-  for (auto x : development) {
-    if (x.first == keywords::key_shipyard && !choice_data.do_produce()) continue;
-    devsum += x.second;
-  }
+  // // sum active worker slots in different sectors
+  // int devsum = 0;
+  // for (auto x : development) {
+  //   if (x.first == keywords::key_shipyard && !choice_data.do_produce()) continue;
+  //   devsum += x.second;
+  // }
 
-  int devslots = 0.33 * workers + 1;
-  if (choice_data.do_develop()) devsum += devslots;
+  // int devslots = 0.33 * workers + 1;
+  // if (choice_data.do_develop()) devsum += devslots;
 
-  if (population == 0 || devsum == 0) return;
+  // if (population == 0 || devsum == 0) return;
 
-  float dev_boost = devslots * workers / devsum;
-  auto boost = [this,workers,devsum] (string k) {
-    float assigned = development[k] * workers / devsum;
-    return assigned * pow(1.1, effective_level(k));
-  };
+  // float dev_boost = devslots * workers / devsum;
+  // auto boost = [this,workers,devsum] (string k) {
+  //   float assigned = development[k] * workers / devsum;
+  //   return assigned * pow(1.1, effective_level(k));
+  // };
 
   // research and development
-  research_points += boost(keywords::key_research) * dt;
+  research_points += effective_level(keywords::key_research) * dt;
 
   if (choice_data.do_produce()) {
     string v = choice_data.ship_queue.front();
@@ -260,7 +264,7 @@ void solar::dynamics(game_data *g){
 	  // todo: message can't afford ship
 	}
       } else {
-	ship_progress += boost(keywords::key_shipyard) * dt;
+	ship_progress += sqrt(population()) * effective_level(keywords::key_shipyard) * dt;
       }
 
       // check ship complete
@@ -293,7 +297,7 @@ void solar::dynamics(game_data *g){
 	// todo: message can't afford building
       }
     } else {
-      build_progress += dev_boost * dt;
+      build_progress += population() * dt;
     }
 
     // check building complete

@@ -219,6 +219,7 @@ void server::game_handler(com &c, game_data &g){
   
   g.rehash_grid();
   g.rebuild_evm();
+  g.pre_step();
 
   // all players know about other players' home solars
   // todo: doesn't this send all units when loading autosave?

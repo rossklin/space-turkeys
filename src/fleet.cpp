@@ -420,7 +420,7 @@ void fleet::check_action(game_data *g) {
 
 void fleet::check_waypoint(game_data *g){
   // set to idle and 'land' ships if converged to waypoint
-  if (identifier::get_type(com.target) == waypoint::class_id){
+  if (identifier::get_type(com.target) == waypoint::class_id && com.action == fleet_action::go_to) {
     if (stats.converge) {
       com.action = fleet_action::idle;
     } else {

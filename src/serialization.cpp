@@ -221,7 +221,7 @@ sf::Packet& st3::operator <<(sf::Packet& packet, const solar &g){
     << g.choice_data
     << g.research_points
     << g.resources
-    << g.population
+    // << g.population
     << g.ships
     << g.development
     << g.ship_progress
@@ -237,7 +237,7 @@ sf::Packet& st3::operator >>(sf::Packet& packet, solar &g){
     >> g.choice_data
     >> g.research_points
     >> g.resources
-    >> g.population
+    // >> g.population
     >> g.ships
     >> g.development
     >> g.ship_progress

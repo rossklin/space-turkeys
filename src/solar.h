@@ -32,7 +32,6 @@ namespace st3{
     sfloat ship_progress;
     sfloat build_progress;
     sfloat research_points;
-    sfloat population;
     sfloat hp;
     cost::res_t resources;
     
@@ -70,6 +69,7 @@ namespace st3{
     float max_hp();
     cost::res_t devcost(std::string k);
     float devtime(std::string k);
+    float population();
 
   protected:
     static const float f_growth;

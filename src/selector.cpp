@@ -50,11 +50,11 @@ namespace st3{
 	hm_t<string, string> build_abr;
 	build_abr[keywords::key_research] = "R";
 	build_abr[keywords::key_shipyard] = "S";
-	build_abr[keywords::key_agriculture] = "A";
+	build_abr[keywords::key_population] = "P";
 	build_abr[keywords::key_defense] = "D";
 	
 	graphics::draw_circle(w, position, vision(), sf::Color(40, 200, 60, 100));
-	graphics::draw_text(w, to_string((int)(population / 1000)), position, 16);
+	graphics::draw_text(w, to_string((int)(population())), position, 16);
 
 	indicator_text = "";
 	if (choice_data.do_develop()) indicator_text = build_abr[choice_data.building_queue.front()];
@@ -114,7 +114,7 @@ namespace st3{
 
       if (owned) {
 	ss << "\n<<Status>>";
-	ss << "\npopulation: " << (int)population;
+	ss << "\npopulation: " << (int)population();
 
 	ss << "\n<<Facilities>>: ";
 	for (auto x : development) {

@@ -232,6 +232,9 @@ bool game::init_data(){
     entity_selector::ptr p = i.second;
     cout << "init_data: checking: " << i.first << endl;
     if (p -> isa(solar::class_id) && p -> owner >= 0) {
+      auto s = utility::guaranteed_cast<specific_selector<solar>, entity_selector>(p);
+      s -> research_level = &players[s -> owner].research_level;
+      
       entity[i.first] = i.second;
       cout << "init_data: added: " << i.first << endl;
       
@@ -325,7 +328,7 @@ bool game::choice_step(){
 	    combid k = targui -> selected_option.key;
 	    bool postselect = false;
 	    
-	    if (k == "add_waypoint"){
+	    if (k.empty()) {
 	      k = add_waypoint(targui -> position);
 	      postselect = true;
 	    }
@@ -1142,9 +1145,9 @@ void game::setup_targui(point p){
   // add possible actions from available ship interactions
   bool exists_ships = false;
   for (auto k : keys_selected){
-    exists_ships |= get_ready_ships(k).size() > 0;
-    entity_selector::ptr e = get_entity(k);
-    for (auto i : e -> get_ships()){
+    auto rships = get_ready_ships(k);
+    exists_ships |= rships.size() > 0;
+    for (auto i : rships) {
       possible_actions += get_specific<ship>(i)->compile_interactions();
     }
   }

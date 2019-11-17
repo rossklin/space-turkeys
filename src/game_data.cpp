@@ -983,9 +983,9 @@ void game_data::build(){
     s -> owner = pid;
     s -> was_discovered = true;
     s -> resources = initial_resources;
-    s -> population = 1;
+    // s -> population = 1;
     s -> radius = settings.solar_meanrad;
-    s -> development[keywords::key_agriculture] = 1;
+    s -> development[keywords::key_population] = 1;
     s -> development[keywords::key_shipyard] = 1;
     s -> development[keywords::key_research] = 1;
     s -> development[keywords::key_defense] = 1;

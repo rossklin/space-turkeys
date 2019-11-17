@@ -1,7 +1,10 @@
 * current work
 ** notes from game
-*** On action "deploy" in client: terminate called without an active exception
-*** solar always says "0"
+*** [done] Research panel should open if none selected
+*** [done] Available actions must be limited when ships are assigned
+*** [done] On action "deploy" in client: terminate called without an active exception
+*** [done] solar always says "0"
+*** Only allow one ship type per fleet
 *** ship icons too similar
 *** command flags should be on bottom layer
 *** solar color not affected by resource ratio at large quantities

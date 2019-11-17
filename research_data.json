@@ -22,7 +22,7 @@
 	    "build time" : 100,
 	    "depends facilities" : {"research facility" : 2},
 	    "depends technologies" : ["warp technology"],
-	    "solar modifier" : {"agriculture" : 1}
+	    "solar modifier" : {"population" : 1}
 	},
 
 	"interstellar culture" : {
@@ -80,7 +80,7 @@
 	    "build time" : 400,
 	    "depends facilities" : {"research facility" : 4},
 	    "depends technologies" : ["nano technology", "automining"],
-	    "solar modifier" : {"medicine" : 1}
+	    "solar modifier" : {"population" : 1}
 	},
 
 	"photon torpedos" : {
