@@ -120,7 +120,7 @@ namespace st3{
 
     // add and remove entities
     void remove_entity(combid id);
-    void distribute_ships(std::list<combid> sh, point p);
+    void distribute_ships(fleet::ptr f);
     void update_research_facility_level();
   };
 };

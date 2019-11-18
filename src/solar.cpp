@@ -100,20 +100,20 @@ void solar::post_phase(game_data *g){
 }
 
 void solar::give_commands(list<command> c, game_data *g) {
-  list<combid> buf;
+  hm_t<string, list<combid> > buf;
 
   // create fleets
   for (auto &x : c){
     buf.clear();
     for (auto i : x.ships){
       if (!ships.count(i)) throw logical_error("solar::give_commands: invalid ship id: " + i);
-      buf.push_back(i);
+      string sc = g->get_ship(i)->ship_class;
+      buf[sc].push_back(i);
       ships.erase(i);
     }
 
     x.origin = id;
-    g -> generate_fleet(position, owner, x, buf);
-
+    for (auto i : buf) g -> generate_fleet(position, owner, x, i.second);
     for (auto i : x.ships) g -> get_ship(i) -> on_liftoff(this, g);
   }
 }

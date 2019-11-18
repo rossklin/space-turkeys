@@ -523,8 +523,8 @@ void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &
     sp -> angle = ta;
   }
   
-  distribute_ships(sh, f -> position);
   add_entity(f);
+  distribute_ships(f);
   f -> heading = f -> position;
   f -> update_data(this, true);
 }
@@ -643,26 +643,32 @@ void game_data::remove_units(){
   cl();
 }
 
-void game_data::distribute_ships(list<combid> sh, point p){
-  float density = 0.1;
-  float area = sh.size() / density;
+void game_data::distribute_ships(fleet::ptr f){
+  float density = 0.05;
+  float area = f->ships.size() / density;
   float radius = sqrt(area / M_PI);
-  vector<ship::ptr> ships(sh.size());
-  list<ship::ptr> all_ships = all<ship>();
+  vector<ship::ptr> ships(f->ships.size());
   
-  transform(sh.begin(), sh.end(), ships.begin(), [this] (combid sid) {
+  transform(f->ships.begin(), f->ships.end(), ships.begin(), [this] (combid sid) {
       ship::ptr s = get_ship(sid);
       s->position = {INFINITY, INFINITY};
       return s;
     });
 
-  auto sample_position = [this,p,radius,&all_ships] (float r) -> point {
+  // todo: handle case where player has ships everywhere..?
+  point p = f->position;
+  float test_rad = 1;
+  target_condition c(target_condition::owned, ship::class_id);
+  c = c.owned_by(f->owner);
+  while (search_targets_nophys(f->id, p, radius, c).size() > ceil(f->ships.size() / (float)10)) {
+    p = f->position + test_rad * utility::normv(utility::random_uniform(0, 2 * M_PI));
+    test_rad *= 1.2;
+  }
+
+  auto sample_position = [this,p,radius] (float r) -> point {
     point x;
-    float dist;
     do {
       x = {utility::random_normal(p.x, radius), utility::random_normal(p.y, radius)};
-      // dist = INFINITY;
-      // for (auto s : all_ships) dist = fmin(dist, utility::l2norm(x - s->position) - 1.3 * (r + s->radius));
     } while (terrain_at(x, r) > -1);
     
     return x;
@@ -671,6 +677,7 @@ void game_data::distribute_ships(list<combid> sh, point p){
   for (auto s : ships) {
     s->position = sample_position(s->radius);
     entity_grid->insert(s->id, s->position);
+    evm[s->owner].insert(s->id);
   }
 }
 
@@ -1003,7 +1010,7 @@ void game_data::build(){
     } else if (settings.starting_fleet == "fighters") {
       starter_fleet["fighter"] = 40;
     } else if (settings.starting_fleet == "massive") {
-      for (auto sc : ship::all_classes()) starter_fleet[sc] = 40;
+      for (auto sc : ship::all_classes()) starter_fleet[sc] = 10;
     } else {
       throw player_error("Invalid starting fleet option: " + settings.starting_fleet);
     }
