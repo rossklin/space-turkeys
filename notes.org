@@ -1,4 +1,15 @@
 * current work
+** military production choice should work like "governors"
+** limiting factors
+   Add some limiting factors e.g. max fleets, max ships per fleet, max
+   population per solar, reduced production if too many or distant
+   solars etc.
+
+   Add developments (research) which modify these limits.
+
+   Consider having distinct facilities to generate research and
+   culture, with distinct development trees. The above would in so
+   case fall under the cultural development tree..?
 ** notes from game
 *** [done] Research panel should open if none selected
 *** [done] Available actions must be limited when ships are assigned
