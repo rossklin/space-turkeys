@@ -665,11 +665,13 @@ void game_data::distribute_ships(fleet::ptr f){
     test_rad *= 1.2;
   }
 
-  auto sample_position = [this,p,radius] (float r) -> point {
+  auto sample_position = [this,f,c,p,radius] (float r) -> point {
     point x;
+    int n = 0;
     do {
       x = {utility::random_normal(p.x, radius), utility::random_normal(p.y, radius)};
-    } while (terrain_at(x, r) > -1);
+      n = search_targets_nophys(f->id, x, r, c).size();
+    } while (terrain_at(x, r) > -1 || n > 0);
     
     return x;
   };

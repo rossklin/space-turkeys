@@ -420,6 +420,8 @@ namespace st3{
   */
   point operator + (const point &a, const point &b);
 
+  point operator * (const float a, const point b);
+
   /*! print vector to output stream
     @param ss output stream
     @param x vector

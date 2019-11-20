@@ -208,37 +208,18 @@ void ship::pre_phase(game_data *g){
       point x1 = position, x2 = s->position;
       double proj = utility::sproject(v1 - v2, x1 - x2);
 
-      if (!(isfinite(proj) && fabs(proj) < 1e6)) {
-	// ships standing on top of each other
-	return;
-      }
+      if (utility::l2norm(x2-x1) >= s->radius + radius) return;
+      if (!(isfinite(proj) && fabs(proj) < 1e6)) return;
 
       // check that they are in fact travelling towards each other
       if (proj >= 0) return;
 	
       // elastic collision formula from wikipedia
       // todo: apply condition: minimum impulse: 120 (whatever that means)
+      // 
+      
       point dvel = -2 * m2 / (m1 + m2) * proj * (x1 - x2);
       force += m1 * dvel;
-
-      // point delta = position - s->position;
-      // float r = utility::l2norm(delta);
-      // float r2 = utility::l2norm(position + velocity - (s->position + s->velocity)); // look ahead
-      // float rmean = 0.5 * (r + r2);
-      // float r0 = radius + s->radius;
-      // if (rmean >= r0) return;
-
-      // float mass = (stats[sskey::key::mass] + s->stats[sskey::key::mass]) / 2;
-      // float f0 = 0.5 * sqrt(mass);
-      // float f = f0 * (r0 - rmean) / r0;
-
-      // // limit acceleration to 2 ship radius per unit time
-      // f = fmin(f, stats[sskey::key::mass] * radius);
-      
-      // point push = utility::normalize_and_scale(delta, f);
-
-      // // apply force
-      // force += push;
 
       // collision damage
       if (s->owner != owner) {

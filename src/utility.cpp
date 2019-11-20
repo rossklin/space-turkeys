@@ -256,6 +256,11 @@ point st3::operator +(const point &a, const point &b){
   return point(a.x + b.x, a.y + b.y);
 }
 
+// point addition operator
+point st3::operator *(const float a, const point b) {
+  return point(a * b.x, a * b.y);
+}
+
 // normal ~N(m,s)
 float utility::random_normal(float m, float s){
   boost::random::normal_distribution<float> dist(m,s);
