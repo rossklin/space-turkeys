@@ -13,6 +13,7 @@ using namespace st3;
 const string ship::class_id = "ship";
 const int ship::na = 10;
 const float ship::friction = 0.5;
+const float collision_damage_factor = 1e-3;
 string ship::starting_ship;
 
 // utility
@@ -149,7 +150,7 @@ ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   load = 0;
   nkills = 0;
   skip_head = false;
-  radius = pow(stats[sskey::key::mass], 1/(float)3);
+  radius = 0.5 * pow(stats[sskey::key::mass], 1/(float)2.1);
   force_refresh = true;
   current_target = "";
   collision_damage = 0;
@@ -198,32 +199,38 @@ void ship::pre_phase(game_data *g){
   force = thrust * utility::normv(angle);
 
   // force from neighbours
-  apply_ships(g, neighbours, [this] (ship::ptr s) {
+  apply_ships(g, neighbours, [this, dt] (ship::ptr s) {
       // ignore same owner, different fleet
       // if (s->owner == owner && s->fleet_id != fleet_id) return;
 
-      double m1 = stats[sskey::key::mass];
-      double m2 = s->stats[sskey::key::mass];
+      float m1 = stats[sskey::key::mass];
+      float m2 = s->stats[sskey::key::mass];
       point v1 = velocity, v2 = s->velocity;
       point x1 = position, x2 = s->position;
-      double proj = utility::sproject(v1 - v2, x1 - x2);
+      float proj = utility::sproject(v1 - v2, x1 - x2);
 
+      if (proj >= 0) return; // moving away from each other
       if (utility::l2norm(x2-x1) >= s->radius + radius) return;
-      if (!(isfinite(proj) && fabs(proj) < 1e6)) return;
 
-      // check that they are in fact travelling towards each other
-      if (proj >= 0) return;
-	
-      // elastic collision formula from wikipedia
-      // todo: apply condition: minimum impulse: 120 (whatever that means)
-      // 
-      
-      point dvel = -2 * m2 / (m1 + m2) * proj * (x1 - x2);
-      force += m1 * dvel;
+      // transform to zero momentum frame
+      point z = 1 / (m1 + m2) * (m1 * v1 + m2 * v2);
+      point V1 = v1 - z;
+      float beta = 0.2;
+      float ad = utility::point_angle(x2 - x1);
+      float av = utility::point_angle(V1);
+      float theta = utility::angle_difference(ad, av);
+      point U1 = beta * utility::l2norm(V1) * utility::normv(av + 2 * theta + M_PI);
+
+      // transform back to original reference frame
+      point u1 = U1 + z;
+
+      // apply nessecary force to change velocity in one iteration
+      point dvel = u1 - velocity;
+      force += m1/dt * dvel;
 
       // collision damage
       if (s->owner != owner) {
-	collision_damage += s->stats[sskey::key::mass] * utility::l2d2(s->velocity - velocity);
+	collision_damage += collision_damage_factor * s->stats[sskey::key::mass] * utility::l2d2(s->velocity - velocity);
       }
     });
   

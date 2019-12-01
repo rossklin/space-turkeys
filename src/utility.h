@@ -376,6 +376,8 @@ namespace st3{
     /* **************************************** */
     /* MATHS */
     /* **************************************** */
+
+    point p2solve(float a, float b, float c);
     
     /*! apply a smooth limit to a value
       @param x value to limit

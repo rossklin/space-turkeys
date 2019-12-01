@@ -498,6 +498,16 @@ vector<sint> utility::different_colors(int n){
   return res;
 }
 
+point utility::p2solve(float a, float b, float c) {
+  // a x^2 + b x + c = 0
+  // x^2 + b/a x + c/a = 0
+  // (x + b/(2a))^2 + c/a = (b/(2a))^2
+  // x = -b/(2a) +/- sqrt((b/(2a))^2 - c/a)
+  float s1 = -b/(2*a) - sqrt(pow(b/(2*a), 2) - c/a);
+  float s2 = -b/(2*a) + sqrt(pow(b/(2*a), 2) - c/a);
+  return point(s1, s2);
+}
+
 // return x mod p, presuming p > 0
 float utility::modulus(float x, float p){
   int num = floor(x / p);

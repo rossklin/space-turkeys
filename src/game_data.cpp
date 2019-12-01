@@ -644,7 +644,7 @@ void game_data::remove_units(){
 }
 
 void game_data::distribute_ships(fleet::ptr f){
-  float density = 0.05;
+  float density = 0.02;
   float area = f->ships.size() / density;
   float radius = sqrt(area / M_PI);
   vector<ship::ptr> ships(f->ships.size());
@@ -668,10 +668,11 @@ void game_data::distribute_ships(fleet::ptr f){
   auto sample_position = [this,f,c,p,radius] (float r) -> point {
     point x;
     int n = 0;
+    int count = 0;
     do {
       x = {utility::random_normal(p.x, radius), utility::random_normal(p.y, radius)};
       n = search_targets_nophys(f->id, x, r, c).size();
-    } while (terrain_at(x, r) > -1 || n > 0);
+    } while (count++ < 100 && (terrain_at(x, r) > -1 || n > 0));
     
     return x;
   };
