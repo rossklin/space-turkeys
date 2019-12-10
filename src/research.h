@@ -14,6 +14,9 @@ namespace st3{
     const std::string upgrade_all_ships = "upgrade all ships";
     class tech : public development::node {
     public:
+      int increase_fleets;
+      int increase_ships_per_fleet;
+      
       tech();
       tech(const tech &f);
       void read_from_json(const rapidjson::Value &v);

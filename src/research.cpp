@@ -152,7 +152,13 @@ void tech::read_from_json(const rapidjson::Value &x) {
   for (auto i = x.MemberBegin(); i != x.MemberEnd(); i++) {
     string name = i -> name.GetString();
     if (!development::node::parse(name, i -> value)) {
-      throw parse_error("Failed to parse tech: " + name);
+      if (name == "increase fleets") {
+	increase_fleets = i->value.GetInteger();
+      } else if (name == "inrease ships per fleet") {
+
+      } else {
+	throw parse_error("Failed to parse tech: " + name);
+      }
     }
   }
 
