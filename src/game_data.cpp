@@ -331,8 +331,8 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner) {
 }
 
 // generate a fleet with given ships, set owner and fleet_id of ships
-void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &sh) {
-  if (sh.empty()) return;
+fleet::ptr game_data::generate_fleet(point p, idtype owner, command c, list<combid> sh) {
+  if (sh.empty()) return NULL;
 
   fleet::ptr f = fleet::create(fleet::server_pid, next_id(fleet::class_id));
   f->com = c;
@@ -344,7 +344,11 @@ void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &
   point tp;
   if (target_position(c.target, tp)) ta = utility::point_angle(tp - p);
 
+  const int max_ships = players.at(owner).research_level.get_max_ships_per_fleet();
+  int count = 0;
+
   for (auto &s : sh) {
+    if (++count > max_ships) break;
     auto sp = get_ship(s);
     f->ships.insert(s);
     sp->owner = owner;
@@ -356,6 +360,8 @@ void game_data::generate_fleet(point p, idtype owner, command &c, list<combid> &
   distribute_ships(f);
   f->heading = f->position;
   f->update_data(this, true);
+
+  return f;
 }
 
 void game_data::apply_choice(choice::choice c, idtype id) {

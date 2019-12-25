@@ -114,8 +114,11 @@ void solar::give_commands(list<command> c, game_data *g) {
     x.origin = id;
     for (auto i : buf) {
       if (!g->allow_add_fleet(owner)) break;
-      g->generate_fleet(position, owner, x, i.second);
-      for (auto j : i.second) {
+
+      fleet::ptr f = g->generate_fleet(position, owner, x, i.second);
+      if (!f) break;
+
+      for (auto j : f->ships) {
         g->get_ship(j)->on_liftoff(this, g);
         ships.erase(j);
       }
