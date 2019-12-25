@@ -191,10 +191,14 @@ const hm_t<string, interaction> &interaction::table() {
         c.action = fleet_action::idle;
         c.target = identifier::target_idle;
 
-        g->generate_fleet(t->position, s->owner, c, new_ships);
-
-        ss << " and encountered a band of " << new_ships.size() << " renegade ships who join your civilization.";
-        sshort << new_ships.size() << " ships join!";
+        if (g->allow_add_fleet(s->owner)) {
+          g->generate_fleet(t->position, s->owner, c, new_ships);
+          ss << " and encountered a band of " << new_ships.size() << " renegade ships who join your civilization.";
+          sshort << new_ships.size() << " ships join!";
+        } else {
+          ss << " and encountered potential allies who could not join because you cannot control additional fleets.";
+          sshort << new_ships.size() << " ships refused due to fleet limit!";
+        }
         message_set = true;
       }
     } else if (test < 0.5) {

@@ -6,6 +6,7 @@
 #include <list>
 #include <string>
 
+#include "solar.h"
 #include "types.h"
 
 namespace st3 {

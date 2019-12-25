@@ -1,5 +1,6 @@
 #include <rapidjson/document.h>
 #include <mutex>
+#include <numeric>
 #include <vector>
 
 #include "choice.h"
@@ -14,6 +15,9 @@ using namespace std;
 using namespace st3;
 using namespace research;
 using namespace cost;
+
+const int BASE_FLEETS = 4;
+const int BASE_SHIPS_PER_FLEET = 10;
 
 data::data() {}
 
@@ -151,6 +155,18 @@ float data::solar_modifier(string k) const {
   return sum;
 }
 
+int data::get_max_fleets() const {
+  int sum = BASE_FLEETS;
+  for (auto v : researched()) sum += tech_map.at(v).increase_fleets;
+  return sum;
+}
+
+int data::get_max_ships_per_fleet() const {
+  int sum = BASE_SHIPS_PER_FLEET;
+  for (auto v : researched()) sum += tech_map.at(v).increase_ships_per_fleet;
+  return sum;
+}
+
 void tech::read_from_json(const rapidjson::Value &x) {
   for (auto i = x.MemberBegin(); i != x.MemberEnd(); i++) {
     string name = i->name.GetString();
@@ -158,6 +174,7 @@ void tech::read_from_json(const rapidjson::Value &x) {
       if (name == "increase fleets") {
         increase_fleets = i->value.GetInt();
       } else if (name == "inrease ships per fleet") {
+        increase_ships_per_fleet = i->value.GetInt();
       } else {
         throw parse_error("Failed to parse tech: " + name);
       }

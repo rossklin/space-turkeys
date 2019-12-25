@@ -42,7 +42,7 @@ void game_data::rehash_grid() {
   }
 }
 
-bool game_data::target_position(combid t, point &p) {
+bool game_data::target_position(combid t, point &p) const {
   if (entity.count(t)) {
     p = get_entity(t)->position;
     return true;
@@ -52,20 +52,20 @@ bool game_data::target_position(combid t, point &p) {
 }
 
 // find all entities in ball(p, r) matching condition c
-list<combid> game_data::search_targets_nophys(combid self_id, point p, float r, target_condition c) {
+list<combid> game_data::search_targets_nophys(combid self_id, point p, float r, target_condition c) const {
   list<combid> res;
   game_object::ptr self = get_entity(self_id);
 
   for (auto i : entity_grid->search(p, r)) {
     auto e = get_entity(i.first);
-    if (evm[self->owner].count(i.first) && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
+    if (evm.at(self->owner).count(i.first) && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
   }
 
   return res;
 }
 
 // find all entities in ball(p, r) matching condition c
-list<combid> game_data::search_targets(combid self_id, point p, float r, target_condition c) {
+list<combid> game_data::search_targets(combid self_id, point p, float r, target_condition c) const {
   list<combid> res;
   game_object::ptr self = get_entity(self_id);
   if (!self->isa(physical_object::class_id)) {
@@ -81,7 +81,7 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
   return res;
 }
 
-idtype game_data::terrain_at(point p, float r) {
+idtype game_data::terrain_at(point p, float r) const {
   for (auto &x : terrain) {
     int j = x.second.triangle(p, r);
     if (j > -1) return x.first;
@@ -89,7 +89,7 @@ idtype game_data::terrain_at(point p, float r) {
   return -1;
 }
 
-path_t game_data::get_path(point a, point b, float r) {
+path_t game_data::get_path(point a, point b, float r) const {
   float eps = 1e-4;
   float r_inside = (1 - eps) * r;
   float r_horizon = (1 - 2 * eps) * r;
@@ -101,7 +101,7 @@ path_t game_data::get_path(point a, point b, float r) {
   // check if we're inside terrain
   tid = terrain_at(a, r_inside);
   if (tid > -1) {
-    point p0 = terrain[tid].closest_exit(a, r);
+    point p0 = terrain.at(tid).closest_exit(a, r);
 
     if (terrain_at(p0, r_inside) > -1) {
       throw logical_error("Closest exit still inside terrain!");
@@ -115,7 +115,7 @@ path_t game_data::get_path(point a, point b, float r) {
   // check if target is inside terrain
   tid = terrain_at(b, r_inside);
   if (tid > -1) {
-    point p0 = terrain[tid].closest_exit(b, r);
+    point p0 = terrain.at(tid).closest_exit(b, r);
 
     if (terrain_at(p0, r_inside) > -1) {
       throw logical_error("Closest exit for target still inside terrain!");
@@ -163,7 +163,7 @@ path_t game_data::get_path(point a, point b, float r) {
   };
 
   auto terrain_horizon = [this, r, r_horizon](point a, int tid) -> pair<int, int> {
-    terrain_object obj = terrain[tid];
+    terrain_object obj = terrain.at(tid);
     float theta = utility::point_angle(obj.center - a);
     float amax = 0;
     float amin = 0;
@@ -217,7 +217,7 @@ path_t game_data::get_path(point a, point b, float r) {
       sub_processed.insert(test);
 
       pair<int, int> sub_idx = parse_hash(test);
-      point sub_b = terrain[sub_idx.first].get_vertice(sub_idx.second, r);
+      point sub_b = terrain.at(sub_idx.first).get_vertice(sub_idx.second, r);
       int sub_tid = first_intersect(sub_a, sub_b, r_intersect);
 
       if (sub_tid > -1) {
@@ -241,7 +241,7 @@ path_t game_data::get_path(point a, point b, float r) {
   throw logical_error("Get path reached end of frontier!");
 }
 
-int game_data::first_intersect(point a, point b, float r) {
+int game_data::first_intersect(point a, point b, float r) const {
   // find first intersected terrain object
   hm_t<idtype, list<pair<int, point> > > intersects;
   point inter_buf;
@@ -274,177 +274,6 @@ int game_data::first_intersect(point a, point b, float r) {
 
   return tid;
 }
-
-// path_t game_data::get_path_around(int tid, point a, point b, float r, int d) {
-//   if (d > 10) {
-//     server::log("get_path: max recursion depth reached!", "warning");
-//     return {};
-//   }
-
-//   if (terrain_at(a, 1).size() || terrain_at(b, 1).size()) {
-//     server::log("get_path: end point covered by terrain!", "warning");
-//     return {};
-//   }
-
-//   // merge border path to follow convex hull of object
-//   auto convex_path = [this, r] (path_t path, terrain_object obj) {
-//     bool did_fix = true;
-//     int n = path.size();
-
-//     if (n < 3) return path;
-
-//     auto does_intersect = [obj, r] (point a, point b) -> bool {
-//       for (int i = 0; i < obj.border.size(); i++) {
-// 	point p1 = obj.get_vertice(i, r / 2);
-// 	point p2 = obj.get_vertice(i + 1, r / 2);
-// 	if (utility::line_intersect(a, b, p1, p2)) return true;
-//       }
-//       return false;
-//     };
-
-//     while (did_fix) {
-//       did_fix = false;
-//       auto start = path.begin();
-//       auto check = start;
-//       check++;
-//       if (check == path.end()) break;
-//       check++;
-
-//       while (does_intersect(*start, *check) && check != path.end()) {
-// 	start++;
-// 	check++;
-//       }
-
-//       while (!does_intersect(*start, *check) && check != path.end()) {
-// 	did_fix = true;
-// 	check++;
-//       }
-
-//       check--;
-//       start++;
-//       path.erase(start, check);
-//     }
-
-//     return path;
-//   };
-
-//   // find a path around the polygon following the edges
-//   auto border_path = [r] (terrain_object obj, point a, point b, int dir) {
-//     path_t path;
-//     path.push_back(a);
-
-//     // find closest vertice
-//     int pid = -1;
-//     int n = obj.border.size();
-//     float best = INFINITY;
-//     for (int i = 0; i < n; i++) {
-//       float d = utility::l2norm(obj.get_vertice(i, r) - a);
-//       if (d < best) {
-// 	best = d;
-// 	pid = i;
-//       }
-//     }
-
-//     // is desination visible from vertice pid?
-//     auto visible_from = [obj, b, n, r] (int pid) {
-//       for (int i = 1; i < n - 1; i++) {
-// 	point p1 = obj.get_vertice(pid + i, r);
-// 	point p2 = obj.get_vertice(pid + i + 1, r);
-// 	if (utility::line_intersect(obj.get_vertice(pid, r), b, p1, p2)) return false;
-//       }
-//       return true;
-//     };
-
-//     point p = obj.get_vertice(pid, r);
-//     path.push_back(p);
-//     do {
-//       pid += dir;
-//       p = obj.get_vertice(pid, r);
-//       path.push_back(p);
-//     } while (!visible_from(pid));
-
-//     path.push_back(b);
-//     return path;
-//   };
-
-//   auto process_direction = [=] (int dir) -> path_t {
-//     terrain_object obj = terrain[tid];
-//     path_t convex = convex_path(border_path(obj, a, b, dir), obj);
-//     if (convex.size() < 2) return convex;
-
-//     // check if convex path intersects other terrain
-//     auto start = convex.begin();
-//     auto check = start;
-//     check++;
-
-//     int block_id = -1;
-//     point inter_buf;
-//     while (check != convex.end()) {
-//       block_id = first_intersect(*start, *check, r, tid, &inter_buf);
-//       if (utility::l2norm(inter_buf - a) > r && utility::l2norm(inter_buf - b) > r && block_id > -1) break;
-//       start++;
-//       check++;
-//     }
-
-//     if (check == convex.end()) {
-//       // path does not intersect other terrain
-//       return convex;
-//     } else if (block_id > -1) {
-//       // part up to start is ok
-//       path_t result;
-//       point pstart = *start;
-//       point pcheck = *check;
-//       result.splice(result.end(), convex, convex.begin(), start);
-
-//       // now we need to get past the obstacle
-//       path_t continuation1 = get_path_around(block_id, pstart, pcheck, r, d + 1);
-//       result.splice(result.end(), continuation1);
-
-//       if (utility::l2norm(pcheck - b) > 1) {
-// 	// now continue
-// 	idtype sub_id = first_intersect(pcheck, b, 0);
-// 	if (sub_id > -1) {
-// 	  path_t continuation2 = get_path_around(tid, pcheck, b, r, d + 1);
-// 	  continuation2.pop_front();
-// 	  result.splice(result.end(), continuation2);
-// 	} else {
-// 	  result.push_back(b);
-// 	}
-//       }
-
-//       return result;
-//     } else {
-//       // should never go here
-//       throw logical_error("Process direction aborted without block_id!");
-//     }
-//   };
-
-//   auto count_path = [] (path_t path) {
-//     if (path.size() < 3) return path.size() ? utility::l2norm(path.back() - path.front()) : INFINITY;
-
-//     auto i = path.begin();
-//     auto j = i;
-//     j++;
-
-//     float d = 0;
-//     while (j != path.end()) {
-//       d += utility::l2norm((*j) - (*i));
-//       i++;
-//       j++;
-//     }
-
-//     return d;
-//   };
-
-//   path_t path1 = process_direction(-1);
-//   path_t path2 = process_direction(1);
-
-//   if (count_path(path1) < count_path(path2)) {
-//     return path1;
-//   } else {
-//     return path2;
-//   }
-// }
 
 // create a new fleet and add ships from command c
 void game_data::relocate_ships(command c, set<combid> &sh, idtype owner) {
@@ -922,17 +751,12 @@ void game_data::rebuild_evm() {
   }
 }
 
-solar::ptr game_data::closest_solar(point p, idtype id) {
+solar::ptr game_data::closest_solar(point p, idtype id) const {
   solar::ptr s = 0;
 
   try {
-    s = utility::value_min(all<solar>(), (function<float(solar::ptr)>)[ this, p, id ](solar::ptr t)->float {
-      bool owned = t->owner == id || (id == game_object::any_owner && t->owner >= 0);
-      if (owned) {
-        return utility::l2d2(t->position - p);
-      } else {
-        return INFINITY;
-      }
+    s = utility::value_min(all<solar>(id), (function<float(solar::ptr)>)[ this, p, id ](solar::ptr t)->float {
+      return utility::l2d2(t->position - p);
     });
   } catch (exception &e) {
     // player doesn't own any solars
@@ -1201,7 +1025,7 @@ void game_data::confirm_data() {
   }
 }
 
-animation_tracker_info game_data::get_tracker(combid id) {
+animation_tracker_info game_data::get_tracker(combid id) const {
   animation_tracker_info info;
   info.eid = id;
 
@@ -1329,8 +1153,12 @@ void game_data::log_message(combid a, string v_full, string v_short) {
   players[s->owner].animations.push_back(x);
 }
 
-float game_data::get_dt() {
+float game_data::get_dt() const {
   return sub_frames * settings.dt;
+}
+
+bool game_data::allow_add_fleet(idtype pid) const {
+  return players.at(pid).research_level.get_max_fleets() > all<fleet>(pid).size();
 }
 
 int entity_package::next_id(class_t x) {
@@ -1338,31 +1166,31 @@ int entity_package::next_id(class_t x) {
   return idc[x]++;
 }
 
-game_object::ptr entity_package::get_entity(combid i) {
+game_object::ptr entity_package::get_entity(combid i) const {
   if (entity.count(i)) {
-    return entity[i];
+    return entity.at(i);
   } else {
     throw logical_error("game_data::get_entity: not found: " + i);
   }
 }
 
-ship::ptr entity_package::get_ship(combid i) {
+ship::ptr entity_package::get_ship(combid i) const {
   return utility::guaranteed_cast<ship>(get_entity(i));
 }
 
-fleet::ptr entity_package::get_fleet(combid i) {
+fleet::ptr entity_package::get_fleet(combid i) const {
   return utility::guaranteed_cast<fleet>(get_entity(i));
 }
 
-solar::ptr entity_package::get_solar(combid i) {
+solar::ptr entity_package::get_solar(combid i) const {
   return utility::guaranteed_cast<solar>(get_entity(i));
 }
 
-waypoint::ptr entity_package::get_waypoint(combid i) {
+waypoint::ptr entity_package::get_waypoint(combid i) const {
   return utility::guaranteed_cast<waypoint>(get_entity(i));
 }
 
-list<game_object::ptr> entity_package::all_owned_by(idtype id) {
+list<game_object::ptr> entity_package::all_owned_by(idtype id) const {
   list<game_object::ptr> res;
 
   for (auto p : entity) {

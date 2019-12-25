@@ -109,12 +109,17 @@ void solar::give_commands(list<command> c, game_data *g) {
       if (!ships.count(i)) throw logical_error("solar::give_commands: invalid ship id: " + i);
       string sc = g->get_ship(i)->ship_class;
       buf[sc].push_back(i);
-      ships.erase(i);
     }
 
     x.origin = id;
-    for (auto i : buf) g->generate_fleet(position, owner, x, i.second);
-    for (auto i : x.ships) g->get_ship(i)->on_liftoff(this, g);
+    for (auto i : buf) {
+      if (!g->allow_add_fleet(owner)) break;
+      g->generate_fleet(position, owner, x, i.second);
+      for (auto j : i.second) {
+        g->get_ship(j)->on_liftoff(this, g);
+        ships.erase(j);
+      }
+    }
   }
 }
 
@@ -219,34 +224,6 @@ float solar::population() {
 
 void solar::dynamics(game_data *g) {
   float dt = g->get_dt();
-
-  // population increment
-  // float agr_ratio = 4 + research_level->solar_modifier(keywords::key_agriculture);
-  // float medicine = 1 + research_level->solar_modifier(keywords::key_medicine);
-  // float farmers = fmin(population / agr_ratio, development[keywords::key_agriculture]);
-  // float workers = population - farmers;
-  // float food = agr_ratio * farmers;
-  // float growth = pow(1.1, effective_level(keywords::key_agriculture)) * (fmin(population, food) + research_level->solar_modifier(keywords::key_population)) * f_growth;
-  // float crowding = f_crowding * pow(population, 2) / medicine;
-  // population += 0.2 * (growth - crowding) * dt;
-
-  // // sum active worker slots in different sectors
-  // int devsum = 0;
-  // for (auto x : development) {
-  //   if (x.first == keywords::key_shipyard && !choice_data.do_produce()) continue;
-  //   devsum += x.second;
-  // }
-
-  // int devslots = 0.33 * workers + 1;
-  // if (choice_data.do_develop()) devsum += devslots;
-
-  // if (population == 0 || devsum == 0) return;
-
-  // float dev_boost = devslots * workers / devsum;
-  // auto boost = [this,workers,devsum] (string k) {
-  //   float assigned = development[k] * workers / devsum;
-  //   return assigned * pow(1.1, effective_level(k));
-  // };
 
   // research and development
   research_points += effective_level(keywords::key_research) * dt;
