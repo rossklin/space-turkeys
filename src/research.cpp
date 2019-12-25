@@ -1,23 +1,23 @@
-#include <vector>
 #include <rapidjson/document.h>
 #include <mutex>
+#include <vector>
 
-#include "research.h"
-#include "cost.h"
-#include "utility.h"
-#include "upgrades.h"
-#include "fleet.h"
 #include "choice.h"
+#include "cost.h"
+#include "fleet.h"
+#include "research.h"
 #include "ship.h"
+#include "upgrades.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
 using namespace research;
 using namespace cost;
 
-data::data(){}
+data::data() {}
 
-const hm_t<string, tech>& data::table(){
+const hm_t<string, tech> &data::table() {
   static hm_t<std::string, tech> tree;
   static bool init = false;
 
@@ -32,7 +32,7 @@ const hm_t<string, tech>& data::table(){
   init = true;
   return tree;
 }
-    
+
 set<string> data::get_tech_upgrades(string sc, string tech) {
   set<string> res;
   research::tech t = research::data::table().at(tech);
@@ -46,8 +46,9 @@ list<string> data::list_tech_requirements(string v) const {
   tech t = table().at(v);
   if (researched().count(v)) {
     req.push_back("Already researched");
-  }else{
-    for (auto d : t.depends_techs) if (!researched().count(d)) req.push_back("technology " + d);
+  } else {
+    for (auto d : t.depends_techs)
+      if (!researched().count(d)) req.push_back("technology " + d);
     for (auto f : t.depends_facilities) {
       int flev = 0;
       if (facility_level.count(f.first)) flev = facility_level.at(f.first);
@@ -59,7 +60,8 @@ list<string> data::list_tech_requirements(string v) const {
 
 list<string> data::available() const {
   list<string> res;
-  for (auto &x : table()) if (list_tech_requirements(x.first).empty()) res.push_back(x.first);
+  for (auto &x : table())
+    if (list_tech_requirements(x.first).empty()) res.push_back(x.first);
   return res;
 }
 
@@ -72,7 +74,7 @@ void data::repair_ship(ship &s) const {
     if (n.ship_upgrades.count(research::upgrade_all_ships)) sum += n.ship_upgrades.at(research::upgrade_all_ships);
     return sum;
   };
-  
+
   // add upgrades from research and facilities
   auto &rtab = table();
   for (auto t : researched()) s.upgrades += maybe_asu(rtab.at(t), s.ship_class);
@@ -102,29 +104,30 @@ bool data::can_build_ship(string v, solar::ptr sol, list<string> *data) const {
   if (!ship::table().count(v)) {
     throw logical_error("Military template: no such ship class: " + v);
   }
-  
+
   int facility = sol->effective_level(keywords::key_shipyard);
   ship_stats s = ship::table().at(v);
   bool success = true;
 
-  if (data) data -> clear();
-  
+  if (data) data->clear();
+
   if (s.depends_facility_level > facility) {
     success = false;
-    if (data) data -> push_back("shipyard level " + to_string(s.depends_facility_level));
+    if (data) data->push_back("shipyard level " + to_string(s.depends_facility_level));
   }
-  
+
   if (s.depends_tech.length() > 0 && !researched().count(s.depends_tech)) {
     success = false;
-    if (data) data -> push_back("research " + s.depends_tech);
+    if (data) data->push_back("research " + s.depends_tech);
   }
-  
+
   return success;
 }
 
 set<string> data::researched() const {
   set<string> x;
-  for (auto &t : tech_map) if (t.second.level > 0) x.insert(t.first);
+  for (auto &t : tech_map)
+    if (t.second.level > 0) x.insert(t.first);
   return x;
 }
 
@@ -150,14 +153,13 @@ float data::solar_modifier(string k) const {
 
 void tech::read_from_json(const rapidjson::Value &x) {
   for (auto i = x.MemberBegin(); i != x.MemberEnd(); i++) {
-    string name = i -> name.GetString();
-    if (!development::node::parse(name, i -> value)) {
+    string name = i->name.GetString();
+    if (!development::node::parse(name, i->value)) {
       if (name == "increase fleets") {
-	increase_fleets = i->value.GetInteger();
+        increase_fleets = i->value.GetInt();
       } else if (name == "inrease ships per fleet") {
-
       } else {
-	throw parse_error("Failed to parse tech: " + name);
+        throw parse_error("Failed to parse tech: " + name);
       }
     }
   }

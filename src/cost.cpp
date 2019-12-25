@@ -10,27 +10,27 @@ using namespace st3;
 using namespace cost;
 
 // basic allocation
-void allocation::setup(vector<string> x){
+void allocation::setup(vector<string> x) {
   float buf = 0;
   data.clear();
   for (auto v : x) data[v] = buf;
 }
 
-sfloat& allocation::operator[](const string &v){
-  if (data.count(v)){
+sfloat &allocation::operator[](const string &v) {
+  if (data.count(v)) {
     return data[v];
-  }else{
+  } else {
     throw logical_error("allocation access: invalid index: " + v);
   }
 }
 
-void allocation::confirm_content(vector<string> x){
+void allocation::confirm_content(vector<string> x) {
   for (auto v : x) {
     if (!data.count(v)) throw logical_error("allocation: unconfirmed content: " + v);
   }
 }
 
-sfloat allocation::count(){
+sfloat allocation::count() {
   sfloat r = 0;
   for (auto x : data) r += x.second;
   return r;
@@ -45,14 +45,14 @@ void allocation::normalize() {
   for (auto &x : data) x.second /= sum;
 }
 
-void allocation::scale(float a){
+void allocation::scale(float a) {
   for (auto &x : data) x.second *= a;
 }
 
-void allocation::add(allocation a){
-  for (auto &x : a.data){
+void allocation::add(allocation a) {
+  for (auto &x : a.data) {
     if (!data.count(x.first)) {
-      throw logical_error("countable_allocation::add: element mismatch: "  + x.first);
+      throw logical_error("countable_allocation::add: element mismatch: " + x.first);
     }
     data[x.first] += x.second;
   }
@@ -71,7 +71,7 @@ resource_allocation::resource_allocation() {
   setup(keywords::resource);
 }
 
-float cost::expansion_multiplier(float level){
+float cost::expansion_multiplier(float level) {
   return pow(2, floor(fmax(level - 1, 0)));
 }
 

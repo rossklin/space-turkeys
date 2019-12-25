@@ -5,54 +5,54 @@
 
 #include "game_object.h"
 
-namespace st3{
-  class game_data;
-  
-  class target_condition{
-  public:
-    static const sint neutral = 1;
-    static const sint owned = 1 << 1;
-    static constexpr sint enemy = 1 << 2;
-    static constexpr sint any_alignment = -1;
-    static const class_t no_target;
+namespace st3 {
+class game_data;
 
-    class_t what;
-    sint alignment;
-    idtype owner;
+class target_condition {
+ public:
+  static const sint neutral = 1;
+  static const sint owned = 1 << 1;
+  static constexpr sint enemy = 1 << 2;
+  static constexpr sint any_alignment = -1;
+  static const class_t no_target;
 
-    target_condition();
-    target_condition(sint a, class_t w);
-    target_condition owned_by(idtype o);
-    bool requires_target();
-    bool valid_on(game_object::ptr o);
+  class_t what;
+  sint alignment;
+  idtype owner;
 
-    static bool get_alignment(idtype t, idtype s);
-  };
+  target_condition();
+  target_condition(sint a, class_t w);
+  target_condition owned_by(idtype o);
+  bool requires_target();
+  bool valid_on(game_object::ptr o);
 
-  class interaction{
-  public:
-    static const std::string trade_to;
-    static const std::string trade_from;
-    static const std::string land;
-    static const std::string deploy;
-    static const std::string search;
-    static const std::string auto_search;
-    static const std::string turret_combat;
-    static const std::string space_combat;
-    static const std::string bombard;
-    static const std::string colonize;
-    static const std::string pickup;
-    static const std::string terraform;
-    static const std::string hive_support;
-    static const std::string splash;
-
-    typedef std::function<void(game_object::ptr self, game_object::ptr target, game_data *g)> perform_t;
-    static const hm_t<std::string, interaction> &table();
-
-    std::string name;
-    target_condition condition;
-    perform_t perform;
-  };
+  static bool get_alignment(idtype t, idtype s);
 };
+
+class interaction {
+ public:
+  static const std::string trade_to;
+  static const std::string trade_from;
+  static const std::string land;
+  static const std::string deploy;
+  static const std::string search;
+  static const std::string auto_search;
+  static const std::string turret_combat;
+  static const std::string space_combat;
+  static const std::string bombard;
+  static const std::string colonize;
+  static const std::string pickup;
+  static const std::string terraform;
+  static const std::string hive_support;
+  static const std::string splash;
+
+  typedef std::function<void(game_object::ptr self, game_object::ptr target, game_data *g)> perform_t;
+  static const hm_t<std::string, interaction> &table();
+
+  std::string name;
+  target_condition condition;
+  perform_t perform;
+};
+};  // namespace st3
 
 #endif

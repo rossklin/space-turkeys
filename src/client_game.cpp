@@ -1,27 +1,26 @@
+#include <chrono>
 #include <iostream>
-#include <thread>
 #include <queue>
-#include <type_traits>
 #include <stdexcept>
 #include <thread>
-#include <chrono>
+#include <type_traits>
 
 #include <SFML/Graphics.hpp>
 
-#include "client_game.h"
-#include "graphics.h"
-#include "com_client.h"
-#include "protocol.h"
-#include "serialization.h"
-#include "utility.h"
-#include "command_gui.h"
-#include "target_gui.h"
-#include "upgrades.h"
-#include "research.h"
-#include "desktop.h"
 #include "animation.h"
 #include "choice_gui.h"
+#include "client_game.h"
+#include "com_client.h"
+#include "command_gui.h"
+#include "desktop.h"
+#include "graphics.h"
+#include "protocol.h"
+#include "research.h"
+#include "serialization.h"
 #include "socket_t.h"
+#include "target_gui.h"
+#include "upgrades.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -36,7 +35,7 @@ sf::FloatRect fixrect(sf::FloatRect r);
 bool add2selection();
 bool ctrlsel();
 
-waypoint_selector::ptr to_wps(entity_selector::ptr p){
+waypoint_selector::ptr to_wps(entity_selector::ptr p) {
   return utility::guaranteed_cast<waypoint_selector, entity_selector>(p);
 }
 
@@ -44,7 +43,7 @@ waypoint_selector::ptr to_wps(entity_selector::ptr p){
 // GAME STEPS
 // ****************************************
 
-game::game(){
+game::game() {
   targui = 0;
   selector_queue = 1;
   chosen_quit = false;
@@ -58,16 +57,16 @@ game::game(){
     if (e.type == sf::Event::Closed) {
       window.close();
       return socket_t::tc_stop;
-    }else{
-      bool had_qw = !!interface::desktop -> query_window;
-      interface::desktop -> HandleEvent(e);
+    } else {
+      bool had_qw = !!interface::desktop->query_window;
+      interface::desktop->HandleEvent(e);
 
       // handle escape on query window
       if (had_qw) {
-	if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape){
-	  interface::desktop -> clear_qw();
-	}
-	return 0;
+        if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape) {
+          interface::desktop->clear_qw();
+        }
+        return 0;
       }
 
       control_event(e);
@@ -75,46 +74,46 @@ game::game(){
     }
   };
 
-  default_body = generate_loop_body([] () -> int {return 0;});
+  default_body = generate_loop_body([]() -> int { return 0; });
 }
 
-function<int(sf::Event)> game::generate_event_handler(function<int(sf::Event)> task){
-  return [task, this] (sf::Event e) -> int {
+function<int(sf::Event)> game::generate_event_handler(function<int(sf::Event)> task) {
+  return [task, this](sf::Event e) -> int {
     // run default event handler
     int test = default_event_handler(e);
 
     if (test) {
       return test;
-    }else{
+    } else {
       return task(e);
     }
   };
 }
 
 function<int()> game::generate_loop_body(function<int()> task) {
-  return [task, this] () -> int {
+  return [task, this]() -> int {
     static sf::Clock clock;
-    
+
     controls();
     draw_window();
     window.setView(view_window);
     float delta = clock.restart().asSeconds();
-    interface::desktop -> Update(delta);
+    interface::desktop->Update(delta);
     return task();
   };
 }
 
-command_selector::ptr game::get_command_selector(idtype i){
+command_selector::ptr game::get_command_selector(idtype i) {
   if (!command_selectors.count(i)) throw classified_error("client::game::get_command_selectors: invalid id: " + to_string(i));
   return command_selectors[i];
 }
 
-entity_selector::ptr game::get_entity(combid i){
+entity_selector::ptr game::get_entity(combid i) {
   if (!entity.count(i)) throw classified_error("client::game::get_entity: invalid id: " + i);
   return entity[i];
 }
 
-void game::clear_guis(){
+void game::clear_guis() {
   if (targui) delete targui;
   targui = 0;
   activate_build = false;
@@ -122,24 +121,23 @@ void game::clear_guis(){
 }
 
 /* Main game entry point called after getting id from server */
-void game::run(){  
-  
+void game::run() {
   bool proceed = true;
   bool first = true;
   area_select_active = false;
-  self_id = socket -> id;
+  self_id = socket->id;
 
   init_data();
-  
+
   // construct interface
   // view_game = sf::View(sf::FloatRect(sight_ul, sight_wh)); // handled by init_data??
   view_window = window.getDefaultView();
   view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
   window.setView(view_window);
   interface::desktop = new interface::main_interface(window.getSize(), this);
-  
+
   // game loop
-  while (true){
+  while (true) {
     clear_guis();
     if (!pre_step()) break;
     if (!choice_step()) break;
@@ -147,36 +145,35 @@ void game::run(){
   }
 
   // message to user on involontary quit
-  if (!chosen_quit){
+  if (!chosen_quit) {
     string server_says;
-    socket -> data >> server_says;
+    socket->data >> server_says;
     popup_message("GAME OVER", server_says);
   }
-  
+
   delete interface::desktop;
   interface::desktop = 0;
 }
 
-bool game::wait_for_it(sf::Packet &p, std::function<bool(sf::Packet)> callback){
+bool game::wait_for_it(sf::Packet &p, std::function<bool(sf::Packet)> callback) {
   int w2c = socket_t::tc_run;
   int c2w = socket_t::tc_run;
-  
+
   thread t(query, socket, ref(p), ref(w2c), ref(c2w));
-  
+
   if (interface::desktop) {
     window_loop(default_event_handler, default_body, c2w, w2c);
   } else {
-
-    auto empty_event_handler = [this] (sf::Event e) -> int {
+    auto empty_event_handler = [this](sf::Event e) -> int {
       if (e.type == sf::Event::Closed) {
-	window.close();
-	return socket_t::tc_stop;
-      }else{
-	return 0;
+        window.close();
+        return socket_t::tc_stop;
+      } else {
+        return 0;
       }
     };
 
-    auto empty_body = [this] () -> int {      
+    auto empty_body = [this]() -> int {
       window.setView(view_window);
       graphics::draw_text(window, message, view_window.getCenter(), 20, false, sf::Color::White);
       return 0;
@@ -184,29 +181,29 @@ bool game::wait_for_it(sf::Packet &p, std::function<bool(sf::Packet)> callback){
 
     window_loop(empty_event_handler, empty_body, c2w, w2c);
   }
-  
+
   t.join();
 
   if ((w2c | c2w) & socket_t::tc_bad_result) {
-    cout << "wait_for_it: finished/aborted" << endl;    
+    cout << "wait_for_it: finished/aborted" << endl;
     return false;
   }
 
   if (callback) {
-    return callback(socket -> data);
+    return callback(socket->data);
   } else {
     return true;
   }
 }
 
-bool game::init_data(){
+bool game::init_data() {
   sf::Packet pq;
   data_frame data;
 
   message = "loading players...";
   pq << protocol::load_init;
 
-  auto callback = [this, &data] (sf::Packet p) -> bool {
+  auto callback = [this, &data](sf::Packet p) -> bool {
     try {
       deserialize(data, p, self_id);
     } catch (exception e) {
@@ -228,25 +225,25 @@ bool game::init_data(){
   update_sight_range(point(0, 0), 1);
 
   // load player starting positions
-  for (auto i : data.entity){
+  for (auto i : data.entity) {
     entity_selector::ptr p = i.second;
     cout << "init_data: checking: " << i.first << endl;
-    if (p -> isa(solar::class_id) && p -> owner >= 0) {
+    if (p->isa(solar::class_id) && p->owner >= 0) {
       auto s = utility::guaranteed_cast<specific_selector<solar>, entity_selector>(p);
-      s -> research_level = &players[s -> owner].research_level;
-      
+      s->research_level = &players[s->owner].research_level;
+
       entity[i.first] = i.second;
       cout << "init_data: added: " << i.first << endl;
-      
-      if (p -> owned){
-	view_game.setCenter(p -> get_position());
-	view_game.setSize(point(25 * settings.solar_meanrad, 25 * settings.solar_meanrad));
-	p -> seen = true;
-	cout << "init_data: selected starting position: " << i.first << endl;
+
+      if (p->owned) {
+        view_game.setCenter(p->get_position());
+        view_game.setSize(point(25 * settings.solar_meanrad, 25 * settings.solar_meanrad));
+        p->seen = true;
+        cout << "init_data: selected starting position: " << i.first << endl;
       }
     }
   }
-  
+
   return true;
 }
 
@@ -254,7 +251,7 @@ bool game::init_data(){
    Responsible for retrieving data from server and running reload_data.   
 */
 
-bool game::pre_step(){
+bool game::pre_step() {
   sf::Packet pq;
   data_frame data;
   phase = "pre";
@@ -262,7 +259,7 @@ bool game::pre_step(){
   message = "loading game data...";
   pq << protocol::game_round;
 
-  auto callback = [this, &data] (sf::Packet p) -> bool {
+  auto callback = [this, &data](sf::Packet p) -> bool {
     try {
       deserialize(data, p, self_id);
     } catch (exception e) {
@@ -289,13 +286,13 @@ bool game::pre_step(){
     and sending it to the server.
 */
 
-bool game::choice_step(){
+bool game::choice_step() {
   phase = "choice";
 
   // reset interface response parameters and clear solar choices for
   // solars which are no longer available.
-  interface::desktop -> done = false;
-  interface::desktop -> accept = false;
+  interface::desktop->done = false;
+  interface::desktop->accept = false;
 
   // keep solar and research choices
   choice::choice c;
@@ -309,67 +306,67 @@ bool game::choice_step(){
     c.research.clear();
   }
 
-  interface::desktop -> response = c;
+  interface::desktop->response = c;
   cout << "choice_step: start" << endl;
 
   if (c.research.empty() && !r.available().empty()) {
-    interface::desktop -> reset_qw(interface::research_gui());
+    interface::desktop->reset_qw(interface::research_gui());
   }
 
   message = "make your choice";
 
   // event handler that passes the event to choice_event()
   auto event_handler = generate_event_handler([this](sf::Event e) -> int {
-      // check the target gui
-      window.setView(view_game);
-      if (targui && targui -> handle_event(e)){
-	if (targui -> done){
-	  if (targui -> selected_option.key != "cancel"){
-	    combid k = targui -> selected_option.key;
-	    bool postselect = false;
-	    
-	    if (k.empty()) {
-	      k = add_waypoint(targui -> position);
-	      postselect = true;
-	    }
+    // check the target gui
+    window.setView(view_game);
+    if (targui && targui->handle_event(e)) {
+      if (targui->done) {
+        if (targui->selected_option.key != "cancel") {
+          combid k = targui->selected_option.key;
+          bool postselect = false;
 
-	    command2entity(k, targui -> selected_option.option, targui -> selected_entities);
+          if (k.empty()) {
+            k = add_waypoint(targui->position);
+            postselect = true;
+          }
 
-	    if (postselect) {
-	      deselect_all();
-	      get_entity(k) -> selected = true;
-	    }
-	  }
-	  delete targui;
-	  targui = 0;
-	}
-	return 0;
+          command2entity(k, targui->selected_option.option, targui->selected_entities);
+
+          if (postselect) {
+            deselect_all();
+            get_entity(k)->selected = true;
+          }
+        }
+        delete targui;
+        targui = 0;
       }
+      return 0;
+    }
 
-      // check the command gui
-      window.setView(view_window);
+    // check the command gui
+    window.setView(view_window);
 
-      // process choice event
-      return choice_event(e);
-    });
+    // process choice event
+    return choice_event(e);
+  });
 
   // gui loop body that handles return status from interface::desktop
-  auto body = generate_loop_body([this] () -> int {
-      if (interface::desktop -> done) {
-	return interface::desktop -> accept ? socket_t::tc_complete : socket_t::tc_game_complete;
-      } else {
-	return 0;
-      }
-    });
+  auto body = generate_loop_body([this]() -> int {
+    if (interface::desktop->done) {
+      return interface::desktop->accept ? socket_t::tc_complete : socket_t::tc_game_complete;
+    } else {
+      return 0;
+    }
+  });
 
   int result = socket_t::tc_run;
   int tc_in = socket_t::tc_run;
 
   // start standby com thread
-  auto standby_com = [this, &tc_in, &result] () {
+  auto standby_com = [this, &tc_in, &result]() {
     sf::Packet p;
     p << protocol::standby;
-    
+
     while (result == socket_t::tc_run) {
       int buf = 0;
       query(socket, p, tc_in, buf);
@@ -379,7 +376,7 @@ bool game::choice_step(){
   };
 
   thread ts(standby_com);
-  
+
   window_loop(event_handler, body, tc_in, result);
   ts.join();
 
@@ -390,7 +387,7 @@ bool game::choice_step(){
     cout << "choice_step: finishded" << endl;
     pq.clear();
     pq << protocol::leave;
-    socket -> send_packet(pq);
+    socket->send_packet(pq);
     return false;
   }
 
@@ -401,11 +398,11 @@ bool game::choice_step(){
   message = "sending choice to server...";
 
   // add commands to choice
-  c = build_choice(interface::desktop -> response);
+  c = build_choice(interface::desktop->response);
   pq << protocol::choice << c;
 
   cout << "client " << self_id << ": choice step: start" << endl;
-  if (!wait_for_it(pq)){
+  if (!wait_for_it(pq)) {
     cout << "choice send: server says game finished!" << endl;
     return false;
   }
@@ -419,7 +416,7 @@ bool game::choice_step(){
     Responsible for visualizing game frames.
 */
 
-bool game::simulation_step(){
+bool game::simulation_step() {
   phase = "simulation";
   int w2c = socket_t::tc_run;
   int c2w = socket_t::tc_run;
@@ -434,122 +431,122 @@ bool game::simulation_step(){
   thread t(load_frames, socket, ref(g), ref(loaded), ref(w2c), ref(c2w));
 
   // event handler which handles play/pause
-  auto event_handler = generate_event_handler([this, &playing] (sf::Event e) -> int {
-      if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Space){
-	playing = !playing;
-      }
-      return 0;
-    });
+  auto event_handler = generate_event_handler([this, &playing](sf::Event e) -> int {
+    if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Space) {
+      playing = !playing;
+    }
+    return 0;
+  });
 
   // gui loop body that draws progress indicator and keeps track of
   // the active frame
-  auto body = generate_loop_body([&,this] () -> int {
-      static int sub_idx = 1;
-      float sub_ratio = 1 / (float) sub_frames;
-    
-      if (idx == settings.frames_per_round - 1) {
-	cout << "simulation: all loaded" << endl;
-	return socket_t::tc_complete;
+  auto body = generate_loop_body([&, this]() -> int {
+    static int sub_idx = 1;
+    float sub_ratio = 1 / (float)sub_frames;
+
+    if (idx == settings.frames_per_round - 1) {
+      cout << "simulation: all loaded" << endl;
+      return socket_t::tc_complete;
+    }
+
+    // draw load progress
+    window.setView(view_window);
+
+    auto colored_rect = [](sf::Color c, float r) -> sf::RectangleShape {
+      float bounds = interface::main_interface::desktop_dims.x;
+      float w = bounds - 10;
+      auto rect = graphics::build_rect(sf::FloatRect(5, 5, r * w, 10));
+      c.a = 150;
+      rect.setFillColor(c);
+      rect.setOutlineColor(sf::Color::White);
+      rect.setOutlineThickness(-1);
+      return rect;
+    };
+
+    window.draw(colored_rect(sf::Color::Red, 1));
+    window.draw(colored_rect(sf::Color::Blue, loaded / (float)settings.frames_per_round));
+    window.draw(colored_rect(sf::Color::Green, idx / (float)settings.frames_per_round));
+
+    message = "evolution: " + to_string((100 * idx) / settings.frames_per_round) + " %" + (playing ? "" : "(paused)");
+
+    int buffer_size = min(settings.frames_per_round - idx - 1, 4);
+    playing &= idx < loaded - buffer_size;
+
+    if (playing) {
+      if (sub_idx >= sub_frames) {
+        sub_idx = 1;
+        idx++;
+        reload_data(g[idx]);
+        return 0;
       }
 
-      // draw load progress
-      window.setView(view_window);
+      float t = sub_idx / (float)sub_frames;
+      float bw = 1;
 
-      auto colored_rect = [] (sf::Color c, float r) -> sf::RectangleShape {
-	float bounds = interface::main_interface::desktop_dims.x;
-	float w = bounds - 10;
-	auto rect = graphics::build_rect(sf::FloatRect(5, 5, r * w, 10));
-	c.a = 150;
-	rect.setFillColor(c);
-	rect.setOutlineColor(sf::Color::White);
-	rect.setOutlineThickness(-1);
-	return rect;
-      };
+      // update entity positions
+      for (auto sh : get_all<ship>()) {
+        if (sh->seen) {
+          vector<point> pbuf(4);
+          vector<float> abuf(4);
 
-      window.draw(colored_rect(sf::Color::Red, 1));
-      window.draw(colored_rect(sf::Color::Blue, loaded / (float) settings.frames_per_round));
-      window.draw(colored_rect(sf::Color::Green, idx / (float) settings.frames_per_round));
+          auto load_buffers = [&](int offset) -> bool {
+            for (int i = -1; i < 3; i++) {
+              int idx_access = idx + offset + i;
+              if (idx_access < 0 || idx_access >= loaded) return false;
+              if (!g[idx_access].entity.count(sh->id)) return false;
 
-      message = "evolution: " + to_string((100 * idx) / settings.frames_per_round) + " %" + (playing ? "" : "(paused)");
+              entity_selector::ptr ep = g[idx_access].entity[sh->id];
+              if (!ep->is_active()) return false;
 
-      int buffer_size = min(settings.frames_per_round - idx - 1, 4);
-      playing &= idx < loaded - buffer_size;
+              pbuf[1 + i] = ep->base_position;
+              abuf[1 + i] = ep->base_angle;
+            }
+            return true;
+          };
 
-      if (playing){
+          int offset = 0;
+          bool test = false;
+          for (auto i : utility::zig_seq(2))
+            if (test = load_buffers(offset = i)) break;
 
-	if (sub_idx >= sub_frames) {
-	  sub_idx = 1;
-	  idx++;
-	  reload_data(g[idx]);
-	  return 0;
-	}
-
-	float t = sub_idx / (float)sub_frames;
-	float bw = 1;
-      
-	// update entity positions
-	for (auto sh : get_all<ship>()) {
-	  if (sh -> seen) {
-	    vector<point> pbuf(4);
-	    vector<float> abuf(4);
-
-	    auto load_buffers = [&] (int offset) -> bool {
-	      for (int i = -1; i < 3; i++) {
-		int idx_access = idx + offset + i;
-		if (idx_access < 0 || idx_access >= loaded) return false;
-		if (!g[idx_access].entity.count(sh -> id)) return false;
-
-		entity_selector::ptr ep = g[idx_access].entity[sh -> id];
-		if (!ep -> is_active()) return false;
-
-		pbuf[1 + i] = ep -> base_position;
-		abuf[1 + i] = ep -> base_angle;
-	      }
-	      return true;
-	    };
-
-	    int offset = 0;
-	    bool test = false;
-	    for (auto i : utility::zig_seq(2)) if (test = load_buffers(offset = i)) break;
-	  
-	    if (test) {
-	      sh -> position = utility::cubic_interpolation(pbuf, t - offset);
-	      sh -> angle = utility::cubic_interpolation(abuf, t - offset);
-	    } else {
-	      sh -> position += sub_ratio * sh->velocity;
-	    }
-	  }
-	}
-
-	for (auto fl : get_all<fleet>()) {
-	  point p(0, 0);
-	  for (auto sid : fl -> ships) p += get_specific<ship>(sid) -> position;
-	  fl -> position = utility::scale_point(p, 1 / (float)fl -> ships.size());
-	}
-
-	for (auto cs : command_selectors) {
-	  cs.second -> from = get_entity(cs.second -> source) -> position;
-	  cs.second -> to = get_entity(cs.second -> target) -> position;
-	}
-
-	for (auto &a : animations) {
-	  auto update_tracker = [this, sub_ratio] (animation_tracker_info &t) {
-	    if (entity.count(t.eid)) {
-	      t.p = entity[t.eid] -> position;
-	    } else {
-	      t.p += sub_ratio * t.v;
-	    }
-	  };
-
-	  update_tracker(a.t1);
-	  update_tracker(a.t2);
-	  a.frame++;
-	}
-      
-	sub_idx++;
+          if (test) {
+            sh->position = utility::cubic_interpolation(pbuf, t - offset);
+            sh->angle = utility::cubic_interpolation(abuf, t - offset);
+          } else {
+            sh->position += sub_ratio * sh->velocity;
+          }
+        }
       }
-      return 0;
-    });
+
+      for (auto fl : get_all<fleet>()) {
+        point p(0, 0);
+        for (auto sid : fl->ships) p += get_specific<ship>(sid)->position;
+        fl->position = utility::scale_point(p, 1 / (float)fl->ships.size());
+      }
+
+      for (auto cs : command_selectors) {
+        cs.second->from = get_entity(cs.second->source)->position;
+        cs.second->to = get_entity(cs.second->target)->position;
+      }
+
+      for (auto &a : animations) {
+        auto update_tracker = [this, sub_ratio](animation_tracker_info &t) {
+          if (entity.count(t.eid)) {
+            t.p = entity[t.eid]->position;
+          } else {
+            t.p += sub_ratio * t.v;
+          }
+        };
+
+        update_tracker(a.t1);
+        update_tracker(a.t2);
+        a.frame++;
+      }
+
+      sub_idx++;
+    }
+    return 0;
+  });
 
   cout << "simlulation: starting loop" << endl;
 
@@ -559,7 +556,8 @@ bool game::simulation_step(){
   cout << "simulation: waiting for thread join" << endl;
   t.join();
 
-  for (auto &f : g) for (auto x : f.entity) delete x.second;
+  for (auto &f : g)
+    for (auto x : f.entity) delete x.second;
 
   cout << "simulation: finished." << endl;
   return !((w2c | c2w) & socket_t::tc_bad_result);
@@ -576,15 +574,15 @@ bool game::simulation_step(){
     @param p the point
     @return the waypoint id
 */
-combid game::add_waypoint(point p) {  
+combid game::add_waypoint(point p) {
   waypoint buf(self_id, wp_idc++);
   buf.position = p;
   waypoint_selector::ptr w = waypoint_selector::create(buf, col, true);
-  entity[w -> id] = w;
+  entity[w->id] = w;
 
-  cout << "added waypoint " << w -> id << endl;
+  cout << "added waypoint " << w->id << endl;
 
-  return w -> id;
+  return w->id;
 }
 
 /** Fills a choice object with data.
@@ -594,40 +592,40 @@ combid game::add_waypoint(point p) {
 
     @return the modified choice
 */
-choice::choice game::build_choice(choice::choice c){
+choice::choice game::build_choice(choice::choice c) {
   cout << "client " << self_id << ": build choice:" << endl;
-  for (auto x : entity){
-    for (auto y : x.second -> commands){
-      if (command_selectors.count(y)){
-	c.commands[x.first].push_back(*get_command_selector(y));
-	cout << "Adding command for entity " << x.first << endl;
-      }else{
-	throw classified_error("Attempting to build invalid command: " + y);
+  for (auto x : entity) {
+    for (auto y : x.second->commands) {
+      if (command_selectors.count(y)) {
+        c.commands[x.first].push_back(*get_command_selector(y));
+        cout << "Adding command for entity " << x.first << endl;
+      } else {
+        throw classified_error("Attempting to build invalid command: " + y);
       }
     }
 
-    if (x.second -> isa(waypoint::class_id)) {
+    if (x.second->isa(waypoint::class_id)) {
       c.waypoints[x.first] = *get_specific<waypoint>(x.first);
       cout << "build choice: " << x.first << endl;
-    } else if (x.second -> isa(fleet::class_id)) {
+    } else if (x.second->isa(fleet::class_id)) {
       c.fleets[x.first] = *get_specific<fleet>(x.first);
       cout << "build_choice: " << x.first << endl;
-    } else if (x.second -> isa(solar::class_id) && x.second -> owned) {
-      c.solar_choices[x.first] = get_specific<solar>(x.first) -> choice_data;
+    } else if (x.second->isa(solar::class_id) && x.second->owned) {
+      c.solar_choices[x.first] = get_specific<solar>(x.first)->choice_data;
       cout << "build_choice: " << x.first << endl;
     }
   }
-  
+
   return c;
 }
 
 /** List all commands incident to an entity by key.
  */
-list<idtype> game::incident_commands(combid key){
+list<idtype> game::incident_commands(combid key) {
   list<idtype> res;
 
-  for (auto x : command_selectors){
-    if (x.second -> target == key){
+  for (auto x : command_selectors) {
+    if (x.second->target == key) {
       res.push_back(x.first);
     }
   }
@@ -648,51 +646,51 @@ void game::update_sight_range(point position, float r) {
 }
 
 // written by Johan Mattsson
-void game::add_fixed_stars (point position, float vision) {
+void game::add_fixed_stars(point position, float vision) {
   float r = vision + grid_size;
   update_sight_range(position, vision);
-  
+
   for (float p = -r; p < r; p += grid_size) {
-    float ymax = sqrt (r * r - p * p);
+    float ymax = sqrt(r * r - p * p);
     for (float j = -ymax; j < ymax; j += grid_size) {
-      int grid_x = round ((position.x + p) / grid_size);
-      int grid_y = round ((position.y + j) / grid_size);
-      pair<int, int> grid_index (grid_x, grid_y);
-      
-      for (int i = rand () % 3; i >= 0; i--) {
-	if (known_universe.count (grid_index) == 0) {
-	  point star_position;
-	  star_position.x = grid_index.first * grid_size + utility::random_uniform () * grid_size;
-	  star_position.y = grid_index.second * grid_size + utility::random_uniform () * grid_size;
-          
-	  fixed_star star(star_position);
-          
-	  if (utility::l2norm(star_position - position) < vision) {
-	    fixed_stars.push_back (star);
-	  } else {
-	    hidden_stars.push_back (star);
-	  }
-          
-	  known_universe.insert (grid_index);
-	}
+      int grid_x = round((position.x + p) / grid_size);
+      int grid_y = round((position.y + j) / grid_size);
+      pair<int, int> grid_index(grid_x, grid_y);
+
+      for (int i = rand() % 3; i >= 0; i--) {
+        if (known_universe.count(grid_index) == 0) {
+          point star_position;
+          star_position.x = grid_index.first * grid_size + utility::random_uniform() * grid_size;
+          star_position.y = grid_index.second * grid_size + utility::random_uniform() * grid_size;
+
+          fixed_star star(star_position);
+
+          if (utility::l2norm(star_position - position) < vision) {
+            fixed_stars.push_back(star);
+          } else {
+            hidden_stars.push_back(star);
+          }
+
+          known_universe.insert(grid_index);
+        }
       }
     }
   }
-  
+
   auto i = hidden_stars.begin();
   while (i != hidden_stars.end()) {
     fixed_star star = *i;
     i++;
-    if (utility::l2norm (star.position - position) < vision) {
-      fixed_stars.push_back (star);
-      hidden_stars.remove (star);
+    if (utility::l2norm(star.position - position) < vision) {
+      fixed_stars.push_back(star);
+      hidden_stars.remove(star);
     }
   }
 }
 
-void game::remove_entity(combid i){
+void game::remove_entity(combid i) {
   auto e = get_entity(i);
-  auto buf = e -> commands;
+  auto buf = e->commands;
   for (auto c : buf) remove_command(c);
   delete get_entity(i);
   entity.erase(i);
@@ -703,28 +701,28 @@ void game::remove_entity(combid i){
     Adds and removes entity selectors given by the frame. Also adds
     new command selectors representing fleet commands.
 */
-void game::reload_data(data_frame &g, bool use_animations){
+void game::reload_data(data_frame &g, bool use_animations) {
   // make selectors 'not seen' and 'not owned' and clear commands and
   // waypoints
-  clear_selectors();  
+  clear_selectors();
   players = g.players;
   settings = g.settings;
   terrain = g.terrain;
 
   // update entities: fleets, solars and waypoints
-  for (auto x : g.entity){
-    entity_selector::ptr p = x.second -> ss_clone();
+  for (auto x : g.entity) {
+    entity_selector::ptr p = x.second->ss_clone();
     combid key = x.first;
     if (entity.count(key)) remove_entity(key);
     entity[key] = p;
-    p -> seen = p -> is_active();
-    if (p -> owner == self_id && p -> is_active()) add_fixed_stars (p -> position, p -> vision());
-    cout << "reload_data: loaded seen entity: " << p -> id << endl;
+    p->seen = p->is_active();
+    if (p->owner == self_id && p->is_active()) add_fixed_stars(p->position, p->vision());
+    cout << "reload_data: loaded seen entity: " << p->id << endl;
   }
 
   // remove entities as server specifies
-  for (auto x : g.remove_entities){
-    if (entity.count(x)){      
+  for (auto x : g.remove_entities) {
+    if (entity.count(x)) {
       cout << " -> remove entity " << x << endl;
       remove_entity(x);
     }
@@ -732,15 +730,15 @@ void game::reload_data(data_frame &g, bool use_animations){
 
   // remove unseen ships that are in sight range
   list<combid> rbuf;
-  for (auto y : entity){
+  for (auto y : entity) {
     entity_selector::ptr s = y.second;
-    if (s -> isa(ship::class_id) && s -> is_active() && !s -> seen){
-      for (auto x : entity){
-	if (x.second -> owned && utility::l2norm(s -> position - x.second -> position) < x.second -> vision()){
-	  rbuf.push_back(s -> id);
-	  cout << "reload_data: spotted unseen ship: " << s -> id << endl;
-	  break;
-	}
+    if (s->isa(ship::class_id) && s->is_active() && !s->seen) {
+      for (auto x : entity) {
+        if (x.second->owned && utility::l2norm(s->position - x.second->position) < x.second->vision()) {
+          rbuf.push_back(s->id);
+          cout << "reload_data: spotted unseen ship: " << s->id << endl;
+          break;
+        }
       }
     }
   }
@@ -748,49 +746,49 @@ void game::reload_data(data_frame &g, bool use_animations){
 
   // fix fleet positions
   for (auto f : get_all<fleet>()) {
-    point p(0,0);
-    for (auto sid : f -> get_ships()) p += get_entity(sid) -> position;
-    f -> position = utility::scale_point(p, 1 / (float)f -> get_ships().size());
+    point p(0, 0);
+    for (auto sid : f->get_ships()) p += get_entity(sid)->position;
+    f->position = utility::scale_point(p, 1 / (float)f->get_ships().size());
   }
 
   // update commands for owned fleets
   for (auto f : get_all<fleet>()) {
-    fleet_idc = max(fleet_idc, identifier::get_multid_index(f -> id) + 1);
+    fleet_idc = max(fleet_idc, identifier::get_multid_index(f->id) + 1);
 
-    if (entity.count(f -> com.target) && f -> owned){
+    if (entity.count(f->com.target) && f->owned) {
       // include commands even if f is idle e.g. to waypoint
-      command c = f -> com;
-      point to = get_entity(f -> com.target) -> get_position();
+      command c = f->com;
+      point to = get_entity(f->com.target)->get_position();
       // assure we don't assign ships which have been killed
-      c.ships = c.ships & f -> ships;
-      add_command(c, f -> position, to, false, false);
+      c.ships = c.ships & f->ships;
+      add_command(c, f->position, to, false, false);
     } else {
-      f -> com.target = identifier::target_idle;
-      f -> com.action = fleet_action::idle;
+      f->com.target = identifier::target_idle;
+      f->com.action = fleet_action::idle;
     }
   }
 
   // update commands for waypoints
   for (auto w : get_all<waypoint>()) {
-    wp_idc = max(wp_idc, identifier::get_multid_index(w -> id) + 1);
-    
-    for (auto c : w -> pending_commands){
-      if (entity.count(c.target)){
-	add_command(c, w -> get_position(), get_entity(c.target) -> get_position(), false, false);
+    wp_idc = max(wp_idc, identifier::get_multid_index(w->id) + 1);
+
+    for (auto c : w->pending_commands) {
+      if (entity.count(c.target)) {
+        add_command(c, w->get_position(), get_entity(c.target)->get_position(), false, false);
       }
     }
-    w -> pending_commands.clear();
+    w->pending_commands.clear();
   }
 
   // update research level ref for solars
   for (auto s : get_all<solar>()) {
-    if (s -> owned) {
-      s -> research_level = &players[s -> owner].research_level;
+    if (s->owned) {
+      s->research_level = &players[s->owner].research_level;
     } else {
-      s -> research_level = NULL;
+      s->research_level = NULL;
     }
   }
-  
+
   // add animations
   if (use_animations) {
     for (auto &a : players[self_id].animations) animations.push_back(a);
@@ -801,12 +799,12 @@ void game::reload_data(data_frame &g, bool use_animations){
   // update enemy cluster buffer
   enemy_clusters.clear();
   for (auto s : get_all<ship>()) {
-    if (s -> seen && !s -> owned) enemy_clusters.push_back(s -> position);
+    if (s->seen && !s->owned) enemy_clusters.push_back(s->position);
   }
   if (enemy_clusters.size()) enemy_clusters = utility::cluster_points(enemy_clusters, 20, 100);
 
   // add log
-  interface::desktop -> push_log(players[self_id].log);
+  interface::desktop->push_log(players[self_id].log);
 }
 
 // ****************************************
@@ -815,9 +813,9 @@ void game::reload_data(data_frame &g, bool use_animations){
 
 /** Add a command selector.
  */
-void game::add_command(command c, point from, point to, bool fill_ships, bool default_policy){
+void game::add_command(command c, point from, point to, bool fill_ships, bool default_policy) {
   // check if command already exists
-  for (auto x : command_selectors){
+  for (auto x : command_selectors) {
     if (c == (command)*x.second) return;
   }
 
@@ -825,7 +823,7 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
   entity_selector::ptr t = get_entity(c.target);
 
   // check waypoint ancestors
-  if (waypoint_ancestor_of(c.target, c.source)){
+  if (waypoint_ancestor_of(c.target, c.source)) {
     cout << "add_command: circular waypoint graphs forbidden!" << endl;
     return;
   }
@@ -841,9 +839,9 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
   if (default_policy) c.policy = fleet::default_policy(c.action);
 
   command_selector::ptr cs = command_selector::create(c, from, to);
-  
-  // add command to command selectors 
-  command_selectors[cs -> id] = cs;
+
+  // add command to command selectors
+  command_selectors[cs->id] = cs;
 
   // add ships to command
   if (fill_ships) {
@@ -853,27 +851,27 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
     if (!fleet_actions.count(c.action)) {
       combid sel = identifier::source_none;
       for (auto sid : ready_ships) {
-	if (get_specific<ship>(sid) -> compile_interactions().count(c.action)) {
-	  sel = sid;
-	}
+        if (get_specific<ship>(sid)->compile_interactions().count(c.action)) {
+          sel = sid;
+        }
       }
 
       if (sel != identifier::source_none) {
-	ready_ships.clear();
-	ready_ships.insert(sel);
+        ready_ships.clear();
+        ready_ships.insert(sel);
       }
     }
-    
-    cs -> ships = ready_ships;
+
+    cs->ships = ready_ships;
   }
 
   // add command selector key to list of the source entity's children
-  s -> commands.insert(cs -> id);
+  s->commands.insert(cs->id);
 }
 
-bool game::waypoint_ancestor_of(combid ancestor, combid child){
+bool game::waypoint_ancestor_of(combid ancestor, combid child) {
   // only waypoints can have this relationship
-  if (identifier::get_type(ancestor).compare(waypoint::class_id) || identifier::get_type(child).compare(waypoint::class_id)){
+  if (identifier::get_type(ancestor).compare(waypoint::class_id) || identifier::get_type(child).compare(waypoint::class_id)) {
     return false;
   }
 
@@ -881,8 +879,8 @@ bool game::waypoint_ancestor_of(combid ancestor, combid child){
   if (ancestor == child) return true;
 
   // if the ancestor is ancestor to a parent, it is ancestor to the child
-  for (auto x : incident_commands(child)){
-    if (waypoint_ancestor_of(ancestor, get_command_selector(x) -> source)) return true;
+  for (auto x : incident_commands(child)) {
+    if (waypoint_ancestor_of(ancestor, get_command_selector(x)->source)) return true;
   }
 
   return false;
@@ -892,26 +890,26 @@ bool game::waypoint_ancestor_of(combid ancestor, combid child){
 
     Also recursively remove empty waypoints and their child commands.
 */
-void game::remove_command(idtype key){
+void game::remove_command(idtype key) {
   if (!command_selectors.count(key)) return;
-  if (comgui_active) interface::desktop -> clear_qw();
+  if (comgui_active) interface::desktop->clear_qw();
   comgui_active = false;
-  
+
   command_selector::ptr cs = get_command_selector(key);
-  entity_selector::ptr s = get_entity(cs -> source);
-  entity_selector::ptr t = get_entity(cs -> target);
+  entity_selector::ptr s = get_entity(cs->source);
+  entity_selector::ptr t = get_entity(cs->target);
 
   // remove this command's selector
   delete cs;
   command_selectors.erase(key);
 
   // remove this command from it's source's list
-  s -> commands.erase(key);
+  s->commands.erase(key);
 
   // if last command of waypoint, remove it
-  if (t -> isa(waypoint::class_id)){
-    if (incident_commands(t -> id).empty()){
-      remove_entity(t -> id);
+  if (t->isa(waypoint::class_id)) {
+    if (incident_commands(t->id).empty()) {
+      remove_entity(t->id);
     }
   }
 }
@@ -922,23 +920,23 @@ void game::remove_command(idtype key){
 
 /** Mark all entity selectors as not seen/owned and clear command
     selectors and waypoints. */
-void game::clear_selectors(){
+void game::clear_selectors() {
   for (auto x : entity) {
-    x.second -> seen = false;
-    x.second -> owned = false;
+    x.second->seen = false;
+    x.second->owned = false;
   }
-  
+
   comid = 0;
   for (auto c : command_selectors) delete c.second;
   command_selectors.clear();
 
-  for (auto w : get_all<waypoint>()) remove_entity(w -> id);
+  for (auto w : get_all<waypoint>()) remove_entity(w->id);
 }
 
 /** Mark all entity and command selectors as not selected. */
-void game::deselect_all(){
-  for (auto x : entity) x.second -> selected = false;
-  for (auto x : command_selectors) x.second -> selected = false;
+void game::deselect_all() {
+  for (auto x : entity) x.second->selected = false;
+  for (auto x : command_selectors) x.second->selected = false;
 }
 
 // ****************************************
@@ -946,12 +944,12 @@ void game::deselect_all(){
 // ****************************************
 
 /** Mark all area selectable entity selectors in selection rectangle as selected. */
-void game::area_select(){
+void game::area_select() {
   sf::FloatRect rect = fixrect(srect);
 
-  if (!add2selection()) deselect_all();  
-  for (auto x : entity){
-    x.second -> selected = x.second -> owned && x.second -> is_area_selectable() && x.second -> inside_rect(rect);
+  if (!add2selection()) deselect_all();
+  for (auto x : entity) {
+    x.second->selected = x.second->owned && x.second->is_area_selectable() && x.second->inside_rect(rect);
   }
 }
 
@@ -961,72 +959,72 @@ void game::area_select(){
     @param act command action
     @param selected_entities selected entities
 */
-void game::command2entity(combid key, string act, list<combid> e_selected){
+void game::command2entity(combid key, string act, list<combid> e_selected) {
   if (!entity.count(key)) throw classified_error("command2entity: invalid key: " + key);
 
   command c;
   point from, to;
   c.target = key;
   c.action = act;
-  to = get_entity(key) -> get_position();
+  to = get_entity(key)->get_position();
 
-  for (auto x : e_selected){
-    if (entity.count(x) && x != key){
+  for (auto x : e_selected) {
+    if (entity.count(x) && x != key) {
       entity_selector::ptr s = get_entity(x);
-      if (s -> is_commandable()){
-	c.source = x;
-	from = s -> get_position();
-	add_command(c, from, to, true);
+      if (s->is_commandable()) {
+        c.source = x;
+        from = s->get_position();
+        add_command(c, from, to, true);
       }
     }
   }
 }
 
 /** List all entities at a point. */
-list<combid> game::entities_at(point p){
+list<combid> game::entities_at(point p) {
   float d;
   list<combid> keys;
 
   // find entities at p
-  for (auto x : entity){
-    if (x.second -> is_active() && x.second -> contains_point(p, d)) keys.push_back(x.first);
+  for (auto x : entity) {
+    if (x.second->is_active() && x.second->contains_point(p, d)) keys.push_back(x.first);
   }
 
   return keys;
 }
 
-/** Get queued owned entity at a point. */ 
-combid game::entity_at(point p, int &q){
+/** Get queued owned entity at a point. */
+combid game::entity_at(point p, int &q) {
   list<combid> buf = entities_at(p);
   list<combid> keys;
-  
+
   // limit to owned selectable entities
   for (auto id : buf) {
     auto e = get_entity(id);
-    if (e -> owned && e -> is_selectable()) keys.push_back(id);
+    if (e->owned && e->is_selectable()) keys.push_back(id);
   }
 
   if (keys.empty()) return identifier::source_none;
 
-  keys.sort([this] (combid a, combid b) -> bool {
-      return get_entity(a) -> queue_level < get_entity(b) -> queue_level;
+  keys.sort([this](combid a, combid b) -> bool {
+    return get_entity(a)->queue_level < get_entity(b)->queue_level;
   });
 
   combid best = keys.front();
-  q = get_entity(best) -> queue_level;
+  q = get_entity(best)->queue_level;
   return best;
 }
 
 /** Get queued command at a point. */
-idtype game::command_at(point p, int &q){
+idtype game::command_at(point p, int &q) {
   int qmin = selector_queue;
   float d;
   idtype key = -1;
 
   // find next queued command near p
-  for (auto x : command_selectors){
-    if (x.second -> contains_point(p, d) && x.second -> queue_level < qmin){
-      qmin = x.second -> queue_level;
+  for (auto x : command_selectors) {
+    if (x.second->contains_point(p, d) && x.second->queue_level < qmin) {
+      qmin = x.second->queue_level;
       key = x.first;
     }
   }
@@ -1036,7 +1034,7 @@ idtype game::command_at(point p, int &q){
 }
 
 /** Select the next queued entity or command selector at a point. */
-bool game::select_at(point p){
+bool game::select_at(point p) {
   int qent = selector_queue;
   int qcom = selector_queue;
   combid key = entity_at(p, qent);
@@ -1045,12 +1043,12 @@ bool game::select_at(point p){
   if (qcom < qent && phase == "choice") return select_command(cid);
 
   auto it = entity.find(key);
- 
+
   if (!add2selection()) deselect_all();
 
-  if (it != entity.end() && it -> second -> owned){
-    it -> second -> selected = !(it -> second -> selected);
-    it -> second -> queue_level = selector_queue++;
+  if (it != entity.end() && it->second->owned) {
+    it->second->selected = !(it->second->selected);
+    it->second->queue_level = selector_queue++;
     return true;
   }
 
@@ -1061,51 +1059,52 @@ bool game::select_at(point p){
     
     Sets up the command gui.
 */
-bool game::select_command(idtype key){ 
+bool game::select_command(idtype key) {
   if (!add2selection()) deselect_all();
   if (!command_selectors.count(key)) return false;
   auto c = get_command_selector(key);
 
-  c -> selected = !(c -> selected);
-  c -> queue_level = selector_queue++;
+  c->selected = !(c->selected);
+  c->queue_level = selector_queue++;
 
-  if (!c -> selected) return false;
+  if (!c->selected) return false;
 
-  interface::desktop -> reset_qw(interface::command_gui::Create(c, this));
+  interface::desktop->reset_qw(interface::command_gui::Create(c, this));
   comgui_active = true;
   return true;
 }
 
 /** At least one selected entity? */
-bool game::exists_selected(){
-  for (auto x : entity) if (x.second -> selected) return true;
+bool game::exists_selected() {
+  for (auto x : entity)
+    if (x.second->selected) return true;
   return false;
 }
 
 /** Get ids of non-allocated ships for entity selector */
-set<combid> game::get_ready_ships(combid id){
+set<combid> game::get_ready_ships(combid id) {
   if (!entity.count(id)) throw classified_error("get ready ships: entity selector " + id + " not found!");
 
   entity_selector::ptr e = get_entity(id);
-  set<combid> s = e -> get_ships();
-  for (auto c : e -> commands) s -= get_command_selector(c) -> ships;
+  set<combid> s = e->get_ships();
+  for (auto c : e->commands) s -= get_command_selector(c)->ships;
 
   return s;
 }
 
 /** Get ids of selected entities. */
-list<combid> game::selected_entities(){
+list<combid> game::selected_entities() {
   list<combid> res;
-  for (auto &x : entity){
-    if (x.second -> selected) res.push_back(x.first);
+  for (auto &x : entity) {
+    if (x.second->selected) res.push_back(x.first);
   }
   return res;
 }
 
-list<idtype> game::selected_commands(){
+list<idtype> game::selected_commands() {
   list<idtype> res;
   for (auto i : command_selectors) {
-    if (i.second -> selected) res.push_back(i.first);
+    if (i.second->selected) res.push_back(i.first);
   }
   return res;
 }
@@ -1127,9 +1126,9 @@ bool game::in_terrain(point p) {
   return false;
 }
 
-void game::setup_targui(point p){
+void game::setup_targui(point p) {
   if (in_terrain(p)) return;
-  
+
   // set up targui
   auto keys_targeted = entities_at(p);
   auto keys_selected = selected_entities();
@@ -1138,13 +1137,13 @@ void game::setup_targui(point p){
   // remove ships from selection
   for (auto sid : ships_selected) keys_selected.remove(sid);
   if (keys_selected.empty()) return;
-  
+
   list<target_gui::option_t> options;
   set<string> possible_actions;
 
   // add possible actions from available ship interactions
   bool exists_ships = false;
-  for (auto k : keys_selected){
+  for (auto k : keys_selected) {
     auto rships = get_ready_ships(k);
     exists_ships |= rships.size() > 0;
     for (auto i : rships) {
@@ -1160,11 +1159,11 @@ void game::setup_targui(point p){
 
   // check if actions are allowed per target
   auto itab = interaction::table();
-  for (auto a : possible_actions){
+  for (auto a : possible_actions) {
     auto condition = itab[a].condition.owned_by(self_id);
-    for (auto k : keys_targeted){
-      if (condition.valid_on(get_entity(k))){
-	options.push_back(target_gui::option_t(k, a));
+    for (auto k : keys_targeted) {
+      if (condition.valid_on(get_entity(k))) {
+        options.push_back(target_gui::option_t(k, a));
       }
     }
     if (!condition.requires_target()) {
@@ -1173,19 +1172,19 @@ void game::setup_targui(point p){
   }
 
   // check waypoint targets
-  for (auto k : keys_targeted){
-    if (identifier::get_type(k) == waypoint::class_id){
+  for (auto k : keys_targeted) {
+    if (identifier::get_type(k) == waypoint::class_id) {
       options.push_back(target_gui::option_t(k, fleet_action::go_to));
     }
   }
 
-  if (options.empty()){
+  if (options.empty()) {
     // autoselect "add waypoint"
     combid k = add_waypoint(p);
     command2entity(k, fleet_action::go_to, keys_selected);
     deselect_all();
-    get_entity(k) -> selected = true;
-  }else{
+    get_entity(k)->selected = true;
+  } else {
     // default options
     options.push_back(target_gui::option_add_waypoint);
     options.push_back(target_gui::option_cancel);
@@ -1195,12 +1194,12 @@ void game::setup_targui(point p){
 }
 
 void game::control_event(sf::Event e) {
-  static point p_prev(0,0);
+  static point p_prev(0, 0);
   static bool drag_map_active = false;
   static bool drag_waypoint_active = false;
   static bool did_drag = false;
   static combid drag_id;
-  
+
   point p;
   sf::Vector2i mpos;
   sf::FloatRect minirect;
@@ -1209,28 +1208,28 @@ void game::control_event(sf::Event e) {
 
   drag_map_active &= sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
 
-  auto update_hover_info = [this] (point p) {
+  auto update_hover_info = [this](point p) {
     auto keys = entities_at(p);
     string text = "";
-      
+
     if (keys.empty()) {
       keys = selected_entities();
       if (keys.empty()) {
-	return;
+        return;
       }
     }
-    
+
     if (keys.size() > 1) text = "Multiple entities\n----------\n";
     for (auto k : keys) {
       text += "----------\n";
-      text += get_entity(k) -> hover_info() + "\n";
+      text += get_entity(k)->hover_info() + "\n";
     }
 
-    interface::desktop -> hover_label -> SetText(text);
+    interface::desktop->hover_label->SetText(text);
   };
 
   // event reaction functions
-  auto init_area_select = [this] (sf::Event e) {
+  auto init_area_select = [this](sf::Event e) {
     point p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
     int qent;
     combid key = entity_at(p, qent);
@@ -1243,90 +1242,90 @@ void game::control_event(sf::Event e) {
       srect = sf::FloatRect(p.x, p.y, 0, 0);
     }
   };
-  
+
   window.setView(view_game);
   switch (e.type) {
-  case sf::Event::MouseMoved:
-    p = window.mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
-    
-    if (area_select_active) {
-      // update area selection
-      srect.width = p.x - srect.left;
-      srect.height = p.y - srect.top;
-    } else if (phase == "choice" && drag_waypoint_active && !in_terrain(p)) {
-      // update position
-      auto wp = get_specific<waypoint>(drag_id);
-      wp -> position = p;
+    case sf::Event::MouseMoved:
+      p = window.mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
 
-      // update target for incident commands
-      list<idtype> inc = incident_commands(drag_id);
-      for (auto cid : inc) get_command_selector(cid) -> to = p;
+      if (area_select_active) {
+        // update area selection
+        srect.width = p.x - srect.left;
+        srect.height = p.y - srect.top;
+      } else if (phase == "choice" && drag_waypoint_active && !in_terrain(p)) {
+        // update position
+        auto wp = get_specific<waypoint>(drag_id);
+        wp->position = p;
 
-      // update source for owned commands
-      for (auto cid : wp -> commands) get_command_selector(cid) -> from = p;
-      
-      did_drag = true;
-    } else if (drag_map_active) {
-      view_game.move(p_prev - p);
-    } else {
-      update_hover_info(p);
-    }
-    break;
-  case sf::Event::MouseButtonPressed:
-    mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
-    p = window.mapPixelToCoords(mpos);
-    if (e.mouseButton.button == sf::Mouse::Left) {
-      if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
-	p_prev = p;
-	drag_map_active = true;
+        // update target for incident commands
+        list<idtype> inc = incident_commands(drag_id);
+        for (auto cid : inc) get_command_selector(cid)->to = p;
+
+        // update source for owned commands
+        for (auto cid : wp->commands) get_command_selector(cid)->from = p;
+
+        did_drag = true;
+      } else if (drag_map_active) {
+        view_game.move(p_prev - p);
       } else {
-	init_area_select(e);
+        update_hover_info(p);
       }
-    }
-    break;
-  case sf::Event::MouseButtonReleased:
-    mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
-    p = window.mapPixelToCoords(mpos);
-    
-    if (e.mouseButton.button == sf::Mouse::Left){
-      if (drag_waypoint_active && did_drag) {
-	// do nothing
-      } else if (abs(srect.width) > 5 || abs(srect.height) > 5){
-	area_select();
-      }else{
-	// check if on minimap
-	minirect = minimap_rect();
-	if (minirect.contains(mpos.x, mpos.y)){
-	  delta = point(mpos.x - minirect.left, mpos.y - minirect.top);
-	  target = point(sight_ul.x + delta.x / minirect.width * sight_wh.x, sight_ul.y + delta.y / minirect.height * sight_wh.y);
-	  view_game.setCenter(target);
-	}else{
-	  select_at(p);
-	}
+      break;
+    case sf::Event::MouseButtonPressed:
+      mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
+      p = window.mapPixelToCoords(mpos);
+      if (e.mouseButton.button == sf::Mouse::Left) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
+          p_prev = p;
+          drag_map_active = true;
+        } else {
+          init_area_select(e);
+        }
       }
-      
-      // clear selection rect
-      drag_waypoint_active = false;
-      did_drag = false;
-      area_select_active = false;
-      srect = sf::FloatRect(0, 0, 0, 0);      
-      drag_map_active = false;
-    }
-    
-    break;
-  case sf::Event::MouseWheelMoved:
-    p = window.mapPixelToCoords(sf::Vector2i(e.mouseWheel.x, e.mouseWheel.y));
-    do_zoom(pow(1.2, -e.mouseWheel.delta), p);
-    break;
-  case sf::Event::KeyPressed:
-    switch (e.key.code){
-    case sf::Keyboard::O:
-      do_zoom(1.2, view_game.getCenter());
       break;
-    case sf::Keyboard::I:
-      do_zoom(1 / 1.2, view_game.getCenter());
+    case sf::Event::MouseButtonReleased:
+      mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
+      p = window.mapPixelToCoords(mpos);
+
+      if (e.mouseButton.button == sf::Mouse::Left) {
+        if (drag_waypoint_active && did_drag) {
+          // do nothing
+        } else if (abs(srect.width) > 5 || abs(srect.height) > 5) {
+          area_select();
+        } else {
+          // check if on minimap
+          minirect = minimap_rect();
+          if (minirect.contains(mpos.x, mpos.y)) {
+            delta = point(mpos.x - minirect.left, mpos.y - minirect.top);
+            target = point(sight_ul.x + delta.x / minirect.width * sight_wh.x, sight_ul.y + delta.y / minirect.height * sight_wh.y);
+            view_game.setCenter(target);
+          } else {
+            select_at(p);
+          }
+        }
+
+        // clear selection rect
+        drag_waypoint_active = false;
+        did_drag = false;
+        area_select_active = false;
+        srect = sf::FloatRect(0, 0, 0, 0);
+        drag_map_active = false;
+      }
+
       break;
-    }
+    case sf::Event::MouseWheelMoved:
+      p = window.mapPixelToCoords(sf::Vector2i(e.mouseWheel.x, e.mouseWheel.y));
+      do_zoom(pow(1.2, -e.mouseWheel.delta), p);
+      break;
+    case sf::Event::KeyPressed:
+      switch (e.key.code) {
+        case sf::Keyboard::O:
+          do_zoom(1.2, view_game.getCenter());
+          break;
+        case sf::Keyboard::I:
+          do_zoom(1 / 1.2, view_game.getCenter());
+          break;
+      }
   }
 }
 
@@ -1343,7 +1342,7 @@ void game::do_zoom(float factor, point p) {
 
   // check limits
   if (utility::l2norm(delta) < 50 || utility::l2norm(delta) > 10000) return;
-  
+
   view_game.setCenter(utility::scale_point(new_ul + new_br, 0.5));
   view_game.setSize(new_br - new_ul);
 }
@@ -1354,7 +1353,7 @@ void game::do_zoom(float factor, point p) {
 
     @return true if client is finished
 */
-int game::choice_event(sf::Event e){
+int game::choice_event(sf::Event e) {
   point p;
   list<combid> ss;
 
@@ -1363,80 +1362,80 @@ int game::choice_event(sf::Event e){
   point delta;
   point target;
 
-  bool has_gui = !!interface::desktop -> query_window;
+  bool has_gui = !!interface::desktop->query_window;
 
   // delete all selected fleets and commands
-  auto handle_delete = [this] () {
+  auto handle_delete = [this]() {
     for (auto id : selected_commands()) remove_command(id);
     for (auto id : selected_specific<fleet>()) {
       fleet_selector::ptr f = get_specific<fleet>(id);
-      for (auto sid : f -> get_ships()) get_specific<ship>(sid) -> fleet_id = identifier::source_none;
+      for (auto sid : f->get_ships()) get_specific<ship>(sid)->fleet_id = identifier::source_none;
       remove_entity(id);
     }
   };
 
   // make a fleet from selected ships
-  auto make_fleet = [this](){
+  auto make_fleet = [this]() {
     auto buf = selected_specific<ship>();
     deselect_all();
-    
+
     if (!buf.empty()) {
       fleet fb(self_id, fleet_idc++);
       fleet_selector::ptr f = fleet_selector::create(fb, sf::Color(players[self_id].color), true);
-      f -> ships = set<combid>(buf.begin(), buf.end());
+      f->ships = set<combid>(buf.begin(), buf.end());
       float vis = 0;
-      point pos(0,0);
+      point pos(0, 0);
       for (auto sid : buf) {
-	ship_selector::ptr s = get_specific<ship>(sid);
-	s -> fleet_id = f -> id;
-	vis = fmax(vis, s -> vision());
-	pos += s -> position;
+        ship_selector::ptr s = get_specific<ship>(sid);
+        s->fleet_id = f->id;
+        vis = fmax(vis, s->vision());
+        pos += s->position;
       }
 
-      f -> radius = settings.fleet_default_radius;
-      f -> stats.vision_buf = vis;
-      f -> position = utility::scale_point(pos, 1 / (float)buf.size());
-      f -> heading = f -> position;
-      f -> selected = true;
-      
-      entity[f -> id] = f;
+      f->radius = settings.fleet_default_radius;
+      f->stats.vision_buf = vis;
+      f->position = utility::scale_point(pos, 1 / (float)buf.size());
+      f->heading = f->position;
+      f->selected = true;
+
+      entity[f->id] = f;
     }
   };
 
-  auto solar_development = [this] (string key) {
+  auto solar_development = [this](string key) {
     bool ctrl = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
     bool shift = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
     auto ss = selected_specific<solar>();
     for (auto sid : ss) {
       solar_selector::ptr s = get_specific<solar>(sid);
       if (shift && ctrl) {
-	// prepend to queue
-	s->choice_data.building_queue.push_front(key);
+        // prepend to queue
+        s->choice_data.building_queue.push_front(key);
       } else if (shift) {
-	// append to queue
-	s->choice_data.building_queue.push_back(key);
+        // append to queue
+        s->choice_data.building_queue.push_back(key);
       } else if (ctrl) {
-	// replace queue
-	s->choice_data.building_queue = {key};
+        // replace queue
+        s->choice_data.building_queue = {key};
       }
     }
   };
 
-  auto solar_production = [this] (string key) {
+  auto solar_production = [this](string key) {
     bool ctrl = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
     bool shift = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
     auto ss = selected_specific<solar>();
     for (auto sid : ss) {
       solar_selector::ptr s = get_specific<solar>(sid);
       if (shift && ctrl) {
-	// prepend to queue
-	s->choice_data.ship_queue.push_front(key);
+        // prepend to queue
+        s->choice_data.ship_queue.push_front(key);
       } else if (shift) {
-	// append to queue
-	s->choice_data.ship_queue.push_back(key);
+        // append to queue
+        s->choice_data.ship_queue.push_back(key);
       } else if (ctrl) {
-	// replace queue
-	s->choice_data.ship_queue = {key};
+        // replace queue
+        s->choice_data.ship_queue = {key};
       }
     }
   };
@@ -1462,77 +1461,77 @@ int game::choice_event(sf::Event e){
 
   // event switch
   window.setView(view_game);
-  switch (e.type){
-  case sf::Event::MouseButtonReleased:
-    clear_guis();
-    mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
-    p = window.mapPixelToCoords(mpos);
-    
-    if (e.mouseButton.button == sf::Mouse::Right && exists_selected()){
-      setup_targui(p);
-    }
+  switch (e.type) {
+    case sf::Event::MouseButtonReleased:
+      clear_guis();
+      mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
+      p = window.mapPixelToCoords(mpos);
 
-    break;
-  case sf::Event::KeyPressed:
-    // check build ship and development keys
-    if (activate_build && dev_map.count(e.key.code)) {
-      solar_development(dev_map[e.key.code]);
-      activate_build = false;
-      break;
-    }
+      if (e.mouseButton.button == sf::Mouse::Right && exists_selected()) {
+        setup_targui(p);
+      }
 
-    if (activate_ship && ship_map.count(e.key.code)) {
-      solar_production(ship_map[e.key.code]);
-      activate_ship = false;
       break;
-    }
-    
-    switch (e.key.code){
-    case sf::Keyboard::Space:
-      if (targui){
-	clear_guis();
-      }else{
-	return socket_t::tc_complete;
+    case sf::Event::KeyPressed:
+      // check build ship and development keys
+      if (activate_build && dev_map.count(e.key.code)) {
+        solar_development(dev_map[e.key.code]);
+        activate_build = false;
+        break;
+      }
+
+      if (activate_ship && ship_map.count(e.key.code)) {
+        solar_production(ship_map[e.key.code]);
+        activate_ship = false;
+        break;
+      }
+
+      switch (e.key.code) {
+        case sf::Keyboard::Space:
+          if (targui) {
+            clear_guis();
+          } else {
+            return socket_t::tc_complete;
+          }
+          break;
+        case sf::Keyboard::Return:
+          ss = selected_specific<solar>();
+          if (ss.size() == 1) {
+            interface::desktop->reset_qw(interface::solar_gui::Create(get_specific<solar>(ss.front())));
+          }
+          break;
+        case sf::Keyboard::Delete:
+          handle_delete();
+          break;
+        case sf::Keyboard::F:
+          make_fleet();
+          break;
+        case sf::Keyboard::B:
+          if (selected_specific<solar>().size() > 0 && !has_gui) {
+            activate_build = !activate_build;
+            activate_ship = false;
+          }
+          break;
+        case sf::Keyboard::S:
+          if (selected_specific<solar>().size() > 0 && !has_gui) {
+            activate_ship = !activate_ship;
+            activate_build = false;
+          }
+          break;
+        case sf::Keyboard::Escape:
+          if (activate_ship || activate_build) {
+            activate_ship = activate_build = false;
+          } else {
+            window.setView(view_window);
+            if (popup_query("Really quit?")) {
+              chosen_quit = true;
+              return socket_t::tc_stop;
+            }
+          }
       }
       break;
-    case sf::Keyboard::Return:
-      ss = selected_specific<solar>();
-      if (ss.size() == 1) {
-	interface::desktop -> reset_qw(interface::solar_gui::Create(get_specific<solar>(ss.front())));
-      }
-      break;
-    case sf::Keyboard::Delete:
-      handle_delete();
-      break;
-    case sf::Keyboard::F:
-      make_fleet();
-      break;
-    case sf::Keyboard::B:
-      if (selected_specific<solar>().size() > 0 && !has_gui) {
-	activate_build = !activate_build;
-	activate_ship = false;
-      }
-      break;
-    case sf::Keyboard::S:
-      if (selected_specific<solar>().size() > 0 && !has_gui) {
-	activate_ship = !activate_ship;
-	activate_build = false;
-      }
-      break;
-    case sf::Keyboard::Escape:
-      if (activate_ship || activate_build) {
-	activate_ship = activate_build = false;
-      } else {
-	window.setView(view_window);
-	if(popup_query("Really quit?")){
-	  chosen_quit = true;
-	  return socket_t::tc_stop;
-	}
-      }
-    }
-    break;
   };
-  
+
   // update message
   if (activate_ship) {
     message = "[select ship production]";
@@ -1546,28 +1545,28 @@ int game::choice_event(sf::Event e){
 }
 
 /** Update virtual camera based on key controls. */
-void game::controls(){
-  static point vel(0,0);
+void game::controls() {
+  static point vel(0, 0);
   if (!window.hasFocus()) {
-    vel = point(0,0);
+    vel = point(0, 0);
     return;
   }
 
   float s = view_game.getSize().x / sight_wh.x;
   sf::Vector2i mpos = sf::Mouse::getPosition(window);
 
-  if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || mpos.x == 0){
+  if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || mpos.x == 0) {
     vel.x -= 5 * s;
-  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || mpos.x == window.getSize().x - 1){
+  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || mpos.x == window.getSize().x - 1) {
     vel.x += 5 * s;
-  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || mpos.y == 0){
+  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || mpos.y == 0) {
     vel.y -= 5 * s;
-  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || mpos.y == window.getSize().y - 1){
+  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || mpos.y == window.getSize().y - 1) {
     vel.y += 5 * s;
   }
 
   vel = utility::scale_point(vel, 0.8);
-  
+
   view_game.move(vel);
 }
 
@@ -1577,7 +1576,7 @@ void game::controls(){
 using namespace graphics;
 
 /** Draw a box with a message and wait for ok. */
-void game::popup_message(string title, string message){
+void game::popup_message(string title, string message) {
   int done = socket_t::tc_run;
 
   auto w = sfg::Window::Create();
@@ -1585,35 +1584,35 @@ void game::popup_message(string title, string message){
   auto text = sfg::Label::Create(message);
   auto baccept = sfg::Button::Create("OK");
 
-  baccept -> GetSignal(sfg::Widget::OnLeftClick).Connect([&] () {
-      done = socket_t::tc_complete;
-    });
+  baccept->GetSignal(sfg::Widget::OnLeftClick).Connect([&]() {
+    done = socket_t::tc_complete;
+  });
 
-  layout -> Pack(text);
-  layout -> Pack(baccept);
-  w -> SetTitle(title);
-  w -> Add(layout);
-  w -> SetPosition(sf::Vector2f(window.getSize().x / 2 - w -> GetRequisition().x / 2, window.getSize().y / 2 - w -> GetRequisition().y / 2));
+  layout->Pack(text);
+  layout->Pack(baccept);
+  w->SetTitle(title);
+  w->Add(layout);
+  w->SetPosition(sf::Vector2f(window.getSize().x / 2 - w->GetRequisition().x / 2, window.getSize().y / 2 - w->GetRequisition().y / 2));
 
-  interface::desktop -> Add(w);
+  interface::desktop->Add(w);
 
-  auto event_handler = generate_event_handler([this] (sf::Event e) -> int {
-      if (e.type == sf::Event::KeyPressed){
-	if (e.key.code == sf::Keyboard::Return){
-	  return socket_t::tc_complete;
-	}
+  auto event_handler = generate_event_handler([this](sf::Event e) -> int {
+    if (e.type == sf::Event::KeyPressed) {
+      if (e.key.code == sf::Keyboard::Return) {
+        return socket_t::tc_complete;
       }
-      return 0;
-    });
+    }
+    return 0;
+  });
 
   int result = socket_t::tc_run;
   window_loop(event_handler, default_body, done, result);
 
-  interface::desktop -> Remove(w);
+  interface::desktop->Remove(w);
 }
 
 /** Draw a box with a a query and options ok or cancel, wait for response. */
-bool game::popup_query(string v){
+bool game::popup_query(string v) {
   hm_t<string, string> options;
   options["ok"] = "Ok";
   options["cancel"] = "Cancel";
@@ -1633,35 +1632,35 @@ string game::popup_options(string header_text, hm_t<string, string> options) {
 
   for (auto v : options) {
     button = sfg::Button::Create(v.second);
-    button -> GetSignal(sfg::Widget::OnLeftClick).Connect([v, &status, &response] () {
-	response = v.first;
-	status = socket_t::tc_complete;
-      });
-    blayout -> Pack(button);
+    button->GetSignal(sfg::Widget::OnLeftClick).Connect([v, &status, &response]() {
+      response = v.first;
+      status = socket_t::tc_complete;
+    });
+    blayout->Pack(button);
   }
 
-  layout -> Pack(header);
-  layout -> Pack(blayout);
-  w -> Add(layout);
-  interface::desktop -> Add(w);
+  layout->Pack(header);
+  layout->Pack(blayout);
+  w->Add(layout);
+  interface::desktop->Add(w);
 
-  w -> SetPosition(sf::Vector2f(window.getSize().x / 2 - w -> GetRequisition().x / 2, window.getSize().y / 2 - w -> GetRequisition().y / 2));
+  w->SetPosition(sf::Vector2f(window.getSize().x / 2 - w->GetRequisition().x / 2, window.getSize().y / 2 - w->GetRequisition().y / 2));
 
-  auto event_handler = generate_event_handler([this, &response] (sf::Event e) -> int {
-      if (e.type == sf::Event::KeyPressed){
-	if (e.key.code == sf::Keyboard::Escape){
-	  response = "";
-	  return socket_t::tc_stop;
-	}
+  auto event_handler = generate_event_handler([this, &response](sf::Event e) -> int {
+    if (e.type == sf::Event::KeyPressed) {
+      if (e.key.code == sf::Keyboard::Escape) {
+        response = "";
+        return socket_t::tc_stop;
       }
-      return 0;
-    });
+    }
+    return 0;
+  });
 
   int result = 0;
   window_loop(event_handler, default_body, status, result);
 
-  interface::desktop -> Remove(w);
-  
+  interface::desktop->Remove(w);
+
   return response;
 }
 
@@ -1672,19 +1671,19 @@ void game::window_loop(function<int(sf::Event)> event_handler, function<int(void
   while ((tc_in | tc_out) == socket_t::tc_run) {
     start = chrono::system_clock::now();
     sf::Event event;
-    while (window.pollEvent(event)){
+    while (window.pollEvent(event)) {
       tc_out |= event_handler(event);
     }
-    
+
     if (!window.isOpen()) {
       tc_out |= socket_t::tc_stop;
       break;
     }
-    
+
     window.clear();
-    
+
     tc_out |= body();
-    sfgui -> Display(window);
+    sfgui->Display(window);
     window.display();
 
     long int millis = 1000 * frame_time;
@@ -1693,7 +1692,7 @@ void game::window_loop(function<int(sf::Event)> event_handler, function<int(void
 }
 
 /** Draw universe and game objects on the window */
-void game::draw_window(){
+void game::draw_window() {
   window.clear();
 
   // draw main interface
@@ -1705,8 +1704,8 @@ void game::draw_window(){
   // draw targui
   window.setView(view_game);
   if (targui) {
-    targui -> draw();
-  } else if (interface::desktop -> query_window) {
+    targui->draw();
+  } else if (interface::desktop->query_window) {
     return;
   }
 
@@ -1726,14 +1725,14 @@ void game::draw_window(){
   r.setOutlineColor(sf::Color::Green);
   r.setOutlineThickness(1);
   window.draw(r);
-    
+
   window.setView(view_window);
 
   // draw text
   sf::Text text;
-  text.setFont(default_font); 
+  text.setFont(default_font);
   text.setCharacterSize(20);
-  text.setFillColor(sf::Color(200,200,200));
+  text.setFillColor(sf::Color(200, 200, 200));
   text.setString(message);
   text.setPosition(point(10, 20));
   window.draw(text);
@@ -1742,14 +1741,14 @@ void game::draw_window(){
   sf::FloatRect fr = minimap_rect();
   r.setPosition(fr.left, fr.top);
   r.setSize(sf::Vector2f(fr.width, fr.height));
-  r.setOutlineColor(sf::Color(255,255,255));
-  r.setFillColor(sf::Color(0,0,25,200));
+  r.setOutlineColor(sf::Color(255, 255, 255));
+  r.setFillColor(sf::Color(0, 0, 25, 200));
   r.setOutlineThickness(1);
   window.draw(r);
 }
 
 /** Get positional rectangle representing the minimap in the window. */
-sf::FloatRect game::minimap_rect(){
+sf::FloatRect game::minimap_rect() {
   sf::FloatRect fr = view_minimap.getViewport();
   sf::FloatRect r;
   r.left = fr.left * view_window.getSize().x;
@@ -1760,34 +1759,33 @@ sf::FloatRect game::minimap_rect(){
 }
 
 /** Draw command selectors and selection rectangle. */
-void game::draw_interface_components(){
+void game::draw_interface_components() {
   window.setView(view_game);
 
   // draw commands
-  for (auto x : command_selectors) x.second -> draw(window);
+  for (auto x : command_selectors) x.second->draw(window);
 
-  if (area_select_active && srect.width && srect.height){
+  if (area_select_active && srect.width && srect.height) {
     // draw selection rect
     sf::RectangleShape r = build_rect(srect);
-    r.setFillColor(sf::Color(250,250,250,50));
+    r.setFillColor(sf::Color(250, 250, 250, 50));
     r.setOutlineColor(sf::Color(80, 120, 240, 200));
     r.setOutlineThickness(1);
     window.draw(r);
   }
-
 }
 
 void game::draw_minimap() {
   for (auto x : entity) {
-    if (!x.second -> is_active()) continue;
-    sf::FloatRect bounds(x.second -> position, point(0.05 * window.getSize().x, 0.05 * window.getSize().y));
-    sf::RectangleShape buf = graphics::build_rect(bounds, 0, sf::Color::Transparent, x.second -> get_color());
+    if (!x.second->is_active()) continue;
+    sf::FloatRect bounds(x.second->position, point(0.05 * window.getSize().x, 0.05 * window.getSize().y));
+    sf::RectangleShape buf = graphics::build_rect(bounds, 0, sf::Color::Transparent, x.second->get_color());
     window.draw(buf);
   }
 }
 
 /** Draw entities, animations and stars. */
-void game::draw_universe(){
+void game::draw_universe() {
   for (auto star : fixed_stars) star.draw(window);
 
   // draw terrain
@@ -1801,7 +1799,7 @@ void game::draw_universe(){
       polygon[i + 1].position = obj.border[i];
       polygon[i + 1].color = sf::Color::Red;
     }
-    polygon[n+1] = polygon[1];
+    polygon[n + 1] = polygon[1];
     window.draw(polygon);
   }
 
@@ -1813,8 +1811,10 @@ void game::draw_universe(){
   animations = buf;
 
   // draw fleets last
-  for (auto x : entity) if (!x.second -> isa(fleet::class_id)) x.second -> draw(window);
-  for (auto x : entity) if (x.second -> isa(fleet::class_id)) x.second -> draw(window);
+  for (auto x : entity)
+    if (!x.second->isa(fleet::class_id)) x.second->draw(window);
+  for (auto x : entity)
+    if (x.second->isa(fleet::class_id)) x.second->draw(window);
 
   // flag clusters of enemy ships
   for (auto x : enemy_clusters) {
@@ -1826,22 +1826,22 @@ void game::draw_universe(){
 // UTILITY FUNCTIONS
 // ****************************************
 
-bool add2selection(){
+bool add2selection() {
   return sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
 }
 
-bool ctrlsel(){
+bool ctrlsel() {
   return sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
 }
 
-sf::FloatRect fixrect(sf::FloatRect r){
+sf::FloatRect fixrect(sf::FloatRect r) {
   // fix reverse selection
-  if (r.width < 0){
+  if (r.width < 0) {
     r.left += r.width;
     r.width *= -1;
   }
 
-  if (r.height < 0){
+  if (r.height < 0) {
     r.top += r.height;
     r.height *= -1;
   }

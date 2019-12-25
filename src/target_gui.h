@@ -1,58 +1,58 @@
-#include <string>
 #include <set>
+#include <string>
 
 #include <SFML/Graphics.hpp>
 
 #include "graphics.h"
-#include "types.h"
 #include "ship.h"
+#include "types.h"
 
-namespace st3{
+namespace st3 {
 
-  /*! gui for allocating ships to command selectors */
-  class target_gui{
-  public: 
-    struct option_t{
-      combid key;
-      std::string option;
+/*! gui for allocating ships to command selectors */
+class target_gui {
+ public:
+  struct option_t {
+    combid key;
+    std::string option;
 
-      option_t(combid k, std::string v);
-    };
+    option_t(combid k, std::string v);
+  };
 
-    static const option_t option_cancel;
-    static const option_t option_add_waypoint;
+  static const option_t option_cancel;
+  static const option_t option_add_waypoint;
 
-  private:
+ private:
+  std::vector<option_t> options;
+  int highlight_index;
+  window_t *window;
+  sf::FloatRect bounds;
 
-    std::vector<option_t> options;
-    int highlight_index;
-    window_t *window;
-    sf::FloatRect bounds;
+  static const point option_size;
 
-    static const point option_size;
+  int compute_index(point p);
 
-    int compute_index(point p);
-  public:
-    point position;
-    option_t selected_option;
-    std::list<combid> selected_entities;
-    bool done;
+ public:
+  point position;
+  option_t selected_option;
+  std::list<combid> selected_entities;
+  bool done;
 
-    /*! construct a target gui
+  /*! construct a target gui
       @param p coordinate position
       @param options list of target options to show
       @param sel list of selected entities to set up commands for
       @param w pointer to window for coorinate transform and drawing
     */
-    target_gui(point p, std::list<option_t> options, std::list<combid> sel, window_t *w);
+  target_gui(point p, std::list<option_t> options, std::list<combid> sel, window_t *w);
 
-    /*! handle an event
+  /*! handle an event
       @param e the event
       @return whether the event was effective 
     */
-    bool handle_event(sf::Event e);
+  bool handle_event(sf::Event e);
 
-    /*! draw the gui */
-    void draw();
-  };
+  /*! draw the gui */
+  void draw();
 };
+};  // namespace st3

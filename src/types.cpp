@@ -1,15 +1,15 @@
-#include <sstream>
-#include <iostream>
-#include <mutex>
-#include <fstream>
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
-#include <iomanip> // put_time
+#include <fstream>
+#include <iomanip>  // put_time
+#include <iostream>
+#include <mutex>
+#include <sstream>
 
-#include "types.h"
-#include "waypoint.h"
-#include "utility.h"
 #include "server_handler.h"
+#include "types.h"
+#include "utility.h"
+#include "waypoint.h"
 
 using namespace std;
 using namespace st3;
@@ -53,7 +53,7 @@ void server::log(string v, string severity) {
 
   f << current_time_and_date() << ": " << severity << ": " << v << endl;
   f.close();
-  
+
   m.unlock();
 }
 
@@ -61,7 +61,7 @@ void server::output(string v, bool force) {
   static mutex m;
 
   if (silent_mode) return;
-  
+
 #ifdef DEBUG
   force = true;
 #endif
@@ -74,81 +74,78 @@ void server::output(string v, bool force) {
 }
 
 const vector<string> keywords::resource = {
-  keywords::key_metals,
-  keywords::key_organics,
-  keywords::key_gases
-};
+    keywords::key_metals,
+    keywords::key_organics,
+    keywords::key_gases};
 
 const vector<string> keywords::development = {
-  keywords::key_population,
-  keywords::key_research,
-  keywords::key_shipyard,
-  keywords::key_defense
-};
+    keywords::key_population,
+    keywords::key_research,
+    keywords::key_shipyard,
+    keywords::key_defense};
 
 const vector<string> keywords::solar_modifier = {
-  // keywords::key_agriculture,
-  keywords::key_research,
-  keywords::key_shipyard,
-  keywords::key_defense,
-  // keywords::key_medicine,
-  keywords::key_population
-};
+    // keywords::key_agriculture,
+    keywords::key_research,
+    keywords::key_shipyard,
+    keywords::key_defense,
+    // keywords::key_medicine,
+    keywords::key_population};
 
 // make a source symbol with type t and id i
-combid identifier::make(class_t t, idtype i){
+combid identifier::make(class_t t, idtype i) {
   stringstream s;
   s << t << ":" << i;
   return s.str();
 }
 
 // make a source symbol with type t and string id k
-combid identifier::make(class_t t, string k){
+combid identifier::make(class_t t, string k) {
   stringstream s;
   s << t << ":" << k;
   return s.str();
 }
 
 // get the type of source symbol s
-class_t identifier::get_type(combid s){
+class_t identifier::get_type(combid s) {
   size_t split = s.find(':');
   return s.substr(0, split);
 }
 
 // get the owner id of waypoint symbol string id v
-idtype identifier::get_multid_owner(combid v){
+idtype identifier::get_multid_owner(combid v) {
   string x = get_multid_owner_symbol(v);
-  try{
+  try {
     return stoi(x);
-  }catch(...){
+  } catch (...) {
     throw classified_error("get multid owner: invalid id from " + v + ": " + x);
   }
 }
 
 // get the owner id of waypoint symbol string id v
-string identifier::get_multid_owner_symbol(combid v){
+string identifier::get_multid_owner_symbol(combid v) {
   size_t split1 = v.find(':');
   size_t split2 = v.find('#');
   return v.substr(split1 + 1, split2 - split1 - 1);
 }
 
 // get the owner id of waypoint symbol string id v
-idtype identifier::get_multid_index(combid v){
+idtype identifier::get_multid_index(combid v) {
   string x = get_multid_index_symbol(v);
-  try{
+  try {
     return stoi(x);
-  }catch(...){
+  } catch (...) {
     throw classified_error("get multid index: invalid id from " + v + ": " + x);
   }
 }
 
 // get the owner id of waypoint symbol string id v
-string identifier::get_multid_index_symbol(combid v){
+string identifier::get_multid_index_symbol(combid v) {
   size_t split = v.find('#');
   return v.substr(split + 1);
 }
 
-combid identifier::make_waypoint_id(idtype owner, idtype id){
+combid identifier::make_waypoint_id(idtype owner, idtype id) {
   return identifier::make(waypoint::class_id, to_string(owner) + "#" + to_string(id));
 }
 
@@ -157,19 +154,19 @@ id_pair::id_pair(combid x, combid y) {
   b = y;
 }
 
-bool st3::operator < (const id_pair &x, const id_pair &y) {
-  return hash<string>{}(x.a)^hash<string>{}(x.b) < hash<string>{}(y.a)^hash<string>{}(y.b);
+bool st3::operator<(const id_pair &x, const id_pair &y) {
+  return hash<string>{}(x.a) ^ hash<string>{}(x.b) < hash<string>{}(y.a) ^ hash<string>{}(y.b);
 }
 
 pair<int, int> terrain_object::intersects_with(terrain_object obj, float r) {
   r *= 0.5;
   for (int i = 0; i < border.size(); i++) {
     point p1 = get_vertice(i, r);
-    point p2 = get_vertice(i+1, r);
-	
+    point p2 = get_vertice(i + 1, r);
+
     for (int j = 0; j < obj.border.size(); j++) {
       point q1 = obj.get_vertice(j, r);
-      point q2 = obj.get_vertice(j+1, r);
+      point q2 = obj.get_vertice(j + 1, r);
 
       if (utility::line_intersect(p1, p2, q1, q2)) return make_pair(i, j);
     }
@@ -192,11 +189,11 @@ vector<point> terrain_object::get_border(float r) const {
 void terrain_object::set_vertice(int idx, point p) {
   border[utility::int_modulus(idx, border.size())] = p;
 }
-  
+
 int terrain_object::triangle(point p, float rad) const {
   float a_sol = utility::point_angle(p - center);
   for (int j = 0; j < border.size(); j++) {
-    if (utility::in_triangle(center, get_vertice(j, rad), get_vertice(j+1, rad), p)) return j;
+    if (utility::in_triangle(center, get_vertice(j, rad), get_vertice(j + 1, rad), p)) return j;
   }
 
   return -1;
@@ -216,7 +213,7 @@ point terrain_object::closest_exit(point p, float r) const {
 
   for (int i = 0; i < border.size(); i++) {
     point a = get_vertice(i, rbuf);
-    point b = get_vertice(i+1, rbuf);
+    point b = get_vertice(i + 1, rbuf);
     point x;
     float d = utility::dpoint2line(p, a, b, &x);
 

@@ -1,5 +1,5 @@
-#include <set>
 #include "game_settings.h"
+#include <set>
 
 using namespace std;
 using namespace st3;
@@ -7,7 +7,7 @@ using namespace st3;
 const set<string> st3::starting_options = {"single", "voyagers", "battleships", "massive", "fighters"};
 int st3::sub_frames = 4;
 
-game_settings::game_settings(){
+game_settings::game_settings() {
   solar_minrad = 10;
   solar_meanrad = 15;
   solar_density = 1e-4;
@@ -17,7 +17,7 @@ game_settings::game_settings(){
   enable_extend = true;
 }
 
-client_game_settings::client_game_settings(){
+client_game_settings::client_game_settings() {
   restart = 0;
   frames_per_round = 50;
   galaxy_radius = 600;

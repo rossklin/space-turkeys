@@ -1,6 +1,6 @@
-#include <iostream>
-#include <cmath>
 #include "ship_stats.h"
+#include <cmath>
+#include <iostream>
 
 using namespace std;
 using namespace st3;
@@ -27,17 +27,17 @@ void ship_stats_modifier::parse(std::string v) {
 }
 
 // base class
-template<typename T>
+template <typename T>
 modifiable_ship_stats<T>::modifiable_ship_stats() {
   stats.resize(sskey::key::count);
 }
 
-template<typename T>
+template <typename T>
 modifiable_ship_stats<T>::modifiable_ship_stats(const modifiable_ship_stats &s) {
   stats = s.stats;
 }
 
-template<typename T>
+template <typename T>
 typename sskey::key modifiable_ship_stats<T>::lookup_key(string name) {
   static hm_t<string, sskey::key> map;
   static bool init = false;
@@ -64,7 +64,7 @@ typename sskey::key modifiable_ship_stats<T>::lookup_key(string name) {
 
   if (map.count(name)) {
     return map[name];
-  }else{
+  } else {
     return sskey::key::count;
   }
 }
@@ -76,21 +76,21 @@ void ssmod_t::combine(const ssmod_t &b) {
   }
 }
 
-ssmod_t::ssmod_t() : modifiable_ship_stats<ship_stats_modifier>(){}
+ssmod_t::ssmod_t() : modifiable_ship_stats<ship_stats_modifier>() {}
 ssmod_t::ssmod_t(const ssmod_t &s) : modifiable_ship_stats<ship_stats_modifier>(s) {}
 
 bool ssmod_t::parse(string name, string value) {
   sskey::key k = lookup_key(name);
   if (k == sskey::key::count) {
     return false;
-  }else{
+  } else {
     stats[k].parse(value);
     return true;
   }
 }
 
 // float
-ssfloat_t::ssfloat_t() : modifiable_ship_stats<sfloat>(){
+ssfloat_t::ssfloat_t() : modifiable_ship_stats<sfloat>() {
   for (auto &x : stats) x = 0;
 }
 ssfloat_t::ssfloat_t(const ssfloat_t &s) : modifiable_ship_stats<sfloat>(s) {}
@@ -99,7 +99,7 @@ bool ssfloat_t::insert(string name, float value) {
   sskey::key k = lookup_key(name);
   if (k == sskey::key::count) {
     return false;
-  }else{
+  } else {
     stats[k] = value;
     return true;
   }
@@ -124,7 +124,7 @@ void ssfloat_t::modify_with(const ssmod_t &b) {
 }
 
 // ship_stats
-ship_stats::ship_stats() : ssfloat_t(){
+ship_stats::ship_stats() : ssfloat_t() {
   depends_facility_level = 0;
   depends_tech = "";
   build_time = 0;

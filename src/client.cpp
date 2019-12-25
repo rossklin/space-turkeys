@@ -1,32 +1,32 @@
-#include <iostream>
-#include <string>
-#include <vector>
 #include <cmath>
 #include <cstdlib>
-#include <thread>
 #include <ctime>
+#include <iostream>
 #include <set>
+#include <string>
+#include <thread>
+#include <vector>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Network.hpp>
 
-#include "socket_t.h"
-#include "graphics.h"
 #include "client_game.h"
 #include "com_client.h"
-#include "protocol.h"
 #include "cost.h"
+#include "game_settings.h"
+#include "graphics.h"
+#include "protocol.h"
 #include "research.h"
 #include "selector.h"
-#include "utility.h"
 #include "serialization.h"
-#include "game_settings.h"
+#include "socket_t.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
 using namespace st3::client;
 
-void run(string game_id, string name, client_game_settings settings, bool fullscreen = false) {  
+void run(string game_id, string name, client_game_settings settings, bool fullscreen = false) {
   int width = 800;
   int height = 600;
   sf::VideoMode vmode(width, height);
@@ -44,34 +44,33 @@ void run(string game_id, string name, client_game_settings settings, bool fullsc
 
   cout << "sending game id..." << endl;
   pq << protocol::connect << game_id << name << settings;
-  query(g -> socket, pq, tc_in, tc_out);
+  query(g->socket, pq, tc_in, tc_out);
 
   if (tc_out & socket_t::tc_bad_result) {
     throw classified_error("Failed to send game id to server.");
   }
 
-  if (!(g -> socket -> data >> g -> socket -> id)){
+  if (!(g->socket->data >> g->socket->id)) {
     throw classified_error("server failed to provide id");
   }
 
-  cout << "received player id: " << g -> socket -> id << endl;
+  cout << "received player id: " << g->socket->id << endl;
 
   sf::ContextSettings sf_settings;
   sf_settings.antialiasingLevel = 8;
-  g -> window.create(vmode, "SPACE TURKEYS III ALPHA", vstyle, sf_settings);
+  g->window.create(vmode, "SPACE TURKEYS III ALPHA", vstyle, sf_settings);
 
   sfg::SFGUI sfgui;
 
-  g -> sfgui = &sfgui;
-  // g -> window.setActive();  
-  
+  g->sfgui = &sfgui;
+  // g -> window.setActive();
+
   graphics::initialize();
 
-  g -> run();
-
+  g->run();
 }
 
-int main(int argc, char **argv){
+int main(int argc, char **argv) {
   string game_id = "game1";
   string ip = "127.0.0.1";
   string name = "Name_blabla";
@@ -84,14 +83,14 @@ int main(int argc, char **argv){
   name[utility::random_int(name.length())] = utility::random_int(256);
   name[utility::random_int(name.length())] = utility::random_int(256);
 
-  auto parse_input = [&game_id, &ip, &name, &settings, &fullscreen] (string x) {
+  auto parse_input = [&game_id, &ip, &name, &settings, &fullscreen](string x) {
     size_t idx = x.find("=");
     if (idx == string::npos) {
       throw classified_error("Invalid input: " + x);
     }
 
     string key = x.substr(0, idx);
-    string value = x.substr(idx+1);
+    string value = x.substr(idx + 1);
 
     if (key == "game_id") {
       game_id = value;
@@ -109,9 +108,9 @@ int main(int argc, char **argv){
       settings.frames_per_round = stoi(value);
     } else if (key == "starting_fleet") {
       if (starting_options.count(value)) {
-	settings.starting_fleet = value;
+        settings.starting_fleet = value;
       } else {
-	throw classified_error("Invalid starting fleet option: " + value);
+        throw classified_error("Invalid starting fleet option: " + value);
       }
     } else if (key == "skip_sub") {
       sub_frames = 1;
@@ -135,12 +134,12 @@ int main(int argc, char **argv){
 
   // connect
   cout << "connecting...";
-  g -> socket = new socket_t();
-  if (g -> socket -> connect(ip, 53000) != sf::Socket::Done){
+  g->socket = new socket_t();
+  if (g->socket->connect(ip, 53000) != sf::Socket::Done) {
     cout << "client: connection failed." << endl;
     return -1;
   }
-  g -> socket -> setBlocking(false);
+  g->socket->setBlocking(false);
   cout << "done." << endl;
 
   try {
@@ -150,8 +149,8 @@ int main(int argc, char **argv){
     cout << "Exiting..." << endl;
   }
 
-  g -> socket -> disconnect();
-  delete g -> socket;
+  g->socket->disconnect();
+  delete g->socket;
 
   return 0;
 }

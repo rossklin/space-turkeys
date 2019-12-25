@@ -1,18 +1,18 @@
-#include <iostream>
-#include <exception>
-#include <cstdlib>
-#include <thread>
 #include <csignal>
+#include <cstdlib>
+#include <exception>
+#include <iostream>
 #include <mutex>
+#include <thread>
 
-#include "game_handler.h"
 #include "com_server.h"
-#include "protocol.h"
-#include "utility.h"
 #include "cost.h"
+#include "game_handler.h"
+#include "protocol.h"
 #include "research.h"
 #include "serialization.h"
 #include "server_handler.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -26,7 +26,7 @@ void handle_sigint(int sig) {
   server::log("COMPLETED SHUTDOWN");
 }
 
-int main(int argc, char **argv){
+int main(int argc, char **argv) {
   server::log("BOOTING");
   signal(SIGINT, handle_sigint);
   try {
@@ -35,7 +35,7 @@ int main(int argc, char **argv){
     cerr << "Parse error loading data: " << e.what() << endl;
     exit(-1);
   }
-  
+
   h.run();
 
   return 0;
