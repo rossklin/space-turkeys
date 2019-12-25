@@ -1,4 +1,17 @@
 * current work
+** VSC formatting
+   Command "format document" CTRL + SHIFT + I
+
+base on @Chris Drew's answer
+
+Go Preferences -> Settings
+Search for C_Cpp.clang_format_fallbackStyle
+Click Edit, Copy to Settings
+Change from "Visual Studio" to "{ BasedOnStyle: Google, IndentWidth: 4 }"
+e.g.
+
+"C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 0}"
+btw ColumnLimit: 0 is helpful too, because google limit will break your code to next line when you do not need it.
 ** military production choice should work like "governors"
 ** limiting factors
    Add some limiting factors e.g. max fleets, max ships per fleet, max
