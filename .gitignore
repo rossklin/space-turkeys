@@ -23,3 +23,9 @@ st_client
 st_server
 test
 .gdbinit
+docs
+.deps
+release
+INSTALL
+autoscan.log
+configure.scan
