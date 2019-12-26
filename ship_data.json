@@ -1,307 +1,614 @@
 {
-    "ship" : {
-	"scout" : {
-	    "thrust" : 2,
-	    "hp" : 1,
-	    "mass" : 1,
-	    "accuracy" : 0.5,
-	    "evasion" : 2,
-	    "ship damage" : 0.2,
-	    "solar damage" : 0,
-	    "interaction radius" : 20,
-	    "vision range" : 100,
-	    "load time" : 5,
-	    "cargo capacity" : 0,
-	    "regeneration" : 0,
-	    "shield" : 0,
-	    "detection" : 0,
-	    "stealth" : 0,
-	    "cannon flex" : 0.1,
-	    "is starting ship" : 1,
-	    "depends facility level" : 0,
-	    "depends tech" : "",
-	    "interactions" : ["land", "space combat", "search", "auto search"],
-	    "cost" : {
-		"metals" : 1,
-		"gases" : 1,
-		"time" : 50
-	    },
-	    "shape" : [
-		{"x" : 2, "y" : 0, "c" : "p"},
-		{"x" : -2, "y" : -1, "c" : "p"},
-		{"x" : -2, "y" : 1, "c" : "p"},
-		{"x" : 2, "y" : 0, "c" : "p"}
-	    ],
-	    "tags" : ["scout", "spacecombat"]
-	},
-
-	"fighter" : {
-	    "thrust" : 3,
-	    "hp" : 2,
-	    "mass" : 3,
-	    "ship damage" : 1,
-	    "solar damage" : 1,
-	    "accuracy" : 2,
-	    "evasion" : 2,
-	    "vision range" : 60,
-	    "interaction radius" : 30,
-	    "load time" : 5,
-	    "cannon flex" : 0.2,
-	    "interactions" : ["land", "space combat", "bombard"],
-	    "depends facility level" : 1,
-	    "depends tech" : "plasma weapons",
-	    "cost" : {
-		"metals" : 5,
-		"gases" : 1,
-		"time" : 100
-	    },
-	    "shape" : [
-		{"x" : 2, "y" : 0, "c" : "n"},
-		{"x" : -2, "y" : -1, "c" : "p"},
-		{"x" : -3, "y" : 0, "c" : "p"},
-		{"x" : -2, "y" : 1, "c" : "p"},
-		{"x" : 2, "y" : 0, "c" : "n"}
-	    ],
-	    "tags" : ["combat", "spacecombat", "bombard"]
-	},
-
-	"bomber" : {
-	    "thrust" : 3,
-	    "hp" : 4,
-	    "mass" : 10,
-	    "solar damage" : 4,
-	    "accuracy" : 0.8,
-	    "interactions" : ["land", "bombard"],
-	    "depends facility level" : 2,
-	    "depends tech" : "plasma weapons",
-	    "cost" : {
-		"metals" : 10,
-		"gases" : 3,
-		"time" : 200
-	    },
-	    "shape" : [
-		{"x" : 2, "y" : 0, "c" : "p"},
-		{"x" : 0, "y" : -3, "c" : "n"},
-		{"x" : -2, "y" : -3, "c" : "n"},
-		{"x" : -1, "y" : 0, "c" : "p"},
-		{"x" : -2, "y" : 3, "c" : "n"},
-		{"x" : 0, "y" : 3, "c" : "n"},
-		{"x" : 2, "y" : 0, "c" : "p"}
-	    ],
-	    "tags" : ["bombard"]
-	},
-	
-	"corsair" : {
-	    "hp" : 10,
-	    "mass" : 15,
-	    "thrust" : 9,
-	    "solar damage" : 0,
-	    "ship damage" : 0.7,
-	    "accuracy" : 2,
-	    "evasion" : 4,
-	    "shield" : 2.5,
-	    "vision range" : 70,
-	    "cannon flex" : 0.9,
-	    "load time" : 0,
-	    "interactions" : ["land", "space combat"],
-	    "depends facility level" : 3,
-	    "depends tech" : "shield technology",
-	    "cost" : {
-		"metals" : 20,
-		"gases" : 10,
-		"time" : 500
-	    },
-	    "shape" : [
-		{"x" : 1, "y" : 0, "c" : "p"},
-		{"x" : 2, "y" : -2, "c" : "p"},
-		{"x" : -2, "y" : -1, "c" : "n"},
-		{"x" : -3, "y" : 0, "c" : "p"},
-		{"x" : -2, "y" : 1, "c" : "n"},
-		{"x" : 2, "y" : 2, "c" : "p"},
-		{"x" : 1, "y" : 0, "c" : "p"}
-	    ],
-	    "tags" : ["combat", "spacecombat"]
-	},
-
-	"cannon" : {
-	    "hp" : 5,
-	    "mass" : 15,
-	    "thrust" : 5,
-	    "solar damage" : 0,
-	    "ship damage" : 1,
-	    "accuracy" : 2,
-	    "evasion" : 0,
-	    "shield" : 0,
-	    "vision range" : 20,
-	    "interaction radius" : 10,
-	    "cannon flex" : 0.1,
-	    "load time" : 5,
-	    "interactions" : ["space combat", "deploy"],
-	    "depends facility level" : 2,
-	    "depends tech" : "ionized hulls",
-	    "cost" : {
-		"metals" : 5,
-		"gases" : 1,
-		"time" : 250
-	    },
-	    "shape" : [
-		{"x" : 1, "y" : 0, "c" : "p"},
-		{"x" : 2, "y" : -2, "c" : "p"},
-		{"x" : -2, "y" : -1, "c" : "n"},
-		{"x" : -3, "y" : 0, "c" : "p"},
-		{"x" : -2, "y" : 1, "c" : "n"},
-		{"x" : 2, "y" : 2, "c" : "p"},
-		{"x" : 1, "y" : 0, "c" : "p"}
-	    ],
-	    "tags" : ["combat", "spacecombat"]
-	},
-
-	"destroyer" : {
-	    "hp" : 100,
-	    "mass" : 55,
-	    "thrust" : 26,
-	    "solar damage" : 0,
-	    "ship damage" : 100,
-	    "accuracy" : 1,
-	    "evasion" : 2,
-	    "shield" : 2,
-	    "vision range" : 60,
-	    "interaction radius" : 60,
-	    "cannon flex" : 0.2,
-	    "load time" : 15,
-	    "interactions" : ["land", "space combat"],
-	    "depends facility level" : 5,
-	    "depends tech" : "photon torpedos",
-	    "cost" : {
-		"metals" : 40,
-		"gases" : 10,
-		"time" : 1500
-	    },
-	    "shape" : [
-		{"x" : 2, "y" : 0, "c" : "p"},
-		{"x" : 1, "y" : -0.5, "c" : "p"},
-		{"x" : -1, "y" : -1, "c" : "n"},
-		{"x" : -2, "y" : 0, "c" : "p"},
-		{"x" : -1, "y" : 1, "c" : "n"},
-		{"x" : 1, "y" : 0.5, "c" : "p"},
-		{"x" : 2, "y" : 0, "c" : "p"}
-	    ],
-	    "tags" : ["combat", "spacecombat"]
-	},
-	
-	"battleship" : {
-	    "hp" : 120,
-	    "mass" : 120,
-	    "thrust" : 60,
-	    "solar damage" : 20,
-	    "ship damage" : 20,
-	    "accuracy" : 7,
-	    "evasion" : 5,
-	    "shield" : 25,
-	    "vision range" : 100,
-	    "interaction radius" : 80,
-	    "load time" : 7,
-	    "interactions" : ["land", "space combat", "bombard"],
-	    "depends facility level" : 3,
-	    "depends tech" : "warp core",
-	    "cost" : {
-		"metals" : 180,
-		"gases" : 20,
-		"organics" : 10,
-		"time" : 5000
-	    },
-	    "shape" : [
-		{"x" : 2, "y" : 0, "c" : "p"},
-		{"x" : 0, "y" : -1, "c" : "n"},
-		{"x" : -1, "y" : -0.5, "c" : "p"},
-		{"x" : -2, "y" : -1, "c" : "n"},
-		{"x" : -3, "y" : 0, "c" : "p"},
-		{"x" : -2, "y" : 1, "c" : "n"},
-		{"x" : -1, "y" : 0.5, "c" : "p"},
-		{"x" : 0, "y" : 1, "c" : "n"},
-		{"x" : 2, "y" : 0, "c" : "p"}
-	    ],
-	    "tags" : ["bombard", "combat", "spacecombat"],
-	    "cannon flex" : 1
-	},
-	
-	"voyager" : {
-	    "hp" : 30,
-	    "mass" : 30,
-	    "thrust" : 30,
-	    "solar damage" : 5,
-	    "ship damage" : 20,
-	    "accuracy" : 35,
-	    "evasion" : 40,
-	    "shield" : 40,
-	    "load time" : 9,
-	    "vision range" : 130,
-	    "interaction radius" : 80,
-	    "interactions" : ["land", "space combat", "bombard", "search", "auto search"],
-	    "depends facility level" : 5,
-	    "depends tech" : "warp core",
-	    "cost" : {
-		"metals" : 120,
-		"gases" : 30,
-		"organics" : 20,
-		"time" : 3500
-	    },
-	    "shape" : [
-		{"x" : 2, "y" : 0, "c" : "p"},
-		{"x" : 0, "y" : -3, "c" : "p"},
-		{"x" : -2, "y" : -3, "c" : "n"},
-		{"x" : 1, "y" : 0, "c" : "p"},
-		{"x" : -2, "y" : 3, "c" : "n"},
-		{"x" : 0, "y" : 3, "c" : "p"},
-		{"x" : 2, "y" : 0, "c" : "p"}
-	    ],
-	    "tags" : ["scout", "bombard", "combat", "spacecombat"],
-	    "cannon flex" : 0.8
-	},
-
-	"colonizer" : {
-	    "thrust" : 9,
-	    "hp" : 20,
-	    "mass" : 30,
-	    "interactions" : [],
-	    "upgrades" : ["colonize"],
-	    "depends facility level" : 1,
-	    "cost" : {
-		"metals" : 30,
-		"gases" : 5,
-		"organics" : 10,
-		"time" : 500
-	    },
-	    "shape" : [
-		{"x" : 2, "y" : 1, "c" : "p"},
-		{"x" : 2, "y" : -1, "c" : "p"},
-		{"x" : -2, "y" : -1, "c" : "p"},
-		{"x" : -2, "y" : 1, "c" : "p"},
-		{"x" : 2, "y" : 1, "c" : "p"}
-	    ]
-	},
-
-	"harvester" : {
-	    "thrust" : 13,
-	    "hp" : 20,
-	    "mass" : 30,
-	    "interactions" : ["land", "trade to", "trade from"],
-	    "depends facility level" : 1,
-	    "depends tech" : "automining",
-	    "cargo capacity" : 10,
-	    "cost" : {
-		"metals" : 30,
-		"gases" : 5,
-		"organics" : 5,
-		"time" : 500
-	    },
-	    "shape" : [
-		{"x" : 2, "y" : 1, "c" : "p"},
-		{"x" : 2, "y" : -1, "c" : "p"},
-		{"x" : -2, "y" : -2, "c" : "p"},
-		{"x" : -2, "y" : 2, "c" : "p"},
-		{"x" : 2, "y" : 1, "c" : "p"}
-	    ]
-	}
+  "ship": {
+    "scout": {
+      "thrust": 2,
+      "hp": 1,
+      "mass": 1,
+      "accuracy": 0.5,
+      "evasion": 2,
+      "ship damage": 0.2,
+      "solar damage": 0,
+      "interaction radius": 20,
+      "vision range": 100,
+      "load time": 5,
+      "cargo capacity": 0,
+      "regeneration": 0,
+      "shield": 0,
+      "detection": 0,
+      "stealth": 0,
+      "cannon flex": 0.1,
+      "is starting ship": 1,
+      "depends facility level": 0,
+      "depends tech": "",
+      "interactions": [
+        "land",
+        "space combat",
+        "search",
+        "auto search"
+      ],
+      "cost": {
+        "metals": 1,
+        "gases": 1,
+        "time": 50
+      },
+      "shape": [
+        {
+          "x": 2,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": -1,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": 1,
+          "c": "p"
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "c": "p"
+        }
+      ],
+      "tags": [
+        "scout",
+        "spacecombat"
+      ]
+    },
+    "fighter": {
+      "thrust": 3,
+      "hp": 2,
+      "mass": 3,
+      "ship damage": 1,
+      "solar damage": 1,
+      "accuracy": 2,
+      "evasion": 2,
+      "vision range": 60,
+      "interaction radius": 30,
+      "load time": 5,
+      "cannon flex": 0.2,
+      "interactions": [
+        "land",
+        "space combat",
+        "bombard"
+      ],
+      "depends facility level": 1,
+      "depends tech": "plasma weapons",
+      "cost": {
+        "metals": 5,
+        "gases": 1,
+        "time": 100
+      },
+      "shape": [
+        {
+          "x": 2,
+          "y": 0,
+          "c": "n"
+        },
+        {
+          "x": -2,
+          "y": -1,
+          "c": "p"
+        },
+        {
+          "x": -3,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": 1,
+          "c": "p"
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "c": "n"
+        }
+      ],
+      "tags": [
+        "combat",
+        "spacecombat",
+        "bombard"
+      ]
+    },
+    "bomber": {
+      "thrust": 3,
+      "hp": 4,
+      "mass": 10,
+      "solar damage": 4,
+      "accuracy": 0.8,
+      "interactions": [
+        "land",
+        "bombard"
+      ],
+      "depends facility level": 2,
+      "depends tech": "plasma weapons",
+      "cost": {
+        "metals": 10,
+        "gases": 3,
+        "time": 200
+      },
+      "shape": [
+        {
+          "x": 2,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": 0,
+          "y": -3,
+          "c": "n"
+        },
+        {
+          "x": -2,
+          "y": -3,
+          "c": "n"
+        },
+        {
+          "x": -1,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": 3,
+          "c": "n"
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "c": "n"
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "c": "p"
+        }
+      ],
+      "tags": [
+        "bombard"
+      ]
+    },
+    "corsair": {
+      "hp": 10,
+      "mass": 15,
+      "thrust": 9,
+      "solar damage": 0,
+      "ship damage": 0.7,
+      "accuracy": 2,
+      "evasion": 4,
+      "shield": 2.5,
+      "vision range": 70,
+      "cannon flex": 0.9,
+      "load time": 0,
+      "interactions": [
+        "land",
+        "space combat"
+      ],
+      "depends facility level": 3,
+      "depends tech": "shield technology",
+      "cost": {
+        "metals": 20,
+        "gases": 10,
+        "time": 500
+      },
+      "shape": [
+        {
+          "x": 1,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": 2,
+          "y": -2,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": -1,
+          "c": "n"
+        },
+        {
+          "x": -3,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": 1,
+          "c": "n"
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "c": "p"
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "c": "p"
+        }
+      ],
+      "tags": [
+        "combat",
+        "spacecombat"
+      ]
+    },
+    "cannon": {
+      "hp": 5,
+      "mass": 15,
+      "thrust": 5,
+      "solar damage": 0,
+      "ship damage": 1,
+      "accuracy": 2,
+      "evasion": 0,
+      "shield": 0,
+      "vision range": 20,
+      "interaction radius": 10,
+      "cannon flex": 0.1,
+      "load time": 5,
+      "interactions": [
+        "space combat",
+        "deploy"
+      ],
+      "depends facility level": 2,
+      "depends tech": "ionized hulls",
+      "cost": {
+        "metals": 5,
+        "gases": 1,
+        "time": 250
+      },
+      "shape": [
+        {
+          "x": 1,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": 2,
+          "y": -2,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": -1,
+          "c": "n"
+        },
+        {
+          "x": -3,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": 1,
+          "c": "n"
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "c": "p"
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "c": "p"
+        }
+      ],
+      "tags": [
+        "combat",
+        "spacecombat"
+      ]
+    },
+    "destroyer": {
+      "hp": 100,
+      "mass": 55,
+      "thrust": 26,
+      "solar damage": 0,
+      "ship damage": 100,
+      "accuracy": 1,
+      "evasion": 2,
+      "shield": 2,
+      "vision range": 60,
+      "interaction radius": 60,
+      "cannon flex": 0.2,
+      "load time": 15,
+      "interactions": [
+        "land",
+        "space combat"
+      ],
+      "depends facility level": 5,
+      "depends tech": "photon torpedos",
+      "cost": {
+        "metals": 40,
+        "gases": 10,
+        "time": 1500
+      },
+      "shape": [
+        {
+          "x": 2,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": 1,
+          "y": -0.5,
+          "c": "p"
+        },
+        {
+          "x": -1,
+          "y": -1,
+          "c": "n"
+        },
+        {
+          "x": -2,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": -1,
+          "y": 1,
+          "c": "n"
+        },
+        {
+          "x": 1,
+          "y": 0.5,
+          "c": "p"
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "c": "p"
+        }
+      ],
+      "tags": [
+        "combat",
+        "spacecombat"
+      ]
+    },
+    "battleship": {
+      "hp": 120,
+      "mass": 120,
+      "thrust": 60,
+      "solar damage": 20,
+      "ship damage": 20,
+      "accuracy": 7,
+      "evasion": 5,
+      "shield": 25,
+      "vision range": 100,
+      "interaction radius": 80,
+      "load time": 7,
+      "interactions": [
+        "land",
+        "space combat",
+        "bombard"
+      ],
+      "depends facility level": 3,
+      "depends tech": "warp core",
+      "cost": {
+        "metals": 180,
+        "gases": 20,
+        "organics": 10,
+        "time": 5000
+      },
+      "shape": [
+        {
+          "x": 2,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": 0,
+          "y": -1,
+          "c": "n"
+        },
+        {
+          "x": -1,
+          "y": -0.5,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": -1,
+          "c": "n"
+        },
+        {
+          "x": -3,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": 1,
+          "c": "n"
+        },
+        {
+          "x": -1,
+          "y": 0.5,
+          "c": "p"
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "c": "n"
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "c": "p"
+        }
+      ],
+      "tags": [
+        "bombard",
+        "combat",
+        "spacecombat"
+      ],
+      "cannon flex": 1
+    },
+    "voyager": {
+      "hp": 30,
+      "mass": 30,
+      "thrust": 30,
+      "solar damage": 5,
+      "ship damage": 20,
+      "accuracy": 35,
+      "evasion": 40,
+      "shield": 40,
+      "load time": 9,
+      "vision range": 130,
+      "interaction radius": 80,
+      "interactions": [
+        "land",
+        "space combat",
+        "bombard",
+        "search",
+        "auto search"
+      ],
+      "depends facility level": 5,
+      "depends tech": "warp core",
+      "cost": {
+        "metals": 120,
+        "gases": 30,
+        "organics": 20,
+        "time": 3500
+      },
+      "shape": [
+        {
+          "x": 2,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": 0,
+          "y": -3,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": -3,
+          "c": "n"
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": 3,
+          "c": "n"
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "c": "p"
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "c": "p"
+        }
+      ],
+      "tags": [
+        "scout",
+        "bombard",
+        "combat",
+        "spacecombat"
+      ],
+      "cannon flex": 0.8
+    },
+    "colonizer": {
+      "thrust": 9,
+      "hp": 20,
+      "mass": 30,
+      "interactions": [],
+      "upgrades": [
+        "colonize"
+      ],
+      "depends facility level": 1,
+      "cost": {
+        "metals": 30,
+        "gases": 5,
+        "organics": 10,
+        "time": 500
+      },
+      "shape": [
+        {
+          "x": 2,
+          "y": 1,
+          "c": "p"
+        },
+        {
+          "x": 2,
+          "y": -1,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": -1,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": 1,
+          "c": "p"
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "c": "p"
+        }
+      ]
+    },
+    "harvester": {
+      "thrust": 13,
+      "hp": 20,
+      "mass": 30,
+      "interactions": [
+        "land",
+        "trade to",
+        "trade from"
+      ],
+      "depends facility level": 1,
+      "depends tech": "automining",
+      "cargo capacity": 10,
+      "cost": {
+        "metals": 30,
+        "gases": 5,
+        "organics": 5,
+        "time": 500
+      },
+      "shape": [
+        {
+          "x": 2,
+          "y": 1,
+          "c": "p"
+        },
+        {
+          "x": 2,
+          "y": -1,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": -2,
+          "c": "p"
+        },
+        {
+          "x": -2,
+          "y": 2,
+          "c": "p"
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "c": "p"
+        }
+      ]
     }
+  }
 }
