@@ -345,15 +345,14 @@ fleet::ptr game_data::generate_fleet(point p, idtype owner, command c, list<comb
   if (target_position(c.target, tp)) ta = utility::point_angle(tp - p);
 
   const int max_ships = players.at(owner).research_level.get_max_ships_per_fleet();
-  int count = 0;
 
   for (auto &s : sh) {
-    if (++count > max_ships) break;
     auto sp = get_ship(s);
     f->ships.insert(s);
     sp->owner = owner;
     sp->fleet_id = f->id;
     sp->angle = ta;
+    if (f->ships.size() >= max_ships) break;
   }
 
   add_entity(f);

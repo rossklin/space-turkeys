@@ -17,7 +17,7 @@ using namespace research;
 using namespace cost;
 
 const int BASE_FLEETS = 4;
-const int BASE_SHIPS_PER_FLEET = 10;
+const int BASE_SHIPS_PER_FLEET = 9;
 
 data::data() {}
 
@@ -173,7 +173,7 @@ void tech::read_from_json(const rapidjson::Value &x) {
     if (!development::node::parse(name, i->value)) {
       if (name == "increase fleets") {
         increase_fleets = i->value.GetInt();
-      } else if (name == "inrease ships per fleet") {
+      } else if (name == "increase ships per fleet") {
         increase_ships_per_fleet = i->value.GetInt();
       } else {
         throw parse_error("Failed to parse tech: " + name);

@@ -33,7 +33,8 @@
       ],
       "solar modifier": {
         "population": 1
-      }
+      },
+      "increase ships per fleet" : 5
     },
     "interstellar culture": {
       "build time": 100,
@@ -46,7 +47,8 @@
       ],
       "solar modifier": {
         "population": 1
-      }
+      },
+      "increase fleets" : 2
     },
     "ionized hulls": {
       "build time": 100,

@@ -1737,6 +1737,14 @@ void game::draw_window() {
   text.setPosition(point(10, 20));
   window.draw(text);
 
+  // draw fleet limits
+  text.setString("Max fleets: " + to_string(players[self_id].research_level.get_max_fleets()));
+  text.setPosition(point(10, 50));
+  window.draw(text);
+  text.setString("Max ships per fleet: " + to_string(players[self_id].research_level.get_max_ships_per_fleet()));
+  text.setPosition(point(10, 80));
+  window.draw(text);
+
   // draw minimap bounds
   sf::FloatRect fr = minimap_rect();
   r.setPosition(fr.left, fr.top);
