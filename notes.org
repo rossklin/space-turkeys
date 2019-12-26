@@ -28,7 +28,7 @@ btw ColumnLimit: 0 is helpful too, because google limit will break your code to 
 *** [done] Available actions must be limited when ships are assigned
 *** [done] On action "deploy" in client: terminate called without an active exception
 *** [done] solar always says "0"
-*** Only allow one ship type per fleet
+*** [done] Only allow one ship type per fleet
 *** ship icons too similar
 *** command flags should be on bottom layer
 *** solar color not affected by resource ratio at large quantities
@@ -41,75 +41,30 @@ btw ColumnLimit: 0 is helpful too, because google limit will break your code to 
 *** check that ships actually use private path
 *** test movement of different ship classes, with upgrades etc
 ** balancing
-*** early
-    +fighter vs scout (unchanged)
-**** log
-    +fighter vs scout
-**** log
-    +fighter vs scout
-**** log
-    -scout vs light: -50% scout damage
-*** mid: ionized hulls, plasma weapons, shield technology
-    ++battleship vs corsair (unchanged)
-    ++fighter vs battleship (overshot)
-**** log
-    battleship: facility level -1, accuracy +40%
+How to count time? I.e. 3000 res = time spent building 1 colonizer, growing 1 pop and flying to a solar?
 
-    ++battleship vs corsair
-    +++battleship vs fighter
-**** log
-    +++battleship vs corsair
-**** log
-    +battleship vs light, med
-    +corsair vs light
-
-    fighter: +100% hp, -60% damage
-    ionized hulls: -67% effect
-    shield: -75% effect
-*** late: micro torpedos
-    ++voyager vs [destroyer, corsair] (unchanged)
-    --voyager vs fighter (new)
-    ++battleship vs [destroyer, corsair, fighter] (unchanged)
-    ++corsair vs fighter (new)
-    ++fighter vs destroyer (improved)
-**** log
-    ++fighter vs voyager: micro torpedos +40% const bonus
-    ++voyager vs [destroyer, battleship, corsair]: +33% damage
-    +++battleship vs [corsair, fighter]: +25% shield
-    ---destroyer vs [battleship, fighter]: -50% accuracy
-**** log
-    +++voyager vs [battleship, destroyer, corsair]
-    +++battleship vs [corsair, destroyer, figther]
-    ---destroyer vs [battleship, voyager, fighter]
-    +destroyer vs corsair
-**** log
-    +voager vs heavy, med: +50% shield
-    -destroyer vs ALL: +67% load time
-    +battleship vs ALL: +3 shield
-    +corsair vs light
-*** late SPLASH
-    -destroyer vs battleship (improved)
-    --destroyer vs fighter (unchanged)
-**** log
-    ---destroyer vs battleship
-    --destroyer vs fighter
-    --battleship vs fighter
-*** late HM
-    ++corsair vs fighter (overshot)
-**** log
-    ++fighter vs corsair: -20% damage
-    -fighter vs destroyer
-    ---fighter vs battleship
-*** late HMSPLASH
-    --fighter vs destroyer (overshot)
-    ++fighter vs battleship (worsened)
-**** log
-    +fighter vs destroyer
-    +fighter vs battleship
-**** log
-    +fighter vs [corsair, voyager, battleship]: splash -33% damage
-**** log
-    +corsair vs light
+1. reduce fighter in general
+2. improve battleship in general
+3. improve destroyer vs corsair and fighter
+4. reduce hm
+*** mid game
+7(3): down: corsair > fighter
+13(2): down: battleship > corsair
+7(2): down: fighter > battleship
+*** late game
+25(10): down: destroyer > battleship
+8(1.7): down: voyager > corsair
+0.2(3): up: destroyer < corsair FAILURE
+7(10): up: corsair > fighter
+1.7(2): up: battleship > corsair
+0.1(2): up: battleship < fighter FAILURE
+*** late hm splash
+8(3): down: battleship > fighter
+*** late splash
+0.3(3): up: destroyer < fighter FAILURE 
+*** late hm
+0.17(1.7): up: corsair < fighter FAILURE
+24(2): down: fighter > battleship
 ** play testing
 *** [?] building first colonizer takes too long
 *** [?] first research takes too long
