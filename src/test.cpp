@@ -55,7 +55,7 @@ void setup_fleet_for(game_data *g, idtype pid, point at, point targ, hm_t<string
   c.policy = fleet::policy_aggressive;
 
   g->add_entity(w);
-  g->generate_fleet(at, pid, c, ships);
+  g->generate_fleet(at, pid, c, ships, true);
   for (auto sid : ships) g->get_ship(sid)->states.erase("landed");
 }
 
@@ -167,6 +167,13 @@ bool test_space_combat(string c0, string c1, float limit, float win_lower, float
   // }
 
   float lowest = fmin(count0, count1);
+
+  if (lowest < 1) {
+    ss << c0 << " vs " << c1 << " limit " << limit << ": less than one ship, skipping";
+    server::output(ss.str(), true);
+    return false;
+  }
+
   if (lowest < min_units) {
     float ratio = min_units / lowest;
     count0 *= ratio;
@@ -311,11 +318,11 @@ int main(int argc, char **argv) {
   add_techs.insert("micro torpedos");
 
   tests.push_back(thread([limit, add_techs]() { test_space_combat("corsair", "fighter", limit, 6, 16, add_techs); }));
-  tests.push_back(thread([limit, add_techs]() { test_space_combat("fighter", "destroyer", limit, 2, 6, add_techs); }));
+  tests.push_back(thread([limit, add_techs]() { test_space_combat("fighter", "destroyer", limit, 3, 6, add_techs); }));
   tests.push_back(thread([limit, add_techs]() { test_space_combat("destroyer", "battleship", limit, 6, 16, add_techs); }));
   tests.push_back(thread([limit, add_techs]() { test_space_combat("destroyer", "corsair", limit, 6, 16, add_techs); }));
-  tests.push_back(thread([limit, add_techs]() { test_space_combat("battleship", "corsair", limit, 2, 8, add_techs); }));
-  tests.push_back(thread([limit, add_techs]() { test_space_combat("battleship", "fighter", limit, 2, 8, add_techs); }));
+  tests.push_back(thread([limit, add_techs]() { test_space_combat("battleship", "corsair", limit, 3, 6, add_techs); }));
+  tests.push_back(thread([limit, add_techs]() { test_space_combat("battleship", "fighter", limit, 3, 6, add_techs); }));
 
   tests.push_back(thread([limit, add_techs]() { test_space_combat("voyager", "fighter", limit, 1.5, 3, add_techs); }));
   tests.push_back(thread([limit, add_techs]() { test_space_combat("voyager", "corsair", limit, 1.5, 3, add_techs); }));
@@ -325,23 +332,23 @@ int main(int argc, char **argv) {
   // late game with hive mind
   add_techs.insert("hive fleet");
   limit = 2000;
-  tests.push_back(thread([limit, add_techs]() { test_space_combat("corsair", "fighter", limit, 1.1, 2, add_techs); }));
-  tests.push_back(thread([limit, add_techs]() { test_space_combat("fighter", "battleship", limit, 1.1, 4, add_techs); }));
+  tests.push_back(thread([limit, add_techs]() { test_space_combat("corsair", "fighter", limit, 1.5, 3, add_techs); }));
+  tests.push_back(thread([limit, add_techs]() { test_space_combat("fighter", "battleship", limit, 1.5, 3, add_techs); }));
   tests.push_back(thread([limit, add_techs]() { test_space_combat("fighter", "destroyer", limit, 6, 16, add_techs); }));
 
   // late game with splash
   add_techs.insert("A.M. Laser");
   add_techs.erase("hive fleet");
   limit = 2000;
-  tests.push_back(thread([limit, add_techs]() { test_space_combat("battleship", "fighter", limit, 4, 16, add_techs); }));
-  tests.push_back(thread([limit, add_techs]() { test_space_combat("destroyer", "fighter", limit, 2, 6, add_techs); }));
+  tests.push_back(thread([limit, add_techs]() { test_space_combat("battleship", "fighter", limit, 6, 16, add_techs); }));
+  tests.push_back(thread([limit, add_techs]() { test_space_combat("destroyer", "fighter", limit, 2, 4, add_techs); }));
   tests.push_back(thread([limit, add_techs]() { test_space_combat("destroyer", "battleship", limit, 6, 16, add_techs); }));
 
   // late game with hive mind and splash
   add_techs.insert("hive fleet");
   limit = 2000;
-  tests.push_back(thread([limit, add_techs]() { test_space_combat("battleship", "fighter", limit, 2, 6, add_techs); }));
-  tests.push_back(thread([limit, add_techs]() { test_space_combat("fighter", "destroyer", limit, 1.1, 3, add_techs); }));
+  tests.push_back(thread([limit, add_techs]() { test_space_combat("battleship", "fighter", limit, 3, 6, add_techs); }));
+  tests.push_back(thread([limit, add_techs]() { test_space_combat("fighter", "destroyer", limit, 2, 4, add_techs); }));
 
   for (auto &t : tests) t.join();
 

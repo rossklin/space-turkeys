@@ -103,7 +103,7 @@ class game_data : public virtual entity_package {
 
   void add_entity(game_object::ptr p);
   void remove_units();
-  fleet::ptr generate_fleet(point p, idtype i, command c, std::list<combid> sh);
+  fleet::ptr generate_fleet(point p, idtype i, command c, std::list<combid> sh, bool ignore_limit = false);
   void relocate_ships(command c, std::set<combid> &sh, idtype owner);
   void allocate_grid();
 

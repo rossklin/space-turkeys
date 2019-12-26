@@ -58,7 +58,7 @@ list<combid> game_data::search_targets_nophys(combid self_id, point p, float r, 
 
   for (auto i : entity_grid->search(p, r)) {
     auto e = get_entity(i.first);
-    if (evm.at(self->owner).count(i.first) && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
+    if (evm.count(self->owner) && evm.at(self->owner).count(i.first) && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
   }
 
   return res;
@@ -331,7 +331,7 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner) {
 }
 
 // generate a fleet with given ships, set owner and fleet_id of ships
-fleet::ptr game_data::generate_fleet(point p, idtype owner, command c, list<combid> sh) {
+fleet::ptr game_data::generate_fleet(point p, idtype owner, command c, list<combid> sh, bool ignore_limit) {
   if (sh.empty()) return NULL;
 
   fleet::ptr f = fleet::create(fleet::server_pid, next_id(fleet::class_id));
@@ -352,7 +352,7 @@ fleet::ptr game_data::generate_fleet(point p, idtype owner, command c, list<comb
     sp->owner = owner;
     sp->fleet_id = f->id;
     sp->angle = ta;
-    if (f->ships.size() >= max_ships) break;
+    if (f->ships.size() >= max_ships && !ignore_limit) break;
   }
 
   add_entity(f);
