@@ -265,6 +265,8 @@ int angle2index(int na, float a);
 float index2angle(int na, int idx);
 std::vector<float> circular_kernel(const std::vector<float> &x, float s = 1);
 
+float gaussian_kernel(float x, float s = 1);
+
 float interval_function(float a, float b, float x);
 
 float angular_hat(float x);

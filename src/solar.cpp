@@ -227,9 +227,10 @@ float solar::population() {
 
 void solar::dynamics(game_data *g) {
   float dt = g->get_dt();
+  float order = g->solar_order_level(id);
 
   // research and development
-  research_points += effective_level(keywords::key_research) * dt;
+  research_points += order * effective_level(keywords::key_research) * dt;
 
   if (choice_data.do_produce()) {
     string v = choice_data.ship_queue.front();
@@ -245,7 +246,7 @@ void solar::dynamics(game_data *g) {
           // todo: message can't afford ship
         }
       } else {
-        ship_progress += sqrt(population()) * effective_level(keywords::key_shipyard) * dt;
+        ship_progress += order * sqrt(population()) * effective_level(keywords::key_shipyard) * dt;
       }
 
       // check ship complete
@@ -263,6 +264,7 @@ void solar::dynamics(game_data *g) {
       }
     } else {
       // can't build this ship
+      g->players[owner].log.push_back("Insufficient resources to build ship " + v);
       choice_data.ship_queue.pop_front();
     }
   }
@@ -275,10 +277,10 @@ void solar::dynamics(game_data *g) {
         build_progress = 0;
         pay_resources(build_cost);
       } else {
-        // todo: message can't afford building
+        g->players[owner].log.push_back("Insufficient resources to develop " + v);
       }
     } else {
-      build_progress += population() * dt;
+      build_progress += order * population() * dt;
     }
 
     // check building complete
@@ -287,7 +289,7 @@ void solar::dynamics(game_data *g) {
       choice_data.building_queue.pop_front();
 
       development[v]++;
-      g->players[owner].log.push_back("Completed building " + v);
+      g->players[owner].log.push_back("Completed building " + v + " level " + to_string(development[v]));
     }
   }
 }

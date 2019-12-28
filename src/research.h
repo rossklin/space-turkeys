@@ -16,6 +16,7 @@ class tech : public development::node {
  public:
   int increase_fleets;
   int increase_ships_per_fleet;
+  sfloat order_modifier;
 
   tech();
   tech(const tech &f);
@@ -41,6 +42,7 @@ struct data {
   float solar_modifier(std::string v) const;
   int get_max_fleets() const;
   int get_max_ships_per_fleet() const;
+  float get_order_modifier() const;
 };
 };  // namespace research
 };  // namespace st3

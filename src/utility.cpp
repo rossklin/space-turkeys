@@ -332,6 +332,10 @@ vector<float> utility::circular_kernel(const vector<float> &x, float s) {
   return buf;
 }
 
+float utility::gaussian_kernel(float x, float s) {
+  return exp(-pow(x/s, 2));
+}
+
 // vector of n random floats ~U(0,1)
 vector<float> utility::random_uniform_vector(int n, float a, float b) {
   boost::random::uniform_real_distribution<float> dist(a, b);

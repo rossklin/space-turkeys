@@ -1,39 +1,38 @@
 {
-    "upgrade" : {
-	"colonize" : {
-	    "interactions" : ["colonize"]
-	},
-
-	"warp drive" : {
-	    "thrust" : "1.5#1"
-	},
-
-	"stealth" : {
-	    "stealth" : "1#2"
-	},
-
-	"shield" : {
-	    "shield" : "1.25#0.5"
-	},
-
-	"ionized hull" : {
-	    "hp" : "1#0.3"
-	},
-
-	"micro torpedos" : {
-	    "ship damage" : "1#0.7"
-	},
-
-	"splash" : {
-	    "hook" : {
-		"on hit" : ["splash"]
-	    }
-	},
-
-	"hive mind" : {
-	    "hook" : {
-		"on move" : ["hive support"]
-	    }
-	}
+  "upgrade": {
+    "colonize": {
+      "interactions": [
+        "colonize"
+      ]
+    },
+    "warp drive": {
+      "thrust": "1.5#1"
+    },
+    "stealth": {
+      "stealth": "1#2"
+    },
+    "shield": {
+      "shield": "1.25#0.5"
+    },
+    "ionized hull": {
+      "hp": "1#0.3"
+    },
+    "micro torpedos": {
+      "ship damage": "1#0.7"
+    },
+    "splash": {
+      "hook": {
+        "on hit": [
+          "splash"
+        ]
+      }
+    },
+    "hive mind": {
+      "hook": {
+        "on move": [
+          "hive support"
+        ]
+      }
     }
+  }
 }

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <queue>
+#include <numeric>
 
 #include "animation_data.h"
 #include "com_server.h"
@@ -1160,6 +1161,40 @@ void game_data::log_message(combid a, string v_full, string v_short) {
 
 float game_data::get_dt() const {
   return sub_frames * settings.dt;
+}
+
+float game_data::solar_order_level(combid id) const {
+  solar::ptr s = get_solar(id);
+  idtype pid = s->owner;
+
+  // Get research order modifier
+  player p = players.at(pid);
+  research::data r = p.research_level;
+  float modifier = r.get_order_modifier();
+
+  // Calculate mean and variance of solar positions
+  list<solar::ptr> solars = all<solar>(pid);
+  float N = solars.size();
+  point m = {0,0};
+  float sd = 0;
+
+  for (auto sp : solars) m += sp->position;
+  m = 1/N * m;
+
+  for (auto sp : solars) sd += utility::l2d2(sp->position - m);
+  sd = sqrt(1/N * sd);
+
+  // Calculate relative distance
+  float rel_dist = 0;
+  if (sd > 0) rel_dist = utility::l2norm(s->position - m) / sd;
+
+  // Calculate total population and number of solars
+  float pop = 0;
+  for (auto sp : solars) pop += sp->population();
+  pop = fmax(pop, 1);
+
+  // Expression for order
+  return (1 + modifier) / (pow(N, 0.5) * pow(pop, 0.25) * utility::gaussian_kernel(rel_dist, 1 + modifier));
 }
 
 bool game_data::allow_add_fleet(idtype pid) const {

@@ -87,6 +87,7 @@ class game_data : public virtual entity_package {
   void log_message(combid a, std::string v_full, std::string v_short);
   float get_dt() const;
   bool allow_add_fleet(idtype pid) const;
+  float solar_order_level(combid id) const;
 
   template <typename T>
   std::list<typename T::ptr> all(idtype pid = game_object::any_owner) const {

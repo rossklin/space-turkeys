@@ -167,6 +167,12 @@ int data::get_max_ships_per_fleet() const {
   return sum;
 }
 
+float data::get_order_modifier() const {
+  float sum = 0;
+  for (auto v : researched()) sum += tech_map.at(v).order_modifier;
+  return sum;
+}
+
 void tech::read_from_json(const rapidjson::Value &x) {
   for (auto i = x.MemberBegin(); i != x.MemberEnd(); i++) {
     string name = i->name.GetString();
@@ -175,6 +181,8 @@ void tech::read_from_json(const rapidjson::Value &x) {
         increase_fleets = i->value.GetInt();
       } else if (name == "increase ships per fleet") {
         increase_ships_per_fleet = i->value.GetInt();
+      } else if (name == "order modifier") {
+        order_modifier = i->value.GetFloat();
       } else {
         throw parse_error("Failed to parse tech: " + name);
       }

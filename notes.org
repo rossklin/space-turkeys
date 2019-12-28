@@ -1,4 +1,6 @@
 * current work
+** Add "order" concept which limits growth/production in distant solars
+** Update research and upgrade data according to sketch
 ** VSC formatting
    Command "format document" CTRL + SHIFT + I
 
