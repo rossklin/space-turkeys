@@ -1,3 +1,43 @@
+* Notes test game 2020-06-22
+** bugs
+*** Parameters showing uninitialized values in gui at start of turn
+o max fleets and max ships per fleet
+o production progress
+*** One solar built 0 of 5 fighters in a round (then showed shipyard level 3 -234823482364% complete)
+*** Units can still enter impassable terrain
+*** (maybe) development queue item dropped
+*** Ship stuck circling target
+*** Production seems to be nearly instant
+** Would like indicators for progress etc in right hand menu
+Eg research progress, ship and building progress, empire stats such as max fleets
+** Stats for solar: show order, growth, production and research per round in stats panel
+** Graphical symbol for solar government choice
+** Governor screen 
+*** Apply to all solars if none selected
+*** Add description of development choices
+*** Add "Set development priority to X for all N selected solars"
+** Military screen
+*** Apply to all solars if none selected
+*** Allow queing multiple items
+*** Add "Distribute production of the requested units among N selected solars"
+*** Add "Will take T turns and use X resources in total"
+** Colonizer: disallow building until pop can support it
+** Solars in starting sector are off color chart in resources so all grey
+** Event log: colour coded entry cards which fit in the window, grey out previous turns
+*** Click to go to location
+** Scouting: what happens when "some people join"?
+** Solar dynamics
+Simple idea (check vs current impl):
+*** All build time expressed in rounds instead of frames and happens at end of round
+*** Each population increases ship build, research and defense by e.g. 20% rounded down
+*** Each level of shipyard or research fac. adds one production point per round
+*** Sending colonizer removes one population
+*** Possibly, organics resource should determine max pop rather than being used when building pop
+** Map properties
+*** Add solars without organics to force players to transport resources to habitable solars
+*** Have more terrain between solars rather than fields of solars
+For example, make clusters of one or two habitable solars and a couple uninhabitable solars
+and then add terrain between them.
 * current work
 ** Add "order" concept which limits growth/production in distant solars
 ** Update research and upgrade data according to sketch
