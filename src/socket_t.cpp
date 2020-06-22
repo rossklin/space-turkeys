@@ -7,12 +7,7 @@ using namespace std;
 using namespace st3;
 
 st3::socket_t::socket_t() {
-  thread_com = NULL;
   id = -1;
-}
-
-bool socket_t::check_com() {
-  return (!thread_com) || *thread_com == tc_run || *thread_com == tc_init;
 }
 
 bool st3::socket_t::send_packet(sf::Packet packet) {

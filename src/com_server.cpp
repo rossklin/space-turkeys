@@ -33,7 +33,8 @@ handler_result server::handler_switch(bool test, function<void(handler_result &)
   return res;
 }
 
-handler_result client_t::receive_query(protocol_t p, query_handler f) {
+// Receive an expected query from the client and generate a response using the provided callback
+handler_result client_t::receive_query(protocol_t p, query_response_generator f) {
   protocol_t input;
   handler_result res;
   res.status = socket_t::tc_failed;
@@ -59,6 +60,10 @@ handler_result client_t::receive_query(protocol_t p, query_handler f) {
   return res;
 }
 
+bool client_t::check_com() {
+  return main_status == tc_run;
+}
+
 void client_t::set_disconnect() {
   server::log("disconnecting client " + to_string(id));
   disconnect();
@@ -69,7 +74,9 @@ bool client_t::is_connected() {
   return status != sf::Socket::Disconnected;
 }
 
-bool client_t::check_protocol(protocol_t p, query_handler f) {
+// Until an outcome is reached, wait for receiving a query for the specified
+// protocol and process it with the given query response generator
+bool client_t::check_protocol(protocol_t p, query_response_generator f) {
   bool running = true;
   bool completed = false;
   sf::Packet p_aborted;
@@ -77,30 +84,36 @@ bool client_t::check_protocol(protocol_t p, query_handler f) {
 
   output("check protocol " + to_string(p) + ": client " + to_string(id) + ": begin.");
 
-  handler::safely([&, this]() {
-      while (running && (*thread_com == socket_t::tc_run || *thread_com == socket_t::tc_init)) {
-	handler_result res = receive_query(p, f);
+  auto task = [&, this]() {
+    while (running && main_status == tc_run) {
+      handler_result res = receive_query(p, f);
 
-	if (res.status == socket_t::tc_failed && is_connected()) {
-	  send_packet(p_aborted);
-	  set_disconnect();
-	}
+      if (res.status == socket_t::tc_failed && is_connected()) {
+        send_packet(p_aborted);
+        set_disconnect();
+      }
 
-	if (!is_connected()) break;
+      if (!is_connected()) break;
 
-	send_packet(res.response);
+      send_packet(res.response);
 
-	if (res.status == socket_t::tc_stop) {
-	  set_disconnect();
-	  break;
-	}
+      if (res.status == socket_t::tc_stop) {
+        set_disconnect();
+        break;
+      }
 
-	running = res.status == socket_t::tc_run;
-	completed = !running;
-      } }, [&, this]() {
-      // on error
-      set_disconnect();
-      completed = false; });
+      running = res.status == socket_t::tc_run;
+      completed = !running;
+    }
+  };
+
+  auto onfail = [&, this]() {
+    // on error
+    set_disconnect();
+    completed = false;
+  };
+
+  handler::safely(task, onfail);
 
   output("check protocol " + to_string(p) + ": client " + to_string(id) + ": " + to_string(is_connected()));
 
@@ -111,20 +124,19 @@ bool client_t::check_protocol(protocol_t p, query_handler f) {
 // Class com
 // ****************************************
 
-com::com() {
+client_communicator::client_communicator() {
   gid = "";
   idc = 0;
-  thread_com = socket_t::tc_init;
+  status = socket_t::tc_init;
   active_thread = NULL;
 }
 
-void com::add_client(client_t *c) {
-  c->thread_com = &thread_com;
+void client_communicator::add_client(client_t *c) {
   c->id = idc++;
   clients[c->id] = c;
 }
 
-list<client_t *> com::access_clients() {
+list<client_t *> client_communicator::access_clients() {
   list<client_t *> res;
   lock();
   for (auto &c : clients) res.push_back(c.second);
@@ -132,31 +144,32 @@ list<client_t *> com::access_clients() {
   return res;
 }
 
-void com::lock() {
+void client_communicator::lock() {
   m_lock.lock();
 }
 
-void com::unlock() {
+void client_communicator::unlock() {
   m_lock.unlock();
 }
 
-bool com::can_join() {
-  return thread_com == socket_t::tc_init && clients.size() < settings.num_players;
+bool client_communicator::can_join() {
+  return status == socket_t::tc_init && clients.size() < settings.num_players;
 }
 
-bool com::ready_to_launch() {
-  return thread_com == socket_t::tc_init && clients.size() == settings.num_players;
+bool client_communicator::ready_to_launch() {
+  return status == socket_t::tc_init && clients.size() == settings.num_players;
 }
 
-void com::disconnect() {
+void client_communicator::disconnect() {
   for (auto c : clients) {
     c.second->disconnect();
     delete c.second;
   }
   clients.clear();
+  status = socket_t::tc_stop;
 }
 
-bool com::cleanup_clients() {
+bool client_communicator::cleanup_clients() {
   // remove disconnected clients
   auto buf = clients;
   for (auto i = buf.begin(); i != buf.end(); i++) {
@@ -171,7 +184,7 @@ bool com::cleanup_clients() {
     sf::Packet packet;
     output("Less than two clients remaining!");
     if (!clients.empty()) {
-      query_handler handler = [](int cid, sf::Packet q) -> handler_result {
+      query_response_generator handler = [](int cid, sf::Packet q) -> handler_result {
         handler_result res;
         res.response << protocol::aborted << string("You are the last player in the game!");
         res.status = socket_t::tc_complete;
@@ -186,7 +199,7 @@ bool com::cleanup_clients() {
   return true;
 }
 
-bool com::check_protocol(protocol_t p, query_handler f) {
+bool client_communicator::check_protocol(protocol_t p, query_response_generator f) {
   list<thread *> ts;
 
   for (auto c : clients) {

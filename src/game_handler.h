@@ -10,7 +10,7 @@ namespace server {
       @param c com object with client data
       @param g game data
     */
-void game_handler(com &c, game_data &g);
+void game_handler(client_communicator &c, game_data &g);
 };  // namespace server
 };  // namespace st3
 

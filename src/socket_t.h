@@ -1,5 +1,4 @@
-#ifndef _STK_SOCKETT
-#define _STK_SOCKETT
+#pragma once
 
 #include <SFML/Network.hpp>
 
@@ -22,7 +21,6 @@ struct socket_t : public sf::TcpSocket {
 
   /*! client id */
   sint id;
-  int *thread_com;
 
   /*! latest status */
   sf::Socket::Status status;
@@ -33,7 +31,7 @@ struct socket_t : public sf::TcpSocket {
   /*! default constructor */
   socket_t();
 
-  bool check_com();
+  virtual bool check_com() = 0;
 
   /*! send a given packet
      @param packet the packet
@@ -47,4 +45,3 @@ struct socket_t : public sf::TcpSocket {
   bool receive_packet();
 };
 };  // namespace st3
-#endif

@@ -15,6 +15,8 @@ using namespace std;
 using namespace st3;
 using namespace server;
 
+int st3::server::main_status;
+
 // show server handler output even though DEBUG is not defined
 void local_output(string v, int cid = -1, string gid = "") {
   string mes = "handler: ";
@@ -52,8 +54,8 @@ void handler::safely(function<void()> f, function<void()> g) {
   }
 }
 
-com *handler::access_game(string gid, bool do_lock) {
-  com *g = 0;
+client_communicator *handler::access_game(string gid, bool do_lock) {
+  client_communicator *g = 0;
   if (do_lock) game_ring.lock();
   if (games.count(gid)) {
     g = &games[gid];
@@ -62,8 +64,8 @@ com *handler::access_game(string gid, bool do_lock) {
   return g;
 }
 
-com *handler::create_game(string gid, client_game_settings set, bool do_lock) {
-  com *g;
+client_communicator *handler::create_game(string gid, client_game_settings set, bool do_lock) {
+  client_communicator *g;
   if (do_lock) game_ring.lock();
   if (games.count(gid)) {
     throw classified_error("Attempted to create game but id alread in use!");
@@ -85,25 +87,26 @@ void handler::wfg(client_t *c) {
   };
 
   // standby during init status
-  while (c->is_connected() && access_game(c->game_id)->thread_com == socket_t::tc_init) {
+  while (c->is_connected() && access_game(c->game_id)->status == socket_t::tc_init) {
     if (!c->check_protocol(protocol::any, handler)) {
       c->set_disconnect();
     }
   }
 
   // disconnect if we didn't pass to run status
-  if (c->is_connected() && *(c->thread_com) != socket_t::tc_run) {
+  if (c->is_connected() && access_game(c->game_id)->status != socket_t::tc_run) {
     c->set_disconnect();
   }
 }
 
 // at this point, no other thread will access c -> clients
 void handler::dispatch_game(string gid) {
-  com *c = access_game(gid);
+  client_communicator *c = access_game(gid);
 
   // wait for client wfg threads to finish
-  for (auto cl : c->access_clients())
+  for (auto cl : c->access_clients()) {
     if (cl->wfg_thread) end_thread(cl->wfg_thread);
+  }
 
   safely([c]() {
     game_data g;
@@ -151,7 +154,7 @@ void handler::dispatch_client(client_t *c) {
       return res_invalid;
     }
 
-    com *link = access_game(gid, false);
+    client_communicator *link = access_game(gid, false);
     bool game_is_new = false;
 
     if (!link) {
@@ -182,7 +185,6 @@ void handler::dispatch_client(client_t *c) {
   };
 
   // temporarily use server status as thread com
-  c->thread_com = &status;
   if (c->check_protocol(protocol::connect, join_handler)) {
     local_output("dispatch_client: starting join thread", c->id);
     c->wfg_thread = new thread([this, c]() { wfg(c); });
@@ -234,7 +236,7 @@ void handler::handle_sigint() {
 
   game_ring.lock();
   status = socket_t::tc_stop;
-  for (auto &c : games) c.second.thread_com = socket_t::tc_stop;
+  main_status = socket_t::tc_stop;
   game_ring.unlock();
 
   while (games.size()) {
@@ -257,12 +259,12 @@ void handler::game_dispatcher() {
 
     // check games to launch
     for (auto &c : games) {
-      com &game = c.second;
+      client_communicator &game = c.second;
       string gid = c.first;
       list<client_t *> clients = game.access_clients();
 
       // only cleanup clients for games in init status
-      if (game.thread_com == socket_t::tc_init) {
+      if (game.status == socket_t::tc_init) {
         for (auto c : clients) {
           if (c->wfg_thread && !c->is_connected()) {
             local_output("game_dispatcher: removing disconnected client", c->id, gid);
@@ -274,7 +276,7 @@ void handler::game_dispatcher() {
 
       if (game.ready_to_launch()) {
         local_output("game_dispatcher: setting game " + gid + " to run status!");
-        game.thread_com = socket_t::tc_run;
+        game.status = socket_t::tc_run;
         game.active_thread = new thread([this, gid]() { dispatch_game(gid); });
       }
 
@@ -288,7 +290,7 @@ void handler::game_dispatcher() {
     // remove games
     for (auto v : rbuf) {
       local_output("game_dispatcher: register game " + v + " for termination.");
-      com *g = access_game(v);
+      client_communicator *g = access_game(v);
       if (g->active_thread) end_thread(g->active_thread);
       games.erase(v);
       local_output("game_dispatcher: completed terminating game " + v);

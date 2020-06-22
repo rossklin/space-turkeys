@@ -1,5 +1,4 @@
-#ifndef _STK_SERVER_HANDLER
-#define _STK_SERVER_HANDLER
+#pragma once
 
 #include <SFML/Network.hpp>
 #include <functional>
@@ -13,8 +12,9 @@
 
 namespace st3 {
 namespace server {
+extern int main_status;
 struct handler {
-  hm_t<std::string, com> games;
+  hm_t<std::string, client_communicator> games;
   int status;
   std::mutex game_ring;
   static void safely(std::function<void()> f, std::function<void()> on_fail = 0);
@@ -26,10 +26,8 @@ struct handler {
   void dispatch_client(client_t *c);
   void wfg(client_t *c);
   void handle_sigint();
-  com *access_game(std::string gid, bool do_lock = true);
-  com *create_game(std::string gid, client_game_settings s, bool do_lock = true);
+  client_communicator *access_game(std::string gid, bool do_lock = true);
+  client_communicator *create_game(std::string gid, client_game_settings s, bool do_lock = true);
 };
 };  // namespace server
 };  // namespace st3
-
-#endif

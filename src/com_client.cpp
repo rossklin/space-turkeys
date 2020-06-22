@@ -12,7 +12,11 @@ using namespace std;
 using namespace st3;
 using namespace st3::client;
 
-void st3::client::load_frames(socket_t *socket, vector<data_frame> &g, int &idx, int &com_in, int &com_out) {
+bool cl_socket_t::check_com() {
+  return (!instruction) || *instruction == tc_run || *instruction == tc_init;
+}
+
+void st3::client::load_frames(cl_socket_t *socket, vector<data_frame> &g, int &idx, int &com_in, int &com_out) {
   sf::Packet pq;
   int sub_com = socket_t::tc_run;
 
@@ -39,10 +43,10 @@ void st3::client::load_frames(socket_t *socket, vector<data_frame> &g, int &idx,
   query(socket, pq, com_in, com_out);
 }
 
-void st3::client::query(socket_t *socket, sf::Packet &pq, int &com_in, int &com_out) {
+void st3::client::query(cl_socket_t *socket, sf::Packet &pq, int &com_in, int &com_out) {
   protocol_t message;
 
-  socket->thread_com = &com_in;
+  socket->instruction = &com_in;
   if (!socket->send_packet(pq)) {
     if (com_in != socket_t::tc_run) {
       // communication stopped

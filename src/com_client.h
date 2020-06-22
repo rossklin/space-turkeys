@@ -1,5 +1,4 @@
-#ifndef _STK_COMCLIENT
-#define _STK_COMCLIENT
+#pragma once
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Network.hpp>
@@ -15,10 +14,14 @@ namespace st3 {
 
 /*! client side specifics */
 namespace client {
-void query(socket_t *socket, sf::Packet &pq, int &tc_in, int &tc_out);
-void load_frames(socket_t *socket, std::vector<data_frame> &g, int &loaded, int &tc_in, int &tc_out);
+
+struct cl_socket_t : public socket_t {
+  int *instruction;
+  bool check_com() override;
+};
+
+void query(cl_socket_t *socket, sf::Packet &pq, int &tc_in, int &tc_out);
+void load_frames(cl_socket_t *socket, std::vector<data_frame> &g, int &loaded, int &tc_in, int &tc_out);
 void deserialize(data_frame &f, sf::Packet &p, sint id);
 };  // namespace client
 };  // namespace st3
-
-#endif

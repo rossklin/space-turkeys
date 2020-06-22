@@ -36,19 +36,20 @@ struct client_t : public socket_t {
   bool check_protocol(protocol_t p, query_handler f);
   bool is_connected();
   void set_disconnect();
+  bool check_com() override;
 };
 
-/*! structure handling a set of clients */
-struct com {
+/*! structure handling communication with a set of clients associated with a game */
+struct client_communicator {
   hm_t<int, client_t *> clients;
   game_settings settings;
   int idc;
-  int thread_com;
+  int status;
   std::string gid;
   std::mutex m_lock;
   std::thread *active_thread;
 
-  com();
+  client_communicator();
   void add_client(client_t *c);
   void disconnect();
   bool cleanup_clients();
