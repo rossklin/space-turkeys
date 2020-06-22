@@ -1,4 +1,14 @@
 {
     "editor.detectIndentation": false,
-    "editor.tabSize": 2
+    "editor.tabSize": 2,
+    "files.associations": {
+      "*.module": "php",
+      "*.inc": "php",
+      "*.install": "php",
+      "complex": "cpp",
+      "functional": "cpp",
+      "limits": "cpp",
+      "tuple": "cpp"
+    },
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 0 }"
 }
