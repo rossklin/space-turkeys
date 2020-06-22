@@ -1,9 +1,10 @@
+#include "choice_gui.h"
+
 #include <SFGUI/SFGUI.hpp>
 #include <SFGUI/Widgets.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <set>
 
-#include "choice_gui.h"
 #include "client_game.h"
 #include "desktop.h"
 #include "graphics.h"

@@ -2,6 +2,7 @@
 #define _STK_ANIMATION_DATA
 
 #include <string>
+
 #include "types.h"
 
 namespace st3 {

@@ -1,11 +1,10 @@
 #ifndef _STK_COMCLIENT
 #define _STK_COMCLIENT
 
-#include <string>
-#include <vector>
-
 #include <SFML/Graphics.hpp>
 #include <SFML/Network.hpp>
+#include <string>
+#include <vector>
 
 #include "data_frame.h"
 #include "selector.h"

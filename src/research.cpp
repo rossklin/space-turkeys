@@ -1,4 +1,7 @@
+#include "research.h"
+
 #include <rapidjson/document.h>
+
 #include <mutex>
 #include <numeric>
 #include <vector>
@@ -6,7 +9,6 @@
 #include "choice.h"
 #include "cost.h"
 #include "fleet.h"
-#include "research.h"
 #include "ship.h"
 #include "upgrades.h"
 #include "utility.h"

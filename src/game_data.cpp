@@ -1,14 +1,15 @@
+#include "game_data.h"
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <iostream>
 #include <memory>
-#include <queue>
 #include <numeric>
+#include <queue>
 
 #include "animation_data.h"
 #include "com_server.h"
-#include "game_data.h"
 #include "game_object.h"
 #include "research.h"
 #include "types.h"
@@ -761,9 +762,10 @@ solar::ptr game_data::closest_solar(point p, idtype id) const {
   solar::ptr s = 0;
 
   try {
-    s = utility::value_min(all<solar>(id), (function<float(solar::ptr)>)[ this, p, id ](solar::ptr t)->float {
-      return utility::l2d2(t->position - p);
-    });
+    s = utility::value_min(
+        all<solar>(id), (function<float(solar::ptr)>)[ this, p, id ](solar::ptr t)->float {
+          return utility::l2d2(t->position - p);
+        });
   } catch (exception &e) {
     // player doesn't own any solars
     return 0;
@@ -1175,14 +1177,14 @@ float game_data::solar_order_level(combid id) const {
   // Calculate mean and variance of solar positions
   list<solar::ptr> solars = all<solar>(pid);
   float N = solars.size();
-  point m = {0,0};
+  point m = {0, 0};
   float sd = 0;
 
   for (auto sp : solars) m += sp->position;
-  m = 1/N * m;
+  m = 1 / N * m;
 
   for (auto sp : solars) sd += utility::l2d2(sp->position - m);
-  sd = sqrt(1/N * sd);
+  sd = sqrt(1 / N * sd);
 
   // Calculate relative distance
   float rel_dist = 0;

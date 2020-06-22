@@ -1,7 +1,8 @@
+#include "fleet.h"
+
 #include <iostream>
 #include <mutex>
 
-#include "fleet.h"
 #include "game_data.h"
 #include "interaction.h"
 #include "serialization.h"
@@ -195,7 +196,8 @@ void fleet::analyze_enemies(game_data *g) {
   float r = stats.spread_radius + vision();
   target_condition cond(target_condition::enemy, ship::class_id);
   list<combid> t = g->search_targets_nophys(id, position, r, cond.owned_by(owner));
-  vector<point> pos = utility::fmap<vector<point> >(t, (function<point(combid)>)[g](combid sid)->point { return g->get_ship(sid)->position; });
+  vector<point> pos = utility::fmap<vector<point> >(
+      t, (function<point(combid)>)[g](combid sid)->point { return g->get_ship(sid)->position; });
   vector<point> x;
 
   auto local_output = [this](string v) {

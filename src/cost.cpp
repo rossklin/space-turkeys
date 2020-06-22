@@ -1,7 +1,8 @@
+#include "cost.h"
+
 #include <cstring>
 #include <iostream>
 
-#include "cost.h"
 #include "ship.h"
 #include "utility.h"
 

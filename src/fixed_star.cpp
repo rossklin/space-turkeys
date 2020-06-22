@@ -1,4 +1,5 @@
 #include "fixed_star.h"
+
 #include "utility.h"
 
 using namespace st3::utility;

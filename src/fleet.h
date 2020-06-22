@@ -2,6 +2,7 @@
 #define _STK_FLEET
 
 #include <set>
+
 #include "command.h"
 #include "game_object.h"
 #include "interaction.h"

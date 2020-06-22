@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <chrono>
+
 #include "types.h"
 
 namespace st3 {

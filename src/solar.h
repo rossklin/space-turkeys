@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rapidjson/document.h>
+
 #include <list>
 #include <set>
 #include <vector>

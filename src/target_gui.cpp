@@ -1,8 +1,9 @@
+#include "target_gui.h"
+
 #include <iostream>
 
 #include "command.h"
 #include "fleet.h"
-#include "target_gui.h"
 #include "utility.h"
 
 using namespace std;

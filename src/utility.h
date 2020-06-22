@@ -1,14 +1,14 @@
 #ifndef _STK_UTILITY
 #define _STK_UTILITY
 
+#include <rapidjson/document.h>
+
 #include <cassert>
 #include <cmath>
 #include <functional>
 #include <set>
 #include <sstream>
 #include <vector>
-
-#include <rapidjson/document.h>
 
 #include "game_object.h"
 #include "types.h"

@@ -1,3 +1,5 @@
+#include "types.h"
+
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
 #include <fstream>
@@ -7,7 +9,6 @@
 #include <sstream>
 
 #include "server_handler.h"
-#include "types.h"
 #include "utility.h"
 #include "waypoint.h"
 

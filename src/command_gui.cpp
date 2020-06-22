@@ -1,3 +1,5 @@
+#include "command_gui.h"
+
 #include <cstdlib>
 #include <iostream>
 #include <set>
@@ -6,7 +8,6 @@
 #include <utility>
 
 #include "client_game.h"
-#include "command_gui.h"
 #include "desktop.h"
 #include "fleet.h"
 #include "graphics.h"

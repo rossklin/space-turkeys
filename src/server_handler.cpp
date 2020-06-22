@@ -1,6 +1,7 @@
+#include "server_handler.h"
+
 #include <fstream>
 #include <iostream>
-
 #include <sstream>  // stringstream
 #include <string>   // string
 
@@ -8,7 +9,6 @@
 #include "game_handler.h"
 #include "protocol.h"
 #include "serialization.h"
-#include "server_handler.h"
 #include "types.h"
 
 using namespace std;

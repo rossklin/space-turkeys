@@ -1,9 +1,10 @@
+#include "selector.h"
+
 #include <iostream>
 
 #include "client_game.h"
 #include "fleet.h"
 #include "graphics.h"
-#include "selector.h"
 #include "solar.h"
 #include "types.h"
 #include "utility.h"

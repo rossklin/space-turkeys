@@ -1,3 +1,6 @@
+#include "client_game.h"
+
+#include <SFML/Graphics.hpp>
 #include <chrono>
 #include <iostream>
 #include <queue>
@@ -5,11 +8,8 @@
 #include <thread>
 #include <type_traits>
 
-#include <SFML/Graphics.hpp>
-
 #include "animation.h"
 #include "choice_gui.h"
-#include "client_game.h"
 #include "com_client.h"
 #include "command_gui.h"
 #include "desktop.h"

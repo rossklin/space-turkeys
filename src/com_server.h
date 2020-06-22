@@ -1,14 +1,12 @@
-#ifndef _STK_COMSERVER
-#define _STK_COMSERVER
+#pragma once
 
+#include <SFML/Network.hpp>
 #include <functional>
 #include <list>
 #include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
-
-#include <SFML/Network.hpp>
 
 #include "game_settings.h"
 #include "socket_t.h"
@@ -64,5 +62,3 @@ struct com {
 };
 };  // namespace server
 };  // namespace st3
-
-#endif

@@ -1,8 +1,7 @@
-#include <set>
-#include <string>
-
 #include <SFGUI/Widgets.hpp>
 #include <SFML/Graphics.hpp>
+#include <set>
+#include <string>
 
 #include "graphics.h"
 #include "selector.h"

@@ -1,3 +1,5 @@
+#include <SFML/Graphics.hpp>
+#include <SFML/Network.hpp>
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
@@ -6,9 +8,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-
-#include <SFML/Graphics.hpp>
-#include <SFML/Network.hpp>
 
 #include "client_game.h"
 #include "com_client.h"

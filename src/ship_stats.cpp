@@ -1,4 +1,5 @@
 #include "ship_stats.h"
+
 #include <cmath>
 #include <iostream>
 

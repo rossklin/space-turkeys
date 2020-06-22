@@ -1,7 +1,6 @@
+#include <SFML/Graphics.hpp>
 #include <set>
 #include <string>
-
-#include <SFML/Graphics.hpp>
 
 #include "graphics.h"
 #include "ship.h"

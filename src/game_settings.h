@@ -2,6 +2,7 @@
 
 #include <set>
 #include <string>
+
 #include "types.h"
 
 namespace st3 {

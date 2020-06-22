@@ -1,9 +1,10 @@
+#include "interaction.h"
+
 #include <iostream>
 #include <sstream>
 
 #include "fleet.h"
 #include "game_data.h"
-#include "interaction.h"
 #include "ship.h"
 #include "solar.h"
 #include "upgrades.h"

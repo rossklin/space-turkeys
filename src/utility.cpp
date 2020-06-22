@@ -1,22 +1,23 @@
+#include "utility.h"
+
 #include <rapidjson/document.h>
+
 #include <algorithm>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
 #include <fstream>
 #include <iomanip>
 #include <iterator>
 #include <mutex>
 #include <sstream>
 
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
-
 #include "fleet.h"
 #include "game_object.h"
 #include "player.h"
 #include "ship.h"
 #include "solar.h"
-#include "utility.h"
 #include "waypoint.h"
 
 using namespace std;
@@ -333,7 +334,7 @@ vector<float> utility::circular_kernel(const vector<float> &x, float s) {
 }
 
 float utility::gaussian_kernel(float x, float s) {
-  return exp(-pow(x/s, 2));
+  return exp(-pow(x / s, 2));
 }
 
 // vector of n random floats ~U(0,1)

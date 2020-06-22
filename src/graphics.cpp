@@ -1,3 +1,5 @@
+#include "graphics.h"
+
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -6,7 +8,6 @@
 #include "animation.h"
 #include "client_game.h"
 #include "cost.h"
-#include "graphics.h"
 #include "types.h"
 #include "utility.h"
 

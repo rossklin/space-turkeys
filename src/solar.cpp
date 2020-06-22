@@ -1,4 +1,7 @@
+#include "solar.h"
+
 #include <rapidjson/document.h>
+
 #include <iostream>
 #include <mutex>
 #include <sstream>
@@ -10,7 +13,6 @@
 #include "interaction.h"
 #include "research.h"
 #include "serialization.h"
-#include "solar.h"
 #include "utility.h"
 
 using namespace std;

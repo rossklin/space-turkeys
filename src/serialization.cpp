@@ -1,7 +1,8 @@
+#include "serialization.h"
+
 #include <iostream>
 #include <set>
 
-#include "serialization.h"
 #include "utility.h"
 
 using namespace std;
@@ -331,17 +332,13 @@ sf::Packet& st3::operator>>(sf::Packet& packet, research::data& c) {
 }
 
 sf::Packet& st3::operator<<(sf::Packet& packet, const research::tech& c) {
-  return packet 
-  << static_cast<const development::node&>(c)
-  << c.increase_fleets
-  << c.increase_ships_per_fleet
-  << c.order_modifier;
+  return packet
+         << static_cast<const development::node&>(c)
+         << c.increase_fleets
+         << c.increase_ships_per_fleet
+         << c.order_modifier;
 }
 
 sf::Packet& st3::operator>>(sf::Packet& packet, research::tech& c) {
-  return packet 
-  >> static_cast<development::node&>(c)
-  >> c.increase_fleets
-  >> c.increase_ships_per_fleet
-  >> c.order_modifier;
+  return packet >> static_cast<development::node&>(c) >> c.increase_fleets >> c.increase_ships_per_fleet >> c.order_modifier;
 }

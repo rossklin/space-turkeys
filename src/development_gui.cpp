@@ -1,8 +1,9 @@
+#include "development_gui.h"
+
 #include <boost/algorithm/string/join.hpp>
 #include <set>
 
 #include "desktop.h"
-#include "development_gui.h"
 #include "development_tree.h"
 #include "graphics.h"
 

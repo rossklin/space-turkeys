@@ -1,12 +1,12 @@
+#include <cstdlib>
+#include <iostream>
+#include <list>
+
 #include "choice.h"
 #include "research.h"
 #include "solar.h"
 #include "types.h"
 #include "utility.h"
-
-#include <cstdlib>
-#include <iostream>
-#include <list>
 
 using namespace std;
 using namespace st3;

@@ -1,3 +1,5 @@
+#include "game_handler.h"
+
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -9,7 +11,6 @@
 
 #include "com_server.h"
 #include "game_data.h"
-#include "game_handler.h"
 #include "protocol.h"
 #include "serialization.h"
 #include "server_handler.h"
@@ -56,7 +57,8 @@ void simulation_step(com &c, game_data &g) {
   };
 
   auto generate_frames = [&c, &g, &frames, &frame_count, n]() {
-    handler::safely([&]() {
+    handler::safely(
+        [&]() {
 	for (frame_count = 0; frame_count < n; frame_count++){
 	  g.increment();
 	  frames[frame_count].copy_from(g);

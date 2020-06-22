@@ -1,11 +1,13 @@
+#include "upgrades.h"
+
 #include <rapidjson/document.h>
+
 #include <list>
 #include <string>
 
 #include "fleet.h"
 #include "interaction.h"
 #include "solar.h"
-#include "upgrades.h"
 #include "utility.h"
 
 using namespace std;

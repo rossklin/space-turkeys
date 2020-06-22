@@ -2,6 +2,7 @@
 #define _STK_SOCKETT
 
 #include <SFML/Network.hpp>
+
 #include "types.h"
 
 namespace st3 {

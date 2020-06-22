@@ -1,9 +1,10 @@
+#include "ship.h"
+
 #include <iostream>
 
 #include "fleet.h"
 #include "game_data.h"
 #include "serialization.h"
-#include "ship.h"
 #include "upgrades.h"
 #include "utility.h"
 

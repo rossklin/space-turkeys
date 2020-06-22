@@ -1,10 +1,11 @@
+#include "waypoint.h"
+
 #include <iostream>
 #include <mutex>
 
 #include "game_data.h"
 #include "serialization.h"
 #include "utility.h"
-#include "waypoint.h"
 
 using namespace std;
 using namespace st3;

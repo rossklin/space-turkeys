@@ -1,8 +1,10 @@
+#include "development_tree.h"
+
 #include <rapidjson/document.h>
+
 #include <boost/algorithm/string.hpp>
 #include <string>
 
-#include "development_tree.h"
 #include "research.h"
 #include "ship.h"
 #include "solar.h"

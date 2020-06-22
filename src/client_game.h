@@ -1,13 +1,12 @@
 #ifndef _STK_CLIENTGAME
 #define _STK_CLIENTGAME
 
+#include <SFGUI/SFGUI.hpp>
+#include <SFML/Graphics.hpp>
 #include <functional>
 #include <set>
 #include <stdexcept>
 #include <string>
-
-#include <SFGUI/SFGUI.hpp>
-#include <SFML/Graphics.hpp>
 
 #include "choice.h"
 #include "com_client.h"

@@ -1,8 +1,9 @@
+#include "game_object.h"
+
 #include <iostream>
 #include <memory>
 
 #include "game_data.h"
-#include "game_object.h"
 #include "serialization.h"
 #include "utility.h"
 

@@ -1,4 +1,5 @@
 #include "game_settings.h"
+
 #include <set>
 
 using namespace std;

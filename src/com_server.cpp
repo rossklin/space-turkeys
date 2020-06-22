@@ -1,8 +1,9 @@
+#include "com_server.h"
+
 #include <iostream>
 #include <queue>
 #include <thread>
 
-#include "com_server.h"
 #include "game_data.h"
 #include "protocol.h"
 #include "serialization.h"

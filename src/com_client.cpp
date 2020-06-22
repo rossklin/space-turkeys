@@ -1,6 +1,7 @@
+#include "com_client.h"
+
 #include <iostream>
 
-#include "com_client.h"
 #include "game_object.h"
 #include "protocol.h"
 #include "selector.h"

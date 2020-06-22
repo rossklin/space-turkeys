@@ -1,7 +1,8 @@
+#include "grid_tree.h"
+
 #include <cmath>
 #include <iostream>
 
-#include "grid_tree.h"
 #include "utility.h"
 
 using namespace std;
