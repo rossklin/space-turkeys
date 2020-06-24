@@ -173,7 +173,7 @@ bool game_setup::can_join() {
 }
 
 bool game_setup::ready_to_launch() {
-  if (!(status == socket_t::tc_run && clients.size() == settings.clset.num_players)) return false;
+  if (!(status == socket_t::tc_ready_game && clients.size() == settings.clset.num_players)) return false;
   for (auto c : clients) {
     if (c.second->st3_state != socket_t::tc_run) return false;
   }

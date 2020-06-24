@@ -15,8 +15,9 @@ struct socket_t : public sf::TcpSocket {
   static const int tc_stop = 8;
   static const int tc_failed = 16;
   static const int tc_game_complete = 32;
-  static const int tc_ok_result = tc_run | tc_complete;
-  static const int tc_bad_result = ~tc_ok_result;
+  static const int tc_ready_game = 64;
+  static const int tc_bad_result = tc_stop | tc_failed;
+
   static const int default_timeout = 1000;
 
   /*! client id */

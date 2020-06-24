@@ -874,6 +874,8 @@ void game_data::build() {
     }
     add_entity(s);
     discover(s->position, 0, true);
+
+    server::log("Created home solar " + s->id + " owned by " + to_string(s->owner));
   };
 
   allocate_grid();

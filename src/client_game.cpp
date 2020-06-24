@@ -717,7 +717,7 @@ void game::reload_data(data_frame &g, bool use_animations) {
     entity[key] = p;
     p->seen = p->is_active();
     if (p->owner == self_id && p->is_active()) add_fixed_stars(p->position, p->vision());
-    cout << "reload_data: loaded seen entity: " << p->id << endl;
+    cout << "reload_data for " << self_id << ": loaded seen entity: " << p->id << " owned by " << p->owner << endl;
   }
 
   // remove entities as server specifies

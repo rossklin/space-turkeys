@@ -55,6 +55,7 @@ int get_status(string game_id) {
     if (!(p >> res)) {
       throw network_error("Packet did not contain status");
     }
+    cout << "Got game status " << res << endl;
   };
 
   handled_response(p, callback);
@@ -66,33 +67,36 @@ void connect_to_server(string name) {
   p << protocol::connect << name;
 
   auto callback = [](sf::Packet data) {
-    if (!data >> g->socket->id) {
-      throw logic_error("Packet did not contain id");
+    if (!(data >> g->socket->id)) {
+      throw logical_error("Packet did not contain id");
     }
+    cout << "Received client id " << g->socket->id << endl;
   };
 
   handled_response(p, callback);
 }
 
-void setup_create_game(client_game_settings settings) {
+string setup_create_game(client_game_settings settings) {
   sf::Packet p;
+  string gid;
   p << protocol::create_game << settings;
 
-  auto callback = [](sf::Packet p) {
-    string gid;
+  auto callback = [&gid](sf::Packet p) {
     if (!(p >> gid)) {
-      throw logic_error("Packet did not contain gid");
+      throw logical_error("Packet did not contain gid");
     }
     cout << "Created game " << gid << endl;
   };
 
   handled_response(p, callback);
+  return gid;
 }
 
 void setup_join_game(string gid) {
   sf::Packet p;
   p << protocol::join_game << gid;
   handled_response(p, 0);
+  cout << "Joined game " << gid << endl;
 }
 
 void setup_gfx(bool fullscreen = false) {
@@ -197,16 +201,18 @@ int main(int argc, char **argv) {
 
     connect_to_server(name);
     if (task == "create") {
-      setup_create_game(settings);
+      game_id = setup_create_game(settings);
     } else if (task == "join" && game_id.size()) {
       setup_join_game(game_id);
     } else {
       throw logical_error("Invalid task or missing game id");
     }
 
-    while (get_status(game_id) != socket_t::tc_run) {
-      sf::sleep(sf::milliseconds(100));
+    while (get_status(game_id) != socket_t::tc_ready_game) {
+      sf::sleep(sf::milliseconds(1000));
     }
+
+    cout << "Calling g->run" << endl;
 
     g->run();
 

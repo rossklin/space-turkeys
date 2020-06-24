@@ -221,7 +221,8 @@ void server::game_handler(game_setup c, game_data &g) {
 
   // check if we are loading an autosave
   string filename = c.id + ".auto.save";
-  bool did_load = load_autosave(filename, c, g);
+  // bool did_load = load_autosave(filename, c, g);
+  bool did_load = false;
 
   g.rehash_grid();
   g.rebuild_evm();

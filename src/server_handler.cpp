@@ -98,7 +98,7 @@ sint handler::get_status(string gid) {
   if (games.count(gid)) {
     res = games.at(gid).status;
   } else {
-    res = socket_t::tc_bad_result;
+    res = socket_t::tc_failed;
   }
   game_ring.unlock();
 
@@ -294,6 +294,7 @@ void handler::main_client_handler(server_cl_socket::ptr cl) {
       case protocol::connect:
         if (cl->data >> cl->name && valid_string(cl->name)) {
           res << protocol::confirm << cl->id;
+          cout << "Sending id " << cl->id << " to client" << endl;
         } else {
           res << protocol::invalid;
         }
@@ -323,7 +324,7 @@ void handler::main_client_handler(server_cl_socket::ptr cl) {
           sint test = get_status(gid);
           res << protocol::confirm << test;
 
-          if (test == socket_t::tc_run) {
+          if (test == socket_t::tc_ready_game) {
             // The game is starting so end this thread
             cl->st3_state = socket_t::tc_run;
             run = false;
@@ -387,12 +388,13 @@ void handler::monitor_games() {
 
       // Check if we should start loading the game
       if (game.status == socket_t::tc_init && game.clients.size() == game.settings.clset.num_players) {
-        game.status = socket_t::tc_run;
+        game.status = socket_t::tc_ready_game;
       }
 
       // Check if clients have confirmed loading the game and we are ready to launch
       if (game.ready_to_launch()) {
         local_output("monitor games: launching game " + gid);
+        game.status = socket_t::tc_run;
         game.game_thread = shared_ptr<thread>(new thread(&handler::dispatch_game, this, game));
       }
 
