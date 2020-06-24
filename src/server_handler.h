@@ -31,8 +31,8 @@ struct handler {
   void handle_sigint();
   // client_communicator *access_game(std::string gid, bool do_lock = true);
   std::string create_game(client_game_settings s);
-  bool join_game(server_cl_socket::ptr cl, string gid);
-  sint get_status(string gid);
+  bool join_game(server_cl_socket::ptr cl, std::string gid);
+  sint get_status(std::string gid);
   void disconnect(server_cl_socket::ptr cl);
 };
 };  // namespace server

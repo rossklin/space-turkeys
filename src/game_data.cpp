@@ -533,7 +533,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   point br((i + 1) * ratio, (j + 1) * ratio);
   point center = utility::scale_point(ul + br, 0.5);
   float distance = utility::l2norm(center);
-  float bounty = exp(-pow(distance / settings.galaxy_radius, 2));
+  float bounty = exp(-pow(distance / settings.clset.galaxy_radius, 2));
   bounty = utility::linsig(utility::random_normal(bounty, 0.2 * bounty));
   float nbuf = bounty * pow(ratio, 2) * settings.solar_density;
   int n_solar = fmax(utility::random_normal(nbuf, 0.2 * nbuf), 0);
@@ -846,24 +846,24 @@ void game_data::build() {
 
     // debug: start with some ships
     hm_t<string, int> starter_fleet;
-    if (settings.starting_fleet == "single") {
+    if (settings.clset.starting_fleet == "single") {
       starter_fleet["fighter"] = 1;
-    } else if (settings.starting_fleet == "voyagers") {
+    } else if (settings.clset.starting_fleet == "voyagers") {
       starter_fleet["voyager"] = 2;
-    } else if (settings.starting_fleet == "battleships") {
+    } else if (settings.clset.starting_fleet == "battleships") {
       starter_fleet["battleship"] = 40;
-    } else if (settings.starting_fleet == "fighters") {
+    } else if (settings.clset.starting_fleet == "fighters") {
       starter_fleet["fighter"] = 40;
-    } else if (settings.starting_fleet == "massive") {
+    } else if (settings.clset.starting_fleet == "massive") {
       for (auto sc : ship::all_classes()) starter_fleet[sc] = 10;
     } else {
-      throw player_error("Invalid starting fleet option: " + settings.starting_fleet);
+      throw player_error("Invalid starting fleet option: " + settings.clset.starting_fleet);
     }
 
     for (auto sc : starter_fleet) {
       for (int j = 0; j < sc.second; j++) {
         ship sh = rbase.build_ship(next_id(ship::class_id), sc.first);
-        if ((!sh.depends_tech.empty()) && settings.starting_fleet == "massive") {
+        if ((!sh.depends_tech.empty()) && settings.clset.starting_fleet == "massive") {
           sh.upgrades += research::data::get_tech_upgrades(sh.ship_class, sh.depends_tech);
         }
         sh.states.insert("landed");
@@ -880,14 +880,14 @@ void game_data::build() {
   float angle = utility::random_uniform(0, 2 * M_PI);
   float np = players.size();
   for (auto &p : players) {
-    point p_base = utility::scale_point(utility::normv(angle), settings.galaxy_radius);
-    point p_start = utility::random_point_polar(p_base, 0.2 * settings.galaxy_radius);
+    point p_base = utility::scale_point(utility::normv(angle), settings.clset.galaxy_radius);
+    point p_start = utility::random_point_polar(p_base, 0.2 * settings.clset.galaxy_radius);
     make_home_solar(p_start, p.first);
     angle += 2 * M_PI / np;
   }
 
   // generate universe between players
-  int idx_max = floor(settings.galaxy_radius / settings.space_index_ratio);
+  int idx_max = floor(settings.clset.galaxy_radius / settings.space_index_ratio);
   for (int i = -idx_max; i <= idx_max; i++) {
     for (int j = -idx_max; j <= idx_max; j++) {
       extend_universe(i, j);
@@ -1204,12 +1204,12 @@ bool game_data::allow_add_fleet(idtype pid) const {
   return players.at(pid).research_level.get_max_fleets() > all<fleet>(pid).size();
 }
 
-int entity_package::next_id(class_t x) {
+int game_base_data::next_id(class_t x) {
   if (!idc.count(x)) idc[x] = 0;
   return idc[x]++;
 }
 
-game_object::ptr entity_package::get_entity(combid i) const {
+game_object::ptr game_base_data::get_entity(combid i) const {
   if (entity.count(i)) {
     return entity.at(i);
   } else {
@@ -1217,23 +1217,23 @@ game_object::ptr entity_package::get_entity(combid i) const {
   }
 }
 
-ship::ptr entity_package::get_ship(combid i) const {
+ship::ptr game_base_data::get_ship(combid i) const {
   return utility::guaranteed_cast<ship>(get_entity(i));
 }
 
-fleet::ptr entity_package::get_fleet(combid i) const {
+fleet::ptr game_base_data::get_fleet(combid i) const {
   return utility::guaranteed_cast<fleet>(get_entity(i));
 }
 
-solar::ptr entity_package::get_solar(combid i) const {
+solar::ptr game_base_data::get_solar(combid i) const {
   return utility::guaranteed_cast<solar>(get_entity(i));
 }
 
-waypoint::ptr entity_package::get_waypoint(combid i) const {
+waypoint::ptr game_base_data::get_waypoint(combid i) const {
   return utility::guaranteed_cast<waypoint>(get_entity(i));
 }
 
-list<game_object::ptr> entity_package::all_owned_by(idtype id) const {
+list<game_object::ptr> game_base_data::all_owned_by(idtype id) const {
   list<game_object::ptr> res;
 
   for (auto p : entity) {
@@ -1244,7 +1244,7 @@ list<game_object::ptr> entity_package::all_owned_by(idtype id) const {
 }
 
 // limit_to without deallocating
-void entity_package::limit_to(idtype id) {
+void game_base_data::limit_to(idtype id) {
   list<combid> remove_buf;
   for (auto i : entity) {
     bool known = i.second->isa(solar::class_id) && get_solar(i.first)->known_by.count(id);
@@ -1255,7 +1255,7 @@ void entity_package::limit_to(idtype id) {
   for (auto i : remove_buf) entity.erase(i);
 }
 
-void entity_package::copy_from(const game_data &g) {
+void game_base_data::copy_from(const game_data &g) {
   if (entity.size()) throw logical_error("Attempting to assign game_data: has entities!");
 
   for (auto x : g.entity) entity[x.first] = x.second->clone();
@@ -1266,7 +1266,7 @@ void entity_package::copy_from(const game_data &g) {
   evm = g.evm;
 }
 
-void entity_package::clear_entities() {
+void game_base_data::clear_entities() {
   for (auto x : entity) delete x.second;
   entity.clear();
 }

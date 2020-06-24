@@ -6,8 +6,9 @@
 using namespace std;
 using namespace st3;
 
+int socket_t::idc = 0;
 st3::socket_t::socket_t() {
-  id = -1;
+  id = idc++;
 }
 
 bool st3::socket_t::send_packet(sf::Packet packet, int timeout) {

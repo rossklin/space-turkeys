@@ -90,7 +90,7 @@ void st3::client::query(cl_socket_t *socket, sf::Packet &pq, int &com_in, int &c
 
 // unpack entity package and generate corresponding selector objects in data frame
 void client::deserialize(data_frame &f, sf::Packet &p, sint id) {
-  entity_package ep;
+  game_base_data ep;
 
   if (f.entity.size()) {
     throw classified_error("client::deserialize: data frame contains entities!");

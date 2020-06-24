@@ -46,6 +46,12 @@ query_response_generator server::static_query_response(handler_result res) {
   };
 }
 
+server_cl_socket::server_cl_socket() : socket_t() {
+  st3_state = tc_init;
+  wfg_thread = 0;
+  gid = "";
+}
+
 // Receive an expected query from the client and generate a response using the provided callback
 handler_result server_cl_socket::receive_query(protocol_t p, query_response_generator f) {
   protocol_t input;
@@ -126,7 +132,7 @@ bool server_cl_socket::check_protocol(protocol_t p, query_response_generator f) 
     completed = false;
   };
 
-  handler::safely(task, onfail);
+  safely(task, onfail);
 
   output("check protocol " + to_string(p) + ": client " + to_string(id) + ": " + to_string(is_connected()));
 
@@ -143,7 +149,6 @@ game_setup::game_setup() {
 }
 
 void game_setup::add_client(server_cl_socket::ptr c) {
-  c->id = client_idc++;
   clients[c->id] = c;
 }
 
@@ -164,7 +169,7 @@ void game_setup::add_client(server_cl_socket::ptr c) {
 // }
 
 bool game_setup::can_join() {
-  return status == socket_t::tc_init && clients.size() < settings.num_players;
+  return status == socket_t::tc_init && clients.size() < settings.clset.num_players;
 }
 
 bool game_setup::ready_to_launch() {

@@ -5,6 +5,7 @@
 
 #include "animation_data.h"
 #include "choice.h"
+#include "com_server.h"
 #include "fleet.h"
 #include "game_object.h"
 #include "game_settings.h"
@@ -28,7 +29,7 @@ struct interaction_info {
   std::string interaction;
 };
 
-class entity_package {
+class game_base_data {
  public:
   hm_t<class_t, idtype> idc;
   hm_t<idtype, player> players; /*!< table of players */
@@ -39,7 +40,7 @@ class entity_package {
   hm_t<idtype, std::set<combid> > evm;
   std::set<std::pair<int, int> > discovered_universe;
 
-  virtual ~entity_package() = default;
+  virtual ~game_base_data() = default;
   int next_id(class_t x);
   void clear_entities();
 
@@ -56,7 +57,7 @@ class entity_package {
 };
 
 /*! struct containing data for game objects */
-class game_data : public virtual entity_package {
+class game_data : public virtual game_base_data {
  public:
   static void confirm_data();
 

@@ -9,7 +9,10 @@
       "functional": "cpp",
       "limits": "cpp",
       "tuple": "cpp",
-      "thread": "cpp"
+      "thread": "cpp",
+      "*.tcc": "cpp",
+      "mutex": "cpp",
+      "variant": "cpp"
     },
     "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 0 }"
 }

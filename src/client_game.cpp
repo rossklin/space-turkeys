@@ -220,8 +220,8 @@ bool game::init_data() {
   settings = data.settings;
   col = sf::Color(players[self_id].color);
 
-  sight_ul = point(-settings.galaxy_radius, -settings.galaxy_radius);
-  sight_wh = point(2 * settings.galaxy_radius, 2 * settings.galaxy_radius);
+  sight_ul = point(-settings.clset.galaxy_radius, -settings.clset.galaxy_radius);
+  sight_wh = point(2 * settings.clset.galaxy_radius, 2 * settings.clset.galaxy_radius);
   update_sight_range(point(0, 0), 1);
 
   // load player starting positions
@@ -423,7 +423,7 @@ bool game::simulation_step() {
   bool playing = true;
   int idx = -1;
   int loaded = 0;
-  vector<data_frame> g(settings.frames_per_round);
+  vector<data_frame> g(settings.clset.frames_per_round);
 
   cout << "simluation: starting data loader" << endl;
 
@@ -444,7 +444,7 @@ bool game::simulation_step() {
     static int sub_idx = 1;
     float sub_ratio = 1 / (float)sub_frames;
 
-    if (idx == settings.frames_per_round - 1) {
+    if (idx == settings.clset.frames_per_round - 1) {
       cout << "simulation: all loaded" << endl;
       return socket_t::tc_complete;
     }
@@ -464,12 +464,12 @@ bool game::simulation_step() {
     };
 
     window.draw(colored_rect(sf::Color::Red, 1));
-    window.draw(colored_rect(sf::Color::Blue, loaded / (float)settings.frames_per_round));
-    window.draw(colored_rect(sf::Color::Green, idx / (float)settings.frames_per_round));
+    window.draw(colored_rect(sf::Color::Blue, loaded / (float)settings.clset.frames_per_round));
+    window.draw(colored_rect(sf::Color::Green, idx / (float)settings.clset.frames_per_round));
 
-    message = "evolution: " + to_string((100 * idx) / settings.frames_per_round) + " %" + (playing ? "" : "(paused)");
+    message = "evolution: " + to_string((100 * idx) / settings.clset.frames_per_round) + " %" + (playing ? "" : "(paused)");
 
-    int buffer_size = min(settings.frames_per_round - idx - 1, 4);
+    int buffer_size = min(settings.clset.frames_per_round - idx - 1, 4);
     playing &= idx < loaded - buffer_size;
 
     if (playing) {

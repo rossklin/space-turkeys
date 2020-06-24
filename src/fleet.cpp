@@ -219,7 +219,7 @@ void fleet::analyze_enemies(game_data *g) {
   // assign ships to clusters
   hm_t<int, float> cc;
   vector<float> scatter_data(na, 1);
-  float dps_scale = g->settings.frames_per_round / get_hp();
+  float dps_scale = g->settings.clset.frames_per_round / get_hp();
   for (auto sid : t) {
     ship s(ship::table().at(g->get_ship(sid)->ship_class));
     point p = g->get_ship(sid)->position;

@@ -70,7 +70,7 @@ void test_setup_fleets(game_data *g) {
 bool test_memory() {
   int n = 100;
   int rep = 100;
-  vector<entity_package> frames(n);
+  vector<game_base_data> frames(n);
   game_data *g = test_setup();
   test_setup_fleets(g);
 

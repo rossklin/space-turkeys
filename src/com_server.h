@@ -11,7 +11,7 @@
 #include "types.h"
 
 namespace st3 {
-class entity_package;
+class game_base_data;
 
 /*! server side specifics */
 namespace server {
@@ -58,7 +58,7 @@ struct game_setup {
   void disconnect();
   bool cleanup_clients();
   bool check_protocol(protocol_t p, query_response_generator h);
-  void distribute_frames(std::vector<entity_package> &g, int &frame_count);
+  void distribute_frames(std::vector<game_base_data> &g, int &frame_count);
   // std::list<server_cl_socket *> access_clients();
   bool can_join();
   bool ready_to_launch();

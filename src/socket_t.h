@@ -20,6 +20,7 @@ struct socket_t : public sf::TcpSocket {
   static const int default_timeout = 1000;
 
   /*! client id */
+  static int idc;
   sint id;
 
   /*! latest status */

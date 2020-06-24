@@ -31,7 +31,7 @@ const float frame_time = 0.05;
       objects, as well as sub guis. 
     */
 struct game : public data_frame {
-  socket_t *socket;        /*!< socket for server communication */
+  cl_socket_t *socket;     /*!< socket for server communication */
   window_t window;         /*!< sfml window for drawing the interface */
   sf::View view_game;      /*!< sfml view for game objects */
   sf::View view_minimap;   /*!< sfml view for the minimap */

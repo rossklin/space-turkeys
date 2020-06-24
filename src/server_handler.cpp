@@ -217,6 +217,7 @@ void handler::dispatch_game(game_setup gs) {
 
 // Start game dispatcher, listen for clients and dispatch them
 void handler::run() {
+  main_status = socket_t::tc_run;
   sf::TcpListener listener;
 
   local_output("Binding listener...");
@@ -228,7 +229,7 @@ void handler::run() {
   listener.setBlocking(false);
 
   // start worker threads
-  // thread t_game_dispatch([this]() { monitor games(); });
+  thread t_game_dispatch(&handler::monitor_games, this);
 
   // accept connections
   while (main_status == socket_t::tc_run) {
@@ -239,20 +240,19 @@ void handler::run() {
     }
 
     if (code == sf::Socket::Done) {
+      local_output("Accepted a new client");
       test->wfg_thread = shared_ptr<thread>(new thread(&handler::main_client_handler, this, test));
       clients[test->id] = test;
     } else {
       test->disconnect();
     }
 
-    monitor_games();
-
     sf::sleep(sf::milliseconds(500));
   }
 
   local_output("handler: terminate: waiting for threads.");
+  t_game_dispatch.join();
   while (clients.size() || games.size()) {
-    monitor_games();
     sf::sleep(sf::milliseconds(100));
   }
   listener.close();
@@ -277,7 +277,10 @@ void handler::handle_sigint() {
 void handler::main_client_handler(server_cl_socket::ptr cl) {
   bool run = true;
 
+  cout << "Main client handler: starting for client " << cl->id << endl;
+
   while (run && cl->receive_packet() && cl->is_connected()) {
+    cout << "Main client handler: packet received for " << cl->id << endl;
     int q;
     string gid;
     client_game_settings clset;
@@ -288,6 +291,13 @@ void handler::main_client_handler(server_cl_socket::ptr cl) {
     }
 
     switch (q) {
+      case protocol::connect:
+        if (cl->data >> cl->name && valid_string(cl->name)) {
+          res << protocol::confirm << cl->id;
+        } else {
+          res << protocol::invalid;
+        }
+        break;
       case protocol::create_game:
         if (cl->data >> clset) {
           gid = create_game(clset);
@@ -333,6 +343,7 @@ void handler::main_client_handler(server_cl_socket::ptr cl) {
     }
 
     cl->send_packet(res);
+    cout << "Main client handler: packet sent to " << cl->id << endl;
   }
 
   // disconnect unless client is being passed to a game
@@ -403,4 +414,6 @@ void handler::monitor_games() {
     game_ring.unlock();
     sf::sleep(sf::milliseconds(100));
   }
+
+  local_output("monitor games: end");
 }

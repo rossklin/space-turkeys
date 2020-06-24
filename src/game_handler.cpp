@@ -21,8 +21,8 @@ using namespace st3;
 using namespace st3::server;
 
 void simulation_step(game_setup &c, game_data &g) {
-  int n = g.settings.frames_per_round;
-  vector<entity_package> frames(n);
+  int n = g.settings.clset.frames_per_round;
+  vector<game_base_data> frames(n);
   int frame_count = 0;
 
   query_response_generator handler = [&c, &frames, &frame_count](int cid, sf::Packet q) -> handler_result {
@@ -30,7 +30,7 @@ void simulation_step(game_setup &c, game_data &g) {
     bool test = q >> idx;
 
     auto on_success = [&frames, &frame_count, idx, cid](handler_result &result) {
-      entity_package g;
+      game_base_data g;
 
       if (idx < 0) {
         // client done - leave default confirm status
@@ -65,7 +65,7 @@ void simulation_step(game_setup &c, game_data &g) {
       }
     };
 
-    handler::safely(task, [&]() { c.status = socket_t::tc_stop; });
+    safely(task, [&]() { c.status = socket_t::tc_stop; });
   };
 
   thread t(generate_frames);
@@ -120,7 +120,7 @@ bool check_end(game_setup &c, game_data &g) {
 query_response_generator pack_game_handler(game_data &g, bool do_limit) {
   return [&g, do_limit](int cid, sf::Packet query) -> handler_result {
     handler_result res;
-    entity_package ep = g;
+    game_base_data ep = g;
 
     if (do_limit) ep.limit_to(cid);
 
@@ -131,12 +131,12 @@ query_response_generator pack_game_handler(game_data &g, bool do_limit) {
   };
 }
 
-void autosave_game(game_setup &c, game_data &g) {
-  if (c.gid.empty()) {
+void autosave_game(game_setup c, game_data &g) {
+  if (c.id.empty()) {
     throw classified_error("autosave: server com object missing gid!");
   }
 
-  entity_package ep = g;
+  game_base_data ep = g;
   sf::Packet p;
 
   if (!(p << ep)) {
@@ -146,7 +146,7 @@ void autosave_game(game_setup &c, game_data &g) {
   const void *data = p.getData();
   int n = p.getDataSize();
 
-  string filename = c.gid + ".auto.save";
+  string filename = c.id + ".auto.save";
   ofstream of(filename, ios::binary);
   of.write((const char *)data, n);
   bool success = !of.fail();
@@ -160,7 +160,7 @@ void autosave_game(game_setup &c, game_data &g) {
 bool load_autosave(string filename, game_setup &c, game_data &g) {
   ifstream file(filename, ios::binary | ios::ate);
 
-  if (file.good() && !g.settings.restart) {
+  if (file.good() && !g.settings.clset.restart) {
     streamsize size = file.tellg();
     file.seekg(0, ios::beg);
     vector<char> buffer(size);
@@ -168,13 +168,13 @@ bool load_autosave(string filename, game_setup &c, game_data &g) {
       sf::Packet p;
       p.append((const void *)buffer.data(), size);
 
-      entity_package ep;
+      game_base_data ep;
       if (!(p >> ep)) {
         throw classified_error("autoload: failed to deserialize!");
       }
 
       // map players by name
-      hm_t<int, server_cl_socket *> new_clients;
+      hm_t<int, server_cl_socket::ptr> new_clients;
       for (auto x : g.players) {
         bool success = false;
         for (auto y : ep.players) {
@@ -206,6 +206,8 @@ bool load_autosave(string filename, game_setup &c, game_data &g) {
       return true;
     }
   }
+
+  return false;
 }
 
 void server::game_handler(game_setup c, game_data &g) {
@@ -218,7 +220,7 @@ void server::game_handler(game_setup c, game_data &g) {
   };
 
   // check if we are loading an autosave
-  string filename = c.gid + ".auto.save";
+  string filename = c.id + ".auto.save";
   bool did_load = load_autosave(filename, c, g);
 
   g.rehash_grid();
