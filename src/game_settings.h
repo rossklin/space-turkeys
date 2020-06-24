@@ -21,7 +21,7 @@ struct client_game_settings {
   bool validate();
 };
 
-struct game_settings : public client_game_settings {
+struct game_settings {
   sfloat solar_minrad;
   sfloat solar_meanrad;
   sfloat solar_density;        /*!< solars per space unit */
@@ -29,6 +29,7 @@ struct game_settings : public client_game_settings {
   sfloat dt;                   /*!< game time per iteration step */
   int space_index_ratio;
   bool enable_extend;
+  client_game_settings clset;
 
   game_settings();
 };

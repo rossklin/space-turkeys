@@ -17,7 +17,7 @@ struct socket_t : public sf::TcpSocket {
   static const int tc_game_complete = 32;
   static const int tc_ok_result = tc_run | tc_complete;
   static const int tc_bad_result = ~tc_ok_result;
-  static const int timeout = 1000;
+  static const int default_timeout = 1000;
 
   /*! client id */
   sint id;
@@ -37,11 +37,11 @@ struct socket_t : public sf::TcpSocket {
      @param packet the packet
      @return whether the send operation was successfull
     */
-  bool send_packet(sf::Packet packet);
+  bool send_packet(sf::Packet packet, int timeout = default_timeout);
 
   /*! receive a packet
       @return whether the receive operation was successfull
     */
-  bool receive_packet();
+  bool receive_packet(int timeout = default_timeout);
 };
 };  // namespace st3

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Network.hpp>
+#include <vector>
 
 #include "animation_data.h"
 #include "choice.h"
@@ -18,7 +19,7 @@
 
 namespace st3 {
 namespace server {
-struct client_t;
+struct server_cl_socket;
 };
 
 struct interaction_info {
@@ -111,7 +112,7 @@ class game_data : public virtual entity_package {
   // game steps
   void pre_step();
   void end_step();
-  void build_players(std::list<server::client_t *> clients);
+  void build_players(std::vector<server::server_cl_socket::ptr> clients);
   void build();
 
  protected:

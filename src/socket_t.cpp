@@ -10,16 +10,12 @@ st3::socket_t::socket_t() {
   id = -1;
 }
 
-bool st3::socket_t::send_packet(sf::Packet packet) {
+bool st3::socket_t::send_packet(sf::Packet packet, int timeout) {
   chrono::time_point<chrono::system_clock> start = chrono::system_clock::now();
+  std::chrono::duration<double> elapsed;
 
   setBlocking(false);
-  while (check_com()) {
-    std::chrono::duration<double> elapsed = (chrono::system_clock::now() - start);
-    if (elapsed.count() > timeout) {
-      throw network_error("socket_t::send: timeout");
-    }
-
+  do {
     switch (status = send(packet)) {
       case sf::Socket::Disconnected:
         throw network_error("socket_t::send: disconnected.");
@@ -36,24 +32,29 @@ bool st3::socket_t::send_packet(sf::Packet packet) {
       default:
         throw network_error("socket_t::send: unknown status: " + to_string(status));
     }
+    elapsed = (chrono::system_clock::now() - start);
 
-    sf::sleep(sf::milliseconds(10));
+    if (timeout > 0) {
+      sf::sleep(sf::milliseconds(10));
+    }
+  } while (check_com() && elapsed.count() < timeout);
+
+  if (timeout > 0 && elapsed.count() > timeout) {
+    throw network_error("socket_t::send: timeout");
   }
 
   // return false when aborted by thread_com
   return false;
 }
 
-bool st3::socket_t::receive_packet() {
+bool st3::socket_t::receive_packet(int timeout) {
   chrono::time_point<chrono::system_clock> start = chrono::system_clock::now();
+  std::chrono::duration<double> elapsed;
 
   data.clear();
   setBlocking(false);
-  while (check_com()) {
+  do {
     std::chrono::duration<double> elapsed = (chrono::system_clock::now() - start);
-    if (elapsed.count() > timeout) {
-      throw network_error("socket_t::receive: timeout");
-    }
 
     switch (status = receive(data)) {
       case sf::Socket::Disconnected:
@@ -69,8 +70,15 @@ bool st3::socket_t::receive_packet() {
       default:
         throw network_error("socket_t::receive: unknown status: " + to_string(status));
     }
+    elapsed = (chrono::system_clock::now() - start);
 
-    sf::sleep(sf::milliseconds(10));
+    if (timeout > 0) {
+      sf::sleep(sf::milliseconds(10));
+    }
+  } while (check_com() && elapsed.count() < timeout);
+
+  if (timeout > 0 && elapsed.count() > timeout) {
+    throw network_error("socket_t::send: timeout");
   }
 
   // return false when aborted by thread_com

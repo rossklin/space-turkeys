@@ -1,10 +1,9 @@
 #pragma once
 
-#include <SFML/Network.hpp>
 #include <functional>
 #include <mutex>
 #include <string>
-#include <thread>
+#include <vector>
 
 #include "com_server.h"
 #include "game_settings.h"
@@ -12,22 +11,29 @@
 
 namespace st3 {
 namespace server {
+void safely(std::function<void()> f, std::function<void()> on_fail = 0);
 extern int main_status;
+
 struct handler {
-  hm_t<std::string, client_communicator> games;
-  int status;
+  hm_t<int, server_cl_socket::ptr> clients;
+  hm_t<std::string, game_setup> games;
   std::mutex game_ring;
-  static void safely(std::function<void()> f, std::function<void()> on_fail = 0);
+  int idc;
 
   handler();
   void run();
-  void game_dispatcher();
-  void dispatch_game(std::string gid);
-  void dispatch_client(client_t *c);
-  void wfg(client_t *c);
+  void main_client_handler(server_cl_socket::ptr cl);
+  void monitor_games();
+  // void game_dispatcher();
+  void dispatch_game(game_setup gs);
+  // void dispatch_client(server_cl_socket::ptr c);
+  // void wfg(server_cl_socket *c);
   void handle_sigint();
-  client_communicator *access_game(std::string gid, bool do_lock = true);
-  client_communicator *create_game(std::string gid, client_game_settings s, bool do_lock = true);
+  // client_communicator *access_game(std::string gid, bool do_lock = true);
+  std::string create_game(client_game_settings s);
+  bool join_game(server_cl_socket::ptr cl, string gid);
+  sint get_status(string gid);
+  void disconnect(server_cl_socket::ptr cl);
 };
 };  // namespace server
 };  // namespace st3

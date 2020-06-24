@@ -8,7 +8,16 @@ namespace st3 {
 namespace protocol {
 
 /* **************************************** */
-/* QUERIES */
+/* MENU QUERIES */
+/* **************************************** */
+
+const sint get_status = 100;
+const sint create_game = 101;
+const sint join_game = 102;
+const sint disconnect = 103;
+
+/* **************************************** */
+/* GAME QUERIES */
 /* **************************************** */
 
 const sint game_round = 0; /*!< query whether to start the game round */

@@ -20,12 +20,12 @@ using namespace std;
 using namespace st3;
 using namespace st3::server;
 
-void simulation_step(client_communicator &c, game_data &g) {
+void simulation_step(game_setup &c, game_data &g) {
   int n = g.settings.frames_per_round;
   vector<entity_package> frames(n);
   int frame_count = 0;
 
-  query_handler handler = [&c, &frames, &frame_count](int cid, sf::Packet q) -> handler_result {
+  query_response_generator handler = [&c, &frames, &frame_count](int cid, sf::Packet q) -> handler_result {
     int idx;
     bool test = q >> idx;
 
@@ -75,7 +75,7 @@ void simulation_step(client_communicator &c, game_data &g) {
   for (int i = 0; i < frame_count; i++) frames[i].clear_entities();
 }
 
-bool check_end(client_communicator &c, game_data &g) {
+bool check_end(game_setup &c, game_data &g) {
   if (main_status != socket_t::tc_run) {
     server::log("game_handler::check_end: server shut down!");
     return true;
@@ -91,7 +91,7 @@ bool check_end(client_communicator &c, game_data &g) {
   }
 
   if (psum < 2) {
-    query_handler h = [&c, psum, pid](int cid, sf::Packet data) -> handler_result {
+    query_response_generator h = [&c, psum, pid](int cid, sf::Packet data) -> handler_result {
       handler_result res;
       string message;
 
@@ -117,7 +117,7 @@ bool check_end(client_communicator &c, game_data &g) {
   return false;
 }
 
-query_handler pack_game_handler(game_data &g, bool do_limit) {
+query_response_generator pack_game_handler(game_data &g, bool do_limit) {
   return [&g, do_limit](int cid, sf::Packet query) -> handler_result {
     handler_result res;
     entity_package ep = g;
@@ -131,7 +131,7 @@ query_handler pack_game_handler(game_data &g, bool do_limit) {
   };
 }
 
-void autosave_game(client_communicator &c, game_data &g) {
+void autosave_game(game_setup &c, game_data &g) {
   if (c.gid.empty()) {
     throw classified_error("autosave: server com object missing gid!");
   }
@@ -157,7 +157,7 @@ void autosave_game(client_communicator &c, game_data &g) {
   }
 }
 
-bool load_autosave(string filename, client_communicator &c, game_data &g) {
+bool load_autosave(string filename, game_setup &c, game_data &g) {
   ifstream file(filename, ios::binary | ios::ate);
 
   if (file.good() && !g.settings.restart) {
@@ -174,7 +174,7 @@ bool load_autosave(string filename, client_communicator &c, game_data &g) {
       }
 
       // map players by name
-      hm_t<int, client_t *> new_clients;
+      hm_t<int, server_cl_socket *> new_clients;
       for (auto x : g.players) {
         bool success = false;
         for (auto y : ep.players) {
@@ -208,8 +208,8 @@ bool load_autosave(string filename, client_communicator &c, game_data &g) {
   }
 }
 
-void server::game_handler(client_communicator &c, game_data &g) {
-  query_handler load_client_choice = [&g](int cid, sf::Packet query) -> handler_result {
+void server::game_handler(game_setup c, game_data &g) {
+  query_response_generator load_client_choice = [&g](int cid, sf::Packet query) -> handler_result {
     choice::choice ch;
 
     return handler_switch(query >> ch, [&g, &ch, cid](handler_result &res) {

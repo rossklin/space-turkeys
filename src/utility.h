@@ -14,6 +14,44 @@
 #include "types.h"
 
 namespace st3 {
+
+template <typename T = double, typename V = double>
+std::vector<V> map(std::function<V(T)> f, std::vector<T> x) {
+  std::vector<V> res(x.size());
+  for (int i = 0; i < x.size(); i++) res[i] = f(x[i]);
+  return res;
+}
+
+template <typename T>
+bool any(T c) {
+  for (auto x : c) {
+    if (x) return true;
+  }
+  return false;
+}
+
+template <typename T>
+bool all(T c) {
+  for (auto x : c) {
+    if (!x) return false;
+  }
+  return true;
+}
+
+template <typename K, typename V>
+std::vector<K> hm_keys(hm_t<K, V> x) {
+  std::vector<K> res;
+  for (auto y : x) res.push_back(y.first);
+  return res;
+}
+
+template <typename K, typename V>
+std::vector<V> hm_values(hm_t<K, V> x) {
+  std::vector<V> res;
+  for (auto y : x) res.push_back(y.second);
+  return res;
+}
+
 /*! Arithmetics for points, vectors, sets and sfml objects. */
 namespace utility {
 const std::string root_path = "/usr/share/spaceturkeys-3/";

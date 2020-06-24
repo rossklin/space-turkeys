@@ -33,13 +33,13 @@ bool valid_string(string v) {
   return v.length() < 1000;
 }
 
-void end_thread(thread *&t) {
-  if (t->joinable()) t->join();
-  delete t;
-  t = 0;
-}
+// void end_thread(thread *&t) {
+//   if (t->joinable()) t->join();
+//   delete t;
+//   t = 0;
+// }
 
-void handler::safely(function<void()> f, function<void()> g) {
+void server::safely(function<void()> f, function<void()> g) {
   try {
     f();
   } catch (classified_error &e) {
@@ -54,146 +54,168 @@ void handler::safely(function<void()> f, function<void()> g) {
   }
 }
 
-client_communicator *handler::access_game(string gid, bool do_lock) {
-  client_communicator *g = 0;
-  if (do_lock) game_ring.lock();
-  if (games.count(gid)) {
-    g = &games[gid];
-  }
-  if (do_lock) game_ring.unlock();
-  return g;
+handler::handler() {
+  idc = 1;
 }
 
-client_communicator *handler::create_game(string gid, client_game_settings set, bool do_lock) {
-  client_communicator *g;
-  if (do_lock) game_ring.lock();
+// client_communicator *handler::access_game(string gid, bool do_lock) {
+//   client_communicator *g = 0;
+//   if (do_lock) game_ring.lock();
+//   if (games.count(gid)) {
+//     g = &games[gid];
+//   }
+//   if (do_lock) game_ring.unlock();
+//   return g;
+// }
+
+// todo: also start game monitor thread
+string handler::create_game(client_game_settings set) {
+  game_ring.lock();
+  game_setup gs;
+  gs.id = to_string(idc++);
+  gs.settings.clset = set;
+  games[gs.id] = gs;
+  game_ring.unlock();
+  return gs.id;
+}
+
+bool handler::join_game(server_cl_socket::ptr cl, string gid) {
+  bool res = true;
+  game_ring.lock();
+  if (!games.count(gid)) res = false;
+  if (!games.at(gid).can_join()) res = false;
+  if (res) {
+    games.at(gid).add_client(cl);
+    cl->gid = gid;
+  }
+  game_ring.unlock();
+  return res;
+}
+
+sint handler::get_status(string gid) {
+  sint res;
+  game_ring.lock();
   if (games.count(gid)) {
-    throw classified_error("Attempted to create game but id alread in use!");
+    res = games.at(gid).status;
   } else {
-    g = &games[gid];
-    g->gid = gid;
-    static_cast<client_game_settings &>(g->settings) = set;
+    res = socket_t::tc_bad_result;
   }
-  if (do_lock) game_ring.unlock();
-  return g;
+  game_ring.unlock();
+
+  return res;
 }
 
-void handler::wfg(client_t *c) {
-  query_handler handler = [](int cid, sf::Packet p) -> handler_result {
-    handler_result res;
-    res.status = socket_t::tc_complete;
-    res.response << protocol::standby;
-    return res;
-  };
-
-  // standby during init status
-  while (c->is_connected() && access_game(c->game_id)->status == socket_t::tc_init) {
-    if (!c->check_protocol(protocol::any, handler)) {
-      c->set_disconnect();
-    }
+void handler::disconnect(server_cl_socket::ptr cl) {
+  game_ring.lock();
+  if (games.count(cl->gid)) {
+    games.at(cl->gid).clients.erase(cl->id);
   }
-
-  // disconnect if we didn't pass to run status
-  if (c->is_connected() && access_game(c->game_id)->status != socket_t::tc_run) {
-    c->set_disconnect();
-  }
+  game_ring.unlock();
 }
 
+// // tell client to stand by until a condition is fullfilled
+// void standby_until(server_cl_socket::ptr c, function<bool(void)> f) {
+//   handler_result res;
+//   res.status = socket_t::tc_complete;
+//   res.response << protocol::standby;
+//   query_response_generator handler = static_query_response(res);
+
+//   // standby during init status
+//   while (c->is_connected() && !f() && main_status == socket_t::tc_run) {
+//     if (!c->check_protocol(protocol::any, handler)) {
+//       c->set_disconnect();
+//     }
+//   }
+
+//   // disconnect if server is shutting down
+//   if (main_status != socket_t::tc_run) {
+//     c->set_disconnect();
+//   }
+
+//   c->st3_state = socket_t::tc_complete;
+// }
+
+// Wait until client standby threads finish, then safely start the game handler.
 // at this point, no other thread will access c -> clients
-void handler::dispatch_game(string gid) {
-  client_communicator *c = access_game(gid);
-
-  // wait for client wfg threads to finish
-  for (auto cl : c->access_clients()) {
-    if (cl->wfg_thread) end_thread(cl->wfg_thread);
-  }
-
-  safely([c]() {
+void handler::dispatch_game(game_setup gs) {
+  safely([this, gs]() {
     game_data g;
-    g.settings = c->settings;
-    g.build_players(c->access_clients());
+    g.settings = gs.settings;
+    g.build_players(hm_values(gs.clients));
     g.build();
-    game_handler(*c, g);
+    game_handler(gs, g);
   });
 
-  local_output("dispatch_game: complete, disconnecting", -1, gid);
-  c->disconnect();
+  local_output("dispatch_game: complete, disconnecting", -1, gs.id);
+  gs.disconnect();
 }
 
-handler::handler() {
-  status = socket_t::tc_run;
-}
+// // Perform client handshake, create game if necessary and add client to game
+// void handler::dispatch_client(server_cl_socket::ptr c) {
+//   local_output("dispatch_client: start", c->id);
 
-void handler::dispatch_client(client_t *c) {
-  local_output("dispatch_client: start", c->id);
+//   query_response_generator client_handshake = [this, c](int cid, sf::Packet p) -> handler_result {
+//     handler_result res;
+//     handler_result res_invalid;
+//     string gid;
+//     string name;
+//     client_game_settings c_settings;
+//     bool test = p >> gid >> name >> c_settings;
+//     local_output("join_handler: start", c->id);
+//     if (!test) local_output("join_handler: failed to unpack", c->id);
 
-  query_handler join_handler = [this, c](int cid, sf::Packet p) -> handler_result {
-    handler_result res;
-    handler_result res_invalid;
-    string gid;
-    string name;
-    client_game_settings c_settings;
-    bool test = p >> gid >> name >> c_settings;
-    local_output("join_handler: start", c->id);
-    if (!test) local_output("join_handler: failed to unpack", c->id);
+//     // game_ring.lock();
+//     test = test && main_status == socket_t::tc_run && valid_string(gid) && valid_string(name) && c_settings.validate();
 
-    // guarantee server status does not change until the game has been
-    // created
-    game_ring.lock();
-    test = test && status == socket_t::tc_run && valid_string(gid) && valid_string(name) && c_settings.validate();
+//     res.status = socket_t::tc_complete;
+//     res.response << protocol::confirm;
 
-    res.status = socket_t::tc_complete;
-    res.response << protocol::confirm;
+//     res_invalid.status = socket_t::tc_stop;
+//     res_invalid.response << protocol::invalid;
 
-    res_invalid.status = socket_t::tc_stop;
-    res_invalid.response << protocol::invalid;
+//     if (!test) {
+//       local_output("failed join condition", c->id, gid);
+//       return res_invalid;
+//     }
 
-    if (!(test && status == socket_t::tc_run)) {
-      local_output("failed join condition", c->id, gid);
-      game_ring.unlock();
-      return res_invalid;
-    }
+//     bool game_is_new = false;
+//     if (!games.count(gid)) {
+//       game_is_new = true;
+//       create_game(gid, c_settings);
+//     }
 
-    client_communicator *link = access_game(gid, false);
-    bool game_is_new = false;
+//     game_setup *cl = &games.at(gid);
 
-    if (!link) {
-      local_output("join_handler: creating new game", c->id, gid);
-      game_is_new = true;
-      link = create_game(gid, c_settings, false);
-    }
+//     // test if joinable
+//     cl->lock();
+//     if (cl->can_join()) {
+//       local_output("join_handler: can join!", c->id, gid);
+//       cl->add_client(c);
+//       int *status = &cl->status;
+//       auto condition = [status]() { return *status != socket_t::tc_init; };
+//       c->wfg_thread = shared_ptr<thread>(new thread(bind(&standby_until, c, condition)));
+//       c->name = name;
+//       res.response << c->id;
+//     } else {
+//       local_output("can not join game", c->id, gid);
+//       res = res_invalid;
+//     }
+//     cl->unlock();
 
-    link->lock();
+//     local_output("join_handler: complete", c->id, gid);
+//     return res;
+//   };
 
-    // test if joinable
-    if (link->can_join()) {
-      local_output("join_handler: can join!", c->id, gid);
-      link->add_client(c);
-      c->name = name;
-      c->game_id = gid;
-      res.response << c->id;
-    } else {
-      local_output("can not join game", c->id, gid);
-      res = res_invalid;
-    }
+//   // temporarily use server status as thread com
+//   if (c->check_protocol(protocol::connect, client_handshake)) {
+//     local_output("dispatch_client: starting join thread", c->id);
+//   } else {
+//     local_output("dispatch_client: failed protocol, deallocating", c->id);
+//     c->disconnect();
+//   }
+// }
 
-    link->unlock();
-    game_ring.unlock();
-
-    local_output("join_handler: complete", c->id, gid);
-    return res;
-  };
-
-  // temporarily use server status as thread com
-  if (c->check_protocol(protocol::connect, join_handler)) {
-    local_output("dispatch_client: starting join thread", c->id);
-    c->wfg_thread = new thread([this, c]() { wfg(c); });
-  } else {
-    local_output("dispatch_client: failed protocol, deallocating", c->id);
-    delete c;
-  }
-}
-
+// Start game dispatcher, listen for clients and dispatch them
 void handler::run() {
   sf::TcpListener listener;
 
@@ -206,27 +228,33 @@ void handler::run() {
   listener.setBlocking(false);
 
   // start worker threads
-  thread t_game_dispatch([this]() { game_dispatcher(); });
+  // thread t_game_dispatch([this]() { monitor games(); });
 
   // accept connections
-  while (status == socket_t::tc_run) {
-    client_t *test = new client_t();
+  while (main_status == socket_t::tc_run) {
+    server_cl_socket::ptr test(new server_cl_socket());
     sf::Socket::Status code;
 
     while ((code = listener.accept(*test)) == sf::Socket::Partial) {
     }
+
     if (code == sf::Socket::Done) {
-      dispatch_client(test);
+      test->wfg_thread = shared_ptr<thread>(new thread(&handler::main_client_handler, this, test));
+      clients[test->id] = test;
     } else {
       test->disconnect();
-      delete test;
     }
+
+    monitor_games();
 
     sf::sleep(sf::milliseconds(500));
   }
 
   local_output("handler: terminate: waiting for threads.");
-  t_game_dispatch.join();
+  while (clients.size() || games.size()) {
+    monitor_games();
+    sf::sleep(sf::milliseconds(100));
+  }
   listener.close();
   local_output("handler: completed!");
 }
@@ -234,68 +262,145 @@ void handler::run() {
 void handler::handle_sigint() {
   local_output("handler: caught signal SIGINT, stopping...");
 
-  game_ring.lock();
-  status = socket_t::tc_stop;
   main_status = socket_t::tc_stop;
-  game_ring.unlock();
 
-  while (games.size()) {
-    local_output("handler: waiting for clients to terminate...");
-    sf::sleep(sf::milliseconds(100));
-  }
+  // while (any(map<game_setup, bool>([](client_communicator g) { return g.status != socket_t::tc_complete; }, hm_values(games)))) {
+  //   local_output("handler: waiting for clients to terminate...");
+  //   sf::sleep(sf::milliseconds(100));
+  // }
 
-  local_output("handler: all games terminated! Exiting.");
-  status = socket_t::tc_complete;
+  // local_output("handler: all games terminated! Exiting.");
+  // main_status = socket_t::tc_complete;
 }
 
-void handler::game_dispatcher() {
-  list<string> rbuf;
-  local_output("game_dispatcher: start");
+// todo: handle starting game
+void handler::main_client_handler(server_cl_socket::ptr cl) {
+  bool run = true;
 
-  while (status != socket_t::tc_complete) {
+  while (run && cl->receive_packet() && cl->is_connected()) {
+    int q;
+    string gid;
+    client_game_settings clset;
+    sf::Packet res;
+
+    if (!(cl->data >> q)) {
+      q = protocol::invalid;
+    }
+
+    switch (q) {
+      case protocol::create_game:
+        if (cl->data >> clset) {
+          gid = create_game(clset);
+          if (join_game(cl, gid)) {
+            res << protocol::confirm << gid;
+          } else {
+            res << protocol::invalid;
+          }
+        } else {
+          res << protocol::invalid;
+        }
+        break;
+      case protocol::join_game:
+        if ((cl->data >> gid) && join_game(cl, gid)) {
+          res << protocol::confirm;
+        } else {
+          res << protocol::invalid;
+        }
+        break;
+
+      case protocol::get_status:
+        if (cl->data >> gid) {
+          sint test = get_status(gid);
+          res << protocol::confirm << test;
+
+          if (test == socket_t::tc_run) {
+            // The game is starting so end this thread
+            cl->st3_state = socket_t::tc_run;
+            run = false;
+          }
+        }
+        break;
+
+      case protocol::disconnect:
+        disconnect(cl);
+        res << protocol::confirm;
+        run = false;
+        break;
+
+      default:
+        res << protocol::invalid;
+        break;
+    }
+
+    cl->send_packet(res);
+  }
+
+  // disconnect unless client is being passed to a game
+  if (cl->st3_state != socket_t::tc_run) {
+    cl->disconnect();
+    cl->st3_state = socket_t::tc_complete;
+  }
+}
+
+// todo
+void handler::monitor_games() {
+  list<string> rbuf;
+  local_output("monitor games: start");
+
+  while (main_status != socket_t::tc_complete) {
     rbuf.clear();
+
+    // Identify clients that completed main handler and should be removed
+    vector<int> clrbuf;
+    for (auto x : clients) {
+      server_cl_socket::ptr cl = x.second;
+      if (cl->st3_state == socket_t::tc_complete) clrbuf.push_back(cl->id);
+    }
 
     game_ring.lock();
 
+    // Cleanupt client main threads and remove clients from games
+    for (int cid : clrbuf) {
+      clients[cid]->wfg_thread->join();
+      if (clients[cid]->gid.size()) {
+        games[clients[cid]->gid].clients.erase(cid);
+      }
+      clients.erase(cid);
+    }
+
     // check games to launch
     for (auto &c : games) {
-      client_communicator &game = c.second;
+      game_setup &game = c.second;
       string gid = c.first;
-      list<client_t *> clients = game.access_clients();
+      vector<server_cl_socket::ptr> clients = hm_values(game.clients);
 
-      // only cleanup clients for games in init status
-      if (game.status == socket_t::tc_init) {
-        for (auto c : clients) {
-          if (c->wfg_thread && !c->is_connected()) {
-            local_output("game_dispatcher: removing disconnected client", c->id, gid);
-            end_thread(c->wfg_thread);
-            game.clients.erase(c->id);
-          }
-        }
-      }
-
-      if (game.ready_to_launch()) {
-        local_output("game_dispatcher: setting game " + gid + " to run status!");
+      // Check if we should start loading the game
+      if (game.status == socket_t::tc_init && game.clients.size() == game.settings.clset.num_players) {
         game.status = socket_t::tc_run;
-        game.active_thread = new thread([this, gid]() { dispatch_game(gid); });
       }
 
+      // Check if clients have confirmed loading the game and we are ready to launch
+      if (game.ready_to_launch()) {
+        local_output("monitor games: launching game " + gid);
+        game.game_thread = shared_ptr<thread>(new thread(&handler::dispatch_game, this, game));
+      }
+
+      // Remove games that do not have any clients
       if (game.clients.empty()) {
-        local_output("game_dispatcher: game " + gid + " has no clients, listing for removal.");
+        local_output("monitor games: game " + gid + " has no clients, listing for removal.");
         rbuf.push_back(gid);
       }
     }
-    game_ring.unlock();
 
     // remove games
     for (auto v : rbuf) {
-      local_output("game_dispatcher: register game " + v + " for termination.");
-      client_communicator *g = access_game(v);
-      if (g->active_thread) end_thread(g->active_thread);
+      local_output("monitor games: register game " + v + " for termination.");
+      if (games[v].game_thread) games[v].game_thread->join();
       games.erase(v);
-      local_output("game_dispatcher: completed terminating game " + v);
+      local_output("monitor games: completed terminating game " + v);
     }
 
+    game_ring.unlock();
     sf::sleep(sf::milliseconds(100));
   }
 }

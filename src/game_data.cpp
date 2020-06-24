@@ -7,6 +7,7 @@
 #include <memory>
 #include <numeric>
 #include <queue>
+#include <vector>
 
 #include "animation_data.h"
 #include "com_server.h"
@@ -808,7 +809,7 @@ void game_data::increment() {
   remove_units();
 }
 
-void game_data::build_players(list<server::client_t *> clients) {
+void game_data::build_players(vector<server::server_cl_socket::ptr> clients) {
   // build player data
   vector<sint> colbuf = utility::different_colors(clients.size());
   int i = 0;

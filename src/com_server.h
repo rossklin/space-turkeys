@@ -2,11 +2,9 @@
 
 #include <SFML/Network.hpp>
 #include <functional>
-#include <list>
+#include <memory>
 #include <mutex>
-#include <string>
 #include <thread>
-#include <vector>
 
 #include "game_settings.h"
 #include "socket_t.h"
@@ -22,40 +20,46 @@ struct handler_result {
   int status;
 };
 
-typedef std::function<handler_result(int cid, sf::Packet q)> query_handler;
+typedef std::function<handler_result(int cid, sf::Packet q)> query_response_generator;
 
 handler_result handler_switch(bool test, std::function<void(handler_result &)> on_success = 0, std::function<void(handler_result &)> on_fail = 0);
 
-/*! special socket functions for server */
-struct client_t : public socket_t {
-  std::string name;
-  std::string game_id;
-  std::thread *wfg_thread;
+query_response_generator static_query_response(handler_result res);
 
-  handler_result receive_query(protocol_t p, query_handler f);
-  bool check_protocol(protocol_t p, query_handler f);
+/*! special socket functions for server */
+struct server_cl_socket : public socket_t {
+  typedef std::shared_ptr<server_cl_socket> ptr;
+
+  std::string name;
+  int st3_state;
+  std::shared_ptr<std::thread> wfg_thread;
+  std::string gid;
+
+  server_cl_socket();
+  handler_result receive_query(protocol_t p, query_response_generator f);
+  bool check_protocol(protocol_t p, query_response_generator f);
   bool is_connected();
   void set_disconnect();
   bool check_com() override;
 };
 
 /*! structure handling communication with a set of clients associated with a game */
-struct client_communicator {
-  hm_t<int, client_t *> clients;
+struct game_setup {
+  hm_t<int, server_cl_socket::ptr> clients;
   game_settings settings;
-  int idc;
+  int client_idc;
+  std::string id;
   int status;
-  std::string gid;
-  std::mutex m_lock;
-  std::thread *active_thread;
+  std::shared_ptr<std::thread> game_thread;
+  // std::shared_ptr<std::mutex> m_lock;
 
-  client_communicator();
-  void add_client(client_t *c);
+  game_setup();
+  void add_client(server_cl_socket::ptr c);
   void disconnect();
   bool cleanup_clients();
-  bool check_protocol(protocol_t p, query_handler h);
+  bool check_protocol(protocol_t p, query_response_generator h);
   void distribute_frames(std::vector<entity_package> &g, int &frame_count);
-  std::list<client_t *> access_clients();
+  // std::list<server_cl_socket *> access_clients();
   bool can_join();
   bool ready_to_launch();
   void lock();
