@@ -1,5 +1,4 @@
-#ifndef _STK_CLIENTGAME
-#define _STK_CLIENTGAME
+#pragma once
 
 #include <SFGUI/SFGUI.hpp>
 #include <SFML/Graphics.hpp>
@@ -9,8 +8,8 @@
 #include <string>
 
 #include "choice.h"
+#include "client_game_data.h"
 #include "com_client.h"
-#include "data_frame.h"
 #include "explosion.h"
 #include "fixed_star.h"
 #include "graphics.h"
@@ -326,4 +325,3 @@ struct game : public client_game_data {
 extern game *g;
 };  // namespace client
 };  // namespace st3
-#endif
