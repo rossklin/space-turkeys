@@ -36,10 +36,6 @@ class ship : public virtual physical_object, public ship_stats {
 
   // state trackers for specific ship types
   std::set<std::string> states;
-  hm_t<std::string, std::string> dynamic_data;
-  int ddata_int(std::string k);
-  float ddata_float(std::string k);
-  std::string ddata_string(std::string k);
 
   // ai stats
   float target_angle;
@@ -57,7 +53,7 @@ class ship : public virtual physical_object, public ship_stats {
   std::list<combid> local_friends;
   std::list<combid> local_all;
   std::vector<float> free_angle;
-  bool check_space(float a);
+  // bool check_space(float a);
 
   // game_object
   void pre_phase(game_data *g);

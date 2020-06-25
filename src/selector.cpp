@@ -366,7 +366,6 @@ string specific_selector<ship>::hover_info() {
     }
   }
 
-  maybe_include("Passengers", ddata_int("passengers"));
   maybe_include("Kills", nkills);
 
   if (upgrades.size()) {
