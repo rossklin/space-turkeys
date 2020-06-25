@@ -56,6 +56,15 @@ std::vector<V> hm_values(hm_t<K, V> x) {
 namespace utility {
 const std::string root_path = "/usr/share/spaceturkeys-3/";
 
+template <typename T>
+T filter(T con, std::function<bool(typename T::value_type)> f) {
+  T res;
+  for (auto x : con) {
+    if (f(x)) res.push_back(x);
+  }
+  return res;
+}
+
 template <typename T, typename F = game_object>
 typename T::ptr guaranteed_cast(typename F::ptr p) {
   if (p == 0) throw logical_error("attempt_cast: null pointer!");
