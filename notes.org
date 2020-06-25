@@ -1,5 +1,6 @@
 * Notes test game 2020-06-22
 ** bugs
+*** Path search fails to remove extra initial nodes
 *** Parameters showing uninitialized values in gui at start of turn
 o max fleets and max ships per fleet
 o production progress

@@ -183,9 +183,9 @@ bool game_setup::ready_to_launch() {
 void game_setup::disconnect() {
   for (auto c : clients) {
     c.second->disconnect();
-    c.second->st3_state = socket_t::tc_stop;
+    c.second->st3_state = socket_t::tc_complete;  // tell game monitor to remove this client
   }
-  status = socket_t::tc_stop;
+  status = socket_t::tc_game_complete;
 }
 
 bool game_setup::cleanup_clients() {
