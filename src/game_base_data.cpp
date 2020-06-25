@@ -34,16 +34,6 @@ waypoint::ptr game_base_data::get_waypoint(combid i) const {
   return utility::guaranteed_cast<waypoint>(get_entity(i));
 }
 
-list<game_object::ptr> game_base_data::all_owned_by(idtype id) const {
-  list<game_object::ptr> res;
-
-  for (auto p : entity) {
-    if (p.second->owner == id) res.push_back(p.second);
-  }
-
-  return res;
-}
-
 // limit_to without deallocating
 void game_base_data::limit_to(idtype id) {
   list<combid> remove_buf;
@@ -70,4 +60,27 @@ void game_base_data::copy_from(const game_data &g) {
 void game_base_data::clear_entities() {
   for (auto x : entity) delete x.second;
   entity.clear();
+}
+
+// Max fleets = 2 + 2 * (nr of solars with developed defense)
+int game_base_data::get_max_fleets(idtype pid) const {
+  int res = 2;
+
+  auto sols = all<solar>(pid);
+  for (auto sp : sols) {
+    if (sp->development.at(keywords::key_defense) > 0) res += 2;
+  }
+
+  return res;
+}
+
+// Max ships per fleet = 2 + 2 * (highest level of developed defense)
+int game_base_data::get_max_ships_per_fleet(idtype pid) const {
+  auto sols = all<solar>(pid);
+  int max_lev = 0;
+  for (auto sp : sols) {
+    max_lev = max(max_lev, sp->development.at(keywords::key_defense));
+  }
+
+  return 2 + 2 * max_lev;
 }

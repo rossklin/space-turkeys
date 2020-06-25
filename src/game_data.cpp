@@ -347,7 +347,7 @@ fleet::ptr game_data::generate_fleet(point p, idtype owner, command c, list<comb
   point tp;
   if (target_position(c.target, tp)) ta = utility::point_angle(tp - p);
 
-  const int max_ships = players.at(owner).research_level.get_max_ships_per_fleet();
+  const int max_ships = get_max_ships_per_fleet(owner);
 
   for (auto &s : sh) {
     auto sp = get_ship(s);
@@ -1203,5 +1203,5 @@ float game_data::solar_order_level(combid id) const {
 }
 
 bool game_data::allow_add_fleet(idtype pid) const {
-  return players.at(pid).research_level.get_max_fleets() > all<fleet>(pid).size();
+  return get_max_fleets(pid) > all<fleet>(pid).size();
 }

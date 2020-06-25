@@ -65,19 +65,6 @@ class game_data : public virtual game_base_data {
   bool allow_add_fleet(idtype pid) const;
   float solar_order_level(combid id) const;
 
-  template <typename T>
-  std::list<typename T::ptr> all(idtype pid = game_object::any_owner) const {
-    std::list<typename T::ptr> res;
-
-    for (auto p : entity) {
-      if (p.second->isa(T::class_id) && (pid == game_object::any_owner || p.second->owner == pid)) {
-        res.push_back(utility::guaranteed_cast<T>(p.second));
-      }
-    }
-
-    return res;
-  };
-
   void add_entity(game_object::ptr p);
   void remove_units();
   fleet::ptr generate_fleet(point p, idtype i, command c, std::list<combid> sh, bool ignore_limit = false);

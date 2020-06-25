@@ -109,8 +109,8 @@ command_selector::ptr game::get_command_selector(idtype i) {
 }
 
 entity_selector::ptr game::get_entity(combid i) {
-  if (!entity.count(i)) throw classified_error("client::game::get_entity: invalid id: " + i);
-  return entity[i];
+  if (!cl_entity.count(i)) throw classified_error("client::game::get_entity: invalid id: " + i);
+  return cl_entity[i];
 }
 
 void game::clear_guis() {
@@ -198,7 +198,7 @@ bool game::wait_for_it(sf::Packet &p, std::function<bool(sf::Packet)> callback) 
 
 bool game::init_data() {
   sf::Packet pq;
-  data_frame data;
+  client_game_data data;
 
   message = "loading players...";
   pq << protocol::load_init;
@@ -225,14 +225,14 @@ bool game::init_data() {
   update_sight_range(point(0, 0), 1);
 
   // load player starting positions
-  for (auto i : data.entity) {
+  for (auto i : data.cl_entity) {
     entity_selector::ptr p = i.second;
     cout << "init_data: checking: " << i.first << endl;
     if (p->isa(solar::class_id) && p->owner >= 0) {
       auto s = utility::guaranteed_cast<specific_selector<solar>, entity_selector>(p);
       s->research_level = &players[s->owner].research_level;
 
-      entity[i.first] = i.second;
+      cl_entity[i.first] = i.second;
       cout << "init_data: added: " << i.first << endl;
 
       if (p->owned) {
@@ -253,7 +253,7 @@ bool game::init_data() {
 
 bool game::pre_step() {
   sf::Packet pq;
-  data_frame data;
+  client_game_data data;
   phase = "pre";
 
   message = "loading game data...";
@@ -423,7 +423,7 @@ bool game::simulation_step() {
   bool playing = true;
   int idx = -1;
   int loaded = 0;
-  vector<data_frame> g(settings.clset.frames_per_round);
+  vector<client_game_data> g(settings.clset.frames_per_round);
 
   cout << "simluation: starting data loader" << endl;
 
@@ -493,9 +493,9 @@ bool game::simulation_step() {
             for (int i = -1; i < 3; i++) {
               int idx_access = idx + offset + i;
               if (idx_access < 0 || idx_access >= loaded) return false;
-              if (!g[idx_access].entity.count(sh->id)) return false;
+              if (!g[idx_access].cl_entity.count(sh->id)) return false;
 
-              entity_selector::ptr ep = g[idx_access].entity[sh->id];
+              entity_selector::ptr ep = g[idx_access].cl_entity[sh->id];
               if (!ep->is_active()) return false;
 
               pbuf[1 + i] = ep->base_position;
@@ -531,8 +531,8 @@ bool game::simulation_step() {
 
       for (auto &a : animations) {
         auto update_tracker = [this, sub_ratio](animation_tracker_info &t) {
-          if (entity.count(t.eid)) {
-            t.p = entity[t.eid]->position;
+          if (cl_entity.count(t.eid)) {
+            t.p = cl_entity[t.eid]->position;
           } else {
             t.p += sub_ratio * t.v;
           }
@@ -557,7 +557,7 @@ bool game::simulation_step() {
   t.join();
 
   for (auto &f : g)
-    for (auto x : f.entity) delete x.second;
+    for (auto x : f.cl_entity) delete x.second;
 
   cout << "simulation: finished." << endl;
   return !((w2c | c2w) & socket_t::tc_bad_result);
@@ -578,7 +578,7 @@ combid game::add_waypoint(point p) {
   waypoint buf(self_id, wp_idc++);
   buf.position = p;
   waypoint_selector::ptr w = waypoint_selector::create(buf, col, true);
-  entity[w->id] = w;
+  cl_entity[w->id] = w;
 
   cout << "added waypoint " << w->id << endl;
 
@@ -594,7 +594,7 @@ combid game::add_waypoint(point p) {
 */
 choice::choice game::build_choice(choice::choice c) {
   cout << "client " << self_id << ": build choice:" << endl;
-  for (auto x : entity) {
+  for (auto x : cl_entity) {
     for (auto y : x.second->commands) {
       if (command_selectors.count(y)) {
         c.commands[x.first].push_back(*get_command_selector(y));
@@ -693,7 +693,7 @@ void game::remove_entity(combid i) {
   auto buf = e->commands;
   for (auto c : buf) remove_command(c);
   delete get_entity(i);
-  entity.erase(i);
+  cl_entity.erase(i);
 }
 
 /** Load new game data from a data_frame.
@@ -701,7 +701,7 @@ void game::remove_entity(combid i) {
     Adds and removes entity selectors given by the frame. Also adds
     new command selectors representing fleet commands.
 */
-void game::reload_data(data_frame &g, bool use_animations) {
+void game::reload_data(client_game_data &g, bool use_animations) {
   // make selectors 'not seen' and 'not owned' and clear commands and
   // waypoints
   clear_selectors();
@@ -710,11 +710,11 @@ void game::reload_data(data_frame &g, bool use_animations) {
   terrain = g.terrain;
 
   // update entities: fleets, solars and waypoints
-  for (auto x : g.entity) {
+  for (auto x : g.cl_entity) {
     entity_selector::ptr p = x.second->ss_clone();
     combid key = x.first;
-    if (entity.count(key)) remove_entity(key);
-    entity[key] = p;
+    if (cl_entity.count(key)) remove_entity(key);
+    cl_entity[key] = p;
     p->seen = p->is_active();
     if (p->owner == self_id && p->is_active()) add_fixed_stars(p->position, p->vision());
     cout << "reload_data for " << self_id << ": loaded seen entity: " << p->id << " owned by " << p->owner << endl;
@@ -722,7 +722,7 @@ void game::reload_data(data_frame &g, bool use_animations) {
 
   // remove entities as server specifies
   for (auto x : g.remove_entities) {
-    if (entity.count(x)) {
+    if (cl_entity.count(x)) {
       cout << " -> remove entity " << x << endl;
       remove_entity(x);
     }
@@ -730,10 +730,10 @@ void game::reload_data(data_frame &g, bool use_animations) {
 
   // remove unseen ships that are in sight range
   list<combid> rbuf;
-  for (auto y : entity) {
+  for (auto y : cl_entity) {
     entity_selector::ptr s = y.second;
     if (s->isa(ship::class_id) && s->is_active() && !s->seen) {
-      for (auto x : entity) {
+      for (auto x : cl_entity) {
         if (x.second->owned && utility::l2norm(s->position - x.second->position) < x.second->vision()) {
           rbuf.push_back(s->id);
           cout << "reload_data: spotted unseen ship: " << s->id << endl;
@@ -755,7 +755,7 @@ void game::reload_data(data_frame &g, bool use_animations) {
   for (auto f : get_all<fleet>()) {
     fleet_idc = max(fleet_idc, identifier::get_multid_index(f->id) + 1);
 
-    if (entity.count(f->com.target) && f->owned) {
+    if (cl_entity.count(f->com.target) && f->owned) {
       // include commands even if f is idle e.g. to waypoint
       command c = f->com;
       point to = get_entity(f->com.target)->get_position();
@@ -773,7 +773,7 @@ void game::reload_data(data_frame &g, bool use_animations) {
     wp_idc = max(wp_idc, identifier::get_multid_index(w->id) + 1);
 
     for (auto c : w->pending_commands) {
-      if (entity.count(c.target)) {
+      if (cl_entity.count(c.target)) {
         add_command(c, w->get_position(), get_entity(c.target)->get_position(), false, false);
       }
     }
@@ -921,7 +921,7 @@ void game::remove_command(idtype key) {
 /** Mark all entity selectors as not seen/owned and clear command
     selectors and waypoints. */
 void game::clear_selectors() {
-  for (auto x : entity) {
+  for (auto x : cl_entity) {
     x.second->seen = false;
     x.second->owned = false;
   }
@@ -935,7 +935,7 @@ void game::clear_selectors() {
 
 /** Mark all entity and command selectors as not selected. */
 void game::deselect_all() {
-  for (auto x : entity) x.second->selected = false;
+  for (auto x : cl_entity) x.second->selected = false;
   for (auto x : command_selectors) x.second->selected = false;
 }
 
@@ -948,7 +948,7 @@ void game::area_select() {
   sf::FloatRect rect = fixrect(srect);
 
   if (!add2selection()) deselect_all();
-  for (auto x : entity) {
+  for (auto x : cl_entity) {
     x.second->selected = x.second->owned && x.second->is_area_selectable() && x.second->inside_rect(rect);
   }
 }
@@ -960,7 +960,7 @@ void game::area_select() {
     @param selected_entities selected entities
 */
 void game::command2entity(combid key, string act, list<combid> e_selected) {
-  if (!entity.count(key)) throw classified_error("command2entity: invalid key: " + key);
+  if (!cl_entity.count(key)) throw classified_error("command2entity: invalid key: " + key);
 
   command c;
   point from, to;
@@ -969,7 +969,7 @@ void game::command2entity(combid key, string act, list<combid> e_selected) {
   to = get_entity(key)->get_position();
 
   for (auto x : e_selected) {
-    if (entity.count(x) && x != key) {
+    if (cl_entity.count(x) && x != key) {
       entity_selector::ptr s = get_entity(x);
       if (s->is_commandable()) {
         c.source = x;
@@ -986,7 +986,7 @@ list<combid> game::entities_at(point p) {
   list<combid> keys;
 
   // find entities at p
-  for (auto x : entity) {
+  for (auto x : cl_entity) {
     if (x.second->is_active() && x.second->contains_point(p, d)) keys.push_back(x.first);
   }
 
@@ -1042,11 +1042,11 @@ bool game::select_at(point p) {
 
   if (qcom < qent && phase == "choice") return select_command(cid);
 
-  auto it = entity.find(key);
+  auto it = cl_entity.find(key);
 
   if (!add2selection()) deselect_all();
 
-  if (it != entity.end() && it->second->owned) {
+  if (it != cl_entity.end() && it->second->owned) {
     it->second->selected = !(it->second->selected);
     it->second->queue_level = selector_queue++;
     return true;
@@ -1076,14 +1076,14 @@ bool game::select_command(idtype key) {
 
 /** At least one selected entity? */
 bool game::exists_selected() {
-  for (auto x : entity)
+  for (auto x : cl_entity)
     if (x.second->selected) return true;
   return false;
 }
 
 /** Get ids of non-allocated ships for entity selector */
 set<combid> game::get_ready_ships(combid id) {
-  if (!entity.count(id)) throw classified_error("get ready ships: entity selector " + id + " not found!");
+  if (!cl_entity.count(id)) throw classified_error("get ready ships: entity selector " + id + " not found!");
 
   entity_selector::ptr e = get_entity(id);
   set<combid> s = e->get_ships();
@@ -1095,7 +1095,7 @@ set<combid> game::get_ready_ships(combid id) {
 /** Get ids of selected entities. */
 list<combid> game::selected_entities() {
   list<combid> res;
-  for (auto &x : entity) {
+  for (auto &x : cl_entity) {
     if (x.second->selected) res.push_back(x.first);
   }
   return res;
@@ -1398,7 +1398,7 @@ int game::choice_event(sf::Event e) {
       f->heading = f->position;
       f->selected = true;
 
-      entity[f->id] = f;
+      cl_entity[f->id] = f;
     }
   };
 
@@ -1738,10 +1738,10 @@ void game::draw_window() {
   window.draw(text);
 
   // draw fleet limits
-  text.setString("Max fleets: " + to_string(players[self_id].research_level.get_max_fleets()));
+  text.setString("Max fleets: " + to_string(get_max_fleets(self_id)));
   text.setPosition(point(10, 50));
   window.draw(text);
-  text.setString("Max ships per fleet: " + to_string(players[self_id].research_level.get_max_ships_per_fleet()));
+  text.setString("Max ships per fleet: " + to_string(get_max_ships_per_fleet(self_id)));
   text.setPosition(point(10, 80));
   window.draw(text);
 
@@ -1784,7 +1784,7 @@ void game::draw_interface_components() {
 }
 
 void game::draw_minimap() {
-  for (auto x : entity) {
+  for (auto x : cl_entity) {
     if (!x.second->is_active()) continue;
     sf::FloatRect bounds(x.second->position, point(0.05 * window.getSize().x, 0.05 * window.getSize().y));
     sf::RectangleShape buf = graphics::build_rect(bounds, 0, sf::Color::Transparent, x.second->get_color());
@@ -1819,9 +1819,9 @@ void game::draw_universe() {
   animations = buf;
 
   // draw fleets last
-  for (auto x : entity)
+  for (auto x : cl_entity)
     if (!x.second->isa(fleet::class_id)) x.second->draw(window);
-  for (auto x : entity)
+  for (auto x : cl_entity)
     if (x.second->isa(fleet::class_id)) x.second->draw(window);
 
   // flag clusters of enemy ships

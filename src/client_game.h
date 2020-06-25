@@ -30,7 +30,7 @@ const float frame_time = 0.05;
       window, socket, game settings and selectors representing game
       objects, as well as sub guis. 
     */
-struct game : public data_frame {
+struct game : public client_game_data {
   cl_socket_t *socket;     /*!< socket for server communication */
   window_t window;         /*!< sfml window for drawing the interface */
   sf::View view_game;      /*!< sfml view for game objects */
@@ -104,7 +104,7 @@ struct game : public data_frame {
   /*! update gui with new game data
 	@param g the game data
       */
-  void reload_data(data_frame &g, bool use_animations = true);
+  void reload_data(client_game_data &g, bool use_animations = true);
 
   // event handling
   /*! update the choice generating gui with an sfml event
@@ -303,7 +303,7 @@ struct game : public data_frame {
   std::set<typename specific_selector<T>::ptr> get_all() {
     std::set<typename specific_selector<T>::ptr> s;
 
-    for (auto x : entity) {
+    for (auto x : cl_entity) {
       if (x.second->isa(T::class_id)) s.insert(get_specific<T>(x.first));
     }
 

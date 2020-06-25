@@ -16,7 +16,7 @@ bool cl_socket_t::check_com() {
   return (!instruction) || *instruction == tc_run || *instruction == tc_init;
 }
 
-void st3::client::load_frames(cl_socket_t *socket, vector<data_frame> &g, int &idx, int &com_in, int &com_out) {
+void st3::client::load_frames(cl_socket_t *socket, vector<client_game_data> &g, int &idx, int &com_in, int &com_out) {
   sf::Packet pq;
   int sub_com = socket_t::tc_run;
 
@@ -89,10 +89,10 @@ void st3::client::query(cl_socket_t *socket, sf::Packet &pq, int &com_in, int &c
 }
 
 // unpack entity package and generate corresponding selector objects in data frame
-void client::deserialize(data_frame &f, sf::Packet &p, sint id) {
+void client::deserialize(client_game_data &f, sf::Packet &p, sint id) {
   game_base_data ep;
 
-  if (f.entity.size()) {
+  if (f.cl_entity.size()) {
     throw classified_error("client::deserialize: data frame contains entities!");
   }
 
@@ -128,7 +128,7 @@ void client::deserialize(data_frame &f, sf::Packet &p, sint id) {
       throw network_error("com_client::deserialize: Failed sanity check: class not recognized!");
     }
 
-    f.entity[obj->id] = obj;
+    f.cl_entity[obj->id] = obj;
   }
 
   // deallocate temporary entity data

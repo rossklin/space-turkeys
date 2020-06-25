@@ -40,8 +40,8 @@ struct data {
   void repair_ship(ship &s) const;
   bool can_build_ship(std::string v, solar::ptr s, std::list<std::string> *data = 0) const;
   float solar_modifier(std::string v) const;
-  int get_max_fleets() const;
-  int get_max_ships_per_fleet() const;
+  // int get_max_fleets() const;
+  // int get_max_ships_per_fleet() const;
   float get_order_modifier() const;
 };
 };  // namespace research

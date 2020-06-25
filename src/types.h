@@ -123,6 +123,7 @@ const std::string build_disabled = "disabled";
 namespace identifier {
 const class_t command = "command";
 const class_t idle = "idle";
+const class_t noclass = "noclass";
 
 const combid target_idle = "idle:0";
 const combid source_none = "noclass:noentity";

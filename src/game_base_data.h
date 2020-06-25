@@ -29,8 +29,22 @@ class game_base_data {
   waypoint::ptr get_waypoint(combid i) const;
   game_object::ptr get_entity(combid i) const;
 
+  template <typename T>
+  std::list<typename T::ptr> all(idtype pid = game_object::any_owner) const {
+    std::list<typename T::ptr> res;
+
+    for (auto p : entity) {
+      if (p.second->isa(T::class_id) && (pid == game_object::any_owner || p.second->owner == pid)) {
+        res.push_back(utility::guaranteed_cast<T>(p.second));
+      }
+    }
+
+    return res;
+  };
+
   void limit_to(idtype pid);
   void copy_from(const game_data &g);
-  std::list<game_object::ptr> all_owned_by(idtype pid) const;
+  int get_max_fleets(idtype pid) const;
+  int get_max_ships_per_fleet(idtype pid) const;
 };
 };  // namespace st3

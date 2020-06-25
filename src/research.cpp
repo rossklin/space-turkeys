@@ -157,17 +157,17 @@ float data::solar_modifier(string k) const {
   return sum;
 }
 
-int data::get_max_fleets() const {
-  int sum = BASE_FLEETS;
-  for (auto v : researched()) sum += tech_map.at(v).increase_fleets;
-  return sum;
-}
+// int data::get_max_fleets() const {
+//   int sum = BASE_FLEETS;
+//   for (auto v : researched()) sum += tech_map.at(v).increase_fleets;
+//   return sum;
+// }
 
-int data::get_max_ships_per_fleet() const {
-  int sum = BASE_SHIPS_PER_FLEET;
-  for (auto v : researched()) sum += tech_map.at(v).increase_ships_per_fleet;
-  return sum;
-}
+// int data::get_max_ships_per_fleet() const {
+//   int sum = BASE_SHIPS_PER_FLEET;
+//   for (auto v : researched()) sum += tech_map.at(v).increase_ships_per_fleet;
+//   return sum;
+// }
 
 float data::get_order_modifier() const {
   float sum = 0;
