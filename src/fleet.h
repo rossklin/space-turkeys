@@ -76,7 +76,7 @@ class fleet : public virtual commandable_object {
   command com;                        /*!< the fleet's command (currently this only holds the target) */
   point heading;
   bool pop_heading;
-  std::list<point> path;
+  std::vector<point> path;
   /* suggestion suggest_buf; */
 
   // mechanical components

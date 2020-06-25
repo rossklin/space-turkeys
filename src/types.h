@@ -70,7 +70,7 @@ using hm_t = std::unordered_map<key, value>;
 
 /*! type used to represent a point in coordinate space */
 typedef sf::Vector2f point;
-typedef std::list<point> path_t;
+typedef std::vector<point> path_t;
 
 struct id_pair {
   combid a;

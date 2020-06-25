@@ -477,7 +477,16 @@ point operator*(const float a, const point b);
     @param x vector
     @return reference to stream
   */
-std::ostream &operator<<(std::ostream &ss, std::vector<float> const &x);
+template <typename T>
+std::ostream &operator<<(std::ostream &ss, std::vector<T> const &x) {
+  for (auto y : x) ss << y << ", ";
+  return ss;
+}
+
+template <typename T1, typename T2>
+std::ostream &operator<<(std::ostream &ss, std::pair<T1, T2> const &x) {
+  return ss << "{" << x.first << ", " << x.second << "}";
+}
 
 /*! print point to output stream
     @param ss output stream

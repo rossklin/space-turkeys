@@ -92,63 +92,60 @@ idtype game_data::terrain_at(point p, float r) const {
   return -1;
 }
 
+// remove unnecessary path nodes caused by stacked horizons
+path_t prune_path(const game_data &g, path_t x, float r) {
+  int i, j;
+  for (i = 0; i < x.size(); i++) {
+    for (j = i + 2; j < x.size(); j++) {
+      if (g.first_intersect(x[i], x[j], r) > -1) {
+        break;
+      }
+    }
+
+    for (int k = i + 1; k < j - 1; k++) {
+      x.erase(x.begin() + i + 1);
+    }
+  }
+
+  return x;
+}
+
 path_t game_data::get_path(point a, point b, float r) const {
-  float eps = 1e-4;
+  float eps = 1e-3;
   float r_inside = (1 - eps) * r;
   float r_horizon = (1 - 2 * eps) * r;
   float r_intersect = (1 - 3 * eps) * r;
+  int tid;
 
-  int tid = first_intersect(a, b, r_intersect);
+  // move points outside of terrain
+  while ((tid = terrain_at(a, r)) > -1) {
+    a = terrain.at(tid).closest_exit(a, r);
+  }
+
+  while ((tid = terrain_at(b, r)) > -1) {
+    b = terrain.at(tid).closest_exit(b, r);
+  }
+
+  tid = first_intersect(a, b, r_intersect);
   if (tid == -1) return path_t(1, b);
-
-  // check if we're inside terrain
-  tid = terrain_at(a, r_inside);
-  if (tid > -1) {
-    point p0 = terrain.at(tid).closest_exit(a, r);
-
-    if (terrain_at(p0, r_inside) > -1) {
-      throw logical_error("Closest exit still inside terrain!");
-    }
-
-    path_t res = get_path(p0, b, r);
-    res.push_front(p0);
-    return res;
-  }
-
-  // check if target is inside terrain
-  tid = terrain_at(b, r_inside);
-  if (tid > -1) {
-    point p0 = terrain.at(tid).closest_exit(b, r);
-
-    if (terrain_at(p0, r_inside) > -1) {
-      throw logical_error("Closest exit for target still inside terrain!");
-    }
-
-    path_t res = get_path(a, p0, r);
-    return res;
-  }
 
   struct ptest {
     float h;
     path_t p;
   };
 
-  // generate a path test for frontier with heuristic cost
+  // calculate heuristic cost of path and return as a ptest
   auto gen_ptest = [b](path_t p) {
     if (p.empty()) {
       throw logical_error("Empty path in gen_ptest!");
     }
 
     float h = 0;
+    point x = p.front();
 
-    auto i = p.begin();
-    auto j = i;
-    j++;
-
-    while (j != p.end()) {
-      h += utility::l2norm(*j - *i);
-      i++;
-      j++;
+    for (auto y : p) {
+      h += utility::l2norm(y - x);
+      x = y;
     }
 
     h += utility::l2norm(b - p.back());
@@ -156,88 +153,114 @@ path_t game_data::get_path(point a, point b, float r) const {
     return ptest{h, p};
   };
 
-  auto hash_point = [](int i, int j) -> string {
-    return to_string(i) + ":" + to_string(j);
-  };
-
-  auto parse_hash = [](string v) -> pair<int, int> {
-    size_t split = v.find(':');
-    return make_pair(stoi(v.substr(0, split)), stoi(v.substr(split + 1)));
-  };
-
-  auto terrain_horizon = [this, r, r_horizon](point a, int tid) -> pair<int, int> {
-    terrain_object obj = terrain.at(tid);
-    float theta = utility::point_angle(obj.center - a);
-    float amax = 0;
-    float amin = 0;
-    int pmin, pmax;
-
-    for (int i = 0; i < obj.border.size(); i++) {
-      point p = obj.get_vertice(i, r_horizon);
-      float adiff = utility::angle_difference(utility::point_angle(p - a), theta);
-      if (adiff > amax) {
-        amax = adiff;
-        pmax = i;
-      }
-      if (adiff < amin) {
-        amin = adiff;
-        pmin = i;
-      }
-    }
-
-    return make_pair(pmin, pmax);
-  };
-
+  // compare two paths represented by ptest objects by their heuristic cost
   auto ptest_comp = [](ptest a, ptest b) { return a.h > b.h; };
 
   priority_queue<ptest, vector<ptest>, decltype(ptest_comp)> frontier(ptest_comp);
   frontier.push(gen_ptest(path_t(1, a)));
 
+  cout << "Path from " << a << " to " << b << endl;
+
+  // Adapted A* search
   while (!frontier.empty()) {
     ptest x = frontier.top();
     frontier.pop();
     path_t res = x.p;
     point sub_a = res.back();
+    cout << "Get path from " << a << " to " << b << ": testing frontier " << vector<point>(res.begin(), res.end()) << " with h = " << x.h << endl;
 
+    // Check if this is the final solution
     if ((tid = first_intersect(sub_a, b, r_intersect)) == -1) {
       res.push_back(b);
-      res.pop_front();
-      return res;
+      res.erase(res.begin());
+      cout << "Found best path!" << endl;
+      return prune_path(*this, res, r_horizon);
     }
 
     // build set of possible state transitions
-    pair<int, int> sub_init = terrain_horizon(sub_a, tid);
-    queue<string> sub_frontier;
-    set<string> sub_processed;
-    sub_frontier.push(hash_point(tid, sub_init.first));
-    sub_frontier.push(hash_point(tid, sub_init.second));
 
-    while (!sub_frontier.empty()) {
-      string test = sub_frontier.front();
-      sub_frontier.pop();
+    // remember blocked vertices
+    hm_t<int, set<int>> hr_blocked;
 
-      if (sub_processed.count(test)) continue;
-      sub_processed.insert(test);
+    // Find the vertices representing the left and right horizon of a terrain wrt a point
+    auto terrain_horizon = [this, r, r_horizon, &hr_blocked](point a, int tid) -> pair<int, int> {
+      terrain_object obj = terrain.at(tid);
+      float theta = utility::point_angle(obj.center - a);
+      float amax = 0;
+      float amin = 0;
+      int pmin, pmax;
+      bool found_min = false, found_max = false;
 
-      pair<int, int> sub_idx = parse_hash(test);
-      point sub_b = terrain.at(sub_idx.first).get_vertice(sub_idx.second, r);
-      int sub_tid = first_intersect(sub_a, sub_b, r_intersect);
+      for (int i = 0; i < obj.border.size(); i++) {
+        point p = obj.get_vertice(i, r);
 
-      if (sub_tid > -1) {
-        sub_init = terrain_horizon(sub_a, sub_tid);
-        sub_frontier.push(hash_point(sub_tid, sub_init.first));
-        sub_frontier.push(hash_point(sub_tid, sub_init.second));
+        // skip the point we are currently standing on
+        if (utility::l2norm(p - a) < r) continue;
+
+        // skip points that are blocked by self
+        if (first_intersect(a, p, r_horizon) == tid) continue;
+
+        // skip vertices that are marked as blocked
+        if (hr_blocked[tid].count(i)) continue;
+
+        float adiff = utility::angle_difference(utility::point_angle(p - a), theta);
+        if (adiff > amax) {
+          amax = adiff;
+          pmax = i;
+          found_max = true;
+        }
+
+        if (adiff < amin) {
+          amin = adiff;
+          pmin = i;
+          found_min = true;
+        }
+      }
+
+      if (!(found_min && found_max)) {
+        throw logical_error("terrain horizon missing vertices");
+      }
+
+      return {pmin, pmax};
+    };
+
+    pair<int, int> alts_idx = terrain_horizon(sub_a, tid);
+
+    vector<pair<int, int>> alts;
+    alts.push_back({tid, alts_idx.first});
+    alts.push_back({tid, alts_idx.second});
+
+    cout << "Testing alts for terrain " << tid << ": " << alts << endl;
+    while (alts.size()) {
+      pair<int, int> alt = alts.back();
+      point q = terrain.at(alt.first).get_vertice(alt.second, r);
+      alts.pop_back();
+
+      int tid2;
+      if ((tid2 = first_intersect(sub_a, q, r_intersect)) > -1) {
+        // block this alt
+        hr_blocked[alt.first].insert(alt.second);
+
+        // expand horizon over blocking object
+        pair<int, int> idx2 = terrain_horizon(sub_a, tid2);
+        cout << "Alt " << q << " for terrain " << tid << ": intersects terrain " << tid2 << ", swapping for alts " << vector<int>{idx2.first, idx2.second} << endl;
+
+        alts.insert(alts.begin(), {tid2, idx2.first});
+        alts.insert(alts.begin(), {tid2, idx2.second});
       } else {
-        path_t sub_path = res;
-        sub_path.push_back(sub_b);
-        frontier.push(gen_ptest(sub_path));
+        path_t new_path = res;
+        new_path.push_back(q);
+        cout << "Alt " << q << " for terrain " << tid << ": adding new path to frontier" << endl;
+        frontier.push(gen_ptest(new_path));
+      }
+
+      if (alts.size() > 1000) {
+        throw logical_error("Get path: alt overflow!");
       }
     }
 
     if (frontier.size() > 1000) {
-      stringstream ss;
-      ss << "Get path: frontier overflow!" << endl;
-      throw logical_error(ss.str());
+      throw logical_error("Get path: frontier overflow!");
     }
   }
 
@@ -246,7 +269,7 @@ path_t game_data::get_path(point a, point b, float r) const {
 
 int game_data::first_intersect(point a, point b, float r) const {
   // find first intersected terrain object
-  hm_t<idtype, list<pair<int, point> > > intersects;
+  hm_t<idtype, list<pair<int, point>>> intersects;
   point inter_buf;
   r *= 0.9;
   for (auto &x : terrain) {
@@ -915,7 +938,7 @@ void game_data::pre_step() {
 
 // compute max levels for each player and development
 void game_data::update_research_facility_level() {
-  hm_t<idtype, hm_t<string, int> > level;
+  hm_t<idtype, hm_t<string, int>> level;
   for (auto s : all<solar>()) {
     if (s->owner > -1) {
       s->research_level = &players[s->owner].research_level;
@@ -1009,7 +1032,7 @@ void game_data::confirm_data() {
   auto &stab = ship::table();
   auto &rtab = research::data::table();
 
-  auto check_ship_upgrades = [&utab, &stab](hm_t<string, set<string> > u) {
+  auto check_ship_upgrades = [&utab, &stab](hm_t<string, set<string>> u) {
     for (auto &x : u) {
       for (auto v : x.second) assert(utab.count(v));
       if (x.first == research::upgrade_all_ships) continue;

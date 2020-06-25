@@ -328,7 +328,7 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
       pop_heading = false;
       if (path.size()) {
         heading = path.front();
-        path.pop_front();
+        path.erase(path.begin());
       } else {
         heading = stats.target_position;
       }

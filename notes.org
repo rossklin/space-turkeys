@@ -1,9 +1,18 @@
 * Notes test game 2020-06-22
 ** bugs
 *** Path search fails to remove extra initial nodes
+Got "terrain horizon missing vertices" when a ship searched for path
+
+Caused by an alt getting stuck in a hole between blocked vertices
+Simply means this alt is not a horizon and should be discarded.
+*** Client side impl of fleet and ship limits
+Note: server limits ships sent but not ships registered for transfer at waypoint
+*** Out of range error when asking to join nonexistent game
+*** Client displays max fleets as 2, should be 4, not finding owned solar?
+*** Ships can shoot through impassable terrain
 *** Parameters showing uninitialized values in gui at start of turn
-o max fleets and max ships per fleet
-o production progress
+[impl] max fleets and max ships per fleet
+production progress
 *** One solar built 0 of 5 fighters in a round (then showed shipyard level 3 -234823482364% complete)
 *** Units can still enter impassable terrain
 *** (maybe) development queue item dropped

@@ -534,12 +534,6 @@ float utility::safe_inv(float x) {
   return x ? 1 / x : INFINITY;
 }
 
-// output vector x to stream ss
-ostream &st3::operator<<(ostream &ss, vector<float> const &x) {
-  for (auto y : x) ss << y << ", ";
-  return ss;
-}
-
 // output point x to stream ss
 ostream &st3::operator<<(ostream &ss, point const &x) {
   ss << "(" << x.x << ", " << x.y << ")";
