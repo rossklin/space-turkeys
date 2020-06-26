@@ -1,6 +1,6 @@
 * Notes test game 2020-06-22
 ** bugs
-*** Path search fails to remove extra initial nodes
+*** [impl] Path search fails to remove extra initial nodes
 Got "terrain horizon missing vertices" when a ship searched for path
 
 Caused by an alt getting stuck in a hole between blocked vertices

@@ -159,21 +159,17 @@ path_t game_data::get_path(point a, point b, float r) const {
   priority_queue<ptest, vector<ptest>, decltype(ptest_comp)> frontier(ptest_comp);
   frontier.push(gen_ptest(path_t(1, a)));
 
-  cout << "Path from " << a << " to " << b << endl;
-
   // Adapted A* search
   while (!frontier.empty()) {
     ptest x = frontier.top();
     frontier.pop();
     path_t res = x.p;
     point sub_a = res.back();
-    cout << "Get path from " << a << " to " << b << ": testing frontier " << vector<point>(res.begin(), res.end()) << " with h = " << x.h << endl;
 
     // Check if this is the final solution
     if ((tid = first_intersect(sub_a, b, r_intersect)) == -1) {
       res.push_back(b);
       res.erase(res.begin());
-      cout << "Found best path!" << endl;
       return prune_path(*this, res, r_horizon);
     }
 
@@ -183,7 +179,7 @@ path_t game_data::get_path(point a, point b, float r) const {
     hm_t<int, set<int>> hr_blocked;
 
     // Find the vertices representing the left and right horizon of a terrain wrt a point
-    auto terrain_horizon = [this, r, r_horizon, &hr_blocked](point a, int tid) -> pair<int, int> {
+    auto terrain_horizon = [this, r, r_horizon, &hr_blocked](point a, int tid) -> vector<int> {
       terrain_object obj = terrain.at(tid);
       float theta = utility::point_angle(obj.center - a);
       float amax = 0;
@@ -217,20 +213,14 @@ path_t game_data::get_path(point a, point b, float r) const {
         }
       }
 
-      if (!(found_min && found_max)) {
-        throw logical_error("terrain horizon missing vertices");
-      }
-
       return {pmin, pmax};
     };
 
-    pair<int, int> alts_idx = terrain_horizon(sub_a, tid);
+    vector<int> alts_idx = terrain_horizon(sub_a, tid);
 
     vector<pair<int, int>> alts;
-    alts.push_back({tid, alts_idx.first});
-    alts.push_back({tid, alts_idx.second});
+    for (auto idx : alts_idx) alts.push_back({tid, idx});
 
-    cout << "Testing alts for terrain " << tid << ": " << alts << endl;
     while (alts.size()) {
       pair<int, int> alt = alts.back();
       point q = terrain.at(alt.first).get_vertice(alt.second, r);
@@ -242,29 +232,29 @@ path_t game_data::get_path(point a, point b, float r) const {
         hr_blocked[alt.first].insert(alt.second);
 
         // expand horizon over blocking object
-        pair<int, int> idx2 = terrain_horizon(sub_a, tid2);
-        cout << "Alt " << q << " for terrain " << tid << ": intersects terrain " << tid2 << ", swapping for alts " << vector<int>{idx2.first, idx2.second} << endl;
-
-        alts.insert(alts.begin(), {tid2, idx2.first});
-        alts.insert(alts.begin(), {tid2, idx2.second});
+        vector<int> idx2 = terrain_horizon(sub_a, tid2);
+        for (auto idx : idx2) alts.push_back({tid2, idx});
       } else {
         path_t new_path = res;
         new_path.push_back(q);
-        cout << "Alt " << q << " for terrain " << tid << ": adding new path to frontier" << endl;
         frontier.push(gen_ptest(new_path));
       }
 
       if (alts.size() > 1000) {
-        throw logical_error("Get path: alt overflow!");
+        server::log("Get path: alt overflow!", "warning");
+        return path_t(1, a);
       }
     }
 
     if (frontier.size() > 1000) {
-      throw logical_error("Get path: frontier overflow!");
+      server::log("Get path: frontier overflow!", "warning");
+      return path_t(1, a);
     }
   }
 
-  throw logical_error("Get path reached end of frontier!");
+  // There is not path, e.g. because ship is to big to fit through any passage
+  server::log("get_path: no path found");
+  return path_t(1, a);
 }
 
 int game_data::first_intersect(point a, point b, float r) const {
