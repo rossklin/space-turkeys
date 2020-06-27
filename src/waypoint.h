@@ -13,7 +13,7 @@ class game_data;
 /*! Waypoints allow position based fleet joining and splitting.*/
 class waypoint : public virtual commandable_object {
  public:
-  typedef waypoint *ptr;
+  typedef std::shared_ptr<waypoint> ptr;
   static ptr create(idtype owner, idtype id);
   static const std::string class_id;
   static int idc;

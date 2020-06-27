@@ -14,6 +14,13 @@
 #include "types.h"
 
 namespace st3 {
+namespace utility {
+
+template <typename T, typename F>
+T range_init(const F &x) {
+  T res(x.begin(), x.end());
+  return res;
+}
 
 template <typename T = double, typename V = double>
 std::vector<V> map(std::function<V(T)> f, std::vector<T> x) {
@@ -53,7 +60,6 @@ std::vector<V> hm_values(hm_t<K, V> x) {
 }
 
 /*! Arithmetics for points, vectors, sets and sfml objects. */
-namespace utility {
 const std::string root_path = "/usr/share/spaceturkeys-3/";
 
 template <typename T>
@@ -69,20 +75,13 @@ template <typename T, typename F = game_object>
 typename T::ptr guaranteed_cast(typename F::ptr p) {
   if (p == 0) throw logical_error("attempt_cast: null pointer!");
 
-  typename T::ptr res = dynamic_cast<typename T::ptr>(p);
+  typename T::ptr res = dynamic_pointer_cast<T>(p);
 
   if (res) {
     return res;
   } else {
     throw classified_error("Failed to downcast", "error");
   }
-}
-
-template <typename T>
-std::list<typename T::key_type> get_map_keys(const T &m) {
-  std::list<typename T::key_type> res;
-  for (auto &x : m) res.push_back(x.first);
-  return res;
 }
 
 template <typename M, typename C>

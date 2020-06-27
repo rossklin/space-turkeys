@@ -56,7 +56,7 @@ void solar::move(game_data *g) {
       float d = utility::l2norm(s->position - position);
       float ack = dlev * accuracy_distance_norm / (d + 1);
       if (s->evasion_check() < ack) {
-        s->receive_damage(g, this, utility::random_uniform(0, dlev));
+        s->receive_damage(g, shared_from_this(), utility::random_uniform(0, dlev));
       }
     }
   }
@@ -121,7 +121,7 @@ void solar::give_commands(list<command> c, game_data *g) {
       if (!f) break;
 
       for (auto j : f->ships) {
-        g->get_ship(j)->on_liftoff(this, g);
+        g->get_ship(j)->on_liftoff(shared_from_this(), g);
         ships.erase(j);
       }
     }
@@ -155,7 +155,7 @@ solar::ptr solar::create(idtype id, point p, float bounty, float var) {
     return fmax(utility::random_normal(level, var * level), 0);
   };
 
-  solar::ptr s = new solar();
+  solar::ptr s(new solar());
 
   s->id = identifier::make(solar::class_id, id);
 
@@ -176,7 +176,7 @@ solar::ptr solar::create(idtype id, point p, float bounty, float var) {
 }
 
 game_object::ptr solar::clone() {
-  return new solar(*this);
+  return ptr(new solar(*this));
 }
 
 bool solar::serialize(sf::Packet &p) {
@@ -236,7 +236,7 @@ void solar::dynamics(game_data *g) {
 
   if (choice_data.do_produce()) {
     string v = choice_data.ship_queue.front();
-    if (research_level->can_build_ship(v, ptr(this))) {
+    if (research_level->can_build_ship(v, shared_from_this())) {
       ship_stats s = ship::table().at(v);
 
       // check if we are starting to build this ship
@@ -260,7 +260,7 @@ void solar::dynamics(game_data *g) {
         sh.states.insert("landed");
         sh.owner = owner;
         ships.insert(sh.id);
-        g->add_entity(ship::ptr(new ship(sh)));
+        g->register_entity(ship::ptr(new ship(sh)));
 
         g->players[owner].log.push_back("Completed ship " + v);
       }
@@ -297,7 +297,7 @@ void solar::dynamics(game_data *g) {
 }
 
 bool solar::isa(string c) {
-  return c == solar::class_id || c == physical_object::class_id || c == commandable_object::class_id;
+  return c == class_id || commandable_object::isa(c) || physical_object::isa(c);
 }
 
 bool solar::can_see(game_object::ptr x) {

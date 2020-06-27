@@ -44,7 +44,7 @@ void setup_fleet_for(game_data *g, idtype pid, point at, point targ, hm_t<string
       ships.push_back(sh.id);
       sh.owner = pid;
       sh.states.insert("landed");
-      g->add_entity(ship::ptr(new ship(sh)));
+      g->register_entity(ship::ptr(new ship(sh)));
     }
   }
 
@@ -55,7 +55,7 @@ void setup_fleet_for(game_data *g, idtype pid, point at, point targ, hm_t<string
   c.action = fleet_action::go_to;
   c.policy = fleet::policy_aggressive;
 
-  g->add_entity(w);
+  g->register_entity(w);
   g->generate_fleet(at, pid, c, ships, true);
   for (auto sid : ships) g->get_ship(sid)->states.erase("landed");
 }
@@ -217,7 +217,7 @@ bool test_space_combat(string c0, string c1, float limit, pair<float, float> mar
 
     auto get_ratio = [&](int pid) -> float {
       float ref = pid == 0 ? scc_0.at(c0) : scc_1.at(c1);
-      for (auto f : g->all<fleet>()) {
+      for (auto f : g->filtered_entities<fleet>()) {
         if (f->owner == pid) {
           return f->ships.size() / ref;
         }

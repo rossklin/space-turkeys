@@ -41,6 +41,17 @@ class game_data : public virtual game_base_data {
   game_data();
   ~game_data();
   game_data(const game_data &g) = delete;
+
+  int next_id(class_t x);
+
+  // access
+  ship::ptr get_ship(combid i) const;
+  fleet::ptr get_fleet(combid i) const;
+  solar::ptr get_solar(combid i) const;
+  waypoint::ptr get_waypoint(combid i) const;
+
+  game_object::ptr get_game_object(combid i) const;
+
   void assign(const game_data &g);
   void rehash_grid();
   void apply_choice(choice::choice c, idtype id);
@@ -65,7 +76,7 @@ class game_data : public virtual game_base_data {
   bool allow_add_fleet(idtype pid) const;
   float solar_order_level(combid id) const;
 
-  void add_entity(game_object::ptr p);
+  void register_entity(game_object::ptr p);
   void remove_units();
   fleet::ptr generate_fleet(point p, idtype i, command c, std::list<combid> sh, bool ignore_limit = false);
   void relocate_ships(command c, std::set<combid> &sh, idtype owner);
@@ -84,7 +95,7 @@ class game_data : public virtual game_base_data {
   void post_phase();
 
   // add and remove entities
-  void remove_entity(combid id);
+  void deregister_entity(combid id);
   void distribute_ships(fleet::ptr f);
   void update_research_facility_level();
 };

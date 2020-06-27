@@ -92,7 +92,7 @@ void st3::client::query(cl_socket_t *socket, sf::Packet &pq, int &com_in, int &c
 void client::deserialize(client_game_data &f, sf::Packet &p, sint id) {
   game_base_data ep;
 
-  if (f.cl_entity.size()) {
+  if (f.entity.size()) {
     throw classified_error("client::deserialize: data frame contains entities!");
   }
 
@@ -105,8 +105,7 @@ void client::deserialize(client_game_data &f, sf::Packet &p, sint id) {
   f.remove_entities = ep.remove_entities;
   f.terrain = ep.terrain;
 
-  for (auto buf : ep.entity) {
-    game_object::ptr x = buf.second;
+  for (auto x : ep.all_entities<game_object>()) {
     sf::Color col;
 
     if (x->owner >= 0) {
@@ -128,7 +127,7 @@ void client::deserialize(client_game_data &f, sf::Packet &p, sint id) {
       throw network_error("com_client::deserialize: Failed sanity check: class not recognized!");
     }
 
-    f.cl_entity[obj->id] = obj;
+    f.add_entity(obj);
   }
 
   // deallocate temporary entity data

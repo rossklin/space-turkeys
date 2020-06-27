@@ -1,7 +1,9 @@
 #pragma once
 
+#include <memory>
 #include <set>
 #include <string>
+#include <vector>
 
 #include "cost.h"
 #include "game_object.h"
@@ -14,12 +16,12 @@ class game_data;
 class solar;
 
 /*! ship game object */
-class ship : public virtual physical_object, public ship_stats {
+class ship : public virtual physical_object, public ship_stats, std::enable_shared_from_this<ship> {
  public:
-  typedef ship *ptr;
+  typedef std::shared_ptr<ship> ptr;
   static ptr create();
   static const std::string class_id;
-  static std::list<std::string> all_classes();
+  static std::vector<std::string> all_classes();
   static std::string starting_ship;
   static const int na;
   static const float friction;
@@ -82,7 +84,7 @@ class ship : public virtual physical_object, public ship_stats {
   float flex_weight(float a);
   void update_data(game_data *g);
   void receive_damage(game_data *g, game_object::ptr from, float damage);
-  void on_liftoff(solar *from, game_data *g);
+  void on_liftoff(solar::ptr from, game_data *g);
   bool has_fleet();
   float evasion_check();
   float accuracy_check(ship::ptr a);

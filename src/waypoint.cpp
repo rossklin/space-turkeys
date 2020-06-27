@@ -35,7 +35,7 @@ void waypoint::post_phase(game_data *g) {
   set<combid> ready_ships, arrived_ships;
 
   // compute landed ships
-  for (auto y : g->all<fleet>()) {
+  for (auto y : g->filtered_entities<fleet>()) {
     if (y->is_idle() && y->com.target == id) {
       arrived_ships += y->ships;
     }
@@ -48,7 +48,7 @@ void waypoint::post_phase(game_data *g) {
     // check if all ships in command y are either landed or dead
     check = true;
     set<combid> sbuf = y.ships - arrived_ships;
-    for (auto i : sbuf) check &= !(g->entity.count(i));
+    for (auto i : sbuf) check &= !(g->entity_exists(i));
 
     if (check) {
       ready_ships = y.ships & arrived_ships;
@@ -67,7 +67,7 @@ waypoint::ptr waypoint::create(idtype o, idtype id) {
 }
 
 game_object::ptr waypoint::clone() {
-  return new waypoint(*this);
+  return ptr(new waypoint(*this));
 }
 
 bool waypoint::serialize(sf::Packet &p) {
@@ -75,5 +75,5 @@ bool waypoint::serialize(sf::Packet &p) {
 }
 
 bool waypoint::isa(string c) {
-  return c == waypoint::class_id || c == commandable_object::class_id;
+  return c == class_id || commandable_object::isa(c);
 }

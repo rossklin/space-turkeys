@@ -20,6 +20,18 @@ using namespace std;
 using namespace st3;
 using namespace st3::server;
 
+// limit_to without deallocating
+void limit_to(game_base_data &g, idtype id) {
+  list<combid> remove_buf;
+  for (auto e : g.all_entities<game_object>()) {
+    bool known = e->isa(solar::class_id) && utility::guaranteed_cast<solar>(e)->known_by.count(id);
+    bool owned = e->owner == id;
+    bool seen = g.evm[id].count(e->id);
+    if (!(known || owned || seen)) remove_buf.push_back(e->id);
+  }
+  for (auto i : remove_buf) g.remove_entity(i);
+}
+
 void simulation_step(game_setup &c, game_data &g) {
   int n = g.settings.clset.frames_per_round;
   vector<game_base_data> frames(n);
@@ -37,7 +49,7 @@ void simulation_step(game_setup &c, game_data &g) {
       } else if (idx < frame_count) {
         // pack frame
         g = frames[idx];
-        g.limit_to(cid);
+        limit_to(g, cid);
         result.response << g;
         result.status = socket_t::tc_run;
       } else if (idx < frames.size()) {
@@ -83,7 +95,7 @@ bool check_end(game_setup &c, game_data &g) {
 
   int pid = -1;
   int psum = 0;
-  for (auto x : g.all<solar>()) {
+  for (auto x : g.filtered_entities<solar>()) {
     if (x->owner > -1 && x->owner != pid) {
       pid = x->owner;
       psum++;
@@ -122,7 +134,7 @@ query_response_generator pack_game_handler(game_data &g, bool do_limit) {
     handler_result res;
     game_base_data ep = g;
 
-    if (do_limit) ep.limit_to(cid);
+    if (do_limit) limit_to(ep, cid);
 
     res.response << protocol::confirm << ep;
     res.status = socket_t::tc_complete;
@@ -196,13 +208,8 @@ bool load_autosave(string filename, game_setup &c, game_data &g) {
       }
 
       c.clients = new_clients;
+      g.copy_from(ep);
 
-      g.idc = ep.idc;
-      g.settings = ep.settings;
-      g.terrain = ep.terrain;
-      g.discovered_universe = ep.discovered_universe;
-      g.entity = ep.entity;
-      g.players = ep.players;
       return true;
     }
   }

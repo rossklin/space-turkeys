@@ -97,7 +97,7 @@ fleet::ptr fleet::create(idtype pid, idtype idx) {
 }
 
 game_object::ptr fleet::clone() {
-  return new fleet(*this);
+  return fleet::ptr(new fleet(*this));
 }
 
 bool fleet::serialize(sf::Packet &p) {
@@ -134,7 +134,7 @@ void fleet::give_commands(list<command> c, game_data *g) {
       }
     }
 
-    g->add_entity(f);
+    g->register_entity(f);
     f->update_data(g, true);
   }
 }
@@ -398,7 +398,7 @@ void fleet::check_action(game_data *g) {
     auto itab = interaction::table();
     if (itab.count(com.action)) {
       target_condition c = itab[com.action].condition.owned_by(owner);
-      if (!c.valid_on(g->get_entity(com.target))) {
+      if (!c.valid_on(g->get_game_object(com.target))) {
         server::output("target " + com.target + " no longer valid for " + id);
         set_idle();
         should_refresh = true;
@@ -436,7 +436,7 @@ void fleet::check_in_sight(game_data *g) {
 
   bool seen = g->evm[owner].count(com.target);
   bool solar = identifier::get_type(com.target) == solar::class_id;
-  bool owned = g->entity.count(com.target) && g->get_entity(com.target)->owner == owner;
+  bool owned = g->entity_exists(com.target) && g->get_game_object(com.target)->owner == owner;
 
   // target left sight?
   if (!(seen || solar || owned)) {
@@ -462,7 +462,7 @@ void fleet::remove_ship(combid i) {
 }
 
 bool fleet::isa(string c) {
-  return c == fleet::class_id || c == commandable_object::class_id;
+  return c == class_id || commandable_object::isa(c);
 }
 
 fleet::analytics::analytics() {

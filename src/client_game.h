@@ -29,7 +29,7 @@ const float frame_time = 0.05;
       window, socket, game settings and selectors representing game
       objects, as well as sub guis. 
     */
-struct game : public client_game_data {
+struct game : public game_base_data {
   cl_socket_t *socket;     /*!< socket for server communication */
   window_t window;         /*!< sfml window for drawing the interface */
   sf::View view_game;      /*!< sfml view for game objects */
@@ -58,7 +58,7 @@ struct game : public client_game_data {
   std::vector<fixed_star> fixed_stars;
   std::list<fixed_star> hidden_stars;
   static constexpr float grid_size = 20;
-  std::set<std::pair<int, int> > known_universe;
+  std::set<std::pair<int, int>> known_universe;
   point sight_ul;
   point sight_wh;
 
@@ -68,7 +68,6 @@ struct game : public client_game_data {
   /*! default contsructor */
   game();
 
-  entity_selector::ptr get_entity(combid i);
   void remove_entity(combid i);
 
   command_selector::ptr get_command_selector(idtype i);
@@ -289,25 +288,19 @@ struct game : public client_game_data {
 
   template <typename T>
   typename specific_selector<T>::ptr get_specific(combid i) {
-    auto e = get_entity(i);
-
-    if (e->isa(T::class_id)) {
-      return utility::guaranteed_cast<specific_selector<T>, entity_selector>(e);
-    } else {
-      throw classified_error("get_specific: " + T::class_id + ": wrong class id for: " + i);
-    }
+    return get_entity<specific_selector<T>>(i);
   };
 
   template <typename T>
-  std::set<typename specific_selector<T>::ptr> get_all() {
-    std::set<typename specific_selector<T>::ptr> s;
-
-    for (auto x : cl_entity) {
-      if (x.second->isa(T::class_id)) s.insert(get_specific<T>(x.first));
-    }
-
-    return s;
+  std::vector<typename specific_selector<T>::ptr> get_all(idtype pid = game_object::any_owner) {
+    return filtered_entities<specific_selector<T>>(pid);
   };
+
+  entity_selector::ptr get_selector(combid i) const {
+    return get_entity<entity_selector>(i);
+  }
+
+  std::vector<entity_selector::ptr> all_selectors() const;
 
   /** Get ids of selected solars */
   template <typename T>

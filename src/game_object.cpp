@@ -10,6 +10,7 @@
 using namespace std;
 using namespace st3;
 
+const string game_object::class_id = "game_object";
 const string commandable_object::class_id = "commandable_object";
 const string physical_object::class_id = "physical_object";
 
@@ -81,7 +82,15 @@ bool commandable_object::is_commandable() {
   return true;
 }
 
+bool commandable_object::isa(string c) {
+  return c == class_id || game_object::isa(c);
+}
+
 // physical object
 bool physical_object::is_physical() {
   return true;
+}
+
+bool physical_object::isa(string c) {
+  return c == class_id || game_object::isa(c);
 }

@@ -188,7 +188,7 @@ void specific_selector<fleet>::draw(window_t &w) {
 
   // add a flag
   auto counts = ship_counts();
-  list<string> keys = utility::get_map_keys(counts);
+  list<string> keys = utility::range_init<list<string>>(utility::hm_keys(counts));
   keys.sort([this](string a, string b) {
     ship_stats ssa = ship::table().at(a);
     ship_stats ssb = ship::table().at(b);

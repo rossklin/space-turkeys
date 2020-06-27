@@ -20,7 +20,7 @@ extern const std::string idle;
 /*! a fleet controls a set of ships */
 class fleet : public virtual commandable_object {
  public:
-  typedef fleet *ptr;
+  typedef std::shared_ptr<fleet> ptr;
   static ptr create(idtype pid, idtype idx);
   static const std::string class_id;
 

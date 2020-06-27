@@ -21,7 +21,7 @@ struct game;
 class entity_selector : public virtual game_object {
   static const int max_click_distance = 20; /*!< greatest distance from entities at which clicks are handled */
  public:
-  typedef entity_selector *ptr;
+  typedef std::shared_ptr<entity_selector> ptr;
 
   int queue_level;           /*!< selection queue level: entities with lower level get priority */
   bool selected;             /*!< is this entity selected? */
@@ -54,7 +54,7 @@ template <typename T>
 class specific_selector : public virtual entity_selector, public virtual T {
  public:
   typedef T base_object_t;
-  typedef specific_selector<T> *ptr;
+  typedef std::shared_ptr<specific_selector<T>> ptr;
   static ptr create(T &s, sf::Color c, bool o);
 
   specific_selector(T &s, sf::Color c, bool o);
@@ -79,7 +79,7 @@ typedef specific_selector<waypoint> waypoint_selector;
 /*! selector representing a command */
 class command_selector : public command {
  public:
-  typedef command_selector *ptr;
+  typedef std::shared_ptr<command_selector> ptr;
 
   static ptr create(command c, point f, point t);
 

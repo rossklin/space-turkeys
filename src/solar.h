@@ -3,6 +3,7 @@
 #include <rapidjson/document.h>
 
 #include <list>
+#include <memory>
 #include <set>
 #include <vector>
 
@@ -20,9 +21,9 @@ struct data;
 };
 
 /*! data representing a solar system */
-class solar : public virtual physical_object, public virtual commandable_object {
+class solar : public virtual physical_object, public virtual commandable_object, std::enable_shared_from_this<solar> {
  public:
-  typedef solar *ptr;
+  typedef std::shared_ptr<solar> ptr;
   static ptr create(idtype id, point p, float bounty, float var = 0.3);
   static const std::string class_id;
 

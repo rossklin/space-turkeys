@@ -29,6 +29,35 @@ game_data::~game_data() {
   clear_entities();
 }
 
+int game_data::next_id(class_t x) {
+  if (!idc.count(x)) idc[x] = 0;
+  return idc[x]++;
+}
+
+game_object::ptr game_data::get_game_object(combid i) const {
+  if (entity_exists(i)) {
+    return get_entity<game_object>(i);
+  } else {
+    throw logical_error("game_data::get_entity: not found: " + i);
+  }
+}
+
+ship::ptr game_data::get_ship(combid i) const {
+  return get_entity<ship>(i);
+}
+
+fleet::ptr game_data::get_fleet(combid i) const {
+  return get_entity<fleet>(i);
+}
+
+solar::ptr game_data::get_solar(combid i) const {
+  return get_entity<solar>(i);
+}
+
+waypoint::ptr game_data::get_waypoint(combid i) const {
+  return get_entity<waypoint>(i);
+}
+
 void game_data::allocate_grid() {
   clear_entities();
   entity_grid = grid::tree::create();
@@ -36,18 +65,17 @@ void game_data::allocate_grid() {
 
 void game_data::rehash_grid() {
   entity_grid->clear();
-  list<combid> keys = utility::get_map_keys(entity);
-  vector<combid> vkeys(keys.begin(), keys.end());
-  random_shuffle(vkeys.begin(), vkeys.end());
-  for (auto eid : vkeys) {
-    game_object::ptr x = get_entity(eid);
+  vector<combid> keys = utility::hm_keys(entity);
+  random_shuffle(keys.begin(), keys.end());
+  for (auto eid : keys) {
+    game_object::ptr x = get_game_object(eid);
     if (x->is_active()) entity_grid->insert(eid, x->position);
   }
 }
 
 bool game_data::target_position(combid t, point &p) const {
-  if (entity.count(t)) {
-    p = get_entity(t)->position;
+  if (entity_exists(t)) {
+    p = get_game_object(t)->position;
     return true;
   } else {
     return false;
@@ -57,10 +85,10 @@ bool game_data::target_position(combid t, point &p) const {
 // find all entities in ball(p, r) matching condition c
 list<combid> game_data::search_targets_nophys(combid self_id, point p, float r, target_condition c) const {
   list<combid> res;
-  game_object::ptr self = get_entity(self_id);
+  game_object::ptr self = get_game_object(self_id);
 
   for (auto i : entity_grid->search(p, r)) {
-    auto e = get_entity(i.first);
+    auto e = get_game_object(i.first);
     if (evm.count(self->owner) && evm.at(self->owner).count(i.first) && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
   }
 
@@ -70,14 +98,14 @@ list<combid> game_data::search_targets_nophys(combid self_id, point p, float r, 
 // find all entities in ball(p, r) matching condition c
 list<combid> game_data::search_targets(combid self_id, point p, float r, target_condition c) const {
   list<combid> res;
-  game_object::ptr self = get_entity(self_id);
+  game_object::ptr self = get_game_object(self_id);
   if (!self->isa(physical_object::class_id)) {
     throw logical_error("Non-physical entity called search targets: " + self_id);
   }
   physical_object::ptr s = utility::guaranteed_cast<physical_object>(self);
 
   for (auto i : entity_grid->search(p, r)) {
-    auto e = get_entity(i.first);
+    auto e = get_game_object(i.first);
     if (s->can_see(e) && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
   }
 
@@ -112,9 +140,7 @@ path_t prune_path(const game_data &g, path_t x, float r) {
 
 path_t game_data::get_path(point a, point b, float r) const {
   float eps = 1e-3;
-  float r_inside = (1 - eps) * r;
-  float r_horizon = (1 - 2 * eps) * r;
-  float r_intersect = (1 - 3 * eps) * r;
+  float r_buffered = (1 - eps) * r;
   int tid;
 
   // move points outside of terrain
@@ -126,7 +152,7 @@ path_t game_data::get_path(point a, point b, float r) const {
     b = terrain.at(tid).closest_exit(b, r);
   }
 
-  tid = first_intersect(a, b, r_intersect);
+  tid = first_intersect(a, b, r_buffered);
   if (tid == -1) return path_t(1, b);
 
   struct ptest {
@@ -167,10 +193,10 @@ path_t game_data::get_path(point a, point b, float r) const {
     point sub_a = res.back();
 
     // Check if this is the final solution
-    if ((tid = first_intersect(sub_a, b, r_intersect)) == -1) {
+    if ((tid = first_intersect(sub_a, b, r_buffered)) == -1) {
       res.push_back(b);
       res.erase(res.begin());
-      return prune_path(*this, res, r_horizon);
+      return prune_path(*this, res, r_buffered);
     }
 
     // build set of possible state transitions
@@ -179,7 +205,7 @@ path_t game_data::get_path(point a, point b, float r) const {
     hm_t<int, set<int>> hr_blocked;
 
     // Find the vertices representing the left and right horizon of a terrain wrt a point
-    auto terrain_horizon = [this, r, r_horizon, &hr_blocked](point a, int tid) -> vector<int> {
+    auto terrain_horizon = [this, r, r_buffered, &hr_blocked](point a, int tid) -> vector<int> {
       terrain_object obj = terrain.at(tid);
       float theta = utility::point_angle(obj.center - a);
       float amax = 0;
@@ -190,14 +216,11 @@ path_t game_data::get_path(point a, point b, float r) const {
       for (int i = 0; i < obj.border.size(); i++) {
         point p = obj.get_vertice(i, r);
 
-        // skip the point we are currently standing on
-        if (utility::l2norm(p - a) < r) continue;
-
         // skip points that are blocked by self
-        if (first_intersect(a, p, r_horizon) == tid) continue;
+        if (first_intersect(a, p, r_buffered) == tid) continue;
 
         // skip vertices that are marked as blocked
-        if (hr_blocked[tid].count(i)) continue;
+        if (hr_blocked.count(tid) && hr_blocked.at(tid).count(i)) continue;
 
         float adiff = utility::angle_difference(utility::point_angle(p - a), theta);
         if (adiff > amax) {
@@ -213,7 +236,11 @@ path_t game_data::get_path(point a, point b, float r) const {
         }
       }
 
-      return {pmin, pmax};
+      vector<int> res;
+      if (found_min) res.push_back(pmin);
+      if (found_max) res.push_back(pmax);
+
+      return res;
     };
 
     vector<int> alts_idx = terrain_horizon(sub_a, tid);
@@ -227,7 +254,7 @@ path_t game_data::get_path(point a, point b, float r) const {
       alts.pop_back();
 
       int tid2;
-      if ((tid2 = first_intersect(sub_a, q, r_intersect)) > -1) {
+      if ((tid2 = first_intersect(sub_a, q, r_buffered)) > -1) {
         // block this alt
         hr_blocked[alt.first].insert(alt.second);
 
@@ -261,7 +288,6 @@ int game_data::first_intersect(point a, point b, float r) const {
   // find first intersected terrain object
   hm_t<idtype, list<pair<int, point>>> intersects;
   point inter_buf;
-  r *= 0.9;
   for (auto &x : terrain) {
     for (int i = 0; i < x.second.border.size(); i++) {
       point p1 = x.second.get_vertice(i, r);
@@ -340,7 +366,7 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner) {
     f->ships = sh;
 
     // add the fleet
-    add_entity(f);
+    register_entity(f);
   }
 
   f->update_data(this, true);
@@ -371,7 +397,7 @@ fleet::ptr game_data::generate_fleet(point p, idtype owner, command c, list<comb
     if (f->ships.size() >= max_ships && !ignore_limit) break;
   }
 
-  add_entity(f);
+  register_entity(f);
   distribute_ships(f);
   f->heading = f->position;
   f->update_data(this, true);
@@ -386,7 +412,7 @@ void game_data::apply_choice(choice::choice c, idtype id) {
     if (identifier::get_multid_owner(x.second.id) != id) {
       throw player_error("apply_choice: player " + to_string(id) + " tried to insert waypoint owned by " + to_string(identifier::get_multid_owner(x.second.id)));
     }
-    add_entity(x.second.clone());
+    register_entity(x.second.clone());
   }
 
   for (auto &x : c.fleets) {
@@ -396,7 +422,7 @@ void game_data::apply_choice(choice::choice c, idtype id) {
     }
 
     x.second.owner = id;
-    add_entity(x.second.clone());
+    register_entity(x.second.clone());
 
     auto f = get_fleet(x.first);
     for (auto sid : f->ships) {
@@ -424,7 +450,7 @@ void game_data::apply_choice(choice::choice c, idtype id) {
   // solar choices: require research to be applied
   for (auto &x : c.solar_choices) {
     // validate
-    auto e = get_entity(x.first);
+    auto e = get_game_object(x.first);
 
     if (e->owner != id) {
       throw player_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + x.first + " owned by " + to_string(e->owner));
@@ -455,7 +481,7 @@ void game_data::apply_choice(choice::choice c, idtype id) {
 
   // commands: validate
   for (auto x : c.commands) {
-    auto e = get_entity(x.first);
+    auto e = get_game_object(x.first);
     if (e->owner != id) {
       throw player_error("validate_choice: error: command by player " + to_string(id) + " for " + x.first + " owned by " + to_string(e->owner));
     }
@@ -463,30 +489,30 @@ void game_data::apply_choice(choice::choice c, idtype id) {
 
   // apply
   for (auto x : c.commands) {
-    commandable_object::ptr v = utility::guaranteed_cast<commandable_object>(get_entity(x.first));
+    commandable_object::ptr v = utility::guaranteed_cast<commandable_object>(get_game_object(x.first));
     v->give_commands(x.second, this);
   }
 }
 
-void game_data::add_entity(game_object::ptr p) {
-  if (entity.count(p->id)) throw logical_error("add_entity: already exists: " + p->id);
-  entity[p->id] = p;
+void game_data::register_entity(game_object::ptr p) {
+  if (entity_exists(p->id)) throw logical_error("add_entity: already exists: " + p->id);
+  add_entity(p);
   p->on_add(this);
 }
 
-void game_data::remove_entity(combid i) {
-  if (!entity.count(i)) throw logical_error("remove_entity: " + i + ": doesn't exist!");
-  get_entity(i)->on_remove(this);
-  delete get_entity(i);
-  entity.erase(i);
+void game_data::deregister_entity(combid i) {
+  if (!entity_exists(i)) throw logical_error("remove_entity: " + i + ": doesn't exist!");
+  get_game_object(i)->on_remove(this);
+  remove_entity(i);
   remove_entities.push_back(i);
 }
 
 void game_data::remove_units() {
   auto cl = [this]() {
-    auto buf = entity;
-    for (auto i : buf)
-      if (i.second->remove) remove_entity(i.first);
+    auto buf = all_entities<game_object>();
+    for (auto e : buf) {
+      if (e->remove) deregister_entity(e->id);
+    }
   };
 
   // run twice since fleets may set remove flag when ships are removed
@@ -602,7 +628,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   }
 
   // make solars
-  for (auto p : x) add_entity(solar::create(next_id(solar::class_id), p, bounty, var));
+  for (auto p : x) register_entity(solar::create(next_id(solar::class_id), p, bounty, var));
 
   // add impassable terrain
   static int terrain_idc = 0;
@@ -627,7 +653,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
     return true;
   };
 
-  list<solar::ptr> all_solars = all<solar>();
+  vector<solar::ptr> all_solars = filtered_entities<solar>();
   int n_terrain = utility::random_int(4);
   float min_dist = 40;
   for (int i = 0; i < n_terrain; i++) {
@@ -714,10 +740,10 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   }
 
   // check waypoints so they aren't covered
-  for (auto w : all<waypoint>()) {
+  for (auto w : filtered_entities<waypoint>()) {
     int tid = terrain_at(w->position, 0);
     if (tid > -1 && terrain[tid].triangle(w->position, 0) > -1) {
-      remove_entity(w->id);
+      deregister_entity(w->id);
       break;
     }
   }
@@ -739,7 +765,7 @@ void game_data::discover(point x, float r, bool starting_area) {
 }
 
 void game_data::update_discover() {
-  for (auto e : all<physical_object>())
+  for (auto e : filtered_entities<physical_object>())
     if (e->is_active()) discover(e->position, e->vision());
 }
 
@@ -747,20 +773,20 @@ void game_data::rebuild_evm() {
   evm.clear();
 
   // rebuild vision matrix
-  for (auto x : entity) {
-    if (x.second->is_active() && x.second->owner != game_object::neutral_owner) {
+  for (auto e : all_entities<game_object>()) {
+    if (e->is_active() && e->owner != game_object::neutral_owner) {
       // entity sees itself
-      evm[x.second->owner].insert(x.first);
+      evm[e->owner].insert(e->id);
 
       // only physical entities can see others
-      if (x.second->isa(physical_object::class_id)) {
-        physical_object::ptr e = utility::guaranteed_cast<physical_object>(x.second);
-        for (auto i : entity_grid->search(e->position, e->vision())) {
-          if (i.first == x.first) continue;
+      if (e->isa(physical_object::class_id)) {
+        physical_object::ptr f = utility::guaranteed_cast<physical_object>(e);
+        for (auto i : entity_grid->search(f->position, f->vision())) {
+          if (i.first == e->id) continue;
 
-          game_object::ptr t = get_entity(i.first);
+          game_object::ptr t = get_game_object(i.first);
           // only see other players' entities if they are physical and active
-          if (t->isa(physical_object::class_id) && t->is_active() && e->can_see(t)) {
+          if (t->isa(physical_object::class_id) && t->is_active() && f->can_see(t)) {
             evm[e->owner].insert(t->id);
 
             // the player will remember seing this solar
@@ -777,7 +803,7 @@ solar::ptr game_data::closest_solar(point p, idtype id) const {
 
   try {
     s = utility::value_min(
-        all<solar>(id), (function<float(solar::ptr)>)[ this, p, id ](solar::ptr t)->float {
+        filtered_entities<solar>(id), (function<float(solar::ptr)>)[ this, p, id ](solar::ptr t)->float {
           return utility::l2d2(t->position - p);
         });
   } catch (exception &e) {
@@ -800,25 +826,30 @@ void game_data::increment() {
   rebuild_evm();
 
   // update entities and compile interactions
-  for (auto x : entity)
-    if (x.second->is_active()) x.second->pre_phase(this);
-  for (auto x : entity)
-    if (x.second->is_active()) x.second->move(this);
+  for (auto e : all_entities<game_object>()) {
+    if (e->is_active()) e->pre_phase(this);
+  }
+
+  for (auto e : all_entities<game_object>()) {
+    if (e->is_active()) e->move(this);
+  }
 
   // perform interactions
   random_shuffle(interaction_buffer.begin(), interaction_buffer.end());
   auto itab = interaction::table();
   for (auto x : interaction_buffer) {
     interaction i = itab[x.interaction];
-    game_object::ptr s = get_entity(x.source);
-    game_object::ptr t = get_entity(x.target);
+    game_object::ptr s = get_game_object(x.source);
+    game_object::ptr t = get_game_object(x.target);
     if (i.condition.owned_by(s->owner).valid_on(t)) {
       i.perform(s, t, this);
     }
   }
 
-  for (auto x : entity)
-    if (x.second->is_active()) x.second->post_phase(this);
+  for (auto e : all_entities<game_object>()) {
+    if (e->is_active()) e->post_phase(this);
+  }
+
   remove_units();
 }
 
@@ -882,10 +913,10 @@ void game_data::build() {
         sh.states.insert("landed");
         sh.owner = pid;
         s->ships.insert(sh.id);
-        add_entity(ship::ptr(new ship(sh)));
+        register_entity(ship::ptr(new ship(sh)));
       }
     }
-    add_entity(s);
+    register_entity(s);
     discover(s->position, 0, true);
 
     server::log("Created home solar " + s->id + " owned by " + to_string(s->owner));
@@ -914,8 +945,8 @@ void game_data::build() {
 void game_data::pre_step() {
   // clear waypoints and fleets, but don't list removals as client
   // manages them
-  for (auto i : all<waypoint>()) i->remove = true;
-  for (auto i : all<fleet>()) i->remove = true;
+  for (auto i : filtered_entities<waypoint>()) i->remove = true;
+  for (auto i : filtered_entities<fleet>()) i->remove = true;
   remove_units();
   remove_entities.clear();
 
@@ -929,7 +960,7 @@ void game_data::pre_step() {
 // compute max levels for each player and development
 void game_data::update_research_facility_level() {
   hm_t<idtype, hm_t<string, int>> level;
-  for (auto s : all<solar>()) {
+  for (auto s : filtered_entities<solar>()) {
     if (s->owner > -1) {
       s->research_level = &players[s->owner].research_level;
       for (auto v : keywords::development) {
@@ -948,16 +979,16 @@ void game_data::end_step() {
   bool check;
   list<combid> remove;
 
-  for (auto i : all<waypoint>()) {
+  for (auto i : filtered_entities<waypoint>()) {
     check = false;
 
     // check for fleets targeting this waypoint
-    for (auto j : all<fleet>()) {
+    for (auto j : filtered_entities<fleet>()) {
       check |= j->com.target == i->id;
     }
 
     // check for waypoints with commands targeting this waypoint
-    for (auto j : all<waypoint>()) {
+    for (auto j : filtered_entities<waypoint>()) {
       for (auto &k : j->pending_commands) {
         check |= k.target == i->id;
       }
@@ -967,7 +998,7 @@ void game_data::end_step() {
   }
 
   for (auto i : remove) {
-    remove_entity(i);
+    deregister_entity(i);
   }
 
   // clear log
@@ -978,7 +1009,7 @@ void game_data::end_step() {
 
   hm_t<idtype, float> pool;
   hm_t<idtype, int> count;
-  for (auto i : all<solar>()) {
+  for (auto i : filtered_entities<solar>()) {
     if (i->owner > -1) {
       pool[i->owner] += i->research_points;
       if (i->research_points > 0) count[i->owner]++;
@@ -1053,10 +1084,10 @@ animation_tracker_info game_data::get_tracker(combid id) const {
   animation_tracker_info info;
   info.eid = id;
 
-  if (entity.count(id)) {
-    info.p = get_entity(id)->position;
+  if (entity_exists(id)) {
+    info.p = get_game_object(id)->position;
 
-    if (get_entity(id)->isa(ship::class_id)) {
+    if (get_game_object(id)->isa(ship::class_id)) {
       ship::ptr s = get_ship(id);
       info.v = s->velocity;
     } else {
@@ -1098,7 +1129,7 @@ void game_data::log_bombard(combid a, combid b) {
 }
 
 void game_data::log_ship_fire(combid a, combid b) {
-  game_object::ptr s = get_entity(a);
+  game_object::ptr s = get_game_object(a);
   ship::ptr t = get_ship(b);
   int delay = utility::random_int(sub_frames);
 
@@ -1136,7 +1167,7 @@ void game_data::log_ship_fire(combid a, combid b) {
 }
 
 void game_data::log_ship_destroyed(combid a, combid b) {
-  game_object::ptr s = get_entity(a);
+  game_object::ptr s = get_game_object(a);
   ship::ptr t = get_ship(b);
   int delay = utility::random_int(sub_frames);
 
@@ -1191,7 +1222,7 @@ float game_data::solar_order_level(combid id) const {
   float modifier = r.get_order_modifier();
 
   // Calculate mean and variance of solar positions
-  list<solar::ptr> solars = all<solar>(pid);
+  vector<solar::ptr> solars = filtered_entities<solar>(pid);
   float N = solars.size();
   point m = {0, 0};
   float sd = 0;
@@ -1216,5 +1247,5 @@ float game_data::solar_order_level(combid id) const {
 }
 
 bool game_data::allow_add_fleet(idtype pid) const {
-  return get_max_fleets(pid) > all<fleet>(pid).size();
+  return get_max_fleets(pid) > filtered_entities<fleet>(pid).size();
 }

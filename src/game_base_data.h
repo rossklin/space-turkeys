@@ -19,19 +19,25 @@ class game_base_data {
   std::set<std::pair<int, int> > discovered_universe;
 
   virtual ~game_base_data() = default;
-  int next_id(class_t x);
   void clear_entities();
+  void copy_from(const game_base_data &g);
+  int get_max_fleets(idtype pid) const;
+  int get_max_ships_per_fleet(idtype pid) const;
 
-  // access
-  ship::ptr get_ship(combid i) const;
-  fleet::ptr get_fleet(combid i) const;
-  solar::ptr get_solar(combid i) const;
-  waypoint::ptr get_waypoint(combid i) const;
-  game_object::ptr get_entity(combid i) const;
+  bool entity_exists(combid id) const;
+  void add_entity(game_object::ptr e);
+  void remove_entity(combid id);
 
   template <typename T>
-  std::list<typename T::ptr> all(idtype pid = game_object::any_owner) const {
-    std::list<typename T::ptr> res;
+  std::vector<typename T::ptr> all_entities(idtype pid = game_object::any_owner) const {
+    std::vector<T::ptr> res;
+    for (auto p : entity) res.push_back(utility::guaranteed_cast<T>(p.second));
+    return res;
+  };
+
+  template <typename T>
+  std::vector<typename T::ptr> filtered_entities(idtype pid = game_object::any_owner) const {
+    std::vector<T::ptr> res;
 
     for (auto p : entity) {
       if (p.second->isa(T::class_id) && (pid == game_object::any_owner || p.second->owner == pid)) {
@@ -42,9 +48,13 @@ class game_base_data {
     return res;
   };
 
-  void limit_to(idtype pid);
-  void copy_from(const game_data &g);
-  int get_max_fleets(idtype pid) const;
-  int get_max_ships_per_fleet(idtype pid) const;
+  template <typename T>
+  typename T::ptr get_entity(combid i) const {
+    if (entity.count(i)) {
+      return utility::guaranteed_cast<T>(entity.at(i));
+    } else {
+      throw logical_error("get_entity: not found!");
+    }
+  }
 };
 };  // namespace st3

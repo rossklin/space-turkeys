@@ -111,10 +111,11 @@ const hm_t<string, interaction> &interaction::table() {
     } else if (test < 0.1) {
       // random tech
       auto rtab = research::data::table();
-      auto keys = utility::get_map_keys(rtab);
+      auto vkeys = utility::hm_keys(rtab);
+      set<string> keys(vkeys.begin(), vkeys.end());
       research::data &level = g->players[s->owner].research_level;
       auto researched = level.researched();
-      for (auto v : researched) keys.remove(v);
+      keys = keys - researched;
       set<string> frontier;
 
       for (auto k : keys) {
@@ -181,7 +182,7 @@ const hm_t<string, interaction> &interaction::table() {
             ship sh = rbase.build_ship(g->next_id(ship::class_id), m.first);
             new_ships.push_back(sh.id);
             sh.owner = s->owner;
-            g->add_entity(ship::ptr(new ship(sh)));
+            g->register_entity(ship::ptr(new ship(sh)));
           }
           break;
         }
@@ -204,7 +205,7 @@ const hm_t<string, interaction> &interaction::table() {
       }
     } else if (test < 0.5) {
       // ship upgrade
-      auto keys = utility::get_map_keys(upgrade::table());
+      auto keys = utility::range_init<list<string>>(utility::hm_keys(upgrade::table()));
       for (auto u : s->upgrades) keys.remove(u);
       if (keys.size()) {
         string u = utility::uniform_sample(keys);
@@ -391,8 +392,8 @@ const hm_t<string, interaction> &interaction::table() {
 
     // first check if we still need to load resources
     if (!s->states.count("loaded")) {
-      if (f->com.action == interaction::trade_to && g->entity.count(f->com.source)) {
-        game_object::ptr h = g->get_entity(f->com.source);
+      if (f->com.action == interaction::trade_to && g->entity_exists(f->com.source)) {
+        game_object::ptr h = g->get_game_object(f->com.source);
         if (h->isa(solar::class_id) && h->owner == s->owner) {
           load_resources(s, utility::guaranteed_cast<solar>(h));
         }

@@ -157,8 +157,8 @@ ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   collision_damage = 0;
 }
 
-list<string> ship::all_classes() {
-  return utility::get_map_keys(table());
+vector<string> ship::all_classes() {
+  return utility::hm_keys(table());
 }
 
 // 1. Update ship data
@@ -364,7 +364,7 @@ void ship::move(game_data *g) {
   // clean up local_*
   list<combid> rbuf;
   for (auto i : neighbours) {
-    if (!(g->entity.count(i) && can_see(g->get_entity(i)))) rbuf.push_back(i);
+    if (!(g->entity_exists(i) && can_see(g->get_game_object(i)))) rbuf.push_back(i);
   }
 
   for (auto i : rbuf) {
@@ -398,7 +398,7 @@ void ship::move(game_data *g) {
   if (activate && has_fleet()) {
     fleet::ptr f = g->get_fleet(fleet_id);
     if (f->com.target != identifier::target_idle && compile_interactions().count(f->com.action)) {
-      game_object::ptr e = g->get_entity(f->com.target);
+      game_object::ptr e = g->get_game_object(f->com.target);
       if (can_see(e) && utility::l2norm(e->position - position) <= interaction_radius()) {
         interaction_info info;
         info.source = id;
@@ -417,7 +417,7 @@ void ship::move(game_data *g) {
   // check upgrade on_move hooks
   for (auto v : upgrades) {
     upgrade u = upgrade::table().at(v);
-    for (auto i : u.hook["on move"]) interaction::table().at(i).perform(this, NULL, g);
+    for (auto i : u.hook["on move"]) interaction::table().at(i).perform(shared_from_this(), NULL, g);
   }
 
   // move
@@ -445,7 +445,7 @@ void ship::move(game_data *g) {
 void ship::post_phase(game_data *g) {
   // take collision damage
   if (collision_damage > 0) {
-    receive_damage(g, this, collision_damage);
+    receive_damage(g, shared_from_this(), collision_damage);
   }
   collision_damage = 0;
 }
@@ -469,7 +469,7 @@ void ship::receive_damage(game_data *g, game_object::ptr from, float damage) {
 }
 
 void ship::on_remove(game_data *g) {
-  if (g->entity.count(fleet_id)) {
+  if (g->entity_exists(fleet_id)) {
     g->get_fleet(fleet_id)->remove_ship(id);
   }
   game_object::on_remove(g);
@@ -480,7 +480,7 @@ ship::ptr ship::create() {
 }
 
 game_object::ptr ship::clone() {
-  return new ship(*this);
+  return ptr(new ship(*this));
 }
 
 bool ship::serialize(sf::Packet &p) {
@@ -545,12 +545,12 @@ void ship::on_liftoff(solar::ptr from, game_data *g) {
 
   for (auto v : upgrades) {
     upgrade u = upgrade::table().at(v);
-    for (auto i : u.hook["on liftoff"]) interaction::table().at(i).perform(this, from, g);
+    for (auto i : u.hook["on liftoff"]) interaction::table().at(i).perform(shared_from_this(), from, g);
   }
 }
 
 bool ship::isa(string c) {
-  return c == ship::class_id || c == physical_object::class_id;
+  return c == class_id || physical_object::isa(c);
 }
 
 bool ship::can_see(game_object::ptr x) {
