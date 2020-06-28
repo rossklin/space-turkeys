@@ -85,10 +85,19 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
     data[ship_class].adjust->SetLower(0);
     data[ship_class].adjust->SetUpper(total);
     data[ship_class].adjust->SetValue(data[ship_class].allocated);
-    data[ship_class].adjust->GetSignal(Adjustment::OnChange).Connect([this, build_ship_label, ship_class, total]() {
-      data[ship_class].allocated = data[ship_class].adjust->GetValue();
+    data[ship_class].adjust->GetSignal(Adjustment::OnChange).Connect([this, g, build_ship_label, ship_class, total]() {
+      int value = min((int)data[ship_class].adjust->GetValue(), g->get_max_ships_per_fleet(g->self_id));
+      data[ship_class].allocated = value;
       data[ship_class].available = total - data[ship_class].allocated;
       data[ship_class].alloc_label->SetText(build_ship_label(ship_class));
+
+      // set all other ship classes to 0
+      for (auto sc2 : ship::all_classes()) {
+        if (sc2 == ship_class) continue;
+        // data[sc2].available += data[sc2].allocated;
+        // data[sc2].allocated = 0;
+        data[sc2].adjust->SetValue(0);
+      }
     });
 
     box->Pack(Label::Create(ship_class));

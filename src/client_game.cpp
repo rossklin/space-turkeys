@@ -823,6 +823,12 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
     return;
   }
 
+  // check that we respect fleet count limit
+  if (filtered_entities<fleet>(self_id).size() >= get_max_fleets(self_id)) {
+    cout << "add_command: reached max nr of fleets!" << endl;
+    return;
+  }
+
   // set default fleet policy
   if (default_policy) c.policy = fleet::default_policy(c.action);
 
@@ -850,7 +856,13 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
       }
     }
 
-    cs->ships = ready_ships;
+    // only add ships of one class
+    string ship_class = get_specific<ship>(*ready_ships.begin())->ship_class;
+    cs->ships.clear();
+    for (auto sid : ready_ships) {
+      if (get_specific<ship>(sid)->ship_class == ship_class) cs->ships.insert(sid);
+      if (cs->ships.size() >= get_max_ships_per_fleet(self_id)) break;
+    }
   }
 
   // add command selector key to list of the source entity's children
