@@ -158,10 +158,11 @@ path_t game_data::get_path(point a, point b, float r) const {
   struct ptest {
     float h;
     path_t p;
+    pair<int, int> vertice;
   };
 
   // calculate heuristic cost of path and return as a ptest
-  auto gen_ptest = [b](path_t p) {
+  auto gen_ptest = [b](path_t p, pair<int, int> vertice) {
     if (p.empty()) {
       throw logical_error("Empty path in gen_ptest!");
     }
@@ -176,14 +177,14 @@ path_t game_data::get_path(point a, point b, float r) const {
 
     h += utility::l2norm(b - p.back());
 
-    return ptest{h, p};
+    return ptest{h, p, vertice};
   };
 
   // compare two paths represented by ptest objects by their heuristic cost
   auto ptest_comp = [](ptest a, ptest b) { return a.h > b.h; };
 
   priority_queue<ptest, vector<ptest>, decltype(ptest_comp)> frontier(ptest_comp);
-  frontier.push(gen_ptest(path_t(1, a)));
+  frontier.push(gen_ptest(path_t(1, a), {-1, -1}));
 
   // Adapted A* search
   while (!frontier.empty()) {
@@ -203,6 +204,9 @@ path_t game_data::get_path(point a, point b, float r) const {
 
     // remember blocked vertices
     hm_t<int, set<int>> hr_blocked;
+
+    // block the vertice that corresponds to the end point of the current path
+    if (x.vertice.first > -1) hr_blocked[x.vertice.first].insert(x.vertice.second);
 
     // Find the vertices representing the left and right horizon of a terrain wrt a point
     auto terrain_horizon = [this, r, r_buffered, &hr_blocked](point a, int tid) -> vector<int> {
@@ -264,7 +268,7 @@ path_t game_data::get_path(point a, point b, float r) const {
       } else {
         path_t new_path = res;
         new_path.push_back(q);
-        frontier.push(gen_ptest(new_path));
+        frontier.push(gen_ptest(new_path, alt));
       }
 
       if (alts.size() > 1000) {
