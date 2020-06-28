@@ -10,7 +10,6 @@
 #include "choice.h"
 #include "development_tree.h"
 #include "game_object.h"
-#include "ship.h"
 #include "types.h"
 
 namespace st3 {
@@ -21,7 +20,7 @@ struct data;
 };
 
 /*! data representing a solar system */
-class solar : public virtual physical_object, public virtual commandable_object, std::enable_shared_from_this<solar> {
+class solar : public virtual physical_object, public virtual commandable_object, public std::enable_shared_from_this<solar> {
  public:
   typedef std::shared_ptr<solar> ptr;
   static ptr create(idtype id, point p, float bounty, float var = 0.3);

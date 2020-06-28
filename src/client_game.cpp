@@ -77,6 +77,10 @@ game::game() {
   default_body = generate_loop_body([]() -> int { return 0; });
 }
 
+vector<entity_selector::ptr> game::all_selectors() const {
+  return all_entities<entity_selector>();
+};
+
 function<int(sf::Event)> game::generate_event_handler(function<int(sf::Event)> task) {
   return [task, this](sf::Event e) -> int {
     // run default event handler
@@ -674,7 +678,7 @@ void game::add_fixed_stars(point position, float vision) {
   }
 }
 
-void game::remove_entity(combid i) {
+void game::deregister_entity(combid i) {
   auto e = get_selector(i);
   auto buf = e->commands;
   for (auto c : buf) remove_command(c);
@@ -698,7 +702,7 @@ void game::reload_data(client_game_data &g, bool use_animations) {
   for (auto a : g.all_entities<entity_selector>()) {
     entity_selector::ptr p = a->ss_clone();
     combid key = p->id;
-    if (entity_exists(key)) remove_entity(key);
+    if (entity_exists(key)) deregister_entity(key);
     add_entity(p);
     p->seen = p->is_active();
     if (p->owner == self_id && p->is_active()) add_fixed_stars(p->position, p->vision());
@@ -709,7 +713,7 @@ void game::reload_data(client_game_data &g, bool use_animations) {
   for (auto x : g.remove_entities) {
     if (entity_exists(x)) {
       cout << " -> remove entity " << x << endl;
-      remove_entity(x);
+      deregister_entity(x);
     }
   }
 
@@ -726,7 +730,7 @@ void game::reload_data(client_game_data &g, bool use_animations) {
       }
     }
   }
-  for (auto id : rbuf) remove_entity(id);
+  for (auto id : rbuf) deregister_entity(id);
 
   // fix fleet positions
   for (auto f : get_all<fleet>()) {
@@ -892,7 +896,7 @@ void game::remove_command(idtype key) {
   // if last command of waypoint, remove it
   if (t->isa(waypoint::class_id)) {
     if (incident_commands(t->id).empty()) {
-      remove_entity(t->id);
+      deregister_entity(t->id);
     }
   }
 }
@@ -912,7 +916,7 @@ void game::clear_selectors() {
   comid = 0;
   command_selectors.clear();
 
-  for (auto w : get_all<waypoint>()) remove_entity(w->id);
+  for (auto w : get_all<waypoint>()) deregister_entity(w->id);
 }
 
 /** Mark all entity and command selectors as not selected. */
@@ -1354,7 +1358,7 @@ int game::choice_event(sf::Event e) {
     for (auto id : selected_specific<fleet>()) {
       fleet_selector::ptr f = get_specific<fleet>(id);
       for (auto sid : f->get_ships()) get_specific<ship>(sid)->fleet_id = identifier::source_none;
-      remove_entity(id);
+      deregister_entity(id);
     }
   };
 

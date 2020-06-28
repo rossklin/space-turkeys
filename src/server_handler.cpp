@@ -102,7 +102,7 @@ void handler::dispatch_game(game_setup gs) {
   safely([this, gs]() {
     game_data g;
     g.settings = gs.settings;
-    g.build_players(hm_values(gs.clients));
+    g.build_players(utility::hm_values(gs.clients));
     g.build();
     game_handler(gs, g);
   });
@@ -273,7 +273,7 @@ void handler::monitor_games() {
     for (auto &c : games) {
       game_setup &game = c.second;
       string gid = c.first;
-      vector<server_cl_socket::ptr> clients = hm_values(game.clients);
+      vector<server_cl_socket::ptr> clients = utility::hm_values(game.clients);
 
       // Check if we should start loading the game
       if (game.status == socket_t::tc_init && game.clients.size() == game.settings.clset.num_players) {

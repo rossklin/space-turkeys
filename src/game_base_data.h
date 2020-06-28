@@ -30,14 +30,14 @@ class game_base_data {
 
   template <typename T>
   std::vector<typename T::ptr> all_entities(idtype pid = game_object::any_owner) const {
-    std::vector<T::ptr> res;
+    std::vector<typename T::ptr> res;
     for (auto p : entity) res.push_back(utility::guaranteed_cast<T>(p.second));
     return res;
   };
 
   template <typename T>
   std::vector<typename T::ptr> filtered_entities(idtype pid = game_object::any_owner) const {
-    std::vector<T::ptr> res;
+    std::vector<typename T::ptr> res;
 
     for (auto p : entity) {
       if (p.second->isa(T::class_id) && (pid == game_object::any_owner || p.second->owner == pid)) {

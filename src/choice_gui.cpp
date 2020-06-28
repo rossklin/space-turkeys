@@ -351,7 +351,7 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
   for (auto v : s->choice_data.building_queue) extend_building_queue(v);
 
   auto bkeys = utility::hm_keys(available_buildings);
-  bkeys.sort();
+  sort(bkeys.begin(), bkeys.end());
   for (auto v : bkeys) {
     Button::Ptr b = Button::Create(v + " level " + to_string(available_buildings[v] + 1));
     desktop->bind_ppc(b, [this, v]() {
@@ -364,7 +364,7 @@ solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
 
   // add ships
   auto skey = utility::hm_keys(ship_stats::table());
-  skey.sort();
+  sort(skey.begin(), skey.end());
   for (auto v : skey) {
     if (desktop->get_research().can_build_ship(v, s)) {
       Button::Ptr b = Button::Create(v);

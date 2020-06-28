@@ -5,6 +5,24 @@
 using namespace st3;
 using namespace std;
 
+void game_base_data::add_entity(game_object::ptr e) {
+  if (entity.count(e->id)) {
+    throw logical_error("Attempted to add entity but it already exists!");
+  }
+  entity[e->id] = e;
+}
+
+bool game_base_data::entity_exists(combid i) const {
+  return entity.count(i);
+}
+
+void game_base_data::remove_entity(combid i) {
+  if (!entity.count(i)) {
+    throw logical_error("Attempted to remove entity but it does not exist!");
+  }
+  entity.erase(i);
+}
+
 void game_base_data::copy_from(const game_base_data &g) {
   if (entity.size()) throw logical_error("Attempting to assign game_data: has entities!");
 

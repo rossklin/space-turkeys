@@ -9,6 +9,7 @@
 #include "game_object.h"
 #include "interaction.h"
 #include "ship_stats.h"
+#include "solar.h"
 #include "types.h"
 
 namespace st3 {
@@ -16,7 +17,7 @@ class game_data;
 class solar;
 
 /*! ship game object */
-class ship : public virtual physical_object, public ship_stats, std::enable_shared_from_this<ship> {
+class ship : public virtual physical_object, public ship_stats, public std::enable_shared_from_this<ship> {
  public:
   typedef std::shared_ptr<ship> ptr;
   static ptr create();

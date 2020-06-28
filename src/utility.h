@@ -75,7 +75,7 @@ template <typename T, typename F = game_object>
 typename T::ptr guaranteed_cast(typename F::ptr p) {
   if (p == 0) throw logical_error("attempt_cast: null pointer!");
 
-  typename T::ptr res = dynamic_pointer_cast<T>(p);
+  typename T::ptr res = std::dynamic_pointer_cast<T>(p);
 
   if (res) {
     return res;

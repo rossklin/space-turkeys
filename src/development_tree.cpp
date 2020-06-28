@@ -36,7 +36,7 @@ bool development::node::parse(string name, const rapidjson::Value &v) {
   } else if (name == "ship upgrades") {
     for (auto u = v.MemberBegin(); u != v.MemberEnd(); u++) {
       string ship_name = u->name.GetString();
-      list<string> ship_classes;
+      vector<string> ship_classes;
 
       if (ship_name == research::upgrade_all_ships) {
         ship_classes = ship::all_classes();

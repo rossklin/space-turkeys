@@ -68,7 +68,7 @@ struct game : public game_base_data {
   /*! default contsructor */
   game();
 
-  void remove_entity(combid i);
+  void deregister_entity(combid i);
 
   command_selector::ptr get_command_selector(idtype i);
 
