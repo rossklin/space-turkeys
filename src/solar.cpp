@@ -38,8 +38,6 @@ void solar::pre_phase(game_data *g) {
 void solar::move(game_data *g) {
   if (owner < 0 || population() <= 0) return;
 
-  dynamics(g);
-
   // check for turret combat interaction
   target_condition cond(target_condition::enemy, ship::class_id);
   list<combid> buf = g->search_targets_nophys(id, position, interaction_radius(), cond.owned_by(owner));
@@ -227,14 +225,18 @@ float solar::population() {
   return effective_level(keywords::key_population);
 }
 
+// Production at end of round
 void solar::dynamics(game_data *g) {
-  float dt = g->get_dt();
-  float order = g->solar_order_level(id);
+  // float dt = g->get_dt();
+  // float order = g->solar_order_level(id);
 
   // research and development
-  research_points += order * effective_level(keywords::key_research) * dt;
+  float a = population();
+  research_points = a * effective_level(keywords::key_research);
+  float ship_build_points = a * effective_level(keywords::key_shipyard);
 
-  if (choice_data.do_produce()) {
+  // build ships
+  while (choice_data.ship_queue.size()) {
     string v = choice_data.ship_queue.front();
     if (research_level->can_build_ship(v, shared_from_this())) {
       ship_stats s = ship::table().at(v);
@@ -246,9 +248,16 @@ void solar::dynamics(game_data *g) {
           pay_resources(s.build_cost);
         } else {
           // todo: message can't afford ship
+          g->players[owner].log.push_back("Can't afford to build ship " + v);
+          break;
         }
-      } else {
-        ship_progress += order * sqrt(population()) * effective_level(keywords::key_shipyard) * dt;
+      }
+
+      float needed = ship_progress - s.build_time;
+      if (needed > 0) {
+        float use = fmin(needed, ship_build_points);
+        ship_progress += use;
+        ship_build_points -= use;
       }
 
       // check ship complete
@@ -263,35 +272,28 @@ void solar::dynamics(game_data *g) {
         g->register_entity(ship::ptr(new ship(sh)));
 
         g->players[owner].log.push_back("Completed ship " + v);
+        choice_data.ship_queue.pop_front();
+      } else {
+        // Ship under construction
+        break;
       }
     } else {
       // can't build this ship
-      g->players[owner].log.push_back("Insufficient resources to build ship " + v);
+      g->players[owner].log.push_back("Lacking requirements to build ship " + v);
       choice_data.ship_queue.pop_front();
     }
   }
 
-  if (choice_data.do_develop()) {
+  // build developments
+  if (choice_data.building_queue.size()) {
     string v = choice_data.building_queue.front();
-    if (build_progress < 0) {
-      cost::res_t build_cost = devcost(v);
-      if (can_afford(build_cost)) {
-        build_progress = 0;
-        pay_resources(build_cost);
-      } else {
-        g->players[owner].log.push_back("Insufficient resources to develop " + v);
-      }
-    } else {
-      build_progress += order * population() * dt;
-    }
-
-    // check building complete
-    if (build_progress >= devtime(v)) {
-      build_progress = -1;
-      choice_data.building_queue.pop_front();
-
+    cost::res_t build_cost = devcost(v);
+    if (can_afford(build_cost)) {
+      pay_resources(build_cost);
       development[v]++;
-      g->players[owner].log.push_back("Completed building " + v + " level " + to_string(development[v]));
+      choice_data.building_queue.pop_front();
+    } else {
+      g->players[owner].log.push_back("Insufficient resources to develop " + v);
     }
   }
 }

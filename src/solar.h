@@ -31,7 +31,7 @@ class solar : public virtual physical_object, public virtual commandable_object,
 
   hm_t<std::string, int> development;
   sfloat ship_progress;
-  sfloat build_progress;
+  // sfloat build_progress;
   sfloat research_points;
   sfloat hp;
   cost::res_t resources;

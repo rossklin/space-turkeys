@@ -18,9 +18,9 @@ const int max_allocation = 10;
 struct c_solar {
   std::list<std::string> building_queue;
   std::list<std::string> ship_queue;
-  bool do_develop();
-  bool do_produce();
-  std::string devstring();
+  // bool do_develop();
+  // bool do_produce();
+  // std::string devstring();
 };
 
 struct choice {

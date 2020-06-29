@@ -1,20 +1,28 @@
 * Notes test game 2020-06-22
 ** bugs
+*** Production seems to be nearly instant
+    Defer to "Solar dynamics" update
+*** Client does not center on home solar on startup
+*** One solar built 0 of 5 fighters in a round (then showed shipyard level 3 -234823482364% complete)
+*** (maybe) development queue item dropped
+*** Ship stuck circling target
 *** [impl] Path search fails to remove extra initial nodes
-*** Client side impl of fleet and ship limits
+*** [impl] Client side impl of fleet and ship limits
 Note: server limits ships sent but not ships registered for transfer at waypoint
 *** Out of range error when asking to join nonexistent game
 *** [done] Client displays max fleets as 2, should be 4, not finding owned solar?
-*** Client does not center on home solar on startup
-*** Ships can shoot through impassable terrain
-*** Parameters showing uninitialized values in gui at start of turn
+*** [done] Parameters showing uninitialized values in gui at start of turn
 [done] max fleets and max ships per fleet
-production progress
-*** One solar built 0 of 5 fighters in a round (then showed shipyard level 3 -234823482364% complete)
+** Solar dynamics
+Simple idea (check vs current impl):
+*** All build time expressed in rounds instead of frames and happens at end of round
+*** Each population increases ship build, research and defense by e.g. 20% rounded down
+*** Each level of shipyard or research fac. adds one production point per round
+*** Sending colonizer removes one population
+*** Possibly, organics resource should determine max pop rather than being used when building pop
+** Terrain mechanic
 *** Units can still enter impassable terrain
-*** (maybe) development queue item dropped
-*** Ship stuck circling target
-*** Production seems to be nearly instant
+*** Ships can shoot through impassable terrain
 ** Would like indicators for progress etc in right hand menu
 Eg research progress, ship and building progress, empire stats such as max fleets
 ** Stats for solar: show order, growth, production and research per round in stats panel
@@ -33,13 +41,6 @@ Eg research progress, ship and building progress, empire stats such as max fleet
 ** Event log: colour coded entry cards which fit in the window, grey out previous turns
 *** Click to go to location
 ** Scouting: what happens when "some people join"?
-** Solar dynamics
-Simple idea (check vs current impl):
-*** All build time expressed in rounds instead of frames and happens at end of round
-*** Each population increases ship build, research and defense by e.g. 20% rounded down
-*** Each level of shipyard or research fac. adds one production point per round
-*** Sending colonizer removes one population
-*** Possibly, organics resource should determine max pop rather than being used when building pop
 ** Map properties
 *** Add solars without organics to force players to transport resources to habitable solars
 *** Have more terrain between solars rather than fields of solars

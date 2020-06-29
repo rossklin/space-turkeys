@@ -978,7 +978,7 @@ void game_data::update_research_facility_level() {
   }
 }
 
-// pool research and remove unused waypoints
+// Run solar dynamics, pool research and remove unused waypoints
 void game_data::end_step() {
   bool check;
   list<combid> remove;
@@ -1007,6 +1007,9 @@ void game_data::end_step() {
 
   // clear log
   for (auto &x : players) x.second.log.clear();
+
+  // Run solar dynamics
+  for (auto s : filtered_entities<solar>()) s->dynamics(this);
 
   // pool research
   update_research_facility_level();
