@@ -16,7 +16,7 @@ bool cl_socket_t::check_com() {
   return (!instruction) || *instruction == tc_run || *instruction == tc_init;
 }
 
-void st3::client::load_frames(cl_socket_t *socket, vector<client_game_data> &g, int &idx, int &com_in, int &com_out) {
+void st3::client::load_frames(cl_socket_t *socket, vector<game_base_data> &g, int &idx, int &com_in, int &com_out) {
   sf::Packet pq;
   int sub_com = socket_t::tc_run;
 
@@ -89,7 +89,7 @@ void st3::client::query(cl_socket_t *socket, sf::Packet &pq, int &com_in, int &c
 }
 
 // unpack entity package and generate corresponding selector objects in data frame
-void client::deserialize(client_game_data &f, sf::Packet &p, sint id) {
+void client::deserialize(game_base_data &f, sf::Packet &p, sint id) {
   game_base_data ep;
 
   if (f.entity.size()) {

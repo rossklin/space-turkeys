@@ -183,12 +183,6 @@ Widget::Ptr interface::governor_gui(list<solar::ptr> solars) {
   hm_t<string, bool> options;
   for (auto v : keywords::development) options[v] = false;
 
-  // test if current governor is consistent
-  string current = solars.front()->choice_data.devstring();
-  bool test = true;
-  for (auto s : solars)
-    if (s->choice_data.devstring() != current) current = "mixed";
-
   choice_gui::f_info_t f_info = [](string v) -> choice_info {
     choice_info res;
     res.info.push_back("Develop " + v);
@@ -418,10 +412,10 @@ void solar_gui::extend_building_queue(string v) {
 
   available_buildings[v]++;
   string name = v + " level " + to_string(available_buildings[v]);
-  if (building_queue.empty() && v == sol->choice_data.devstring()) {
-    int percent = 100 * sol->build_progress / sol->devtime(v);
-    name += ": " + to_string(percent) + "%";
-  }
+  // if (building_queue.empty() && v == sol->choice_data.devstring()) {
+  //   int percent = 100 * sol->build_progress / sol->devtime(v);
+  //   name += ": " + to_string(percent) + "%";
+  // }
 
   Button::Ptr b = Button::Create(name);
   int id = bid++;
@@ -442,7 +436,7 @@ void solar_gui::extend_ship_queue(string v) {
 
   string name = v;
   if (ship_queue.empty() && sol->ship_progress > 0) {
-    if (sol->choice_data.do_produce() && sol->choice_data.ship_queue.front() == v) {
+    if (sol->choice_data.ship_queue.size() && sol->choice_data.ship_queue.front() == v) {
       float build_time = ship::table().at(v).build_time;
       int percent = 100 * sol->ship_progress / build_time;
       name += ": " + to_string(percent) + "%";

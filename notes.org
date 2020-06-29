@@ -1,21 +1,22 @@
 * Notes test game 2020-06-22
 ** bugs
-*** Production seems to be nearly instant
-    Defer to "Solar dynamics" update
+*** Server segfault on colonize
 *** Client does not center on home solar on startup
 *** One solar built 0 of 5 fighters in a round (then showed shipyard level 3 -234823482364% complete)
 *** (maybe) development queue item dropped
 *** Ship stuck circling target
+*** Out of range error when asking to join nonexistent game
+*** [done] Production seems to be nearly instant
+    Defer to "Solar dynamics" update
 *** [impl] Path search fails to remove extra initial nodes
 *** [impl] Client side impl of fleet and ship limits
 Note: server limits ships sent but not ships registered for transfer at waypoint
-*** Out of range error when asking to join nonexistent game
 *** [done] Client displays max fleets as 2, should be 4, not finding owned solar?
 *** [done] Parameters showing uninitialized values in gui at start of turn
 [done] max fleets and max ships per fleet
 ** Solar dynamics
 Simple idea (check vs current impl):
-*** All build time expressed in rounds instead of frames and happens at end of round
+*** [done] All build time expressed in rounds instead of frames and happens at end of round
 *** Each population increases ship build, research and defense by e.g. 20% rounded down
 *** Each level of shipyard or research fac. adds one production point per round
 *** Sending colonizer removes one population

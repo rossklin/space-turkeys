@@ -58,7 +58,7 @@ void specific_selector<solar>::draw(window_t &w) {
     graphics::draw_text(w, to_string((int)(population())), position, 16);
 
     indicator_text = "";
-    if (choice_data.do_develop()) indicator_text = build_abr[choice_data.building_queue.front()];
+    if (choice_data.building_queue.size()) indicator_text = build_abr[choice_data.building_queue.front()];
     if (get_ships().size()) indicator_text += " <>";
 
     if (selected) {
@@ -121,12 +121,12 @@ string specific_selector<solar>::hover_info() {
       ss << "\n"
          << x.first << ": " << x.second;
 
-      if (build_progress >= 0 && choice_data.do_develop() && x.first == choice_data.building_queue.front()) {
-        ss << " (" << to_string((int)(100 * build_progress / devtime(x.first))) << "%)";
-      }
+      // if (build_progress >= 0 && choice_data.do_develop() && x.first == choice_data.building_queue.front()) {
+      //   ss << " (" << to_string((int)(100 * build_progress / devtime(x.first))) << "%)";
+      // }
     }
 
-    if (ship_progress >= 0 && choice_data.do_produce()) {
+    if (ship_progress >= 0 && choice_data.ship_queue.size()) {
       ss << "\n<<Shipyard>>";
       string sc = choice_data.ship_queue.front();
       ship_stats s = ship::table().at(sc);

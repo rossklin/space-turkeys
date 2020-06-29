@@ -8,7 +8,6 @@
 #include <string>
 
 #include "choice.h"
-#include "client_game_data.h"
 #include "com_client.h"
 #include "explosion.h"
 #include "fixed_star.h"
@@ -102,7 +101,7 @@ struct game : public game_base_data {
   /*! update gui with new game data
 	@param g the game data
       */
-  void reload_data(client_game_data &g, bool use_animations = true);
+  void reload_data(game_base_data &g, bool use_animations = true);
 
   // event handling
   /*! update the choice generating gui with an sfml event

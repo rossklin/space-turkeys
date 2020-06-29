@@ -197,7 +197,7 @@ bool game::wait_for_it(sf::Packet &p, std::function<bool(sf::Packet)> callback) 
 
 bool game::init_data() {
   sf::Packet pq;
-  client_game_data data;
+  game_base_data data;
 
   message = "loading players...";
   pq << protocol::load_init;
@@ -246,7 +246,7 @@ bool game::init_data() {
 
 bool game::pre_step() {
   sf::Packet pq;
-  client_game_data data;
+  game_base_data data;
   phase = "pre";
 
   message = "loading game data...";
@@ -416,7 +416,7 @@ bool game::simulation_step() {
   bool playing = true;
   int idx = -1;
   int loaded = 0;
-  vector<client_game_data> g(settings.clset.frames_per_round);
+  vector<game_base_data> g(settings.clset.frames_per_round);
 
   cout << "simluation: starting data loader" << endl;
 
@@ -690,7 +690,7 @@ void game::deregister_entity(combid i) {
     Adds and removes entity selectors given by the frame. Also adds
     new command selectors representing fleet commands.
 */
-void game::reload_data(client_game_data &g, bool use_animations) {
+void game::reload_data(game_base_data &g, bool use_animations) {
   // make selectors 'not seen' and 'not owned' and clear commands and
   // waypoints
   clear_selectors();

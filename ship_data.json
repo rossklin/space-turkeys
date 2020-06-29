@@ -24,7 +24,7 @@
       "cost": {
         "metals": 1,
         "gases": 1,
-        "time": 50
+        "time": 2
       },
       "shape": [
         {
@@ -68,7 +68,7 @@
       "cost": {
         "metals": 5,
         "gases": 1,
-        "time": 100
+        "time": 4
       },
       "shape": [
         {
@@ -111,7 +111,7 @@
       "cost": {
         "metals": 10,
         "gases": 3,
-        "time": 200
+        "time": 8
       },
       "shape": [
         {
@@ -170,7 +170,7 @@
       "cost": {
         "metals": 20,
         "gases": 10,
-        "time": 500
+        "time": 20
       },
       "shape": [
         {
@@ -230,7 +230,7 @@
       "cost": {
         "metals": 5,
         "gases": 1,
-        "time": 250
+        "time": 10
       },
       "shape": [
         {
@@ -290,7 +290,7 @@
       "cost": {
         "metals": 40,
         "gases": 10,
-        "time": 1500
+        "time": 60
       },
       "shape": [
         {
@@ -350,7 +350,7 @@
         "metals": 180,
         "gases": 20,
         "organics": 10,
-        "time": 5000
+        "time": 200
       },
       "shape": [
         {
@@ -427,7 +427,7 @@
         "metals": 120,
         "gases": 30,
         "organics": 20,
-        "time": 3500
+        "time": 140
       },
       "shape": [
         {
@@ -480,7 +480,7 @@
         "metals": 30,
         "gases": 5,
         "organics": 10,
-        "time": 500
+        "time": 20
       },
       "shape": [
         {
@@ -522,7 +522,7 @@
         "metals": 30,
         "gases": 5,
         "organics": 5,
-        "time": 500
+        "time": 20
       },
       "shape": [
         {

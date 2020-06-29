@@ -1,7 +1,7 @@
 {
   "research": {
     "warp technology": {
-      "build time": 50,
+      "build time": 5,
       "depends facilities": {
         "research facility": 1
       },
@@ -10,19 +10,19 @@
       }
     },
     "plasma weapons": {
-      "build time": 50,
+      "build time": 5,
       "depends facilities": {
         "research facility": 1
       }
     },
     "research culture": {
-      "build time": 50,
+      "build time": 5,
       "depends facilities": {
         "research facility": 1
       }
     },
     "nano technology": {
-      "build time": 100,
+      "build time": 10,
       "depends facilities": {
         "research facility": 2
       },
@@ -33,7 +33,7 @@
       "increase ships per fleet": 5
     },
     "interstellar culture": {
-      "build time": 100,
+      "build time": 10,
       "depends facilities": {
         "research facility": 2
       },
@@ -44,7 +44,7 @@
       "increase fleets": 2
     },
     "ionized hulls": {
-      "build time": 100,
+      "build time": 10,
       "depends facilities": {
         "research facility": 2
       },
@@ -54,7 +54,7 @@
       }
     },
     "shield technology": {
-      "build time": 200,
+      "build time": 20,
       "depends facilities": {
         "research facility": 3
       },
@@ -64,21 +64,21 @@
       }
     },
     "warp core": {
-      "build time": 200,
+      "build time": 20,
       "depends facilities": {
         "research facility": 3
       },
       "depends technologies": ["nano technology", "shield technology"]
     },
     "automining": {
-      "build time": 200,
+      "build time": 20,
       "depends facilities": {
         "research facility": 3
       },
       "depends technologies": ["nano technology", "interstellar culture"]
     },
     "stealth technology": {
-      "build time": 400,
+      "build time": 40,
       "depends facilities": {
         "research facility": 4
       },
@@ -88,7 +88,7 @@
       }
     },
     "micro torpedos": {
-      "build time": 400,
+      "build time": 40,
       "depends facilities": {
         "research facility": 4
       },
@@ -98,7 +98,7 @@
       }
     },
     "micro med bots": {
-      "build time": 400,
+      "build time": 40,
       "depends facilities": {
         "research facility": 4
       },
@@ -108,14 +108,14 @@
       }
     },
     "photon torpedos": {
-      "build time": 800,
+      "build time": 80,
       "depends facilities": {
         "research facility": 5
       },
       "depends technologies": ["stealth technology", "warp core"]
     },
     "A.M. Laser": {
-      "build time": 800,
+      "build time": 80,
       "depends facilities": {
         "research facility": 5
       },
@@ -125,7 +125,7 @@
       }
     },
     "hive fleet": {
-      "build time": 800,
+      "build time": 80,
       "depends facilities": {
         "research facility": 5
       },

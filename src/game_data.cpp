@@ -464,7 +464,7 @@ void game_data::apply_choice(choice::choice c, idtype id) {
       throw player_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + x.first + ": not a solar!");
     }
 
-    if (x.second.do_develop()) {
+    if (x.second.building_queue.size()) {
       for (auto y : x.second.building_queue) {
         if (!utility::find_in(y, keywords::development)) {
           throw player_error("validate_choice: error: invalid development key: " + y);
@@ -475,8 +475,9 @@ void game_data::apply_choice(choice::choice c, idtype id) {
     solar::ptr s = get_solar(x.first);
 
     // reset ship production if altered
-    if (!(s->choice_data.do_produce() && x.second.do_produce() && s->choice_data.ship_queue.front() == x.second.ship_queue.front())) {
-      s->ship_progress = 0;
+    if (s->choice_data.ship_queue.size() && x.second.ship_queue.size() && s->choice_data.ship_queue.front() != x.second.ship_queue.front()) {
+      server::log("Reset production of " + s->choice_data.ship_queue.front() + " to " + x.second.ship_queue.front());
+      s->ship_progress = -1;
     }
 
     // apply

@@ -159,7 +159,6 @@ solar::ptr solar::create(idtype id, point p, float bounty, float var) {
 
   // s -> population = 0;
   s->research_points = 0;
-  s->build_progress = -1;
   s->ship_progress = -1;
 
   for (auto v : keywords::resource) s->resources[v] = fres();
@@ -246,6 +245,7 @@ void solar::dynamics(game_data *g) {
         if (can_afford(s.build_cost)) {
           ship_progress = 0;
           pay_resources(s.build_cost);
+          g->players[owner].log.push_back("Started building " + v);
         } else {
           // todo: message can't afford ship
           g->players[owner].log.push_back("Can't afford to build ship " + v);
@@ -253,15 +253,19 @@ void solar::dynamics(game_data *g) {
         }
       }
 
-      float needed = ship_progress - s.build_time;
-      if (needed > 0) {
-        float use = fmin(needed, ship_build_points);
+      bool will_complete = ship_progress + ship_build_points >= s.build_time;
+
+      // pay build points as needed
+      float needed = s.build_time - ship_progress;
+      float use = 0;
+      if (needed > 0 && ship_build_points > 0) {
+        use = fmin(needed, ship_build_points);
         ship_progress += use;
         ship_build_points -= use;
       }
 
       // check ship complete
-      if (ship_progress >= s.build_time) {
+      if (will_complete) {
         ship_progress = -1;
         choice_data.ship_queue.pop_front();
 
@@ -272,9 +276,9 @@ void solar::dynamics(game_data *g) {
         g->register_entity(ship::ptr(new ship(sh)));
 
         g->players[owner].log.push_back("Completed ship " + v);
-        choice_data.ship_queue.pop_front();
       } else {
         // Ship under construction
+        g->players[owner].log.push_back("Building " + v + ": spending " + to_string(use) + ", prog " + to_string(100 * ship_progress / s.build_time) + "%");
         break;
       }
     } else {

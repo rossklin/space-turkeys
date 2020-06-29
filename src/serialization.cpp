@@ -185,7 +185,6 @@ sf::Packet& st3::operator<<(sf::Packet& packet, const solar& g) {
          << g.ships
          << g.development
          << g.ship_progress
-         << g.build_progress
          << g.hp
          << g.was_discovered
          << g.known_by;
@@ -194,7 +193,7 @@ sf::Packet& st3::operator<<(sf::Packet& packet, const solar& g) {
 sf::Packet& st3::operator>>(sf::Packet& packet, solar& g) {
   return packet >> static_cast<commandable_object&>(g) >> g.choice_data >> g.research_points >> g.resources
          // >> g.population
-         >> g.ships >> g.development >> g.ship_progress >> g.build_progress >> g.hp >> g.was_discovered >> g.known_by;
+         >> g.ships >> g.development >> g.ship_progress >> g.hp >> g.was_discovered >> g.known_by;
 }
 
 // solar choice
