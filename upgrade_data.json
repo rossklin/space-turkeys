@@ -1,9 +1,7 @@
 {
   "upgrade": {
     "colonize": {
-      "interactions": [
-        "colonize"
-      ]
+      "interactions": ["colonize"]
     },
     "warp drive": {
       "thrust": "1.5#1"
@@ -22,16 +20,12 @@
     },
     "splash": {
       "hook": {
-        "on hit": [
-          "splash"
-        ]
+        "on hit": ["splash"]
       }
     },
     "hive mind": {
       "hook": {
-        "on move": [
-          "hive support"
-        ]
+        "on move": ["hive support"]
       }
     }
   }

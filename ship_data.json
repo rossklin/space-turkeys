@@ -20,12 +20,7 @@
       "is starting ship": 1,
       "depends facility level": 0,
       "depends tech": "",
-      "interactions": [
-        "land",
-        "space combat",
-        "search",
-        "auto search"
-      ],
+      "interactions": ["land", "space combat", "search", "auto search"],
       "cost": {
         "metals": 1,
         "gases": 1,
@@ -53,10 +48,7 @@
           "c": "p"
         }
       ],
-      "tags": [
-        "scout",
-        "spacecombat"
-      ]
+      "tags": ["scout", "spacecombat"]
     },
     "fighter": {
       "thrust": 3,
@@ -70,11 +62,7 @@
       "interaction radius": 30,
       "load time": 5,
       "cannon flex": 0.2,
-      "interactions": [
-        "land",
-        "space combat",
-        "bombard"
-      ],
+      "interactions": ["land", "space combat", "bombard"],
       "depends facility level": 1,
       "depends tech": "plasma weapons",
       "cost": {
@@ -109,11 +97,7 @@
           "c": "n"
         }
       ],
-      "tags": [
-        "combat",
-        "spacecombat",
-        "bombard"
-      ]
+      "tags": ["combat", "spacecombat", "bombard"]
     },
     "bomber": {
       "thrust": 3,
@@ -121,10 +105,7 @@
       "mass": 10,
       "solar damage": 4,
       "accuracy": 0.8,
-      "interactions": [
-        "land",
-        "bombard"
-      ],
+      "interactions": ["land", "bombard"],
       "depends facility level": 2,
       "depends tech": "plasma weapons",
       "cost": {
@@ -169,9 +150,7 @@
           "c": "p"
         }
       ],
-      "tags": [
-        "bombard"
-      ]
+      "tags": ["bombard"]
     },
     "corsair": {
       "hp": 10,
@@ -185,10 +164,7 @@
       "vision range": 70,
       "cannon flex": 0.9,
       "load time": 0,
-      "interactions": [
-        "land",
-        "space combat"
-      ],
+      "interactions": ["land", "space combat"],
       "depends facility level": 3,
       "depends tech": "shield technology",
       "cost": {
@@ -233,10 +209,7 @@
           "c": "p"
         }
       ],
-      "tags": [
-        "combat",
-        "spacecombat"
-      ]
+      "tags": ["combat", "spacecombat"]
     },
     "cannon": {
       "hp": 5,
@@ -251,10 +224,7 @@
       "interaction radius": 10,
       "cannon flex": 0.1,
       "load time": 5,
-      "interactions": [
-        "space combat",
-        "deploy"
-      ],
+      "interactions": ["space combat", "deploy"],
       "depends facility level": 2,
       "depends tech": "ionized hulls",
       "cost": {
@@ -299,10 +269,7 @@
           "c": "p"
         }
       ],
-      "tags": [
-        "combat",
-        "spacecombat"
-      ]
+      "tags": ["combat", "spacecombat"]
     },
     "destroyer": {
       "hp": 100,
@@ -317,10 +284,7 @@
       "interaction radius": 60,
       "cannon flex": 0.2,
       "load time": 15,
-      "interactions": [
-        "land",
-        "space combat"
-      ],
+      "interactions": ["land", "space combat"],
       "depends facility level": 5,
       "depends tech": "photon torpedos",
       "cost": {
@@ -365,10 +329,7 @@
           "c": "p"
         }
       ],
-      "tags": [
-        "combat",
-        "spacecombat"
-      ]
+      "tags": ["combat", "spacecombat"]
     },
     "battleship": {
       "hp": 120,
@@ -382,11 +343,7 @@
       "vision range": 100,
       "interaction radius": 80,
       "load time": 7,
-      "interactions": [
-        "land",
-        "space combat",
-        "bombard"
-      ],
+      "interactions": ["land", "space combat", "bombard"],
       "depends facility level": 3,
       "depends tech": "warp core",
       "cost": {
@@ -442,11 +399,7 @@
           "c": "p"
         }
       ],
-      "tags": [
-        "bombard",
-        "combat",
-        "spacecombat"
-      ],
+      "tags": ["bombard", "combat", "spacecombat"],
       "cannon flex": 1
     },
     "voyager": {
@@ -513,12 +466,7 @@
           "c": "p"
         }
       ],
-      "tags": [
-        "scout",
-        "bombard",
-        "combat",
-        "spacecombat"
-      ],
+      "tags": ["scout", "bombard", "combat", "spacecombat"],
       "cannon flex": 0.8
     },
     "colonizer": {
@@ -526,9 +474,7 @@
       "hp": 20,
       "mass": 30,
       "interactions": [],
-      "upgrades": [
-        "colonize"
-      ],
+      "upgrades": ["colonize"],
       "depends facility level": 1,
       "cost": {
         "metals": 30,
@@ -568,11 +514,7 @@
       "thrust": 13,
       "hp": 20,
       "mass": 30,
-      "interactions": [
-        "land",
-        "trade to",
-        "trade from"
-      ],
+      "interactions": ["land", "trade to", "trade from"],
       "depends facility level": 1,
       "depends tech": "automining",
       "cargo capacity": 10,

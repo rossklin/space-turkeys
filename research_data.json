@@ -6,9 +6,7 @@
         "research facility": 1
       },
       "ship upgrades": {
-        "[2,1000]": [
-          "warp drive"
-        ]
+        "[2,1000]": ["warp drive"]
       }
     },
     "plasma weapons": {
@@ -28,40 +26,31 @@
       "depends facilities": {
         "research facility": 2
       },
-      "depends technologies": [
-        "warp technology"
-      ],
+      "depends technologies": ["warp technology"],
       "solar modifier": {
         "population": 1
       },
-      "increase ships per fleet" : 5
+      "increase ships per fleet": 5
     },
     "interstellar culture": {
       "build time": 100,
       "depends facilities": {
         "research facility": 2
       },
-      "depends technologies": [
-        "research culture",
-        "warp technology"
-      ],
+      "depends technologies": ["research culture", "warp technology"],
       "solar modifier": {
         "population": 1
       },
-      "increase fleets" : 2
+      "increase fleets": 2
     },
     "ionized hulls": {
       "build time": 100,
       "depends facilities": {
         "research facility": 2
       },
-      "depends technologies": [
-        "plasma weapons"
-      ],
+      "depends technologies": ["plasma weapons"],
       "ship upgrades": {
-        "upgrade all ships": [
-          "ionized hull"
-        ]
+        "upgrade all ships": ["ionized hull"]
       }
     },
     "shield technology": {
@@ -69,14 +58,9 @@
       "depends facilities": {
         "research facility": 3
       },
-      "depends technologies": [
-        "warp technology",
-        "ionized hulls"
-      ],
+      "depends technologies": ["warp technology", "ionized hulls"],
       "ship upgrades": {
-        "upgrade all ships": [
-          "shield"
-        ]
+        "upgrade all ships": ["shield"]
       }
     },
     "warp core": {
@@ -84,33 +68,23 @@
       "depends facilities": {
         "research facility": 3
       },
-      "depends technologies": [
-        "nano technology",
-        "shield technology"
-      ]
+      "depends technologies": ["nano technology", "shield technology"]
     },
     "automining": {
       "build time": 200,
       "depends facilities": {
         "research facility": 3
       },
-      "depends technologies": [
-        "nano technology",
-        "interstellar culture"
-      ]
+      "depends technologies": ["nano technology", "interstellar culture"]
     },
     "stealth technology": {
       "build time": 400,
       "depends facilities": {
         "research facility": 4
       },
-      "depends technologies": [
-        "shield technology"
-      ],
+      "depends technologies": ["shield technology"],
       "ship upgrades": {
-        "[3,15]": [
-          "stealth"
-        ]
+        "[3,15]": ["stealth"]
       }
     },
     "micro torpedos": {
@@ -118,13 +92,9 @@
       "depends facilities": {
         "research facility": 4
       },
-      "depends technologies": [
-        "nano technology"
-      ],
+      "depends technologies": ["nano technology"],
       "ship upgrades": {
-        "#spacecombat": [
-          "micro torpedos"
-        ]
+        "#spacecombat": ["micro torpedos"]
       }
     },
     "micro med bots": {
@@ -132,10 +102,7 @@
       "depends facilities": {
         "research facility": 4
       },
-      "depends technologies": [
-        "nano technology",
-        "automining"
-      ],
+      "depends technologies": ["nano technology", "automining"],
       "solar modifier": {
         "population": 1
       }
@@ -145,23 +112,16 @@
       "depends facilities": {
         "research facility": 5
       },
-      "depends technologies": [
-        "stealth technology",
-        "warp core"
-      ]
+      "depends technologies": ["stealth technology", "warp core"]
     },
     "A.M. Laser": {
       "build time": 800,
       "depends facilities": {
         "research facility": 5
       },
-      "depends technologies": [
-        "warp core"
-      ],
+      "depends technologies": ["warp core"],
       "ship upgrades": {
-        "[50,1000]:#spacecombat": [
-          "splash"
-        ]
+        "[50,1000]:#spacecombat": ["splash"]
       }
     },
     "hive fleet": {
@@ -169,13 +129,9 @@
       "depends facilities": {
         "research facility": 5
       },
-      "depends technologies": [
-        "micro med bots"
-      ],
+      "depends technologies": ["micro med bots"],
       "ship upgrades": {
-        "[1,5]:#spacecombat": [
-          "hive mind"
-        ]
+        "[1,5]:#spacecombat": ["hive mind"]
       }
     }
   }
