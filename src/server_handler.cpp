@@ -66,7 +66,7 @@ bool handler::join_game(server_cl_socket_ptr cl, string gid) {
   bool res = true;
   game_ring.lock();
   if (!games.count(gid)) res = false;
-  if (!games.at(gid).can_join()) res = false;
+  if (!(res && games.at(gid).can_join())) res = false;
   if (res) {
     games.at(gid).add_client(cl);
     cl->gid = gid;
