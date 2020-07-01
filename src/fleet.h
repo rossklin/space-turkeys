@@ -1,11 +1,9 @@
-#ifndef _STK_FLEET
-#define _STK_FLEET
+#pragma once
 
 #include <set>
 
 #include "command.h"
 #include "game_object.h"
-#include "interaction.h"
 #include "ship_stats.h"
 #include "types.h"
 
@@ -20,8 +18,8 @@ extern const std::string idle;
 /*! a fleet controls a set of ships */
 class fleet : public virtual commandable_object {
  public:
-  typedef std::shared_ptr<fleet> ptr;
-  static ptr create(idtype pid, idtype idx);
+  typedef fleet_ptr ptr;
+  static fleet_ptr create(idtype pid, idtype idx);
   static const std::string class_id;
 
   /* class suggestion { */
@@ -113,11 +111,10 @@ class fleet : public virtual commandable_object {
   float get_strength();
   void refresh_ships(game_data *g);
   void check_action(game_data *g);
-  game_object::ptr clone();
+  game_object_ptr clone();
 
  protected:
   void check_waypoint(game_data *g);
   void check_in_sight(game_data *g);
 };
 };  // namespace st3
-#endif

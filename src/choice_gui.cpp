@@ -8,6 +8,9 @@
 #include "client_game.h"
 #include "desktop.h"
 #include "graphics.h"
+#include "ship.h"
+#include "solar.h"
+#include "utility.h"
 
 using namespace std;
 using namespace st3;
@@ -179,7 +182,7 @@ void choice_gui::update_selected() {
 }
 
 // GOVERNOR
-Widget::Ptr interface::governor_gui(list<solar::ptr> solars) {
+Widget::Ptr interface::governor_gui(list<solar_ptr> solars) {
   hm_t<string, bool> options;
   for (auto v : keywords::development) options[v] = false;
 
@@ -267,7 +270,7 @@ Widget::Ptr interface::research_gui() {
 }
 
 // MILITARY
-Widget::Ptr interface::military_gui(list<solar::ptr> solars) {
+Widget::Ptr interface::military_gui(list<solar_ptr> solars) {
   hm_t<string, bool> options;
   for (auto v : ship::all_classes()) options[v] = false;
 
@@ -308,14 +311,14 @@ Widget::Ptr interface::military_gui(list<solar::ptr> solars) {
   return choice_gui::Create("Military", "Chose which ships should be produced in your empire", false, options, f_info, callback);
 }
 
-solar_gui::Ptr solar_gui::Create(solar::ptr s) {
+solar_gui::Ptr solar_gui::Create(solar_ptr s) {
   Ptr buf(new solar_gui(s));
   buf->Add(buf->wrapper);
   buf->SetId(sfg_id);
   return buf;
 }
 
-solar_gui::solar_gui(solar::ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
+solar_gui::solar_gui(solar_ptr s) : Window(Window::Style::BACKGROUND), sol(s) {
   wrapper = Box::Create(Box::Orientation::VERTICAL, 5);
   auto layout = Box::Create(Box::Orientation::HORIZONTAL, 5);
   auto frame_left = Frame::Create("Available buildings");

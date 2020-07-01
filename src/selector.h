@@ -1,5 +1,4 @@
-#ifndef _STK_SELECTOR
-#define _STK_SELECTOR
+#pragma once
 
 #include <SFML/Graphics.hpp>
 #include <memory>
@@ -10,8 +9,10 @@
 #include "fleet.h"
 #include "game_object.h"
 #include "graphics.h"
+#include "ship.h"
 #include "solar.h"
 #include "types.h"
+#include "waypoint.h"
 
 namespace st3 {
 namespace client {
@@ -68,8 +69,8 @@ class specific_selector : public virtual entity_selector, public virtual T {
   std::string hover_info();
 };
 
-template <>
-specific_selector<ship>::specific_selector(ship &s, sf::Color c, bool o);
+// template <>
+// specific_selector<ship>::specific_selector(ship &s, sf::Color c, bool o);
 
 typedef specific_selector<ship> ship_selector;
 typedef specific_selector<fleet> fleet_selector;
@@ -113,4 +114,3 @@ class command_selector : public command {
 };
 };  // namespace client
 };  // namespace st3
-#endif

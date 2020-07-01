@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "selector.h"
+#include "game_base_data.h"
 #include "socket_t.h"
 #include "types.h"
 

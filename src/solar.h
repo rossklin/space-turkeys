@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "choice.h"
-#include "development_tree.h"
+#include "cost.h"
 #include "game_object.h"
 #include "types.h"
 
@@ -22,8 +22,8 @@ struct data;
 /*! data representing a solar system */
 class solar : public virtual physical_object, public virtual commandable_object, public std::enable_shared_from_this<solar> {
  public:
-  typedef std::shared_ptr<solar> ptr;
-  static ptr create(idtype id, point p, float bounty, float var = 0.3);
+  typedef solar_ptr ptr;
+  static solar_ptr create(idtype id, point p, float bounty, float var = 0.3);
   static const std::string class_id;
 
   choice::c_solar choice_data;
@@ -50,19 +50,19 @@ class solar : public virtual physical_object, public virtual commandable_object,
   void move(game_data *g);
   void post_phase(game_data *g);
   bool serialize(sf::Packet &p);
-  game_object::ptr clone();
+  game_object_ptr clone();
   bool isa(std::string c);
 
   // physical_object
   std::set<std::string> compile_interactions();
   float interaction_radius();
-  bool can_see(game_object::ptr x);
+  bool can_see(game_object_ptr x);
 
   // commandable_object
   void give_commands(std::list<command> c, game_data *g);
 
   // solar
-  void receive_damage(game_object::ptr s, float damage, game_data *g);
+  void receive_damage(game_object_ptr s, float damage, game_data *g);
   float vision();
   std::string get_info();
   float effective_level(std::string k);

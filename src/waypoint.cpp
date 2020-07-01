@@ -3,6 +3,7 @@
 #include <iostream>
 #include <mutex>
 
+#include "fleet.h"
 #include "game_data.h"
 #include "serialization.h"
 #include "utility.h"
@@ -62,11 +63,11 @@ void waypoint::give_commands(list<command> c, game_data *g) {
   pending_commands.insert(pending_commands.end(), c.begin(), c.end());
 }
 
-waypoint::ptr waypoint::create(idtype o, idtype id) {
+waypoint_ptr waypoint::create(idtype o, idtype id) {
   return ptr(new waypoint(o, id));
 }
 
-game_object::ptr waypoint::clone() {
+game_object_ptr waypoint::clone() {
   return ptr(new waypoint(*this));
 }
 

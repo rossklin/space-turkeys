@@ -1,5 +1,4 @@
-#ifndef _STK_PROTOCOL
-#define _STK_PROTOCOL
+#pragma once
 
 #include "types.h"
 
@@ -40,4 +39,3 @@ const sint aborted = 1003;  /*!< tell the client the game was aborted */
 const sint standby = 1004;
 };  // namespace protocol
 };  // namespace st3
-#endif

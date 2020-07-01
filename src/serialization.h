@@ -1,12 +1,15 @@
-#ifndef _STK_SERIALIZATION
-#define _STK_SERIALIZATION
+#pragma once
 
 #include <utility>
 
 #include "cost.h"
 #include "development_tree.h"
+#include "fleet.h"
 #include "game_data.h"
 #include "research.h"
+#include "ship.h"
+#include "solar.h"
+#include "waypoint.h"
 
 namespace st3 {
 
@@ -306,4 +309,3 @@ sf::Packet& operator<<(sf::Packet& packet, const research::tech& g);
   */
 sf::Packet& operator>>(sf::Packet& packet, research::tech& g);
 };  // namespace st3
-#endif

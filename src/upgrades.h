@@ -1,13 +1,10 @@
-#ifndef _STK_UPGRADES
-#define _STK_UPGRADES
+#pragma once
 
 #include <functional>
 #include <set>
 #include <string>
 
-#include "interaction.h"
-#include "ship.h"
-#include "solar.h"
+#include "ship_stats.h"
 
 namespace st3 {
 class game_data;
@@ -21,5 +18,3 @@ class upgrade {
   ssmod_t modify;
 };
 };  // namespace st3
-
-#endif

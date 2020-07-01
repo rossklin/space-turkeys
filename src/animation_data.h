@@ -1,5 +1,4 @@
-#ifndef _STK_ANIMATION_DATA
-#define _STK_ANIMATION_DATA
+#pragma once
 
 #include <string>
 
@@ -31,5 +30,3 @@ struct animation_data {
   std::string text;
 };
 };  // namespace st3
-
-#endif

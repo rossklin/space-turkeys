@@ -1,5 +1,4 @@
-#ifndef _STK_DEVELOPMENT_GUI
-#define _STK_DEVELOPMENT_GUI
+#pragma once
 
 #include <SFGUI/SFGUI.hpp>
 #include <SFGUI/Widgets.hpp>
@@ -60,5 +59,3 @@ class development_gui : public sfg::Bin {
 };
 };  // namespace interface
 };  // namespace st3
-
-#endif

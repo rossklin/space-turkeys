@@ -1,5 +1,4 @@
-#ifndef _STK_WAYPOINT
-#define _STK_WAYPOINT
+#pragma once
 
 #include <list>
 
@@ -13,8 +12,8 @@ class game_data;
 /*! Waypoints allow position based fleet joining and splitting.*/
 class waypoint : public virtual commandable_object {
  public:
-  typedef std::shared_ptr<waypoint> ptr;
-  static ptr create(idtype owner, idtype id);
+  typedef waypoint_ptr ptr;
+  static waypoint_ptr create(idtype owner, idtype id);
   static const std::string class_id;
   static int idc;
 
@@ -27,7 +26,7 @@ class waypoint : public virtual commandable_object {
   void post_phase(game_data *g);
   float vision();
   bool serialize(sf::Packet &p);
-  game_object::ptr clone();
+  game_object_ptr clone();
   bool isa(std::string c);
 
   // commandable_object
@@ -40,4 +39,3 @@ class waypoint : public virtual commandable_object {
   waypoint(const waypoint &w);
 };
 };  // namespace st3
-#endif

@@ -7,8 +7,10 @@
 #include "interaction.h"
 #include "serialization.h"
 #include "ship.h"
+#include "solar.h"
 #include "upgrades.h"
 #include "utility.h"
+#include "waypoint.h"
 
 using namespace std;
 using namespace st3;
@@ -92,12 +94,12 @@ float fleet::vision() {
   return stats.vision_buf;
 }
 
-fleet::ptr fleet::create(idtype pid, idtype idx) {
-  return ptr(new fleet(pid, idx));
+fleet_ptr fleet::create(idtype pid, idtype idx) {
+  return fleet_ptr(new fleet(pid, idx));
 }
 
-game_object::ptr fleet::clone() {
-  return fleet::ptr(new fleet(*this));
+game_object_ptr fleet::clone() {
+  return fleet_ptr(new fleet(*this));
 }
 
 bool fleet::serialize(sf::Packet &p) {
@@ -118,7 +120,7 @@ void fleet::give_commands(list<command> c, game_data *g) {
   random_shuffle(buf.begin(), buf.end());
 
   for (auto &x : buf) {
-    ptr f = create(fleet::server_pid, g->next_id(fleet::class_id));
+    fleet_ptr f = create(fleet::server_pid, g->next_id(fleet::class_id));
     f->com = x;
     f->com.source = f->id;
     if (f->com.origin.empty()) f->com.origin = com.origin;
@@ -127,7 +129,7 @@ void fleet::give_commands(list<command> c, game_data *g) {
     f->owner = owner;
     for (auto i : x.ships) {
       if (ships.count(i)) {
-        ship::ptr buf = g->get_ship(i);
+        ship_ptr buf = g->get_ship(i);
         buf->fleet_id = f->id;
         remove_ship(i);
         f->ships.insert(i);
@@ -260,7 +262,7 @@ void fleet::analyze_enemies(game_data *g) {
   int idx_target = utility::angle2index(na, utility::point_angle(stats.target_position - position));
   int idx_closest = 0;
 
-  solar::ptr closest_solar = g->closest_solar(position, owner);
+  solar_ptr closest_solar = g->closest_solar(position, owner);
   if (closest_solar) {
     idx_closest = utility::angle2index(na, utility::point_angle(closest_solar->position - position));
     dw[idx_closest] = 0.8;
@@ -305,7 +307,7 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
 
   float rbuf = 0;
   for (auto k : ships) {
-    ship::ptr s = g->get_ship(k);
+    ship_ptr s = g->get_ship(k);
     p = p + s->position;
     rbuf = max(rbuf, s->radius);
   }
@@ -355,7 +357,7 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
   point dir = utility::normalize_and_scale(heading - position, 1);
   float hpossd = 0;
   for (auto k : ships) {
-    ship::ptr s = g->get_ship(k);
+    ship_ptr s = g->get_ship(k);
     speed = fmin(speed, s->max_speed());
     r2 = fmax(r2, utility::l2d2(s->position - position));
     stats.vision_buf = fmax(stats.vision_buf, s->vision());
@@ -369,7 +371,7 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
   if (n > 1) {
     hpossd = sqrt(hpossd / n);
     for (auto k : ships) {
-      ship::ptr s = g->get_ship(k);
+      ship_ptr s = g->get_ship(k);
       s->hpos /= hpossd;
     }
   }
@@ -409,7 +411,7 @@ void fleet::check_action(game_data *g) {
     if (g->target_position(com.target, stats.target_position)) {
       bool buf = false;
       for (auto sid : ships) {
-        ship::ptr s = g->get_ship(sid);
+        ship_ptr s = g->get_ship(sid);
         buf |= utility::l2d2(stats.target_position - s->position) < fleet::interact_d2;
       }
       should_refresh |= buf != stats.converge;
@@ -446,7 +448,7 @@ void fleet::check_in_sight(game_data *g) {
     // created on client side
 
     // // create a waypoint and reset target
-    // waypoint::ptr w = waypoint::create(owner);
+    // waypoint_ptr w = waypoint::create(owner);
 
     // // if the target exists, set waypoint at  target position
     // g -> target_position(com.target, w -> position);

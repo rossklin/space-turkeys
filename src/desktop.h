@@ -1,5 +1,4 @@
-#ifndef _STK_DESKTOP
-#define _STK_DESKTOP
+#pragma once
 
 #include <SFGUI/SFGUI.hpp>
 #include <SFGUI/Widgets.hpp>
@@ -50,5 +49,3 @@ class main_interface : public sfg::Desktop {
 extern main_interface *desktop;
 };  // namespace interface
 };  // namespace st3
-
-#endif

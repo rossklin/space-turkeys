@@ -11,9 +11,9 @@
 using namespace std;
 using namespace st3;
 
-solar::ptr build_solar() {
+solar_ptr build_solar() {
   static int idc = 0;
-  solar::ptr s = solar::create(idc++, point(0, 0), 1);
+  solar_ptr s = solar::create(idc++, point(0, 0), 1);
 
   s->population = 1000;
   s->research_points = 0;
@@ -45,55 +45,55 @@ int main(int argc, char **argv) {
   if (argc > 2) entities = atoi(argv[2]);
   if (argc > 3) steps = atoi(argv[3]);
 
-  hm_t<string, function<float(solar::ptr)> > stat;
+  hm_t<string, function<float(solar_ptr)> > stat;
 
-  stat["population"] = [](solar::ptr s) -> float {
+  stat["population"] = [](solar_ptr s) -> float {
     return s->population / 10000;
   };
 
-  stat["happiness"] = [](solar::ptr s) -> float {
+  stat["happiness"] = [](solar_ptr s) -> float {
     return s->happiness;
   };
 
-  stat["environment"] = [](solar::ptr s) -> float {
+  stat["environment"] = [](solar_ptr s) -> float {
     return s->ecology;
   };
 
-  stat["crowding"] = [](solar::ptr s) -> float {
+  stat["crowding"] = [](solar_ptr s) -> float {
     return s->crowding_rate() / (s->base_growth() + 1);
   };
 
-  stat["resources"] = [](solar::ptr s) -> float {
+  stat["resources"] = [](solar_ptr s) -> float {
     cost::res_t res = s->available_resource;
     res.add(s->resource_storage);
     return fmin(res["gases"], fmin(res["metals"], res["organics"])) / 1000;
   };
 
-  stat["ships"] = [](solar::ptr s) -> float {
+  stat["ships"] = [](solar_ptr s) -> float {
     return s->ship_progress / 1000;
   };
 
-  stat["culture"] = [](solar::ptr s) -> float {
+  stat["culture"] = [](solar_ptr s) -> float {
     return s->choice_data.allocation[keywords::key_culture] * s->compute_boost(keywords::key_culture);
   };
 
-  stat["medicine"] = [](solar::ptr s) -> float {
+  stat["medicine"] = [](solar_ptr s) -> float {
     return s->compute_boost(keywords::key_medicine) - 1;
   };
 
-  stat["ecology"] = [](solar::ptr s) -> float {
+  stat["ecology"] = [](solar_ptr s) -> float {
     return s->compute_boost(keywords::key_ecology) - 1;
   };
 
-  stat["research"] = [](solar::ptr s) -> float {
+  stat["research"] = [](solar_ptr s) -> float {
     return s->research_points;
   };
 
-  stat["mining"] = [](solar::ptr s) -> float {
+  stat["mining"] = [](solar_ptr s) -> float {
     return s->choice_data.allocation[keywords::key_mining];
   };
 
-  stat["buildings"] = [](solar::ptr s) -> float {
+  stat["buildings"] = [](solar_ptr s) -> float {
     int sum = 0;
     for (auto f : s->developed()) {
       sum += f.level;
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
     return sum - 3;
   };
 
-  stat["research_facility"] = [](solar::ptr s) -> float {
+  stat["research_facility"] = [](solar_ptr s) -> float {
     return s->developed("research facility").level;
   };
 
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
   server::silent_mode = true;
   float init_pop_lim = 5000;
   for (int i = 0; i < entities; i++) {
-    solar::ptr s = build_solar();
+    solar_ptr s = build_solar();
 
     s->research_level = &rdata;
     s->choice_data.allocation = cost::sector_allocation::base_allocation();

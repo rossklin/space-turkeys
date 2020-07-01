@@ -1,5 +1,4 @@
-#ifndef _STK_EXPLOSION
-#define _STK_EXPLOSION
+#pragma once
 
 #include <SFML/Graphics.hpp>
 #include <chrono>
@@ -16,5 +15,3 @@ struct explosion {
   float time_passed();
 };
 };  // namespace st3
-
-#endif

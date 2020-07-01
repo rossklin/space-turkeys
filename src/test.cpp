@@ -3,9 +3,12 @@
 #include <iostream>
 #include <thread>
 
+#include "fleet.h"
 #include "game_data.h"
 #include "research.h"
+#include "ship.h"
 #include "types.h"
+#include "waypoint.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
@@ -40,15 +43,15 @@ void setup_fleet_for(game_data *g, idtype pid, point at, point targ, hm_t<string
   for (auto sc : scc) {
     int count = max(round(utility::random_normal(sc.second, 0.5)), 1);
     for (int j = 0; j < count; j++) {
-      ship sh = rbase.build_ship(g->next_id(ship::class_id), sc.first);
-      ships.push_back(sh.id);
-      sh.owner = pid;
-      sh.states.insert("landed");
-      g->register_entity(ship::ptr(new ship(sh)));
+      ship_ptr sh = rbase.build_ship(g->next_id(ship::class_id), sc.first);
+      ships.push_back(sh->id);
+      sh->owner = pid;
+      sh->states.insert("landed");
+      g->register_entity(sh);
     }
   }
 
-  waypoint::ptr w = waypoint::create(idc++, pid);
+  waypoint_ptr w = waypoint::create(idc++, pid);
   w->position = targ;
   command c;
   c.target = w->id;

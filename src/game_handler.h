@@ -1,5 +1,4 @@
-#ifndef _STK_GAMEHANDLER
-#define _STK_GAMEHANDLER
+#pragma once
 
 #include "com_server.h"
 #include "game_data.h"
@@ -13,5 +12,3 @@ namespace server {
 void game_handler(game_setup c, game_data &g);
 };  // namespace server
 };  // namespace st3
-
-#endif

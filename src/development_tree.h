@@ -5,7 +5,6 @@
 #include <set>
 #include <string>
 
-#include "cost.h"
 #include "types.h"
 
 namespace st3 {

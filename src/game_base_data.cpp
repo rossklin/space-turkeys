@@ -1,11 +1,12 @@
 #include "game_base_data.h"
 
 #include "game_data.h"
+#include "solar.h"
 
 using namespace st3;
 using namespace std;
 
-void game_base_data::add_entity(game_object::ptr e) {
+void game_base_data::add_entity(game_object_ptr e) {
   if (entity.count(e->id)) {
     throw logical_error("Attempted to add entity but it already exists!");
   }

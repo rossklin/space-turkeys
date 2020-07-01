@@ -3,7 +3,13 @@
 #include <iostream>
 #include <set>
 
+#include "fleet.h"
+#include "game_base_data.h"
+#include "interaction.h"
+#include "ship.h"
+#include "solar.h"
 #include "utility.h"
+#include "waypoint.h"
 
 using namespace std;
 using namespace st3;
@@ -32,7 +38,7 @@ sf::Packet& st3::operator>>(sf::Packet& packet, game_base_data& g) {
   // polymorphic deserialization
   g.clear_entities();
   for (int i = 0; i < n; i++) {
-    game_object::ptr x = game_object::deserialize(packet);
+    game_object_ptr x = game_object::deserialize(packet);
     if (x) {
       g.add_entity(x);
     } else {
@@ -256,11 +262,23 @@ sf::Packet& st3::operator>>(sf::Packet& packet, fleet::analytics& g) {
 
 // choice
 sf::Packet& st3::operator<<(sf::Packet& packet, const choice::choice& c) {
-  return packet << c.commands << c.solar_choices << c.waypoints << c.fleets << c.research;
+  vector<waypoint> wps = utility::map<waypoint_ptr, waypoint>([](waypoint_ptr p) { return *p; }, utility::hm_values(c.waypoints));
+  vector<fleet> fls = utility::map<fleet_ptr, fleet>([](fleet_ptr p) { return *p; }, utility::hm_values(c.fleets));
+
+  return packet << c.commands << c.solar_choices << wps << fls << c.research;
 }
 
 sf::Packet& st3::operator>>(sf::Packet& packet, choice::choice& c) {
-  return packet >> c.commands >> c.solar_choices >> c.waypoints >> c.fleets >> c.research;
+  vector<waypoint> wps;
+  vector<fleet> fls;
+  auto& res = packet >> c.commands >> c.solar_choices >> wps >> fls >> c.research;
+
+  if (res) {
+    for (auto w : wps) c.waypoints[w.id] = waypoint_ptr(new waypoint(w));
+    for (auto f : fls) c.fleets[f.id] = fleet_ptr(new fleet(f));
+  }
+
+  return res;
 }
 
 // waypoint

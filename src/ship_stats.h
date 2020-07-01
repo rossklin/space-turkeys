@@ -4,8 +4,6 @@
 #include <string>
 
 #include "cost.h"
-#include "game_object.h"
-#include "interaction.h"
 #include "types.h"
 
 namespace st3 {

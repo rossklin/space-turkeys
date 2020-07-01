@@ -3,7 +3,6 @@
 #include <string>
 
 #include "animation_data.h"
-#include "cost.h"
 #include "research.h"
 #include "types.h"
 

@@ -1,5 +1,4 @@
-#ifndef _STK_GRIDTREE
-#define _STK_GRIDTREE
+#pragma once
 
 #include <SFML/Graphics.hpp>
 #include <list>
@@ -120,5 +119,3 @@ struct tree {
 };
 };  // namespace grid
 };  // namespace st3
-
-#endif

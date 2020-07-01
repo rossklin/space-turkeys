@@ -46,14 +46,14 @@ query_response_generator server::static_query_response(handler_result res) {
   };
 }
 
-server_cl_socket::server_cl_socket() : socket_t() {
+server::server_cl_socket::server_cl_socket() : socket_t() {
   st3_state = tc_init;
   wfg_thread = 0;
   gid = "";
 }
 
 // Receive an expected query from the client and generate a response using the provided callback
-handler_result server_cl_socket::receive_query(protocol_t p, query_response_generator f) {
+handler_result server::server_cl_socket::receive_query(protocol_t p, query_response_generator f) {
   protocol_t input;
   handler_result res;
   res.status = socket_t::tc_failed;
@@ -79,23 +79,23 @@ handler_result server_cl_socket::receive_query(protocol_t p, query_response_gene
   return res;
 }
 
-bool server_cl_socket::check_com() {
+bool server::server_cl_socket::check_com() {
   return main_status == tc_run;
 }
 
-void server_cl_socket::set_disconnect() {
+void server::server_cl_socket::set_disconnect() {
   server::log("disconnecting client " + to_string(id));
   disconnect();
   status = sf::Socket::Status::Disconnected;
 }
 
-bool server_cl_socket::is_connected() {
+bool server::server_cl_socket::is_connected() {
   return status != sf::Socket::Disconnected;
 }
 
 // Until an outcome is reached, wait for receiving a query for the specified
 // protocol and process it with the given query response generator
-bool server_cl_socket::check_protocol(protocol_t p, query_response_generator f) {
+bool server::server_cl_socket::check_protocol(protocol_t p, query_response_generator f) {
   bool running = true;
   bool completed = false;
   sf::Packet p_aborted;
@@ -148,7 +148,7 @@ game_setup::game_setup() {
   status = socket_t::tc_init;
 }
 
-void game_setup::add_client(server_cl_socket::ptr c) {
+void game_setup::add_client(server_cl_socket_ptr c) {
   clients[c->id] = c;
 }
 

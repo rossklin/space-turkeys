@@ -8,6 +8,7 @@
 #include "animation.h"
 #include "client_game.h"
 #include "cost.h"
+#include "ship.h"
 #include "types.h"
 #include "utility.h"
 
@@ -83,9 +84,9 @@ void graphics::draw_flag(sf::RenderTarget &w, point p, sf::Color c, sf::Color bg
   w.draw(pole, t);
 
   // draw ship symbol
-  ship sh = ship::table().at(ship_class);
-  sh.position = p + s * point(0.5, -1.5);
-  sh.angle = 0;
+  ship_ptr sh(new ship(ship::table().at(ship_class)));
+  sh->position = p + s * point(0.5, -1.5);
+  sh->angle = 0;
   draw_ship(w, sh, sf::Color::Black, 0.35 * s, false);
 }
 
@@ -158,15 +159,15 @@ sf::Image graphics::ship_image_label(string text, string ship_class, float width
 
   tex.clear();
 
-  ship s(ship::table().at(ship_class));
-  s.position = point(width / 2, height / 2);
-  s.angle = 0;
+  ship_ptr s(new ship(ship::table().at(ship_class)));
+  s->position = point(width / 2, height / 2);
+  s->angle = 0;
   float scale = width / 6;
   draw_ship(tex, s, s_col, scale);
 
   if (text.length() > 0) {
     int fs = 0.6 * fmin(width / (float)text.length(), height);
-    draw_text(tex, text, s.position, fs);
+    draw_text(tex, text, s->position, fs);
   }
 
   tex.display();
@@ -180,26 +181,26 @@ sfg::Button::Ptr graphics::ship_button(string ship_class, float width, float hei
   return b;
 };
 
-void graphics::draw_ship(sf::RenderTarget &w, ship s, sf::Color col, float sc, bool multicolor) {
+void graphics::draw_ship(sf::RenderTarget &w, ship_ptr s, sf::Color col, float sc, bool multicolor) {
   vector<sf::Vertex> svert;
 
   sf::Color cnose(255, 200, 180, 200);
 
-  svert.resize(s.shape.size());
-  for (int i = 0; i < s.shape.size(); i++) {
-    svert[i].position = s.shape[i].first;
-    svert[i].color = s.shape[i].second == 'p' || !multicolor ? col : cnose;
+  svert.resize(s->shape.size());
+  for (int i = 0; i < s->shape.size(); i++) {
+    svert[i].position = s->shape[i].first;
+    svert[i].color = s->shape[i].second == 'p' || !multicolor ? col : cnose;
   }
 
   sf::Transform t;
-  t.translate(s.position.x, s.position.y);
-  t.rotate(s.angle / (2 * M_PI) * 360);
+  t.translate(s->position.x, s->position.y);
+  t.rotate(s->angle / (2 * M_PI) * 360);
   t.scale(sc, sc);
   w.draw(&svert[0], svert.size(), sf::LinesStrip, t);
 
   // temp for debug
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::L)) {
-    draw_text(w, s.id, s.position, 12, false);
+    draw_text(w, s->id, s->position, 12, false);
   }
 }
 

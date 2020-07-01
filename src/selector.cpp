@@ -5,9 +5,11 @@
 #include "client_game.h"
 #include "fleet.h"
 #include "graphics.h"
+#include "ship.h"
 #include "solar.h"
 #include "types.h"
 #include "utility.h"
+#include "waypoint.h"
 
 using namespace std;
 
@@ -321,7 +323,7 @@ void specific_selector<ship>::draw(window_t &w) {
     w.draw(s);
   }
 
-  graphics::draw_ship(w, *this, get_color(), graphics::ship_scale_factor * radius);
+  graphics::draw_ship(w, ship::shared_from_this(), get_color(), graphics::ship_scale_factor * radius);
 
   // // debug
   // float tr = thrust / stats[sskey::key::thrust];

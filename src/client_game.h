@@ -8,12 +8,9 @@
 #include <string>
 
 #include "choice.h"
-#include "com_client.h"
-#include "explosion.h"
 #include "fixed_star.h"
-#include "graphics.h"
+#include "game_base_data.h"
 #include "selector.h"
-#include "socket_t.h"
 #include "types.h"
 
 namespace st3 {
@@ -21,6 +18,8 @@ class target_gui;
 
 namespace client {
 const float frame_time = 0.05;
+
+struct cl_socket_t;
 
 /*! Client game interface
 

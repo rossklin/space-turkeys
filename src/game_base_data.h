@@ -3,6 +3,7 @@
 #include "game_object.h"
 #include "game_settings.h"
 #include "player.h"
+#include "terrain_object.h"
 #include "types.h"
 #include "utility.h"
 
@@ -12,7 +13,7 @@ class game_base_data {
   hm_t<class_t, idtype> idc;
   hm_t<idtype, player> players; /*!< table of players */
   game_settings settings;       /*! game settings */
-  hm_t<combid, game_object::ptr> entity;
+  hm_t<combid, game_object_ptr> entity;
   hm_t<idtype, terrain_object> terrain;
   std::list<combid> remove_entities;
   hm_t<idtype, std::set<combid> > evm;
@@ -25,7 +26,7 @@ class game_base_data {
   int get_max_ships_per_fleet(idtype pid) const;
 
   bool entity_exists(combid id) const;
-  void add_entity(game_object::ptr e);
+  void add_entity(game_object_ptr e);
   void remove_entity(combid id);
 
   template <typename T>

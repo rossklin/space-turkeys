@@ -56,12 +56,12 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
   layout->Pack(Separator::Create());
 
   for (auto sid : g->get_ready_ships(c->source)) {
-    ship::ptr s = g->get_specific<ship>(sid);
+    ship_ptr s = g->get_specific<ship>(sid);
     data[s->ship_class].available++;
   }
 
   for (auto sid : c->ships) {
-    ship::ptr s = g->get_specific<ship>(sid);
+    ship_ptr s = g->get_specific<ship>(sid);
     data[s->ship_class].allocated++;
   }
 
@@ -120,7 +120,7 @@ command_gui::command_gui(client::command_selector::ptr c, client::game *g) : Win
     // first list ships by class
     hm_t<string, set<combid> > by_class;
     for (auto sid : ready_ships) {
-      ship::ptr s = g->get_specific<ship>(sid);
+      ship_ptr s = g->get_specific<ship>(sid);
       by_class[s->ship_class].insert(s->id);
     }
 

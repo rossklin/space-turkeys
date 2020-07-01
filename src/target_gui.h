@@ -3,7 +3,6 @@
 #include <string>
 
 #include "graphics.h"
-#include "ship.h"
 #include "types.h"
 
 namespace st3 {

@@ -1,5 +1,4 @@
-#ifndef _STK_ANIMATION
-#define _STK_ANIMATION
+#pragma once
 
 #include "animation_data.h"
 #include "types.h"
@@ -13,5 +12,3 @@ struct animation : public animation_data {
   float time_passed();
 };
 };  // namespace st3
-
-#endif

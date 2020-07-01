@@ -6,7 +6,6 @@
 #include <list>
 #include <string>
 
-#include "solar.h"
 #include "types.h"
 
 namespace st3 {
@@ -26,7 +25,7 @@ class solar_gui : public sfg::Window {
   typedef std::shared_ptr<const solar_gui> PtrConst;
   static const std::string sfg_id;
 
-  static Ptr Create(solar::ptr s);
+  static Ptr Create(solar_ptr s);
 
  protected:
   sfg::Box::Ptr wrapper, layout_left, layout_left_q, layout_right, layout_right_q;
@@ -34,9 +33,9 @@ class solar_gui : public sfg::Window {
   hm_t<std::string, sfg::Button::Ptr> available_buildings_b;
   hm_t<int, std::pair<std::string, sfg::Button::Ptr> > building_queue;
   hm_t<int, std::pair<std::string, sfg::Button::Ptr> > ship_queue;
-  solar::ptr sol;
+  solar_ptr sol;
 
-  solar_gui(solar::ptr s);
+  solar_gui(solar_ptr s);
   void update_available_button(std::string v);
   void extend_building_queue(std::string v);
   void extend_ship_queue(std::string v);
@@ -86,8 +85,8 @@ class choice_gui : public sfg::Window {
   void update_selected();
 };
 
-sfg::Widget::Ptr governor_gui(std::list<solar::ptr> solars);
-sfg::Widget::Ptr military_gui(std::list<solar::ptr> solars);
+sfg::Widget::Ptr governor_gui(std::list<solar_ptr> solars);
+sfg::Widget::Ptr military_gui(std::list<solar_ptr> solars);
 sfg::Widget::Ptr research_gui();
 };  // namespace interface
 };  // namespace st3

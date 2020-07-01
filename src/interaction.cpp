@@ -30,7 +30,7 @@ const string interaction::terraform = "terraform";
 const string interaction::hive_support = "hive support";
 const string interaction::splash = "splash";
 
-void load_resources(ship::ptr s, solar::ptr t) {
+void load_resources(ship_ptr s, solar_ptr t) {
   float total = t->resources.count();
   if (total == 0) return;
 
@@ -53,10 +53,10 @@ const hm_t<string, interaction> &interaction::table() {
   // land
   i.name = interaction::land;
   i.condition = target_condition(target_condition::owned, solar::class_id);
-  i.perform = [](game_object::ptr self, game_object::ptr target, game_data *g) {
+  i.perform = [](game_object_ptr self, game_object_ptr target, game_data *g) {
     output("interaction: land: " + self->id + " targeting " + target->id);
-    ship::ptr s = utility::guaranteed_cast<ship>(self);
-    solar::ptr t = utility::guaranteed_cast<solar>(target);
+    ship_ptr s = utility::guaranteed_cast<ship>(self);
+    solar_ptr t = utility::guaranteed_cast<solar>(target);
     output(s->id + " lands at " + t->id);
 
     // unset fleet
@@ -79,9 +79,9 @@ const hm_t<string, interaction> &interaction::table() {
   // deploy
   i.name = interaction::deploy;
   i.condition = target_condition(target_condition::any_alignment, target_condition::no_target);
-  i.perform = [](game_object::ptr self, game_object::ptr null_ptr, game_data *g) {
+  i.perform = [](game_object_ptr self, game_object_ptr null_ptr, game_data *g) {
     output("interaction: deploy: " + self->id);
-    ship::ptr s = utility::guaranteed_cast<ship>(self);
+    ship_ptr s = utility::guaranteed_cast<ship>(self);
     if (s->states.count("deployed")) return;
 
     s->states.insert("deployed");
@@ -94,10 +94,10 @@ const hm_t<string, interaction> &interaction::table() {
   data[i.name] = i;
 
   // search
-  auto do_search = [](game_object::ptr self, game_object::ptr target, game_data *g) {
+  auto do_search = [](game_object_ptr self, game_object_ptr target, game_data *g) {
     output("interaction: search: " + self->id + " targeting " + target->id);
-    ship::ptr s = utility::guaranteed_cast<ship>(self);
-    solar::ptr t = utility::guaranteed_cast<solar>(target);
+    ship_ptr s = utility::guaranteed_cast<ship>(self);
+    solar_ptr t = utility::guaranteed_cast<solar>(target);
     stringstream ss;
     stringstream sshort;
 
@@ -150,7 +150,7 @@ const hm_t<string, interaction> &interaction::table() {
       }
     } else if (test < 0.2) {
       // population boost
-      solar::ptr csol = g->closest_solar(t->position, s->owner);
+      solar_ptr csol = g->closest_solar(t->position, s->owner);
       if (csol) {
         csol->development[keywords::key_population]++;
         ss << " and encountered a group of people who join your civilization at " << t->id << "!";
@@ -179,10 +179,10 @@ const hm_t<string, interaction> &interaction::table() {
         int count = utility::random_normal(m.second, 0.2 * m.second);
         if (count > 0) {
           for (int j = 0; j < count; j++) {
-            ship sh = rbase.build_ship(g->next_id(ship::class_id), m.first);
-            new_ships.push_back(sh.id);
-            sh.owner = s->owner;
-            g->register_entity(ship::ptr(new ship(sh)));
+            ship_ptr sh = rbase.build_ship(g->next_id(ship::class_id), m.first);
+            new_ships.push_back(sh->id);
+            sh->owner = s->owner;
+            g->register_entity(sh);
           }
           break;
         }
@@ -235,14 +235,14 @@ const hm_t<string, interaction> &interaction::table() {
   // auto search
   i.name = interaction::auto_search;
   i.condition = target_condition(target_condition::neutral, solar::class_id);
-  i.perform = [do_search](game_object::ptr self, game_object::ptr target, game_data *g) {
+  i.perform = [do_search](game_object_ptr self, game_object_ptr target, game_data *g) {
     do_search(self, target, g);
 
     // check ship has fleet
     if (!self->isa(ship::class_id)) return;
-    ship::ptr s = utility::guaranteed_cast<ship>(self);
+    ship_ptr s = utility::guaranteed_cast<ship>(self);
     if (!s->has_fleet()) return;
-    fleet::ptr f = g->get_fleet(s->fleet_id);
+    fleet_ptr f = g->get_fleet(s->fleet_id);
 
     // find new target
     target_condition cond(target_condition::neutral, solar::class_id);
@@ -261,10 +261,10 @@ const hm_t<string, interaction> &interaction::table() {
   // space combat
   i.name = interaction::space_combat;
   i.condition = target_condition(target_condition::enemy, ship::class_id);
-  i.perform = [](game_object::ptr self, game_object::ptr target, game_data *g) {
+  i.perform = [](game_object_ptr self, game_object_ptr target, game_data *g) {
     output("interaction: space_combat: " + self->id + " targeting " + target->id);
-    ship::ptr s = utility::guaranteed_cast<ship>(self);
-    ship::ptr t = utility::guaranteed_cast<ship>(target);
+    ship_ptr s = utility::guaranteed_cast<ship>(self);
+    ship_ptr t = utility::guaranteed_cast<ship>(target);
 
     if (s->load < s->stats[sskey::key::load_time]) return;
 
@@ -301,10 +301,10 @@ const hm_t<string, interaction> &interaction::table() {
   // // turret combat
   // i.name = interaction::turret_combat;
   // i.condition = target_condition(target_condition::enemy, ship::class_id);
-  // i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
+  // i.perform = [] (game_object_ptr self, game_object_ptr target, game_data *g){
   //   output("interaction: turret_combat: " + self -> id + " targeting " + target -> id);
-  //   solar::ptr s = utility::guaranteed_cast<solar>(self);
-  //   ship::ptr x = utility::guaranteed_cast<ship>(target);
+  //   solar_ptr s = utility::guaranteed_cast<solar>(self);
+  //   ship_ptr x = utility::guaranteed_cast<ship>(target);
   //   float d = utility::l2norm(s -> position - x -> position);
 
   //   for (auto buf : s -> facility_access()){
@@ -331,9 +331,9 @@ const hm_t<string, interaction> &interaction::table() {
   // bombard
   i.name = interaction::bombard;
   i.condition = target_condition(target_condition::enemy, solar::class_id);
-  i.perform = [](game_object::ptr self, game_object::ptr target, game_data *g) {
-    ship::ptr s = utility::guaranteed_cast<ship>(self);
-    solar::ptr t = utility::guaranteed_cast<solar>(target);
+  i.perform = [](game_object_ptr self, game_object_ptr target, game_data *g) {
+    ship_ptr s = utility::guaranteed_cast<ship>(self);
+    solar_ptr t = utility::guaranteed_cast<solar>(target);
 
     if (s->load < s->stats[sskey::key::load_time]) return;
 
@@ -348,9 +348,9 @@ const hm_t<string, interaction> &interaction::table() {
   // colonize
   i.name = interaction::colonize;
   i.condition = target_condition(target_condition::neutral, solar::class_id);
-  i.perform = [](game_object::ptr self, game_object::ptr target, game_data *g) {
-    ship::ptr s = utility::guaranteed_cast<ship>(self);
-    solar::ptr t = utility::guaranteed_cast<solar>(target);
+  i.perform = [](game_object_ptr self, game_object_ptr target, game_data *g) {
+    ship_ptr s = utility::guaranteed_cast<ship>(self);
+    solar_ptr t = utility::guaranteed_cast<solar>(target);
 
     // if (s->ddata_int("passengers") == 0) return;
 
@@ -365,9 +365,9 @@ const hm_t<string, interaction> &interaction::table() {
   // // pickup
   // i.name = interaction::pickup;
   // i.condition = target_condition(target_condition::owned, solar::class_id);
-  // i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
-  //   ship::ptr s = utility::guaranteed_cast<ship>(self);
-  //   solar::ptr t = utility::guaranteed_cast<solar>(target);
+  // i.perform = [] (game_object_ptr self, game_object_ptr target, game_data *g){
+  //   ship_ptr s = utility::guaranteed_cast<ship>(self);
+  //   solar_ptr t = utility::guaranteed_cast<solar>(target);
 
   //   if (s -> ddata_int("passengers") > 0) return;
 
@@ -384,16 +384,16 @@ const hm_t<string, interaction> &interaction::table() {
   // trade_to
   i.name = interaction::trade_to;
   i.condition = target_condition(target_condition::owned, solar::class_id);
-  i.perform = [](game_object::ptr self, game_object::ptr target, game_data *g) {
-    ship::ptr s = utility::guaranteed_cast<ship>(self);
-    solar::ptr t = utility::guaranteed_cast<solar>(target);
+  i.perform = [](game_object_ptr self, game_object_ptr target, game_data *g) {
+    ship_ptr s = utility::guaranteed_cast<ship>(self);
+    solar_ptr t = utility::guaranteed_cast<solar>(target);
     if (!s->has_fleet()) return;
-    fleet::ptr f = g->get_fleet(s->fleet_id);
+    fleet_ptr f = g->get_fleet(s->fleet_id);
 
     // first check if we still need to load resources
     if (!s->states.count("loaded")) {
       if (f->com.action == interaction::trade_to && g->entity_exists(f->com.source)) {
-        game_object::ptr h = g->get_game_object(f->com.source);
+        game_object_ptr h = g->get_game_object(f->com.source);
         if (h->isa(solar::class_id) && h->owner == s->owner) {
           load_resources(s, utility::guaranteed_cast<solar>(h));
         }
@@ -410,7 +410,7 @@ const hm_t<string, interaction> &interaction::table() {
 
     // check that we are the last ship in fleet unloading
     for (auto sid : f->ships) {
-      ship::ptr sh = g->get_ship(sid);
+      ship_ptr sh = g->get_ship(sid);
       if (sh->states.count("loaded")) return;
     }
 
@@ -425,18 +425,18 @@ const hm_t<string, interaction> &interaction::table() {
   // trade_from
   i.name = interaction::trade_from;
   i.condition = target_condition(target_condition::owned, solar::class_id);
-  i.perform = [](game_object::ptr self, game_object::ptr target, game_data *g) {
-    ship::ptr s = utility::guaranteed_cast<ship>(self);
-    solar::ptr t = utility::guaranteed_cast<solar>(target);
+  i.perform = [](game_object_ptr self, game_object_ptr target, game_data *g) {
+    ship_ptr s = utility::guaranteed_cast<ship>(self);
+    solar_ptr t = utility::guaranteed_cast<solar>(target);
     if (!s->has_fleet()) return;
     if (s->states.count("loaded")) return;
 
     load_resources(s, t);
 
     // check that we are the last ship in fleet loading
-    fleet::ptr f = g->get_fleet(s->fleet_id);
+    fleet_ptr f = g->get_fleet(s->fleet_id);
     for (auto sid : f->ships) {
-      ship::ptr sh = g->get_ship(sid);
+      ship_ptr sh = g->get_ship(sid);
       if (!sh->states.count("loaded")) return;
     }
 
@@ -451,9 +451,9 @@ const hm_t<string, interaction> &interaction::table() {
   // // terraform
   // i.name = terraform;
   // i.condition = target_condition(target_condition::neutral, solar::class_id);
-  // i.perform = [] (game_object::ptr self, game_object::ptr target, game_data *g){
-  //   ship::ptr s = utility::guaranteed_cast<ship>(self);
-  //   solar::ptr t = utility::guaranteed_cast<solar>(target);
+  // i.perform = [] (game_object_ptr self, game_object_ptr target, game_data *g){
+  //   ship_ptr s = utility::guaranteed_cast<ship>(self);
+  //   solar_ptr t = utility::guaranteed_cast<solar>(target);
 
   //   if (s -> load < s -> stats[sskey::key::load_time]) return;
   //   s -> load = 0;
@@ -468,11 +468,11 @@ const hm_t<string, interaction> &interaction::table() {
 
   // hive support
   i.name = hive_support;
-  i.perform = [](game_object::ptr self, game_object::ptr null_pointer, game_data *g) {
-    ship::ptr s = utility::guaranteed_cast<ship>(self);
+  i.perform = [](game_object_ptr self, game_object_ptr null_pointer, game_data *g) {
+    ship_ptr s = utility::guaranteed_cast<ship>(self);
     float strength = s->local_friends.size() / 40;
     for (auto sid : s->local_friends) {
-      ship::ptr sh = g->get_ship(sid);
+      ship_ptr sh = g->get_ship(sid);
       sh->load += strength;
       sh->stats[sskey::key::evasion] = (1 + strength) * sh->base_stats.stats[sskey::key::evasion];
     }
@@ -482,16 +482,16 @@ const hm_t<string, interaction> &interaction::table() {
   // splash
   i.name = splash;
   i.condition = target_condition(target_condition::enemy, ship::class_id);
-  i.perform = [](game_object::ptr self, game_object::ptr target, game_data *g) {
-    ship::ptr s = utility::guaranteed_cast<ship>(self);
-    ship::ptr t = utility::guaranteed_cast<ship>(target);
+  i.perform = [](game_object_ptr self, game_object_ptr target, game_data *g) {
+    ship_ptr s = utility::guaranteed_cast<ship>(self);
+    ship_ptr t = utility::guaranteed_cast<ship>(target);
 
     float damage = 0.2 * s->stats[sskey::key::ship_damage];
     auto ns = g->entity_grid->search(t->position, 20);
     for (auto x : ns) {
       combid id = x.first;
       if (identifier::get_type(id) == ship::class_id) {
-        ship::ptr t2 = g->get_ship(id);
+        ship_ptr t2 = g->get_ship(id);
         t2->receive_damage(g, s, damage);
       }
     }
@@ -523,7 +523,7 @@ bool target_condition::requires_target() {
 }
 
 // interaction
-bool target_condition::valid_on(game_object::ptr p) {
+bool target_condition::valid_on(game_object_ptr p) {
   bool type_match = !(requires_target() && identifier::get_type(p->id) != what);
   sint aligned = 0;
   if (owner == p->owner) {

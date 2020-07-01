@@ -14,6 +14,7 @@
 #include "protocol.h"
 #include "serialization.h"
 #include "server_handler.h"
+#include "solar.h"
 #include "utility.h"
 
 using namespace std;
@@ -186,7 +187,7 @@ bool load_autosave(string filename, game_setup &c, game_data &g) {
       }
 
       // map players by name
-      hm_t<int, server_cl_socket::ptr> new_clients;
+      hm_t<int, server_cl_socket_ptr> new_clients;
       for (auto x : g.players) {
         bool success = false;
         for (auto y : ep.players) {

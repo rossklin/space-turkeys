@@ -1,7 +1,5 @@
-#ifndef _STK_COMMAND
-#define _STK_COMMAND
+#pragma once
 
-#include <list>
 #include <set>
 #include <string>
 
@@ -28,5 +26,3 @@ struct command {
   */
 bool operator==(const command &a, const command &b);
 };  // namespace st3
-
-#endif

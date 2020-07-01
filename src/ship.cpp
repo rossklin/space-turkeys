@@ -4,7 +4,9 @@
 
 #include "fleet.h"
 #include "game_data.h"
+#include "interaction.h"
 #include "serialization.h"
+#include "solar.h"
 #include "upgrades.h"
 #include "utility.h"
 
@@ -18,7 +20,7 @@ const float collision_damage_factor = 1e-3;
 string ship::starting_ship;
 
 // utility
-void apply_ships(game_data *g, list<combid> sids, function<void(ship::ptr)> f) {
+void apply_ships(game_data *g, list<combid> sids, function<void(ship_ptr)> f) {
   for (combid sid : sids) f(g->get_ship(sid));
 }
 
@@ -179,7 +181,7 @@ void ship::pre_phase(game_data *g) {
   force = thrust * utility::normv(angle);
 
   // force from neighbours
-  apply_ships(g, neighbours, [this, dt](ship::ptr s) {
+  apply_ships(g, neighbours, [this, dt](ship_ptr s) {
     // ignore same owner, different fleet
     // if (s->owner == owner && s->fleet_id != fleet_id) return;
 
@@ -252,7 +254,7 @@ void ship::update_data(game_data *g) {
 
   if (!has_fleet()) return;
 
-  fleet::ptr f = g->get_fleet(fleet_id);
+  fleet_ptr f = g->get_fleet(fleet_id);
   activate = f->stats.converge;
 
   // Update path variables
@@ -294,7 +296,7 @@ void ship::update_data(game_data *g) {
   local_friends.clear();
 
   // precompute enemies and friends
-  apply_ships(g, neighbours, [this](ship::ptr s) {
+  apply_ships(g, neighbours, [this](ship_ptr s) {
     if (s->owner == owner) {
       local_friends.push_back(s->id);
     } else {
@@ -341,7 +343,7 @@ void ship::update_data(game_data *g) {
 
   if (local_friends.size() > 0) {
     point tn(0, 0);
-    apply_ships(g, local_friends, [this, &tn](ship::ptr s) {
+    apply_ships(g, local_friends, [this, &tn](ship_ptr s) {
       tn += fmin(s->speed(), max_speed()) * utility::normv(s->angle);
     });
     tn = 1 / (float)local_friends.size() * tn;
@@ -376,7 +378,7 @@ void ship::move(game_data *g) {
   // shoot enemies if able
   if (compile_interactions().count(interaction::space_combat) && local_enemies.size()) {
     list<combid> can_hit = utility::filter(local_enemies, [this, g](combid sid) {
-      ship::ptr s = g->get_ship(sid);
+      ship_ptr s = g->get_ship(sid);
       return accuracy_check(s) > 0;
     });
 
@@ -396,9 +398,9 @@ void ship::move(game_data *g) {
 
   // activate fleet command action if able
   if (activate && has_fleet()) {
-    fleet::ptr f = g->get_fleet(fleet_id);
+    fleet_ptr f = g->get_fleet(fleet_id);
     if (f->com.target != identifier::target_idle && compile_interactions().count(f->com.action)) {
-      game_object::ptr e = g->get_game_object(f->com.target);
+      game_object_ptr e = g->get_game_object(f->com.target);
       if (can_see(e) && utility::l2norm(e->position - position) <= interaction_radius()) {
         interaction_info info;
         info.source = id;
@@ -450,7 +452,7 @@ void ship::post_phase(game_data *g) {
   collision_damage = 0;
 }
 
-void ship::receive_damage(game_data *g, game_object::ptr from, float damage) {
+void ship::receive_damage(game_data *g, game_object_ptr from, float damage) {
   float shield_value = stats[sskey::key::shield];
   stats[sskey::key::shield] = fmax(stats[sskey::key::shield] - 0.1 * damage, 0);
   damage = fmax(damage - shield_value, 0);
@@ -460,7 +462,7 @@ void ship::receive_damage(game_data *g, game_object::ptr from, float damage) {
   if (remove) {
     // register kill
     if (from->isa(ship::class_id)) {
-      ship::ptr s = utility::guaranteed_cast<ship>(from);
+      ship_ptr s = utility::guaranteed_cast<ship>(from);
       s->nkills++;
     }
 
@@ -475,11 +477,11 @@ void ship::on_remove(game_data *g) {
   game_object::on_remove(g);
 }
 
-ship::ptr ship::create() {
+ship_ptr ship::create() {
   return ptr(new ship());
 }
 
-game_object::ptr ship::clone() {
+game_object_ptr ship::clone() {
   return ptr(new ship(*this));
 }
 
@@ -513,7 +515,7 @@ float ship::flex_weight(float a) {
   // return utility::angular_hat(x);
 }
 
-float ship::accuracy_check(ship::ptr t) {
+float ship::accuracy_check(ship_ptr t) {
   float a = utility::point_angle(t->position - position);
   float d = utility::l2norm(t->position - position);
   return stats[sskey::key::accuracy] * flex_weight(a) * accuracy_distance_norm / (d + 1);
@@ -535,8 +537,8 @@ bool ship::has_fleet() {
   return fleet_id != identifier::source_none;
 }
 
-void ship::on_liftoff(solar::ptr from, game_data *g) {
-  g->players[owner].research_level.repair_ship(*this);
+void ship::on_liftoff(solar_ptr from, game_data *g) {
+  g->players[owner].research_level.repair_ship(shared_from_this());
   states.erase("landed");
   force_refresh = true;
   thrust = 0;
@@ -545,7 +547,9 @@ void ship::on_liftoff(solar::ptr from, game_data *g) {
 
   for (auto v : upgrades) {
     upgrade u = upgrade::table().at(v);
-    for (auto i : u.hook["on liftoff"]) interaction::table().at(i).perform(shared_from_this(), from, g);
+    game_object_ptr self = shared_from_this();
+    game_object_ptr target = utility::guaranteed_cast<game_object, solar>(from);
+    for (auto i : u.hook["on liftoff"]) interaction::table().at(i).perform(self, target, g);
   }
 }
 
@@ -553,12 +557,12 @@ bool ship::isa(string c) {
   return c == class_id || physical_object::isa(c);
 }
 
-bool ship::can_see(game_object::ptr x) {
+bool ship::can_see(game_object_ptr x) {
   float r = vision();
   if (!x->is_active()) return false;
 
   if (x->isa(ship::class_id)) {
-    ship::ptr s = utility::guaranteed_cast<ship>(x);
+    ship_ptr s = utility::guaranteed_cast<ship>(x);
     float area = pow(s->stats[sskey::key::mass], 2 / (float)3);
     r = vision() * fmin(area * (stats[sskey::key::detection] + 1) / (s->stats[sskey::key::stealth] + 1), 1);
   }

@@ -3,9 +3,13 @@
 #include <iostream>
 #include <memory>
 
+#include "fleet.h"
 #include "game_data.h"
 #include "serialization.h"
+#include "ship.h"
+#include "solar.h"
 #include "utility.h"
+#include "waypoint.h"
 
 using namespace std;
 using namespace st3;
@@ -47,27 +51,27 @@ bool game_object::isa(string c) {
   return identifier::get_type(id) == c;
 }
 
-game_object::ptr game_object::deserialize(sf::Packet &p) {
-  game_object::ptr res;
+game_object_ptr game_object::deserialize(sf::Packet &p) {
+  game_object_ptr res;
   class_t key;
   bool success = (p >> key);
 
   if (!success) {
     throw network_error("deserialize: failed to extract key!");
   } else if (key == ship::class_id) {
-    ship::ptr buf = ship::ptr(new ship());
+    ship_ptr buf = ship_ptr(new ship());
     success = (p >> *buf);
     res = buf;
   } else if (key == fleet::class_id) {
-    fleet::ptr buf = fleet::ptr(new fleet());
+    fleet_ptr buf = fleet_ptr(new fleet());
     success = (p >> *buf);
     res = buf;
   } else if (key == solar::class_id) {
-    solar::ptr buf = solar::ptr(new solar());
+    solar_ptr buf = solar_ptr(new solar());
     success = (p >> *buf);
     res = buf;
   } else if (key == waypoint::class_id) {
-    waypoint::ptr buf = waypoint::ptr(new waypoint());
+    waypoint_ptr buf = waypoint_ptr(new waypoint());
     success = (p >> *buf);
     res = buf;
   } else {

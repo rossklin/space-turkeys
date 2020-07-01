@@ -1,5 +1,4 @@
-#ifndef _STK_GAME_OBJECT
-#define _STK_GAME_OBJECT
+#pragma once
 
 #include <SFML/Network.hpp>
 #include <iostream>
@@ -15,11 +14,11 @@ class game_data;
 
 class game_object {
  public:
-  typedef std::shared_ptr<game_object> ptr;
+  typedef game_object_ptr ptr;
   static const sint neutral_owner = -1;
   static const sint any_owner = -2;
   static const std::string class_id;
-  static ptr deserialize(sf::Packet &p);
+  static game_object_ptr deserialize(sf::Packet &p);
 
   point position;
   sfloat radius;
@@ -42,13 +41,13 @@ class game_object {
   virtual bool is_physical();
   virtual bool is_active();
   virtual bool isa(std::string c);
-  virtual ptr clone() = 0;
+  virtual game_object_ptr clone() = 0;
 };
 
 class commandable_object : public virtual game_object {
  public:
+  typedef commandable_object_ptr ptr;
   static const std::string class_id;
-  typedef std::shared_ptr<commandable_object> ptr;
 
   commandable_object() = default;
   virtual ~commandable_object() = default;
@@ -59,19 +58,17 @@ class commandable_object : public virtual game_object {
 
 class physical_object : public virtual game_object {
  public:
+  typedef physical_object_ptr ptr;
   static const std::string class_id;
-  typedef std::shared_ptr<physical_object> ptr;
 
   physical_object() = default;
   virtual ~physical_object() = default;
 
   virtual std::set<std::string> compile_interactions() = 0;
   virtual float interaction_radius() = 0;
-  virtual bool can_see(game_object::ptr x) = 0;
+  virtual bool can_see(game_object_ptr x) = 0;
   virtual bool isa(std::string c);
 
   bool is_physical();
 };
 };  // namespace st3
-
-#endif

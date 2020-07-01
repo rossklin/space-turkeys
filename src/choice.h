@@ -1,13 +1,9 @@
-#ifndef _STK_CHOICE
-#define _STK_CHOICE
+#pragma once
 
 #include <list>
 
 #include "command.h"
-#include "cost.h"
-#include "fleet.h"
 #include "types.h"
-#include "waypoint.h"
 
 namespace st3 {
 /*! struct representing what a player can chose */
@@ -18,18 +14,14 @@ const int max_allocation = 10;
 struct c_solar {
   std::list<std::string> building_queue;
   std::list<std::string> ship_queue;
-  // bool do_develop();
-  // bool do_produce();
-  // std::string devstring();
 };
 
 struct choice {
   std::string research;
   hm_t<combid, std::list<command> > commands; /*!< table of commands for game entities */
   hm_t<combid, c_solar> solar_choices;        /*!< table of choices for solar system evolution */
-  hm_t<combid, waypoint> waypoints;           /*!< table of generated waypoints */
-  hm_t<combid, fleet> fleets;
+  hm_t<combid, waypoint_ptr> waypoints;       /*!< table of generated waypoints */
+  hm_t<combid, fleet_ptr> fleets;
 };
 };  // namespace choice
 };  // namespace st3
-#endif

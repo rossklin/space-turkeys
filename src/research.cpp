@@ -10,6 +10,7 @@
 #include "cost.h"
 #include "fleet.h"
 #include "ship.h"
+#include "solar.h"
 #include "upgrades.h"
 #include "utility.h"
 
@@ -71,8 +72,8 @@ list<string> data::available() const {
   return res;
 }
 
-void data::repair_ship(ship &s) const {
-  ship_stats base_stats = ship::table().at(s.ship_class);
+void data::repair_ship(ship_ptr s) const {
+  ship_stats base_stats = ship::table().at(s->ship_class);
 
   auto maybe_asu = [](const development::node &n, string sc) -> set<string> {
     set<string> sum;
@@ -83,22 +84,22 @@ void data::repair_ship(ship &s) const {
 
   // add upgrades from research and facilities
   auto &rtab = table();
-  for (auto t : researched()) s.upgrades += maybe_asu(rtab.at(t), s.ship_class);
+  for (auto t : researched()) s->upgrades += maybe_asu(rtab.at(t), s->ship_class);
 
   // evaluate upgrades
   auto &utab = upgrade::table();
   ssmod_t mod_stats;
-  for (auto u : s.upgrades) mod_stats.combine(utab.at(u).modify);
+  for (auto u : s->upgrades) mod_stats.combine(utab.at(u).modify);
 
-  s.base_stats.stats = base_stats.stats;
-  s.base_stats.modify_with(mod_stats);
-  s.stats = s.base_stats.stats;
+  s->base_stats.stats = base_stats.stats;
+  s->base_stats.modify_with(mod_stats);
+  s->stats = s->base_stats.stats;
 }
 
-ship data::build_ship(idtype id, string c) const {
-  ship s(ship::table().at(c));
+ship_ptr data::build_ship(idtype id, string c) const {
+  ship_ptr s(new ship(ship::table().at(c)));
 
-  s.id = identifier::make(ship::class_id, id);
+  s->id = identifier::make(ship::class_id, id);
 
   // apply upgrades
   repair_ship(s);
@@ -106,7 +107,7 @@ ship data::build_ship(idtype id, string c) const {
   return s;
 }
 
-bool data::can_build_ship(string v, solar::ptr sol, list<string> *data) const {
+bool data::can_build_ship(string v, solar_ptr sol, list<string> *data) const {
   if (!ship::table().count(v)) {
     throw logical_error("Military template: no such ship class: " + v);
   }

@@ -62,7 +62,7 @@ string handler::create_game(client_game_settings set) {
   return gs.id;
 }
 
-bool handler::join_game(server_cl_socket::ptr cl, string gid) {
+bool handler::join_game(server_cl_socket_ptr cl, string gid) {
   bool res = true;
   game_ring.lock();
   if (!games.count(gid)) res = false;
@@ -88,7 +88,7 @@ sint handler::get_status(string gid) {
   return res;
 }
 
-void handler::disconnect(server_cl_socket::ptr cl) {
+void handler::disconnect(server_cl_socket_ptr cl) {
   game_ring.lock();
   if (games.count(cl->gid)) {
     games.at(cl->gid).clients.erase(cl->id);
@@ -129,7 +129,7 @@ void handler::run() {
 
   // accept connections
   while (main_status == socket_t::tc_run) {
-    server_cl_socket::ptr test(new server_cl_socket());
+    server_cl_socket_ptr test(new server_cl_socket());
     sf::Socket::Status code;
 
     while ((code = listener.accept(*test)) == sf::Socket::Partial) {
@@ -163,7 +163,7 @@ void handler::handle_sigint() {
 }
 
 // todo: handle starting game
-void handler::main_client_handler(server_cl_socket::ptr cl) {
+void handler::main_client_handler(server_cl_socket_ptr cl) {
   bool run = true;
 
   cout << "Main client handler: starting for client " << cl->id << endl;
@@ -254,7 +254,7 @@ void handler::monitor_games() {
     // Identify clients that completed main handler and should be removed
     vector<int> clrbuf;
     for (auto x : clients) {
-      server_cl_socket::ptr cl = x.second;
+      server_cl_socket_ptr cl = x.second;
       if (cl->st3_state == socket_t::tc_complete) clrbuf.push_back(cl->id);
     }
 
@@ -273,7 +273,7 @@ void handler::monitor_games() {
     for (auto &c : games) {
       game_setup &game = c.second;
       string gid = c.first;
-      vector<server_cl_socket::ptr> clients = utility::hm_values(game.clients);
+      vector<server_cl_socket_ptr> clients = utility::hm_values(game.clients);
 
       // Check if we should start loading the game
       if (game.status == socket_t::tc_init && game.clients.size() == game.settings.clset.num_players) {

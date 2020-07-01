@@ -9,10 +9,12 @@
 
 #include "choice.h"
 #include "cost.h"
+#include "fleet.h"
 #include "game_data.h"
 #include "interaction.h"
 #include "research.h"
 #include "serialization.h"
+#include "ship.h"
 #include "utility.h"
 
 using namespace std;
@@ -47,7 +49,7 @@ void solar::move(game_data *g) {
     float dlev = effective_level(keywords::key_defense);
     for (int i = 0; i < dlev; i++) {
       combid sid = utility::uniform_sample(buf);
-      ship::ptr s = g->get_ship(sid);
+      ship_ptr s = g->get_ship(sid);
 
       g->log_ship_fire(id, s->id);
 
@@ -72,7 +74,7 @@ float solar::max_hp() {
   return 30 + 10 * development[keywords::key_defense];
 }
 
-void solar::receive_damage(game_object::ptr s, float damage, game_data *g) {
+void solar::receive_damage(game_object_ptr s, float damage, game_data *g) {
   g->log_bombard(s->id, id);
 
   hp -= damage;
@@ -115,7 +117,7 @@ void solar::give_commands(list<command> c, game_data *g) {
     for (auto i : buf) {
       if (!g->allow_add_fleet(owner)) break;
 
-      fleet::ptr f = g->generate_fleet(position, owner, x, i.second);
+      fleet_ptr f = g->generate_fleet(position, owner, x, i.second);
       if (!f) break;
 
       for (auto j : f->ships) {
@@ -147,13 +149,13 @@ sfloat solar::vision() {
   return 1.3 * interaction_radius();
 }
 
-solar::ptr solar::create(idtype id, point p, float bounty, float var) {
+solar_ptr solar::create(idtype id, point p, float bounty, float var) {
   float level = pow(2, 13 * bounty);
   auto fres = [level, var]() {
     return fmax(utility::random_normal(level, var * level), 0);
   };
 
-  solar::ptr s(new solar());
+  solar_ptr s(new solar());
 
   s->id = identifier::make(solar::class_id, id);
 
@@ -172,7 +174,7 @@ solar::ptr solar::create(idtype id, point p, float bounty, float var) {
   return s;
 }
 
-game_object::ptr solar::clone() {
+game_object_ptr solar::clone() {
   return ptr(new solar(*this));
 }
 
@@ -269,11 +271,11 @@ void solar::dynamics(game_data *g) {
         ship_progress = -1;
         choice_data.ship_queue.pop_front();
 
-        ship sh = research_level->build_ship(g->next_id(ship::class_id), v);
-        sh.states.insert("landed");
-        sh.owner = owner;
-        ships.insert(sh.id);
-        g->register_entity(ship::ptr(new ship(sh)));
+        ship_ptr sh = research_level->build_ship(g->next_id(ship::class_id), v);
+        sh->states.insert("landed");
+        sh->owner = owner;
+        ships.insert(sh->id);
+        g->register_entity(sh);
 
         g->players[owner].log.push_back("Completed ship " + v);
       } else {
@@ -305,12 +307,12 @@ bool solar::isa(string c) {
   return c == class_id || commandable_object::isa(c) || physical_object::isa(c);
 }
 
-bool solar::can_see(game_object::ptr x) {
+bool solar::can_see(game_object_ptr x) {
   float r = vision();
   if (!x->is_active()) return false;
 
   if (x->isa(ship::class_id)) {
-    ship::ptr s = utility::guaranteed_cast<ship>(x);
+    ship_ptr s = utility::guaranteed_cast<ship>(x);
     float area = M_PI * pow(s->radius, 2);
     r = vision() * fmin(area / (s->stats[sskey::key::stealth] + 1), 1);
   }

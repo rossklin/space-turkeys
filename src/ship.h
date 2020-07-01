@@ -7,20 +7,17 @@
 
 #include "cost.h"
 #include "game_object.h"
-#include "interaction.h"
 #include "ship_stats.h"
-#include "solar.h"
 #include "types.h"
 
 namespace st3 {
 class game_data;
-class solar;
 
 /*! ship game object */
 class ship : public virtual physical_object, public ship_stats, public std::enable_shared_from_this<ship> {
  public:
-  typedef std::shared_ptr<ship> ptr;
-  static ptr create();
+  typedef ship_ptr ptr;
+  static ship_ptr create();
   static const std::string class_id;
   static std::vector<std::string> all_classes();
   static std::string starting_ship;
@@ -66,13 +63,13 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   float vision();
   bool serialize(sf::Packet &p);
   bool is_active();
-  game_object::ptr clone();
+  game_object_ptr clone();
   bool isa(std::string c);
 
   // physical_object
   std::set<std::string> compile_interactions();
   float interaction_radius();
-  bool can_see(game_object::ptr x);
+  bool can_see(game_object_ptr x);
 
   // ship
   ship(const ship &s);
@@ -84,10 +81,10 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   float max_speed();
   float flex_weight(float a);
   void update_data(game_data *g);
-  void receive_damage(game_data *g, game_object::ptr from, float damage);
-  void on_liftoff(solar::ptr from, game_data *g);
+  void receive_damage(game_data *g, game_object_ptr from, float damage);
+  void on_liftoff(solar_ptr from, game_data *g);
   bool has_fleet();
   float evasion_check();
-  float accuracy_check(ship::ptr a);
+  float accuracy_check(ship_ptr a);
 };
 };  // namespace st3

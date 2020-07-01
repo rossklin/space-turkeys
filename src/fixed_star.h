@@ -1,5 +1,4 @@
-#ifndef _STK_FIXED_STAR
-#define _STK_FIXED_STAR
+#pragma once
 
 #include "graphics.h"
 
@@ -27,4 +26,3 @@ class fixed_star {
 };
 };  // namespace client
 };  // namespace st3
-#endif

@@ -28,8 +28,6 @@ query_response_generator static_query_response(handler_result res);
 
 /*! special socket functions for server */
 struct server_cl_socket : public socket_t {
-  typedef std::shared_ptr<server_cl_socket> ptr;
-
   std::string name;
   int st3_state;
   std::shared_ptr<std::thread> wfg_thread;
@@ -45,7 +43,7 @@ struct server_cl_socket : public socket_t {
 
 /*! structure handling communication with a set of clients associated with a game */
 struct game_setup {
-  hm_t<int, server_cl_socket::ptr> clients;
+  hm_t<int, server_cl_socket_ptr> clients;
   game_settings settings;
   int client_idc;
   std::string id;
@@ -54,7 +52,7 @@ struct game_setup {
   // std::shared_ptr<std::mutex> m_lock;
 
   game_setup();
-  void add_client(server_cl_socket::ptr c);
+  void add_client(server_cl_socket_ptr c);
   void disconnect();
   bool cleanup_clients();
   bool check_protocol(protocol_t p, query_response_generator h);

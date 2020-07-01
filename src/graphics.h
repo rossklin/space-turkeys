@@ -1,5 +1,4 @@
-#ifndef _STK_GRAPHICS
-#define _STK_GRAPHICS
+#pragma once
 
 #include <SFGUI/Widgets.hpp>
 #include <SFML/Graphics.hpp>
@@ -7,10 +6,6 @@
 #include <string>
 
 #include "animation.h"
-#include "choice.h"
-#include "game_data.h"
-#include "research.h"
-#include "ship.h"
 #include "types.h"
 
 namespace st3 {
@@ -62,7 +57,7 @@ void draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, sf::Color 
       @param c color
       @param sc scale
     */
-void draw_ship(sf::RenderTarget &w, ship s, sf::Color c, float sc = 1, bool multicolor = true);
+void draw_ship(sf::RenderTarget &w, ship_ptr s, sf::Color c, float sc = 1, bool multicolor = true);
 
 sfg::Button::Ptr ship_button(std::string ship_class, float width, float height, sf::Color col = sf::Color::Green);
 sf::Image ship_image(std::string ship_class, float width, float height, sf::Color col = sf::Color::Green);
@@ -102,4 +97,3 @@ sfg::Widget::Ptr wrap_in_scroll(sfg::Widget::Ptr w, bool horizontal, int dim);
 sfg::Widget::Ptr wrap_in_scroll2(sfg::Widget::Ptr w, int width, int height);
 };  // namespace graphics
 };  // namespace st3
-#endif

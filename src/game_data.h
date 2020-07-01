@@ -5,24 +5,12 @@
 
 #include "animation_data.h"
 #include "choice.h"
-#include "com_server.h"
-#include "fleet.h"
 #include "game_base_data.h"
-#include "game_object.h"
-#include "game_settings.h"
 #include "grid_tree.h"
 #include "interaction.h"
-#include "player.h"
-#include "ship.h"
-#include "solar.h"
 #include "types.h"
-#include "utility.h"
-#include "waypoint.h"
 
 namespace st3 {
-namespace server {
-struct server_cl_socket;
-};
 
 struct interaction_info {
   combid source;
@@ -45,12 +33,12 @@ class game_data : public virtual game_base_data {
   int next_id(class_t x);
 
   // access
-  ship::ptr get_ship(combid i) const;
-  fleet::ptr get_fleet(combid i) const;
-  solar::ptr get_solar(combid i) const;
-  waypoint::ptr get_waypoint(combid i) const;
+  ship_ptr get_ship(combid i) const;
+  fleet_ptr get_fleet(combid i) const;
+  solar_ptr get_solar(combid i) const;
+  waypoint_ptr get_waypoint(combid i) const;
 
-  game_object::ptr get_game_object(combid i) const;
+  game_object_ptr get_game_object(combid i) const;
 
   void assign(const game_data &g);
   void rehash_grid();
@@ -66,7 +54,7 @@ class game_data : public virtual game_base_data {
   void extend_universe(int i, int j, bool starting_area = false);
   void discover(point x, float r, bool starting_area = false);
   void update_discover();
-  solar::ptr closest_solar(point p, idtype id) const;
+  solar_ptr closest_solar(point p, idtype id) const;
   animation_tracker_info get_tracker(combid id) const;
   void log_ship_fire(combid a, combid b);
   void log_ship_destroyed(combid a, combid b);
@@ -76,16 +64,16 @@ class game_data : public virtual game_base_data {
   bool allow_add_fleet(idtype pid) const;
   float solar_order_level(combid id) const;
 
-  void register_entity(game_object::ptr p);
+  void register_entity(game_object_ptr p);
   void remove_units();
-  fleet::ptr generate_fleet(point p, idtype i, command c, std::list<combid> sh, bool ignore_limit = false);
+  fleet_ptr generate_fleet(point p, idtype i, command c, std::list<combid> sh, bool ignore_limit = false);
   void relocate_ships(command c, std::set<combid> &sh, idtype owner);
   void allocate_grid();
 
   // game steps
   void pre_step();
   void end_step();
-  void build_players(std::vector<server::server_cl_socket::ptr> clients);
+  void build_players(std::vector<server_cl_socket_ptr> clients);
   void build();
 
  protected:
@@ -96,7 +84,7 @@ class game_data : public virtual game_base_data {
 
   // add and remove entities
   void deregister_entity(combid id);
-  void distribute_ships(fleet::ptr f);
+  void distribute_ships(fleet_ptr f);
   void update_research_facility_level();
 };
 };  // namespace st3

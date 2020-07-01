@@ -1,7 +1,9 @@
 #include "com_client.h"
 
 #include <iostream>
+#include <vector>
 
+#include "game_base_data.h"
 #include "game_object.h"
 #include "protocol.h"
 #include "selector.h"
@@ -16,7 +18,7 @@ bool cl_socket_t::check_com() {
   return (!instruction) || *instruction == tc_run || *instruction == tc_init;
 }
 
-void st3::client::load_frames(cl_socket_t *socket, vector<game_base_data> &g, int &idx, int &com_in, int &com_out) {
+void st3::client::load_frames(cl_socket_t *socket, vector<st3::game_base_data> &g, int &idx, int &com_in, int &com_out) {
   sf::Packet pq;
   int sub_com = socket_t::tc_run;
 

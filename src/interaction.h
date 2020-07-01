@@ -1,9 +1,8 @@
-#ifndef _STK_INTERACTION
-#define _STK_INTERACTION
+#pragma once
 
 #include <functional>
 
-#include "game_object.h"
+#include "types.h"
 
 namespace st3 {
 class game_data;
@@ -24,7 +23,7 @@ class target_condition {
   target_condition(sint a, class_t w);
   target_condition owned_by(idtype o);
   bool requires_target();
-  bool valid_on(game_object::ptr o);
+  bool valid_on(game_object_ptr o);
 
   static bool get_alignment(idtype t, idtype s);
 };
@@ -46,7 +45,7 @@ class interaction {
   static const std::string hive_support;
   static const std::string splash;
 
-  typedef std::function<void(game_object::ptr self, game_object::ptr target, game_data *g)> perform_t;
+  typedef std::function<void(game_object_ptr self, game_object_ptr target, game_data *g)> perform_t;
   static const hm_t<std::string, interaction> &table();
 
   std::string name;
@@ -54,5 +53,3 @@ class interaction {
   perform_t perform;
 };
 };  // namespace st3
-
-#endif

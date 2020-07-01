@@ -1,9 +1,8 @@
-/* this file defines fixed length types for network passing */
+#pragma once
 
-#ifndef _STK_TYPES
-#define _STK_TYPES
 #include <SFML/System.hpp>
 #include <list>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -79,20 +78,30 @@ struct id_pair {
   id_pair(combid x, combid y);
 };
 
-struct terrain_object {
-  class_t type;
-  point center;
-  std::vector<point> border;
+bool operator<(const id_pair &x, const id_pair &y);
 
-  std::pair<int, int> intersects_with(terrain_object b, float r = 0);
-  point get_vertice(int idx, float rbuf = 0) const;
-  void set_vertice(int idx, point p);
-  int triangle(point p, float r) const;
-  std::vector<point> get_border(float r) const;
-  point closest_exit(point p, float r) const;
+// declare classes and pointer types
+class ship;
+class solar;
+class fleet;
+class waypoint;
+class game_object;
+class physical_object;
+class commandable_object;
+
+namespace server {
+struct server_cl_socket;
 };
 
-bool operator<(const id_pair &x, const id_pair &y);
+typedef std::shared_ptr<ship> ship_ptr;
+typedef std::shared_ptr<solar> solar_ptr;
+typedef std::shared_ptr<fleet> fleet_ptr;
+typedef std::shared_ptr<waypoint> waypoint_ptr;
+typedef std::shared_ptr<game_object> game_object_ptr;
+typedef std::shared_ptr<physical_object> physical_object_ptr;
+typedef std::shared_ptr<commandable_object> commandable_object_ptr;
+
+typedef std::shared_ptr<server::server_cl_socket> server_cl_socket_ptr;
 
 namespace keywords {
 extern const std::vector<std::string> resource;
@@ -161,4 +170,3 @@ std::string get_multid_index_symbol(combid v);
 combid make_waypoint_id(idtype owner, idtype id);
 };  // namespace identifier
 };  // namespace st3
-#endif

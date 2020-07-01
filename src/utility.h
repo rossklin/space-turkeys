@@ -1,5 +1,4 @@
-#ifndef _STK_UTILITY
-#define _STK_UTILITY
+#pragma once
 
 #include <rapidjson/document.h>
 
@@ -10,7 +9,6 @@
 #include <sstream>
 #include <vector>
 
-#include "game_object.h"
 #include "types.h"
 
 namespace st3 {
@@ -539,5 +537,3 @@ std::set<T> operator&(const std::set<T> &a, const std::set<T> &b) {
 }
 
 };  // namespace st3
-
-#endif

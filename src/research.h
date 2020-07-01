@@ -4,10 +4,7 @@
 #include <set>
 #include <string>
 
-#include "choice.h"
 #include "development_tree.h"
-#include "ship.h"
-#include "solar.h"
 
 namespace st3 {
 namespace research {
@@ -36,9 +33,9 @@ struct data {
   std::list<std::string> list_tech_requirements(std::string v) const;
   std::list<std::string> available() const;
   std::set<std::string> researched() const;
-  ship build_ship(idtype id, std::string v) const;
-  void repair_ship(ship &s) const;
-  bool can_build_ship(std::string v, solar::ptr s, std::list<std::string> *data = 0) const;
+  ship_ptr build_ship(idtype id, std::string v) const;
+  void repair_ship(ship_ptr s) const;
+  bool can_build_ship(std::string v, solar_ptr s, std::list<std::string> *data = 0) const;
   float solar_modifier(std::string v) const;
   // int get_max_fleets() const;
   // int get_max_ships_per_fleet() const;
