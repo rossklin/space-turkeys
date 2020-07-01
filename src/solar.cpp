@@ -230,7 +230,7 @@ void solar::dynamics(game_data *g) {
   // float order = g->solar_order_level(id);
 
   // research and development
-  float a = population();
+  float a = 1 + 0.2 * population();
   research_points = a * effective_level(keywords::key_research);
   float ship_build_points = a * effective_level(keywords::key_shipyard);
 
@@ -278,7 +278,6 @@ void solar::dynamics(game_data *g) {
         g->players[owner].log.push_back("Completed ship " + v);
       } else {
         // Ship under construction
-        g->players[owner].log.push_back("Building " + v + ": spending " + to_string(use) + ", prog " + to_string(100 * ship_progress / s.build_time) + "%");
         break;
       }
     } else {
