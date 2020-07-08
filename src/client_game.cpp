@@ -224,7 +224,7 @@ bool game::init_data() {
   update_sight_range(point(0, 0), 1);
 
   // load player starting positions
-  for (auto s : get_all<solar>()) {
+  for (auto s : data.filtered_entities<solar_selector>()) {
     s->research_level = &players[s->owner].research_level;
     add_entity(s);
     cout << "init_data: added: " << s->id << endl;

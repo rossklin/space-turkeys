@@ -1,8 +1,8 @@
 * Notes test game 2020-06-22
 ** bugs
-*** Server segfault on colonize
-*** Client does not center on home solar on startup
-*** One solar built 0 of 5 fighters in a round (then showed shipyard level 3 -234823482364% complete)
+*** [irregular] Server segfault on colonize
+*** [done] Client does not center on home solar on startup
+*** [done?] One solar built 0 of 5 fighters in a round (then showed shipyard level 3 -234823482364% complete)
 *** (maybe) development queue item dropped
 *** Ship stuck circling target
 *** Out of range error when asking to join nonexistent game
@@ -14,13 +14,17 @@ Note: server limits ships sent but not ships registered for transfer at waypoint
 *** [done] Client displays max fleets as 2, should be 4, not finding owned solar?
 *** [done] Parameters showing uninitialized values in gui at start of turn
 [done] max fleets and max ships per fleet
+** new GUI
+There is no (documented) way to handle styles for SFGUI Widgets so
+sadly I will need to write my own GUI lib. The examples don't even
+work.
 ** Solar dynamics
-Simple idea (check vs current impl):
+   Simple idea (check vs current impl):
 *** [done] All build time expressed in rounds instead of frames and happens at end of round
 *** Each population increases ship build, research and defense by e.g. 20% rounded down
 *** Each level of shipyard or research fac. adds one production point per round
 *** Sending colonizer removes one population
-*** Possibly, organics resource should determine max pop rather than being used when building pop
+*** Possibly, organics resource should determine max pop rather than being used when building pop		
 ** Terrain mechanic
 *** Units can still enter impassable terrain
 *** Ships can shoot through impassable terrain
