@@ -53,8 +53,8 @@ For example, make clusters of one or two habitable solars and a couple uninhabit
 and then add terrain between them.
 * current work
 ** Restructure to Makefile and RSG
-*** Update json file refs to data directory
-*** Save files in save directory
+*** [impl] Update json file refs to data directory
+*** [impl] Save files in save directory
 *** Re-implement all SFGUI components in RSG
 *** Restructure main window loop and event handling
 ** Add "order" concept which limits growth/production in distant solars

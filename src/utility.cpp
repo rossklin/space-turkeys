@@ -51,7 +51,7 @@ string get_file(ifstream &in) {
 }
 
 rapidjson::Document *utility::get_json(string key) {
-  string filename = key + "_data.json";
+  string filename = "data/" + key + "_data.json";
   ifstream file(filename);
 
   if (!file.is_open()) {

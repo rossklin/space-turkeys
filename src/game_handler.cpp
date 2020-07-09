@@ -159,7 +159,7 @@ void autosave_game(game_setup c, game_data &g) {
   const void *data = p.getData();
   int n = p.getDataSize();
 
-  string filename = c.id + ".auto.save";
+  string filename = "save/" + c.id + ".auto.save";
   ofstream of(filename, ios::binary);
   of.write((const char *)data, n);
   bool success = !of.fail();
@@ -171,7 +171,7 @@ void autosave_game(game_setup c, game_data &g) {
 }
 
 bool load_autosave(string filename, game_setup &c, game_data &g) {
-  ifstream file(filename, ios::binary | ios::ate);
+  ifstream file("save/" + filename, ios::binary | ios::ate);
 
   if (file.good() && !g.settings.clset.restart) {
     streamsize size = file.tellg();
