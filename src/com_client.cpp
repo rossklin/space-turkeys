@@ -15,73 +15,56 @@ using namespace st3;
 using namespace st3::client;
 
 bool cl_socket_t::check_com() {
-  return (!instruction) || *instruction == tc_run || *instruction == tc_init;
+  return instruction == tc_run;
 }
 
-void st3::client::load_frames(cl_socket_t *socket, vector<st3::game_base_data> &g, int &idx, int &com_in, int &com_out) {
+bool st3::client::load_frames(cl_socket_ptr socket, vector<st3::game_base_data> &g, int &idx) {
   sf::Packet pq;
   int sub_com = socket_t::tc_run;
 
-  for (idx = 0; idx < g.size() && com_in == socket_t::tc_run; idx++) {
+  for (idx = 0; idx < g.size() && socket->check_com(); idx++) {
     pq.clear();
     pq << protocol::frame << idx;
 
-    query(socket, pq, com_in, sub_com);
-
-    if (sub_com != socket_t::tc_complete) {
-      com_out = sub_com;
+    if (query(socket, pq)) {
+      deserialize(g[idx], socket->data, socket->id);
+    } else {
       break;
     }
-
-    deserialize(g[idx], socket->data, socket->id);
   }
 
-  if (!(com_in | com_out == socket_t::tc_run)) return;
+  if (!socket->check_com()) return false;
 
   // indicate done
   int i = -1;
   pq.clear();
   pq << protocol::frame << i;
-  query(socket, pq, com_in, com_out);
+  return query(socket, pq);
 }
 
-void st3::client::query(cl_socket_t *socket, sf::Packet &pq, int &com_in, int &com_out) {
+bool st3::client::query(cl_socket_ptr socket, sf::Packet &pq) {
   protocol_t message;
 
-  socket->instruction = &com_in;
   if (!socket->send_packet(pq)) {
-    if (com_in != socket_t::tc_run) {
-      // communication stopped
-      return;
-    } else {
-      throw network_error("client::query: failed to send packet");
-    }
+    return false;
   }
 
   if (!socket->receive_packet()) {
-    if (com_in != socket_t::tc_run) {
-      // communication stopped
-      return;
-    } else {
-      throw network_error("client::query: failed to receive packet");
-    }
+    return false;
   }
 
   if (socket->data >> message) {
     if (message == protocol::confirm) {
-      com_out = socket_t::tc_complete;
+      return true;
     } else if (message == protocol::standby) {
       // wait a little while then try again
       sf::sleep(sf::milliseconds(500));
-      query(socket, pq, com_in, com_out);
+      return query(socket, pq);
     } else if (message == protocol::invalid) {
       throw network_error("query: server says invalid");
-    } else if (message == protocol::complete) {
-      cout << "query: server says complete" << endl;
-      com_out = socket_t::tc_game_complete;
     } else if (message == protocol::aborted) {
       cout << "query: server says game aborted" << endl;
-      com_out = socket_t::tc_stop;
+      return false;
     } else {
       throw network_error("query: unknown response: " + message);
     }
@@ -118,13 +101,13 @@ void client::deserialize(game_base_data &f, sf::Packet &p, sint id) {
 
     entity_selector::ptr obj;
     if (x->isa(ship::class_id)) {
-      obj = client::ship_selector::create(*utility::guaranteed_cast<ship>(x), col, x->owner == id);
+      obj = ship_selector::create(*utility::guaranteed_cast<ship>(x), col, x->owner == id);
     } else if (x->isa(fleet::class_id)) {
-      obj = client::fleet_selector::create(*utility::guaranteed_cast<fleet>(x), col, x->owner == id);
+      obj = fleet_selector::create(*utility::guaranteed_cast<fleet>(x), col, x->owner == id);
     } else if (x->isa(solar::class_id)) {
-      obj = client::solar_selector::create(*utility::guaranteed_cast<solar>(x), col, x->owner == id);
+      obj = solar_selector::create(*utility::guaranteed_cast<solar>(x), col, x->owner == id);
     } else if (x->isa(waypoint::class_id)) {
-      obj = client::waypoint_selector::create(*utility::guaranteed_cast<waypoint>(x), col, x->owner == id);
+      obj = waypoint_selector::create(*utility::guaranteed_cast<waypoint>(x), col, x->owner == id);
     } else {
       throw network_error("com_client::deserialize: Failed sanity check: class not recognized!");
     }
