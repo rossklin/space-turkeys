@@ -2,9 +2,9 @@
 
 #include <string>
 
-#include "animation_data.h"
-#include "research.h"
-#include "types.h"
+#include "animation_data.hpp"
+#include "research.hpp"
+#include "types.hpp"
 
 namespace st3 {
 /*! player data */

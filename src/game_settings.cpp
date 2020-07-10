@@ -1,4 +1,4 @@
-#include "game_settings.h"
+#include "game_settings.hpp"
 
 #include <set>
 

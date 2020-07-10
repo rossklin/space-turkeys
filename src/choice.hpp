@@ -2,8 +2,8 @@
 
 #include <list>
 
-#include "command.h"
-#include "types.h"
+#include "command.hpp"
+#include "types.hpp"
 
 namespace st3 {
 /*! struct representing what a player can chose */

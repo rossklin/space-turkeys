@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "types.h"
+#include "types.hpp"
 
 namespace st3 {
 struct animation_tracker_info {

@@ -1,6 +1,6 @@
-#include "fixed_star.h"
+#include "fixed_star.hpp"
 
-#include "utility.h"
+#include "utility.hpp"
 
 using namespace st3::utility;
 

@@ -2,9 +2,9 @@
 
 #include <list>
 
-#include "command.h"
-#include "game_object.h"
-#include "types.h"
+#include "command.hpp"
+#include "game_object.hpp"
+#include "types.hpp"
 
 namespace st3 {
 class game_data;

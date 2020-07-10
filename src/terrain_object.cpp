@@ -1,6 +1,6 @@
-#include "terrain_object.h"
+#include "terrain_object.hpp"
 
-#include "utility.h"
+#include "utility.hpp"
 
 using namespace st3;
 using namespace std;

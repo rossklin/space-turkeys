@@ -3,8 +3,8 @@
 #include <SFGUI/SFGUI.hpp>
 #include <SFGUI/Widgets.hpp>
 
-#include "choice.h"
-#include "research.h"
+#include "choice.hpp"
+#include "research.hpp"
 
 namespace st3 {
 namespace client {

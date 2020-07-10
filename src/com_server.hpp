@@ -6,9 +6,9 @@
 #include <mutex>
 #include <thread>
 
-#include "game_settings.h"
-#include "socket_t.h"
-#include "types.h"
+#include "game_settings.hpp"
+#include "socket_t.hpp"
+#include "types.hpp"
 
 namespace st3 {
 class game_base_data;

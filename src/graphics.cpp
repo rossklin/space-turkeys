@@ -1,16 +1,16 @@
-#include "graphics.h"
+#include "graphics.hpp"
 
 #include <cmath>
 #include <iostream>
 #include <memory>
 #include <string>
 
-#include "animation.h"
-#include "client_game.h"
-#include "cost.h"
-#include "ship.h"
-#include "types.h"
-#include "utility.h"
+#include "animation.hpp"
+#include "client_game.hpp"
+#include "cost.hpp"
+#include "ship.hpp"
+#include "types.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

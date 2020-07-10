@@ -2,14 +2,14 @@
 
 #include <utility>
 
-#include "cost.h"
-#include "development_tree.h"
-#include "fleet.h"
-#include "game_data.h"
-#include "research.h"
-#include "ship.h"
-#include "solar.h"
-#include "waypoint.h"
+#include "cost.hpp"
+#include "development_tree.hpp"
+#include "fleet.hpp"
+#include "game_data.hpp"
+#include "research.hpp"
+#include "ship.hpp"
+#include "solar.hpp"
+#include "waypoint.hpp"
 
 namespace st3 {
 

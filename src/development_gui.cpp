@@ -1,11 +1,11 @@
-#include "development_gui.h"
+#include "development_gui.hpp"
 
 #include <boost/algorithm/string/join.hpp>
 #include <set>
 
-#include "desktop.h"
-#include "development_tree.h"
-#include "graphics.h"
+#include "desktop.hpp"
+#include "development_tree.hpp"
+#include "graphics.hpp"
 
 using namespace std;
 using namespace st3;

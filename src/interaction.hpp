@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include "types.h"
+#include "types.hpp"
 
 namespace st3 {
 class game_data;

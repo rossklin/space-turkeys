@@ -1,4 +1,4 @@
-#include "game_handler.h"
+#include "game_handler.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -9,13 +9,13 @@
 #include <thread>
 #include <vector>
 
-#include "com_server.h"
-#include "game_data.h"
-#include "protocol.h"
-#include "serialization.h"
-#include "server_handler.h"
-#include "solar.h"
-#include "utility.h"
+#include "com_server.hpp"
+#include "game_data.hpp"
+#include "protocol.hpp"
+#include "serialization.hpp"
+#include "server_handler.hpp"
+#include "solar.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

@@ -1,4 +1,4 @@
-#include "command_gui.h"
+#include "command_gui.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -7,13 +7,13 @@
 #include <unordered_map>
 #include <utility>
 
-#include "client_game.h"
-#include "desktop.h"
-#include "fleet.h"
-#include "graphics.h"
-#include "selector.h"
-#include "solar.h"
-#include "utility.h"
+#include "client_game.hpp"
+#include "desktop.hpp"
+#include "fleet.hpp"
+#include "graphics.hpp"
+#include "selector.hpp"
+#include "solar.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

@@ -1,10 +1,10 @@
-#include "cost.h"
+#include "cost.hpp"
 
 #include <cstring>
 #include <iostream>
 
-#include "ship.h"
-#include "utility.h"
+#include "ship.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

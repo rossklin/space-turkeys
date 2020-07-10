@@ -1,15 +1,15 @@
-#include "selector.h"
+#include "selector.hpp"
 
 #include <iostream>
 
-#include "client_game.h"
-#include "fleet.h"
-#include "graphics.h"
-#include "ship.h"
-#include "solar.h"
-#include "types.h"
-#include "utility.h"
-#include "waypoint.h"
+#include "client_game.hpp"
+#include "fleet.hpp"
+#include "graphics.hpp"
+#include "ship.hpp"
+#include "solar.hpp"
+#include "types.hpp"
+#include "utility.hpp"
+#include "waypoint.hpp"
 
 using namespace std;
 

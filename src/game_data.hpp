@@ -3,12 +3,12 @@
 #include <SFML/Network.hpp>
 #include <vector>
 
-#include "animation_data.h"
-#include "choice.h"
-#include "game_base_data.h"
-#include "grid_tree.h"
-#include "interaction.h"
-#include "types.h"
+#include "animation_data.hpp"
+#include "choice.hpp"
+#include "game_base_data.hpp"
+#include "grid_tree.hpp"
+#include "interaction.hpp"
+#include "types.hpp"
 
 namespace st3 {
 

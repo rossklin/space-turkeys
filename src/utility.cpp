@@ -1,4 +1,4 @@
-#include "utility.h"
+#include "utility.hpp"
 
 #include <rapidjson/document.h>
 
@@ -13,12 +13,12 @@
 #include <mutex>
 #include <sstream>
 
-#include "fleet.h"
-#include "game_object.h"
-#include "player.h"
-#include "ship.h"
-#include "solar.h"
-#include "waypoint.h"
+#include "fleet.hpp"
+#include "game_object.hpp"
+#include "player.hpp"
+#include "ship.hpp"
+#include "solar.hpp"
+#include "waypoint.hpp"
 
 using namespace std;
 using namespace st3;

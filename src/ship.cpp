@@ -1,14 +1,14 @@
-#include "ship.h"
+#include "ship.hpp"
 
 #include <iostream>
 
-#include "fleet.h"
-#include "game_data.h"
-#include "interaction.h"
-#include "serialization.h"
-#include "solar.h"
-#include "upgrades.h"
-#include "utility.h"
+#include "fleet.hpp"
+#include "game_data.hpp"
+#include "interaction.hpp"
+#include "serialization.hpp"
+#include "solar.hpp"
+#include "upgrades.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

@@ -2,7 +2,7 @@
 
 #include <SFML/Network.hpp>
 
-#include "types.h"
+#include "types.hpp"
 
 namespace st3 {
 

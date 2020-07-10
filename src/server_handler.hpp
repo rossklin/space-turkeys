@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 
-#include "com_server.h"
-#include "game_settings.h"
-#include "types.h"
+#include "com_server.hpp"
+#include "game_settings.hpp"
+#include "types.hpp"
 
 namespace st3 {
 namespace server {

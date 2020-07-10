@@ -10,17 +10,17 @@
 #include <thread>
 #include <vector>
 
-#include "client_game.h"
-#include "com_client.h"
-#include "cost.h"
-#include "game_settings.h"
-#include "graphics.h"
-#include "protocol.h"
-#include "research.h"
-#include "selector.h"
-#include "serialization.h"
-#include "socket_t.h"
-#include "utility.h"
+#include "client_game.hpp"
+#include "com_client.hpp"
+#include "cost.hpp"
+#include "game_settings.hpp"
+#include "graphics.hpp"
+#include "protocol.hpp"
+#include "research.hpp"
+#include "selector.hpp"
+#include "serialization.hpp"
+#include "socket_t.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

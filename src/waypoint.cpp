@@ -1,12 +1,12 @@
-#include "waypoint.h"
+#include "waypoint.hpp"
 
 #include <iostream>
 #include <mutex>
 
-#include "fleet.h"
-#include "game_data.h"
-#include "serialization.h"
-#include "utility.h"
+#include "fleet.hpp"
+#include "game_data.hpp"
+#include "serialization.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

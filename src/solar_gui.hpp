@@ -5,8 +5,8 @@
 #include <string>
 
 #include "RskTypes.hpp"
-#include "research.h"
-#include "types.h"
+#include "research.hpp"
+#include "types.hpp"
 
 namespace st3 {
 namespace interface {

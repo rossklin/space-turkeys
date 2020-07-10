@@ -1,7 +1,7 @@
-#include "game_base_data.h"
+#include "game_base_data.hpp"
 
-#include "game_data.h"
-#include "solar.h"
+#include "game_data.hpp"
+#include "solar.hpp"
 
 using namespace st3;
 using namespace std;

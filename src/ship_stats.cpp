@@ -1,4 +1,4 @@
-#include "ship_stats.h"
+#include "ship_stats.hpp"
 
 #include <cmath>
 #include <iostream>

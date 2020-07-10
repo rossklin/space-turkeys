@@ -1,6 +1,6 @@
-#include "animation.h"
+#include "animation.hpp"
 
-#include "client_game.h"
+#include "client_game.hpp"
 
 using namespace std;
 using namespace st3;

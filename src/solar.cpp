@@ -1,4 +1,4 @@
-#include "solar.h"
+#include "solar.hpp"
 
 #include <rapidjson/document.h>
 
@@ -7,15 +7,15 @@
 #include <sstream>
 #include <vector>
 
-#include "choice.h"
-#include "cost.h"
-#include "fleet.h"
-#include "game_data.h"
-#include "interaction.h"
-#include "research.h"
-#include "serialization.h"
-#include "ship.h"
-#include "utility.h"
+#include "choice.hpp"
+#include "cost.hpp"
+#include "fleet.hpp"
+#include "game_data.hpp"
+#include "interaction.hpp"
+#include "research.hpp"
+#include "serialization.hpp"
+#include "ship.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

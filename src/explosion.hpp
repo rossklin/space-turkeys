@@ -3,7 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <chrono>
 
-#include "types.h"
+#include "types.hpp"
 
 namespace st3 {
 struct explosion {

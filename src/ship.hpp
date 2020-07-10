@@ -5,10 +5,10 @@
 #include <string>
 #include <vector>
 
-#include "cost.h"
-#include "game_object.h"
-#include "ship_stats.h"
-#include "types.h"
+#include "cost.hpp"
+#include "game_object.hpp"
+#include "ship_stats.hpp"
+#include "types.hpp"
 
 namespace st3 {
 class game_data;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "com_server.h"
-#include "game_data.h"
+#include "com_server.hpp"
+#include "game_data.hpp"
 
 namespace st3 {
 namespace server {

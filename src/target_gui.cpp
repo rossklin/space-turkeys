@@ -1,10 +1,10 @@
-#include "target_gui.h"
+#include "target_gui.hpp"
 
 #include <iostream>
 
-#include "command.h"
-#include "fleet.h"
-#include "utility.h"
+#include "command.hpp"
+#include "fleet.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

@@ -9,7 +9,7 @@
 #include <sstream>
 #include <vector>
 
-#include "types.h"
+#include "types.hpp"
 
 namespace st3 {
 namespace utility {

@@ -1,15 +1,15 @@
-#include "server_handler.h"
+#include "server_handler.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>  // stringstream
 #include <string>   // string
 
-#include "game_data.h"
-#include "game_handler.h"
-#include "protocol.h"
-#include "serialization.h"
-#include "types.h"
+#include "game_data.hpp"
+#include "game_handler.hpp"
+#include "protocol.hpp"
+#include "serialization.hpp"
+#include "types.hpp"
 
 using namespace std;
 using namespace st3;

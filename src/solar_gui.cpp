@@ -1,14 +1,14 @@
-#include "solar_gui.h"
+#include "solar_gui.hpp"
 
 #include <memory>
 
-#include "client_game.h"
+#include "client_game.hpp"
 #include "rsg/src/button.hpp"
 #include "rsg/src/panel.hpp"
 #include "rsg/src/utility.hpp"
-#include "solar.h"
-#include "types.h"
-#include "utility.h"
+#include "solar.hpp"
+#include "types.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

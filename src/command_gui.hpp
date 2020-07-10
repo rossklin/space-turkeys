@@ -3,8 +3,8 @@
 #include <set>
 #include <string>
 
-#include "selector.h"
-#include "types.h"
+#include "selector.hpp"
+#include "types.hpp"
 
 namespace st3 {
 namespace client {

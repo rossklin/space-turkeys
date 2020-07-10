@@ -1,16 +1,16 @@
-#include "fleet.h"
+#include "fleet.hpp"
 
 #include <iostream>
 #include <mutex>
 
-#include "game_data.h"
-#include "interaction.h"
-#include "serialization.h"
-#include "ship.h"
-#include "solar.h"
-#include "upgrades.h"
-#include "utility.h"
-#include "waypoint.h"
+#include "game_data.hpp"
+#include "interaction.hpp"
+#include "serialization.hpp"
+#include "ship.hpp"
+#include "solar.hpp"
+#include "upgrades.hpp"
+#include "utility.hpp"
+#include "waypoint.hpp"
 
 using namespace std;
 using namespace st3;

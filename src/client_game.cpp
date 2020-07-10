@@ -1,4 +1,4 @@
-#include "client_game.h"
+#include "client_game.hpp"
 
 #include <SFML/Graphics.hpp>
 #include <chrono>
@@ -8,19 +8,19 @@
 #include <thread>
 #include <type_traits>
 
-#include "animation.h"
-#include "choice_gui.h"
-#include "com_client.h"
-#include "command_gui.h"
-#include "desktop.h"
-#include "graphics.h"
-#include "protocol.h"
-#include "research.h"
-#include "serialization.h"
-#include "socket_t.h"
-#include "target_gui.h"
-#include "upgrades.h"
-#include "utility.h"
+#include "animation.hpp"
+#include "choice_gui.hpp"
+#include "com_client.hpp"
+#include "command_gui.hpp"
+#include "desktop.hpp"
+#include "graphics.hpp"
+#include "protocol.hpp"
+#include "research.hpp"
+#include "serialization.hpp"
+#include "socket_t.hpp"
+#include "target_gui.hpp"
+#include "upgrades.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

@@ -1,4 +1,4 @@
-#include "com_server.h"
+#include "com_server.hpp"
 
 #include <SFML/Network.hpp>
 #include <functional>
@@ -10,11 +10,11 @@
 #include <thread>
 #include <vector>
 
-#include "game_data.h"
-#include "protocol.h"
-#include "serialization.h"
-#include "server_handler.h"
-#include "types.h"
+#include "game_data.hpp"
+#include "protocol.hpp"
+#include "serialization.hpp"
+#include "server_handler.hpp"
+#include "types.hpp"
 
 using namespace std;
 using namespace st3;

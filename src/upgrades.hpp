@@ -4,7 +4,7 @@
 #include <set>
 #include <string>
 
-#include "ship_stats.h"
+#include "ship_stats.hpp"
 
 namespace st3 {
 class game_data;

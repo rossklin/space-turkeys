@@ -5,14 +5,14 @@
 #include <mutex>
 #include <thread>
 
-#include "com_server.h"
-#include "cost.h"
-#include "game_handler.h"
-#include "protocol.h"
-#include "research.h"
-#include "serialization.h"
-#include "server_handler.h"
-#include "utility.h"
+#include "com_server.hpp"
+#include "cost.hpp"
+#include "game_handler.hpp"
+#include "protocol.hpp"
+#include "research.hpp"
+#include "serialization.hpp"
+#include "server_handler.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

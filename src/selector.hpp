@@ -5,14 +5,14 @@
 #include <set>
 #include <string>
 
-#include "command.h"
-#include "fleet.h"
-#include "game_object.h"
-#include "graphics.h"
-#include "ship.h"
-#include "solar.h"
-#include "types.h"
-#include "waypoint.h"
+#include "command.hpp"
+#include "fleet.hpp"
+#include "game_object.hpp"
+#include "graphics.hpp"
+#include "ship.hpp"
+#include "solar.hpp"
+#include "types.hpp"
+#include "waypoint.hpp"
 
 namespace st3 {
 namespace client {

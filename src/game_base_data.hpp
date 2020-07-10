@@ -1,11 +1,11 @@
 #pragma once
 
-#include "game_object.h"
-#include "game_settings.h"
-#include "player.h"
-#include "terrain_object.h"
-#include "types.h"
-#include "utility.h"
+#include "game_object.hpp"
+#include "game_settings.hpp"
+#include "player.hpp"
+#include "terrain_object.hpp"
+#include "types.hpp"
+#include "utility.hpp"
 
 namespace st3 {
 class game_base_data {

@@ -6,8 +6,8 @@
 #include <list>
 #include <string>
 
-#include "development_tree.h"
-#include "types.h"
+#include "development_tree.hpp"
+#include "types.hpp"
 
 namespace st3 {
 namespace interface {

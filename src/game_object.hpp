@@ -6,8 +6,8 @@
 #include <memory>
 #include <set>
 
-#include "command.h"
-#include "types.h"
+#include "command.hpp"
+#include "types.hpp"
 
 namespace st3 {
 class game_data;

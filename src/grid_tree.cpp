@@ -1,9 +1,9 @@
-#include "grid_tree.h"
+#include "grid_tree.hpp"
 
 #include <cmath>
 #include <iostream>
 
-#include "utility.h"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

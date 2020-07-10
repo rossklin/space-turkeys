@@ -1,15 +1,15 @@
-#include "serialization.h"
+#include "serialization.hpp"
 
 #include <iostream>
 #include <set>
 
-#include "fleet.h"
-#include "game_base_data.h"
-#include "interaction.h"
-#include "ship.h"
-#include "solar.h"
-#include "utility.h"
-#include "waypoint.h"
+#include "fleet.hpp"
+#include "game_base_data.hpp"
+#include "interaction.hpp"
+#include "ship.hpp"
+#include "solar.hpp"
+#include "utility.hpp"
+#include "waypoint.hpp"
 
 using namespace std;
 using namespace st3;

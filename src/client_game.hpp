@@ -6,11 +6,11 @@
 #include <stdexcept>
 #include <string>
 
-#include "choice.h"
-#include "fixed_star.h"
-#include "game_base_data.h"
-#include "selector.h"
-#include "types.h"
+#include "choice.hpp"
+#include "fixed_star.hpp"
+#include "game_base_data.hpp"
+#include "selector.hpp"
+#include "types.hpp"
 
 namespace st3 {
 class target_gui;

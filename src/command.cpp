@@ -1,6 +1,6 @@
-#include "command.h"
+#include "command.hpp"
 
-#include "fleet.h"
+#include "fleet.hpp"
 
 using namespace std;
 using namespace st3;

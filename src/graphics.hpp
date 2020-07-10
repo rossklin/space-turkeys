@@ -4,8 +4,8 @@
 #include <functional>
 #include <string>
 
-#include "animation.h"
-#include "types.h"
+#include "animation.hpp"
+#include "types.hpp"
 
 namespace st3 {
 /*! type representing a window */

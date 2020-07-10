@@ -1,4 +1,4 @@
-#include "research.h"
+#include "research.hpp"
 
 #include <rapidjson/document.h>
 
@@ -6,13 +6,13 @@
 #include <numeric>
 #include <vector>
 
-#include "choice.h"
-#include "cost.h"
-#include "fleet.h"
-#include "ship.h"
-#include "solar.h"
-#include "upgrades.h"
-#include "utility.h"
+#include "choice.hpp"
+#include "cost.hpp"
+#include "fleet.hpp"
+#include "ship.hpp"
+#include "solar.hpp"
+#include "upgrades.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

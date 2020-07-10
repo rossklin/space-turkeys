@@ -1,14 +1,14 @@
-#include "com_client.h"
+#include "com_client.hpp"
 
 #include <iostream>
 #include <vector>
 
-#include "game_base_data.h"
-#include "game_object.h"
-#include "protocol.h"
-#include "selector.h"
-#include "serialization.h"
-#include "utility.h"
+#include "game_base_data.hpp"
+#include "game_object.hpp"
+#include "protocol.hpp"
+#include "selector.hpp"
+#include "serialization.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

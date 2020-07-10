@@ -3,8 +3,8 @@
 #include <set>
 #include <string>
 
-#include "cost.h"
-#include "types.h"
+#include "cost.hpp"
+#include "types.hpp"
 
 namespace st3 {
 struct ship_stats_modifier {

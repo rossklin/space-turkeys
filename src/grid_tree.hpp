@@ -4,7 +4,7 @@
 #include <list>
 #include <memory>
 
-#include "types.h"
+#include "types.hpp"
 
 namespace st3 {
 /*! functions for the 2d search tree */

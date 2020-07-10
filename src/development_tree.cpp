@@ -1,15 +1,15 @@
-#include "development_tree.h"
+#include "development_tree.hpp"
 
 #include <rapidjson/document.h>
 
 #include <boost/algorithm/string.hpp>
 #include <string>
 
-#include "research.h"
-#include "ship.h"
-#include "solar.h"
-#include "types.h"
-#include "utility.h"
+#include "research.hpp"
+#include "ship.hpp"
+#include "solar.hpp"
+#include "types.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

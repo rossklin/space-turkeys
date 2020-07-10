@@ -3,12 +3,12 @@
 #include <iostream>
 #include <thread>
 
-#include "fleet.h"
-#include "game_data.h"
-#include "research.h"
-#include "ship.h"
-#include "types.h"
-#include "waypoint.h"
+#include "fleet.hpp"
+#include "game_data.hpp"
+#include "research.hpp"
+#include "ship.hpp"
+#include "types.hpp"
+#include "waypoint.hpp"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 

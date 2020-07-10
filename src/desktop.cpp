@@ -1,7 +1,7 @@
-#include "desktop.h"
+#include "desktop.hpp"
 
-#include "choice_gui.h"
-#include "client_game.h"
+#include "choice_gui.hpp"
+#include "client_game.hpp"
 
 using namespace std;
 using namespace st3;

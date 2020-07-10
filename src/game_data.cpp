@@ -1,4 +1,4 @@
-#include "game_data.h"
+#include "game_data.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -9,18 +9,18 @@
 #include <queue>
 #include <vector>
 
-#include "animation_data.h"
-#include "com_server.h"
-#include "fleet.h"
-#include "game_object.h"
-#include "interaction.h"
-#include "research.h"
-#include "ship.h"
-#include "solar.h"
-#include "types.h"
-#include "upgrades.h"
-#include "utility.h"
-#include "waypoint.h"
+#include "animation_data.hpp"
+#include "com_server.hpp"
+#include "fleet.hpp"
+#include "game_object.hpp"
+#include "interaction.hpp"
+#include "research.hpp"
+#include "ship.hpp"
+#include "solar.hpp"
+#include "types.hpp"
+#include "upgrades.hpp"
+#include "utility.hpp"
+#include "waypoint.hpp"
 
 using namespace std;
 using namespace st3;

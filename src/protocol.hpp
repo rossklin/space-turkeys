@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include "types.hpp"
 
 namespace st3 {
 /*! constants used in client server communication */

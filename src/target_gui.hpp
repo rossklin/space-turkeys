@@ -2,8 +2,8 @@
 #include <set>
 #include <string>
 
-#include "graphics.h"
-#include "types.h"
+#include "graphics.hpp"
+#include "types.hpp"
 
 namespace st3 {
 

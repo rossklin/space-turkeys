@@ -2,11 +2,11 @@
 #include <iostream>
 #include <list>
 
-#include "choice.h"
-#include "research.h"
-#include "solar.h"
-#include "types.h"
-#include "utility.h"
+#include "choice.hpp"
+#include "research.hpp"
+#include "solar.hpp"
+#include "types.hpp"
+#include "utility.hpp"
 
 using namespace std;
 using namespace st3;

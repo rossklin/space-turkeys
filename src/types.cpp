@@ -1,4 +1,4 @@
-#include "types.h"
+#include "types.hpp"
 
 #include <chrono>  // chrono::system_clock
 #include <ctime>   // localtime
@@ -8,9 +8,9 @@
 #include <mutex>
 #include <sstream>
 
-#include "server_handler.h"
-#include "utility.h"
-#include "waypoint.h"
+#include "server_handler.hpp"
+#include "utility.hpp"
+#include "waypoint.hpp"
 
 using namespace std;
 using namespace st3;

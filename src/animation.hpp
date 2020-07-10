@@ -1,7 +1,7 @@
 #pragma once
 
-#include "animation_data.h"
-#include "types.h"
+#include "animation_data.hpp"
+#include "types.hpp"
 
 namespace st3 {
 struct animation : public animation_data {

@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 
-#include "game_base_data.h"
-#include "socket_t.h"
-#include "types.h"
+#include "game_base_data.hpp"
+#include "socket_t.hpp"
+#include "types.hpp"
 
 namespace st3 {
 
