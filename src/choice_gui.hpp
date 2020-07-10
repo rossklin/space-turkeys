@@ -1,92 +1,19 @@
 #pragma once
 
-#include <SFGUI/SFGUI.hpp>
-#include <SFGUI/Widgets.hpp>
 #include <functional>
 #include <list>
 #include <string>
 
-#include "types.h"
+#include "rsg/src/panel.hpp"
+#include "types.hpp"
 
 namespace st3 {
-namespace interface {
-struct choice_info {
-  bool available;
-  float progress;
-  std::list<std::string> info;
-  std::list<std::string> requirements;
-
-  choice_info();
-};
-
-class solar_gui : public sfg::Window {
- public:
-  typedef std::shared_ptr<solar_gui> Ptr;
-  typedef std::shared_ptr<const solar_gui> PtrConst;
-  static const std::string sfg_id;
-
-  static Ptr Create(solar_ptr s);
-
- protected:
-  sfg::Box::Ptr wrapper, layout_left, layout_left_q, layout_right, layout_right_q;
-  hm_t<std::string, int> available_buildings;
-  hm_t<std::string, sfg::Button::Ptr> available_buildings_b;
-  hm_t<int, std::pair<std::string, sfg::Button::Ptr> > building_queue;
-  hm_t<int, std::pair<std::string, sfg::Button::Ptr> > ship_queue;
-  solar_ptr sol;
-
-  solar_gui(solar_ptr s);
-  void update_available_button(std::string v);
-  void extend_building_queue(std::string v);
-  void extend_ship_queue(std::string v);
-};
-
-class choice_gui : public sfg::Window {
- public:
-  typedef std::shared_ptr<choice_gui> Ptr;
-  typedef std::shared_ptr<const choice_gui> PtrConst;
-  typedef std::function<choice_info(std::string)> f_info_t;
-  typedef std::function<void(hm_t<std::string, bool>, bool)> f_result_t;
-
-  static const std::string sfg_id;
-  static const std::string class_normal;
-  static const std::string class_selected;
-
-  static Ptr Create(std::string title,
-                    std::string help_text,
-                    bool unique,
-                    hm_t<std::string, bool> options,
-                    f_info_t info,
-                    f_result_t callback);
-
-  static hm_t<std::string, int> calc_faclev();
-
-  const std::string& GetName() const;
-
- protected:
-  bool unique;
-  hm_t<std::string, bool> options;
-  hm_t<std::string, sfg::Button::Ptr> buttons;
-  sfg::Box::Ptr info_area;
-  f_info_t f_info;
-  f_result_t callback;
-
-  int width;
-  sfg::Box::Ptr layout;
-  sfg::Frame::Ptr frame;
-
-  choice_gui(std::string title,
-             std::string help_text,
-             bool unique,
-             hm_t<std::string, bool> options,
-             f_info_t info,
-             f_result_t callback);
-
-  void update_selected();
-};
-
-sfg::Widget::Ptr governor_gui(std::list<solar_ptr> solars);
-sfg::Widget::Ptr military_gui(std::list<solar_ptr> solars);
-sfg::Widget::Ptr research_gui();
-};  // namespace interface
+typedef std::function<RSG::ComponentPtr(std::string)> option_generator;
+RSG::PanelPtr choice_gui(
+    std::string title,
+    std::list<string> options,
+    option_generator f_opt,
+    std::function<void(std::list<std::string>)> on_commit,
+    RSG::Voidfun on_cancel,
+    bool allow_queue);
 };  // namespace st3
