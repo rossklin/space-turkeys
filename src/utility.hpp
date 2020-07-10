@@ -2,6 +2,7 @@
 
 #include <rapidjson/document.h>
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <functional>
@@ -20,10 +21,10 @@ T range_init(const F &x) {
   return res;
 }
 
-template <typename T = double, typename V = double>
-std::vector<V> map(std::function<V(T)> f, std::vector<T> x) {
-  std::vector<V> res(x.size());
-  for (int i = 0; i < x.size(); i++) res[i] = f(x[i]);
+template <typename C1, typename C2>
+C2 map(std::function<typename C2::value_type(typename C1::value_type)> f, C1 x) {
+  C2 res(x.size());
+  transform(x.begin(), x.end(), res.begin(), f);
   return res;
 }
 
