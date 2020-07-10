@@ -27,6 +27,13 @@ std::vector<V> map(std::function<V(T)> f, std::vector<T> x) {
   return res;
 }
 
+template <typename K, typename V>
+hm_t<K, V> hm_map(std::function<V(K, V)> f, hm_t<K, V> x) {
+  hm_t<K, V> res;
+  for (auto &y : x) res[x.first] = f(x.first, x.second);
+  return res;
+}
+
 template <typename T>
 bool any(T c) {
   for (auto x : c) {
