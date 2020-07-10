@@ -6,6 +6,7 @@
 
 #include "rsg/src/RskTypes.hpp"
 #include "rsg/src/button.hpp"
+#include "rsg/src/component.hpp"
 #include "rsg/src/panel.hpp"
 #include "style.hpp"
 #include "utility.hpp"
@@ -15,11 +16,13 @@ using namespace st3;
 using namespace RSG;
 
 PanelPtr build_queue(list<string> q) {
-  // todo
+  list<ComponentPtr> children = utility::map<list<string>, list<ComponentPtr>>([](string v) { return Button::create(v); }, q);
+  return Panel::create(children, Panel::ORIENT_VERTICAL);
 }
 
 PanelPtr build_info(list<string> info) {
-  // todo
+  list<ComponentPtr> children = utility::map<list<string>, list<ComponentPtr>>([](string v) { return make_label(v); }, info);
+  return Panel::create(children, Panel::ORIENT_VERTICAL);
 }
 
 PanelPtr choice_gui(
@@ -42,6 +45,7 @@ PanelPtr choice_gui(
   // Info wrapper
   PanelPtr info_wrapper = Panel::create();
 
+  // Option cards
   list<ComponentPtr> cards = utility::map<list<string>, list<ComponentPtr>>(
       [=](string v) -> ComponentPtr {
         ButtonPtr b = f_opt(v);
@@ -54,6 +58,7 @@ PanelPtr choice_gui(
       },
       options);
 
+  // Main layout
   return Panel::create(
       {
           make_label(title),
@@ -61,7 +66,7 @@ PanelPtr choice_gui(
           Panel::create(cards),
           make_hbar(),
           info_wrapper,
-          make_hbar,
+          make_hbar(),
           queue_wrapper,
       },
       Panel::ORIENT_VERTICAL);
