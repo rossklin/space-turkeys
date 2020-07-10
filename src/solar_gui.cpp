@@ -7,12 +7,12 @@
 #include "rsg/src/panel.hpp"
 #include "rsg/src/utility.hpp"
 #include "solar.hpp"
+#include "style.hpp"
 #include "types.hpp"
 #include "utility.hpp"
 
 using namespace std;
 using namespace st3;
-using namespace interface;
 using namespace RSG;
 
 typedef shared_ptr<list<string>> list_t;
