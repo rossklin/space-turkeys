@@ -2,20 +2,21 @@
 
 #include <SFML/Graphics.hpp>
 #include <functional>
+#include <memory>
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "choice.hpp"
 #include "fixed_star.hpp"
 #include "game_base_data.hpp"
+#include "rsg/src/RskTypes.hpp"
 #include "selector.hpp"
 #include "types.hpp"
 
 namespace st3 {
-class target_gui;
 
-namespace client {
 const float frame_time = 0.05;
 
 struct cl_socket_t;
@@ -26,30 +27,40 @@ struct cl_socket_t;
       window, socket, game settings and selectors representing game
       objects, as well as sub guis. 
     */
-struct game : public game_base_data {
-  cl_socket_t *socket;     /*!< socket for server communication */
-  window_t window;         /*!< sfml window for drawing the interface */
-  sf::View view_game;      /*!< sfml view for game objects */
-  sf::View view_minimap;   /*!< sfml view for the minimap */
-  sf::View view_window;    /*!< sfml view fitting window */
-  std::string message;     /*!< game round progress message */
+class game : public game_base_data {
+ private:
+  enum gui_layers {
+    LAYER_CONTEXT,
+    LAYER_PANEL,
+    LAYER_POPUP,
+    LAYER_NUM
+  };
+
+  // Server communication
+  std::shared_ptr<cl_socket_t> socket; /*!< socket for server communication */
+
+  // graphics handlers
+  window_t window;       /*!< sfml window for drawing the interface */
+  sf::View view_game;    /*!< sfml view for game objects */
+  sf::View view_minimap; /*!< sfml view for the minimap */
+  sf::View view_window;  /*!< sfml view fitting window */
+  RSG::PanelPtr base_layer;
+  std::vector<RSG::PanelPtr> component_layers;
+
+  // GUI state variables
   bool area_select_active; /*!< whether area selection is active */
   sf::FloatRect srect;     /*!< area selection rectangle */
   std::string phase;
-  std::vector<point> enemy_clusters;
-  bool activate_build;
-  bool activate_ship;
+  int selector_queue; /*!< index for back end of selector queue */
 
-  hm_t<idtype, command_selector::ptr> command_selectors; /*!< graphical representations for commands */
-  int selector_queue;                                    /*!< index for back end of selector queue */
-  idtype comid;                                          /*!< id counter for commands */
+  // Game variables
   sf::Color col;
   sint self_id;
+  std::vector<point> enemy_clusters;
 
-  sfg::SFGUI *sfgui;
-  target_gui *targui; /*!< gui for selecting command action */
-  bool chosen_quit;
-  bool comgui_active;
+  // Command selectors
+  idtype comid;                                          /*!< id counter for commands */
+  hm_t<idtype, command_selector::ptr> command_selectors; /*!< graphical representations for commands */
 
   // stars
   std::vector<fixed_star> fixed_stars;
@@ -63,7 +74,9 @@ struct game : public game_base_data {
   std::list<animation> animations;
 
   /*! default contsructor */
-  game();
+  game(std::shared_ptr<cl_socket_t> s);
+
+  PanelPtr build_base_panel();
 
   void deregister_entity(combid i);
 
@@ -73,8 +86,10 @@ struct game : public game_base_data {
   /*! run the game user interface */
   void run();
 
+  void queue_background_task(RSG::Voidfun f);
+
   /*! send a packet to query and wait for response */
-  bool wait_for_it(sf::Packet &p, std::function<bool(sf::Packet)> callback = 0);
+  void wait_for_it(sf::Packet &p, std::function<void(sf::Packet &)> callback, RSG::Voidfun on_fail = 0);
 
   bool init_data();
 
@@ -168,9 +183,6 @@ struct game : public game_base_data {
   /*! translate the game view according to user input */
   void controls();
 
-  /*! remove the current command gui */
-  void clear_guis();
-
   /*! check whether a waypoint is an ancestor of another waypoint
 
 	This is used to prevent the user from generating circular
@@ -254,9 +266,6 @@ struct game : public game_base_data {
   /* GRAPHICS */
   /* **************************************** */
 
-  std::function<int(sf::Event)> default_event_handler;
-  std::function<int()> default_body;
-
   sf::FloatRect minimap_rect();
 
   bool popup_query(std::string v);
@@ -313,5 +322,6 @@ struct game : public game_base_data {
 };
 
 extern game *g;
-};  // namespace client
 };  // namespace st3
+}
+;  // namespace st3

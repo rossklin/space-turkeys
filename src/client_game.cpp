@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <chrono>
+#include <functional>
 #include <iostream>
 #include <queue>
 #include <stdexcept>
@@ -12,10 +13,12 @@
 #include "choice_gui.hpp"
 #include "com_client.hpp"
 #include "command_gui.hpp"
-#include "desktop.hpp"
 #include "graphics.hpp"
 #include "protocol.hpp"
 #include "research.hpp"
+#include "rsg/src/panel.hpp"
+#include "rsg/src/utility.hpp"
+#include "selector.hpp"
 #include "serialization.hpp"
 #include "socket_t.hpp"
 #include "target_gui.hpp"
@@ -24,175 +27,80 @@
 
 using namespace std;
 using namespace st3;
-using namespace client;
-
-game *client::g = 0;
-int wp_idc = 0;
-int fleet_idc = 0;
+using namespace RSG;
 
 // local utility functions
 sf::FloatRect fixrect(sf::FloatRect r);
 bool add2selection();
 bool ctrlsel();
 
-waypoint_selector::ptr to_wps(entity_selector::ptr p) {
-  return utility::guaranteed_cast<waypoint_selector, entity_selector>(p);
-}
-
 // ****************************************
 // GAME STEPS
 // ****************************************
 
-game::game() {
-  targui = 0;
+game::game(std::shared_ptr<cl_socket_t> s) {
   selector_queue = 1;
-  chosen_quit = false;
-  comgui_active = false;
-  activate_ship = false;
-  activate_build = false;
   sight_ul = point(0, 0);
   sight_wh = point(0, 0);
-
-  default_event_handler = [this](sf::Event e) -> int {
-    if (e.type == sf::Event::Closed) {
-      window.close();
-      return socket_t::tc_stop;
-    } else {
-      bool had_qw = !!interface::desktop->query_window;
-      interface::desktop->HandleEvent(e);
-
-      // handle escape on query window
-      if (had_qw) {
-        if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape) {
-          interface::desktop->clear_qw();
-        }
-        return 0;
-      }
-
-      control_event(e);
-      return 0;
-    }
-  };
-
-  default_body = generate_loop_body([]() -> int { return 0; });
+  socket = s;
+  area_select_active = false;
+  self_id = socket->id;
+  component_layers.resize(LAYER_NUM);
 }
 
 vector<entity_selector::ptr> game::all_selectors() const {
   return all_entities<entity_selector>();
 };
 
-function<int(sf::Event)> game::generate_event_handler(function<int(sf::Event)> task) {
-  return [task, this](sf::Event e) -> int {
-    // run default event handler
-    int test = default_event_handler(e);
-
-    if (test) {
-      return test;
-    } else {
-      return task(e);
-    }
-  };
-}
-
-function<int()> game::generate_loop_body(function<int()> task) {
-  return [task, this]() -> int {
-    static sf::Clock clock;
-
-    controls();
-    draw_window();
-    window.setView(view_window);
-    float delta = clock.restart().asSeconds();
-    interface::desktop->Update(delta);
-    return task();
-  };
-}
-
 command_selector::ptr game::get_command_selector(idtype i) {
   if (!command_selectors.count(i)) throw classified_error("client::game::get_command_selectors: invalid id: " + to_string(i));
   return command_selectors[i];
-}
-
-void game::clear_guis() {
-  if (targui) delete targui;
-  targui = 0;
-  activate_build = false;
-  activate_ship = false;
 }
 
 /* Main game entry point called after getting id from server */
 void game::run() {
   bool proceed = true;
   bool first = true;
-  area_select_active = false;
-  self_id = socket->id;
 
   init_data();
 
   // construct interface
-  // view_game = sf::View(sf::FloatRect(sight_ul, sight_wh)); // handled by init_data??
   view_window = window.getDefaultView();
   view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
   window.setView(view_window);
-  interface::desktop = new interface::main_interface(window.getSize(), this);
+
+  auto make_container = styled_generator<Panel>(
+      {
+          {"width", to_string(window.getSize().x) + "px"},
+          {"height", to_string(window.getSize().y) + "px"},
+          {"align-horizontal", "center"},
+          {"align-vertical", "center"},
+      });
+
+  for (int i = 0; i < LAYER_NUM; i++) {
+    component_layers[i] = make_container();
+  }
+
+  base_layer = make_container();
+  base_layer->add_child(build_base_panel());
 
   // game loop
   while (true) {
-    clear_guis();
     if (!pre_step()) break;
     if (!choice_step()) break;
     if (!simulation_step()) break;
   }
-
-  // message to user on involontary quit
-  if (!chosen_quit) {
-    string server_says;
-    socket->data >> server_says;
-    popup_message("GAME OVER", server_says);
-  }
-
-  delete interface::desktop;
-  interface::desktop = 0;
 }
 
-bool game::wait_for_it(sf::Packet &p, std::function<bool(sf::Packet)> callback) {
-  int w2c = socket_t::tc_run;
-  int c2w = socket_t::tc_run;
-
-  thread t(query, socket, ref(p), ref(w2c), ref(c2w));
-
-  if (interface::desktop) {
-    window_loop(default_event_handler, default_body, c2w, w2c);
-  } else {
-    auto empty_event_handler = [this](sf::Event e) -> int {
-      if (e.type == sf::Event::Closed) {
-        window.close();
-        return socket_t::tc_stop;
-      } else {
-        return 0;
-      }
-    };
-
-    auto empty_body = [this]() -> int {
-      window.setView(view_window);
-      graphics::draw_text(window, message, view_window.getCenter(), 20, false, sf::Color::White);
-      return 0;
-    };
-
-    window_loop(empty_event_handler, empty_body, c2w, w2c);
-  }
-
-  t.join();
-
-  if ((w2c | c2w) & socket_t::tc_bad_result) {
-    cout << "wait_for_it: finished/aborted" << endl;
-    return false;
-  }
-
-  if (callback) {
-    return callback(socket->data);
-  } else {
-    return true;
-  }
+// Query server with packet, then callback with result
+void game::wait_for_it(sf::Packet &p, function<void(sf::Packet &)> callback, RSG::Voidfun on_fail) {
+  queue_background_task([this, &p, callback, on_fail]() {
+    if (client::query(socket, p)) {
+      callback(socket->data);
+    } else {
+      on_fail();
+    }
+  });
 }
 
 bool game::init_data() {
