@@ -15,7 +15,6 @@
 #include "waypoint.hpp"
 
 namespace st3 {
-namespace client {
 struct game;
 
 /*! base class for graphical representation of game objects */
@@ -112,5 +111,4 @@ class command_selector : public command {
       */
   bool contains_point(point p, float &d);
 };
-};  // namespace client
 };  // namespace st3

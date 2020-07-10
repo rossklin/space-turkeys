@@ -14,7 +14,6 @@
 using namespace std;
 
 namespace st3 {
-namespace client {
 
 template class specific_selector<ship>;
 template class specific_selector<fleet>;
@@ -377,7 +376,6 @@ string specific_selector<ship>::hover_info() {
 
   return output;
 }
-}  // namespace client
 }  // namespace st3
 
 using namespace st3;
