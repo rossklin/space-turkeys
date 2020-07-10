@@ -1,6 +1,5 @@
 #pragma once
 
-#include <SFGUI/Widgets.hpp>
 #include <SFML/Graphics.hpp>
 #include <functional>
 #include <string>

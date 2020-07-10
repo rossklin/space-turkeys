@@ -195,10 +195,6 @@ int main(int argc, char **argv) {
   try {
     setup_gfx(fullscreen);
 
-    sfg::SFGUI sfgui;
-    g->sfgui = &sfgui;
-    graphics::initialize();
-
     connect_to_server(name);
     if (task == "create") {
       game_id = setup_create_game(settings);

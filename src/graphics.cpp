@@ -46,15 +46,6 @@ sf::Color graphics::fade_color(sf::Color from, sf::Color to, float r) {
                    from.a + r * (to.a - from.a));
 }
 
-void graphics::initialize() {
-  bool loaded = default_font.loadFromFile("fonts/AjarSans-Regular.ttf");
-  if (!loaded) loaded = default_font.loadFromFile(utility::root_path + "/fonts/AjarSans-Regular.ttf");
-
-  if (!loaded) {
-    throw classified_error("error loading font");
-  }
-}
-
 void graphics::draw_flag(sf::RenderTarget &w, point p, sf::Color c, sf::Color bg, int count, string ship_class, int nstack) {
   vector<sf::Vertex> svert;
   float s = 35 * unscale();
