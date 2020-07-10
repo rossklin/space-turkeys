@@ -1,5 +1,7 @@
 #include "solar_gui.h"
 
+#include <memory>
+
 #include "client_game.h"
 #include "rsg/src/button.hpp"
 #include "rsg/src/panel.hpp"
@@ -13,22 +15,21 @@ using namespace st3;
 using namespace interface;
 using namespace RSG;
 
-list<string> bqueue;
-list<string> squeue;
+typedef shared_ptr<list<string>> list_t;
 
-PanelPtr building_queue(solar_ptr s) {
+PanelPtr building_queue(solar_ptr s, list_t q) {
   hm_t<string, int> available = s->development;
   list<ComponentPtr> children;
   PanelPtr p = Panel::create({}, Panel::ORIENT_VERTICAL);
 
-  for (auto v : bqueue) {
+  for (auto v : *q) {
     available[v]++;
     ButtonPtr b = Button::create(
         v + " level " + to_string(available[v]),
         [=](ButtonPtr self) {
           p->remove_child(self);
-          auto i = find(bqueue.begin(), bqueue.end(), v);
-          if (i != bqueue.end()) bqueue.erase(i);
+          auto i = find(q->begin(), q->end(), v);
+          if (i != q->end()) q->erase(i);
         });
 
     children.push_back(b);
@@ -39,7 +40,7 @@ PanelPtr building_queue(solar_ptr s) {
 }
 
 // Panel with buttons for queing development
-PanelPtr make_left_panel(solar_ptr s) {
+PanelPtr make_left_panel(solar_ptr s, list_t q) {
   PanelPtr p1 = Panel::create({}, Panel::ORIENT_VERTICAL);
   PanelPtr p2 = Panel::create({}, Panel::ORIENT_VERTICAL);
   list<ComponentPtr> children;
@@ -49,29 +50,29 @@ PanelPtr make_left_panel(solar_ptr s) {
         v,
         [=](ButtonPtr b) {
           // Run event handler through post process since we are adding/removing children
-          bqueue.push_back(v);
+          q->push_back(v);
           p2->clear_children();
-          p2->add_child(building_queue(s));
+          p2->add_child(building_queue(s, q));
         }));
   }
 
   p1->add_children(children);
-  p2->add_child(building_queue(s));
+  p2->add_child(building_queue(s, q));
 
   return Panel::create({p1, p2});
 }
 
-PanelPtr ship_queue() {
+PanelPtr ship_queue(list_t q) {
   list<ComponentPtr> children;
   PanelPtr p = Panel::create({}, Panel::ORIENT_VERTICAL);
 
-  for (auto v : squeue) {
+  for (auto v : *q) {
     ButtonPtr b = Button::create(
         v,
         [=](ButtonPtr self) {
           p->remove_child(self);
-          auto i = find(bqueue.begin(), bqueue.end(), v);
-          if (i != bqueue.end()) bqueue.erase(i);
+          auto i = find(q->begin(), q->end(), v);
+          if (i != q->end()) q->erase(i);
         });
 
     children.push_back(b);
@@ -82,7 +83,7 @@ PanelPtr ship_queue() {
 }
 
 // Panel with buttons for queing ship production
-PanelPtr make_right_panel(solar_ptr s, research::data r) {
+PanelPtr make_right_panel(solar_ptr s, research::data r, list_t q) {
   PanelPtr p1 = Panel::create({}, Panel::ORIENT_VERTICAL);
   PanelPtr p2 = Panel::create({}, Panel::ORIENT_VERTICAL);
   list<ComponentPtr> children;
@@ -95,49 +96,36 @@ PanelPtr make_right_panel(solar_ptr s, research::data r) {
           v,
           [=](ButtonPtr b) {
             // Run event handler through post process since we are adding/removing children
-            bqueue.push_back(v);
+            q->push_back(v);
             p2->clear_children();
-            p2->add_child(building_queue(s));
+            p2->add_child(ship_queue(q));
           }));
     }
   }
 
   p1->add_children(children);
-  p2->add_child(ship_queue());
+  p2->add_child(ship_queue(q));
 
   return Panel::create({p1, p2});
 }
 
 PanelPtr solar_gui(solar_ptr s, research::data r, Voidfun on_cancel, function<void(list<string>, list<string>)> on_commit) {
-  function<ButtonPtr(string)> make_label = styled_generator<Button, string>({
-      {"background-color", "00000000"},
-      {"border-thickness", "0"},
-  });
-
-  auto make_hbar = styled_generator<Button>({
-      {"width", "100%"},
-      {"height", "1px"},
-      {"border-thickness", "0"},
-      {"background-color", "112233ff"},
-      {"margin-top", "20"},
-      {"margin-bottom", "20"},
-      {"margin-left", "0"},
-      {"margin-right", "0"},
-  });
+  list_t bqueue(new list<string>(s->choice_data.building_queue));
+  list_t squeue(new list<string>(s->choice_data.ship_queue));
 
   PanelPtr p = Panel::create(
       {
           make_label("Manage " + s->id),
           make_hbar(),
           Panel::create({
-              make_left_panel(s),
-              make_right_panel(s, r),
+              make_left_panel(s, bqueue),
+              make_right_panel(s, r, squeue),
           }),
           make_hbar(),
           Panel::create(
               {
                   Button::create("Cancel", [=](ButtonPtr s) { on_cancel(); }),
-                  Button::create("Commit", [=](ButtonPtr s) { on_commit(bqueue, squeue); }),
+                  Button::create("Commit", [=](ButtonPtr s) { on_commit(*bqueue, *squeue); }),
               }),
       },
       Panel::ORIENT_VERTICAL);
