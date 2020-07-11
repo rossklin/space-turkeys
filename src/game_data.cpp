@@ -414,7 +414,7 @@ fleet_ptr game_data::generate_fleet(point p, idtype owner, command c, list<combi
   return f;
 }
 
-void game_data::apply_choice(choice::choice c, idtype id) {
+void game_data::apply_choice(choice c, idtype id) {
   // build waypoints and fleets before validating the choice, so that
   // commands based there can be validated
   for (auto &x : c.waypoints) {

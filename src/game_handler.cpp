@@ -220,7 +220,7 @@ bool load_autosave(string filename, game_setup &c, game_data &g) {
 
 void server::game_handler(game_setup c, game_data &g) {
   query_response_generator load_client_choice = [&g](int cid, sf::Packet query) -> handler_result {
-    choice::choice ch;
+    choice ch;
 
     return handler_switch(query >> ch, [&g, &ch, cid](handler_result &res) {
       g.apply_choice(ch, cid);

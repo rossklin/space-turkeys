@@ -134,14 +134,14 @@ sf::Packet& operator>>(sf::Packet& packet, client_game_settings& g);
     @param g the object to stream
     @return reference to the resulting packet
   */
-sf::Packet& operator<<(sf::Packet& packet, const choice::choice& c);
+sf::Packet& operator<<(sf::Packet& packet, const choice& c);
 
 /*! stream a choice out of a packet
     @param packet the packet
     @param g the object to stream
     @return reference to the resulting packet
   */
-sf::Packet& operator>>(sf::Packet& packet, choice::choice& c);
+sf::Packet& operator>>(sf::Packet& packet, choice& c);
 
 /*! stream a waypoint into packet
     @param packet the packet
@@ -216,14 +216,14 @@ sf::Packet& operator>>(sf::Packet& packet, solar& g);
     @param g the object to stream
     @return reference to the resulting packet
   */
-sf::Packet& operator<<(sf::Packet& packet, const choice::c_solar& g);
+sf::Packet& operator<<(sf::Packet& packet, const c_solar& g);
 
 /*! stream a solar choice out of a packet
     @param packet the packet
     @param g the object to stream
     @return reference to the resulting packet
   */
-sf::Packet& operator>>(sf::Packet& packet, choice::c_solar& g);
+sf::Packet& operator>>(sf::Packet& packet, c_solar& g);
 
 /*! stream a fleet into packet
     @param packet the packet

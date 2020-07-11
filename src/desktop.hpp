@@ -30,7 +30,7 @@ class main_interface : public sfg::Desktop {
   client::game *g;
 
   // data for generating the client's choice
-  choice::choice response;
+  choice response;
 
   // progress communication variables for game loop
   bool accept;

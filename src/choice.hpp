@@ -7,7 +7,6 @@
 
 namespace st3 {
 /*! struct representing what a player can chose */
-namespace choice {
 const int max_allocation = 10;
 
 /*! choice of priorities for solar system */
@@ -23,5 +22,4 @@ struct choice {
   hm_t<combid, waypoint_ptr> waypoints;       /*!< table of generated waypoints */
   hm_t<combid, fleet_ptr> fleets;
 };
-};  // namespace choice
 };  // namespace st3

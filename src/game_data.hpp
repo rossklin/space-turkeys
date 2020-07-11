@@ -42,7 +42,7 @@ class game_data : public virtual game_base_data {
 
   void assign(const game_data &g);
   void rehash_grid();
-  void apply_choice(choice::choice c, idtype id);
+  void apply_choice(choice c, idtype id);
   void increment();
   bool target_position(combid t, point &p) const;
   std::list<combid> search_targets(combid self_id, point p, float r, target_condition c) const;

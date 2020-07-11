@@ -26,7 +26,7 @@ class solar : public virtual physical_object, public virtual commandable_object,
   static solar_ptr create(idtype id, point p, float bounty, float var = 0.3);
   static const std::string class_id;
 
-  choice::c_solar choice_data;
+  c_solar choice_data;
   research::data *research_level;
 
   hm_t<std::string, int> development;

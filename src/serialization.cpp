@@ -203,13 +203,13 @@ sf::Packet& st3::operator>>(sf::Packet& packet, solar& g) {
 }
 
 // solar choice
-sf::Packet& st3::operator<<(sf::Packet& packet, const choice::c_solar& g) {
+sf::Packet& st3::operator<<(sf::Packet& packet, const c_solar& g) {
   return packet
          << g.building_queue
          << g.ship_queue;
 }
 
-sf::Packet& st3::operator>>(sf::Packet& packet, choice::c_solar& g) {
+sf::Packet& st3::operator>>(sf::Packet& packet, c_solar& g) {
   return packet >> g.building_queue >> g.ship_queue;
 }
 
@@ -261,14 +261,14 @@ sf::Packet& st3::operator>>(sf::Packet& packet, fleet::analytics& g) {
 // }
 
 // choice
-sf::Packet& st3::operator<<(sf::Packet& packet, const choice::choice& c) {
+sf::Packet& st3::operator<<(sf::Packet& packet, const choice& c) {
   vector<waypoint> wps = utility::map<waypoint_ptr, waypoint>([](waypoint_ptr p) { return *p; }, utility::hm_values(c.waypoints));
   vector<fleet> fls = utility::map<fleet_ptr, fleet>([](fleet_ptr p) { return *p; }, utility::hm_values(c.fleets));
 
   return packet << c.commands << c.solar_choices << wps << fls << c.research;
 }
 
-sf::Packet& st3::operator>>(sf::Packet& packet, choice::choice& c) {
+sf::Packet& st3::operator>>(sf::Packet& packet, choice& c) {
   vector<waypoint> wps;
   vector<fleet> fls;
   auto& res = packet >> c.commands >> c.solar_choices >> wps >> fls >> c.research;
