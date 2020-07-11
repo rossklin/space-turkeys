@@ -52,11 +52,23 @@ class game : public game_base_data {
   sf::FloatRect srect;     /*!< area selection rectangle */
   std::string phase;
   int selector_queue; /*!< index for back end of selector queue */
+  bool choice_complete;
+  choice user_choice;
 
   // Game variables
   sf::Color col;
   sint self_id;
   std::vector<point> enemy_clusters;
+  int wp_idc;
+  int fleet_idc;
+
+  // Simulation data
+  int sim_sub_frames;
+  int sim_frames_loaded;
+  int sim_idx;
+  int sim_sub_idx;
+  bool sim_playing;
+  std::vector<game_base_data> sim_frames;
 
   // Command selectors
   idtype comid;                                          /*!< id counter for commands */
@@ -76,40 +88,89 @@ class game : public game_base_data {
   /*! default contsructor */
   game(std::shared_ptr<cl_socket_t> s);
 
-  PanelPtr build_base_panel();
+  /*! Main entry point */
+  void run();
 
+  // OBJECT ACCESS
   void deregister_entity(combid i);
 
   command_selector::ptr get_command_selector(idtype i);
 
-  // round sections
-  /*! run the game user interface */
-  void run();
+  // USER INTERFACE RELATED STUFF
 
+  /*! Add a task to be run in UI update step */
+  void queue_ui_task(RSG::Voidfun f);
+
+  /*! Run all queued UI tasks */
+  void process_ui_tasks();
+
+  /*! Setup layer root panels */
+  void do_clear_ui_layers(bool preserve_base = true);
+
+  /*! Queue do_clear_ui_layers */
+  void clear_ui_layers(bool preserve_base = true);
+
+  /*! Queue updating layer with component */
+  void swap_layer(int layer, RSG::ComponentPtr component);
+
+  /*! Queue set/unset loading message */
+  void set_loading(bool s);
+
+  void set_game_log(std::list<std::string> log);
+
+  /*! Queue create a popup message which terminates game on callback */
+  void terminate_with_message(std::string message);
+
+  /*! Queue swap base UI panel into base layer */
+  void build_base_panel();
+
+  /*! Research choice UI component */
+  RSG::PanelPtr research_gui();
+
+  /*! Military choice UI component */
+  RSG::PanelPtr military_gui();
+
+  /*! Simulation controls UI */
+  RSG::PanelPtr simulation_gui();
+
+  // CALLBACKS
+  /*! Callback for target gui */
+  void target_selected(combid id, std::string action, point pos, std::list<std::string> e_sel);
+
+  // SERVER COMMUNICATION AND BACKGROUND TASKS
+  /*! Load simulation frames from server */
+  void load_frames();
+
+  /*! Update entities to correspond to the current sim frame */
+  void update_sim_frame();
+
+  /*! Increment simulation to next index */
+  void next_sim_frame();
+
+  /*! Add a task to be run in background thread */
   void queue_background_task(RSG::Voidfun f);
 
-  /*! send a packet to query and wait for response */
+  /*! Queue background task: send a packet to query and callback with response */
   void wait_for_it(sf::Packet &p, std::function<void(sf::Packet &)> callback, RSG::Voidfun on_fail = 0);
 
-  bool init_data();
+  // STEP SETUP FUNCTIONS
+
+  /*! Start background task: load init data from server */
+  void init_data();
+
+  void pre_step();
+  void choice_step();
+  void send_choice();
+  void simulation_step();
+
+  // UNSORTED METHODS BELOW THIS POINT
 
   void update_sight_range(point p, float r);
-
-  /*! run the pre step: check with server and get game data
-	@return whether to continue the game round
-      */
-  bool pre_step();
-
-  /*! let user build a choice and send to server */
-  bool choice_step();
-
-  /*! load simulation frames from server and visualize */
-  bool simulation_step();
 
   /*! make a choice from the user interface
 	@return the choice
       */
-  choice::choice build_choice(choice::choice c);
+  choice build_choice();
 
   /*! update gui with new game data
 	@param g the game data

@@ -39,12 +39,15 @@ bool ctrlsel();
 // ****************************************
 
 game::game(std::shared_ptr<cl_socket_t> s) {
+  sim_sub_frames = 4;
   selector_queue = 1;
   sight_ul = point(0, 0);
   sight_wh = point(0, 0);
   socket = s;
   area_select_active = false;
   self_id = socket->id;
+  fleet_idc = 0;
+  wp_idc = 0;
   component_layers.resize(LAYER_NUM);
 }
 
@@ -55,6 +58,26 @@ vector<entity_selector::ptr> game::all_selectors() const {
 command_selector::ptr game::get_command_selector(idtype i) {
   if (!command_selectors.count(i)) throw classified_error("client::game::get_command_selectors: invalid id: " + to_string(i));
   return command_selectors[i];
+}
+
+void game::clear_ui_layers(bool preserve_base) {
+  queue_ui_task(bind(&do_clear_ui_layers, this, preserve_base));
+}
+
+void game::do_clear_ui_layers(bool preserve_base) {
+  auto make_container = styled_generator<Panel>(
+      {
+          {"width", to_string(window.getSize().x) + "px"},
+          {"height", to_string(window.getSize().y) + "px"},
+          {"align-horizontal", "center"},
+          {"align-vertical", "center"},
+      });
+
+  for (int i = 0; i < LAYER_NUM; i++) {
+    component_layers[i] = make_container();
+  }
+
+  if (!preserve_base) base_layer = make_container();
 }
 
 /* Main game entry point called after getting id from server */
@@ -69,135 +92,131 @@ void game::run() {
   view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
   window.setView(view_window);
 
-  auto make_container = styled_generator<Panel>(
-      {
-          {"width", to_string(window.getSize().x) + "px"},
-          {"height", to_string(window.getSize().y) + "px"},
-          {"align-horizontal", "center"},
-          {"align-vertical", "center"},
-      });
+  // Setup all layers, do not preserve base layer
+  do_clear_ui_layers(false);
 
-  for (int i = 0; i < LAYER_NUM; i++) {
-    component_layers[i] = make_container();
-  }
-
-  base_layer = make_container();
-  base_layer->add_child(build_base_panel());
-
-  // game loop
-  while (true) {
-    if (!pre_step()) break;
-    if (!choice_step()) break;
-    if (!simulation_step()) break;
-  }
+  // todo
+  window_loop();
 }
 
-// Query server with packet, then callback with result
+// Start background task: query server with packet, then callback with result
 void game::wait_for_it(sf::Packet &p, function<void(sf::Packet &)> callback, RSG::Voidfun on_fail) {
   queue_background_task([this, &p, callback, on_fail]() {
     if (client::query(socket, p)) {
       callback(socket->data);
-    } else {
+    } else if (on_fail) {
       on_fail();
+    } else {
+      terminate_with_message("Error sending query to server!");
     }
   });
 }
 
-bool game::init_data() {
-  sf::Packet pq;
-  game_base_data data;
+// Load initial data from the server
+void game::init_data() {
+  set_loading(true);
 
-  message = "loading players...";
-  pq << protocol::load_init;
+  auto callback = [this](sf::Packet p) {
+    game_base_data data;
 
-  auto callback = [this, &data](sf::Packet p) -> bool {
     try {
-      deserialize(data, p, self_id);
+      client::deserialize(data, p, self_id);
     } catch (exception e) {
-      return false;
+      terminate_with_message("Failed to load init data");
+      return;
     }
-    return true;
+
+    players = data.players;
+    settings = data.settings;
+    col = sf::Color(players[self_id].color);
+
+    sight_ul = point(-settings.clset.galaxy_radius, -settings.clset.galaxy_radius);
+    sight_wh = point(2 * settings.clset.galaxy_radius, 2 * settings.clset.galaxy_radius);
+    update_sight_range(point(0, 0), 1);
+
+    // load player starting positions
+    for (auto s : data.filtered_entities<solar_selector>()) {
+      s->research_level = &players[s->owner].research_level;
+      add_entity(s);
+      cout << "init_data: added: " << s->id << endl;
+
+      if (s->owned) {
+        view_game.setCenter(s->get_position());
+        view_game.setSize(point(25 * settings.solar_meanrad, 25 * settings.solar_meanrad));
+        s->seen = true;
+        cout << "init_data: selected starting position: " << s->id << endl;
+      }
+    }
+
+    pre_step();
   };
 
-  if (!wait_for_it(pq, callback)) {
-    throw classified_error("pre_step: failed to load/deserialize init_data");
-  }
+  auto on_fail = [this]() { terminate_with_message("Load init data: can't reach server!"); };
 
-  players = data.players;
-  settings = data.settings;
-  col = sf::Color(players[self_id].color);
+  sf::Packet pq;
+  pq << protocol::load_init;
 
-  sight_ul = point(-settings.clset.galaxy_radius, -settings.clset.galaxy_radius);
-  sight_wh = point(2 * settings.clset.galaxy_radius, 2 * settings.clset.galaxy_radius);
-  update_sight_range(point(0, 0), 1);
-
-  // load player starting positions
-  for (auto s : data.filtered_entities<solar_selector>()) {
-    s->research_level = &players[s->owner].research_level;
-    add_entity(s);
-    cout << "init_data: added: " << s->id << endl;
-
-    if (s->owned) {
-      view_game.setCenter(s->get_position());
-      view_game.setSize(point(25 * settings.solar_meanrad, 25 * settings.solar_meanrad));
-      s->seen = true;
-      cout << "init_data: selected starting position: " << s->id << endl;
-    }
-  }
-
-  return true;
+  wait_for_it(pq, callback, on_fail);
 }
 
 /**First step in game round.
    Responsible for retrieving data from server and running reload_data.   
 */
 
-bool game::pre_step() {
+void game::pre_step() {
+  clear_ui_layers();
+  set_loading(true);
   sf::Packet pq;
-  game_base_data data;
   phase = "pre";
-
-  message = "loading game data...";
   pq << protocol::game_round;
 
-  auto callback = [this, &data](sf::Packet p) -> bool {
+  auto callback = [this](sf::Packet p) -> bool {
+    game_base_data data;
     try {
-      deserialize(data, p, self_id);
+      client::deserialize(data, p, self_id);
     } catch (exception e) {
-      return false;
+      terminate_with_message("Pre-step: failed to load: " + string(e.what()));
+      return;
     }
-    return true;
+    cout << "client " << self_id << ": pre step: loaded" << endl;
+
+    reload_data(data, false);
+
+    set_loading(false);
+    choice_step();
   };
 
-  cout << "client " << self_id << ": pre step: start" << endl;
-  if (!wait_for_it(pq, callback)) {
-    cout << "pre_step: failed to load/deserialize game_data" << endl;
-    return false;
-  }
-  cout << "client " << self_id << ": pre step: loaded" << endl;
+  auto on_fail = [this]() { terminate_with_message("Load pre step data: can't reach server!"); };
 
-  reload_data(data, false);
-
-  return true;
+  wait_for_it(pq, callback, on_fail);
 }
 
-/** Second step in game round.
+void game::target_selected(combid id, string action, point pos, list<string> e_sel) {
+  if (id != "cancel") {
+    bool postselect = false;
 
-    Responsible for running the choice gui, building a choice object
-    and sending it to the server.
-*/
+    if (id.empty()) {
+      id = add_waypoint(pos);
+      postselect = true;
+    }
 
-bool game::choice_step() {
+    command2entity(id, action, e_sel);
+
+    if (postselect) {
+      deselect_all();
+      get_selector(id)->selected = true;
+    }
+  }
+
+  clear_ui_layers();
+}
+
+void game::choice_step() {
   phase = "choice";
-
-  // reset interface response parameters and clear solar choices for
-  // solars which are no longer available.
-  interface::desktop->done = false;
-  interface::desktop->accept = false;
+  build_base_panel();
 
   // keep solar and research choices
-  choice::choice c;
-
+  choice c;
   research::data &r = players[self_id].research_level;
   c.research = r.researching;
 
@@ -207,109 +226,44 @@ bool game::choice_step() {
     c.research.clear();
   }
 
-  interface::desktop->response = c;
   cout << "choice_step: start" << endl;
 
   if (c.research.empty() && !r.available().empty()) {
-    interface::desktop->reset_qw(interface::research_gui());
+    swap_layer(LAYER_PANEL, research_gui());
   }
 
-  message = "make your choice";
-
-  // event handler that passes the event to choice_event()
-  auto event_handler = generate_event_handler([this](sf::Event e) -> int {
-    // check the target gui
-    window.setView(view_game);
-    if (targui && targui->handle_event(e)) {
-      if (targui->done) {
-        if (targui->selected_option.key != "cancel") {
-          combid k = targui->selected_option.key;
-          bool postselect = false;
-
-          if (k.empty()) {
-            k = add_waypoint(targui->position);
-            postselect = true;
-          }
-
-          command2entity(k, targui->selected_option.option, targui->selected_entities);
-
-          if (postselect) {
-            deselect_all();
-            get_selector(k)->selected = true;
-          }
-        }
-        delete targui;
-        targui = 0;
-      }
-      return 0;
-    }
-
-    // check the command gui
-    window.setView(view_window);
-
-    // process choice event
-    return choice_event(e);
-  });
-
-  // gui loop body that handles return status from interface::desktop
-  auto body = generate_loop_body([this]() -> int {
-    if (interface::desktop->done) {
-      return interface::desktop->accept ? socket_t::tc_complete : socket_t::tc_game_complete;
-    } else {
-      return 0;
-    }
-  });
-
-  int result = socket_t::tc_run;
-  int tc_in = socket_t::tc_run;
+  choice_complete = false;
 
   // start standby com thread
-  auto standby_com = [this, &tc_in, &result]() {
+  queue_background_task([this]() {
     sf::Packet p;
     p << protocol::standby;
 
-    while (result == socket_t::tc_run) {
-      int buf = 0;
-      query(socket, p, tc_in, buf);
-      if (buf != socket_t::tc_complete) tc_in = buf;
-      sf::sleep(sf::milliseconds(500));
+    while (!choice_complete) {
+      if (client::query(socket, p)) {
+        sf::sleep(sf::milliseconds(500));
+      } else {
+        terminate_with_message("Choice standby thread: network error");
+        return;
+      }
     }
-  };
 
-  thread ts(standby_com);
+    send_choice();
+  });
+}
 
-  window_loop(event_handler, body, tc_in, result);
-  ts.join();
-
-  sf::Packet pq;
-
-  // client chose to leave the game
-  if (result & socket_t::tc_bad_result) {
-    cout << "choice_step: finishded" << endl;
-    pq.clear();
-    pq << protocol::leave;
-    socket->send_packet(pq);
-    return false;
-  }
-
+void game::send_choice() {
   // clear guis while sending choice
-  clear_guis();
+  clear_ui_layers(false);
   deselect_all();
 
-  message = "sending choice to server...";
-
-  // add commands to choice
-  c = build_choice(interface::desktop->response);
+  choice c = build_choice();
+  sf::Packet pq;
   pq << protocol::choice << c;
 
-  cout << "client " << self_id << ": choice step: start" << endl;
-  if (!wait_for_it(pq)) {
-    cout << "choice send: server says game finished!" << endl;
-    return false;
-  }
-
-  cout << "client " << self_id << ": choice step: loaded" << endl;
-  return true;
+  wait_for_it(pq, [this](sf::Packet &data) {
+    simulation_step();
+  });
 }
 
 /** Third game step.
@@ -317,148 +271,134 @@ bool game::choice_step() {
     Responsible for visualizing game frames.
 */
 
-bool game::simulation_step() {
+void game::simulation_step() {
   phase = "simulation";
-  int w2c = socket_t::tc_run;
-  int c2w = socket_t::tc_run;
-  bool playing = true;
-  int idx = -1;
-  int loaded = 0;
-  vector<game_base_data> g(settings.clset.frames_per_round);
-
   cout << "simluation: starting data loader" << endl;
 
   // start loading frames in background
-  thread t(load_frames, socket, ref(g), ref(loaded), ref(w2c), ref(c2w));
+  sim_frames_loaded = 0;
+  sim_sub_idx = 0;
+  sim_idx = 0;
+  sim_playing = false;
+  queue_background_task(bind(&game::load_frames, this));
 
-  // event handler which handles play/pause
-  auto event_handler = generate_event_handler([this, &playing](sf::Event e) -> int {
-    if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Space) {
-      playing = !playing;
+  clear_ui_layers(false);
+  swap_layer(LAYER_PANEL, simulation_gui());
+}
+
+void game::next_sim_frame() {
+  sim_sub_idx++;
+  if (sim_sub_idx >= sim_sub_frames) {
+    int buffer_size = min<int>(settings.clset.frames_per_round - sim_idx - 1, 4);
+    if (sim_idx < sim_frames_loaded - buffer_size) {
+      sim_sub_idx = 0;
+      sim_idx++;
+      reload_data(sim_frames[sim_idx]);
+    } else {
+      sim_playing = false;
+      return;
     }
-    return 0;
-  });
+  }
 
-  // gui loop body that draws progress indicator and keeps track of
-  // the active frame
-  auto body = generate_loop_body([&, this]() -> int {
-    static int sub_idx = 1;
-    float sub_ratio = 1 / (float)sub_frames;
+  for (auto &a : animations) a.frame++;
+}
 
-    if (idx == settings.clset.frames_per_round - 1) {
-      cout << "simulation: all loaded" << endl;
-      return socket_t::tc_complete;
+// Update entities to correspond to the current sim frame
+void game::update_sim_frame() {
+  // static int sub_idx = 1;
+  // float sub_ratio = 1 / (float)sub_frames;
+  int total_frames = sim_sub_frames * settings.clset.frames_per_round;
+
+  // if (idx == settings.clset.frames_per_round - 1) {
+  //   cout << "simulation: all loaded" << endl;
+  //   return socket_t::tc_complete;
+  // }
+
+  // // draw load progress
+  // window.setView(view_window);
+
+  // auto colored_rect = [](sf::Color c, float r) -> sf::RectangleShape {
+  //   float bounds = interface::main_interface::desktop_dims.x;
+  //   float w = bounds - 10;
+  //   auto rect = graphics::build_rect(sf::FloatRect(5, 5, r * w, 10));
+  //   c.a = 150;
+  //   rect.setFillColor(c);
+  //   rect.setOutlineColor(sf::Color::White);
+  //   rect.setOutlineThickness(-1);
+  //   return rect;
+  // };
+
+  // window.draw(colored_rect(sf::Color::Red, 1));
+  // window.draw(colored_rect(sf::Color::Blue, loaded / (float)settings.clset.frames_per_round));
+  // window.draw(colored_rect(sf::Color::Green, idx / (float)settings.clset.frames_per_round));
+
+  // message = "evolution: " + to_string((100 * idx) / settings.clset.frames_per_round) + " %" + (playing ? "" : "(paused)");
+
+  // if (playing) {
+
+  float t = sim_sub_idx / (float)sim_sub_frames;
+  float bw = 1;
+
+  // update entity positions
+  for (auto sh : get_all<ship>()) {
+    if (sh->seen) {
+      vector<point> pbuf(4);
+      vector<float> abuf(4);
+
+      auto load_buffers = [&, this](int offset) -> bool {
+        for (int i = -1; i < 3; i++) {
+          int idx_access = sim_idx + offset + i;
+          if (idx_access < 0 || idx_access >= sim_frames_loaded) return false;
+          if (!g[idx_access].entity_exists(sh->id)) return false;
+
+          entity_selector::ptr ep = g[idx_access].get_entity<entity_selector>(sh->id);
+          if (!ep->is_active()) return false;
+
+          pbuf[1 + i] = ep->base_position;
+          abuf[1 + i] = ep->base_angle;
+        }
+        return true;
+      };
+
+      int offset = 0;
+      bool test = false;
+      for (auto i : utility::zig_seq(2)) {
+        if (test = load_buffers(offset = i)) break;
+      }
+
+      if (test) {
+        sh->position = utility::cubic_interpolation(pbuf, t - offset);
+        sh->angle = utility::cubic_interpolation(abuf, t - offset);
+      } else {
+        sh->position = sh->base_position + t * sh->velocity;
+      }
     }
+  }
 
-    // draw load progress
-    window.setView(view_window);
+  for (auto fl : get_all<fleet>()) {
+    point p(0, 0);
+    for (auto sid : fl->ships) p += get_specific<ship>(sid)->position;
+    fl->position = utility::scale_point(p, 1 / (float)fl->ships.size());
+  }
 
-    auto colored_rect = [](sf::Color c, float r) -> sf::RectangleShape {
-      float bounds = interface::main_interface::desktop_dims.x;
-      float w = bounds - 10;
-      auto rect = graphics::build_rect(sf::FloatRect(5, 5, r * w, 10));
-      c.a = 150;
-      rect.setFillColor(c);
-      rect.setOutlineColor(sf::Color::White);
-      rect.setOutlineThickness(-1);
-      return rect;
+  for (auto cs : command_selectors) {
+    cs.second->from = get_selector(cs.second->source)->position;
+    cs.second->to = get_selector(cs.second->target)->position;
+  }
+
+  for (auto &a : animations) {
+    auto update_tracker = [this](animation_tracker_info &t) {
+      if (entity_exists(t.eid)) {
+        t.p = get_selector(t.eid)->position;
+      } else {
+        // Todo
+        // t.p = sub_ratio * t.v;
+      }
     };
 
-    window.draw(colored_rect(sf::Color::Red, 1));
-    window.draw(colored_rect(sf::Color::Blue, loaded / (float)settings.clset.frames_per_round));
-    window.draw(colored_rect(sf::Color::Green, idx / (float)settings.clset.frames_per_round));
-
-    message = "evolution: " + to_string((100 * idx) / settings.clset.frames_per_round) + " %" + (playing ? "" : "(paused)");
-
-    int buffer_size = min(settings.clset.frames_per_round - idx - 1, 4);
-    playing &= idx < loaded - buffer_size;
-
-    if (playing) {
-      if (sub_idx >= sub_frames) {
-        sub_idx = 1;
-        idx++;
-        reload_data(g[idx]);
-        return 0;
-      }
-
-      float t = sub_idx / (float)sub_frames;
-      float bw = 1;
-
-      // update entity positions
-      for (auto sh : get_all<ship>()) {
-        if (sh->seen) {
-          vector<point> pbuf(4);
-          vector<float> abuf(4);
-
-          auto load_buffers = [&](int offset) -> bool {
-            for (int i = -1; i < 3; i++) {
-              int idx_access = idx + offset + i;
-              if (idx_access < 0 || idx_access >= loaded) return false;
-              if (!g[idx_access].entity_exists(sh->id)) return false;
-
-              entity_selector::ptr ep = g[idx_access].get_entity<entity_selector>(sh->id);
-              if (!ep->is_active()) return false;
-
-              pbuf[1 + i] = ep->base_position;
-              abuf[1 + i] = ep->base_angle;
-            }
-            return true;
-          };
-
-          int offset = 0;
-          bool test = false;
-          for (auto i : utility::zig_seq(2))
-            if (test = load_buffers(offset = i)) break;
-
-          if (test) {
-            sh->position = utility::cubic_interpolation(pbuf, t - offset);
-            sh->angle = utility::cubic_interpolation(abuf, t - offset);
-          } else {
-            sh->position += sub_ratio * sh->velocity;
-          }
-        }
-      }
-
-      for (auto fl : get_all<fleet>()) {
-        point p(0, 0);
-        for (auto sid : fl->ships) p += get_specific<ship>(sid)->position;
-        fl->position = utility::scale_point(p, 1 / (float)fl->ships.size());
-      }
-
-      for (auto cs : command_selectors) {
-        cs.second->from = get_selector(cs.second->source)->position;
-        cs.second->to = get_selector(cs.second->target)->position;
-      }
-
-      for (auto &a : animations) {
-        auto update_tracker = [this, sub_ratio](animation_tracker_info &t) {
-          if (entity_exists(t.eid)) {
-            t.p = get_selector(t.eid)->position;
-          } else {
-            t.p += sub_ratio * t.v;
-          }
-        };
-
-        update_tracker(a.t1);
-        update_tracker(a.t2);
-        a.frame++;
-      }
-
-      sub_idx++;
-    }
-    return 0;
-  });
-
-  cout << "simlulation: starting loop" << endl;
-
-  int dont_interrupt = socket_t::tc_run;
-  window_loop(event_handler, body, dont_interrupt, w2c);
-
-  cout << "simulation: waiting for thread join" << endl;
-  t.join();
-
-  cout << "simulation: finished." << endl;
-  return !((w2c | c2w) & socket_t::tc_bad_result);
+    update_tracker(a.t1);
+    update_tracker(a.t2);
+  }
 }
 
 // ****************************************
@@ -490,7 +430,8 @@ combid game::add_waypoint(point p) {
 
     @return the modified choice
 */
-choice::choice game::build_choice(choice::choice c) {
+choice game::build_choice() {
+  choice c = user_choice;
   cout << "client " << self_id << ": build choice:" << endl;
   for (auto x : all_selectors()) {
     for (auto y : x->commands) {
@@ -698,9 +639,6 @@ void game::reload_data(game_base_data &g, bool use_animations) {
     if (s->seen && !s->owned) enemy_clusters.push_back(s->position);
   }
   if (enemy_clusters.size()) enemy_clusters = utility::cluster_points(enemy_clusters, 20, 100);
-
-  // add log
-  interface::desktop->push_log(players[self_id].log);
 }
 
 // ****************************************
@@ -800,8 +738,7 @@ bool game::waypoint_ancestor_of(combid ancestor, combid child) {
 */
 void game::remove_command(idtype key) {
   if (!command_selectors.count(key)) return;
-  if (comgui_active) interface::desktop->clear_qw();
-  comgui_active = false;
+  clear_ui_layers();
 
   command_selector::ptr cs = get_command_selector(key);
   entity_selector::ptr s = get_selector(cs->source);
@@ -975,6 +912,17 @@ bool game::select_command(idtype key) {
   c->queue_level = selector_queue++;
 
   if (!c->selected) return false;
+
+  set<combid> ships = get_ready_ships(c->source);
+
+  swap_layer(
+      LAYER_PANEL,
+      command_gui(
+          c->ship_class,
+          c->action,
+          c->policy,
+
+          ));
 
   interface::desktop->reset_qw(interface::command_gui::Create(c, this));
   comgui_active = true;
