@@ -13,6 +13,7 @@ struct command {
   combid target; /*!< key of target */
   std::string action;
   sint policy;
+  std::string ship_class;
   std::set<combid> ships; /*!< ids of ships allocated to the command */
 
   /*! default constructor */
