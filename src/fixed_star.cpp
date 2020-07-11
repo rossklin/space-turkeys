@@ -2,9 +2,10 @@
 
 #include "utility.hpp"
 
+using namespace st3;
 using namespace st3::utility;
 
-st3::client::fixed_star::fixed_star(point p) {
+fixed_star::fixed_star(point p) {
   radius = 1;
   position = p;
   float redshift = utility::random_uniform();
@@ -15,7 +16,7 @@ st3::client::fixed_star::fixed_star(point p) {
   color.a = 20 + 55 * utility::random_uniform();
 }
 
-void st3::client::fixed_star::draw(st3::window_t &w) {
+void fixed_star::draw(st3::window_t &w) {
   sf::CircleShape star(radius);
 
   star.setRadius(radius * graphics::inverse_scale(w).x);
@@ -25,6 +26,6 @@ void st3::client::fixed_star::draw(st3::window_t &w) {
   w.draw(star);
 }
 
-bool st3::client::fixed_star::operator==(const fixed_star &star) {
+bool fixed_star::operator==(const fixed_star &star) {
   return star.position == position;
 }

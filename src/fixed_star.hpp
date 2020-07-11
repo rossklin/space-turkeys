@@ -3,7 +3,6 @@
 #include "graphics.hpp"
 
 namespace st3 {
-namespace client {
 /*! base class for graphical representation of game objects */
 class fixed_star {
   sf::Color color; /*!< greatest distance from entities at which clicks are handled */
@@ -24,5 +23,4 @@ class fixed_star {
 
   bool operator==(const fixed_star &rhs);
 };
-};  // namespace client
 };  // namespace st3
