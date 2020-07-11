@@ -8,7 +8,6 @@
 namespace st3 {
 /*! Struct containing settings for a game */
 extern const std::set<std::string> starting_options;
-extern int sub_frames;
 
 struct client_game_settings {
   std::string starting_fleet;

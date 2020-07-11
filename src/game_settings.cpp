@@ -6,7 +6,6 @@ using namespace std;
 using namespace st3;
 
 const set<string> st3::starting_options = {"single", "voyagers", "battleships", "massive", "fighters"};
-int st3::sub_frames = 4;
 
 game_settings::game_settings() {
   solar_minrad = 10;
