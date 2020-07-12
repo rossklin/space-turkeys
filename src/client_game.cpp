@@ -16,11 +16,14 @@
 #include "graphics.hpp"
 #include "protocol.hpp"
 #include "research.hpp"
+#include "rsg/src/button.hpp"
 #include "rsg/src/panel.hpp"
 #include "rsg/src/utility.hpp"
 #include "selector.hpp"
 #include "serialization.hpp"
 #include "socket_t.hpp"
+#include "solar_gui.hpp"
+#include "style.hpp"
 #include "target_gui.hpp"
 #include "upgrades.hpp"
 #include "utility.hpp"
@@ -191,21 +194,19 @@ void game::pre_step() {
   wait_for_it(pq, callback, on_fail);
 }
 
-void game::target_selected(combid id, string action, point pos, list<string> e_sel) {
-  if (id != "cancel") {
-    bool postselect = false;
+void game::target_selected(string action, combid target, point pos, list<string> e_sel) {
+  bool postselect = false;
 
-    if (id.empty()) {
-      id = add_waypoint(pos);
-      postselect = true;
-    }
+  if (target == identifier::source_none) {
+    target = add_waypoint(pos);
+    postselect = true;
+  }
 
-    command2entity(id, action, e_sel);
+  command2entity(target, action, e_sel);
 
-    if (postselect) {
-      deselect_all();
-      get_selector(id)->selected = true;
-    }
+  if (postselect) {
+    deselect_all();
+    get_selector(target)->selected = true;
   }
 
   clear_ui_layers();
@@ -663,7 +664,7 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
   }
 
   // check that there is at least one ship available
-  set<combid> ready_ships = get_ready_ships(c.source);
+  hm_t<string, set<combid>> ready_ships = get_ready_ships(c.source);
   if (fill_ships && ready_ships.empty()) {
     cout << "add_command: attempted to create empty command!" << endl;
     return;
@@ -690,23 +691,28 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
     // check if special action
     if (!fleet_actions.count(c.action)) {
       combid sel = identifier::source_none;
-      for (auto sid : ready_ships) {
-        if (get_specific<ship>(sid)->compile_interactions().count(c.action)) {
-          sel = sid;
+      for (auto ship_set : ready_ships) {
+        for (auto sid : ship_set.second) {
+          if (get_specific<ship>(sid)->compile_interactions().count(c.action)) {
+            sel = sid;
+            break;
+          }
         }
+        if (sel != identifier::source_none) break;
       }
 
       if (sel != identifier::source_none) {
         ready_ships.clear();
-        ready_ships.insert(sel);
+        ready_ships[get_specific<ship>(sel)->ship_class].insert(sel);
       }
     }
 
     // only add ships of one class
-    string ship_class = get_specific<ship>(*ready_ships.begin())->ship_class;
+    cs->ship_class = utility::hm_keys(ready_ships).front();
+    set<combid> sel_ships = ready_ships[cs->ship_class];
     cs->ships.clear();
-    for (auto sid : ready_ships) {
-      if (get_specific<ship>(sid)->ship_class == ship_class) cs->ships.insert(sid);
+    for (auto sid : sel_ships) {
+      cs->ships.insert(sid);
       if (cs->ships.size() >= get_max_ships_per_fleet(self_id)) break;
     }
   }
@@ -913,7 +919,13 @@ bool game::select_command(idtype key) {
 
   if (!c->selected) return false;
 
-  set<combid> ships = get_ready_ships(c->source);
+  set<combid> ready_ships = get_ready_ships(c->source)[c->ship_class];
+  set<combid> all_ships = ready_ships + c->ships;
+
+  bool combat = false;
+  if (all_ships.size()) {
+    combat = get_specific<ship>(*all_ships.begin())->compile_interactions().count(interaction::space_combat);
+  }
 
   swap_layer(
       LAYER_PANEL,
@@ -921,11 +933,22 @@ bool game::select_command(idtype key) {
           c->ship_class,
           c->action,
           c->policy,
+          all_ships.size(),
+          combat,
+          [this, c](int policy, int num) {
+            c->policy = policy;
+            c->ships.clear();
+            vector<combid> ready_ships = utility::range_init<vector<combid>>(get_ready_ships(c->source)[c->ship_class]);
+            if (num > ready_ships.size()) num = ready_ships.size();
+            c->ships = set<combid>(ready_ships.begin(), ready_ships.begin() + num);
+            c->selected = false;
+            clear_ui_layers();
+          },
+          [this, c]() {
+            c->selected = false;
+            clear_ui_layers();
+          }));
 
-          ));
-
-  interface::desktop->reset_qw(interface::command_gui::Create(c, this));
-  comgui_active = true;
   return true;
 }
 
@@ -938,14 +961,22 @@ bool game::exists_selected() {
 }
 
 /** Get ids of non-allocated ships for entity selector */
-set<combid> game::get_ready_ships(combid id) {
+hm_t<string, set<combid>> game::get_ready_ships(combid id) {
   if (!entity_exists(id)) throw classified_error("get ready ships: entity selector " + id + " not found!");
 
   entity_selector::ptr e = get_selector(id);
-  set<combid> s = e->get_ships();
-  for (auto c : e->commands) s -= get_command_selector(c)->ships;
+  hm_t<string, set<string>> res;
 
-  return s;
+  for (auto sid : e->get_ships()) res[get_specific<ship>(sid)->class_id].insert(sid);
+
+  for (auto c : e->commands) {
+    auto com = get_command_selector(c);
+    if (res.count(com->ship_class)) {
+      res[com->ship_class] -= com->ships;
+    }
+  }
+
+  return res;
 }
 
 /** Get ids of selected entities. */
@@ -994,7 +1025,6 @@ void game::setup_targui(point p) {
   for (auto sid : ships_selected) keys_selected.remove(sid);
   if (keys_selected.empty()) return;
 
-  list<target_gui::option_t> options;
   set<string> possible_actions;
 
   // add possible actions from available ship interactions
@@ -1002,8 +1032,10 @@ void game::setup_targui(point p) {
   for (auto k : keys_selected) {
     auto rships = get_ready_ships(k);
     exists_ships |= rships.size() > 0;
-    for (auto i : rships) {
-      possible_actions += get_specific<ship>(i)->compile_interactions();
+    for (auto ship_set : rships) {
+      for (auto i : ship_set.second) {
+        possible_actions += get_specific<ship>(i)->compile_interactions();
+      }
     }
   }
 
@@ -1013,24 +1045,26 @@ void game::setup_targui(point p) {
     return;
   }
 
+  hm_t<string, set<combid>> options;
+
   // check if actions are allowed per target
   auto itab = interaction::table();
   for (auto a : possible_actions) {
     auto condition = itab[a].condition.owned_by(self_id);
     for (auto k : keys_targeted) {
       if (condition.valid_on(get_selector(k))) {
-        options.push_back(target_gui::option_t(k, a));
+        options[a].insert(k);
       }
     }
     if (!condition.requires_target()) {
-      options.push_back(target_gui::option_t("", a));
+      options[a].insert(identifier::source_none);
     }
   }
 
   // check waypoint targets
   for (auto k : keys_targeted) {
     if (identifier::get_type(k) == waypoint::class_id) {
-      options.push_back(target_gui::option_t(k, fleet_action::go_to));
+      options[fleet_action::go_to].insert(k);
     }
   }
 
@@ -1041,11 +1075,15 @@ void game::setup_targui(point p) {
     deselect_all();
     get_selector(k)->selected = true;
   } else {
-    // default options
-    options.push_back(target_gui::option_add_waypoint);
-    options.push_back(target_gui::option_cancel);
+    PanelPtr targui = target_gui(
+        sf::Vector2f(window.mapCoordsToPixel(p, view_game)),
+        options,
+        [this, keys_selected, p](string action, string target) {
+          target_selected(action, target, p, keys_selected);
+        },
+        bind(&game::clear_ui_layers, this, true));
 
-    targui = new target_gui(p, options, keys_selected, &window);
+    swap_layer(LAYER_CONTEXT, targui);
   }
 }
 
@@ -1066,7 +1104,7 @@ void game::control_event(sf::Event e) {
 
   auto update_hover_info = [this](point p) {
     auto keys = entities_at(p);
-    string text = "";
+    list<string> text;
 
     if (keys.empty()) {
       keys = selected_entities();
@@ -1075,13 +1113,14 @@ void game::control_event(sf::Event e) {
       }
     }
 
-    if (keys.size() > 1) text = "Multiple entities\n----------\n";
+    string title = "";
+    if (keys.size() > 1) title = "Multiple entities";
+
     for (auto k : keys) {
-      text += "----------\n";
-      text += get_selector(k)->hover_info() + "\n";
+      text.push_back(get_selector(k)->hover_info());
     }
 
-    interface::desktop->hover_label->SetText(text);
+    set_hover_info(title, text);
   };
 
   // event reaction functions
@@ -1203,201 +1242,205 @@ void game::do_zoom(float factor, point p) {
   view_game.setSize(new_br - new_ul);
 }
 
-/** Event handler for the main choice interface.
+// Choice step global handler, return true if event handled
+bool game::choice_event(sf::Event e) {
+  if (phase != "choice") return false;
 
-    Called by the event handler in choice_step.
+  // // make a fleet from selected ships
+  // auto make_fleet = [this]() {
+  //   auto buf = selected_specific<ship>();
+  //   deselect_all();
 
-    @return true if client is finished
-*/
-int game::choice_event(sf::Event e) {
+  //   if (!buf.empty()) {
+  //     fleet fb(self_id, fleet_idc++);
+  //     fleet_selector::ptr f = fleet_selector::create(fb, sf::Color(players[self_id].color), true);
+  //     f->ships = set<combid>(buf.begin(), buf.end());
+  //     float vis = 0;
+  //     point pos(0, 0);
+  //     for (auto sid : buf) {
+  //       ship_selector::ptr s = get_specific<ship>(sid);
+  //       s->fleet_id = f->id;
+  //       vis = fmax(vis, s->vision());
+  //       pos += s->position;
+  //     }
+
+  //     f->radius = settings.fleet_default_radius;
+  //     f->stats.vision_buf = vis;
+  //     f->position = utility::scale_point(pos, 1 / (float)buf.size());
+  //     f->heading = f->position;
+  //     f->selected = true;
+
+  //     add_entity(f);
+  //   }
+  // };
+
+  // auto solar_development = [this](string key) {
+  //   bool ctrl = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
+  //   bool shift = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
+  //   auto ss = selected_specific<solar>();
+  //   for (auto sid : ss) {
+  //     solar_selector::ptr s = get_specific<solar>(sid);
+  //     if (shift && ctrl) {
+  //       // prepend to queue
+  //       s->choice_data.building_queue.push_front(key);
+  //     } else if (shift) {
+  //       // append to queue
+  //       s->choice_data.building_queue.push_back(key);
+  //     } else if (ctrl) {
+  //       // replace queue
+  //       s->choice_data.building_queue = {key};
+  //     }
+  //   }
+  // };
+
+  // auto solar_production = [this](string key) {
+  //   bool ctrl = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
+  //   bool shift = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
+  //   auto ss = selected_specific<solar>();
+  //   for (auto sid : ss) {
+  //     solar_selector::ptr s = get_specific<solar>(sid);
+  //     if (shift && ctrl) {
+  //       // prepend to queue
+  //       s->choice_data.ship_queue.push_front(key);
+  //     } else if (shift) {
+  //       // append to queue
+  //       s->choice_data.ship_queue.push_back(key);
+  //     } else if (ctrl) {
+  //       // replace queue
+  //       s->choice_data.ship_queue = {key};
+  //     }
+  //   }
+  // };
+
+  // hm_t<int, string> ship_map;
+  // hm_t<int, string> dev_map;
+
+  // ship_map[sf::Keyboard::U] = "scout";
+  // ship_map[sf::Keyboard::F] = "fighter";
+  // ship_map[sf::Keyboard::B] = "bomber";
+  // ship_map[sf::Keyboard::C] = "corsair";
+  // ship_map[sf::Keyboard::A] = "cannon";
+  // ship_map[sf::Keyboard::D] = "destroyer";
+  // ship_map[sf::Keyboard::T] = "battleship";
+  // ship_map[sf::Keyboard::V] = "voyager";
+  // ship_map[sf::Keyboard::O] = "colonizer";
+  // ship_map[sf::Keyboard::H] = "harvester";
+
+  // dev_map[sf::Keyboard::A] = keywords::key_agriculture;
+  // dev_map[sf::Keyboard::S] = keywords::key_shipyard;
+  // dev_map[sf::Keyboard::D] = keywords::key_defense;
+  // dev_map[sf::Keyboard::R] = keywords::key_research;
+
   point p;
   list<combid> ss;
+  list<int> coms;
 
   sf::Vector2i mpos;
   sf::FloatRect minirect;
   point delta;
   point target;
 
-  bool has_gui = !!interface::desktop->query_window;
+  // Some global key commands are disabled when a UI panel is active
+  bool has_gui = component_layers[LAYER_PANEL]->get_children().size();
 
-  // delete all selected fleets and commands
+  // delete all selected commands
   auto handle_delete = [this]() {
     for (auto id : selected_commands()) remove_command(id);
-    for (auto id : selected_specific<fleet>()) {
-      fleet_selector::ptr f = get_specific<fleet>(id);
-      for (auto sid : f->get_ships()) get_specific<ship>(sid)->fleet_id = identifier::source_none;
-      deregister_entity(id);
-    }
   };
-
-  // make a fleet from selected ships
-  auto make_fleet = [this]() {
-    auto buf = selected_specific<ship>();
-    deselect_all();
-
-    if (!buf.empty()) {
-      fleet fb(self_id, fleet_idc++);
-      fleet_selector::ptr f = fleet_selector::create(fb, sf::Color(players[self_id].color), true);
-      f->ships = set<combid>(buf.begin(), buf.end());
-      float vis = 0;
-      point pos(0, 0);
-      for (auto sid : buf) {
-        ship_selector::ptr s = get_specific<ship>(sid);
-        s->fleet_id = f->id;
-        vis = fmax(vis, s->vision());
-        pos += s->position;
-      }
-
-      f->radius = settings.fleet_default_radius;
-      f->stats.vision_buf = vis;
-      f->position = utility::scale_point(pos, 1 / (float)buf.size());
-      f->heading = f->position;
-      f->selected = true;
-
-      add_entity(f);
-    }
-  };
-
-  auto solar_development = [this](string key) {
-    bool ctrl = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
-    bool shift = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
-    auto ss = selected_specific<solar>();
-    for (auto sid : ss) {
-      solar_selector::ptr s = get_specific<solar>(sid);
-      if (shift && ctrl) {
-        // prepend to queue
-        s->choice_data.building_queue.push_front(key);
-      } else if (shift) {
-        // append to queue
-        s->choice_data.building_queue.push_back(key);
-      } else if (ctrl) {
-        // replace queue
-        s->choice_data.building_queue = {key};
-      }
-    }
-  };
-
-  auto solar_production = [this](string key) {
-    bool ctrl = sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
-    bool shift = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift);
-    auto ss = selected_specific<solar>();
-    for (auto sid : ss) {
-      solar_selector::ptr s = get_specific<solar>(sid);
-      if (shift && ctrl) {
-        // prepend to queue
-        s->choice_data.ship_queue.push_front(key);
-      } else if (shift) {
-        // append to queue
-        s->choice_data.ship_queue.push_back(key);
-      } else if (ctrl) {
-        // replace queue
-        s->choice_data.ship_queue = {key};
-      }
-    }
-  };
-
-  hm_t<int, string> ship_map;
-  hm_t<int, string> dev_map;
-
-  ship_map[sf::Keyboard::U] = "scout";
-  ship_map[sf::Keyboard::F] = "fighter";
-  ship_map[sf::Keyboard::B] = "bomber";
-  ship_map[sf::Keyboard::C] = "corsair";
-  ship_map[sf::Keyboard::A] = "cannon";
-  ship_map[sf::Keyboard::D] = "destroyer";
-  ship_map[sf::Keyboard::T] = "battleship";
-  ship_map[sf::Keyboard::V] = "voyager";
-  ship_map[sf::Keyboard::O] = "colonizer";
-  ship_map[sf::Keyboard::H] = "harvester";
-
-  dev_map[sf::Keyboard::A] = keywords::key_agriculture;
-  dev_map[sf::Keyboard::S] = keywords::key_shipyard;
-  dev_map[sf::Keyboard::D] = keywords::key_defense;
-  dev_map[sf::Keyboard::R] = keywords::key_research;
 
   // event switch
   window.setView(view_game);
   switch (e.type) {
+    // MOUSE BUTTON RELEASED
     case sf::Event::MouseButtonReleased:
-      clear_guis();
+      swap_layer(LAYER_CONTEXT, 0);
       mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
       p = window.mapPixelToCoords(mpos);
 
       if (e.mouseButton.button == sf::Mouse::Right && exists_selected()) {
         setup_targui(p);
+        return true;
       }
 
       break;
-    case sf::Event::KeyPressed:
-      // check build ship and development keys
-      if (activate_build && dev_map.count(e.key.code)) {
-        solar_development(dev_map[e.key.code]);
-        activate_build = false;
-        break;
-      }
 
-      if (activate_ship && ship_map.count(e.key.code)) {
-        solar_production(ship_map[e.key.code]);
-        activate_ship = false;
-        break;
-      }
+      // KEY PRESSED
+    case sf::Event::KeyPressed:
+      // // check build ship and development keys
+      // if (activate_build && dev_map.count(e.key.code)) {
+      //   solar_development(dev_map[e.key.code]);
+      //   activate_build = false;
+      //   break;
+      // }
+
+      // if (activate_ship && ship_map.count(e.key.code)) {
+      //   solar_production(ship_map[e.key.code]);
+      //   activate_ship = false;
+      //   break;
+      // }
 
       switch (e.key.code) {
         case sf::Keyboard::Space:
-          if (targui) {
-            clear_guis();
-          } else {
-            return socket_t::tc_complete;
+          if (!any_gui_content()) {
+            choice_complete = true;
+            return true;
           }
           break;
         case sf::Keyboard::Return:
           ss = selected_specific<solar>();
           if (ss.size() == 1) {
-            interface::desktop->reset_qw(interface::solar_gui::Create(get_specific<solar>(ss.front())));
+            auto sol = get_specific<solar>(ss.front());
+            swap_layer(
+                LAYER_PANEL,
+                solar_gui(
+                    sol,
+                    get_research(),
+                    bind(&game::clear_ui_layers, this, true),
+                    [this, sol](list<string> qdev, list<string> qship) {
+                      // Solar GUI callback
+                      sol->choice_data.building_queue = qdev;
+                      sol->choice_data.ship_queue = qship;
+                      clear_ui_layers();
+                    }));
+            return true;
           }
           break;
         case sf::Keyboard::Delete:
-          handle_delete();
-          break;
-        case sf::Keyboard::F:
-          make_fleet();
-          break;
-        case sf::Keyboard::B:
-          if (selected_specific<solar>().size() > 0 && !has_gui) {
-            activate_build = !activate_build;
-            activate_ship = false;
+          coms = selected_commands();
+          if (coms.size()) {
+            for (auto id : coms) remove_command(id);
+            return true;
           }
           break;
-        case sf::Keyboard::S:
-          if (selected_specific<solar>().size() > 0 && !has_gui) {
-            activate_ship = !activate_ship;
-            activate_build = false;
-          }
-          break;
+        // case sf::Keyboard::B:
+        //   if (selected_specific<solar>().size() > 0 && !has_gui) {
+        //     activate_build = !activate_build;
+        //     activate_ship = false;
+        //   }
+        //   break;
+        // case sf::Keyboard::S:
+        //   if (selected_specific<solar>().size() > 0 && !has_gui) {
+        //     activate_ship = !activate_ship;
+        //     activate_build = false;
+        //   }
+        //   break;
         case sf::Keyboard::Escape:
-          if (activate_ship || activate_build) {
-            activate_ship = activate_build = false;
+          if (any_gui_content()) {
+            clear_ui_layers();
           } else {
-            window.setView(view_window);
-            if (popup_query("Really quit?")) {
-              chosen_quit = true;
-              return socket_t::tc_stop;
-            }
+            popup_query(
+                "Really quit?",
+                [this]() {
+                  tell_server_quit([this]() { state_run = false; });
+                },
+                0);
           }
+          return true;
       }
       break;
   };
 
-  // update message
-  if (activate_ship) {
-    message = "[select ship production]";
-  } else if (activate_build) {
-    message = "[select solar development]";
-  } else {
-    message = "make your choice";
-  }
-
-  return 0;
+  return false;
 }
 
 /** Update virtual camera based on key controls. */
@@ -1433,46 +1476,25 @@ using namespace graphics;
 
 /** Draw a box with a message and wait for ok. */
 void game::popup_message(string title, string message) {
-  int done = socket_t::tc_run;
-
-  auto w = sfg::Window::Create();
-  auto layout = sfg::Box::Create(sfg::Box::Orientation::VERTICAL, 10);
-  auto text = sfg::Label::Create(message);
-  auto baccept = sfg::Button::Create("OK");
-
-  baccept->GetSignal(sfg::Widget::OnLeftClick).Connect([&]() {
-    done = socket_t::tc_complete;
-  });
-
-  layout->Pack(text);
-  layout->Pack(baccept);
-  w->SetTitle(title);
-  w->Add(layout);
-  w->SetPosition(sf::Vector2f(window.getSize().x / 2 - w->GetRequisition().x / 2, window.getSize().y / 2 - w->GetRequisition().y / 2));
-
-  interface::desktop->Add(w);
-
-  auto event_handler = generate_event_handler([this](sf::Event e) -> int {
-    if (e.type == sf::Event::KeyPressed) {
-      if (e.key.code == sf::Keyboard::Return) {
-        return socket_t::tc_complete;
-      }
-    }
-    return 0;
-  });
-
-  int result = socket_t::tc_run;
-  window_loop(event_handler, default_body, done, result);
-
-  interface::desktop->Remove(w);
+  popup_query(title, message, {{"OK", [this]() { swap_layer(LAYER_POPUP, 0); }}});
 }
 
 /** Draw a box with a a query and options ok or cancel, wait for response. */
-bool game::popup_query(string v) {
-  hm_t<string, string> options;
-  options["ok"] = "Ok";
-  options["cancel"] = "Cancel";
-  return popup_options(v, options) == "ok";
+void game::popup_query(string title, string text, hm_t<string, Voidfun> opts) {
+  PanelPtr bp = Panel::create();
+  for (auto x : opts) bp->add_child(Button::create(x.first, x.second));
+
+  swap_layer(
+      LAYER_POPUP,
+      Panel::create(
+          {
+              make_label(title),
+              make_hbar(),
+              make_label(text),
+              make_hbar(),
+              bp,
+          },
+          Panel::ORIENT_VERTICAL));
 }
 
 string game::popup_options(string header_text, hm_t<string, string> options) {

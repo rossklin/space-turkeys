@@ -48,6 +48,7 @@ class game : public game_base_data {
   std::vector<RSG::PanelPtr> component_layers;
 
   // GUI state variables
+  bool state_run;
   bool area_select_active; /*!< whether area selection is active */
   sf::FloatRect srect;     /*!< area selection rectangle */
   std::string phase;
@@ -85,14 +86,18 @@ class game : public game_base_data {
   // animations
   std::list<animation> animations;
 
+ public:
   /*! default contsructor */
   game(std::shared_ptr<cl_socket_t> s);
 
   /*! Main entry point */
   void run();
 
+ private:
   // OBJECT ACCESS
   void deregister_entity(combid i);
+
+  research::data get_research() const;
 
   command_selector::ptr get_command_selector(idtype i);
 
@@ -118,6 +123,8 @@ class game : public game_base_data {
 
   void set_game_log(std::list<std::string> log);
 
+  void set_hover_info(std::string title, std::list<std::string> info);
+
   /*! Queue create a popup message which terminates game on callback */
   void terminate_with_message(std::string message);
 
@@ -133,9 +140,13 @@ class game : public game_base_data {
   /*! Simulation controls UI */
   RSG::PanelPtr simulation_gui();
 
+  bool layers_have_content(std::list<int> layers);
+
+  bool any_gui_content();
+
   // CALLBACKS
   /*! Callback for target gui */
-  void target_selected(combid id, std::string action, point pos, std::list<std::string> e_sel);
+  void target_selected(std::string action, combid target, point pos, std::list<std::string> e_sel);
 
   // SERVER COMMUNICATION AND BACKGROUND TASKS
   /*! Load simulation frames from server */
@@ -152,6 +163,9 @@ class game : public game_base_data {
 
   /*! Queue background task: send a packet to query and callback with response */
   void wait_for_it(sf::Packet &p, std::function<void(sf::Packet &)> callback, RSG::Voidfun on_fail = 0);
+
+  /*! Tell server we are leaving game */
+  void tell_server_quit(RSG::Voidfun callback);
 
   // STEP SETUP FUNCTIONS
 
@@ -182,7 +196,7 @@ class game : public game_base_data {
 	@param e the event
 	@return client::query_status denoting whether to proceed to next step
       */
-  int choice_event(sf::Event e);
+  bool choice_event(sf::Event e);
   void control_event(sf::Event e);
 
   void do_zoom(float factor, point p);
@@ -314,7 +328,7 @@ class game : public game_base_data {
 	@param key key of the entity selector
 	@return set of ship ids
       */
-  std::set<combid> get_ready_ships(combid key);
+  hm_t<std::string, std::set<combid>> get_ready_ships(combid key);
 
   /*! get a list of keys of all selected entity selectors
 	@return list of keys of selected entity selectors
@@ -329,7 +343,7 @@ class game : public game_base_data {
 
   sf::FloatRect minimap_rect();
 
-  bool popup_query(std::string v);
+  void popup_query(std::string title, std::string v, hm_t<std::string, RSG::Voidfun> opts);
   std::string popup_options(std::string v, hm_t<std::string, std::string> opts);
 
   void popup_message(std::string title, std::string text);
