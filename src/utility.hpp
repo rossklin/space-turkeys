@@ -28,9 +28,9 @@ C2 map(std::function<typename C2::value_type(typename C1::value_type)> f, C1 x) 
   return res;
 }
 
-template <typename K, typename V>
-hm_t<K, V> hm_map(std::function<V(K, V)> f, hm_t<K, V> x) {
-  hm_t<K, V> res;
+template <typename K, typename V, typename V2>
+hm_t<K, V2> hm_map(std::function<V2(K, V)> f, hm_t<K, V> x) {
+  hm_t<K, V2> res;
   for (auto &y : x) res[x.first] = f(x.first, x.second);
   return res;
 }
