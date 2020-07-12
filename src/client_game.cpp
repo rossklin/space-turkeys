@@ -41,16 +41,18 @@ bool ctrlsel();
 // GAME STEPS
 // ****************************************
 
-game::game(std::shared_ptr<cl_socket_t> s) {
+game::game(std::shared_ptr<cl_socket_t> s, WindowPtr w) {
+  socket = s;
+  window = w;
   sim_sub_frames = 4;
   selector_queue = 1;
   sight_ul = point(0, 0);
   sight_wh = point(0, 0);
-  socket = s;
   area_select_active = false;
   self_id = socket->id;
   fleet_idc = 0;
   wp_idc = 0;
+  state_run = true;
   component_layers.resize(LAYER_NUM);
 }
 
@@ -70,8 +72,8 @@ void game::clear_ui_layers(bool preserve_base) {
 void game::do_clear_ui_layers(bool preserve_base) {
   auto make_container = styled_generator<Panel>(
       {
-          {"width", to_string(window.getSize().x) + "px"},
-          {"height", to_string(window.getSize().y) + "px"},
+          {"width", to_string(window->getSize().x) + "px"},
+          {"height", to_string(window->getSize().y) + "px"},
           {"align-horizontal", "center"},
           {"align-vertical", "center"},
       });
@@ -91,14 +93,13 @@ void game::run() {
   init_data();
 
   // construct interface
-  view_window = window.getDefaultView();
+  view_window = window->getDefaultView();
   view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
-  window.setView(view_window);
+  window->setView(view_window);
 
   // Setup all layers, do not preserve base layer
   do_clear_ui_layers(false);
 
-  // todo
   window_loop();
 }
 
@@ -316,7 +317,7 @@ void game::update_sim_frame() {
   // }
 
   // // draw load progress
-  // window.setView(view_window);
+  // window->setView(view_window);
 
   // auto colored_rect = [](sf::Color c, float r) -> sf::RectangleShape {
   //   float bounds = interface::main_interface::desktop_dims.x;
@@ -329,9 +330,9 @@ void game::update_sim_frame() {
   //   return rect;
   // };
 
-  // window.draw(colored_rect(sf::Color::Red, 1));
-  // window.draw(colored_rect(sf::Color::Blue, loaded / (float)settings.clset.frames_per_round));
-  // window.draw(colored_rect(sf::Color::Green, idx / (float)settings.clset.frames_per_round));
+  // window->draw(colored_rect(sf::Color::Red, 1));
+  // window->draw(colored_rect(sf::Color::Blue, loaded / (float)settings.clset.frames_per_round));
+  // window->draw(colored_rect(sf::Color::Green, idx / (float)settings.clset.frames_per_round));
 
   // message = "evolution: " + to_string((100 * idx) / settings.clset.frames_per_round) + " %" + (playing ? "" : "(paused)");
 
@@ -350,9 +351,9 @@ void game::update_sim_frame() {
         for (int i = -1; i < 3; i++) {
           int idx_access = sim_idx + offset + i;
           if (idx_access < 0 || idx_access >= sim_frames_loaded) return false;
-          if (!g[idx_access].entity_exists(sh->id)) return false;
+          if (!sim_frames[idx_access].entity_exists(sh->id)) return false;
 
-          entity_selector::ptr ep = g[idx_access].get_entity<entity_selector>(sh->id);
+          entity_selector::ptr ep = sim_frames[idx_access].get_entity<entity_selector>(sh->id);
           if (!ep->is_active()) return false;
 
           pbuf[1 + i] = ep->base_position;
@@ -1076,7 +1077,7 @@ void game::setup_targui(point p) {
     get_selector(k)->selected = true;
   } else {
     PanelPtr targui = target_gui(
-        sf::Vector2f(window.mapCoordsToPixel(p, view_game)),
+        sf::Vector2f(window->mapCoordsToPixel(p, view_game)),
         options,
         [this, keys_selected, p](string action, string target) {
           target_selected(action, target, p, keys_selected);
@@ -1125,7 +1126,7 @@ void game::control_event(sf::Event e) {
 
   // event reaction functions
   auto init_area_select = [this](sf::Event e) {
-    point p = window.mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
+    point p = window->mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
     int qent;
     combid key = entity_at(p, qent);
 
@@ -1138,10 +1139,10 @@ void game::control_event(sf::Event e) {
     }
   };
 
-  window.setView(view_game);
+  window->setView(view_game);
   switch (e.type) {
     case sf::Event::MouseMoved:
-      p = window.mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
+      p = window->mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
 
       if (area_select_active) {
         // update area selection
@@ -1168,7 +1169,7 @@ void game::control_event(sf::Event e) {
       break;
     case sf::Event::MouseButtonPressed:
       mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
-      p = window.mapPixelToCoords(mpos);
+      p = window->mapPixelToCoords(mpos);
       if (e.mouseButton.button == sf::Mouse::Left) {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
           p_prev = p;
@@ -1180,7 +1181,7 @@ void game::control_event(sf::Event e) {
       break;
     case sf::Event::MouseButtonReleased:
       mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
-      p = window.mapPixelToCoords(mpos);
+      p = window->mapPixelToCoords(mpos);
 
       if (e.mouseButton.button == sf::Mouse::Left) {
         if (drag_waypoint_active && did_drag) {
@@ -1209,7 +1210,7 @@ void game::control_event(sf::Event e) {
 
       break;
     case sf::Event::MouseWheelMoved:
-      p = window.mapPixelToCoords(sf::Vector2i(e.mouseWheel.x, e.mouseWheel.y));
+      p = window->mapPixelToCoords(sf::Vector2i(e.mouseWheel.x, e.mouseWheel.y));
       do_zoom(pow(1.2, -e.mouseWheel.delta), p);
       break;
     case sf::Event::KeyPressed:
@@ -1349,13 +1350,13 @@ bool game::choice_event(sf::Event e) {
   };
 
   // event switch
-  window.setView(view_game);
+  window->setView(view_game);
   switch (e.type) {
     // MOUSE BUTTON RELEASED
     case sf::Event::MouseButtonReleased:
       swap_layer(LAYER_CONTEXT, 0);
       mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
-      p = window.mapPixelToCoords(mpos);
+      p = window->mapPixelToCoords(mpos);
 
       if (e.mouseButton.button == sf::Mouse::Right && exists_selected()) {
         setup_targui(p);
@@ -1429,11 +1430,12 @@ bool game::choice_event(sf::Event e) {
             clear_ui_layers();
           } else {
             popup_query(
+                "",
                 "Really quit?",
-                [this]() {
-                  tell_server_quit([this]() { state_run = false; });
-                },
-                0);
+                {{"Yes", [this]() {
+                    tell_server_quit([this]() { state_run = false; });
+                  }},
+                 {"No", 0}});
           }
           return true;
       }
@@ -1446,21 +1448,21 @@ bool game::choice_event(sf::Event e) {
 /** Update virtual camera based on key controls. */
 void game::controls() {
   static point vel(0, 0);
-  if (!window.hasFocus()) {
+  if (!window->hasFocus()) {
     vel = point(0, 0);
     return;
   }
 
   float s = view_game.getSize().x / sight_wh.x;
-  sf::Vector2i mpos = sf::Mouse::getPosition(window);
+  sf::Vector2i mpos = sf::Mouse::getPosition(*window);
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || mpos.x == 0) {
     vel.x -= 5 * s;
-  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || mpos.x == window.getSize().x - 1) {
+  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || mpos.x == window->getSize().x - 1) {
     vel.x += 5 * s;
   } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || mpos.y == 0) {
     vel.y -= 5 * s;
-  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || mpos.y == window.getSize().y - 1) {
+  } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || mpos.y == window->getSize().y - 1) {
     vel.y += 5 * s;
   }
 
@@ -1482,7 +1484,13 @@ void game::popup_message(string title, string message) {
 /** Draw a box with a a query and options ok or cancel, wait for response. */
 void game::popup_query(string title, string text, hm_t<string, Voidfun> opts) {
   PanelPtr bp = Panel::create();
-  for (auto x : opts) bp->add_child(Button::create(x.first, x.second));
+  for (auto x : opts) {
+    // Always clear the popup before calling the option callback
+    bp->add_child(Button::create(x.first, [this, x]() {
+      swap_layer(LAYER_POPUP, 0);
+      x.second();
+    }));
+  }
 
   swap_layer(
       LAYER_POPUP,
@@ -1497,72 +1505,47 @@ void game::popup_query(string title, string text, hm_t<string, Voidfun> opts) {
           Panel::ORIENT_VERTICAL));
 }
 
-string game::popup_options(string header_text, hm_t<string, string> options) {
-  int status = socket_t::tc_run;
-  string response;
-
-  auto w = sfg::Window::Create();
-  auto layout = sfg::Box::Create(sfg::Box::Orientation::VERTICAL, 10);
-  auto blayout = sfg::Box::Create(sfg::Box::Orientation::HORIZONTAL, 10);
-  auto header = sfg::Label::Create(header_text);
-
-  sfg::Button::Ptr button;
-
-  for (auto v : options) {
-    button = sfg::Button::Create(v.second);
-    button->GetSignal(sfg::Widget::OnLeftClick).Connect([v, &status, &response]() {
-      response = v.first;
-      status = socket_t::tc_complete;
-    });
-    blayout->Pack(button);
-  }
-
-  layout->Pack(header);
-  layout->Pack(blayout);
-  w->Add(layout);
-  interface::desktop->Add(w);
-
-  w->SetPosition(sf::Vector2f(window.getSize().x / 2 - w->GetRequisition().x / 2, window.getSize().y / 2 - w->GetRequisition().y / 2));
-
-  auto event_handler = generate_event_handler([this, &response](sf::Event e) -> int {
-    if (e.type == sf::Event::KeyPressed) {
-      if (e.key.code == sf::Keyboard::Escape) {
-        response = "";
-        return socket_t::tc_stop;
-      }
-    }
-    return 0;
-  });
-
-  int result = 0;
-  window_loop(event_handler, default_body, status, result);
-
-  interface::desktop->Remove(w);
-
-  return response;
-}
-
 /** Core loop for gui. */
-void game::window_loop(function<int(sf::Event)> event_handler, function<int(void)> body, int &tc_in, int &tc_out) {
+void game::window_loop() {
   chrono::time_point<chrono::system_clock> start;
+  CoordMapper coord_mapper = [this](sf::Vector2i p) { return window->mapPixelToCoords(p); };
 
-  while ((tc_in | tc_out) == socket_t::tc_run) {
+  while (window->isOpen() && state_run) {
     start = chrono::system_clock::now();
     sf::Event event;
-    while (window.pollEvent(event)) {
-      tc_out |= event_handler(event);
+    while (window->pollEvent(event)) {
+      bool was_handled = base_layer->handle_event(event, coord_mapper);
+
+      for (int i = LAYER_NUM - 1; i >= 0 && !was_handled; i++) {
+        was_handled |= component_layers[i]->handle_event(event, coord_mapper);
+      }
+
+      if (phase == "choice" && !was_handled) was_handled |= choice_event(event);
+
+      if (!was_handled) control_event(event);
+
+      if (event.type == sf::Event::Closed && !was_handled) {
+        window->close();
+        break;
+      }
     }
 
-    if (!window.isOpen()) {
-      tc_out |= socket_t::tc_stop;
-      break;
-    }
+    if (!window->isOpen()) break;
 
-    window.clear();
+    // Post process tasks generated by GUI component event callbacks
+    Component::post_process();
 
-    tc_out |= body();
-    sfgui->Display(window);
-    window.display();
+    // Run UI tasks generated by background threads
+    process_ui_tasks();
+
+    // Cleanup any background threads that have completed
+    check_background_tasks();
+
+    // Draw all graphics
+    draw_window();
+    base_layer->paint(window);
+    for (auto p : component_layers) p->paint(window);
+    window->display();
 
     long int millis = 1000 * frame_time;
     this_thread::sleep_until(start + chrono::milliseconds(millis));
@@ -1571,26 +1554,16 @@ void game::window_loop(function<int(sf::Event)> event_handler, function<int(void
 
 /** Draw universe and game objects on the window */
 void game::draw_window() {
-  window.clear();
+  window->clear();
 
   // draw main interface
-  window.setView(view_game);
-  point ul = ul_corner(window);
+  window->setView(view_game);
+  point ul = ul_corner(*window);
   draw_universe();
   draw_interface_components();
 
-  // draw targui
-  window.setView(view_game);
-  if (targui) {
-    targui->draw();
-  } else if (interface::desktop->query_window) {
-    return;
-  }
-
-  // Interface stuff that is only drawn if there is no query window
-
   // draw minimap contents
-  window.setView(view_minimap);
+  window->setView(view_minimap);
   draw_minimap();
 
   // draw view rectangle
@@ -1602,26 +1575,26 @@ void game::draw_window() {
   r.setFillColor(sf::Color::Transparent);
   r.setOutlineColor(sf::Color::Green);
   r.setOutlineThickness(1);
-  window.draw(r);
+  window->draw(r);
 
-  window.setView(view_window);
+  window->setView(view_window);
 
-  // draw text
-  sf::Text text;
-  text.setFont(default_font);
-  text.setCharacterSize(20);
-  text.setFillColor(sf::Color(200, 200, 200));
-  text.setString(message);
-  text.setPosition(point(10, 20));
-  window.draw(text);
+  // // draw text
+  // sf::Text text;
+  // text.setFont(default_font);
+  // text.setCharacterSize(20);
+  // text.setFillColor(sf::Color(200, 200, 200));
+  // text.setString(message);
+  // text.setPosition(point(10, 20));
+  // window->draw(text);
 
-  // draw fleet limits
-  text.setString("Max fleets: " + to_string(get_max_fleets(self_id)));
-  text.setPosition(point(10, 50));
-  window.draw(text);
-  text.setString("Max ships per fleet: " + to_string(get_max_ships_per_fleet(self_id)));
-  text.setPosition(point(10, 80));
-  window.draw(text);
+  // // draw fleet limits
+  // text.setString("Max fleets: " + to_string(get_max_fleets(self_id)));
+  // text.setPosition(point(10, 50));
+  // window->draw(text);
+  // text.setString("Max ships per fleet: " + to_string(get_max_ships_per_fleet(self_id)));
+  // text.setPosition(point(10, 80));
+  // window->draw(text);
 
   // draw minimap bounds
   sf::FloatRect fr = minimap_rect();
@@ -1630,10 +1603,10 @@ void game::draw_window() {
   r.setOutlineColor(sf::Color(255, 255, 255));
   r.setFillColor(sf::Color(0, 0, 25, 200));
   r.setOutlineThickness(1);
-  window.draw(r);
+  window->draw(r);
 }
 
-/** Get positional rectangle representing the minimap in the window. */
+/** Get positional rectangle representing the minimap in the window-> */
 sf::FloatRect game::minimap_rect() {
   sf::FloatRect fr = view_minimap.getViewport();
   sf::FloatRect r;
@@ -1646,7 +1619,7 @@ sf::FloatRect game::minimap_rect() {
 
 /** Draw command selectors and selection rectangle. */
 void game::draw_interface_components() {
-  window.setView(view_game);
+  window->setView(view_game);
 
   // draw commands
   for (auto x : command_selectors) x.second->draw(window);
@@ -1657,16 +1630,16 @@ void game::draw_interface_components() {
     r.setFillColor(sf::Color(250, 250, 250, 50));
     r.setOutlineColor(sf::Color(80, 120, 240, 200));
     r.setOutlineThickness(1);
-    window.draw(r);
+    window->draw(r);
   }
 }
 
 void game::draw_minimap() {
   for (auto e : all_selectors()) {
     if (!e->is_active()) continue;
-    sf::FloatRect bounds(e->position, point(0.05 * window.getSize().x, 0.05 * window.getSize().y));
+    sf::FloatRect bounds(e->position, point(0.05 * window->getSize().x, 0.05 * window->getSize().y));
     sf::RectangleShape buf = graphics::build_rect(bounds, 0, sf::Color::Transparent, e->get_color());
-    window.draw(buf);
+    window->draw(buf);
   }
 }
 
@@ -1686,12 +1659,12 @@ void game::draw_universe() {
       polygon[i + 1].color = sf::Color::Red;
     }
     polygon[n + 1] = polygon[1];
-    window.draw(polygon);
+    window->draw(polygon);
   }
 
   list<animation> buf;
   for (auto e : animations) {
-    graphics::draw_animation(window, e);
+    graphics::draw_animation(*window, e);
     if (e.time_passed() < animation::tmax) buf.push_back(e);
   }
   animations = buf;
@@ -1707,7 +1680,7 @@ void game::draw_universe() {
 
   // flag clusters of enemy ships
   for (auto x : enemy_clusters) {
-    graphics::draw_flag(window, x, sf::Color::Red, sf::Color::White, 0, "scout");
+    graphics::draw_flag(*window, x, sf::Color::Red, sf::Color::White, 0, "scout");
   }
 }
 

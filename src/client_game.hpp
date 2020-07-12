@@ -40,7 +40,7 @@ class game : public game_base_data {
   std::shared_ptr<cl_socket_t> socket; /*!< socket for server communication */
 
   // graphics handlers
-  window_t window;       /*!< sfml window for drawing the interface */
+  RSG::WindowPtr window; /*!< sfml window for drawing the interface */
   sf::View view_game;    /*!< sfml view for game objects */
   sf::View view_minimap; /*!< sfml view for the minimap */
   sf::View view_window;  /*!< sfml view fitting window */
@@ -88,7 +88,7 @@ class game : public game_base_data {
 
  public:
   /*! default contsructor */
-  game(std::shared_ptr<cl_socket_t> s);
+  game(std::shared_ptr<cl_socket_t> s, RSG::WindowPtr w);
 
   /*! Main entry point */
   void run();
@@ -102,6 +102,8 @@ class game : public game_base_data {
   command_selector::ptr get_command_selector(idtype i);
 
   // USER INTERFACE RELATED STUFF
+  /*! Run the main GUI loop */
+  void window_loop();
 
   /*! Add a task to be run in UI update step */
   void queue_ui_task(RSG::Voidfun f);
@@ -130,6 +132,10 @@ class game : public game_base_data {
 
   /*! Queue swap base UI panel into base layer */
   void build_base_panel();
+
+  void popup_query(std::string title, std::string v, hm_t<std::string, RSG::Voidfun> opts);
+
+  void popup_message(std::string title, std::string text);
 
   /*! Research choice UI component */
   RSG::PanelPtr research_gui();
@@ -160,6 +166,8 @@ class game : public game_base_data {
 
   /*! Add a task to be run in background thread */
   void queue_background_task(RSG::Voidfun f);
+
+  void check_background_tasks();
 
   /*! Queue background task: send a packet to query and callback with response */
   void wait_for_it(sf::Packet &p, std::function<void(sf::Packet &)> callback, RSG::Voidfun on_fail = 0);
@@ -343,13 +351,6 @@ class game : public game_base_data {
 
   sf::FloatRect minimap_rect();
 
-  void popup_query(std::string title, std::string v, hm_t<std::string, RSG::Voidfun> opts);
-  std::string popup_options(std::string v, hm_t<std::string, std::string> opts);
-
-  void popup_message(std::string title, std::string text);
-
-  void window_loop(std::function<int(sf::Event)> event_handler, std::function<int(void)> body, int &tc_in, int &tc_out);
-
   void setup_targui(point p);
 
   /*! draw the gui
@@ -395,8 +396,4 @@ class game : public game_base_data {
     return res;
   };
 };
-
-extern game *g;
 };  // namespace st3
-}
-;  // namespace st3
