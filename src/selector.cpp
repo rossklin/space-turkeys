@@ -36,14 +36,14 @@ template <>
 set<combid> specific_selector<solar>::get_ships() { return ships; }
 
 template <>
-void specific_selector<solar>::draw(window_t &w) {
+void specific_selector<solar>::draw(RSG::WindowPtr w) {
   // compute fill color
   sf::Color cfill;
   cfill.r = 256 * utility::sigmoid(2 * resources[keywords::key_metals] / 1000);
   cfill.g = 256 * utility::sigmoid(2 * resources[keywords::key_organics] / 1000);
   cfill.b = 256 * utility::sigmoid(2 * resources[keywords::key_gases] / 1000);
   cfill.a = 160;
-  graphics::draw_circle(w, position, radius, get_color(), cfill, -2);
+  graphics::draw_circle(*w, position, radius, get_color(), cfill, -2);
 
   string indicator_text = "";
   if (!was_discovered) indicator_text += "!";
@@ -55,15 +55,15 @@ void specific_selector<solar>::draw(window_t &w) {
     build_abr[keywords::key_population] = "P";
     build_abr[keywords::key_defense] = "D";
 
-    graphics::draw_circle(w, position, vision(), sf::Color(40, 200, 60, 100));
-    graphics::draw_text(w, to_string((int)(population())), position, 16);
+    graphics::draw_circle(*w, position, vision(), sf::Color(40, 200, 60, 100));
+    graphics::draw_text(*w, to_string((int)(population())), position, 16);
 
     indicator_text = "";
     if (choice_data.building_queue.size()) indicator_text = build_abr[choice_data.building_queue.front()];
     if (get_ships().size()) indicator_text += " <>";
 
     if (selected) {
-      graphics::draw_circle(w, position, radius + 1, graphics::solar_selected, graphics::solar_selected_fill, 2);
+      graphics::draw_circle(*w, position, radius + 1, graphics::solar_selected, graphics::solar_selected_fill, 2);
 
       auto counts = ship_counts();
 
@@ -82,7 +82,7 @@ void specific_selector<solar>::draw(window_t &w) {
         float width = maxlen * fs * 0.6;
         float height = 1.3 * n * fs;
         sf::FloatRect bounds(position.x + radius + 10, position.y - height / 2, width, height);
-        graphics::draw_framed_text(w, res, bounds, sf::Color::White, sf::Color(20, 30, 40, 80), fs);
+        graphics::draw_framed_text(*w, res, bounds, sf::Color::White, sf::Color(20, 30, 40, 80), fs);
       }
     }
   }
@@ -90,21 +90,21 @@ void specific_selector<solar>::draw(window_t &w) {
   // draw shield indicator
   float sp = development[keywords::key_defense];
   if (sp > 0) {
-    graphics::draw_circle(w, position, radius + 4, sf::Color(100, 140, 200, 150), sf::Color::Transparent, sp);
+    graphics::draw_circle(*w, position, radius + 4, sf::Color(100, 140, 200, 150), sf::Color::Transparent, sp);
   }
 
   // draw health indicator
   float hp_ratio = hp / (float)max_hp();
   if (hp_ratio < 1) {
     sf::FloatRect bounds(position.x - radius, position.y + radius + 5, 2 * radius, 2);
-    w.draw(graphics::build_rect(bounds, 0.5, sf::Color::White, sf::Color::Transparent));
+    w->draw(graphics::build_rect(bounds, 0.5, sf::Color::White, sf::Color::Transparent));
     bounds.width *= hp_ratio;
-    w.draw(graphics::build_rect(bounds, 0, sf::Color::Transparent, sf::Color::Red));
+    w->draw(graphics::build_rect(bounds, 0, sf::Color::Transparent, sf::Color::Red));
   }
 
   // draw symbol indicators
   if (indicator_text.length()) {
-    graphics::draw_text(w, indicator_text, position + point(radius, -radius), 14);
+    graphics::draw_text(*w, indicator_text, position + point(radius, -radius), 14);
   }
 }
 
@@ -172,7 +172,7 @@ set<combid> specific_selector<fleet>::get_ships() {
 }
 
 template <>
-void specific_selector<fleet>::draw(window_t &w) {
+void specific_selector<fleet>::draw(RSG::WindowPtr w) {
   auto f = [this, &w](float r, sf::Color cf, sf::Color co, float th = 1) {
     sf::CircleShape s(r);
     s.setPointCount(r / graphics::unscale());
@@ -180,7 +180,7 @@ void specific_selector<fleet>::draw(window_t &w) {
     s.setOutlineColor(co);
     s.setOutlineThickness(graphics::unscale() * th);
     s.setPosition(position - point(r, r));
-    w.draw(s);
+    w->draw(s);
   };
 
   f(radius * graphics::unscale(), graphics::fleet_fill, graphics::fleet_outline);
@@ -199,7 +199,7 @@ void specific_selector<fleet>::draw(window_t &w) {
   string ship_key = "scout";
   if (keys.size() > 0) ship_key = keys.front();
   sf::Color bg = is_idle() ? sf::Color::Yellow : sf::Color::White;
-  graphics::draw_flag(w, position, get_color(), bg, get_ships().size(), ship_key, (int)log(ships.size() + 1) + 1);
+  graphics::draw_flag(*w, position, get_color(), bg, get_ships().size(), ship_key, (int)log(ships.size() + 1) + 1);
 
   // add path
   sf::CircleShape s(4);
@@ -213,9 +213,9 @@ void specific_selector<fleet>::draw(window_t &w) {
   for (auto x : buf) {
     line.push_back(sf::Vertex(x));
     s.setPosition(x - point(4, 4));
-    w.draw(s);
+    w->draw(s);
   }
-  w.draw(&line[0], line.size(), sf::LineStrip);
+  w->draw(&line[0], line.size(), sf::LineStrip);
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::L)) {
     // debug: add suggestion
@@ -228,14 +228,14 @@ void specific_selector<fleet>::draw(window_t &w) {
     // suggest_names[fleet::suggestion::hold] = "hold";
     // suggest_names[fleet::suggestion::evade] = "evade";
 
-    // graphics::draw_text(w, suggest_names[suggest_buf.id], position, 26);
+    // graphics::draw_text(*w, suggest_names[suggest_buf.id], position, 26);
 
     // debug: add evade path
     if (stats.can_evade) {
       line.clear();
       line.push_back(sf::Vertex(position, sf::Color::Blue));
       line.push_back(sf::Vertex(stats.evade_path, sf::Color::Blue));
-      w.draw(&line[0], line.size(), sf::LineStrip);
+      w->draw(&line[0], line.size(), sf::LineStrip);
     }
   }
 }
@@ -270,14 +270,14 @@ bool specific_selector<waypoint>::is_selectable() {
 }
 
 template <>
-void specific_selector<waypoint>::draw(window_t &w) {
+void specific_selector<waypoint>::draw(RSG::WindowPtr w) {
   float r = radius * graphics::unscale();
   sf::CircleShape s(r);
   s.setFillColor(selected ? sf::Color(255, 255, 255, 100) : sf::Color(0, 0, 0, 0));
   s.setOutlineColor(get_color());
   s.setOutlineThickness(graphics::unscale());
   s.setPosition(position - point(r, r));
-  w.draw(s);
+  w->draw(s);
 }
 
 template <>
@@ -311,7 +311,7 @@ bool specific_selector<ship>::is_selectable() {
 }
 
 template <>
-void specific_selector<ship>::draw(window_t &w) {
+void specific_selector<ship>::draw(RSG::WindowPtr w) {
   if (!is_active()) return;
 
   if (selected) {
@@ -319,14 +319,14 @@ void specific_selector<ship>::draw(window_t &w) {
     sf::CircleShape s(rad);
     s.setFillColor(sf::Color(255, 255, 255, 50));
     s.setPosition(position - point(rad, rad));
-    w.draw(s);
+    w->draw(s);
   }
 
-  graphics::draw_ship(w, ship::shared_from_this(), get_color(), graphics::ship_scale_factor * radius);
+  graphics::draw_ship(*w, ship::shared_from_this(), get_color(), graphics::ship_scale_factor * radius);
 
   // // debug
   // float tr = thrust / stats[sskey::key::thrust];
-  // graphics::draw_circle(w, position, radius, sf::Color(255 * (1 - tr), 0, 255 * (tr), 100));
+  // graphics::draw_circle(*w, position, radius, sf::Color(255 * (1 - tr), 0, 255 * (tr), 100));
 }
 
 template <>
@@ -468,7 +468,7 @@ bool command_selector::contains_point(point p, float &d) {
   return d < 5;
 }
 
-void command_selector::draw(window_t &w) {
+void command_selector::draw(RSG::WindowPtr w) {
   float body_length = 1 - 0.1 * graphics::unscale();
 
   sf::Vertex c_head[3] = {
@@ -528,14 +528,14 @@ void command_selector::draw(window_t &w) {
   t.rotate(utility::point_angle(delta) / (2 * M_PI) * 360);
   t.scale(scale, graphics::unscale());
 
-  w.draw(c_head, 3, sf::Triangles, t);
-  w.draw(c_body, 3, sf::Triangles, t);
+  w->draw(c_head, 3, sf::Triangles, t);
+  w->draw(c_body, 3, sf::Triangles, t);
 
   sf::Color text_bg = graphics::fade_color(sf::Color::White, policy_colors[policy], 0.1);
   sf::RectangleShape r = graphics::build_rect(text_dims, 2, policy_colors[policy], text_bg);
   r.setPosition(text.getPosition());
   r.setSize(point(1.5 * text_dims.width, 1.5 * text_dims.height));
   r.setScale(graphics::inverse_scale(w));
-  w.draw(r);
-  w.draw(text);
+  w->draw(r);
+  w->draw(text);
 }

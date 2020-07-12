@@ -9,6 +9,7 @@
 #include "fleet.hpp"
 #include "game_object.hpp"
 #include "graphics.hpp"
+#include "rsg/src/RskTypes.hpp"
 #include "ship.hpp"
 #include "solar.hpp"
 #include "types.hpp"
@@ -37,7 +38,7 @@ class entity_selector : public virtual game_object {
   virtual ptr ss_clone() = 0;
 
   virtual bool contains_point(point p, float &d) = 0;
-  virtual void draw(window_t &w) = 0;
+  virtual void draw(RSG::WindowPtr w) = 0;
   virtual point get_position() = 0;
   virtual std::set<combid> get_ships() = 0;
   virtual std::string hover_info() = 0;
@@ -62,7 +63,7 @@ class specific_selector : public virtual entity_selector, public virtual T {
   entity_selector::ptr ss_clone();
   bool is_selectable();
   bool contains_point(point p, float &d);
-  void draw(window_t &w);
+  void draw(RSG::WindowPtr w);
   point get_position();
   std::set<combid> get_ships();
   std::string hover_info();
@@ -102,7 +103,7 @@ class command_selector : public command {
   /*! draw the command selector on a window
 	@param w the window
       */
-  void draw(window_t &w);
+  void draw(RSG::WindowPtr w);
 
   /*! check whether a point intersects the command_selector
 	@param p the point
