@@ -23,8 +23,8 @@ PanelPtr command_gui(
     int policy,
     int num_available,
     bool allow_combat,
-    Voidfun on_cancel,
-    function<void(int, int)> on_commit) {
+    function<void(int, int)> on_commit,
+    Voidfun on_cancel) {
   // Policy panel
   hm_t<int, string> policies = {
       {fleet::policy_maintain_course, "Maintain course"},

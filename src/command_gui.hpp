@@ -12,6 +12,6 @@ RSG::PanelPtr command_gui(
     int policy,
     int num_available,
     bool allow_combat,
-    RSG::Voidfun on_cancel,
-    std::function<void(int, int)> on_commit);
+    std::function<void(int, int)> on_commit,
+    RSG::Voidfun on_cancel);
 };  // namespace st3
