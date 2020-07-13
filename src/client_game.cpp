@@ -32,6 +32,8 @@ using namespace std;
 using namespace st3;
 using namespace RSG;
 
+shared_ptr<window_t> game::window = 0;
+
 // local utility functions
 sf::FloatRect fixrect(sf::FloatRect r);
 bool add2selection();
@@ -41,10 +43,8 @@ bool ctrlsel();
 // GAME STEPS
 // ****************************************
 
-game::game(std::shared_ptr<cl_socket_t> s, WindowPtr w) {
+game::game(std::shared_ptr<cl_socket_t> s) {
   socket = s;
-  window = w;
-  sim_sub_frames = 4;
   selector_queue = 1;
   sight_ul = point(0, 0);
   sight_wh = point(0, 0);
@@ -66,7 +66,7 @@ command_selector::ptr game::get_command_selector(idtype i) {
 }
 
 void game::clear_ui_layers(bool preserve_base) {
-  queue_ui_task(bind(&do_clear_ui_layers, this, preserve_base));
+  queue_ui_task(bind(&game::do_clear_ui_layers, this, preserve_base));
 }
 
 void game::do_clear_ui_layers(bool preserve_base) {
@@ -174,7 +174,7 @@ void game::pre_step() {
   phase = "pre";
   pq << protocol::game_round;
 
-  auto callback = [this](sf::Packet p) -> bool {
+  auto callback = [this](sf::Packet p) {
     game_base_data data;
     try {
       client::deserialize(data, p, self_id);
@@ -290,7 +290,7 @@ void game::simulation_step() {
 
 void game::next_sim_frame() {
   sim_sub_idx++;
-  if (sim_sub_idx >= sim_sub_frames) {
+  if (sim_sub_idx >= settings.clset.sim_sub_frames) {
     int buffer_size = min<int>(settings.clset.frames_per_round - sim_idx - 1, 4);
     if (sim_idx < sim_frames_loaded - buffer_size) {
       sim_sub_idx = 0;
@@ -309,7 +309,7 @@ void game::next_sim_frame() {
 void game::update_sim_frame() {
   // static int sub_idx = 1;
   // float sub_ratio = 1 / (float)sub_frames;
-  int total_frames = sim_sub_frames * settings.clset.frames_per_round;
+  int total_frames = settings.clset.sim_sub_frames * settings.clset.frames_per_round;
 
   // if (idx == settings.clset.frames_per_round - 1) {
   //   cout << "simulation: all loaded" << endl;
@@ -338,7 +338,7 @@ void game::update_sim_frame() {
 
   // if (playing) {
 
-  float t = sim_sub_idx / (float)sim_sub_frames;
+  float t = sim_sub_idx / (float)settings.clset.sim_sub_frames;
   float bw = 1;
 
   // update entity positions
@@ -968,7 +968,17 @@ hm_t<string, set<combid>> game::get_ready_ships(combid id) {
   entity_selector::ptr e = get_selector(id);
   hm_t<string, set<string>> res;
 
-  for (auto sid : e->get_ships()) res[get_specific<ship>(sid)->class_id].insert(sid);
+  set<combid> sids;
+  if (e->isa(waypoint::class_id)) {
+    // Waypoint selector does not support get_ships method
+    for (auto i : incident_commands(id)) {
+      sids += get_command_selector(i)->ships;
+    }
+  } else {
+    sids = e->get_ships();
+  }
+
+  for (auto sid : sids) res[get_specific<ship>(sid)->class_id].insert(sid);
 
   for (auto c : e->commands) {
     auto com = get_command_selector(c);
@@ -1508,7 +1518,7 @@ void game::popup_query(string title, string text, hm_t<string, Voidfun> opts) {
 /** Core loop for gui. */
 void game::window_loop() {
   chrono::time_point<chrono::system_clock> start;
-  CoordMapper coord_mapper = [this](sf::Vector2i p) { return window->mapPixelToCoords(p); };
+  CoordMapper coord_mapper = [this](sf::Vector2i p) { return window->mapPixelToCoords(p, view_game); };
 
   while (window->isOpen() && state_run) {
     start = chrono::system_clock::now();

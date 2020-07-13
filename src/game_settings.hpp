@@ -10,6 +10,7 @@ namespace st3 {
 extern const std::set<std::string> starting_options;
 
 struct client_game_settings {
+  int sim_sub_frames;
   std::string starting_fleet;
   sint num_players;
   sint frames_per_round; /*!< number of frames in the simulation step */

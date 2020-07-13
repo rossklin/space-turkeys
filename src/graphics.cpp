@@ -15,9 +15,7 @@
 using namespace std;
 using namespace st3;
 using namespace graphics;
-using namespace client;
 
-sf::Font graphics::default_font;
 const float graphics::ship_scale_factor = 1;
 
 const sf::Color graphics::solar_neutral(150, 150, 150);
@@ -35,8 +33,23 @@ const sf::Color graphics::solar_selected_fill(200, 225, 255, 80);
 const sf::Color graphics::fleet_fill(200, 200, 200, 50);
 const sf::Color graphics::fleet_outline(40, 60, 180, 200);
 
+sf::Font graphics::get_default_font() {
+  static sf::Font f;
+  static bool init = false;
+
+  if (!init) {
+    if (!f.loadFromFile("fonts/AjarSans-Regular.ttf")) {
+      throw logical_error("Failed to load default font");
+    }
+    init = true;
+  }
+
+  return f;
+}
+
+/*! Get x dimension of inverse scale of the current view */
 float graphics::unscale() {
-  return inverse_scale(g->window).x;
+  return inverse_scale(*game::window).x;
 }
 
 sf::Color graphics::fade_color(sf::Color from, sf::Color to, float r) {
@@ -46,7 +59,7 @@ sf::Color graphics::fade_color(sf::Color from, sf::Color to, float r) {
                    from.a + r * (to.a - from.a));
 }
 
-void graphics::draw_flag(sf::RenderTarget &w, point p, sf::Color c, sf::Color bg, int count, string ship_class, int nstack) {
+void graphics::draw_flag(sf::RenderTarget& w, point p, sf::Color c, sf::Color bg, int count, string ship_class, int nstack) {
   vector<sf::Vertex> svert;
   float s = 35 * unscale();
   float bt = 0.05;
@@ -81,7 +94,7 @@ void graphics::draw_flag(sf::RenderTarget &w, point p, sf::Color c, sf::Color bg
   draw_ship(w, sh, sf::Color::Black, 0.35 * s, false);
 }
 
-void graphics::draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, sf::Color cf, float b) {
+void graphics::draw_circle(sf::RenderTarget& w, point p, float r, sf::Color co, sf::Color cf, float b) {
   sf::CircleShape sol(r);
   float inv = inverse_scale(w).x;
   sol.setPointCount(r / inv);
@@ -92,13 +105,13 @@ void graphics::draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, 
   w.draw(sol);
 };
 
-void graphics::draw_text(sf::RenderTarget &w, string v, point p, float fs, bool ul, sf::Color fill, bool do_inv, float rotate) {
+void graphics::draw_text(sf::RenderTarget& w, string v, point p, float fs, bool ul, sf::Color fill, bool do_inv, float rotate) {
   sf::Text text;
   float charsize = 16;
   float scale = fs / charsize;
   if (do_inv) scale *= unscale();
   text.setString(v);
-  text.setFont(graphics::default_font);
+  text.setFont(graphics::get_default_font());
   text.setCharacterSize(charsize);
   sf::FloatRect text_dims = text.getLocalBounds();
   if (ul) {
@@ -123,7 +136,7 @@ sf::RectangleShape graphics::build_rect(sf::FloatRect bounds, float thickness, s
   return r;
 }
 
-void graphics::draw_framed_text(sf::RenderTarget &w, string v, sf::FloatRect bounds, sf::Color co, sf::Color cf, float fs) {
+void graphics::draw_framed_text(sf::RenderTarget& w, string v, sf::FloatRect bounds, sf::Color co, sf::Color cf, float fs) {
   float margin = unscale() * 1;
   sf::RectangleShape r = graphics::build_rect(bounds, margin, co, cf);
   w.draw(r);
@@ -138,41 +151,41 @@ void graphics::draw_framed_text(sf::RenderTarget &w, string v, sf::FloatRect bou
   draw_text(w, v, p, fs, false, co, false);
 }
 
-sf::Image graphics::ship_image(string ship_class, float width, float height, sf::Color col) {
-  return ship_image_label("", ship_class, width, height, col, col);
-}
+// sf::Image graphics::ship_image(string ship_class, float width, float height, sf::Color col) {
+//   return ship_image_label("", ship_class, width, height, col, col);
+// }
 
-sf::Image graphics::ship_image_label(string text, string ship_class, float width, float height, sf::Color l_col, sf::Color s_col) {
-  sf::RenderTexture tex;
-  if (!tex.create(width, height)) {
-    throw classified_error("Failed to create render texture!");
-  }
+// sf::Image graphics::ship_image_label(string text, string ship_class, float width, float height, sf::Color l_col, sf::Color s_col) {
+//   sf::RenderTexture tex;
+//   if (!tex.create(width, height)) {
+//     throw classified_error("Failed to create render texture!");
+//   }
 
-  tex.clear();
+//   tex.clear();
 
-  ship_ptr s(new ship(ship::table().at(ship_class)));
-  s->position = point(width / 2, height / 2);
-  s->angle = 0;
-  float scale = width / 6;
-  draw_ship(tex, s, s_col, scale);
+//   ship_ptr s(new ship(ship::table().at(ship_class)));
+//   s->position = point(width / 2, height / 2);
+//   s->angle = 0;
+//   float scale = width / 6;
+//   draw_ship(tex, s, s_col, scale);
 
-  if (text.length() > 0) {
-    int fs = 0.6 * fmin(width / (float)text.length(), height);
-    draw_text(tex, text, s->position, fs);
-  }
+//   if (text.length() > 0) {
+//     int fs = 0.6 * fmin(width / (float)text.length(), height);
+//     draw_text(tex, text, s->position, fs);
+//   }
 
-  tex.display();
+//   tex.display();
 
-  return tex.getTexture().copyToImage();
-}
+//   return tex.getTexture().copyToImage();
+// }
 
-sfg::Button::Ptr graphics::ship_button(string ship_class, float width, float height, sf::Color col) {
-  sfg::Button::Ptr b = sfg::Button::Create();
-  b->SetImage(sfg::Image::Create(ship_image(ship_class, width, height, col)));
-  return b;
-};
+// sfg::Button::Ptr graphics::ship_button(string ship_class, float width, float height, sf::Color col) {
+//   sfg::Button::Ptr b = sfg::Button::Create();
+//   b->SetImage(sfg::Image::Create(ship_image(ship_class, width, height, col)));
+//   return b;
+// };
 
-void graphics::draw_ship(sf::RenderTarget &w, ship_ptr s, sf::Color col, float sc, bool multicolor) {
+void graphics::draw_ship(sf::RenderTarget& w, ship_ptr s, sf::Color col, float sc, bool multicolor) {
   vector<sf::Vertex> svert;
 
   sf::Color cnose(255, 200, 180, 200);
@@ -196,29 +209,29 @@ void graphics::draw_ship(sf::RenderTarget &w, ship_ptr s, sf::Color col, float s
 }
 
 // point coordinates of view ul corner
-point graphics::ul_corner(sf::RenderTarget &w) {
+point graphics::ul_corner(sf::RenderTarget& w) {
   sf::View sv = w.getView();
   point v = sv.getSize();
   return sv.getCenter() - point(v.x * 0.5, v.y * 0.5);
 }
 
-// transform from pixels to points
-sf::Transform graphics::view_inverse_transform(sf::RenderTarget &w) {
-  sf::Transform t;
-  sf::View v = w.getView();
+// // transform from pixels to points
+// sf::Transform graphics::view_inverse_transform(sf::RenderTarget& w) {
+//   sf::Transform t;
+//   sf::View v = w.getView();
 
-  t.translate(ul_corner(w));
-  t.scale(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
-  return t;
-}
+//   t.translate(ul_corner(w));
+//   t.scale(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
+//   return t;
+// }
 
 // scale from pixels to points
-point graphics::inverse_scale(sf::RenderTarget &w) {
+point graphics::inverse_scale(sf::RenderTarget& w) {
   sf::View v = w.getView();
   return point(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
 }
 
-void graphics::draw_animation(sf::RenderTarget &w, animation e) {
+void graphics::draw_animation(sf::RenderTarget& w, animation e) {
   float t = e.time_passed();
   if (t < 0) return;
 
@@ -272,70 +285,70 @@ void graphics::draw_animation(sf::RenderTarget &w, animation e) {
   }
 }
 
-sf::Image graphics::selector_card(string title, bool available, float progress) {
-  sf::RenderTexture tex;
-  int width = 120;
-  int height = 200;
-  sf::FloatRect bounds(0, 0, width, height);
+// sf::Image graphics::selector_card(string title, bool available, float progress) {
+//   sf::RenderTexture tex;
+//   int width = 120;
+//   int height = 200;
+//   sf::FloatRect bounds(0, 0, width, height);
 
-  cout << "selector card: " << title << ": progress = " << progress << endl;
+//   cout << "selector card: " << title << ": progress = " << progress << endl;
 
-  if (!tex.create(width, height)) {
-    throw classified_error("Failed to create render texture!");
-  }
+//   if (!tex.create(width, height)) {
+//     throw classified_error("Failed to create render texture!");
+//   }
 
-  tex.clear();
+//   tex.clear();
 
-  // draw progress
-  auto pfill = build_rect(sf::FloatRect(0, (1 - progress) * bounds.height, bounds.width, progress * bounds.height), 0, sf::Color::Transparent, sf::Color(50, 50, 80));
-  if (progress < 0) {
-    // already complete
-    pfill = build_rect(sf::FloatRect(0, 0, bounds.width, bounds.height), 0, sf::Color::Transparent, sf::Color(50, 100, 50));
-  }
-  tex.draw(pfill);
+//   // draw progress
+//   auto pfill = build_rect(sf::FloatRect(0, (1 - progress) * bounds.height, bounds.width, progress * bounds.height), 0, sf::Color::Transparent, sf::Color(50, 50, 80));
+//   if (progress < 0) {
+//     // already complete
+//     pfill = build_rect(sf::FloatRect(0, 0, bounds.width, bounds.height), 0, sf::Color::Transparent, sf::Color(50, 100, 50));
+//   }
+//   tex.draw(pfill);
 
-  // draw text
-  draw_text(tex, title, point(width / 2, height / 2), 16, false, sf::Color::White, true, M_PI / 2);
+//   // draw text
+//   draw_text(tex, title, point(width / 2, height / 2), 16, false, sf::Color::White, true, M_PI / 2);
 
-  // draw outline
-  sf::Color outline = sf::Color(150, 150, 150);
-  tex.draw(build_rect(bounds, -2, outline));
+//   // draw outline
+//   sf::Color outline = sf::Color(150, 150, 150);
+//   tex.draw(build_rect(bounds, -2, outline));
 
-  // draw available
-  if (!available) {
-    auto pgrey = build_rect(bounds, 0, sf::Color::Transparent, sf::Color(120, 120, 120, 120));
-    tex.draw(pgrey);
-  }
+//   // draw available
+//   if (!available) {
+//     auto pgrey = build_rect(bounds, 0, sf::Color::Transparent, sf::Color(120, 120, 120, 120));
+//     tex.draw(pgrey);
+//   }
 
-  tex.display();
+//   tex.display();
 
-  return tex.getTexture().copyToImage();
-}
+//   return tex.getTexture().copyToImage();
+// }
 
-sfg::Widget::Ptr graphics::wrap_in_scroll(sfg::Widget::Ptr w, bool horizontal, int dim) {
-  sfg::ScrolledWindow::Ptr sw = sfg::ScrolledWindow::Create();
-  if (horizontal) {
-    sw->SetScrollbarPolicy(sfg::ScrolledWindow::HORIZONTAL_AUTOMATIC | sfg::ScrolledWindow::VERTICAL_NEVER);
-  } else {
-    sw->SetScrollbarPolicy(sfg::ScrolledWindow::HORIZONTAL_NEVER | sfg::ScrolledWindow::VERTICAL_AUTOMATIC);
-  }
+// sfg::Widget::Ptr graphics::wrap_in_scroll(sfg::Widget::Ptr w, bool horizontal, int dim) {
+//   sfg::ScrolledWindow::Ptr sw = sfg::ScrolledWindow::Create();
+//   if (horizontal) {
+//     sw->SetScrollbarPolicy(sfg::ScrolledWindow::HORIZONTAL_AUTOMATIC | sfg::ScrolledWindow::VERTICAL_NEVER);
+//   } else {
+//     sw->SetScrollbarPolicy(sfg::ScrolledWindow::HORIZONTAL_NEVER | sfg::ScrolledWindow::VERTICAL_AUTOMATIC);
+//   }
 
-  sw->AddWithViewport(w);
-  point req = w->GetRequisition();
+//   sw->AddWithViewport(w);
+//   point req = w->GetRequisition();
 
-  if (horizontal) {
-    sw->SetRequisition(point(dim, req.y));
-  } else {
-    sw->SetRequisition(point(req.x, dim));
-  }
+//   if (horizontal) {
+//     sw->SetRequisition(point(dim, req.y));
+//   } else {
+//     sw->SetRequisition(point(req.x, dim));
+//   }
 
-  return sw;
-}
+//   return sw;
+// }
 
-sfg::Widget::Ptr graphics::wrap_in_scroll2(sfg::Widget::Ptr w, int width, int height) {
-  sfg::ScrolledWindow::Ptr sw = sfg::ScrolledWindow::Create();
-  sw->SetScrollbarPolicy(sfg::ScrolledWindow::HORIZONTAL_AUTOMATIC | sfg::ScrolledWindow::VERTICAL_AUTOMATIC);
-  sw->AddWithViewport(w);
-  sw->SetRequisition(point(width, height));
-  return sw;
-}
+// sfg::Widget::Ptr graphics::wrap_in_scroll2(sfg::Widget::Ptr w, int width, int height) {
+//   sfg::ScrolledWindow::Ptr sw = sfg::ScrolledWindow::Create();
+//   sw->SetScrollbarPolicy(sfg::ScrolledWindow::HORIZONTAL_AUTOMATIC | sfg::ScrolledWindow::VERTICAL_AUTOMATIC);
+//   sw->AddWithViewport(w);
+//   sw->SetRequisition(point(width, height));
+//   return sw;
+// }

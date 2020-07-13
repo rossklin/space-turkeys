@@ -77,5 +77,6 @@
       "valarray": "cpp",
       "bit": "cpp"
     },
-    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 0 }"
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 0 }",
+    "C_Cpp.errorSquiggles": "Enabled"
 }

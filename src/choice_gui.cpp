@@ -16,12 +16,12 @@ using namespace st3;
 using namespace RSG;
 
 PanelPtr build_queue(list<string> q) {
-  list<ComponentPtr> children = utility::map<list<string>, list<ComponentPtr>>([](string v) { return Button::create(v); }, q);
+  list<ComponentPtr> children = utility::map<list<ComponentPtr>>([](string v) { return Button::create(v); }, q);
   return Panel::create(children, Panel::ORIENT_VERTICAL);
 }
 
 PanelPtr build_info(list<string> info) {
-  list<ComponentPtr> children = utility::map<list<string>, list<ComponentPtr>>([](string v) { return make_label(v); }, info);
+  list<ComponentPtr> children = utility::map<list<ComponentPtr>>([](string v) { return make_label(v); }, info);
   return Panel::create(children, Panel::ORIENT_VERTICAL);
 }
 
@@ -46,7 +46,7 @@ PanelPtr choice_gui(
   PanelPtr info_wrapper = Panel::create();
 
   // Option cards
-  list<ComponentPtr> cards = utility::map<list<string>, list<ComponentPtr>>(
+  list<ComponentPtr> cards = utility::map<list<ComponentPtr>>(
       [=](string v) -> ComponentPtr {
         ButtonPtr b = f_opt(v);
         b->set_on_press([=](ButtonPtr self) { enque(v); });

@@ -56,6 +56,8 @@ and then add terrain between them.
 *** [impl] Update json file refs to data directory
 *** [impl] Save files in save directory
 *** Re-implement all SFGUI components in RSG
+    [done] game::get_ready_ships should sort by class
+    [done] command_gui should take parameter max ships per class and allow selecting which class to send
 *** Restructure main window loop and event handling
 ** Add "order" concept which limits growth/production in distant solars
 ** Update research and upgrade data according to sketch

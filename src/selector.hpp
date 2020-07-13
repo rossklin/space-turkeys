@@ -42,7 +42,6 @@ class entity_selector : public virtual game_object {
   virtual point get_position() = 0;
   virtual std::set<combid> get_ships() = 0;
   virtual std::string hover_info() = 0;
-  hm_t<std::string, int> ship_counts();
 
   sf::Color get_color();
   virtual bool inside_rect(sf::FloatRect r);

@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "client_game.hpp"
+#include "command.hpp"
 #include "fleet.hpp"
 #include "graphics.hpp"
 #include "ship.hpp"
@@ -65,25 +66,25 @@ void specific_selector<solar>::draw(RSG::WindowPtr w) {
     if (selected) {
       graphics::draw_circle(*w, position, radius + 1, graphics::solar_selected, graphics::solar_selected_fill, 2);
 
-      auto counts = ship_counts();
+      // auto counts = ship_counts();
 
-      if (counts.size()) {
-        string res = "";
-        int maxlen = 0;
-        for (auto v : counts) {
-          string buf = to_string(v.second) + " " + v.first + "s";
-          if (maxlen) buf = "\n" + buf;
-          maxlen = max((int)buf.length(), maxlen);
-          res += buf;
-        }
+      // if (counts.size()) {
+      //   string res = "";
+      //   int maxlen = 0;
+      //   for (auto v : counts) {
+      //     string buf = to_string(v.second) + " " + v.first + "s";
+      //     if (maxlen) buf = "\n" + buf;
+      //     maxlen = max((int)buf.length(), maxlen);
+      //     res += buf;
+      //   }
 
-        float fs = graphics::unscale() * 16;
-        int n = counts.size();
-        float width = maxlen * fs * 0.6;
-        float height = 1.3 * n * fs;
-        sf::FloatRect bounds(position.x + radius + 10, position.y - height / 2, width, height);
-        graphics::draw_framed_text(*w, res, bounds, sf::Color::White, sf::Color(20, 30, 40, 80), fs);
-      }
+      //   float fs = graphics::unscale() * 16;
+      //   int n = counts.size();
+      //   float width = maxlen * fs * 0.6;
+      //   float height = 1.3 * n * fs;
+      //   sf::FloatRect bounds(position.x + radius + 10, position.y - height / 2, width, height);
+      //   graphics::draw_framed_text(*w, res, bounds, sf::Color::White, sf::Color(20, 30, 40, 80), fs);
+      // }
     }
   }
 
@@ -188,16 +189,16 @@ void specific_selector<fleet>::draw(RSG::WindowPtr w) {
   if (selected) f(2 * radius * graphics::unscale(), sf::Color::Transparent, sf::Color::White, 3);
 
   // add a flag
-  auto counts = ship_counts();
-  list<string> keys = utility::range_init<list<string>>(utility::hm_keys(counts));
-  keys.sort([this](string a, string b) {
-    ship_stats ssa = ship::table().at(a);
-    ship_stats ssb = ship::table().at(b);
-    return ssa.get_strength() > ssb.get_strength();
-  });
+  // auto counts = ship_counts();
+  // list<string> keys = utility::range_init<list<string>>(utility::hm_keys(counts));
+  // keys.sort([this](string a, string b) {
+  //   ship_stats ssa = ship::table().at(a);
+  //   ship_stats ssb = ship::table().at(b);
+  //   return ssa.get_strength() > ssb.get_strength();
+  // });
 
-  string ship_key = "scout";
-  if (keys.size() > 0) ship_key = keys.front();
+  string ship_key = com.ship_class;
+  // if (keys.size() > 0) ship_key = keys.front();
   sf::Color bg = is_idle() ? sf::Color::Yellow : sf::Color::White;
   graphics::draw_flag(*w, position, get_color(), bg, get_ships().size(), ship_key, (int)log(ships.size() + 1) + 1);
 
@@ -245,10 +246,8 @@ string specific_selector<fleet>::hover_info() {
   string res = "fleet at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
 
   if (owned) {
-    hm_t<string, int> counts = ship_counts();
-
     res += "\naction: " + com.action;
-    for (auto x : counts) res += "\n" + x.first + "s: " + to_string(x.second);
+    res += "\n" + to_string(ships.size()) + " " + com.ship_class + "s";
   }
 
   return res;
@@ -282,11 +281,7 @@ void specific_selector<waypoint>::draw(RSG::WindowPtr w) {
 
 template <>
 set<combid> specific_selector<waypoint>::get_ships() {
-  set<combid> s;
-  for (auto i : g->incident_commands(id)) {
-    s += g->command_selectors[i]->ships;
-  }
-  return s;
+  throw logical_error("waypoint_selector::get_ships must not be called!");
 }
 
 template <>
@@ -379,7 +374,6 @@ string specific_selector<ship>::hover_info() {
 }  // namespace st3
 
 using namespace st3;
-using namespace st3::client;
 
 // ****************************************
 // ENTITY SELECTOR
@@ -393,11 +387,11 @@ entity_selector::entity_selector(sf::Color c, bool o) {
   queue_level = 0;
 }
 
-hm_t<string, int> entity_selector::ship_counts() {
-  hm_t<string, int> counts;
-  for (auto sid : get_ships()) counts[g->get_specific<ship>(sid)->ship_class]++;
-  return counts;
-}
+// hm_t<string, int> entity_selector::ship_counts() {
+//   hm_t<string, int> counts;
+//   for (auto sid : get_ships()) counts[g->get_specific<ship>(sid)->ship_class]++;
+//   return counts;
+// }
 
 bool entity_selector::is_area_selectable() {
   return this->is_selectable() && !this->isa(waypoint::class_id);
@@ -494,13 +488,13 @@ void command_selector::draw(RSG::WindowPtr w) {
   policy_colors[fleet::policy_evasive] = sf::Color::Yellow;
   policy_colors[fleet::policy_maintain_course] = sf::Color::Blue;
 
-  text.setFont(graphics::default_font);
+  text.setFont(graphics::get_default_font());
   text.setString(policy_symbols[policy] + ": " + to_string(ships.size()));
   text.setCharacterSize(16);
   // text.setStyle(sf::Text::Underlined);
   sf::FloatRect text_dims = text.getLocalBounds();
   text.setPosition(utility::scale_point(to + from, 0.5) - utility::scale_point(point(text_dims.width / 2, text_dims.height + 10), graphics::unscale()));
-  text.setScale(graphics::inverse_scale(w));
+  text.setScale(graphics::inverse_scale(*w));
   text.setFillColor(sf::Color::Black);
 
   // setup arrow colors
@@ -535,7 +529,7 @@ void command_selector::draw(RSG::WindowPtr w) {
   sf::RectangleShape r = graphics::build_rect(text_dims, 2, policy_colors[policy], text_bg);
   r.setPosition(text.getPosition());
   r.setSize(point(1.5 * text_dims.width, 1.5 * text_dims.height));
-  r.setScale(graphics::inverse_scale(w));
+  r.setScale(graphics::inverse_scale(*w));
   w->draw(r);
   w->draw(text);
 }

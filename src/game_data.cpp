@@ -1114,7 +1114,7 @@ animation_tracker_info game_data::get_tracker(combid id) const {
 void game_data::log_bombard(combid a, combid b) {
   ship_ptr s = get_ship(a);
   solar_ptr t = get_solar(b);
-  int delay = utility::random_int(sub_frames);
+  int delay = utility::random_int(settings.clset.sim_sub_frames);
 
   animation_data x;
   x.t1 = get_tracker(s->id);
@@ -1144,7 +1144,7 @@ void game_data::log_bombard(combid a, combid b) {
 void game_data::log_ship_fire(combid a, combid b) {
   game_object_ptr s = get_game_object(a);
   ship_ptr t = get_ship(b);
-  int delay = utility::random_int(sub_frames);
+  int delay = utility::random_int(settings.clset.sim_sub_frames);
 
   animation_data x;
   x.t1 = get_tracker(s->id);
@@ -1182,7 +1182,7 @@ void game_data::log_ship_fire(combid a, combid b) {
 void game_data::log_ship_destroyed(combid a, combid b) {
   game_object_ptr s = get_game_object(a);
   ship_ptr t = get_ship(b);
-  int delay = utility::random_int(sub_frames);
+  int delay = utility::random_int(settings.clset.sim_sub_frames);
 
   // text log
   string self_identifier = s->isa(ship::class_id) ? get_ship(a)->ship_class : "solar";
@@ -1222,7 +1222,7 @@ void game_data::log_message(combid a, string v_full, string v_short) {
 }
 
 float game_data::get_dt() const {
-  return sub_frames * settings.dt;
+  return settings.clset.sim_sub_frames * settings.dt;
 }
 
 float game_data::solar_order_level(combid id) const {

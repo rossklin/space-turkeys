@@ -40,7 +40,6 @@ class game : public game_base_data {
   std::shared_ptr<cl_socket_t> socket; /*!< socket for server communication */
 
   // graphics handlers
-  RSG::WindowPtr window; /*!< sfml window for drawing the interface */
   sf::View view_game;    /*!< sfml view for game objects */
   sf::View view_minimap; /*!< sfml view for the minimap */
   sf::View view_window;  /*!< sfml view fitting window */
@@ -64,7 +63,6 @@ class game : public game_base_data {
   int fleet_idc;
 
   // Simulation data
-  int sim_sub_frames;
   int sim_frames_loaded;
   int sim_idx;
   int sim_sub_idx;
@@ -87,8 +85,10 @@ class game : public game_base_data {
   std::list<animation> animations;
 
  public:
+  static RSG::WindowPtr window; /*!< sfml window for drawing the interface */
+
   /*! default contsructor */
-  game(std::shared_ptr<cl_socket_t> s, RSG::WindowPtr w);
+  game(std::shared_ptr<cl_socket_t> s);
 
   /*! Main entry point */
   void run();
@@ -133,6 +133,7 @@ class game : public game_base_data {
   /*! Queue swap base UI panel into base layer */
   void build_base_panel();
 
+  /*! Queue UI task: display a popup query with a number of options represented by a label and a callback */
   void popup_query(std::string title, std::string v, hm_t<std::string, RSG::Voidfun> opts);
 
   void popup_message(std::string title, std::string text);
@@ -146,8 +147,7 @@ class game : public game_base_data {
   /*! Simulation controls UI */
   RSG::PanelPtr simulation_gui();
 
-  bool layers_have_content(std::list<int> layers);
-
+  /*! Check whether any GUI layers above base have content */
   bool any_gui_content();
 
   // CALLBACKS

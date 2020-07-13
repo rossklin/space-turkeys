@@ -24,29 +24,28 @@
 
 using namespace std;
 using namespace st3;
-using namespace st3::client;
 
-void handled_response(sf::Packet p, function<void(sf::Packet)> f) {
+void handled_response(cl_socket_ptr socket, sf::Packet p, function<void(sf::Packet)> f) {
   cout << "Attempting to send packet" << endl;
-  if (!g->socket->send_packet(p)) {
+  if (!socket->send_packet(p)) {
     throw network_error("Failed to send packet");
   }
 
   cout << "Attempting to receive packet" << endl;
-  if (!g->socket->receive_packet()) {
+  if (!socket->receive_packet()) {
     throw network_error("Failed to receive packet");
   }
 
   sint r;
-  if (!(g->socket->data >> r && r == protocol::confirm)) {
+  if (!(socket->data >> r && r == protocol::confirm)) {
     throw network_error("Server did not respond with confirm");
   }
 
   cout << "Query complete, calling back" << endl;
-  if (f) f(g->socket->data);
+  if (f) f(socket->data);
 }
 
-int get_status(string game_id) {
+int get_status(cl_socket_ptr socket, string game_id) {
   sf::Packet p;
   p << protocol::get_status << game_id;
 
@@ -58,25 +57,25 @@ int get_status(string game_id) {
     cout << "Got game status " << res << endl;
   };
 
-  handled_response(p, callback);
+  handled_response(socket, p, callback);
   return res;
 }
 
-void connect_to_server(string name) {
+void connect_to_server(cl_socket_ptr socket, string name) {
   sf::Packet p;
   p << protocol::connect << name;
 
-  auto callback = [](sf::Packet data) {
-    if (!(data >> g->socket->id)) {
+  auto callback = [socket](sf::Packet data) {
+    if (!(data >> socket->id)) {
       throw logical_error("Packet did not contain id");
     }
-    cout << "Received client id " << g->socket->id << endl;
+    cout << "Received client id " << socket->id << endl;
   };
 
-  handled_response(p, callback);
+  handled_response(socket, p, callback);
 }
 
-string setup_create_game(client_game_settings settings) {
+string setup_create_game(cl_socket_ptr socket, client_game_settings settings) {
   sf::Packet p;
   string gid;
   p << protocol::create_game << settings;
@@ -88,14 +87,14 @@ string setup_create_game(client_game_settings settings) {
     cout << "Created game " << gid << endl;
   };
 
-  handled_response(p, callback);
+  handled_response(socket, p, callback);
   return gid;
 }
 
-void setup_join_game(string gid) {
+void setup_join_game(cl_socket_ptr socket, string gid) {
   sf::Packet p;
   p << protocol::join_game << gid;
-  handled_response(p, 0);
+  handled_response(socket, p, 0);
   cout << "Joined game " << gid << endl;
 }
 
@@ -114,7 +113,8 @@ void setup_gfx(bool fullscreen = false) {
 
   sf::ContextSettings sf_settings;
   sf_settings.antialiasingLevel = 8;
-  g->window.create(vmode, "SPACE TURKEYS III ALPHA", vstyle, sf_settings);
+  game::window = shared_ptr<window_t>(new window_t());
+  game::window->create(vmode, "SPACE TURKEYS III ALPHA", vstyle, sf_settings);
 }
 
 int main(int argc, char **argv) {
@@ -161,7 +161,7 @@ int main(int argc, char **argv) {
         throw classified_error("Invalid starting fleet option: " + value);
       }
     } else if (key == "skip_sub") {
-      sub_frames = 1;
+      settings.sim_sub_frames = 1;
     } else if (key == "restart") {
       settings.restart = stoi(value);
     } else if (key == "task") {
@@ -179,36 +179,35 @@ int main(int argc, char **argv) {
     exit(0);
   }
 
-  game g_obj;
-  g = &g_obj;
-
   // connect
   cout << "connecting...";
-  g->socket = new cl_socket_t();
-  if (g->socket->connect(ip, 53000) != sf::Socket::Done) {
+  shared_ptr<cl_socket_t> socket(new cl_socket_t());
+  if (socket->connect(ip, 53000) != sf::Socket::Done) {
     cout << "client: connection failed." << endl;
     return -1;
   }
-  g->socket->setBlocking(false);
+  socket->setBlocking(false);
   cout << "done." << endl;
+
+  shared_ptr<game> g(new game(socket));
 
   try {
     setup_gfx(fullscreen);
 
-    connect_to_server(name);
+    connect_to_server(socket, name);
     if (task == "create") {
-      game_id = setup_create_game(settings);
+      game_id = setup_create_game(socket, settings);
     } else if (task == "join" && game_id.size()) {
-      setup_join_game(game_id);
+      setup_join_game(socket, game_id);
     } else {
       throw logical_error("Invalid task or missing game id");
     }
 
-    while (get_status(game_id) != socket_t::tc_ready_game) {
+    while (get_status(socket, game_id) != socket_t::tc_ready_game) {
       sf::sleep(sf::milliseconds(1000));
     }
 
-    cout << "Calling g->run" << endl;
+    cout << "Calling run" << endl;
 
     g->run();
 
@@ -217,8 +216,7 @@ int main(int argc, char **argv) {
     cout << "Exiting..." << endl;
   }
 
-  g->socket->disconnect();
-  delete g->socket;
+  socket->disconnect();
 
   return 0;
 }

@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 
+#include "rsg/src/button.hpp"
 #include "rsg/src/utility.hpp"
 
 using namespace std;

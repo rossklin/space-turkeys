@@ -19,7 +19,7 @@ fixed_star::fixed_star(point p) {
 void fixed_star::draw(RSG::WindowPtr w) {
   sf::CircleShape star(radius);
 
-  star.setRadius(radius * graphics::inverse_scale(w).x);
+  star.setRadius(radius * graphics::inverse_scale(*w).x);
   star.setPointCount(10);
   star.setFillColor(color);
   star.setPosition(position.x - radius, position.y - radius);

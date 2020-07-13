@@ -5,16 +5,17 @@
 #include <string>
 
 #include "animation.hpp"
+#include "rsg/src/RskTypes.hpp"
 #include "types.hpp"
 
 namespace st3 {
 /*! type representing a window */
-typedef sf::RenderWindow window_t;
+typedef RSG::Window window_t;
 
 /*! graphics related code elements */
 namespace graphics {
 /*! a default font */
-extern sf::Font default_font;
+sf::Font get_default_font();
 
 extern const sf::Color solar_neutral;         /*!< color for neutral solars */
 extern const sf::Color command_selected_head; /*!< color for selected command head */
@@ -43,7 +44,6 @@ float unscale();
 sf::Color fade_color(sf::Color from, sf::Color to, float r);
 
 /*! initialize static graphics i.e. default font */
-void initialize();
 void draw_flag(sf::RenderTarget &w, point p, sf::Color c, sf::Color bg, int count, std::string ship_class, int nstack = 1);
 void draw_text(sf::RenderTarget &w, std::string v, point p, float fs, bool ul = false, sf::Color fill = sf::Color::White, bool do_inv = true, float rotate = 0);
 void draw_framed_text(sf::RenderTarget &w, std::string v, sf::FloatRect r, sf::Color co, sf::Color cf = sf::Color::Transparent, float fs = 0);
@@ -58,9 +58,9 @@ void draw_circle(sf::RenderTarget &w, point p, float r, sf::Color co, sf::Color 
     */
 void draw_ship(sf::RenderTarget &w, ship_ptr s, sf::Color c, float sc = 1, bool multicolor = true);
 
-sfg::Button::Ptr ship_button(std::string ship_class, float width, float height, sf::Color col = sf::Color::Green);
-sf::Image ship_image(std::string ship_class, float width, float height, sf::Color col = sf::Color::Green);
-sf::Image ship_image_label(std::string text, std::string ship_class, float width, float height, sf::Color l_col = sf::Color::White, sf::Color s_col = sf::Color::Green);
+// sfg::Button::Ptr ship_button(std::string ship_class, float width, float height, sf::Color col = sf::Color::Green);
+// sf::Image ship_image(std::string ship_class, float width, float height, sf::Color col = sf::Color::Green);
+// sf::Image ship_image_label(std::string text, std::string ship_class, float width, float height, sf::Color l_col = sf::Color::White, sf::Color s_col = sf::Color::Green);
 
 void draw_animation(sf::RenderTarget &w, animation e);
 
@@ -74,11 +74,11 @@ void draw_animation(sf::RenderTarget &w, animation e);
     */
 point ul_corner(sf::RenderTarget &w);
 
-/*! compute an sf::Transform mapping from coordinates to pixels
-      @param w the current window
-      @return the transform
-    */
-sf::Transform view_inverse_transform(sf::RenderTarget &w);
+// /*! compute an sf::Transform mapping from coordinates to pixels
+//       @param w the current window
+//       @return the transform
+//     */
+// sf::Transform view_inverse_transform(sf::RenderTarget &w);
 
 /*! compute the scale factor coordinates per pixel
 
@@ -89,10 +89,10 @@ sf::Transform view_inverse_transform(sf::RenderTarget &w);
     */
 point inverse_scale(sf::RenderTarget &w);
 
-sf::Image selector_card(std::string title, bool available, float progress);
-void draw_frame(sf::FloatRect r, int thickness, sf::Color co, sf::Color cf = sf::Color::Transparent);
+// sf::Image selector_card(std::string title, bool available, float progress);
+// void draw_frame(sf::FloatRect r, int thickness, sf::Color co, sf::Color cf = sf::Color::Transparent);
 sf::RectangleShape build_rect(sf::FloatRect bounds, float thickness = -1, sf::Color co = sf::Color::White, sf::Color cf = sf::Color::Transparent);
-sfg::Widget::Ptr wrap_in_scroll(sfg::Widget::Ptr w, bool horizontal, int dim);
-sfg::Widget::Ptr wrap_in_scroll2(sfg::Widget::Ptr w, int width, int height);
+// sfg::Widget::Ptr wrap_in_scroll(sfg::Widget::Ptr w, bool horizontal, int dim);
+// sfg::Widget::Ptr wrap_in_scroll2(sfg::Widget::Ptr w, int width, int height);
 };  // namespace graphics
 };  // namespace st3

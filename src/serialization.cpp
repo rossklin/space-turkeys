@@ -262,8 +262,8 @@ sf::Packet& st3::operator>>(sf::Packet& packet, fleet::analytics& g) {
 
 // choice
 sf::Packet& st3::operator<<(sf::Packet& packet, const choice& c) {
-  vector<waypoint> wps = utility::map<waypoint_ptr, waypoint>([](waypoint_ptr p) { return *p; }, utility::hm_values(c.waypoints));
-  vector<fleet> fls = utility::map<fleet_ptr, fleet>([](fleet_ptr p) { return *p; }, utility::hm_values(c.fleets));
+  vector<waypoint> wps = utility::map<vector<waypoint>>([](waypoint_ptr p) { return *p; }, utility::hm_values(c.waypoints));
+  vector<fleet> fls = utility::map<vector<fleet>>([](fleet_ptr p) { return *p; }, utility::hm_values(c.fleets));
 
   return packet << c.commands << c.solar_choices << wps << fls << c.research;
 }

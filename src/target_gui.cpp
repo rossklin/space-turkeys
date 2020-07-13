@@ -16,7 +16,7 @@ using namespace RSG;
 using namespace st3;
 
 PanelPtr target_gui(sf::Vector2f position, std::list<std::string> options, std::function<void(std::string)> callback) {
-  list<ComponentPtr> children = utility::map<list<string>, list<ComponentPtr>>(
+  list<ComponentPtr> children = utility::map<list<ComponentPtr>>(
       [callback](string v) -> ComponentPtr {
         return Button::create(v, [callback, v](ButtonPtr self) { callback(v); });
       },

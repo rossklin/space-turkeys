@@ -21,7 +21,7 @@ T range_init(const F &x) {
   return res;
 }
 
-template <typename C1, typename C2>
+template <typename C2, typename C1>
 C2 map(std::function<typename C2::value_type(typename C1::value_type)> f, C1 x) {
   C2 res(x.size());
   transform(x.begin(), x.end(), res.begin(), f);

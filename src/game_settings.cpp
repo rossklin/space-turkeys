@@ -18,6 +18,7 @@ game_settings::game_settings() {
 }
 
 client_game_settings::client_game_settings() {
+  sim_sub_frames = 4;
   restart = 0;
   frames_per_round = 50;
   galaxy_radius = 600;
