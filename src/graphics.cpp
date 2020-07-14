@@ -232,7 +232,7 @@ point graphics::inverse_scale(sf::RenderTarget& w) {
 }
 
 void graphics::draw_animation(sf::RenderTarget& w, animation e) {
-  float t = e.time_passed();
+  float t = e.time;
   if (t < 0) return;
 
   sf::Color c(e.color);
