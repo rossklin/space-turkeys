@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -39,21 +40,31 @@ class game : public game_base_data {
   // Server communication
   std::shared_ptr<cl_socket_t> socket; /*!< socket for server communication */
 
-  // graphics handlers
+  // Window views
   sf::View view_game;    /*!< sfml view for game objects */
   sf::View view_minimap; /*!< sfml view for the minimap */
   sf::View view_window;  /*!< sfml view fitting window */
+
+  // GUI static components
   RSG::PanelPtr base_layer;
   std::vector<RSG::PanelPtr> component_layers;
 
-  // GUI state variables
-  bool state_run;
+  // RSG interface variables
+  bool is_loading;
   bool area_select_active; /*!< whether area selection is active */
   sf::FloatRect srect;     /*!< area selection rectangle */
+  int selector_queue;      /*!< index for back end of selector queue */
+  std::list<std::string> event_log;
+  std::string hover_info_title;
+  std::list<std::string> hover_info_items;
+
+  // Interface logic variables
+  bool state_run;
   std::string phase;
-  int selector_queue; /*!< index for back end of selector queue */
   bool choice_complete;
   choice user_choice;
+  std::list<RSG::Voidfun> ui_tasks;
+  std::mutex ui_task_mutex;
 
   // Game variables
   sf::Color col;
@@ -87,68 +98,41 @@ class game : public game_base_data {
  public:
   static RSG::WindowPtr window; /*!< sfml window for drawing the interface */
 
-  /*! default contsructor */
   game(std::shared_ptr<cl_socket_t> s);
-
-  /*! Main entry point */
   void run();
 
  private:
   // OBJECT ACCESS
   void deregister_entity(combid i);
-
   research::data get_research() const;
-
-  command_selector::ptr get_command_selector(idtype i);
+  command_selector::ptr get_command_selector(idtype i) const;
+  std::vector<entity_selector::ptr> all_selectors() const;
 
   // USER INTERFACE RELATED STUFF
-  /*! Run the main GUI loop */
   void window_loop();
-
-  /*! Add a task to be run in UI update step */
   void queue_ui_task(RSG::Voidfun f);
-
-  /*! Run all queued UI tasks */
   void process_ui_tasks();
-
-  /*! Setup layer root panels */
   void do_clear_ui_layers(bool preserve_base = true);
+  bool any_gui_content() const;
 
-  /*! Queue do_clear_ui_layers */
-  void clear_ui_layers(bool preserve_base = true);
-
-  /*! Queue updating layer with component */
-  void swap_layer(int layer, RSG::ComponentPtr component);
-
-  /*! Queue set/unset loading message */
+  // METHODS THAT ENQUEUE A UI MODIFICATION
   void set_loading(bool s);
-
   void set_game_log(std::list<std::string> log);
-
   void set_hover_info(std::string title, std::list<std::string> info);
-
-  /*! Queue create a popup message which terminates game on callback */
+  void swap_layer(int layer, RSG::ComponentPtr component);
+  void clear_ui_layers(bool preserve_base = true);
   void terminate_with_message(std::string message);
-
-  /*! Queue swap base UI panel into base layer */
   void build_base_panel();
-
-  /*! Queue UI task: display a popup query with a number of options represented by a label and a callback */
   void popup_query(std::string title, std::string v, hm_t<std::string, RSG::Voidfun> opts);
-
   void popup_message(std::string title, std::string text);
 
-  /*! Research choice UI component */
-  RSG::PanelPtr research_gui();
-
-  /*! Military choice UI component */
-  RSG::PanelPtr military_gui();
-
-  /*! Simulation controls UI */
-  RSG::PanelPtr simulation_gui();
-
-  /*! Check whether any GUI layers above base have content */
-  bool any_gui_content();
+  // METHODS THAT PRODUCE A UI COMPONENT
+  RSG::PanelPtr research_gui() const;
+  RSG::PanelPtr development_gui() const;
+  RSG::PanelPtr military_gui() const;
+  RSG::PanelPtr event_log_widget() const;
+  RSG::PanelPtr hover_info_widget() const;
+  RSG::PanelPtr simulation_gui() const;
 
   // CALLBACKS
   /*! Callback for target gui */
@@ -381,8 +365,6 @@ class game : public game_base_data {
   entity_selector::ptr get_selector(combid i) const {
     return get_entity<entity_selector>(i);
   }
-
-  std::vector<entity_selector::ptr> all_selectors() const;
 
   /** Get ids of selected solars */
   template <typename T>
