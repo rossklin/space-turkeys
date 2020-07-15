@@ -268,6 +268,52 @@ void game::popup_query(string title, string text, hm_t<string, Voidfun> opts) {
           Panel::ORIENT_VERTICAL));
 }
 
+// ****************************************
+// METHODS THAT PRODUCE A UI COMPONENT
+// ****************************************
+
+PanelPtr game::research_gui() {
+  list<string> opts = get_research().available();
+
+  option_generator f_option = [this](string k) -> ButtonPtr {
+    return styled<Button, string>({{"width", "100px"}, {"height", "200px"}}, k);
+  };
+
+  info_generator f_info = [this](string k) -> list<string> {
+    list<string> items;
+    items.push_back("Research technology " + k);
+
+    for (auto x : research::data::table()) {
+      if (x.second.depends_techs.count(k)) {
+        items.push_back("Leads to: " + k);
+      }
+    }
+
+    for (auto sc : ship::all_classes()) {
+      set<string> upg = research::data::get_tech_upgrades(sc, k);
+      for (auto u : upg) items.push_back("Provides " + u + " for " + sc);
+    }
+
+    return items;
+  };
+
+  auto f_commit = [this](choice_gui_action a, list<string> q) {
+    user_choice.research = q.front();
+    clear_ui_layers();
+  };
+
+  Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
+
+  return choice_gui(
+      "Research",
+      opts,
+      f_option,
+      f_info,
+      f_commit,
+      f_cancel,
+      false);
+}
+
 // Start background task: query server with packet, then callback with result
 void game::wait_for_it(sf::Packet &p, function<void(sf::Packet &)> callback, RSG::Voidfun on_fail) {
   queue_background_task([this, &p, callback, on_fail]() {

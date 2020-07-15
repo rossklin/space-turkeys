@@ -127,12 +127,12 @@ class game : public game_base_data {
   void popup_message(std::string title, std::string text);
 
   // METHODS THAT PRODUCE A UI COMPONENT
-  RSG::PanelPtr research_gui() const;
-  RSG::PanelPtr development_gui() const;
-  RSG::PanelPtr military_gui() const;
-  RSG::PanelPtr event_log_widget() const;
-  RSG::PanelPtr hover_info_widget() const;
-  RSG::PanelPtr simulation_gui() const;
+  RSG::PanelPtr research_gui();
+  RSG::PanelPtr development_gui();
+  RSG::PanelPtr military_gui();
+  RSG::PanelPtr event_log_widget();
+  RSG::PanelPtr hover_info_widget();
+  RSG::PanelPtr simulation_gui();
 
   // CALLBACKS
   /*! Callback for target gui */

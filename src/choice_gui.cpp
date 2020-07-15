@@ -15,6 +15,7 @@ using namespace std;
 using namespace st3;
 using namespace RSG;
 
+// Todo: remove queue item on press
 PanelPtr build_queue(list<string> q) {
   list<ComponentPtr> children = utility::map<list<ComponentPtr>>([](string v) { return Button::create(v); }, q);
   return Panel::create(children, Panel::ORIENT_VERTICAL);
@@ -37,6 +38,7 @@ PanelPtr choice_gui(
   PanelPtr queue_wrapper = Panel::create();
   list<string> queue;
   auto enque = [&](string v) {
+    if (queue.size() && !allow_queue) return;
     queue.push_back(v);
     queue_wrapper->clear_children();
     queue_wrapper->add_child(build_queue(queue));

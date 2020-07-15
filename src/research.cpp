@@ -54,8 +54,9 @@ list<string> data::list_tech_requirements(string v) const {
   if (researched().count(v)) {
     req.push_back("Already researched");
   } else {
-    for (auto d : t.depends_techs)
+    for (auto d : t.depends_techs) {
       if (!researched().count(d)) req.push_back("technology " + d);
+    }
     for (auto f : t.depends_facilities) {
       int flev = 0;
       if (facility_level.count(f.first)) flev = facility_level.at(f.first);
@@ -67,8 +68,9 @@ list<string> data::list_tech_requirements(string v) const {
 
 list<string> data::available() const {
   list<string> res;
-  for (auto &x : table())
+  for (auto &x : table()) {
     if (list_tech_requirements(x.first).empty()) res.push_back(x.first);
+  }
   return res;
 }
 
@@ -133,8 +135,9 @@ bool data::can_build_ship(string v, solar_ptr sol, list<string> *data) const {
 
 set<string> data::researched() const {
   set<string> x;
-  for (auto &t : tech_map)
+  for (auto &t : tech_map) {
     if (t.second.level > 0) x.insert(t.first);
+  }
   return x;
 }
 
