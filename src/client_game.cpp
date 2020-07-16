@@ -128,12 +128,16 @@ void game::window_loop() {
     // Cleanup any background threads that have completed
     check_background_tasks();
 
+    // Update simulation
+    if (phase == "simulation" && sim_playing) next_sim_frame();
+
     // Draw all graphics
     draw_window();
     base_layer->paint(window);
     for (auto p : component_layers) p->paint(window);
     window->display();
 
+    // Sleep until frame time catches up
     long int millis = 1000 * frame_time;
     this_thread::sleep_until(start + chrono::milliseconds(millis));
   }
@@ -314,6 +318,202 @@ PanelPtr game::research_gui() {
       false);
 }
 
+/*! Setup a choice_gui for enqueuing development to all selected solars */
+PanelPtr game::development_gui() {
+  // TODO
+  list<string> opts = utility::range_init<list<string>>(keywords::development);
+  auto sel = selected_specific<solar>();
+
+  option_generator f_option = [this](string k) -> ButtonPtr {
+    return styled<Button, string>({{"width", "100px"}, {"height", "200px"}}, k);
+  };
+
+  info_generator f_info = [this](string k) -> list<string> {
+    list<string> items;
+    items.push_back("Develop " + k);
+    return items;
+  };
+
+  auto f_commit = [this, sel](choice_gui_action a, list<string> q) {
+    for (auto sid : sel) {
+      auto s = get_specific<solar>(sid);
+      switch (a) {
+        case CHOICEGUI_APPEND:
+          s->choice_data.building_queue.insert(s->choice_data.building_queue.end(), q.begin(), q.end());
+          break;
+        case CHOICEGUI_PREPEND:
+          s->choice_data.building_queue.insert(s->choice_data.building_queue.begin(), q.begin(), q.end());
+          break;
+        case CHOICEGUI_REPLACE:
+          s->choice_data.building_queue = q;
+          break;
+      }
+    }
+    clear_ui_layers();
+  };
+
+  Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
+
+  return choice_gui(
+      "Development",
+      opts,
+      f_option,
+      f_info,
+      f_commit,
+      f_cancel,
+      false);
+}
+
+PanelPtr game::military_gui() {
+  list<string> opts = get_research().available();
+
+  // Identify which ship classes can be produced in any owned solar
+  auto owned_solars = filtered_entities<solar_selector>(self_id);
+  auto r = get_research();
+  auto skey = utility::hm_keys(ship_stats::table());
+  sort(skey.begin(), skey.end());
+  for (auto sc : skey) {
+    for (auto s : owned_solars) {
+      if (r.can_build_ship(sc, s)) {
+        opts.push_back(sc);
+        break;
+      }
+    }
+  }
+
+  option_generator f_option = [this](string k) -> ButtonPtr {
+    return styled<Button, string>({{"width", "100px"}, {"height", "200px"}}, k);
+  };
+
+  info_generator f_info = [this](string k) -> list<string> {
+    list<string> items;
+    items.push_back("Build ship " + k);
+    return items;
+  };
+
+  auto sel = selected_specific<solar>();
+  auto f_commit = [this, sel](choice_gui_action a, list<string> q) {
+    for (auto sid : sel) {
+      auto s = get_specific<solar>(sid);
+      switch (a) {
+        case CHOICEGUI_APPEND:
+          s->choice_data.ship_queue.insert(s->choice_data.ship_queue.end(), q.begin(), q.end());
+          break;
+        case CHOICEGUI_PREPEND:
+          s->choice_data.ship_queue.insert(s->choice_data.ship_queue.begin(), q.begin(), q.end());
+          break;
+        case CHOICEGUI_REPLACE:
+          s->choice_data.ship_queue = q;
+          break;
+      }
+    }
+    clear_ui_layers();
+  };
+
+  Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
+
+  return choice_gui(
+      "Research",
+      opts,
+      f_option,
+      f_info,
+      f_commit,
+      f_cancel,
+      false);
+}
+
+RSG::PanelPtr game::event_log_widget() {
+  list<ComponentPtr> children;
+  for (auto v : event_log) {
+    children.push_back(make_label(v));
+    children.push_back(make_hbar());
+  }
+
+  return styled<Panel, list<ComponentPtr>>(
+      {{"width", "100%"}, {"height", "300px"}, {"align-horizontal", "left"}},
+      children,
+      Panel::ORIENT_VERTICAL);
+}
+
+RSG::PanelPtr game::hover_info_widget() {
+  list<ComponentPtr> children;
+  children.push_back(make_label(hover_info_title));
+  children.push_back(make_hbar());
+  for (auto v : event_log) {
+    children.push_back(make_label(v));
+  }
+
+  return styled<Panel, list<ComponentPtr>>(
+      {{"width", "100%"}, {"height", "300px"}, {"align-horizontal", "left"}},
+      children,
+      Panel::ORIENT_VERTICAL);
+}
+
+/*! Create a Panel with controls for simulation: play, pause, done */
+RSG::PanelPtr game::simulation_gui() {
+  return styled<Panel, list<ComponentPtr>>(
+      {{"position", "absolute"}, {"bottom", "0"}},
+      {
+          Button::create("Play", [this](ButtonPtr self) {
+            sim_playing = !sim_playing;
+            self->set_label(sim_playing ? "Pause" : "Play");
+          }),
+          Button::create("Done", [this]() {
+            pre_step();
+          }),
+      });
+}
+
+// *************************************
+// SERVER COMMUNICATION AND BACKGROUND TASKS
+// *************************************
+
+/*! Callback for target GUI, create commands to an entity */
+void game::target_selected(string action, combid target, point pos, list<string> e_sel) {
+  bool postselect = false;
+
+  if (target == identifier::source_none) {
+    target = add_waypoint(pos);
+    postselect = true;
+  }
+
+  command2entity(target, action, e_sel);
+
+  if (postselect) {
+    deselect_all();
+    get_selector(target)->selected = true;
+  }
+
+  clear_ui_layers();
+}
+
+/*! Background task for simulation step, loading frame data from server */
+void game::load_frames() {
+  sf::Packet pq;
+  sim_frames.resize(settings.clset.frames_per_round);
+
+  for (sim_frames_loaded = 0; sim_frames_loaded < sim_frames.size() && socket->check_com(); sim_frames_loaded++) {
+    pq.clear();
+    pq << protocol::frame << sim_frames_loaded;
+
+    if (client::query(socket, pq)) {
+      client::deserialize(sim_frames[sim_frames_loaded], socket->data, socket->id);
+    } else {
+      break;
+    }
+  }
+
+  pq.clear();
+  pq << protocol::frame << -1;
+  if (sim_frames_loaded < sim_frames.size()) {
+    terminate_with_message("Load frames: failed to load all frames");
+  } else if (!socket->check_com()) {
+    terminate_with_message("Load frames: disconnected");
+  } else if (!client::query(socket, pq)) {
+    terminate_with_message("Load frames: disconnected on confirm");
+  }
+}
+
 // Start background task: query server with packet, then callback with result
 void game::wait_for_it(sf::Packet &p, function<void(sf::Packet &)> callback, RSG::Voidfun on_fail) {
   queue_background_task([this, &p, callback, on_fail]() {
@@ -404,24 +604,6 @@ void game::pre_step() {
   auto on_fail = [this]() { terminate_with_message("Load pre step data: can't reach server!"); };
 
   wait_for_it(pq, callback, on_fail);
-}
-
-void game::target_selected(string action, combid target, point pos, list<string> e_sel) {
-  bool postselect = false;
-
-  if (target == identifier::source_none) {
-    target = add_waypoint(pos);
-    postselect = true;
-  }
-
-  command2entity(target, action, e_sel);
-
-  if (postselect) {
-    deselect_all();
-    get_selector(target)->selected = true;
-  }
-
-  clear_ui_layers();
 }
 
 void game::choice_step() {

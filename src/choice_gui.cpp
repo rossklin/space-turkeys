@@ -38,8 +38,12 @@ PanelPtr choice_gui(
   PanelPtr queue_wrapper = Panel::create();
   list<string> queue;
   auto enque = [&](string v) {
-    if (queue.size() && !allow_queue) return;
-    queue.push_back(v);
+    if (allow_queue) {
+      queue.push_back(v);
+    } else {
+      queue = {v};
+    }
+
     queue_wrapper->clear_children();
     queue_wrapper->add_child(build_queue(queue));
   };

@@ -23,7 +23,6 @@ typedef std::shared_ptr<cl_socket_t> cl_socket_ptr;
 
 namespace client {
 bool query(cl_socket_ptr socket, sf::Packet &pq);
-bool load_frames(cl_socket_ptr socket, std::vector<game_base_data> &g, int &loaded);
 void deserialize(game_base_data &f, sf::Packet &p, sint id);
 };  // namespace client
 };  // namespace st3

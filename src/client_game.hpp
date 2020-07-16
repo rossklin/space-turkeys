@@ -134,12 +134,8 @@ class game : public game_base_data {
   RSG::PanelPtr hover_info_widget();
   RSG::PanelPtr simulation_gui();
 
-  // CALLBACKS
-  /*! Callback for target gui */
-  void target_selected(std::string action, combid target, point pos, std::list<std::string> e_sel);
-
   // SERVER COMMUNICATION AND BACKGROUND TASKS
-  /*! Load simulation frames from server */
+  void target_selected(std::string action, combid target, point pos, std::list<std::string> e_sel);
   void load_frames();
 
   /*! Update entities to correspond to the current sim frame */

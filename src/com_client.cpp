@@ -18,30 +18,6 @@ bool cl_socket_t::check_com() {
   return instruction == tc_run;
 }
 
-bool st3::client::load_frames(cl_socket_ptr socket, vector<st3::game_base_data> &g, int &idx) {
-  sf::Packet pq;
-  int sub_com = socket_t::tc_run;
-
-  for (idx = 0; idx < g.size() && socket->check_com(); idx++) {
-    pq.clear();
-    pq << protocol::frame << idx;
-
-    if (query(socket, pq)) {
-      deserialize(g[idx], socket->data, socket->id);
-    } else {
-      break;
-    }
-  }
-
-  if (!socket->check_com()) return false;
-
-  // indicate done
-  int i = -1;
-  pq.clear();
-  pq << protocol::frame << i;
-  return query(socket, pq);
-}
-
 bool st3::client::query(cl_socket_ptr socket, sf::Packet &pq) {
   protocol_t message;
 
