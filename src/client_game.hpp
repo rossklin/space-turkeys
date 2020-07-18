@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <functional>
+#include <future>
 #include <memory>
 #include <mutex>
 #include <set>
@@ -95,6 +96,10 @@ class game : public game_base_data {
   // animations
   std::list<animation> animations;
 
+  // Background tasks
+  hm_t<int, std::shared_ptr<std::future<void>>> background_tasks;
+  std::mutex background_task_mutex;
+
  public:
   static RSG::WindowPtr window; /*!< sfml window for drawing the interface */
 
@@ -153,7 +158,7 @@ class game : public game_base_data {
   void wait_for_it(sf::Packet &p, std::function<void(sf::Packet &)> callback, RSG::Voidfun on_fail = 0);
 
   /*! Tell server we are leaving game */
-  void tell_server_quit(RSG::Voidfun callback);
+  void tell_server_quit(RSG::Voidfun callback, RSG::Voidfun on_fail);
 
   // STEP SETUP FUNCTIONS
 

@@ -26,12 +26,12 @@ PanelPtr build_info(list<string> info) {
   return Panel::create(children, Panel::ORIENT_VERTICAL);
 }
 
-PanelPtr choice_gui(
+PanelPtr st3::choice_gui(
     std::string title,
     std::list<string> options,
     option_generator f_opt,
     info_generator f_info,
-    std::function<void(std::list<std::string>)> on_commit,
+    std::function<void(choice_gui_action, std::list<std::string>)> on_commit,
     RSG::Voidfun on_cancel,
     bool allow_queue) {
   // Queue wrapper

@@ -468,6 +468,40 @@ RSG::PanelPtr game::simulation_gui() {
 // SERVER COMMUNICATION AND BACKGROUND TASKS
 // *************************************
 
+void game::queue_background_task(Voidfun f) {
+  static int tid = 0;
+
+  background_task_mutex.lock();
+  background_tasks[tid++] = make_shared<future<void>>(async(launch::async, f));
+  background_task_mutex.unlock();
+}
+
+void game::check_background_tasks() {
+  background_task_mutex.lock();
+
+  list<int> remove;
+  for (auto x : background_tasks) {
+    if (x.second->wait_for(chrono::seconds(0)) == future_status::ready) {
+      remove.push_back(x.first);
+    }
+  }
+
+  for (auto id : remove) background_tasks.erase(id);
+
+  background_task_mutex.unlock();
+}
+
+/*! Send quit message to server, then callback */
+void game::tell_server_quit(Voidfun callback, Voidfun on_fail) {
+  sf::Packet p;
+  p << protocol::leave;
+  if (client::query(socket, p)) {
+    callback();
+  } else {
+    on_fail();
+  }
+}
+
 /*! Callback for target GUI, create commands to an entity */
 void game::target_selected(string action, combid target, point pos, list<string> e_sel) {
   bool postselect = false;
@@ -1760,6 +1794,8 @@ bool game::choice_event(sf::Event e) {
     for (auto id : selected_commands()) remove_command(id);
   };
 
+  Voidfun f_stop = [this]() { state_run = false; };
+
   // event switch
   window->setView(view_game);
   switch (e.type) {
@@ -1843,8 +1879,8 @@ bool game::choice_event(sf::Event e) {
             popup_query(
                 "",
                 "Really quit?",
-                {{"Yes", [this]() {
-                    tell_server_quit([this]() { state_run = false; });
+                {{"Yes", [this, f_stop]() {
+                    tell_server_quit(f_stop, f_stop);
                   }},
                  {"No", 0}});
           }

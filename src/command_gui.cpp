@@ -17,7 +17,7 @@ using namespace std;
 using namespace st3;
 using namespace RSG;
 
-PanelPtr command_gui(
+PanelPtr st3::command_gui(
     string ship_class,
     string action,
     int policy,

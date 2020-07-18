@@ -8,8 +8,9 @@
 
 using namespace std;
 using namespace RSG;
+using namespace st3;
 
-ButtonPtr make_label(string v) {
+ButtonPtr st3::make_label(string v) {
   return styled<Button>(
       {
           {"background-color", "00000000"},
@@ -18,7 +19,7 @@ ButtonPtr make_label(string v) {
       v);
 }
 
-ButtonPtr make_hbar() {
+ButtonPtr st3::make_hbar() {
   return styled<Button>(
       {
           {"width", "100%"},

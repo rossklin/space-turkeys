@@ -109,7 +109,7 @@ PanelPtr make_right_panel(solar_ptr s, research::data r, list_t q) {
   return Panel::create({p1, p2});
 }
 
-PanelPtr solar_gui(solar_ptr s, research::data r, Voidfun on_cancel, function<void(list<string>, list<string>)> on_commit) {
+PanelPtr st3::solar_gui(solar_ptr s, research::data r, Voidfun on_cancel, function<void(list<string>, list<string>)> on_commit) {
   list_t bqueue(new list<string>(s->choice_data.building_queue));
   list_t squeue(new list<string>(s->choice_data.ship_queue));
 

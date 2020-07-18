@@ -2,7 +2,7 @@ COMMON_SOURCES=game_data.cpp grid_tree.cpp terrain_object.cpp game_base_data.cpp
 SERVER_SOURCES=server.cpp game_handler.cpp com_server.cpp server_handler.cpp
 CLIENT_SOURCES=client.cpp graphics.cpp client_game.cpp com_client.cpp selector.cpp fixed_star.cpp command_gui.cpp target_gui.cpp animation.cpp utility.cpp choice_gui.cpp style.cpp solar_gui.cpp
 TESTER_SOURCES=test.cpp game_handler.cpp com_server.cpp server_handler.cpp
-RSG_SOURCES=button.cpp component.cpp container.cpp panel.cpp textfield.cpp slider.cpp utility.cpp
+RSG_SOURCES=button.cpp component.cpp container.cpp panel.cpp textfield.cpp slider.cpp utility.cpp button_options.cpp
 SRC_DIR=./src
 BUILD_DIR=./build
 DEBUG_BUILD_DIR=./debug_build
@@ -53,9 +53,9 @@ debug_st_server: $(COMMON_OBJ) $(SERVER_OBJ)
 	mkdir -p $(@D)
 	$(CC) $(DEBUG_CPPFLAGS) $^ -o $@ $(LDFLAGS)
 
-debug_st_client: RSG $(COMMON_OBJ) $(CLIENT_OBJ)
+debug_st_client: $(COMMON_OBJ) $(CLIENT_OBJ)
 	mkdir -p $(@D)
-	$(CC) $(DEBUG_CPPFLAGS) $(RSG_OBJECTS) $^ -o $@ $(LDFLAGS)
+	$(CC) $(DEBUG_CPPFLAGS) $(DEBUG_RSG_OBJECTS) $^ -o $@ $(LDFLAGS)
 
 -include $(DEP)
 
