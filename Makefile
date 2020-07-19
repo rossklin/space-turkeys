@@ -26,7 +26,7 @@ DEP=$(ALL_OBJ:%.o=%.d) $(DEBUG_ALL_OBJ:%.o=%.d)
 
 CC=g++
 CPPFLAGS=--std=c++17 -I $(RSG_DIR)/src -I . -O3
-DEBUG_CPPFLAGS=--std=c++17 -I $(RSG_DIR)/src -ggdb
+DEBUG_CPPFLAGS=--std=c++17 -I $(RSG_DIR)/src -I . -ggdb
 LDFLAGS=-lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -lpthread
 
 # Disable default rules
@@ -49,11 +49,11 @@ st_client: $(COMMON_OBJ) $(CLIENT_OBJ)
 	mkdir -p $(@D)
 	$(CC) $(CPPFLAGS) $(RSG_OBJECTS) $^ -o $@ $(LDFLAGS)
 
-debug_st_server: $(COMMON_OBJ) $(SERVER_OBJ)
+debug_st_server: $(DEBUG_COMMON_OBJ) $(DEBUG_SERVER_OBJ)
 	mkdir -p $(@D)
 	$(CC) $(DEBUG_CPPFLAGS) $^ -o $@ $(LDFLAGS)
 
-debug_st_client: $(COMMON_OBJ) $(CLIENT_OBJ)
+debug_st_client: $(DEBUG_COMMON_OBJ) $(DEBUG_CLIENT_OBJ)
 	mkdir -p $(@D)
 	$(CC) $(DEBUG_CPPFLAGS) $(DEBUG_RSG_OBJECTS) $^ -o $@ $(LDFLAGS)
 
