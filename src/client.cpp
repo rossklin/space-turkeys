@@ -187,6 +187,7 @@ int main(int argc, char **argv) {
     return -1;
   }
   socket->setBlocking(false);
+  socket->instruction = socket_t::tc_run;
   cout << "done." << endl;
 
   shared_ptr<game> g(new game(socket));
