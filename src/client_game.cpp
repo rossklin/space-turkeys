@@ -103,7 +103,7 @@ void game::window_loop() {
     while (window->pollEvent(event)) {
       bool was_handled = base_layer->handle_event(event, coord_mapper);
 
-      for (int i = LAYER_NUM - 1; i >= 0 && !was_handled; i++) {
+      for (int i = LAYER_NUM - 1; i >= 0 && !was_handled; i--) {
         was_handled |= component_layers[i]->handle_event(event, coord_mapper);
       }
 
@@ -549,9 +549,9 @@ void game::load_frames() {
 }
 
 // Start background task: query server with packet, then callback with result
-void game::wait_for_it(sf::Packet &p, function<void(sf::Packet &)> callback, RSG::Voidfun on_fail) {
-  queue_background_task([this, &p, callback, on_fail]() {
-    if (client::query(socket, p)) {
+void game::wait_for_it(packet_ptr p, function<void(sf::Packet &)> callback, RSG::Voidfun on_fail) {
+  queue_background_task([this, p, callback, on_fail]() {
+    if (p && client::query(socket, *p)) {
       callback(socket->data);
     } else if (on_fail) {
       on_fail();
@@ -602,10 +602,7 @@ void game::init_data() {
 
   auto on_fail = [this]() { terminate_with_message("Load init data: can't reach server!"); };
 
-  sf::Packet pq;
-  pq << protocol::load_init;
-
-  wait_for_it(pq, callback, on_fail);
+  wait_for_it(protopack(protocol::load_init), callback, on_fail);
 }
 
 /**First step in game round.
@@ -615,9 +612,7 @@ void game::init_data() {
 void game::pre_step() {
   clear_ui_layers();
   set_loading(true);
-  sf::Packet pq;
   phase = "pre";
-  pq << protocol::game_round;
 
   auto callback = [this](sf::Packet p) {
     game_base_data data;
@@ -637,7 +632,7 @@ void game::pre_step() {
 
   auto on_fail = [this]() { terminate_with_message("Load pre step data: can't reach server!"); };
 
-  wait_for_it(pq, callback, on_fail);
+  wait_for_it(protopack(protocol::game_round), callback, on_fail);
 }
 
 void game::choice_step() {
@@ -687,8 +682,8 @@ void game::send_choice() {
   deselect_all();
 
   choice c = build_choice();
-  sf::Packet pq;
-  pq << protocol::choice << c;
+  packet_ptr pq = protopack(protocol::choice);
+  *pq << c;
 
   wait_for_it(pq, [this](sf::Packet &data) {
     simulation_step();
