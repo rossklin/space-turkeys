@@ -15,7 +15,7 @@ typedef RSG::Window window_t;
 /*! graphics related code elements */
 namespace graphics {
 /*! a default font */
-sf::Font get_default_font();
+const sf::Font &get_default_font();
 
 extern const sf::Color solar_neutral;         /*!< color for neutral solars */
 extern const sf::Color command_selected_head; /*!< color for selected command head */

@@ -33,7 +33,7 @@ const sf::Color graphics::solar_selected_fill(200, 225, 255, 80);
 const sf::Color graphics::fleet_fill(200, 200, 200, 50);
 const sf::Color graphics::fleet_outline(40, 60, 180, 200);
 
-sf::Font graphics::get_default_font() {
+const sf::Font& graphics::get_default_font() {
   static sf::Font f;
   static bool init = false;
 
