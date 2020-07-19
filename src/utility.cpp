@@ -18,6 +18,7 @@
 #include "player.hpp"
 #include "ship.hpp"
 #include "solar.hpp"
+#include "types.hpp"
 #include "waypoint.hpp"
 
 using namespace std;
@@ -538,4 +539,10 @@ float utility::safe_inv(float x) {
 ostream &st3::operator<<(ostream &ss, point const &x) {
   ss << "(" << x.x << ", " << x.y << ")";
   return ss;
+}
+
+packet_ptr st3::protopack(protocol_t q) {
+  packet_ptr p = make_shared<sf::Packet>();
+  *p << q;
+  return p;
 }

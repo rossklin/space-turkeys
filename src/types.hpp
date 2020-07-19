@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SFML/Network.hpp>
 #include <SFML/System.hpp>
 #include <list>
 #include <memory>
@@ -102,6 +103,7 @@ typedef std::shared_ptr<physical_object> physical_object_ptr;
 typedef std::shared_ptr<commandable_object> commandable_object_ptr;
 
 typedef std::shared_ptr<server::server_cl_socket> server_cl_socket_ptr;
+typedef std::shared_ptr<sf::Packet> packet_ptr;
 
 namespace keywords {
 extern const std::vector<std::string> resource;

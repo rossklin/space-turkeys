@@ -2,6 +2,7 @@
 
 #include <rapidjson/document.h>
 
+#include <SFML/Network.hpp>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -543,5 +544,8 @@ std::set<T> operator&(const std::set<T> &a, const std::set<T> &b) {
   }
   return res;
 }
+
+// SFML wrappers
+packet_ptr protopack(protocol_t p);
 
 };  // namespace st3
