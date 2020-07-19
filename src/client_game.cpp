@@ -62,6 +62,8 @@ void game::run() {
   bool proceed = true;
   bool first = true;
 
+  Component::class_style["Panel"]["border-thickness"] = "1";
+
   init_data();
 
   // construct interface
@@ -95,11 +97,12 @@ command_selector::ptr game::get_command_selector(idtype i) const {
 /** Core loop for gui. */
 void game::window_loop() {
   chrono::time_point<chrono::system_clock> start;
-  CoordMapper coord_mapper = [this](sf::Vector2i p) { return window->mapPixelToCoords(p, view_game); };
+  CoordMapper coord_mapper = [this](sf::Vector2i p) { return window->mapPixelToCoords(p, view_window); };
 
   while (window->isOpen() && state_run) {
     start = chrono::system_clock::now();
     sf::Event event;
+    window->setView(view_window);
     while (window->pollEvent(event)) {
       bool was_handled = base_layer->handle_event(event, coord_mapper);
 
@@ -158,6 +161,7 @@ void game::process_ui_tasks() {
   ui_tasks.clear();
   ui_task_mutex.unlock();
 
+  cout << "Running " << buf.size() << " UI tasks" << endl;
   for (auto f : buf) f();
 }
 
@@ -174,6 +178,8 @@ void game::do_clear_ui_layers(bool preserve_base) {
           {"height", to_string(window->getSize().y) + "px"},
           {"align-horizontal", "center"},
           {"align-vertical", "center"},
+          {"background-color", "00000000"},
+          {"border-thickness", "0"},
       });
 
   for (int i = 0; i < LAYER_NUM; i++) {
@@ -214,7 +220,11 @@ void game::set_hover_info(string title, list<string> items) {
 /*! Queue updating layer with component */
 void game::swap_layer(int layer, RSG::ComponentPtr c) {
   queue_ui_task([this, layer, c]() {
-    component_layers[layer]->replace_children({c});
+    if (c) {
+      component_layers[layer]->replace_children({c});
+    } else {
+      component_layers[layer]->clear_children();
+    }
   });
 }
 
@@ -227,10 +237,15 @@ void game::terminate_with_message(string message) {
 void game::build_base_panel() {
   auto make_button = styled_generator<Button, string, RSG::Voidfun>({{"width", "90%"}, {"height", "30px"}});
 
-  PanelPtr right = styled<Panel, list<ComponentPtr>>(
-      {{"position", "absolute"},
-       {"right", "0"},
-       {"top", "0"}},
+  PanelPtr right = styled<Panel, list<ComponentPtr>, Panel::orientation>(
+      {
+          {"position", "absolute"},
+          {"right", "0"},
+          {"left", "auto"},
+          {"top", "0"},
+          {"background-color", "ffcc77ff"},
+          {"border-color", "ff0000ff"},
+      },
 
       {
           make_button("Research", [this]() { swap_layer(LAYER_PANEL, research_gui()); }),
@@ -238,7 +253,14 @@ void game::build_base_panel() {
           make_button("Military", [this]() { swap_layer(LAYER_PANEL, military_gui()); }),
           event_log_widget(),
           hover_info_widget(),
-      });
+      },
+
+      Panel::ORIENT_VERTICAL);
+
+  // Prevent propagation of clicks that hit right panel
+  right->on_click = [](ComponentPtr self, sf::Event e) {
+    cout << "Right panel prevents click" << endl;
+  };
 
   queue_ui_task([this, right]() { base_layer->replace_children({right}); });
 }
@@ -423,20 +445,21 @@ PanelPtr game::military_gui() {
 }
 
 RSG::PanelPtr game::event_log_widget() {
-  list<ComponentPtr> children;
+  list<ComponentPtr> children = {make_label("Event log:")};
   for (auto v : event_log) {
     children.push_back(make_label(v));
     children.push_back(make_hbar());
   }
 
   return styled<Panel, list<ComponentPtr>>(
-      {{"width", "100%"}, {"height", "300px"}, {"align-horizontal", "left"}},
+      {{"width", "100%"}, {"height", "300px"}, {"align-horizontal", "left"}, {"background-color", "556677ff"}},
       children,
       Panel::ORIENT_VERTICAL);
 }
 
 RSG::PanelPtr game::hover_info_widget() {
   list<ComponentPtr> children;
+  children.push_back(make_label("Hover info"));
   children.push_back(make_label(hover_info_title));
   children.push_back(make_hbar());
   for (auto v : event_log) {
@@ -444,7 +467,7 @@ RSG::PanelPtr game::hover_info_widget() {
   }
 
   return styled<Panel, list<ComponentPtr>>(
-      {{"width", "100%"}, {"height", "300px"}, {"align-horizontal", "left"}},
+      {{"width", "100%"}, {"height", "300px"}, {"align-horizontal", "left"}, {"background-color", "994477ff"}},
       children,
       Panel::ORIENT_VERTICAL);
 }
@@ -473,6 +496,7 @@ void game::queue_background_task(Voidfun f) {
 
   background_task_mutex.lock();
   background_tasks[tid++] = make_shared<future<void>>(async(launch::async, f));
+  cout << "Starting background task " << tid << endl;
   background_task_mutex.unlock();
 }
 
@@ -486,7 +510,12 @@ void game::check_background_tasks() {
     }
   }
 
-  for (auto id : remove) background_tasks.erase(id);
+  for (auto id : remove) {
+    cout << "Removing background task " << id << endl;
+    background_tasks.erase(id);
+  }
+
+  cout << background_tasks.size() << " background tasks remain" << endl;
 
   background_task_mutex.unlock();
 }
@@ -1616,6 +1645,7 @@ void game::control_event(sf::Event e) {
           drag_map_active = true;
         } else {
           init_area_select(e);
+          cout << "Area select started" << endl;
         }
       }
       break;
@@ -1624,6 +1654,7 @@ void game::control_event(sf::Event e) {
       p = window->mapPixelToCoords(mpos);
 
       if (e.mouseButton.button == sf::Mouse::Left) {
+        cout << "Left button released" << endl;
         if (drag_waypoint_active && did_drag) {
           // do nothing
         } else if (abs(srect.width) > 5 || abs(srect.height) > 5) {
