@@ -190,8 +190,6 @@ int main(int argc, char **argv) {
   socket->instruction = socket_t::tc_run;
   cout << "done." << endl;
 
-  shared_ptr<game> g(new game(socket));
-
   try {
     setup_gfx(fullscreen);
 
@@ -210,6 +208,7 @@ int main(int argc, char **argv) {
 
     cout << "Calling run" << endl;
 
+    shared_ptr<game> g(new game(socket));
     g->run();
 
   } catch (exception &e) {
