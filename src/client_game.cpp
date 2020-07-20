@@ -161,8 +161,10 @@ void game::process_ui_tasks() {
   ui_tasks.clear();
   ui_task_mutex.unlock();
 
-  cout << "Running " << buf.size() << " UI tasks" << endl;
-  for (auto f : buf) f();
+  if (buf.size()) {
+    cout << "Running " << buf.size() << " UI tasks" << endl;
+    for (auto f : buf) f();
+  }
 }
 
 /*! Queue UI task to clear UI layers */
@@ -301,8 +303,9 @@ void game::popup_query(string title, string text, hm_t<string, Voidfun> opts) {
 PanelPtr game::research_gui() {
   list<string> opts = get_research().available();
 
-  option_generator f_option = [this](string k) -> ButtonPtr {
-    return styled<Button, string>({{"width", "100px"}, {"height", "200px"}}, k);
+  option_generator f_option = [this, opts](string k) -> ButtonPtr {
+    int w = 100 / opts.size() - 2;
+    return styled<Button, string>({{"width", to_string(w) + "%"}, {"height", "100px"}}, k);
   };
 
   info_generator f_info = [this](string k) -> list<string> {
@@ -330,7 +333,7 @@ PanelPtr game::research_gui() {
 
   Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
 
-  return choice_gui(
+  auto p = choice_gui(
       "Research",
       opts,
       f_option,
@@ -338,6 +341,10 @@ PanelPtr game::research_gui() {
       f_commit,
       f_cancel,
       false);
+
+  p->set_style("width", "90%");
+
+  return p;
 }
 
 /*! Setup a choice_gui for enqueuing development to all selected solars */
@@ -513,9 +520,8 @@ void game::check_background_tasks() {
   for (auto id : remove) {
     cout << "Removing background task " << id << endl;
     background_tasks.erase(id);
+    cout << background_tasks.size() << " background tasks remain" << endl;
   }
-
-  cout << background_tasks.size() << " background tasks remain" << endl;
 
   background_task_mutex.unlock();
 }
@@ -613,17 +619,25 @@ void game::init_data() {
     update_sight_range(point(0, 0), 1);
 
     // load player starting positions
+    int home_found = 0;
     for (auto s : data.filtered_entities<solar_selector>()) {
-      s->research_level = &players[s->owner].research_level;
+      if (s->owner >= 0) s->research_level = &players[s->owner].research_level;
       add_entity(s);
       cout << "init_data: added: " << s->id << endl;
 
       if (s->owned) {
+        home_found++;
         view_game.setCenter(s->get_position());
         view_game.setSize(point(25 * settings.solar_meanrad, 25 * settings.solar_meanrad));
         s->seen = true;
         cout << "init_data: selected starting position: " << s->id << endl;
       }
+    }
+
+    // debug
+    if (home_found != 1) {
+      terminate_with_message("Invalid init data: " + to_string(home_found) + " home solars!");
+      return;
     }
 
     pre_step();
