@@ -36,16 +36,16 @@ PanelPtr st3::choice_gui(
     bool allow_queue) {
   // Queue wrapper
   PanelPtr queue_wrapper = Panel::create();
-  list<string> queue;
-  auto enque = [&](string v) {
+  shared_ptr<list<string>> queue = make_shared<list<string>>();
+  auto enque = [=](string v) {
     if (allow_queue) {
-      queue.push_back(v);
+      queue->push_back(v);
     } else {
-      queue = {v};
+      *queue = {v};
     }
 
     queue_wrapper->clear_children();
-    queue_wrapper->add_child(build_queue(queue));
+    queue_wrapper->add_child(build_queue(*queue));
   };
 
   // Info wrapper
@@ -64,6 +64,8 @@ PanelPtr st3::choice_gui(
       },
       options);
 
+  // Todo: action
+
   // Main layout
   return Panel::create(
       {
@@ -74,6 +76,13 @@ PanelPtr st3::choice_gui(
           info_wrapper,
           make_hbar(),
           queue_wrapper,
+          make_hbar(),
+          Panel::create({
+              Button::create("Cancel", on_cancel),
+              Button::create("Commit", [on_commit, queue]() {
+                on_commit(CHOICEGUI_APPEND, *queue);
+              }),
+          }),
       },
       Panel::ORIENT_VERTICAL);
 }
