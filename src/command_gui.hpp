@@ -4,14 +4,15 @@
 #include <string>
 
 #include "rsg/src/RskTypes.hpp"
+#include "types.hpp"
 
 namespace st3 {
 RSG::PanelPtr command_gui(
     std::string ship_class,
     std::string action,
     int policy,
-    int num_available,
+    hm_t<std::string, int> num_available,
     bool allow_combat,
-    std::function<void(int, int)> on_commit,
+    std::function<void(std::string ship_class, int policy, int num)> on_commit,
     RSG::Voidfun on_cancel);
 };  // namespace st3

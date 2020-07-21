@@ -1393,13 +1393,17 @@ bool game::select_command(idtype key) {
 
   if (!c->selected) return false;
 
-  set<combid> ready_ships = get_ready_ships(c->source)[c->ship_class];
-  set<combid> all_ships = ready_ships + c->ships;
+  hm_t<string, set<combid>> ready_ships = get_ready_ships(c->source);
+  ready_ships[c->ship_class] += c->ships;
+  set<combid> all_ships = ready_ships[c->ship_class];
 
   bool combat = false;
   if (all_ships.size()) {
     combat = get_specific<ship>(*all_ships.begin())->compile_interactions().count(interaction::space_combat);
   }
+
+  hm_t<string, int> ship_counts;
+  for (auto x : ready_ships) ship_counts[x.first] = x.second.size();
 
   swap_layer(
       LAYER_PANEL,
@@ -1407,9 +1411,10 @@ bool game::select_command(idtype key) {
           c->ship_class,
           c->action,
           c->policy,
-          all_ships.size(),
+          ship_counts,
           combat,
-          [this, c](int policy, int num) {
+          [this, c](string ship_class, int policy, int num) {
+            c->ship_class = ship_class;
             c->policy = policy;
             c->ships.clear();
             vector<combid> ready_ships = utility::range_init<vector<combid>>(get_ready_ships(c->source)[c->ship_class]);
@@ -1451,7 +1456,7 @@ hm_t<string, set<combid>> game::get_ready_ships(combid id) {
     sids = e->get_ships();
   }
 
-  for (auto sid : sids) res[get_specific<ship>(sid)->class_id].insert(sid);
+  for (auto sid : sids) res[get_specific<ship>(sid)->ship_class].insert(sid);
 
   for (auto c : e->commands) {
     auto com = get_command_selector(c);
