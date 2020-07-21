@@ -246,6 +246,7 @@ void game::build_base_panel() {
           {"right", "0"},
           {"left", "auto"},
           {"top", "0"},
+          {"width", "25%"},
           {"background-color", "ffcc77ff"},
           {"border-color", "ff0000ff"},
       },
@@ -312,7 +313,7 @@ PanelPtr game::research_gui() {
 
     for (auto x : research::data::table()) {
       if (x.second.depends_techs.count(k)) {
-        items.push_back("Leads to: " + k);
+        items.push_back("Leads to: " + x.first);
       }
     }
 
@@ -394,7 +395,7 @@ PanelPtr game::development_gui() {
 }
 
 PanelPtr game::military_gui() {
-  list<string> opts = get_research().available();
+  list<string> opts;
 
   // Identify which ship classes can be produced in any owned solar
   auto owned_solars = filtered_entities<solar_selector>(self_id);
@@ -461,7 +462,7 @@ RSG::PanelPtr game::event_log_widget() {
   }
 
   return styled<Panel, list<ComponentPtr>>(
-      {{"width", "100%"}, {"height", "300px"}, {"align-horizontal", "left"}, {"background-color", "556677ff"}},
+      {{"width", "100%"}, {"height", "200px"}, {"align-horizontal", "left"}, {"background-color", "556677ff"}},
       children,
       Panel::ORIENT_VERTICAL);
 }
@@ -471,12 +472,12 @@ RSG::PanelPtr game::hover_info_widget() {
   children.push_back(make_label("Hover info"));
   children.push_back(make_label(hover_info_title));
   children.push_back(make_hbar());
-  for (auto v : event_log) {
+  for (auto v : hover_info_items) {
     children.push_back(make_label(v));
   }
 
   return styled<Panel, list<ComponentPtr>>(
-      {{"width", "100%"}, {"height", "300px"}, {"align-horizontal", "left"}, {"background-color", "994477ff"}},
+      {{"width", "100%"}, {"height", "200px"}, {"align-horizontal", "left"}, {"background-color", "994477ff"}},
       children,
       Panel::ORIENT_VERTICAL);
 }
