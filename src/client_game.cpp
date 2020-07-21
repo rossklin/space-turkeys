@@ -1592,19 +1592,19 @@ void game::control_event(sf::Event e) {
   drag_map_active &= sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
 
   auto update_hover_info = [this](point p) {
-    auto keys = entities_at(p);
-    list<string> text;
+    static set<string> last_keys = {};
 
-    if (keys.empty()) {
-      keys = selected_entities();
-      if (keys.empty()) {
-        return;
-      }
-    }
+    auto keys = entities_at(p);
+    if (keys.empty()) keys = selected_entities();
+
+    set<string> test = utility::range_init<set<string>>(keys);
+    if (test == last_keys) return;
+    last_keys = test;
 
     string title = "";
     if (keys.size() > 1) title = "Multiple entities";
 
+    list<string> text;
     for (auto k : keys) {
       text.push_back(get_selector(k)->hover_info());
     }
