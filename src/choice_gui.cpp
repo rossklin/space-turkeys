@@ -6,6 +6,7 @@
 
 #include "rsg/src/RskTypes.hpp"
 #include "rsg/src/button.hpp"
+#include "rsg/src/button_options.hpp"
 #include "rsg/src/component.hpp"
 #include "rsg/src/panel.hpp"
 #include "style.hpp"
@@ -37,6 +38,13 @@ PanelPtr st3::choice_gui(
   // Queue wrapper
   PanelPtr queue_wrapper = Panel::create();
   shared_ptr<list<string>> queue = make_shared<list<string>>();
+  shared_ptr<choice_gui_action> action = make_shared<choice_gui_action>(CHOICEGUI_APPEND);
+
+  ButtonPtr b_commit = Button::create("Commit", [on_commit, queue, action]() {
+    on_commit(*action, *queue);
+  });
+  b_commit->add_state("disabled");
+
   auto enque = [=](string v) {
     if (allow_queue) {
       queue->push_back(v);
@@ -46,6 +54,7 @@ PanelPtr st3::choice_gui(
 
     queue_wrapper->clear_children();
     queue_wrapper->add_child(build_queue(*queue));
+    b_commit->remove_state("disabled");
   };
 
   // Info wrapper
@@ -64,7 +73,18 @@ PanelPtr st3::choice_gui(
       },
       options);
 
-  // Todo: action
+  // Action
+  ButtonOptionsPtr action_options = ButtonOptions::create(
+      {"Append", "Prepend", "Replace"},
+      [action](string k) {
+        if (k == "Append") {
+          *action = CHOICEGUI_APPEND;
+        } else if (k == "Prepend") {
+          *action = CHOICEGUI_PREPEND;
+        } else if (k == "Replace") {
+          *action = CHOICEGUI_REPLACE;
+        }
+      });
 
   // Main layout
   return Panel::create(
@@ -73,15 +93,15 @@ PanelPtr st3::choice_gui(
           make_hbar(),
           Panel::create(cards),
           make_hbar(),
+          action_options,
+          make_hbar(),
           info_wrapper,
           make_hbar(),
           queue_wrapper,
           make_hbar(),
           Panel::create({
               Button::create("Cancel", on_cancel),
-              Button::create("Commit", [on_commit, queue]() {
-                on_commit(CHOICEGUI_APPEND, *queue);
-              }),
+              b_commit,
           }),
       },
       Panel::ORIENT_VERTICAL);
