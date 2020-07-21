@@ -34,6 +34,11 @@ using namespace RSG;
 
 shared_ptr<window_t> game::window = 0;
 
+StyleMap main_panel_style = {
+    {"width", "90%"},
+    {"height", "90%"},
+};
+
 // local utility functions
 sf::FloatRect fixrect(sf::FloatRect r);
 bool add2selection();
@@ -304,10 +309,7 @@ void game::popup_query(string title, string text, hm_t<string, Voidfun> opts) {
 PanelPtr game::research_gui() {
   list<string> opts = get_research().available();
 
-  option_generator f_option = [this, opts](string k) -> ButtonPtr {
-    int w = 100 / opts.size() - 2;
-    return styled<Button, string>({{"width", to_string(w) + "%"}, {"height", "100px"}}, k);
-  };
+  option_generator f_option = bind(&make_card, placeholders::_1, opts.size(), "100px");
 
   info_generator f_info = [this](string k) -> list<string> {
     list<string> items;
@@ -343,7 +345,7 @@ PanelPtr game::research_gui() {
       f_cancel,
       false);
 
-  p->set_style("width", "90%");
+  p->set_style(main_panel_style);
 
   return p;
 }
@@ -354,9 +356,7 @@ PanelPtr game::development_gui() {
   list<string> opts = utility::range_init<list<string>>(keywords::development);
   auto sel = selected_specific<solar>();
 
-  option_generator f_option = [this](string k) -> ButtonPtr {
-    return styled<Button, string>({{"width", "100px"}, {"height", "200px"}}, k);
-  };
+  option_generator f_option = bind(&make_card, placeholders::_1, opts.size(), "100px");
 
   info_generator f_info = [this](string k) -> list<string> {
     list<string> items;
@@ -384,14 +384,18 @@ PanelPtr game::development_gui() {
 
   Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
 
-  return choice_gui(
+  auto p = choice_gui(
       "Development",
       opts,
       f_option,
       f_info,
       f_commit,
       f_cancel,
-      false);
+      true);
+
+  p->set_style(main_panel_style);
+
+  return p;
 }
 
 PanelPtr game::military_gui() {
@@ -411,9 +415,7 @@ PanelPtr game::military_gui() {
     }
   }
 
-  option_generator f_option = [this](string k) -> ButtonPtr {
-    return styled<Button, string>({{"width", "100px"}, {"height", "200px"}}, k);
-  };
+  option_generator f_option = bind(&make_card, placeholders::_1, opts.size(), "100px");
 
   info_generator f_info = [this](string k) -> list<string> {
     list<string> items;
@@ -442,14 +444,18 @@ PanelPtr game::military_gui() {
 
   Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
 
-  return choice_gui(
-      "Research",
+  auto p = choice_gui(
+      "Military",
       opts,
       f_option,
       f_info,
       f_commit,
       f_cancel,
-      false);
+      true);
+
+  p->set_style(main_panel_style);
+
+  return p;
 }
 
 RSG::PanelPtr game::event_log_widget() {
