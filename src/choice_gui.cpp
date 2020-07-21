@@ -47,8 +47,10 @@ PanelPtr st3::choice_gui(
     info_generator f_info,
     std::function<void(choice_gui_action, std::list<std::string>)> on_commit,
     RSG::Voidfun on_cancel,
-    bool allow_queue,
-    bool hide_action) {
+    bool allow_queue) {
+  // If this choice does not support queing, always use replace action
+  bool hide_action = !allow_queue;
+
   // Queue wrapper
   PanelPtr queue_wrapper = Panel::create();
   shared_ptr<list<string>> queue = make_shared<list<string>>();
