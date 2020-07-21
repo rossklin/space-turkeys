@@ -27,20 +27,33 @@ PanelPtr st3::target_gui(
 
   ButtonPtr b_cancel = Button::create("Cancel", on_cancel);
   ButtonPtr b_commit = Button::create("Commit", [sel_action, sel_target, callback]() { callback(*sel_action, *sel_target); });
+  b_commit->add_state("disabled");
 
-  auto t_opts = ButtonOptions::create(list<string>{}, [sel_target](string k) { *sel_target = k; });
+  auto t_opts = ButtonOptions::create(
+      list<string>{},
+      [sel_target, b_commit](string k) {
+        *sel_target = k;
+        b_commit->remove_state("disabled");
+      });
   t_opts->add_state("invisible");
 
+  map<string, ButtonPtr> opt_buttons;
+  for (auto x : action_targets) {
+    string label = x.first == identifier::source_none ? "Add waypoint" : x.first;
+    opt_buttons[x.first] = Button::create(label);
+  }
+
   auto a_opts = ButtonOptions::create(
-      utility::range_init<list<string>>(utility::hm_keys(action_targets)),
+      opt_buttons,
       [=](string k) {
         if (*sel_action == k) return;
 
         *sel_action = k;
         *sel_target = "";
+        b_commit->add_state("disabled");
 
         map<string, ButtonPtr> buf;
-        for (auto v : action_targets.at(k)) buf[k] = Button::create(k);
+        for (auto v : action_targets.at(k)) buf[v] = Button::create(v);
         t_opts->set_children(buf);
         t_opts->remove_state("invisible");
       });
@@ -48,7 +61,21 @@ PanelPtr st3::target_gui(
   return styled<Panel, list<ComponentPtr>, Panel::orientation>(
       {{"position", "fixed"}, {"top", to_string(position.y)}, {"left", to_string(position.x)}},
       {
-          Panel::create({a_opts, t_opts}),
+          Panel::create(
+              {
+                  Panel::create(
+                      {
+                          make_label("Action:"),
+                          a_opts,
+                      },
+                      Panel::ORIENT_VERTICAL),
+                  Panel::create(
+                      {
+                          make_label("Target:"),
+                          t_opts,
+                      },
+                      Panel::ORIENT_VERTICAL),
+              }),
           Panel::create({b_cancel, b_commit}),
       },
       Panel::ORIENT_VERTICAL);
