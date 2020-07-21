@@ -24,5 +24,6 @@ RSG::PanelPtr choice_gui(
     info_generator f_info,
     std::function<void(choice_gui_action a, std::list<std::string> q)> on_commit,
     RSG::Voidfun on_cancel,
-    bool allow_queue);
+    bool allow_queue,
+    bool hide_action = false);
 };  // namespace st3

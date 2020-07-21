@@ -9,6 +9,7 @@
 #include "rsg/src/button_options.hpp"
 #include "rsg/src/component.hpp"
 #include "rsg/src/panel.hpp"
+#include "rsg/src/utility.hpp"
 #include "style.hpp"
 #include "utility.hpp"
 
@@ -23,7 +24,19 @@ PanelPtr build_queue(list<string> q) {
 }
 
 PanelPtr build_info(list<string> info) {
-  list<ComponentPtr> children = utility::map<list<ComponentPtr>>([](string v) { return make_label(v); }, info);
+  list<ComponentPtr> children = utility::map<list<ComponentPtr>>(
+      [](string v) {
+        auto p = make_label(v);
+        p->set_style({
+            {"font-size", "11"},
+            {"padding-top", "0"},
+            {"padding-bottom", "0"},
+            {"margin-top", "5"},
+            {"margin-bottom", "5"},
+        });
+        return p;
+      },
+      info);
   return Panel::create(children, Panel::ORIENT_VERTICAL);
 }
 
@@ -34,11 +47,12 @@ PanelPtr st3::choice_gui(
     info_generator f_info,
     std::function<void(choice_gui_action, std::list<std::string>)> on_commit,
     RSG::Voidfun on_cancel,
-    bool allow_queue) {
+    bool allow_queue,
+    bool hide_action) {
   // Queue wrapper
   PanelPtr queue_wrapper = Panel::create();
   shared_ptr<list<string>> queue = make_shared<list<string>>();
-  shared_ptr<choice_gui_action> action = make_shared<choice_gui_action>(CHOICEGUI_APPEND);
+  shared_ptr<choice_gui_action> action = make_shared<choice_gui_action>(CHOICEGUI_REPLACE);
 
   ButtonPtr b_commit = Button::create("Commit", [on_commit, queue, action]() {
     on_commit(*action, *queue);
@@ -86,23 +100,55 @@ PanelPtr st3::choice_gui(
         }
       });
 
+  switch (*action) {
+    case CHOICEGUI_APPEND:
+      action_options->select("Append");
+      break;
+
+    case CHOICEGUI_PREPEND:
+      action_options->select("Prepend");
+      break;
+
+    case CHOICEGUI_REPLACE:
+      action_options->select("Replace");
+      break;
+
+    default:
+      break;
+  }
+
   // Main layout
-  return Panel::create(
-      {
-          make_label(title),
-          make_hbar(),
-          Panel::create(cards),
-          make_hbar(),
-          action_options,
-          make_hbar(),
-          info_wrapper,
-          make_hbar(),
-          queue_wrapper,
-          make_hbar(),
-          Panel::create({
-              Button::create("Cancel", on_cancel),
-              b_commit,
-          }),
-      },
+  list<ComponentPtr> children = {
+      make_label(title),
+      make_hbar(),
+      Panel::create(cards),
+      make_hbar(),
+  };
+
+  if (!hide_action) {
+    children.push_back(action_options);
+    children.push_back(make_hbar());
+  }
+
+  list<ComponentPtr> children2 = {
+      info_wrapper,
+      make_hbar(),
+      queue_wrapper,
+      make_hbar(),
+      Panel::create({
+          Button::create("Cancel", on_cancel),
+          b_commit,
+      }),
+  };
+
+  children.insert(children.end(), children2.begin(), children2.end());
+
+  PanelPtr p = styled<Panel, list<ComponentPtr>, Panel::orientation>(
+      {},
+      children,
       Panel::ORIENT_VERTICAL);
+
+  // Prevent click propagation
+  p->on_click = [](ComponentPtr self, sf::Event e) {};
+  return p;
 }
