@@ -34,11 +34,6 @@ using namespace RSG;
 
 shared_ptr<window_t> game::window = 0;
 
-StyleMap main_panel_style = {
-    {"width", "90%"},
-    {"height", "90%"},
-};
-
 // local utility functions
 sf::FloatRect fixrect(sf::FloatRect r);
 bool add2selection();

@@ -10,6 +10,13 @@ using namespace std;
 using namespace RSG;
 using namespace st3;
 
+StyleMap st3::main_panel_style = {
+    {"width", "90%"},
+    {"height", "90%"},
+    {"background-color", "12345688"},
+    {"color", "ffccaaff"},
+};
+
 ButtonPtr st3::make_label(string v) {
   return styled<Button>(
       {
