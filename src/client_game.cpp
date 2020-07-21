@@ -104,11 +104,12 @@ void game::window_loop() {
     sf::Event event;
     window->setView(view_window);
     while (window->pollEvent(event)) {
-      bool was_handled = base_layer->handle_event(event, coord_mapper);
-
+      bool was_handled = false;
       for (int i = LAYER_NUM - 1; i >= 0 && !was_handled; i--) {
         was_handled |= component_layers[i]->handle_event(event, coord_mapper);
       }
+
+      if (!was_handled) was_handled = base_layer->handle_event(event, coord_mapper);
 
       if (phase == "choice" && !was_handled) was_handled |= choice_event(event);
 
