@@ -17,6 +17,13 @@ using namespace RSG;
 
 typedef shared_ptr<list<string>> list_t;
 
+PanelPtr column2() {
+  return styled<Panel, list<ComponentPtr>, Panel::orientation>(
+      {{"width", "50%"}},
+      {},
+      Panel::ORIENT_VERTICAL);
+}
+
 PanelPtr building_queue(solar_ptr s, list_t q) {
   hm_t<string, int> available = s->development;
   list<ComponentPtr> children;
@@ -41,15 +48,14 @@ PanelPtr building_queue(solar_ptr s, list_t q) {
 
 // Panel with buttons for queing development
 PanelPtr make_left_panel(solar_ptr s, list_t q) {
-  PanelPtr p1 = Panel::create({}, Panel::ORIENT_VERTICAL);
-  PanelPtr p2 = Panel::create({}, Panel::ORIENT_VERTICAL);
+  PanelPtr p1 = column2();
+  PanelPtr p2 = column2();
   list<ComponentPtr> children;
 
   for (auto v : keywords::development) {
     children.push_back(Button::create(
         v,
         [=](ButtonPtr b) {
-          // Run event handler through post process since we are adding/removing children
           q->push_back(v);
           p2->clear_children();
           p2->add_child(building_queue(s, q));
@@ -59,7 +65,7 @@ PanelPtr make_left_panel(solar_ptr s, list_t q) {
   p1->add_children(children);
   p2->add_child(building_queue(s, q));
 
-  return Panel::create({p1, p2});
+  return styled<Panel, list<ComponentPtr>>({{"width", "50%"}}, {p1, p2});
 }
 
 PanelPtr ship_queue(list_t q) {
@@ -84,8 +90,8 @@ PanelPtr ship_queue(list_t q) {
 
 // Panel with buttons for queing ship production
 PanelPtr make_right_panel(solar_ptr s, research::data r, list_t q) {
-  PanelPtr p1 = Panel::create({}, Panel::ORIENT_VERTICAL);
-  PanelPtr p2 = Panel::create({}, Panel::ORIENT_VERTICAL);
+  PanelPtr p1 = column2();
+  PanelPtr p2 = column2();
   list<ComponentPtr> children;
 
   auto skey = utility::hm_keys(ship_stats::table());
@@ -95,7 +101,6 @@ PanelPtr make_right_panel(solar_ptr s, research::data r, list_t q) {
       children.push_back(Button::create(
           v,
           [=](ButtonPtr b) {
-            // Run event handler through post process since we are adding/removing children
             q->push_back(v);
             p2->clear_children();
             p2->add_child(ship_queue(q));
@@ -106,14 +111,15 @@ PanelPtr make_right_panel(solar_ptr s, research::data r, list_t q) {
   p1->add_children(children);
   p2->add_child(ship_queue(q));
 
-  return Panel::create({p1, p2});
+  return styled<Panel, list<ComponentPtr>>({{"width", "50%"}}, {p1, p2});
 }
 
 PanelPtr st3::solar_gui(solar_ptr s, research::data r, Voidfun on_cancel, function<void(list<string>, list<string>)> on_commit) {
   list_t bqueue(new list<string>(s->choice_data.building_queue));
   list_t squeue(new list<string>(s->choice_data.ship_queue));
 
-  PanelPtr p = Panel::create(
+  PanelPtr p = styled<Panel, list<ComponentPtr>, Panel::orientation>(
+      main_panel_style,
       {
           make_label("Manage " + s->id),
           make_hbar(),
