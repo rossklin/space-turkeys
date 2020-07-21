@@ -1564,6 +1564,8 @@ void game::setup_targui(point p) {
     deselect_all();
     get_selector(k)->selected = true;
   } else {
+    // Always provide option "add waypoint"
+    options[fleet_action::go_to].insert(identifier::source_none);
     PanelPtr targui = target_gui(
         sf::Vector2f(window->mapCoordsToPixel(p, view_game)),
         options,
