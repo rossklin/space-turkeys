@@ -1,11 +1,34 @@
 * Notes test game 2020-06-22
 ** bugs
-*** [irregular] Server segfault on colonize
+*** Irregular segfault when starting second client
+*** Check that commit is disabled for main panels until choice is selected
+*** Make main panel prevent click event propagation
+*** Hover info shows nothing, does not fit in window
+*** Event log and hover info should be 100% width or transparent background
+*** Military GUI 
+**** shows techs instead of ships
+*** Choice GUI 
+**** description lists should have smaller text and smaller top-bottom-margins
+**** content should be center-aligned
+*** Command GUI
+**** Slider does not show
+**** Ship list to wide for window
+*** Global game::window used only for graphics::unscale, seems silly?
+*** Ship stuck circling target
+*** Out of range error when asking to join nonexistent game
+*** (irregular) Server segfault on colonize
+*** [impl] Command GUI still has byrefs in cosures
+*** [impl] Random nr (10-100) of UI tasks run every time a solar is hovered
+*** [done] Development choice seemed to work only first time
+*** [done] Research panel layout 
+**** buttons hidden below edge of window
+**** panel height should be fixed
+**** selected card should be styled
+**** selected card info should appear when no card is hovered
+*** [impl] Prevent propagation of left mouse pressed event on button/activatable
 *** [done] Client does not center on home solar on startup
 *** [done?] One solar built 0 of 5 fighters in a round (then showed shipyard level 3 -234823482364% complete)
 *** (maybe) development queue item dropped
-*** Ship stuck circling target
-*** Out of range error when asking to join nonexistent game
 *** [done] Production seems to be nearly instant
     Defer to "Solar dynamics" update
 *** [impl] Path search fails to remove extra initial nodes
@@ -52,13 +75,14 @@ Eg research progress, ship and building progress, empire stats such as max fleet
 For example, make clusters of one or two habitable solars and a couple uninhabitable solars
 and then add terrain between them.
 * current work
+** SEVERE memory leak in client game::draw_window
 ** Restructure to Makefile and RSG
 *** [impl] Update json file refs to data directory
 *** [impl] Save files in save directory
-*** Re-implement all SFGUI components in RSG
+*** [impl] Re-implement all SFGUI components in RSG
     [done] game::get_ready_ships should sort by class
     [done] command_gui should take parameter max ships per class and allow selecting which class to send
-*** Restructure main window loop and event handling
+*** [impl] Restructure main window loop and event handling
 ** Add "order" concept which limits growth/production in distant solars
 ** Update research and upgrade data according to sketch
 ** VSC formatting
