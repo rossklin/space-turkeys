@@ -20,7 +20,7 @@ using namespace RSG;
 // Todo: remove queue item on press
 PanelPtr build_queue(list<string> q) {
   list<ComponentPtr> children = utility::map<list<ComponentPtr>>([](string v) { return Button::create(v); }, q);
-  return Panel::create(children, Panel::ORIENT_VERTICAL);
+  return tag({"transparent"}, Panel::create(children, Panel::ORIENT_VERTICAL));
 }
 
 PanelPtr build_info(list<string> info) {
@@ -51,8 +51,27 @@ PanelPtr st3::choice_gui(
   // If this choice does not support queing, always use replace action
   bool hide_action = !allow_queue;
 
-  // Queue wrapper
-  PanelPtr queue_wrapper = Panel::create();
+  StyleMap section_style = {
+      {"width", "100%"},
+      {"overflow", "scrolled"},
+      {"margin-top", "10"},
+      {"margin-bottom", "10"},
+  };
+
+  auto make_section = [section_style](string h) {
+    auto s = section_style;
+    s["height"] = h;
+    return styled<Panel>(s);
+  };
+
+  // Create sections
+  PanelPtr cards_wrapper = make_section("auto");
+  PanelPtr action_wrapper = make_section("auto");
+  PanelPtr info_wrapper = make_section("20%");
+  PanelPtr queue_wrapper = make_section("15%");
+  PanelPtr button_wrapper = make_section("auto");
+
+  // Managed variables
   shared_ptr<list<string>> queue = make_shared<list<string>>();
   shared_ptr<choice_gui_action> action = make_shared<choice_gui_action>(CHOICEGUI_REPLACE);
 
@@ -73,9 +92,6 @@ PanelPtr st3::choice_gui(
     b_commit->remove_state("disabled");
   };
 
-  // Info wrapper
-  PanelPtr info_wrapper = Panel::create();
-
   // Option cards
   list<ComponentPtr> cards = utility::map<list<ComponentPtr>>(
       [=](string v) -> ComponentPtr {
@@ -89,6 +105,8 @@ PanelPtr st3::choice_gui(
       },
       options);
 
+  cards_wrapper->replace_children(cards);
+
   // Action
   ButtonOptionsPtr action_options = ButtonOptions::create(
       {"Append", "Prepend", "Replace"},
@@ -101,6 +119,14 @@ PanelPtr st3::choice_gui(
           *action = CHOICEGUI_REPLACE;
         }
       });
+
+  action_options->set_style(
+      {
+          {"background-color", "00000000"},
+          {"border-thickness", "0"},
+      });
+
+  action_wrapper->replace_children({action_options});
 
   switch (*action) {
     case CHOICEGUI_APPEND:
@@ -119,36 +145,25 @@ PanelPtr st3::choice_gui(
       break;
   }
 
+  // Button wrapper
+  button_wrapper->replace_children({Button::create("Cancel", on_cancel), b_commit});
+
   // Main layout
-  list<ComponentPtr> children = {
-      make_label(title),
-      make_hbar(),
-      Panel::create(cards),
-      make_hbar(),
-  };
+  PanelPtr p = RSG::tag(
+      {"main-panel"},
+      Panel::create(
+          {
+              tag({"h1"}, Button::create(title)),
+              make_hbar(),
+              cards_wrapper,
+              action_options,
+              info_wrapper,
+              queue_wrapper,
+              button_wrapper,
+          },
+          Panel::ORIENT_VERTICAL));
 
-  if (!hide_action) {
-    children.push_back(action_options);
-    children.push_back(make_hbar());
-  }
-
-  list<ComponentPtr> children2 = {
-      info_wrapper,
-      make_hbar(),
-      queue_wrapper,
-      make_hbar(),
-      Panel::create({
-          Button::create("Cancel", on_cancel),
-          b_commit,
-      }),
-  };
-
-  children.insert(children.end(), children2.begin(), children2.end());
-
-  PanelPtr p = styled<Panel, list<ComponentPtr>, Panel::orientation>(
-      {},
-      children,
-      Panel::ORIENT_VERTICAL);
+  if (hide_action) p->remove_child(action_options);
 
   // Prevent click propagation
   p->on_click = [](ComponentPtr self, sf::Event e) {};
