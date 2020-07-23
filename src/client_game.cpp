@@ -62,8 +62,7 @@ void game::run() {
   bool proceed = true;
   bool first = true;
 
-  Component::class_style["Panel"]["border-thickness"] = "1";
-
+  generate_styles();
   init_data();
 
   // construct interface
@@ -101,6 +100,7 @@ void game::window_loop() {
 
   while (window->isOpen() && state_run) {
     start = chrono::system_clock::now();
+    bool has_gui = component_layers[LAYER_PANEL]->get_children().size();
     sf::Event event;
     window->setView(view_window);
     while (window->pollEvent(event)) {
@@ -111,9 +111,10 @@ void game::window_loop() {
 
       if (!was_handled) was_handled = base_layer->handle_event(event, coord_mapper);
 
-      if (phase == "choice" && !was_handled) was_handled |= choice_event(event);
-
-      if (!was_handled) control_event(event);
+      if (!has_gui) {
+        if (phase == "choice" && !was_handled) was_handled |= choice_event(event);
+        if (!was_handled) control_event(event);
+      }
 
       if (event.type == sf::Event::Closed && !was_handled) {
         window->close();
@@ -332,7 +333,7 @@ PanelPtr game::research_gui() {
 
   Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
 
-  auto p = choice_gui(
+  return choice_gui(
       "Research",
       opts,
       f_option,
@@ -340,10 +341,6 @@ PanelPtr game::research_gui() {
       f_commit,
       f_cancel,
       false);
-
-  p->set_style(main_panel_style);
-
-  return p;
 }
 
 /*! Setup a choice_gui for enqueuing development to all selected solars */
@@ -380,7 +377,7 @@ PanelPtr game::development_gui() {
 
   Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
 
-  auto p = choice_gui(
+  return choice_gui(
       "Development",
       opts,
       f_option,
@@ -388,10 +385,6 @@ PanelPtr game::development_gui() {
       f_commit,
       f_cancel,
       true);
-
-  p->set_style(main_panel_style);
-
-  return p;
 }
 
 PanelPtr game::military_gui() {
@@ -440,7 +433,7 @@ PanelPtr game::military_gui() {
 
   Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
 
-  auto p = choice_gui(
+  return choice_gui(
       "Military",
       opts,
       f_option,
@@ -448,10 +441,6 @@ PanelPtr game::military_gui() {
       f_commit,
       f_cancel,
       true);
-
-  p->set_style(main_panel_style);
-
-  return p;
 }
 
 RSG::PanelPtr game::event_log_widget() {
@@ -1835,9 +1824,6 @@ bool game::choice_event(sf::Event e) {
   sf::FloatRect minirect;
   point delta;
   point target;
-
-  // Some global key commands are disabled when a UI panel is active
-  bool has_gui = component_layers[LAYER_PANEL]->get_children().size();
 
   // delete all selected commands
   auto handle_delete = [this]() {
