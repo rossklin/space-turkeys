@@ -84,6 +84,19 @@ vector<entity_selector::ptr> game::all_selectors() const {
   return all_entities<entity_selector>();
 };
 
+// Get ids of all selected solars. If none are selected, instead get all owned solars.
+list<combid> game::solars_for_panel() const {
+  list<string> sel = selected_specific<solar>();
+
+  if (sel.empty()) {
+    sel = utility::map<list<std::string>>(
+        [](solar_selector::ptr s) { return s->id; },
+        filtered_entities<solar_selector>(self_id));
+  }
+
+  return sel;
+};
+
 command_selector::ptr game::get_command_selector(idtype i) const {
   if (!command_selectors.count(i)) throw classified_error("client::game::get_command_selectors: invalid id: " + to_string(i));
   return command_selectors.at(i);
@@ -239,28 +252,21 @@ void game::terminate_with_message(string message) {
 
 /*! Queue swap base UI panel into base layer */
 void game::build_base_panel() {
-  auto make_button = styled_generator<Button, string, RSG::Voidfun>({{"width", "90%"}, {"height", "30px"}});
+  auto make_button = [](string v, RSG::Voidfun f) {
+    return RSG::tag({"right-panel-button"}, Button::create(v, f));
+  };
 
-  PanelPtr right = styled<Panel, list<ComponentPtr>, Panel::orientation>(
-      {
-          {"position", "absolute"},
-          {"right", "0"},
-          {"left", "auto"},
-          {"top", "0"},
-          {"width", "25%"},
-          {"background-color", "ffcc77ff"},
-          {"border-color", "ff0000ff"},
-      },
-
-      {
-          make_button("Research", [this]() { swap_layer(LAYER_PANEL, research_gui()); }),
-          make_button("Development", [this]() { swap_layer(LAYER_PANEL, development_gui()); }),
-          make_button("Military", [this]() { swap_layer(LAYER_PANEL, military_gui()); }),
-          event_log_widget(),
-          hover_info_widget(),
-      },
-
-      Panel::ORIENT_VERTICAL);
+  PanelPtr right = RSG::tag(
+      {"right-panel"},
+      Panel::create(
+          {
+              make_button("Research", [this]() { swap_layer(LAYER_PANEL, research_gui()); }),
+              make_button("Development", [this]() { swap_layer(LAYER_PANEL, development_gui()); }),
+              make_button("Military", [this]() { swap_layer(LAYER_PANEL, military_gui()); }),
+              event_log_widget(),
+              hover_info_widget(),
+          },
+          Panel::ORIENT_VERTICAL));
 
   // Prevent propagation of clicks that hit right panel
   right->on_click = [](ComponentPtr self, sf::Event e) {
@@ -345,9 +351,8 @@ PanelPtr game::research_gui() {
 
 /*! Setup a choice_gui for enqueuing development to all selected solars */
 PanelPtr game::development_gui() {
-  // TODO
   list<string> opts = utility::range_init<list<string>>(keywords::development);
-  auto sel = selected_specific<solar>();
+  auto sel = solars_for_panel();
 
   option_generator f_option = bind(&make_card, placeholders::_1, opts.size(), "100px");
 
@@ -378,7 +383,7 @@ PanelPtr game::development_gui() {
   Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
 
   return choice_gui(
-      "Development",
+      "Development queue for " + to_string(sel.size()) + " selected solars",
       opts,
       f_option,
       f_info,
@@ -412,7 +417,7 @@ PanelPtr game::military_gui() {
     return items;
   };
 
-  auto sel = selected_specific<solar>();
+  auto sel = solars_for_panel();
   auto f_commit = [this, sel](choice_gui_action a, list<string> q) {
     for (auto sid : sel) {
       auto s = get_specific<solar>(sid);
@@ -434,7 +439,7 @@ PanelPtr game::military_gui() {
   Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
 
   return choice_gui(
-      "Military",
+      "Shipyard production queue for " + to_string(sel.size()) + " selected solars",
       opts,
       f_option,
       f_info,
@@ -450,10 +455,11 @@ RSG::PanelPtr game::event_log_widget() {
     children.push_back(make_hbar());
   }
 
-  return styled<Panel, list<ComponentPtr>>(
-      {{"width", "100%"}, {"height", "200px"}, {"align-horizontal", "left"}, {"background-color", "556677ff"}},
-      children,
-      Panel::ORIENT_VERTICAL);
+  return RSG::tag(
+      {"right-panel-box"},
+      Panel::create(
+          children,
+          Panel::ORIENT_VERTICAL));
 }
 
 RSG::PanelPtr game::hover_info_widget() {
@@ -465,10 +471,11 @@ RSG::PanelPtr game::hover_info_widget() {
     children.push_back(make_label(v));
   }
 
-  return styled<Panel, list<ComponentPtr>>(
-      {{"width", "100%"}, {"height", "200px"}, {"align-horizontal", "left"}, {"background-color", "994477ff"}},
-      children,
-      Panel::ORIENT_VERTICAL);
+  return RSG::tag(
+      {"right-panel-box"},
+      Panel::create(
+          children,
+          Panel::ORIENT_VERTICAL));
 }
 
 /*! Create a Panel with controls for simulation: play, pause, done */

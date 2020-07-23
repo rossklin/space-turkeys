@@ -112,6 +112,7 @@ class game : public game_base_data {
   research::data get_research() const;
   command_selector::ptr get_command_selector(idtype i) const;
   std::vector<entity_selector::ptr> all_selectors() const;
+  std::list<combid> solars_for_panel() const;
 
   // USER INTERFACE RELATED STUFF
   void window_loop();
@@ -359,7 +360,7 @@ class game : public game_base_data {
   };
 
   template <typename T>
-  std::vector<typename specific_selector<T>::ptr> get_all(idtype pid = game_object::any_owner) {
+  std::vector<typename specific_selector<T>::ptr> get_all(idtype pid = game_object::any_owner) const {
     return filtered_entities<specific_selector<T>>(pid);
   };
 
@@ -369,7 +370,7 @@ class game : public game_base_data {
 
   /** Get ids of selected solars */
   template <typename T>
-  std::list<combid> selected_specific() {
+  std::list<combid> selected_specific() const {
     std::list<combid> res;
     for (auto s : get_all<T>()) {
       if (s->selected) {
