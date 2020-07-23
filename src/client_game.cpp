@@ -1404,6 +1404,7 @@ bool game::select_command(idtype key) {
           c->action,
           c->policy,
           ship_counts,
+          get_max_ships_per_fleet(self_id),
           combat,
           [this, c](string ship_class, int policy, int num) {
             c->ship_class = ship_class;

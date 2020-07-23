@@ -23,9 +23,13 @@ PanelPtr st3::command_gui(
     string action,
     int original_policy,
     hm_t<string, int> num_available,
+    int max_num,
     bool allow_combat,
     function<void(string ship_class, int policy, int num)> on_commit,
     Voidfun on_cancel) {
+  // Apply max num
+  num_available = utility::hm_map<string, int, int>([max_num](string k, int v) { return min(v, max_num); }, num_available);
+
   // Policy panel
   hm_t<string, int> policies = {
       {"Maintain course", fleet::policy_maintain_course},
@@ -34,11 +38,13 @@ PanelPtr st3::command_gui(
   };
 
   shared_ptr<int> policy = make_shared<int>(original_policy);
-  ButtonOptionsPtr policy_panel = ButtonOptions::create(
-      utility::range_init<list<string>>(utility::hm_keys(policies)),
-      [policies, policy](string k) {
-        *policy = policies.at(k);
-      });
+  ButtonOptionsPtr policy_panel = tag(
+      {"section"},
+      ButtonOptions::create(
+          utility::range_init<list<string>>(utility::hm_keys(policies)),
+          [policies, policy](string k) {
+            *policy = policies.at(k);
+          }));
 
   // Slider
   shared_ptr<string> ship_class = make_shared<string>(original_ship_class);
@@ -54,36 +60,39 @@ PanelPtr st3::command_gui(
     return Slider::create(0, num_available.at(*ship_class), num_available.at(*ship_class), slider_handler);
   };
 
-  PanelPtr slider_panel = Panel::create({slider_label, build_slider()}, Panel::ORIENT_VERTICAL);
+  PanelPtr slider_panel = tag({"section"}, Panel::create({slider_label, build_slider()}, Panel::ORIENT_VERTICAL));
 
   ButtonPtr title = make_label("Assign " + *ship_class + " ships for '" + action + "' command");
 
   // Ship class panel
-  ButtonOptionsPtr sc_panel = ButtonOptions::create(
-      utility::range_init<list<string>>(utility::hm_keys(num_available)),
-      [ship_class, action, slider_panel, slider_label, build_slider, title](string sc) {
-        *ship_class = sc;
-        title->set_label("Assign " + *ship_class + " ships for '" + action + "' command");
-        slider_panel->replace_children({slider_label, build_slider()});
-      });
+  ButtonOptionsPtr sc_panel = tag(
+      {"section"},
+      ButtonOptions::create(
+          utility::range_init<list<string>>(utility::hm_keys(num_available)),
+          [ship_class, action, slider_panel, slider_label, build_slider, title](string sc) {
+            *ship_class = sc;
+            title->set_label("Assign " + *ship_class + " ships for '" + action + "' command");
+            slider_panel->replace_children({slider_label, build_slider()});
+          }));
 
   // Button panel
   ButtonPtr b_cancel = Button::create("Cancel", [on_cancel](ButtonPtr b) { on_cancel(); });
   ButtonPtr b_commit = Button::create("Commit", [on_commit, ship_class, policy, num](ButtonPtr b) { on_commit(*ship_class, *policy, *num); });
-  PanelPtr button_panel = Panel::create({b_cancel, b_commit});
+  PanelPtr button_panel = tag({"section"}, Panel::create({b_cancel, b_commit}));
 
-  return styled<Panel, list<ComponentPtr>, Panel::orientation>(
-      {},
-      {
-          title,
-          make_hbar(),
-          sc_panel,
-          make_hbar(),
-          policy_panel,
-          make_hbar(),
-          slider_panel,
-          make_hbar(),
-          button_panel,
-      },
-      Panel::ORIENT_VERTICAL);
+  return tag(
+      {"main-panel"},
+      Panel::create(
+          {
+              title,
+              make_hbar(),
+              sc_panel,
+              make_hbar(),
+              policy_panel,
+              make_hbar(),
+              slider_panel,
+              make_hbar(),
+              button_panel,
+          },
+          Panel::ORIENT_VERTICAL));
 }

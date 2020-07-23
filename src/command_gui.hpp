@@ -12,6 +12,7 @@ RSG::PanelPtr command_gui(
     std::string action,
     int policy,
     hm_t<std::string, int> num_available,
+    int max_num,
     bool allow_combat,
     std::function<void(std::string ship_class, int policy, int num)> on_commit,
     RSG::Voidfun on_cancel);
