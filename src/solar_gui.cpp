@@ -118,23 +118,22 @@ PanelPtr st3::solar_gui(solar_ptr s, research::data r, Voidfun on_cancel, functi
   list_t bqueue(new list<string>(s->choice_data.building_queue));
   list_t squeue(new list<string>(s->choice_data.ship_queue));
 
-  PanelPtr p = styled<Panel, list<ComponentPtr>, Panel::orientation>(
-      main_panel_style,
-      {
-          make_label("Manage " + s->id),
-          make_hbar(),
-          Panel::create({
-              make_left_panel(s, bqueue),
-              make_right_panel(s, r, squeue),
-          }),
-          make_hbar(),
-          Panel::create(
-              {
-                  Button::create("Cancel", [=](ButtonPtr s) { on_cancel(); }),
-                  Button::create("Commit", [=](ButtonPtr s) { on_commit(*bqueue, *squeue); }),
+  return RSG::tag(
+      {"main-panel"},
+      Panel::create(
+          {
+              make_label("Manage " + s->id),
+              make_hbar(),
+              Panel::create({
+                  make_left_panel(s, bqueue),
+                  make_right_panel(s, r, squeue),
               }),
-      },
-      Panel::ORIENT_VERTICAL);
-
-  return p;
+              make_hbar(),
+              Panel::create(
+                  {
+                      Button::create("Cancel", [=](ButtonPtr s) { on_cancel(); }),
+                      Button::create("Commit", [=](ButtonPtr s) { on_commit(*bqueue, *squeue); }),
+                  }),
+          },
+          Panel::ORIENT_VERTICAL));
 }
