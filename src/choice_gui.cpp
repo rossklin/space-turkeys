@@ -20,7 +20,15 @@ using namespace RSG;
 // Todo: remove queue item on press
 PanelPtr build_queue(list<string> q) {
   list<ComponentPtr> children = utility::map<list<ComponentPtr>>([](string v) { return Button::create(v); }, q);
-  return tag({"transparent"}, Panel::create(children, Panel::ORIENT_VERTICAL));
+
+  return tag(
+      {"transparent"},
+      Panel::create(
+          {
+              make_label("Queue"),
+              Panel::create(children),
+          },
+          Panel::ORIENT_VERTICAL));
 }
 
 PanelPtr build_info(list<string> info) {
@@ -51,17 +59,8 @@ PanelPtr st3::choice_gui(
   // If this choice does not support queing, always use replace action
   bool hide_action = !allow_queue;
 
-  StyleMap section_style = {
-      {"width", "100%"},
-      {"overflow", "scrolled"},
-      {"margin-top", "10"},
-      {"margin-bottom", "10"},
-  };
-
-  auto make_section = [section_style](string h) {
-    auto s = section_style;
-    s["height"] = h;
-    return styled<Panel>(s);
+  auto make_section = [](string h) {
+    return tag({"section"}, with_style({{"height", h}}, Panel::create()));
   };
 
   // Create sections
