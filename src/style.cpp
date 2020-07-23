@@ -11,8 +11,12 @@ using namespace RSG;
 using namespace st3;
 
 void st3::generate_styles() {
+  // Class style modifications
+
+  // Debug
   Component::class_style["Panel"]["border-thickness"] = "1";
 
+  // Main panel
   Component::tag_style["main-panel"] = {
       {"width", "90%"},
       {"height", "90%"},
@@ -20,6 +24,32 @@ void st3::generate_styles() {
       {"color", "ffccaaff"},
   };
 
+  // Right panel
+  Component::tag_style["right-panel"] = {
+      {"position", "absolute"},
+      {"right", "0"},
+      {"left", "auto"},
+      {"top", "0"},
+      {"width", "25%"},
+      {"height", "100%"},
+      {"background-color", "ffcc77ff"},
+      {"border-color", "ff0000ff"},
+  };
+
+  Component::tag_style["right-panel-button"] = {
+      {"width", "90%"},
+      {"height", "30px"},
+  };
+
+  Component::tag_style["right-panel-box"] = {
+      {"width", "100%"},
+      {"height", "200px"},
+      {"align-horizontal", "left"},
+      {"align-vertical", "top"},
+      {"background-color", "556677ff"},
+  };
+
+  // General styles
   Component::tag_style["transparent"] = {
       {"background-color", "00000000"},
       {"border-thickness", "0"},
@@ -55,6 +85,13 @@ void st3::generate_styles() {
       {"selected:background-color", "654321aa"},
       {"selected:border-thickness", "2"},
       {"selected:border-color", "ffffff88"},
+  };
+
+  Component::tag_style["section"] = {
+      {"width", "100%"},
+      {"overflow", "scrolled"},
+      {"margin-top", "10"},
+      {"margin-bottom", "10"},
   };
 }
 
