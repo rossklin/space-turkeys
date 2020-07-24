@@ -4,6 +4,7 @@
 #include <string>
 
 #include "rsg/src/button.hpp"
+#include "rsg/src/panel.hpp"
 #include "rsg/src/utility.hpp"
 
 using namespace std;
@@ -21,7 +22,7 @@ void st3::generate_styles() {
   Component::tag_style["main-panel"] = {
       {"width", "90%"},
       {"height", "90%"},
-      {"background-color", "12345688"},
+      {"background-color", "123456bb"},
       {"color", "ffccaaff"},
   };
 
@@ -33,7 +34,7 @@ void st3::generate_styles() {
       {"top", "0"},
       {"width", "25%"},
       {"height", "100%"},
-      {"background-color", "ccddee88"},
+      {"background-color", "ccddee66"},
       {"border-color", "33557755"},
       {"border-thickness", "5"},
       {"align-vertical", "top"},
@@ -69,7 +70,7 @@ void st3::generate_styles() {
   };
 
   Component::tag_style["main-commit-button"] = {
-      {"font-size", "20"},
+      {"font-size", "40"},
   };
 
   // Choice GUI
@@ -82,6 +83,26 @@ void st3::generate_styles() {
 
   Component::tag_style["choice-queue"] = {
       {"width", "100%"},
+      {"height", "100%"},
+      {"align-vertical", "top"},
+      {"align-horizontal", "left"},
+  };
+
+  Component::tag_style["choice-wrapper"] = {
+      {"width", "100%"},
+      {"height", "85%"},
+      {"background-color", "00000000"},
+      {"border-thickness", "0"},
+  };
+
+  Component::tag_style["choice-left"] = {
+      {"width", "70%"},
+      {"height", "100%"},
+      {"border-thickness", "1"},
+  };
+
+  Component::tag_style["choice-right"] = {
+      {"width", "25%"},
       {"height", "100%"},
   };
 
@@ -97,15 +118,40 @@ void st3::generate_styles() {
 
   Component::tag_style["solar-component"] = {
       {"align-horizontal", "left"},
+      {"align-vertical", "top"},
       {"width", "50%"},
       {"height", "100%"},
+      {"overflow", "scrolled"},
+  };
+
+  Component::tag_style["solar-queue"] = {
+      {"width", "100%"},
+      {"height", "100%"},
+      {"background-color", "00000000"},
+      {"border-thickness", "0"},
+  };
+
+  Component::tag_style["solar-gui-button"] = {
+      {"width", "90%"},
+      {"height", "40px"},
   };
 
   // General styles
+
+  Component::tag_style["button-option"] = {
+      {"width", "20%"},
+      {"height", "30px"},
+  };
+
+  Component::tag_style["default-panel"] = {
+      {"background-color", "12345688"},
+      {"color", "ffccaaff"},
+  };
+
   Component::tag_style["abs-top-left"] = {
       {"position", "absolute"},
-      {"top", "5"},
-      {"left", "5"},
+      {"top", "10"},
+      {"left", "10"},
   };
 
   Component::tag_style["transparent"] = {
@@ -127,7 +173,7 @@ void st3::generate_styles() {
   };
 
   Component::tag_style["list-item"] = {
-      {"font-size", "11"},
+      {"font-size", "12"},
   };
 
   Component::tag_style["h1"] = {
@@ -150,11 +196,19 @@ void st3::generate_styles() {
   Component::tag_style["card"] = {
       {"font-size", "18"},
       {"background-color", "123456ff"},
-      {"hover:background-color", "123456aa"},
-      {"selected:color", "ffffffff"},
-      {"selected:background-color", "654321aa"},
-      {"selected:border-thickness", "2"},
-      {"selected:border-color", "ffffff88"},
+      {"border-thickness", "2"},
+      {"border-color", "ddeeff88"},
+  };
+
+  Component::tag_style["card:hover"] = {
+      {"background-color", "345678ff"},
+  };
+
+  Component::tag_style["card:selected"] = {
+      {"color", "ffffffff"},
+      {"background-color", "654321aa"},
+      {"border-thickness", "4"},
+      {"border-color", "ffffffaa"},
   };
 
   Component::tag_style["section"] = {
@@ -162,6 +216,7 @@ void st3::generate_styles() {
       {"overflow", "scrolled"},
       {"margin-top", "10"},
       {"margin-bottom", "10"},
+      {"border-thickness", "0"},
   };
 }
 
@@ -182,4 +237,12 @@ ButtonPtr st3::make_card(string v, int n, string h) {
           {"height", h},
       },
       b);
+}
+
+PanelPtr st3::spaced_ul(ComponentPtr c) {
+  return tag(
+      {"transparent"},
+      with_style(
+          {{"align-horizontal", "left"}, {"align-vertical", "top"}, {"width", "100%"}},
+          Panel::create({c})));
 }
