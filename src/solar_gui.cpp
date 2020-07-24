@@ -17,14 +17,7 @@ using namespace RSG;
 
 typedef shared_ptr<list<string>> list_t;
 
-PanelPtr column2() {
-  return styled<Panel, list<ComponentPtr>, Panel::orientation>(
-      {{"width", "50%"}},
-      {},
-      Panel::ORIENT_VERTICAL);
-}
-
-PanelPtr building_queue(solar_ptr s, list_t q) {
+PanelPtr make_building_queue(solar_ptr s, list_t q) {
   hm_t<string, int> available = s->development;
   list<ComponentPtr> children;
   PanelPtr p = Panel::create({}, Panel::ORIENT_VERTICAL);
@@ -46,29 +39,15 @@ PanelPtr building_queue(solar_ptr s, list_t q) {
   return p;
 }
 
-// Panel with buttons for queing development
-PanelPtr make_left_panel(solar_ptr s, list_t q) {
-  PanelPtr p1 = column2();
-  PanelPtr p2 = column2();
+PanelPtr make_building_buttons(function<void(string)> callback) {
   list<ComponentPtr> children;
-
   for (auto v : keywords::development) {
-    children.push_back(Button::create(
-        v,
-        [=](ButtonPtr b) {
-          q->push_back(v);
-          p2->clear_children();
-          p2->add_child(building_queue(s, q));
-        }));
+    children.push_back(Button::create(v, [callback, v]() { callback(v); }));
   }
-
-  p1->add_children(children);
-  p2->add_child(building_queue(s, q));
-
-  return styled<Panel, list<ComponentPtr>>({{"width", "50%"}}, {p1, p2});
+  return Panel::create(children, Panel::ORIENT_VERTICAL);
 }
 
-PanelPtr ship_queue(list_t q) {
+PanelPtr make_ship_queue(list_t q) {
   list<ComponentPtr> children;
   PanelPtr p = Panel::create({}, Panel::ORIENT_VERTICAL);
 
@@ -88,52 +67,59 @@ PanelPtr ship_queue(list_t q) {
   return p;
 }
 
-// Panel with buttons for queing ship production
-PanelPtr make_right_panel(solar_ptr s, research::data r, list_t q) {
-  PanelPtr p1 = column2();
-  PanelPtr p2 = column2();
+PanelPtr make_ship_buttons(solar_ptr s, research::data r, function<void(string)> callback) {
   list<ComponentPtr> children;
 
   auto skey = utility::hm_keys(ship_stats::table());
   sort(skey.begin(), skey.end());
   for (auto v : skey) {
     if (r.can_build_ship(v, s)) {
-      children.push_back(Button::create(
-          v,
-          [=](ButtonPtr b) {
-            q->push_back(v);
-            p2->clear_children();
-            p2->add_child(ship_queue(q));
-          }));
+      children.push_back(Button::create(v, [callback, v]() { callback(v); }));
     }
   }
 
-  p1->add_children(children);
-  p2->add_child(ship_queue(q));
-
-  return styled<Panel, list<ComponentPtr>>({{"width", "50%"}}, {p1, p2});
+  return Panel::create(children, Panel::ORIENT_VERTICAL);
 }
 
 PanelPtr st3::solar_gui(solar_ptr s, research::data r, Voidfun on_cancel, function<void(list<string>, list<string>)> on_commit) {
   list_t bqueue(new list<string>(s->choice_data.building_queue));
   list_t squeue(new list<string>(s->choice_data.ship_queue));
 
-  return RSG::tag(
-      {"main-panel"},
-      Panel::create(
-          {
-              make_label("Manage " + s->id),
-              make_hbar(),
+  PanelPtr p_building_buttons, p_building_queue, p_ship_buttons, p_ship_queue;
+
+  auto ship_button_callback = [=](string v) {
+    squeue->push_back(v);
+    p_ship_queue->replace_children({make_ship_queue(squeue)});
+  };
+
+  auto building_button_callback = [=](string v) {
+    bqueue->push_back(v);
+    p_building_queue->replace_children({make_building_queue(s, bqueue)});
+  };
+
+  p_building_buttons = tag({"solar-component"}, make_building_buttons(building_button_callback));
+  p_building_queue = tag({"solar-component"}, make_building_queue(s, squeue));
+  p_ship_buttons = tag({"solar-component"}, make_ship_buttons(s, r, ship_button_callback));
+  p_ship_queue = tag({"solar-component"}, make_ship_queue(squeue));
+
+  return Panel::create(
+      {
+          tag({"h1"}, Button::create("Manage " + s->id)),
+          make_hbar(),
+          tag(
+              {"section", "solar-main-panel"},
               Panel::create({
-                  make_left_panel(s, bqueue),
-                  make_right_panel(s, r, squeue),
-              }),
-              make_hbar(),
+                  tag({"solar-block"}, Panel::create({p_building_buttons, p_building_queue})),
+                  tag({"solar-block"}, Panel::create({p_ship_buttons, p_ship_queue})),
+              })),
+          make_hbar(),
+          tag(
+              {"section"},
               Panel::create(
                   {
                       Button::create("Cancel", [=](ButtonPtr s) { on_cancel(); }),
                       Button::create("Commit", [=](ButtonPtr s) { on_commit(*bqueue, *squeue); }),
-                  }),
-          },
-          Panel::ORIENT_VERTICAL));
+                  })),
+      },
+      Panel::ORIENT_VERTICAL);
 }
