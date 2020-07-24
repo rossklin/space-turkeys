@@ -22,10 +22,10 @@ PanelPtr build_queue(list<string> q) {
   list<ComponentPtr> children = utility::map<list<ComponentPtr>>([](string v) { return Button::create(v); }, q);
 
   return tag(
-      {"transparent"},
+      {"transparent", "choice-queue"},
       Panel::create(
           {
-              make_label("Queue"),
+              tag({"abs-top-left"}, make_label("Queue")),
               Panel::create(children),
           },
           Panel::ORIENT_VERTICAL));
@@ -34,18 +34,11 @@ PanelPtr build_queue(list<string> q) {
 PanelPtr build_info(list<string> info) {
   list<ComponentPtr> children = utility::map<list<ComponentPtr>>(
       [](string v) {
-        auto p = make_label(v);
-        p->set_style({
-            {"font-size", "11"},
-            {"padding-top", "0"},
-            {"padding-bottom", "0"},
-            {"margin-top", "5"},
-            {"margin-bottom", "5"},
-        });
-        return p;
+        return tag({"label", "list-item"}, Button::create(v));
       },
       info);
-  return Panel::create(children, Panel::ORIENT_VERTICAL);
+
+  return tag({"choice-gui-info"}, Panel::create(children, Panel::ORIENT_VERTICAL));
 }
 
 PanelPtr st3::choice_gui(
@@ -148,23 +141,18 @@ PanelPtr st3::choice_gui(
   button_wrapper->replace_children({Button::create("Cancel", on_cancel), b_commit});
 
   // Main layout
-  PanelPtr p = RSG::tag(
-      {"main-panel"},
-      Panel::create(
-          {
-              tag({"h1"}, Button::create(title)),
-              make_hbar(),
-              cards_wrapper,
-              action_options,
-              info_wrapper,
-              queue_wrapper,
-              button_wrapper,
-          },
-          Panel::ORIENT_VERTICAL));
+  auto p = Panel::create(
+      {
+          tag({"h1"}, Button::create(title)),
+          make_hbar(),
+          cards_wrapper,
+          action_options,
+          info_wrapper,
+          queue_wrapper,
+          button_wrapper,
+      },
+      Panel::ORIENT_VERTICAL);
 
   if (hide_action) p->remove_child(action_options);
-
-  // Prevent click propagation
-  p->on_click = [](ComponentPtr self, sf::Event e) {};
   return p;
 }
