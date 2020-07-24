@@ -245,6 +245,17 @@ void game::swap_layer(int layer, RSG::ComponentPtr c) {
   });
 }
 
+void game::set_main_panel(PanelPtr p) {
+  p = RSG::tag({"main-panel"}, p);
+  p->on_keypress[sf::Keyboard::Escape] = [this]() {
+    swap_layer(LAYER_PANEL, 0);
+  };
+  p->on_click = [](ComponentPtr self, sf::Event e) {};
+  queue_ui_task([this, p]() {
+    swap_layer(LAYER_PANEL, p);
+  });
+}
+
 /*! Queue create a popup message which terminates game on callback */
 void game::terminate_with_message(string message) {
   popup_query("", message, {{"Ok", [this]() { state_run = false; }}});
@@ -260,9 +271,9 @@ void game::build_base_panel() {
       {"right-panel"},
       Panel::create(
           {
-              make_button("Research", [this]() { swap_layer(LAYER_PANEL, research_gui()); }),
-              make_button("Development", [this]() { swap_layer(LAYER_PANEL, development_gui()); }),
-              make_button("Military", [this]() { swap_layer(LAYER_PANEL, military_gui()); }),
+              make_button("Research", [this]() { set_main_panel(research_gui()); }),
+              make_button("Development", [this]() { set_main_panel(development_gui()); }),
+              make_button("Military", [this]() { set_main_panel(military_gui()); }),
               event_log_widget(),
               hover_info_widget(),
           },
@@ -273,7 +284,16 @@ void game::build_base_panel() {
     cout << "Right panel prevents click" << endl;
   };
 
-  queue_ui_task([this, right]() { base_layer->replace_children({right}); });
+  PanelPtr bottom = RSG::tag(
+      {"bottom-panel", "transparent"},
+      Panel::create(
+          {tag(
+              {"main-commit-button"},
+              Button::create(
+                  "Commit",
+                  [this]() { simulation_step(); }))}));
+
+  queue_ui_task([this, right, bottom]() { base_layer->replace_children({right, bottom}); });
 }
 
 /** Queue Draw a box with a message and wait for ok. */
@@ -449,10 +469,9 @@ PanelPtr game::military_gui() {
 }
 
 RSG::PanelPtr game::event_log_widget() {
-  list<ComponentPtr> children = {make_label("Event log:")};
+  list<ComponentPtr> children = {make_label("Event log"), make_hbar()};
   for (auto v : event_log) {
-    children.push_back(make_label(v));
-    children.push_back(make_hbar());
+    children.push_back(RSG::tag({"event-item"}, Button::create(v)));
   }
 
   return RSG::tag(
@@ -465,10 +484,10 @@ RSG::PanelPtr game::event_log_widget() {
 RSG::PanelPtr game::hover_info_widget() {
   list<ComponentPtr> children;
   children.push_back(make_label("Hover info"));
-  children.push_back(make_label(hover_info_title));
+  if (hover_info_title.size()) children.push_back(make_label(hover_info_title));
   children.push_back(make_hbar());
   for (auto v : hover_info_items) {
-    children.push_back(make_label(v));
+    children.push_back(RSG::tag({"list-item", "label"}, Button::create(v)));
   }
 
   return RSG::tag(
@@ -695,7 +714,7 @@ void game::choice_step() {
   cout << "choice_step: start" << endl;
 
   if (c.research.empty() && !r.available().empty()) {
-    swap_layer(LAYER_PANEL, research_gui());
+    set_main_panel(research_gui());
   }
 
   choice_complete = false;
@@ -749,7 +768,7 @@ void game::simulation_step() {
   queue_background_task(bind(&game::load_frames, this));
 
   clear_ui_layers(false);
-  swap_layer(LAYER_PANEL, simulation_gui());
+  queue_ui_task([this]() { base_layer->replace_children({simulation_gui()}); });
 }
 
 void game::next_sim_frame() {
@@ -1404,8 +1423,7 @@ bool game::select_command(idtype key) {
   hm_t<string, int> ship_counts;
   for (auto x : ready_ships) ship_counts[x.first] = x.second.size();
 
-  swap_layer(
-      LAYER_PANEL,
+  set_main_panel(
       command_gui(
           c->ship_class,
           c->action,
@@ -1882,8 +1900,7 @@ bool game::choice_event(sf::Event e) {
           ss = selected_specific<solar>();
           if (ss.size() == 1) {
             auto sol = get_specific<solar>(ss.front());
-            swap_layer(
-                LAYER_PANEL,
+            set_main_panel(
                 solar_gui(
                     sol,
                     get_research(),

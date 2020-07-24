@@ -126,6 +126,7 @@ class game : public game_base_data {
   void set_game_log(std::list<std::string> log);
   void set_hover_info(std::string title, std::list<std::string> info);
   void swap_layer(int layer, RSG::ComponentPtr component);
+  void set_main_panel(RSG::PanelPtr p);
   void clear_ui_layers(bool preserve_base = true);
   void terminate_with_message(std::string message);
   void build_base_panel();
