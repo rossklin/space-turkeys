@@ -38,13 +38,18 @@ PanelPtr st3::command_gui(
   };
 
   shared_ptr<int> policy = make_shared<int>(original_policy);
-  ButtonOptionsPtr policy_panel = tag(
+  PanelPtr policy_panel = tag(
       {"section"},
-      ButtonOptions::create(
-          utility::range_init<list<string>>(utility::hm_keys(policies)),
-          [policies, policy](string k) {
-            *policy = policies.at(k);
-          }));
+      Panel::create(
+          {
+              spaced_ul(make_label("Enemy reaction policy")),
+              ButtonOptions::create(
+                  utility::range_init<list<string>>(utility::hm_keys(policies)),
+                  [policies, policy](string k) {
+                    *policy = policies.at(k);
+                  }),
+          },
+          Panel::ORIENT_VERTICAL));
 
   // Slider
   shared_ptr<string> ship_class = make_shared<string>(original_ship_class);
@@ -65,14 +70,19 @@ PanelPtr st3::command_gui(
   ButtonPtr title = make_label("Assign " + *ship_class + " ships for '" + action + "' command");
 
   // Ship class panel
-  ButtonOptionsPtr sc_panel = tag(
+  PanelPtr sc_panel = tag(
       {"section"},
-      ButtonOptions::create(
-          utility::range_init<list<string>>(utility::hm_keys(num_available)),
-          [ship_class, action, slider_panel, slider_label, build_slider, title](string sc) {
-            *ship_class = sc;
-            title->set_label("Assign " + *ship_class + " ships for '" + action + "' command");
-            slider_panel->replace_children({slider_label, build_slider()});
+      Panel::create(
+          {
+              spaced_ul(make_label("Select ship class to send")),
+
+              ButtonOptions::create(
+                  utility::range_init<list<string>>(utility::hm_keys(num_available)),
+                  [ship_class, action, slider_panel, slider_label, build_slider, title](string sc) {
+                    *ship_class = sc;
+                    title->set_label("Assign " + *ship_class + " ships for '" + action + "' command");
+                    slider_panel->replace_children({slider_label, build_slider()});
+                  }),
           }));
 
   // Button panel

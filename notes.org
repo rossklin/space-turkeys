@@ -1,18 +1,45 @@
 * Notes test game 2020-06-22
-** bugs
-*** Irregular segfault when starting second client
-*** Check that commit is disabled for main panels until choice is selected
-*** Make main panel prevent click event propagation
-*** Hover info shows nothing, does not fit in window
-*** Event log and hover info should be 100% width or transparent background
+** verify
+*** [impl] Make main panel prevent click event propagation
+*** [impl] Hover info shows nothing, does not fit in window
+*** [impl] Event log and hover info should be 100% width or transparent background
+** Segfault in solar_gui
+In building_button_callback, p_building_queue is 0
+** UI updates
+*** Acute need for proper style matching rules
+*** Bind global button handlers to components
+*** Base panel
+**** [impl] Right panel should have 100% height
+**** [impl] event log and info panel labels should be positioned at top
+**** [impl] Less space after box labels, hbar on both
+*** Choice GUI
+**** [impl] Cards should have smaller font
+**** [impl] Description list should have tag transparent
+**** [impl] Description list should be left aligned
+**** Description list title should have margin and larger font
+**** [impl] Description list should have fixed width 67%
+**** [impl] Queue label should have absolute position top left
+**** Title should have less top margin
+*** Development GUI
+**** [impl] List nr of solars in title
 *** Military GUI 
-**** shows techs instead of ships
-*** Choice GUI 
-**** description lists should have smaller text and smaller top-bottom-margins
-**** content should be center-aligned
+**** [impl] List nr of solars in title
 *** Command GUI
+**** Ship class list items should 
+**** [impl] Must respect ships per fleet limit
 **** Slider does not show
-**** Ship list to wide for window
+**** [impl] Ship list to wide for window
+*** Solar GUI needs layout
+*** Target GUI needs layout
+*** Simulation interface: needs progress bar
+*** Use consistent styles for choice-buttons, enquer-buttons and queue-items
+*** UI overflow scrollbars
+** bugs
+*** Target GUI click does not stop event propagation to area select
+*** Irregular segfault when starting second client
+*** After scroll, content shifts position on next update_layout
+*** Map index crash in simulation step when sending ships
+*** Server should only send seen entities on first load, send opponent starting positions separately instead
 *** Global game::window used only for graphics::unscale, seems silly?
 *** Ship stuck circling target
 *** Out of range error when asking to join nonexistent game

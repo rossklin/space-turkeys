@@ -19,8 +19,8 @@ typedef shared_ptr<list<string>> list_t;
 
 PanelPtr make_building_queue(solar_ptr s, list_t q) {
   hm_t<string, int> available = s->development;
-  list<ComponentPtr> children;
-  PanelPtr p = Panel::create({}, Panel::ORIENT_VERTICAL);
+  list<ComponentPtr> children = {make_label("Queue"), make_hbar()};
+  PanelPtr p = tag({"solar-queue"}, Panel::create({}, Panel::ORIENT_VERTICAL));
 
   for (auto v : *q) {
     available[v]++;
@@ -42,23 +42,25 @@ PanelPtr make_building_queue(solar_ptr s, list_t q) {
 PanelPtr make_building_buttons(function<void(string)> callback) {
   list<ComponentPtr> children;
   for (auto v : keywords::development) {
-    children.push_back(Button::create(v, [callback, v]() { callback(v); }));
+    children.push_back(tag({"card", "solar-gui-button"}, Button::create(v, [callback, v]() { callback(v); })));
   }
   return Panel::create(children, Panel::ORIENT_VERTICAL);
 }
 
 PanelPtr make_ship_queue(list_t q) {
-  list<ComponentPtr> children;
-  PanelPtr p = Panel::create({}, Panel::ORIENT_VERTICAL);
+  list<ComponentPtr> children = {make_label("Queue"), make_hbar()};
+  PanelPtr p = tag({"solar-queue"}, Panel::create({}, Panel::ORIENT_VERTICAL));
 
   for (auto v : *q) {
-    ButtonPtr b = Button::create(
-        v,
-        [=](ButtonPtr self) {
-          p->remove_child(self);
-          auto i = find(q->begin(), q->end(), v);
-          if (i != q->end()) q->erase(i);
-        });
+    ButtonPtr b = tag(
+        {"label"},
+        Button::create(
+            v,
+            [=](ButtonPtr self) {
+              p->remove_child(self);
+              auto i = find(q->begin(), q->end(), v);
+              if (i != q->end()) q->erase(i);
+            }));
 
     children.push_back(b);
   }
@@ -74,7 +76,7 @@ PanelPtr make_ship_buttons(solar_ptr s, research::data r, function<void(string)>
   sort(skey.begin(), skey.end());
   for (auto v : skey) {
     if (r.can_build_ship(v, s)) {
-      children.push_back(Button::create(v, [callback, v]() { callback(v); }));
+      children.push_back(tag({"card", "solar-gui-button"}, Button::create(v, [callback, v]() { callback(v); })));
     }
   }
 
@@ -98,9 +100,9 @@ PanelPtr st3::solar_gui(solar_ptr s, research::data r, Voidfun on_cancel, functi
   };
 
   p_building_buttons = tag({"solar-component"}, make_building_buttons(building_button_callback));
-  p_building_queue = tag({"solar-component"}, make_building_queue(s, squeue));
+  p_building_queue = tag({"solar-component"}, Panel::create({make_building_queue(s, bqueue)}));
   p_ship_buttons = tag({"solar-component"}, make_ship_buttons(s, r, ship_button_callback));
-  p_ship_queue = tag({"solar-component"}, make_ship_queue(squeue));
+  p_ship_queue = tag({"solar-component"}, Panel::create({make_ship_queue(squeue)}));
 
   return Panel::create(
       {

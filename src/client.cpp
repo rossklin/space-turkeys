@@ -99,8 +99,8 @@ void setup_join_game(cl_socket_ptr socket, string gid) {
 }
 
 void setup_gfx(bool fullscreen = false) {
-  int width = 800;
-  int height = 600;
+  int width = 1024;
+  int height = 9 * 1024 / 16;
   sf::VideoMode vmode(width, height);
   sf::Uint32 vstyle = sf::Style::Default;
 

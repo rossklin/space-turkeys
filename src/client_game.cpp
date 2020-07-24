@@ -332,7 +332,7 @@ void game::popup_query(string title, string text, hm_t<string, Voidfun> opts) {
 PanelPtr game::research_gui() {
   list<string> opts = get_research().available();
 
-  option_generator f_option = bind(&make_card, placeholders::_1, opts.size(), "100px");
+  option_generator f_option = [](string v) { return tag({"card"}, Button::create(v)); };
 
   info_generator f_info = [this](string k) -> list<string> {
     list<string> items;
@@ -374,7 +374,7 @@ PanelPtr game::development_gui() {
   list<string> opts = utility::range_init<list<string>>(keywords::development);
   auto sel = solars_for_panel();
 
-  option_generator f_option = bind(&make_card, placeholders::_1, opts.size(), "100px");
+  option_generator f_option = [](string v) { return tag({"card"}, Button::create(v)); };
 
   info_generator f_info = [this](string k) -> list<string> {
     list<string> items;
@@ -429,7 +429,7 @@ PanelPtr game::military_gui() {
     }
   }
 
-  option_generator f_option = bind(&make_card, placeholders::_1, opts.size(), "100px");
+  option_generator f_option = [](string v) { return tag({"card"}, Button::create(v)); };
 
   info_generator f_info = [this](string k) -> list<string> {
     list<string> items;

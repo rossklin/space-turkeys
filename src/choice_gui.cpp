@@ -21,14 +21,12 @@ using namespace RSG;
 PanelPtr build_queue(list<string> q) {
   list<ComponentPtr> children = utility::map<list<ComponentPtr>>([](string v) { return Button::create(v); }, q);
 
+  children.push_front(make_hbar());
+  children.push_front(make_label("Queue"));
+
   return tag(
       {"transparent", "choice-queue"},
-      Panel::create(
-          {
-              tag({"abs-top-left"}, make_label("Queue")),
-              Panel::create(children),
-          },
-          Panel::ORIENT_VERTICAL));
+      Panel::create(children, Panel::ORIENT_VERTICAL));
 }
 
 PanelPtr build_info(list<string> info) {
@@ -53,15 +51,17 @@ PanelPtr st3::choice_gui(
   bool hide_action = !allow_queue;
 
   auto make_section = [](string h) {
-    return tag({"section"}, with_style({{"height", h}}, Panel::create()));
+    return tag({"section", "default-panel"}, with_style({{"height", h}}, Panel::create()));
   };
 
   // Create sections
-  PanelPtr cards_wrapper = make_section("auto");
-  PanelPtr action_wrapper = make_section("auto");
-  PanelPtr info_wrapper = make_section("20%");
-  PanelPtr queue_wrapper = make_section("15%");
-  PanelPtr button_wrapper = make_section("auto");
+  PanelPtr cards_wrapper = make_section("30%");
+  PanelPtr action_wrapper = make_section("20%");
+  PanelPtr info_wrapper = make_section("30%");
+  PanelPtr button_wrapper = make_section("15%");
+
+  // Left panel section
+  PanelPtr queue_wrapper = Panel::create();
 
   // Managed variables
   shared_ptr<list<string>> queue = make_shared<list<string>>();
@@ -79,15 +79,17 @@ PanelPtr st3::choice_gui(
       *queue = {v};
     }
 
-    queue_wrapper->clear_children();
-    queue_wrapper->add_child(build_queue(*queue));
+    queue_wrapper->replace_children({build_queue(*queue)});
     b_commit->remove_state("disabled");
   };
+
+  // Initialize queue wrapper
+  queue_wrapper->replace_children({build_queue(*queue)});
 
   // Option cards
   list<ComponentPtr> cards = utility::map<list<ComponentPtr>>(
       [=](string v) -> ComponentPtr {
-        ButtonPtr b = f_opt(v);
+        ButtonPtr b = with_style({{"width", "22%"}, {"height", "75%"}}, f_opt(v));
         b->set_on_press([=](ButtonPtr self) { enque(v); });
         b->on_hover = [=]() {
           info_wrapper->clear_children();
@@ -141,18 +143,31 @@ PanelPtr st3::choice_gui(
   button_wrapper->replace_children({Button::create("Cancel", on_cancel), b_commit});
 
   // Main layout
+  list<ComponentPtr> left_children = {
+      cards_wrapper,
+      action_options,
+      info_wrapper,
+      button_wrapper,
+  };
+  if (hide_action) left_children.remove(action_options);
+
   auto p = Panel::create(
       {
           tag({"h1"}, Button::create(title)),
           make_hbar(),
-          cards_wrapper,
-          action_options,
-          info_wrapper,
-          queue_wrapper,
-          button_wrapper,
+          tag(
+              {"choice-wrapper"},
+              Panel::create(
+                  {
+                      tag(
+                          {"choice-left", "transparent"},
+                          Panel::create(left_children, Panel::ORIENT_VERTICAL)),
+                      tag(
+                          {"choice-right", "transparent"},
+                          queue_wrapper),
+                  })),
       },
       Panel::ORIENT_VERTICAL);
 
-  if (hide_action) p->remove_child(action_options);
   return p;
 }
