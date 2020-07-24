@@ -15,6 +15,7 @@ void st3::generate_styles() {
 
   // Debug
   Component::class_style["Panel"]["border-thickness"] = "1";
+  Component::class_style["Panel"]["border-color"] = "ff448855";
 
   // Main panel
   Component::tag_style["main-panel"] = {
@@ -32,8 +33,10 @@ void st3::generate_styles() {
       {"top", "0"},
       {"width", "25%"},
       {"height", "100%"},
-      {"background-color", "ffcc77ff"},
-      {"border-color", "ff0000ff"},
+      {"background-color", "ccddee88"},
+      {"border-color", "33557755"},
+      {"border-thickness", "5"},
+      {"align-vertical", "top"},
   };
 
   Component::tag_style["right-panel-button"] = {
@@ -46,10 +49,65 @@ void st3::generate_styles() {
       {"height", "200px"},
       {"align-horizontal", "left"},
       {"align-vertical", "top"},
-      {"background-color", "556677ff"},
+      {"padding-top", "5"},
+  };
+
+  Component::tag_style["event-item"] = {
+      {"margin-left", "0"},
+      {"margin-right", "0"},
+      {"margin-top", "5"},
+      {"margin-bottom", "5"},
+      {"width", "100%"},
+  };
+
+  // Bottom panel
+  Component::tag_style["bottom-panel"] = {
+      {"position", "absolute"},
+      {"top", "auto"},
+      {"bottom", "0"},
+      {"width", "100%"},
+  };
+
+  Component::tag_style["main-commit-button"] = {
+      {"font-size", "20"},
+  };
+
+  // Choice GUI
+  Component::tag_style["choice-gui-info"] = {
+      {"background-color", "00000000"},
+      {"border-thickness", "0"},
+      {"align-horizontal", "left"},
+      {"width", "67%"},
+  };
+
+  Component::tag_style["choice-queue"] = {
+      {"width", "100%"},
+      {"height", "100%"},
+  };
+
+  // Solar GUI
+  Component::tag_style["solar-main-panel"] = {
+      {"height", "67%"},
+  };
+
+  Component::tag_style["solar-block"] = {
+      {"width", "45%"},
+      {"height", "90%"},
+  };
+
+  Component::tag_style["solar-component"] = {
+      {"align-horizontal", "left"},
+      {"width", "50%"},
+      {"height", "100%"},
   };
 
   // General styles
+  Component::tag_style["abs-top-left"] = {
+      {"position", "absolute"},
+      {"top", "5"},
+      {"left", "5"},
+  };
+
   Component::tag_style["transparent"] = {
       {"background-color", "00000000"},
       {"border-thickness", "0"},
@@ -58,6 +116,18 @@ void st3::generate_styles() {
   Component::tag_style["label"] = {
       {"background-color", "00000000"},
       {"border-thickness", "0"},
+      {"padding-left", "0"},
+      {"padding-right", "0"},
+      {"padding-top", "0"},
+      {"padding-bottom", "0"},
+      {"margin-left", "5"},
+      {"margin-right", "5"},
+      {"margin-top", "5"},
+      {"margin-bottom", "5"},
+  };
+
+  Component::tag_style["list-item"] = {
+      {"font-size", "11"},
   };
 
   Component::tag_style["h1"] = {
@@ -78,7 +148,7 @@ void st3::generate_styles() {
   };
 
   Component::tag_style["card"] = {
-      {"font-size", "25"},
+      {"font-size", "18"},
       {"background-color", "123456ff"},
       {"hover:background-color", "123456aa"},
       {"selected:color", "ffffffff"},
