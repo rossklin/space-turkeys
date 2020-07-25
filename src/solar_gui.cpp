@@ -42,7 +42,7 @@ PanelPtr make_building_queue(solar_ptr s, list_t q) {
 PanelPtr make_building_buttons(function<void(string)> callback) {
   list<ComponentPtr> children;
   for (auto v : keywords::development) {
-    children.push_back(tag({"card", "solar-gui-button"}, Button::create(v, [callback, v]() { callback(v); })));
+    children.push_back(tag({"card"}, Button::create(v, [callback, v]() { callback(v); })));
   }
   return Panel::create(children, Panel::ORIENT_VERTICAL);
 }
@@ -76,7 +76,7 @@ PanelPtr make_ship_buttons(solar_ptr s, research::data r, function<void(string)>
   sort(skey.begin(), skey.end());
   for (auto v : skey) {
     if (r.can_build_ship(v, s)) {
-      children.push_back(tag({"card", "solar-gui-button"}, Button::create(v, [callback, v]() { callback(v); })));
+      children.push_back(tag({"card"}, Button::create(v, [callback, v]() { callback(v); })));
     }
   }
 
@@ -89,10 +89,15 @@ PanelPtr st3::solar_gui(solar_ptr s, research::data r, Voidfun on_cancel, functi
 
   PanelPtr p_building_buttons, p_building_queue, p_ship_buttons, p_ship_queue;
 
+  p_building_queue = tag({"solar-component"}, Panel::create({make_building_queue(s, bqueue)}));
+  p_ship_queue = tag({"solar-component"}, Panel::create({make_ship_queue(squeue)}));
+
   auto ship_button_callback = [=](string v) {
     squeue->push_back(v);
     p_ship_queue->replace_children({make_ship_queue(squeue)});
   };
+
+  p_ship_buttons = tag({"solar-component"}, make_ship_buttons(s, r, ship_button_callback));
 
   auto building_button_callback = [=](string v) {
     bqueue->push_back(v);
@@ -100,9 +105,6 @@ PanelPtr st3::solar_gui(solar_ptr s, research::data r, Voidfun on_cancel, functi
   };
 
   p_building_buttons = tag({"solar-component"}, make_building_buttons(building_button_callback));
-  p_building_queue = tag({"solar-component"}, Panel::create({make_building_queue(s, bqueue)}));
-  p_ship_buttons = tag({"solar-component"}, make_ship_buttons(s, r, ship_button_callback));
-  p_ship_queue = tag({"solar-component"}, Panel::create({make_ship_queue(squeue)}));
 
   return Panel::create(
       {

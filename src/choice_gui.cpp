@@ -36,7 +36,7 @@ PanelPtr build_info(list<string> info) {
       },
       info);
 
-  return tag({"choice-gui-info"}, Panel::create(children, Panel::ORIENT_VERTICAL));
+  return tag({"choice-info", "transparent"}, Panel::create(children, Panel::ORIENT_VERTICAL));
 }
 
 PanelPtr st3::choice_gui(

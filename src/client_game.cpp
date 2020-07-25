@@ -264,7 +264,7 @@ void game::terminate_with_message(string message) {
 /*! Queue swap base UI panel into base layer */
 void game::build_base_panel() {
   auto make_button = [](string v, RSG::Voidfun f) {
-    return RSG::tag({"right-panel-button"}, Button::create(v, f));
+    return Button::create(v, f);
   };
 
   PanelPtr right = RSG::tag(
@@ -471,11 +471,11 @@ PanelPtr game::military_gui() {
 RSG::PanelPtr game::event_log_widget() {
   list<ComponentPtr> children = {make_label("Event log"), make_hbar()};
   for (auto v : event_log) {
-    children.push_back(RSG::tag({"event-item"}, Button::create(v)));
+    children.push_back(RSG::tag({"list-item"}, Button::create(v)));
   }
 
   return RSG::tag(
-      {"right-panel-box"},
+      {"event-log"},
       Panel::create(
           children,
           Panel::ORIENT_VERTICAL));
@@ -491,7 +491,7 @@ RSG::PanelPtr game::hover_info_widget() {
   }
 
   return RSG::tag(
-      {"right-panel-box"},
+      {"hover-info"},
       Panel::create(
           children,
           Panel::ORIENT_VERTICAL));
