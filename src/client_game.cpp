@@ -108,6 +108,7 @@ command_selector::ptr game::get_command_selector(idtype i) const {
 
 /** Core loop for gui. */
 void game::window_loop() {
+  double fps = 0;
   chrono::time_point<chrono::system_clock> start;
   CoordMapper coord_mapper = [this](sf::Vector2i p) { return window->mapPixelToCoords(p, view_window); };
 
@@ -149,11 +150,26 @@ void game::window_loop() {
     // Update simulation
     if (phase == "simulation" && sim_playing) next_sim_frame();
 
+    // Now check if UI layers need to update
+    base_layer->update_if_invalid();
+    for (auto p : component_layers) p->update_if_invalid();
+
     // Draw all graphics
     draw_window();
     base_layer->paint(window);
     for (auto p : component_layers) p->paint(window);
+
+    // Debug: add frame rate
+    graphics::draw_text(*window, to_string((int)fps), {(float)window->getSize().x - 100, 10}, 18);
+
     window->display();
+
+    chrono::duration<double> frame_secs = chrono::system_clock::now() - start;
+    fps = 0.95 * fps + 0.05 * 1 / frame_secs.count();
+
+    if (frame_secs.count() > 0.1) {
+      cout << "Long frame: " << frame_secs.count() << " secs" << endl;
+    }
 
     // Sleep until frame time catches up
     long int millis = 1000 * frame_time;
