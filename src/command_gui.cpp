@@ -58,7 +58,7 @@ PanelPtr st3::command_gui(
 
   auto build_slider = [num, slider_label, num_available, ship_class]() {
     Slider::handler_t slider_handler = [num, slider_label](SliderPtr self, float new_value, float new_ratio) {
-      *num = new_value;
+      *num = round(new_value);
       slider_label->set_label("Ships to send: " + to_string(*num));
     };
 
@@ -90,17 +90,19 @@ PanelPtr st3::command_gui(
   ButtonPtr b_commit = Button::create("Commit", [on_commit, ship_class, policy, num](ButtonPtr b) { on_commit(*ship_class, *policy, *num); });
   PanelPtr button_panel = tag({"section"}, Panel::create({b_cancel, b_commit}));
 
-  return Panel::create(
-      {
-          title,
-          make_hbar(),
-          sc_panel,
-          make_hbar(),
-          policy_panel,
-          make_hbar(),
-          slider_panel,
-          make_hbar(),
-          button_panel,
-      },
-      Panel::ORIENT_VERTICAL);
+  return tag(
+      {"command-gui"},
+      Panel::create(
+          {
+              title,
+              make_hbar(),
+              sc_panel,
+              make_hbar(),
+              policy_panel,
+              make_hbar(),
+              slider_panel,
+              make_hbar(),
+              button_panel,
+          },
+          Panel::ORIENT_VERTICAL));
 }

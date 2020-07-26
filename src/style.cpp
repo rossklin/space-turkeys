@@ -40,7 +40,7 @@ void st3::generate_styles() {
               {"top", "0"},
               {"width", "25%"},
               {"height", "100%"},
-              {"background-color", "ccddeeaa"},
+              {"background-color", "99aabbaa"},
               {"border-color", "33557755"},
               {"border-thickness", "5"},
               {"align-vertical", "top"},
@@ -64,6 +64,8 @@ void st3::generate_styles() {
               {"align-horizontal", "left"},
               {"align-vertical", "top"},
               {"padding-top", "5"},
+              {"background-color", "00000000"},
+              {"border-thickness", "0"},
           },
       },
 
@@ -183,6 +185,15 @@ void st3::generate_styles() {
 
       {
           ".solar-main-panel .solar-component .card",
+          {
+              {"width", "90%"},
+              {"height", "40px"},
+          },
+      },
+
+      // Command GUI
+      {
+          ".command-gui Slider",
           {
               {"width", "90%"},
               {"height", "40px"},
