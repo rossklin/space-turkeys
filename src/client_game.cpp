@@ -63,7 +63,6 @@ void game::run() {
   bool first = true;
 
   generate_styles();
-  init_data();
 
   // construct interface
   view_window = window->getDefaultView();
@@ -73,6 +72,7 @@ void game::run() {
   // Setup all layers, do not preserve base layer
   do_clear_ui_layers(false);
 
+  init_data();
   window_loop();
 }
 
