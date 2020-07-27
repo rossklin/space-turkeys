@@ -58,25 +58,36 @@ PanelPtr st3::target_gui(
         t_opts->remove_state("invisible");
       });
 
-  return styled<Panel, list<ComponentPtr>, Panel::orientation>(
-      {{"position", "fixed"}, {"top", to_string(position.y)}, {"left", to_string(position.x)}},
-      {
-          Panel::create(
-              {
+  return tag(
+      {"target-gui"},
+      styled<Panel, list<ComponentPtr>, Panel::orientation>(
+          {{"position", "fixed"}, {"top", to_string(position.y)}, {"left", to_string(position.x)}},
+          {
+              tag(
+                  {"section", "target-wrapper"},
                   Panel::create(
                       {
-                          make_label("Action:"),
-                          a_opts,
-                      },
-                      Panel::ORIENT_VERTICAL),
-                  Panel::create(
-                      {
-                          make_label("Target:"),
-                          t_opts,
-                      },
-                      Panel::ORIENT_VERTICAL),
-              }),
-          Panel::create({b_cancel, b_commit}),
-      },
-      Panel::ORIENT_VERTICAL);
+                          tag(
+                              {"column2"},
+                              Panel::create(
+                                  {
+                                      make_label("Action:"),
+                                      a_opts,
+                                  },
+                                  Panel::ORIENT_VERTICAL)),
+                          tag(
+                              {"column2"},
+                              Panel::create(
+                                  {
+                                      make_label("Target:"),
+                                      t_opts,
+                                  },
+                                  Panel::ORIENT_VERTICAL)),
+                      })),
+              make_hbar(),
+              tag(
+                  {"section"},
+                  Panel::create({b_cancel, b_commit})),
+          },
+          Panel::ORIENT_VERTICAL));
 }
