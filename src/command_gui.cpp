@@ -71,7 +71,7 @@ PanelPtr st3::command_gui(
 
   // Ship class panel
   PanelPtr sc_panel = tag(
-      {"section"},
+      {"section", "ship-class-panel"},
       Panel::create(
           {
               spaced_ul(make_label("Select ship class to send")),
@@ -83,7 +83,8 @@ PanelPtr st3::command_gui(
                     title->set_label("Assign " + *ship_class + " ships for '" + action + "' command");
                     slider_panel->replace_children({slider_label, build_slider()});
                   }),
-          }));
+          },
+          Panel::ORIENT_VERTICAL));
 
   // Button panel
   ButtonPtr b_cancel = Button::create("Cancel", [on_cancel](ButtonPtr b) { on_cancel(); });
