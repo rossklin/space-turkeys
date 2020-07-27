@@ -69,6 +69,9 @@ $(DEBUG_BUILD_DIR)/%.o : $(SRC_DIR)/%.cpp
 
 .PHONY : clean
 
+remove_binaries:
+	-rm -rf test st_client st_server debug_st_client debug_st_server
+
 clean :
 	-rm -rf test st_client st_server debug_st_client debug_st_server $(ALL_OBJ) $(DEBUG_ALL_OBJ) $(DEP)
 	cd $(RSG_DIR) && $(MAKE) clean
