@@ -14,37 +14,63 @@ using namespace st3;
 void st3::generate_styles() {
   // Class style modifications
 
-  // Debug
-  Component::class_style["Panel"]["border-thickness"] = "1";
-  Component::class_style["Panel"]["border-color"] = "ff448855";
+  // Default dark theme
+  string default_bg = "123456bb";
+  string default_fg = "ffccaaff";
+  string default_border = "ffffffbb";
+
+  // Default light theme
+  string default_bg2 = "99aabbaa";
+  string default_fg2 = "553311ff";
+  string default_border2 = "33557755";
+
+  string transparent = "00000000";
+  string bar_color = "aabbcc88";
+
+  StyleMap s_transparent = {
+      {"background-color", transparent},
+      {"border-thickness", "0"},
+  };
+
+  StyleMap s_default1 = {
+      {"color", default_fg},
+      {"background-color", default_bg},
+      {"border-color", default_border},
+  };
+
+  StyleMap s_default2 = {
+      {"color", default_fg2},
+      {"background-color", default_bg2},
+      {"border-color", default_border2},
+  };
+
+  // Prevent inheritance for panel background since stacked semitransparent panels look weird
+  Component::class_style["Panel"]["background-color"] = transparent;
+  Component::class_style["Panel"]["border-thickness"] = "0";
 
   Component::tag_style = {
       // Main panel
       {
           ".main-panel",
-          {
+          StyleMap{
               {"width", "90%"},
               {"height", "90%"},
-              {"background-color", "123456bb"},
-              {"color", "ffccaaff"},
-          },
+          } + s_default1,
       },
 
       // Right panel
       {
           ".right-panel",
-          {
+          StyleMap{
               {"position", "absolute"},
               {"right", "0"},
               {"left", "auto"},
               {"top", "0"},
               {"width", "25%"},
               {"height", "100%"},
-              {"background-color", "99aabbaa"},
-              {"border-color", "33557755"},
               {"border-thickness", "5"},
               {"align-vertical", "top"},
-          },
+          } + s_default2,
       },
 
       {
@@ -64,8 +90,6 @@ void st3::generate_styles() {
               {"align-horizontal", "left"},
               {"align-vertical", "top"},
               {"padding-top", "5"},
-              {"background-color", "00000000"},
-              {"border-thickness", "0"},
           },
       },
 
@@ -123,7 +147,6 @@ void st3::generate_styles() {
           {
               {"width", "70%"},
               {"height", "100%"},
-              {"border-thickness", "1"},
           },
       },
 
@@ -140,8 +163,6 @@ void st3::generate_styles() {
           {
               {"width", "100%"},
               {"height", "85%"},
-              {"background-color", "00000000"},
-              {"border-thickness", "0"},
 
           },
       },
@@ -178,8 +199,6 @@ void st3::generate_styles() {
           {
               {"width", "100%"},
               {"height", "100%"},
-              {"background-color", "00000000"},
-              {"border-thickness", "0"},
           },
       },
 
@@ -200,6 +219,29 @@ void st3::generate_styles() {
           },
       },
 
+      // Target GUI
+      {
+          ".target-gui",
+          StyleMap{
+              {"width", "300px"},
+          } + s_default2,
+      },
+
+      {
+          ".target-gui .target-wrapper .label",
+          {
+              {"height", "30px"},
+          },
+      },
+
+      {
+          ".target-gui .target-wrapper ButtonOptions",
+          {
+              {"width", "100%"},
+              {"height", "50px"},
+          },
+      },
+
       // General styles
       {
           ".button-option",
@@ -211,9 +253,7 @@ void st3::generate_styles() {
 
       {
           ".label",
-          {
-              {"background-color", "00000000"},
-              {"border-thickness", "0"},
+          StyleMap{
               {"padding-left", "0"},
               {"padding-right", "0"},
               {"padding-top", "0"},
@@ -222,7 +262,7 @@ void st3::generate_styles() {
               {"margin-right", "5"},
               {"margin-top", "5"},
               {"margin-bottom", "5"},
-          },
+          } + s_transparent,
       },
 
       {
@@ -231,7 +271,7 @@ void st3::generate_styles() {
               {"width", "100%"},
               {"height", "2px"},
               {"border-thickness", "0"},
-              {"background-color", "aabbcc88"},
+              {"background-color", bar_color},
               {"margin-top", "10"},
               {"margin-bottom", "10"},
               {"margin-left", "0"},
@@ -245,7 +285,7 @@ void st3::generate_styles() {
               {"height", "100%"},
               {"width", "2px"},
               {"border-thickness", "0"},
-              {"background-color", "aabbcc88"},
+              {"background-color", bar_color},
               {"margin-left", "10"},
               {"margin-right", "10"},
               {"margin-top", "0"},
@@ -287,19 +327,13 @@ void st3::generate_styles() {
               {"overflow", "scrolled"},
               {"margin-top", "10"},
               {"margin-bottom", "10"},
-              {"border-thickness", "0"},
           },
       },
 
       // Modifiers
 
-      {
-          ".default-panel",
-          {
-              {"background-color", "12345688"},
-              {"color", "ffccaaff"},
-          },
-      },
+      {".default-panel", s_default1},
+      {".default-panel2", s_default2},
 
       {
           ".list-item",
@@ -310,12 +344,17 @@ void st3::generate_styles() {
 
       {
           ".h1",
-          {
-              {"background-color", "00000000"},
-              {"border-thickness", "0"},
+          StyleMap{
               {"font-size", "25"},
-          },
+          } + s_transparent,
       },
+
+      {".column2", {{"width", "50%"}}},
+      {".column3", {{"width", "33%"}}},
+      {".column4", {{"width", "25%"}}},
+      {".column5", {{"width", "20%"}}},
+
+      {".scrolled", {{"overflow", "scrolled"}}},
 
       {
           ".abs-top-left",
@@ -326,13 +365,8 @@ void st3::generate_styles() {
           },
       },
 
-      {
-          ".transparent",
-          {
-              {"background-color", "00000000"},
-              {"border-thickness", "0"},
-          },
-      },
+      {".transparent", s_transparent},
+
   };
 }
 
