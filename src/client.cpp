@@ -98,7 +98,7 @@ void setup_join_game(cl_socket_ptr socket, string gid) {
   cout << "Joined game " << gid << endl;
 }
 
-void setup_gfx(bool fullscreen = false) {
+RSG::WindowPtr setup_gfx(bool fullscreen = false) {
   int width = 1024;
   int height = 9 * 1024 / 16;
   sf::VideoMode vmode(width, height);
@@ -113,8 +113,9 @@ void setup_gfx(bool fullscreen = false) {
 
   sf::ContextSettings sf_settings;
   sf_settings.antialiasingLevel = 8;
-  game::window = shared_ptr<window_t>(new window_t());
-  game::window->create(vmode, "SPACE TURKEYS III ALPHA", vstyle, sf_settings);
+  RSG::WindowPtr w = shared_ptr<window_t>(new window_t());
+  w->create(vmode, "SPACE TURKEYS III ALPHA", vstyle, sf_settings);
+  return w;
 }
 
 int main(int argc, char **argv) {
@@ -191,7 +192,7 @@ int main(int argc, char **argv) {
   cout << "done." << endl;
 
   try {
-    setup_gfx(fullscreen);
+    auto win = setup_gfx(fullscreen);
 
     connect_to_server(socket, name);
     if (task == "create") {
@@ -208,7 +209,8 @@ int main(int argc, char **argv) {
 
     cout << "Calling run" << endl;
 
-    shared_ptr<game> g(new game(socket));
+    shared_ptr<game> g(new game(socket, win));
+    game::gmain = g;
     g->run();
 
   } catch (exception &e) {

@@ -32,7 +32,7 @@ using namespace std;
 using namespace st3;
 using namespace RSG;
 
-shared_ptr<window_t> game::window = 0;
+weak_ptr<game> game::gmain;
 
 // local utility functions
 sf::FloatRect fixrect(sf::FloatRect r);
@@ -44,8 +44,9 @@ bool ctrlsel();
 // ****************************************
 
 /*! default contsructor */
-game::game(std::shared_ptr<cl_socket_t> s) {
+game::game(std::shared_ptr<cl_socket_t> s, RSG::WindowPtr w) {
   socket = s;
+  window = w;
   selector_queue = 1;
   sight_ul = point(0, 0);
   sight_wh = point(0, 0);

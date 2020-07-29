@@ -101,9 +101,10 @@ class game : public game_base_data {
   std::mutex background_task_mutex;
 
  public:
-  static RSG::WindowPtr window; /*!< sfml window for drawing the interface */
+  static std::weak_ptr<game> gmain;
+  RSG::WindowPtr window; /*!< sfml window for drawing the interface */
 
-  game(std::shared_ptr<cl_socket_t> s);
+  game(std::shared_ptr<cl_socket_t> s, RSG::WindowPtr w);
   void run();
 
  private:
