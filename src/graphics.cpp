@@ -49,7 +49,11 @@ const sf::Font& graphics::get_default_font() {
 
 /*! Get x dimension of inverse scale of the current view */
 float graphics::unscale() {
-  return inverse_scale(*game::window).x;
+  if (auto p = game::gmain.lock()) {
+    return inverse_scale(*p->window).x;
+  } else {
+    return 1;
+  }
 }
 
 sf::Color graphics::fade_color(sf::Color from, sf::Color to, float r) {
