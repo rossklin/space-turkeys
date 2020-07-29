@@ -32,6 +32,7 @@ struct cl_socket_t;
 class game : public game_base_data {
  private:
   enum gui_layers {
+    LAYER_BASE,
     LAYER_CONTEXT,
     LAYER_PANEL,
     LAYER_POPUP,
@@ -47,7 +48,6 @@ class game : public game_base_data {
   sf::View view_window;  /*!< sfml view fitting window */
 
   // GUI static components
-  RSG::PanelPtr base_layer;
   std::vector<RSG::PanelPtr> component_layers;
 
   // RSG interface variables
@@ -66,6 +66,9 @@ class game : public game_base_data {
   choice user_choice;
   std::list<RSG::Voidfun> ui_tasks;
   std::mutex ui_task_mutex;
+  bool did_drag;
+  bool drag_waypoint_active;
+  bool drag_map_active;
 
   // Game variables
   sf::Color col;
@@ -105,6 +108,7 @@ class game : public game_base_data {
   RSG::WindowPtr window; /*!< sfml window for drawing the interface */
 
   game(std::shared_ptr<cl_socket_t> s, RSG::WindowPtr w);
+  void terminate_with_message(std::string message);
   void run();
 
  private:
@@ -120,7 +124,7 @@ class game : public game_base_data {
   void queue_ui_task(RSG::Voidfun f);
   void process_ui_tasks();
   void do_clear_ui_layers(bool preserve_base = true);
-  bool any_gui_content() const;
+  bool any_gui_content(int level = LAYER_CONTEXT) const;
 
   // METHODS THAT ENQUEUE A UI MODIFICATION
   void set_loading(bool s);
@@ -129,7 +133,6 @@ class game : public game_base_data {
   void swap_layer(int layer, RSG::ComponentPtr component);
   void set_main_panel(RSG::PanelPtr p);
   void clear_ui_layers(bool preserve_base = true);
-  void terminate_with_message(std::string message);
   void build_base_panel();
   void popup_query(std::string title, std::string v, hm_t<std::string, RSG::Voidfun> opts);
   void popup_message(std::string title, std::string text);
@@ -174,6 +177,8 @@ class game : public game_base_data {
   void simulation_step();
 
   // UNSORTED METHODS BELOW THIS POINT
+
+  void reset_drags();
 
   void update_sight_range(point p, float r);
 

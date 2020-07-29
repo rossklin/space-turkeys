@@ -48,6 +48,8 @@ void st3::generate_styles() {
   Component::class_style["Panel"]["background-color"] = transparent;
   Component::class_style["Panel"]["border-thickness"] = "0";
 
+  Component::class_style["Button:hover"]["background-color"] = "345678ff";
+
   Component::tag_style = {
       // Main panel
       {
@@ -366,6 +368,8 @@ void st3::generate_styles() {
       },
 
       {".transparent", s_transparent},
+
+      {".fill-container", {{"width", "100%"}, {"height", "100%"}, {"position", "absolute"}}},
 
   };
 }

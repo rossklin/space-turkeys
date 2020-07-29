@@ -56,6 +56,7 @@ game::game(std::shared_ptr<cl_socket_t> s, RSG::WindowPtr w) {
   wp_idc = 0;
   state_run = true;
   component_layers.resize(LAYER_NUM);
+  reset_drags();
 }
 
 /*! Main entry point */
@@ -115,7 +116,6 @@ void game::window_loop() {
 
   while (window->isOpen() && state_run) {
     start = chrono::system_clock::now();
-    bool has_gui = component_layers[LAYER_PANEL]->get_children().size();
     sf::Event event;
     window->setView(view_window);
     while (window->pollEvent(event)) {
@@ -124,12 +124,8 @@ void game::window_loop() {
         was_handled |= component_layers[i]->handle_event(event, coord_mapper);
       }
 
-      if (!was_handled) was_handled = base_layer->handle_event(event, coord_mapper);
-
-      if (!has_gui) {
-        if (phase == "choice" && !was_handled) was_handled |= choice_event(event);
-        if (!was_handled) control_event(event);
-      }
+      if (!was_handled) was_handled |= choice_event(event);
+      if (!was_handled) control_event(event);
 
       if (event.type == sf::Event::Closed && !was_handled) {
         window->close();
@@ -148,16 +144,17 @@ void game::window_loop() {
     // Cleanup any background threads that have completed
     check_background_tasks();
 
+    // Check camera controls
+    controls();
+
     // Update simulation
     if (phase == "simulation" && sim_playing) next_sim_frame();
 
     // Now check if UI layers need to update
-    base_layer->update_if_invalid();
     for (auto p : component_layers) p->update_if_invalid();
 
     // Draw all graphics
     draw_window();
-    base_layer->paint(window);
     for (auto p : component_layers) p->paint(window);
 
     // Debug: add frame rate
@@ -176,6 +173,8 @@ void game::window_loop() {
     long int millis = 1000 * frame_time;
     this_thread::sleep_until(start + chrono::milliseconds(millis));
   }
+
+  state_run = false;
 }
 
 /*! Threadsafely push a task to the UI task queue */
@@ -217,15 +216,20 @@ void game::do_clear_ui_layers(bool preserve_base) {
       });
 
   for (int i = 0; i < LAYER_NUM; i++) {
+    if (i == LAYER_BASE && preserve_base) continue;
     component_layers[i] = make_container();
   }
-
-  if (!preserve_base) base_layer = make_container();
 }
 
 /*! Check whether any GUI layers above base have content */
-bool game::any_gui_content() const {
-  return utility::any(utility::map<vector<bool>>([](RSG::PanelPtr p) { return p->get_children().size(); }, component_layers));
+bool game::any_gui_content(int level) const {
+  // Ignore base layer
+  for (int i = level; i < LAYER_NUM; i++) {
+    if (component_layers[i]->get_children().size()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // ****************************************
@@ -263,6 +267,8 @@ void game::swap_layer(int layer, RSG::ComponentPtr c) {
 }
 
 void game::set_main_panel(PanelPtr p) {
+  if (phase != "choice") return;
+
   p = RSG::tag({"main-panel"}, p);
   p->on_keypress[sf::Keyboard::Escape] = [this]() {
     swap_layer(LAYER_PANEL, 0);
@@ -308,9 +314,9 @@ void game::build_base_panel() {
               {"main-commit-button"},
               Button::create(
                   "Commit",
-                  [this]() { simulation_step(); }))}));
+                  [this]() { choice_complete = true; }))}));
 
-  queue_ui_task([this, right, bottom]() { base_layer->replace_children({right, bottom}); });
+  swap_layer(LAYER_BASE, tag({"fill-container"}, Panel::create({right, bottom})));
 }
 
 /** Queue Draw a box with a message and wait for ok. */
@@ -593,6 +599,7 @@ void game::target_selected(string action, combid target, point pos, list<string>
 
 /*! Background task for simulation step, loading frame data from server */
 void game::load_frames() {
+  cout << "Starting to load frames" << endl;
   sf::Packet pq;
   sim_frames.resize(settings.clset.frames_per_round);
 
@@ -616,6 +623,7 @@ void game::load_frames() {
   } else if (!client::query(socket, pq)) {
     terminate_with_message("Load frames: disconnected on confirm");
   }
+  cout << "Finished loading frames" << endl;
 }
 
 // Start background task: query server with packet, then callback with result
@@ -656,7 +664,6 @@ void game::init_data() {
     // load player starting positions
     int home_found = 0;
     for (auto s : data.filtered_entities<solar_selector>()) {
-      if (s->owner >= 0) s->research_level = &players[s->owner].research_level;
       add_entity(s);
       cout << "init_data: added: " << s->id << endl;
 
@@ -689,6 +696,7 @@ void game::init_data() {
 
 void game::pre_step() {
   clear_ui_layers();
+  build_base_panel();
   set_loading(true);
   phase = "pre";
 
@@ -784,23 +792,29 @@ void game::simulation_step() {
   sim_playing = false;
   queue_background_task(bind(&game::load_frames, this));
 
-  clear_ui_layers(false);
-  queue_ui_task([this]() { base_layer->replace_children({simulation_gui()}); });
+  clear_ui_layers();
+  swap_layer(LAYER_CONTEXT, simulation_gui());
 }
 
 void game::next_sim_frame() {
   int sub_frames = settings.clset.sim_sub_frames;
-  sim_sub_idx++;
-  if (sim_sub_idx >= sub_frames) {
-    int buffer_size = min<int>(settings.clset.frames_per_round - sim_idx - 1, 4);
-    if (sim_idx < sim_frames_loaded - buffer_size) {
+  int buffer_size = max<int>(min<int>(settings.clset.frames_per_round - sim_idx - 1, 4), 0);
+  bool can_increment = sim_idx + 1 < settings.clset.frames_per_round;
+  bool has_buffer = sim_idx + 1 < sim_frames_loaded - buffer_size;
+
+  if (sim_sub_idx < sub_frames - 1 || (can_increment && has_buffer)) {
+    sim_sub_idx++;
+    if (sim_sub_idx >= sub_frames) {
       sim_sub_idx = 0;
       sim_idx++;
+      cout << "Showing sim frame " << sim_idx << endl;
       reload_data(sim_frames[sim_idx]);
-    } else {
-      sim_playing = false;
-      return;
     }
+    update_sim_frame();
+  } else {
+    sim_playing = false;
+    swap_layer(LAYER_BASE, simulation_gui());
+    return;
   }
 
   // Update time for animations
@@ -1125,15 +1139,6 @@ void game::reload_data(game_base_data &g, bool use_animations) {
       }
     }
     w->pending_commands.clear();
-  }
-
-  // update research level ref for solars
-  for (auto s : get_all<solar>()) {
-    if (s->owned) {
-      s->research_level = &players[s->owner].research_level;
-    } else {
-      s->research_level = NULL;
-    }
   }
 
   // add animations
@@ -1615,10 +1620,8 @@ void game::setup_targui(point p) {
 
 void game::control_event(sf::Event e) {
   static point p_prev(0, 0);
-  static bool drag_map_active = false;
-  static bool drag_waypoint_active = false;
-  static bool did_drag = false;
-  static combid drag_id;
+
+  if (any_gui_content(LAYER_PANEL)) return;
 
   point p;
   sf::Vector2i mpos;
@@ -1649,44 +1652,12 @@ void game::control_event(sf::Event e) {
     set_hover_info(title, text);
   };
 
-  // event reaction functions
-  auto init_area_select = [this](sf::Event e) {
-    point p = window->mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
-    int qent;
-    combid key = entity_at(p, qent);
-
-    if (phase == "choice" && identifier::get_type(key) == waypoint::class_id) {
-      drag_waypoint_active = true;
-      drag_id = key;
-    } else {
-      area_select_active = true;
-      srect = sf::FloatRect(p.x, p.y, 0, 0);
-    }
-  };
-
   window->setView(view_game);
   switch (e.type) {
     case sf::Event::MouseMoved:
       p = window->mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
 
-      if (area_select_active) {
-        // update area selection
-        srect.width = p.x - srect.left;
-        srect.height = p.y - srect.top;
-      } else if (phase == "choice" && drag_waypoint_active && !in_terrain(p)) {
-        // update position
-        auto wp = get_specific<waypoint>(drag_id);
-        wp->position = p;
-
-        // update target for incident commands
-        list<idtype> inc = incident_commands(drag_id);
-        for (auto cid : inc) get_command_selector(cid)->to = p;
-
-        // update source for owned commands
-        for (auto cid : wp->commands) get_command_selector(cid)->from = p;
-
-        did_drag = true;
-      } else if (drag_map_active) {
+      if (drag_map_active) {
         view_game.move(p_prev - p);
       } else {
         update_hover_info(p);
@@ -1699,9 +1670,6 @@ void game::control_event(sf::Event e) {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
           p_prev = p;
           drag_map_active = true;
-        } else {
-          init_area_select(e);
-          cout << "Area select started" << endl;
         }
       }
       break;
@@ -1710,29 +1678,15 @@ void game::control_event(sf::Event e) {
       p = window->mapPixelToCoords(mpos);
 
       if (e.mouseButton.button == sf::Mouse::Left) {
-        cout << "Left button released" << endl;
-        if (drag_waypoint_active && did_drag) {
-          // do nothing
-        } else if (abs(srect.width) > 5 || abs(srect.height) > 5) {
-          area_select();
-        } else {
-          // check if on minimap
-          minirect = minimap_rect();
-          if (minirect.contains(mpos.x, mpos.y)) {
-            delta = point(mpos.x - minirect.left, mpos.y - minirect.top);
-            target = point(sight_ul.x + delta.x / minirect.width * sight_wh.x, sight_ul.y + delta.y / minirect.height * sight_wh.y);
-            view_game.setCenter(target);
-          } else {
-            select_at(p);
-          }
+        // check if on minimap
+        minirect = minimap_rect();
+        if (minirect.contains(mpos.x, mpos.y)) {
+          delta = point(mpos.x - minirect.left, mpos.y - minirect.top);
+          target = point(sight_ul.x + delta.x / minirect.width * sight_wh.x, sight_ul.y + delta.y / minirect.height * sight_wh.y);
+          view_game.setCenter(target);
         }
 
-        // clear selection rect
-        drag_waypoint_active = false;
-        did_drag = false;
-        area_select_active = false;
-        srect = sf::FloatRect(0, 0, 0, 0);
-        drag_map_active = false;
+        reset_drags();
       }
 
       break;
@@ -1770,9 +1724,18 @@ void game::do_zoom(float factor, point p) {
   view_game.setSize(new_br - new_ul);
 }
 
+void game::reset_drags() {
+  drag_map_active = false;
+  drag_waypoint_active = false;
+  did_drag = false;
+  area_select_active = false;
+  srect = sf::FloatRect(0, 0, 0, 0);
+}
+
 // Choice step global handler, return true if event handled
 bool game::choice_event(sf::Event e) {
   if (phase != "choice") return false;
+  if (any_gui_content(LAYER_CONTEXT)) return false;
 
   // // make a fleet from selected ships
   // auto make_fleet = [this]() {
@@ -1868,6 +1831,23 @@ bool game::choice_event(sf::Event e) {
   point delta;
   point target;
 
+  static combid drag_id;
+
+  // event reaction functions
+  auto init_area_select = [this](sf::Event e) {
+    point p = window->mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
+    int qent;
+    combid key = entity_at(p, qent);
+
+    if (phase == "choice" && identifier::get_type(key) == waypoint::class_id) {
+      drag_waypoint_active = true;
+      drag_id = key;
+    } else {
+      area_select_active = true;
+      srect = sf::FloatRect(p.x, p.y, 0, 0);
+    }
+  };
+
   // delete all selected commands
   auto handle_delete = [this]() {
     for (auto id : selected_commands()) remove_command(id);
@@ -1878,17 +1858,65 @@ bool game::choice_event(sf::Event e) {
   // event switch
   window->setView(view_game);
   switch (e.type) {
-    // MOUSE BUTTON RELEASED
-    case sf::Event::MouseButtonReleased:
-      swap_layer(LAYER_CONTEXT, 0);
+    case sf::Event::MouseButtonPressed:
+      // Area select
       mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
       p = window->mapPixelToCoords(mpos);
+      if (e.mouseButton.button == sf::Mouse::Left) {
+        if (!sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
+          init_area_select(e);
+          cout << "Area select started" << endl;
+        }
+      }
+      break;
+
+    case sf::Event::MouseMoved:
+      p = window->mapPixelToCoords(sf::Vector2i(e.mouseMove.x, e.mouseMove.y));
+
+      if (area_select_active) {
+        // update area selection
+        srect.width = p.x - srect.left;
+        srect.height = p.y - srect.top;
+      } else if (phase == "choice" && drag_waypoint_active && !in_terrain(p)) {
+        // update position
+        auto wp = get_specific<waypoint>(drag_id);
+        wp->position = p;
+
+        // update target for incident commands
+        list<idtype> inc = incident_commands(drag_id);
+        for (auto cid : inc) get_command_selector(cid)->to = p;
+
+        // update source for owned commands
+        for (auto cid : wp->commands) get_command_selector(cid)->from = p;
+
+        did_drag = true;
+      }
+      break;
+
+    // MOUSE BUTTON RELEASED
+    case sf::Event::MouseButtonReleased:
+      mpos = sf::Vector2i(e.mouseButton.x, e.mouseButton.y);
+      p = window->mapPixelToCoords(mpos);
+
+      // Any button release clears the context layer
+      swap_layer(LAYER_CONTEXT, 0);
 
       if (e.mouseButton.button == sf::Mouse::Right && exists_selected()) {
         setup_targui(p);
         return true;
-      }
+      } else if (e.mouseButton.button == sf::Mouse::Left && !minimap_rect().contains(mpos.x, mpos.y)) {
+        if (drag_waypoint_active && did_drag) {
+          // do nothing
+        } else if (abs(srect.width) > 5 || abs(srect.height) > 5) {
+          area_select();
+        } else {
+          select_at(p);
+        }
 
+        reset_drags();
+
+        return true;
+      }
       break;
 
       // KEY PRESSED
@@ -1908,11 +1936,8 @@ bool game::choice_event(sf::Event e) {
 
       switch (e.key.code) {
         case sf::Keyboard::Space:
-          if (!any_gui_content()) {
-            choice_complete = true;
-            return true;
-          }
-          break;
+          choice_complete = true;
+          return true;
         case sf::Keyboard::Return:
           ss = selected_specific<solar>();
           if (ss.size() == 1) {
@@ -1951,17 +1976,13 @@ bool game::choice_event(sf::Event e) {
         //   }
         //   break;
         case sf::Keyboard::Escape:
-          if (any_gui_content()) {
-            clear_ui_layers();
-          } else {
-            popup_query(
-                "",
-                "Really quit?",
-                {{"Yes", [this, f_stop]() {
-                    tell_server_quit(f_stop, f_stop);
-                  }},
-                 {"No", 0}});
-          }
+          popup_query(
+              "",
+              "Really quit?",
+              {{"Yes", [this, f_stop]() {
+                  tell_server_quit(f_stop, f_stop);
+                }},
+               {"No", 0}});
           return true;
       }
       break;
