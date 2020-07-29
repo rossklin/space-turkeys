@@ -1,8 +1,10 @@
 #include "com_client.hpp"
 
+#include <exception>
 #include <iostream>
 #include <vector>
 
+#include "client_game.hpp"
 #include "game_base_data.hpp"
 #include "game_object.hpp"
 #include "protocol.hpp"
@@ -21,31 +23,40 @@ bool cl_socket_t::check_com() {
 bool st3::client::query(cl_socket_ptr socket, sf::Packet &pq) {
   protocol_t message;
 
-  if (!socket->send_packet(pq)) {
-    return false;
-  }
-
-  if (!socket->receive_packet()) {
-    return false;
-  }
-
-  if (socket->data >> message) {
-    if (message == protocol::confirm) {
-      return true;
-    } else if (message == protocol::standby) {
-      // wait a little while then try again
-      sf::sleep(sf::milliseconds(500));
-      return query(socket, pq);
-    } else if (message == protocol::invalid) {
-      throw network_error("query: server says invalid");
-    } else if (message == protocol::aborted) {
-      cout << "query: server says game aborted" << endl;
+  try {
+    if (!socket->send_packet(pq)) {
       return false;
-    } else {
-      throw network_error("query: unknown response: " + message);
     }
-  } else {
-    throw network_error("query: failed to unpack message");
+
+    if (!socket->receive_packet()) {
+      return false;
+    }
+
+    if (socket->data >> message) {
+      if (message == protocol::confirm) {
+        return true;
+      } else if (message == protocol::standby) {
+        // wait a little while then try again
+        sf::sleep(sf::milliseconds(500));
+        return query(socket, pq);
+      } else if (message == protocol::invalid) {
+        throw network_error("query: server says invalid");
+      } else if (message == protocol::aborted) {
+        cout << "query: server says game aborted" << endl;
+        return false;
+      } else {
+        throw network_error("query: unknown response: " + message);
+      }
+    } else {
+      throw network_error("query: failed to unpack message");
+    }
+  } catch (const exception &e) {
+    if (auto p = game::gmain.lock()) {
+      p->terminate_with_message("Communication error: " + string(e.what()));
+    } else {
+      cout << "Exception in client::query but game references is invalid! " << e.what() << endl;
+    }
+    return false;
   }
 }
 
