@@ -32,9 +32,7 @@ solar::solar(const solar &s) : game_object(s) {
   *this = s;
 };
 
-void solar::pre_phase(game_data *g) {
-  research_level = &g->players[owner].research_level;
-}
+void solar::pre_phase(game_data *g) {}
 
 // so far, solars don't move
 void solar::move(game_data *g) {
@@ -183,7 +181,7 @@ bool solar::serialize(sf::Packet &p) {
 }
 
 float solar::effective_level(string k) {
-  return development[k] + research_level->solar_modifier(k);
+  return development.at(k);
 }
 
 float solar::devtime(string k) {
@@ -228,8 +226,8 @@ float solar::population() {
 
 // Production at end of round
 void solar::dynamics(game_data *g) {
-  // float dt = g->get_dt();
-  // float order = g->solar_order_level(id);
+  if (owner < 0) return;
+  research::data research_level = g->players.at(owner).research_level;
 
   // research and development
   float a = 1 + 0.2 * population();
@@ -239,7 +237,7 @@ void solar::dynamics(game_data *g) {
   // build ships
   while (choice_data.ship_queue.size()) {
     string v = choice_data.ship_queue.front();
-    if (research_level->can_build_ship(v, shared_from_this())) {
+    if (research_level.can_build_ship(v, shared_from_this())) {
       ship_stats s = ship::table().at(v);
 
       // check if we are starting to build this ship
@@ -271,7 +269,7 @@ void solar::dynamics(game_data *g) {
         ship_progress = -1;
         choice_data.ship_queue.pop_front();
 
-        ship_ptr sh = research_level->build_ship(g->next_id(ship::class_id), v);
+        ship_ptr sh = research_level.build_ship(g->next_id(ship::class_id), v);
         sh->states.insert("landed");
         sh->owner = owner;
         ships.insert(sh->id);

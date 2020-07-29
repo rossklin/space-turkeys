@@ -27,7 +27,6 @@ class solar : public virtual physical_object, public virtual commandable_object,
   static const std::string class_id;
 
   c_solar choice_data;
-  research::data *research_level;
 
   hm_t<std::string, int> development;
   sfloat ship_progress;

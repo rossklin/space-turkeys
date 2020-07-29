@@ -972,7 +972,6 @@ void game_data::update_research_facility_level() {
   hm_t<idtype, hm_t<string, int>> level;
   for (auto s : filtered_entities<solar>()) {
     if (s->owner > -1) {
-      s->research_level = &players[s->owner].research_level;
       for (auto v : keywords::development) {
         level[s->owner][v] = max(level[s->owner][v], (int)s->effective_level(v));
       }
