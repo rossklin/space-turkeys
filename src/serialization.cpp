@@ -295,11 +295,11 @@ sf::Packet& st3::operator>>(sf::Packet& packet, waypoint& c) {
 
 // command
 sf::Packet& st3::operator<<(sf::Packet& packet, const command& c) {
-  return packet << c.source << c.origin << c.target << c.action << c.policy << c.ships;
+  return packet << c.source << c.origin << c.target << c.action << c.policy << c.ship_class << c.ships;
 }
 
 sf::Packet& st3::operator>>(sf::Packet& packet, command& c) {
-  return packet >> c.source >> c.origin >> c.target >> c.action >> c.policy >> c.ships;
+  return packet >> c.source >> c.origin >> c.target >> c.action >> c.policy >> c.ship_class >> c.ships;
 }
 
 // point
