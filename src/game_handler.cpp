@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <queue>
+#include <set>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -20,17 +21,23 @@
 using namespace std;
 using namespace st3;
 using namespace st3::server;
+using namespace st3::utility;
 
 // limit_to without deallocating
-void limit_to(game_base_data &g, idtype id) {
+void limit_to(game_base_data *g, set<idtype> ids) {
   list<combid> remove_buf;
-  for (auto e : g.all_entities<game_object>()) {
-    bool known = e->isa(solar::class_id) && utility::guaranteed_cast<solar>(e)->known_by.count(id);
-    bool owned = e->owner == id;
-    bool seen = g.evm[id].count(e->id);
-    if (!(known || owned || seen)) remove_buf.push_back(e->id);
+  for (auto e : g->all_entities<game_object>()) {
+    bool test = any(
+        range_map<list<bool>>([g, e](idtype id) {
+          bool known = e->isa(solar::class_id) && guaranteed_cast<solar>(e)->known_by.count(id);
+          bool owned = e->owner == id;
+          bool seen = g->evm[id].count(e->id);
+          return known || owned || seen;
+        },
+                              ids));
+    if (!test) remove_buf.push_back(e->id);
   }
-  for (auto i : remove_buf) g.remove_entity(i);
+  for (auto i : remove_buf) g->remove_entity(i);
 }
 
 void simulation_step(game_setup &c, game_data &g) {
@@ -50,7 +57,7 @@ void simulation_step(game_setup &c, game_data &g) {
       } else if (idx < frame_count) {
         // pack frame
         g = frames[idx];
-        limit_to(g, cid);
+        limit_to(&g, {cid});
         result.response << g;
         result.status = socket_t::tc_run;
       } else if (idx < frames.size()) {
@@ -134,8 +141,13 @@ query_response_generator pack_game_handler(game_data &g, bool do_limit) {
   return [&g, do_limit](int cid, sf::Packet query) -> handler_result {
     handler_result res;
     game_base_data ep = g;
+    set<int> all_ids = range_init<set<int>>(hm_keys(g.players));
 
-    if (do_limit) limit_to(ep, cid);
+    if (do_limit) {
+      limit_to(&ep, {cid});
+    } else {
+      limit_to(&ep, all_ids);
+    }
 
     res.response << protocol::confirm << ep;
     res.status = socket_t::tc_complete;
