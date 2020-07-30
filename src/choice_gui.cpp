@@ -19,7 +19,7 @@ using namespace RSG;
 
 // Todo: remove queue item on press
 PanelPtr build_queue(list<string> q) {
-  list<ComponentPtr> children = utility::map<list<ComponentPtr>>([](string v) { return Button::create(v); }, q);
+  list<ComponentPtr> children = utility::range_map<list<ComponentPtr>>([](string v) { return Button::create(v); }, q);
 
   children.push_front(make_hbar());
   children.push_front(make_label("Queue"));
@@ -30,7 +30,7 @@ PanelPtr build_queue(list<string> q) {
 }
 
 PanelPtr build_info(list<string> info) {
-  list<ComponentPtr> children = utility::map<list<ComponentPtr>>(
+  list<ComponentPtr> children = utility::range_map<list<ComponentPtr>>(
       [](string v) {
         return tag({"label", "list-item"}, Button::create(v));
       },
@@ -87,7 +87,7 @@ PanelPtr st3::choice_gui(
   queue_wrapper->replace_children({build_queue(*queue)});
 
   // Option cards
-  list<ComponentPtr> cards = utility::map<list<ComponentPtr>>(
+  list<ComponentPtr> cards = utility::range_map<list<ComponentPtr>>(
       [=](string v) -> ComponentPtr {
         ButtonPtr b = with_style({{"width", "22%"}, {"height", "75%"}}, f_opt(v));
         b->set_on_press([=](ButtonPtr self) { enque(v); });

@@ -23,7 +23,7 @@ T range_init(const F &x) {
 }
 
 template <typename C2, typename C1>
-C2 map(std::function<typename C2::value_type(typename C1::value_type)> f, C1 x) {
+C2 range_map(std::function<typename C2::value_type(typename C1::value_type)> f, C1 x) {
   C2 res(x.size());
   transform(x.begin(), x.end(), res.begin(), f);
   return res;

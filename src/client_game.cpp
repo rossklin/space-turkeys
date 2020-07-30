@@ -91,7 +91,7 @@ list<combid> game::solars_for_panel() const {
   list<string> sel = selected_specific<solar>();
 
   if (sel.empty()) {
-    sel = utility::map<list<std::string>>(
+    sel = utility::range_map<list<std::string>>(
         [](solar_selector::ptr s) { return s->id; },
         filtered_entities<solar_selector>(self_id));
   }
