@@ -601,6 +601,7 @@ void game::target_selected(string action, combid target, point pos, list<string>
 void game::load_frames() {
   cout << "Starting to load frames" << endl;
   sf::Packet pq;
+  sim_frames.clear();
   sim_frames.resize(settings.clset.frames_per_round);
 
   for (sim_frames_loaded = 0; sim_frames_loaded < sim_frames.size() && socket->check_com(); sim_frames_loaded++) {
