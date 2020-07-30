@@ -3,12 +3,40 @@
 *** [impl] Make main panel prevent click event propagation
 *** [impl] Hover info shows nothing, does not fit in window
 *** [impl] Event log and hover info should be 100% width or transparent background
-** Segfault in solar_gui
-In building_button_callback, p_building_queue is 0
+** [impl] Segfault in solar_gui
+   In building_button_callback, p_building_queue is 0
+** [fixed?] Weird X11 assert failures in sfml after data loaded, control_event > sf::Keyboard::isKeyPressed
+Maybe caused by starting init_data sequence before initializing ui layers
+** [done] Simulation phase causes network disconnect which is ignored, why?
+Simulation step was called before send_choice
+** [done] map::at throws out of range error or something in draw_window after first sim frame is loaded
+   Not caught by gdb catchpoint for some reason
+
+   Caused by command.ship_class not added to serializer
+** [impl] Global key bindings seem to be disabled
+   Caused by game::any_gui_content checking base layer
+** [impl] Clicking in target gui triggers area select
+** [impl] Move global event handler responsibilities
+*** Choice events (run above base layer)
+**** Area select
+**** Drag waypoint
+**** Clear/setup target gui
+**** Key space: choice complete
+**** Key return: solar gui
+**** Key delete: delete commands
+**** Key escape: quit popup
+*** All phases events (run above context layer)
+**** Update hover info
+**** Zoom in/out
+**** Drag map
+**** Click minimap
+** Component should have parameters for allowed scroll directions
+** Layers should have a view connected to them (so target gui can be on game view)
+** Might need a mutex for socket, since used in parallel by load_frames
 ** UI updates
-*** Acute need for proper style matching rules
-*** Bind global button handlers to components
 *** Base panel
+**** Hover info floating above container
+     Probably caused by multiline string in label, selector::hover_info should return list
 **** [impl] Right panel should have 100% height
 **** [impl] event log and info panel labels should be positioned at top
 **** [impl] Less space after box labels, hbar on both
@@ -30,13 +58,21 @@ In building_button_callback, p_building_queue is 0
 **** Slider does not show
 **** [impl] Ship list to wide for window
 *** Solar GUI needs layout
-*** Target GUI needs layout
-*** Simulation interface: needs progress bar
+*** Target GUI
+**** Target GUI must block scrool zoom mapping since it requires scroll in option lists
+**** Target GUI option list scrolls wrong dimension
+**** Target GUI should allow more space for options
+**** target gui target buttons should have labels
+*** Simulation interface: needs progress bar, show base panel but not commit button
 *** Use consistent styles for choice-buttons, enquer-buttons and queue-items
 *** UI overflow scrollbars
+*** [done] Right panel appears in lower left after layers update
+*** [impl] Acute need for proper style matching rules
+*** [impl] Bind global button handlers to components
 ** bugs
-*** Target GUI click does not stop event propagation to area select
-*** Irregular segfault when starting second client
+*** check_background_tasks should call get() to trigger exceptions
+*** Font displays ugly in UI
+*** Tell server quit causes network exception on client::query -> receive_packet 
 *** After scroll, content shifts position on next update_layout
 *** Map index crash in simulation step when sending ships
 *** Server should only send seen entities on first load, send opponent starting positions separately instead
@@ -44,6 +80,8 @@ In building_button_callback, p_building_queue is 0
 *** Ship stuck circling target
 *** Out of range error when asking to join nonexistent game
 *** (irregular) Server segfault on colonize
+*** [done] Target GUI click does not stop event propagation to area select
+*** [done] Irregular segfault when starting second client
 *** [impl] Command GUI still has byrefs in cosures
 *** [impl] Random nr (10-100) of UI tasks run every time a solar is hovered
 *** [done] Development choice seemed to work only first time
