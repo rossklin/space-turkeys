@@ -337,15 +337,17 @@ void game::popup_query(string title, string text, hm_t<string, Voidfun> opts) {
 
   swap_layer(
       LAYER_POPUP,
-      Panel::create(
-          {
-              make_label(title),
-              make_hbar(),
-              make_label(text),
-              make_hbar(),
-              bp,
-          },
-          Panel::ORIENT_VERTICAL));
+      tag(
+          {"popup"},
+          Panel::create(
+              {
+                  make_label(title),
+                  make_hbar(),
+                  make_label(text),
+                  make_hbar(),
+                  bp,
+              },
+              Panel::ORIENT_VERTICAL)));
 }
 
 // ****************************************

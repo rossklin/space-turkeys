@@ -244,6 +244,12 @@ void st3::generate_styles() {
           },
       },
 
+      // Popup
+      {
+          ".popup",
+          s_default1,
+      },
+
       // General styles
       {
           ".button-option",

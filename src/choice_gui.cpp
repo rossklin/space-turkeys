@@ -51,7 +51,7 @@ PanelPtr st3::choice_gui(
   bool hide_action = !allow_queue;
 
   auto make_section = [](string h) {
-    return tag({"section", "default-panel"}, with_style({{"height", h}}, Panel::create()));
+    return tag({"section"}, with_style({{"height", h}}, Panel::create()));
   };
 
   // Create sections
