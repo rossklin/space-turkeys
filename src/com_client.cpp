@@ -2,6 +2,7 @@
 
 #include <exception>
 #include <iostream>
+#include <mutex>
 #include <vector>
 
 #include "client_game.hpp"
@@ -21,6 +22,8 @@ bool cl_socket_t::check_com() {
 }
 
 bool st3::client::query(cl_socket_ptr socket, sf::Packet &pq) {
+  static mutex m;
+  scoped_lock lock(m);
   protocol_t message;
 
   try {
