@@ -822,7 +822,7 @@ void game::next_sim_frame() {
     update_sim_frame();
   } else {
     sim_playing = false;
-    swap_layer(LAYER_BASE, simulation_gui());
+    swap_layer(LAYER_CONTEXT, simulation_gui());
     return;
   }
 
