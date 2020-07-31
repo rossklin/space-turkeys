@@ -26,7 +26,7 @@ PanelPtr build_queue(list<string> q) {
 
   return tag(
       {"transparent", "choice-queue"},
-      Panel::create(children, Panel::ORIENT_VERTICAL));
+      Panel::create(children, ORIENT_VERTICAL));
 }
 
 PanelPtr build_info(list<string> info) {
@@ -36,7 +36,7 @@ PanelPtr build_info(list<string> info) {
       },
       info);
 
-  return tag({"choice-info", "transparent"}, Panel::create(children, Panel::ORIENT_VERTICAL));
+  return tag({"choice-info", "transparent"}, Panel::create(children, ORIENT_VERTICAL));
 }
 
 PanelPtr st3::choice_gui(
@@ -161,13 +161,13 @@ PanelPtr st3::choice_gui(
                   {
                       tag(
                           {"choice-left", "transparent"},
-                          Panel::create(left_children, Panel::ORIENT_VERTICAL)),
+                          Panel::create(left_children, ORIENT_VERTICAL)),
                       tag(
                           {"choice-right", "transparent"},
                           queue_wrapper),
                   })),
       },
-      Panel::ORIENT_VERTICAL);
+      ORIENT_VERTICAL);
 
   return p;
 }

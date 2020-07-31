@@ -49,7 +49,7 @@ PanelPtr st3::command_gui(
                     *policy = policies.at(k);
                   }),
           },
-          Panel::ORIENT_VERTICAL));
+          ORIENT_VERTICAL));
 
   // Slider
   shared_ptr<string> ship_class = make_shared<string>(original_ship_class);
@@ -65,7 +65,7 @@ PanelPtr st3::command_gui(
     return Slider::create(0, num_available.at(*ship_class), num_available.at(*ship_class), slider_handler);
   };
 
-  PanelPtr slider_panel = tag({"section"}, Panel::create({slider_label, build_slider()}, Panel::ORIENT_VERTICAL));
+  PanelPtr slider_panel = tag({"section"}, Panel::create({slider_label, build_slider()}, ORIENT_VERTICAL));
 
   ButtonPtr title = make_label("Assign " + *ship_class + " ships for '" + action + "' command");
 
@@ -84,7 +84,7 @@ PanelPtr st3::command_gui(
                     slider_panel->replace_children({slider_label, build_slider()});
                   }),
           },
-          Panel::ORIENT_VERTICAL));
+          ORIENT_VERTICAL));
 
   // Button panel
   ButtonPtr b_cancel = Button::create("Cancel", [on_cancel](ButtonPtr b) { on_cancel(); });
@@ -105,5 +105,5 @@ PanelPtr st3::command_gui(
               make_hbar(),
               button_panel,
           },
-          Panel::ORIENT_VERTICAL));
+          ORIENT_VERTICAL));
 }

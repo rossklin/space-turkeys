@@ -60,7 +60,7 @@ PanelPtr st3::target_gui(
 
   return tag(
       {"target-gui"},
-      styled<Panel, list<ComponentPtr>, Panel::orientation>(
+      styled<Panel, list<ComponentPtr>, orientation>(
           {{"position", "fixed"}, {"top", to_string(position.y)}, {"left", to_string(position.x)}},
           {
               tag(
@@ -74,7 +74,7 @@ PanelPtr st3::target_gui(
                                       make_label("Action:"),
                                       a_opts,
                                   },
-                                  Panel::ORIENT_VERTICAL)),
+                                  ORIENT_VERTICAL)),
                           tag(
                               {"column2"},
                               Panel::create(
@@ -82,12 +82,12 @@ PanelPtr st3::target_gui(
                                       make_label("Target:"),
                                       t_opts,
                                   },
-                                  Panel::ORIENT_VERTICAL)),
+                                  ORIENT_VERTICAL)),
                       })),
               make_hbar(),
               tag(
                   {"section"},
                   Panel::create({b_cancel, b_commit})),
           },
-          Panel::ORIENT_VERTICAL));
+          ORIENT_VERTICAL));
 }

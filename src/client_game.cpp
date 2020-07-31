@@ -300,7 +300,7 @@ void game::build_base_panel() {
               event_log_widget(),
               hover_info_widget(),
           },
-          Panel::ORIENT_VERTICAL));
+          ORIENT_VERTICAL));
 
   // Prevent propagation of clicks that hit right panel
   right->on_click = [](ComponentPtr self, sf::Event e) {
@@ -347,7 +347,7 @@ void game::popup_query(string title, string text, hm_t<string, Voidfun> opts) {
                   make_hbar(),
                   bp,
               },
-              Panel::ORIENT_VERTICAL)));
+              ORIENT_VERTICAL)));
 }
 
 // ****************************************
@@ -503,7 +503,7 @@ RSG::PanelPtr game::event_log_widget() {
       {"event-log"},
       Panel::create(
           children,
-          Panel::ORIENT_VERTICAL));
+          ORIENT_VERTICAL));
 }
 
 RSG::PanelPtr game::hover_info_widget() {
@@ -519,7 +519,7 @@ RSG::PanelPtr game::hover_info_widget() {
       {"hover-info"},
       Panel::create(
           children,
-          Panel::ORIENT_VERTICAL));
+          ORIENT_VERTICAL));
 }
 
 /*! Create a Panel with controls for simulation: play, pause, done */

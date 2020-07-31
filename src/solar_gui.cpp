@@ -20,7 +20,7 @@ typedef shared_ptr<list<string>> list_t;
 PanelPtr make_building_queue(solar_ptr s, list_t q) {
   hm_t<string, int> available = s->development;
   list<ComponentPtr> children = {make_label("Queue"), make_hbar()};
-  PanelPtr p = tag({"solar-queue"}, Panel::create({}, Panel::ORIENT_VERTICAL));
+  PanelPtr p = tag({"solar-queue"}, Panel::create({}, ORIENT_VERTICAL));
 
   for (auto v : *q) {
     available[v]++;
@@ -44,12 +44,12 @@ PanelPtr make_building_buttons(function<void(string)> callback) {
   for (auto v : keywords::development) {
     children.push_back(tag({"card"}, Button::create(v, [callback, v]() { callback(v); })));
   }
-  return Panel::create(children, Panel::ORIENT_VERTICAL);
+  return Panel::create(children, ORIENT_VERTICAL);
 }
 
 PanelPtr make_ship_queue(list_t q) {
   list<ComponentPtr> children = {make_label("Queue"), make_hbar()};
-  PanelPtr p = tag({"solar-queue"}, Panel::create({}, Panel::ORIENT_VERTICAL));
+  PanelPtr p = tag({"solar-queue"}, Panel::create({}, ORIENT_VERTICAL));
 
   for (auto v : *q) {
     ButtonPtr b = tag(
@@ -80,7 +80,7 @@ PanelPtr make_ship_buttons(solar_ptr s, research::data r, function<void(string)>
     }
   }
 
-  return Panel::create(children, Panel::ORIENT_VERTICAL);
+  return Panel::create(children, ORIENT_VERTICAL);
 }
 
 PanelPtr st3::solar_gui(solar_ptr s, research::data r, Voidfun on_cancel, function<void(list<string>, list<string>)> on_commit) {
@@ -125,5 +125,5 @@ PanelPtr st3::solar_gui(solar_ptr s, research::data r, Voidfun on_cancel, functi
                       Button::create("Commit", [=](ButtonPtr s) { on_commit(*bqueue, *squeue); }),
                   })),
       },
-      Panel::ORIENT_VERTICAL);
+      ORIENT_VERTICAL);
 }
