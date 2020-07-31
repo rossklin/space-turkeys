@@ -62,7 +62,8 @@ handler_result server::server_cl_socket::receive_query(protocol_t p, query_respo
     if (data >> input) {
       if (input == protocol::leave) {
         output("client " + to_string(id) + " disconnected!");
-        set_disconnect();
+        res.status = socket_t::tc_stop;
+        res.response << protocol::confirm;
       } else if (input == protocol::standby) {
         res.status = socket_t::tc_run;
         res.response << protocol::confirm;
@@ -107,7 +108,10 @@ bool server::server_cl_socket::check_protocol(protocol_t p, query_response_gener
     while (running && main_status == tc_run) {
       handler_result res = receive_query(p, f);
 
-      if (res.status == socket_t::tc_failed && is_connected()) {
+      if (res.status == socket_t::tc_stop) {
+        send_packet(res.response);
+        set_disconnect();
+      } else if (res.status == socket_t::tc_failed && is_connected()) {
         send_packet(p_aborted);
         set_disconnect();
       }
