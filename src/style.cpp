@@ -333,6 +333,7 @@ void st3::generate_styles() {
           {
               {"width", "100%"},
               {"overflow", "scrolled"},
+              {"scroll-direction", "horizontal"},
               {"margin-top", "10"},
               {"margin-bottom", "10"},
           },
