@@ -562,6 +562,12 @@ void game::check_background_tasks() {
 
   for (auto id : remove) {
     cout << "Removing background task " << id << endl;
+    try {
+      background_tasks.at(id).get();
+    } catch (const exception &e) {
+      cout << "Exception in background task: " << e.what() << endl;
+      terminate_with_message("Something went wrong: " + string(e.what()));
+    }
     background_tasks.erase(id);
     cout << background_tasks.size() << " background tasks remain" << endl;
   }
