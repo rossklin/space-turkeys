@@ -137,7 +137,16 @@ void handler::run() {
 
     if (code == sf::Socket::Done) {
       local_output("Accepted a new client");
-      test->wfg_thread = shared_ptr<thread>(new thread(&handler::main_client_handler, this, test));
+      auto f = [this, test]() {
+        safely(
+            [this, test]() {
+              main_client_handler(test);
+            },
+            [test]() {
+              test->disconnect();
+            });
+      };
+      test->wfg_thread = shared_ptr<thread>(new thread(f));
       clients[test->id] = test;
     } else {
       test->disconnect();
