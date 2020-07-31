@@ -15,6 +15,7 @@
 using namespace std;
 
 namespace st3 {
+using namespace utility;
 
 template class specific_selector<ship>;
 template class specific_selector<fleet>;
@@ -110,7 +111,7 @@ void specific_selector<solar>::draw(RSG::WindowPtr w) {
 }
 
 template <>
-string specific_selector<solar>::hover_info() {
+list<string> specific_selector<solar>::hover_info() {
   stringstream ss;
   ss << id << " at " << utility::format_float(position.x) << "x" << utility::format_float(position.y);
 
@@ -143,7 +144,7 @@ string specific_selector<solar>::hover_info() {
        << k << ": " << (int)resources[k];
   }
 
-  return ss.str();
+  return range_init<list<string>>(explode(ss.str(), "\\n"));
 }
 
 // ****************************************
@@ -242,12 +243,12 @@ void specific_selector<fleet>::draw(RSG::WindowPtr w) {
 }
 
 template <>
-string specific_selector<fleet>::hover_info() {
-  string res = "fleet at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
+list<string> specific_selector<fleet>::hover_info() {
+  list<string> res = {"fleet at " + utility::format_float(position.x) + "x" + utility::format_float(position.y)};
 
   if (owned) {
-    res += "\naction: " + com.action;
-    res += "\n" + to_string(ships.size()) + " " + com.ship_class + "s";
+    res.push_back("action: " + com.action);
+    res.push_back(to_string(ships.size()) + " " + com.ship_class + "s");
   }
 
   return res;
@@ -285,8 +286,8 @@ set<combid> specific_selector<waypoint>::get_ships() {
 }
 
 template <>
-string specific_selector<waypoint>::hover_info() {
-  return "waypoint at " + utility::format_float(position.x) + "x" + utility::format_float(position.y);
+list<string> specific_selector<waypoint>::hover_info() {
+  return {"waypoint at " + utility::format_float(position.x) + "x" + utility::format_float(position.y)};
 }
 
 // ****************************************
@@ -330,7 +331,7 @@ set<combid> specific_selector<ship>::get_ships() {
 }
 
 template <>
-string specific_selector<ship>::hover_info() {
+list<string> specific_selector<ship>::hover_info() {
   auto get_percent = [this](int k) -> int {
     return 100 * stats[k] / base_stats.stats[k];
   };
@@ -369,7 +370,7 @@ string specific_selector<ship>::hover_info() {
     for (auto u : upgrades) output += u + "\n";
   }
 
-  return output;
+  return range_init<list<string>>(explode(output, "\\n"));
 }
 }  // namespace st3
 

@@ -128,6 +128,8 @@ typename C::value_type vsum(C &x) {
 
 std::string format_float(float x);
 
+std::vector<std::string> explode(std::string text, std::string delim);
+
 rapidjson::Document *get_json(std::string filename);
 
 /* **************************************** */

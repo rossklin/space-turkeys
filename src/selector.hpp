@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <list>
 #include <memory>
 #include <set>
 #include <string>
@@ -41,7 +42,7 @@ class entity_selector : public virtual game_object {
   virtual void draw(RSG::WindowPtr w) = 0;
   virtual point get_position() = 0;
   virtual std::set<combid> get_ships() = 0;
-  virtual std::string hover_info() = 0;
+  virtual std::list<std::string> hover_info() = 0;
 
   sf::Color get_color();
   virtual bool inside_rect(sf::FloatRect r);
@@ -65,7 +66,7 @@ class specific_selector : public virtual entity_selector, public virtual T {
   void draw(RSG::WindowPtr w);
   point get_position();
   std::set<combid> get_ships();
-  std::string hover_info();
+  std::list<std::string> hover_info();
 };
 
 // template <>

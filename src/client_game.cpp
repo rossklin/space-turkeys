@@ -1655,7 +1655,8 @@ void game::control_event(sf::Event e) {
 
     list<string> text;
     for (auto k : keys) {
-      text.push_back(get_selector(k)->hover_info());
+      auto buf = get_selector(k)->hover_info();
+      text.insert(text.end(), buf.begin(), buf.end());
     }
 
     set_hover_info(title, text);

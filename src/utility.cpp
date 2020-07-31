@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <iterator>
 #include <mutex>
+#include <regex>
 #include <sstream>
 
 #include "fleet.hpp"
@@ -297,14 +298,14 @@ int utility::int_modulus(int x, int p) {
   return x < 0 ? p + (x % p) : x % p;
 }
 
-std::vector<int> utility::sequence(int a, int b) {
+vector<int> utility::sequence(int a, int b) {
   assert(a < b);
   vector<int> res(b - a);
   for (int i = a; i < b; i++) res[i] = i;
   return res;
 }
 
-std::vector<int> utility::zig_seq(int a) {
+vector<int> utility::zig_seq(int a) {
   assert(a >= 0);
   vector<int> res(2 * a + 1);
   int c = 0;
@@ -525,6 +526,23 @@ string utility::format_float(float x) {
   stringstream stream;
   stream << fixed << setprecision(2) << x;
   return stream.str();
+}
+
+vector<string> utility::explode(string text, string delim) {
+  // https://www.journaldev.com/37223/tokenize-string-c-plus-plus
+  // Regex for tokenizing whitespaces
+  regex reg(delim);
+
+  // Get an iterator after filtering through the regex
+  sregex_token_iterator iter(text.begin(), text.end(), reg, -1);
+
+  // Keep a dummy end iterator - Needed to construct a vector
+  // using (start, end) iterators.
+  sregex_token_iterator end;
+
+  vector<string> res(iter, end);
+
+  return res;
 }
 
 float utility::mass2area(float m) {
