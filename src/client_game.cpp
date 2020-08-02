@@ -121,7 +121,10 @@ void game::window_loop() {
     while (window->pollEvent(event)) {
       bool was_handled = false;
       for (int i = LAYER_NUM - 1; i >= 0 && !was_handled; i--) {
-        was_handled |= component_layers[i]->handle_event(event, coord_mapper);
+        if (component_layers[i]->get_children().size()) {
+          was_handled |= component_layers[i]->handle_event(event, coord_mapper);
+          break;
+        }
       }
 
       if (!was_handled) was_handled |= choice_event(event);
@@ -1745,6 +1748,23 @@ void game::reset_drags() {
 // Choice step global handler, return true if event handled
 bool game::choice_event(sf::Event e) {
   if (phase != "choice") return false;
+
+  Voidfun f_stop = [this]() { state_run = false; };
+  if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape) {
+    if (any_gui_content()) {
+      clear_ui_layers();
+    } else {
+      popup_query(
+          "",
+          "Really quit?",
+          {{"Yes", [this, f_stop]() {
+              tell_server_quit(f_stop, f_stop);
+            }},
+           {"No", 0}});
+    }
+    return true;
+  }
+
   if (any_gui_content(LAYER_CONTEXT)) return false;
 
   // // make a fleet from selected ships
@@ -1863,8 +1883,6 @@ bool game::choice_event(sf::Event e) {
     for (auto id : selected_commands()) remove_command(id);
   };
 
-  Voidfun f_stop = [this]() { state_run = false; };
-
   // event switch
   window->setView(view_game);
   switch (e.type) {
@@ -1973,27 +1991,18 @@ bool game::choice_event(sf::Event e) {
             return true;
           }
           break;
-        // case sf::Keyboard::B:
-        //   if (selected_specific<solar>().size() > 0 && !has_gui) {
-        //     activate_build = !activate_build;
-        //     activate_ship = false;
-        //   }
-        //   break;
-        // case sf::Keyboard::S:
-        //   if (selected_specific<solar>().size() > 0 && !has_gui) {
-        //     activate_ship = !activate_ship;
-        //     activate_build = false;
-        //   }
-        //   break;
-        case sf::Keyboard::Escape:
-          popup_query(
-              "",
-              "Really quit?",
-              {{"Yes", [this, f_stop]() {
-                  tell_server_quit(f_stop, f_stop);
-                }},
-               {"No", 0}});
-          return true;
+          // case sf::Keyboard::B:
+          //   if (selected_specific<solar>().size() > 0 && !has_gui) {
+          //     activate_build = !activate_build;
+          //     activate_ship = false;
+          //   }
+          //   break;
+          // case sf::Keyboard::S:
+          //   if (selected_specific<solar>().size() > 0 && !has_gui) {
+          //     activate_ship = !activate_ship;
+          //     activate_build = false;
+          //   }
+          //   break;
       }
       break;
   };
