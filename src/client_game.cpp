@@ -18,6 +18,7 @@
 #include "research.hpp"
 #include "rsg/src/button.hpp"
 #include "rsg/src/panel.hpp"
+#include "rsg/src/progress_bar.hpp"
 #include "rsg/src/utility.hpp"
 #include "selector.hpp"
 #include "serialization.hpp"
@@ -319,7 +320,15 @@ void game::build_base_panel() {
                   "Commit",
                   [this]() { choice_complete = true; }))}));
 
-  swap_layer(LAYER_BASE, tag({"fill-container"}, Panel::create({right, bottom})));
+  PanelPtr p;
+
+  if (phase == "choice") {
+    p = Panel::create({right, bottom});
+  } else {
+    p = Panel::create({right});
+  }
+
+  swap_layer(LAYER_BASE, tag({"fill-container"}, p));
 }
 
 /** Queue Draw a box with a message and wait for ok. */
@@ -527,17 +536,24 @@ RSG::PanelPtr game::hover_info_widget() {
 
 /*! Create a Panel with controls for simulation: play, pause, done */
 RSG::PanelPtr game::simulation_gui() {
-  return styled<Panel, list<ComponentPtr>>(
-      {{"position", "absolute"}, {"bottom", "0"}},
-      {
-          Button::create("Play", [this](ButtonPtr self) {
-            sim_playing = !sim_playing;
-            self->set_label(sim_playing ? "Pause" : "Play");
-          }),
-          Button::create("Done", [this]() {
-            pre_step();
-          }),
-      });
+  sim_progress = RSG::ProgressBar::create();
+  return tag(
+      {"simulation-gui"},
+      Panel::create(
+          {
+              {sim_progress},
+              Panel::create(
+                  {
+                      Button::create("Play", [this](ButtonPtr self) {
+                        sim_playing = !sim_playing;
+                        self->set_label(sim_playing ? "Pause" : "Play");
+                      }),
+                      Button::create("Done", [this]() {
+                        pre_step();
+                      }),
+                  }),
+          },
+          ORIENT_VERTICAL));
 }
 
 // *************************************
@@ -1703,9 +1719,9 @@ void game::control_event(sf::Event e) {
       }
 
       break;
-    case sf::Event::MouseWheelMoved:
-      p = window->mapPixelToCoords(sf::Vector2i(e.mouseWheel.x, e.mouseWheel.y));
-      do_zoom(pow(1.2, -e.mouseWheel.delta), p);
+    case sf::Event::MouseWheelScrolled:
+      p = window->mapPixelToCoords(sf::Vector2i(e.mouseWheelScroll.x, e.mouseWheelScroll.y));
+      do_zoom(pow(1.2, -e.mouseWheelScroll.delta), p);
       break;
     case sf::Event::KeyPressed:
       switch (e.key.code) {

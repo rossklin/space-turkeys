@@ -46,7 +46,8 @@ void st3::generate_styles() {
 
   // Prevent inheritance for panel background since stacked semitransparent panels look weird
   Component::class_style["Panel"]["background-color"] = transparent;
-  Component::class_style["Panel"]["border-thickness"] = "0";
+  Component::class_style["Panel"]["border-thickness"] = "1";
+  Component::class_style["Panel"]["border-color"] = "ffffffff";
 
   Component::class_style["Button:hover"]["background-color"] = "345678ff";
 
@@ -238,7 +239,7 @@ void st3::generate_styles() {
       },
 
       {
-          ".target-gui .target-wrapper .label",
+          ".target-gui .target-wrapper .button-option",
           {
               {"width", "100%"},
               {"height", "30px"},
@@ -251,6 +252,24 @@ void st3::generate_styles() {
               {"align-vertical", "top"},
               {"width", "100%"},
               {"height", "150px"},
+          },
+      },
+
+      //Simulation GUI
+      {
+          ".simulation-gui",
+          {
+              {"position", "absolute"},
+              {"top", "auto"},
+              {"bottom", "0"},
+          },
+      },
+
+      {
+          ".simulation-gui ProgressBar",
+          {
+              {"width", "400px"},
+              {"height", "20px"},
           },
       },
 

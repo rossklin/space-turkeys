@@ -115,6 +115,12 @@ RSG::WindowPtr setup_gfx(bool fullscreen = false) {
   sf_settings.antialiasingLevel = 8;
   RSG::WindowPtr w = shared_ptr<window_t>(new window_t());
   w->create(vmode, "SPACE TURKEYS III ALPHA", vstyle, sf_settings);
+
+  // Draw initial loading message
+  w->clear();
+  graphics::draw_text(*w, "Connecting...", {(float)width / 2, (float)height / 2}, 40);
+  w->display();
+
   return w;
 }
 
