@@ -16,6 +16,7 @@
 using namespace std;
 using namespace RSG;
 using namespace st3;
+using namespace st3::utility;
 
 PanelPtr st3::target_gui(
     sf::Vector2f position,
@@ -34,17 +35,12 @@ PanelPtr st3::target_gui(
       [sel_target, b_commit](string k) {
         *sel_target = k;
         b_commit->remove_state("disabled");
-      });
+      },
+      ORIENT_VERTICAL);
   t_opts->add_state("invisible");
 
-  map<string, ButtonPtr> opt_buttons;
-  for (auto x : action_targets) {
-    string label = x.first == identifier::source_none ? "Add waypoint" : x.first;
-    opt_buttons[x.first] = Button::create(label);
-  }
-
   auto a_opts = ButtonOptions::create(
-      opt_buttons,
+      range_init<list<string>>(hm_keys(action_targets)),
       [=](string k) {
         if (*sel_action == k) return;
 
@@ -53,10 +49,14 @@ PanelPtr st3::target_gui(
         b_commit->add_state("disabled");
 
         map<string, ButtonPtr> buf;
-        for (auto v : action_targets.at(k)) buf[v] = Button::create(v);
+        for (auto v : action_targets.at(k)) {
+          string label = v == identifier::source_none ? "Add waypoint" : v;
+          buf[v] = Button::create(label);
+        }
         t_opts->set_children(buf);
         t_opts->remove_state("invisible");
-      });
+      },
+      ORIENT_VERTICAL);
 
   return tag(
       {"target-gui"},
