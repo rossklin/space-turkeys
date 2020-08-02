@@ -22,8 +22,8 @@ bool cl_socket_t::check_com() {
 }
 
 bool st3::client::query(cl_socket_ptr socket, sf::Packet &pq) {
-  static mutex m;
-  scoped_lock lock(m);
+  static recursive_mutex m;
+  lock_guard<recursive_mutex> lock(m);
   protocol_t message;
 
   try {
