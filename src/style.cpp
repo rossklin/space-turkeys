@@ -76,7 +76,7 @@ void st3::generate_styles() {
       },
 
       {
-          ".right-panel Button",
+          ".right-panel > Button",
           {
               {"width", "100%"},
               {"height", "30px"},
@@ -92,6 +92,14 @@ void st3::generate_styles() {
               {"align-horizontal", "left"},
               {"align-vertical", "top"},
               {"padding-top", "5"},
+          },
+      },
+
+      {
+          ".hover-info .list-item",
+          {
+              {"margin-top", "5"},
+              {"margin-bottom", "5"},
           },
       },
 
@@ -225,13 +233,14 @@ void st3::generate_styles() {
       {
           ".target-gui",
           StyleMap{
-              {"width", "300px"},
+              {"width", "400px"},
           } + s_default2,
       },
 
       {
           ".target-gui .target-wrapper .label",
           {
+              {"width", "100%"},
               {"height", "30px"},
           },
       },
@@ -239,8 +248,9 @@ void st3::generate_styles() {
       {
           ".target-gui .target-wrapper ButtonOptions",
           {
+              {"align-vertical", "top"},
               {"width", "100%"},
-              {"height", "50px"},
+              {"height", "150px"},
           },
       },
 
@@ -312,7 +322,7 @@ void st3::generate_styles() {
           ".card:selected",
           {
               {"color", "ffffffff"},
-              {"background-color", "654321aa"},
+              {"background-color", "56789abb"},
               {"border-thickness", "4"},
               {"border-color", "ffffffaa"},
           },

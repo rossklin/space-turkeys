@@ -47,7 +47,8 @@ PanelPtr st3::command_gui(
                   utility::range_init<list<string>>(utility::hm_keys(policies)),
                   [policies, policy](string k) {
                     *policy = policies.at(k);
-                  }),
+                  },
+                  ORIENT_HORIZONTAL),
           },
           ORIENT_VERTICAL));
 
@@ -82,7 +83,8 @@ PanelPtr st3::command_gui(
                     *ship_class = sc;
                     title->set_label("Assign " + *ship_class + " ships for '" + action + "' command");
                     slider_panel->replace_children({slider_label, build_slider()});
-                  }),
+                  },
+                  ORIENT_HORIZONTAL),
           },
           ORIENT_VERTICAL));
 

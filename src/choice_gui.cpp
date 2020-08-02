@@ -60,6 +60,8 @@ PanelPtr st3::choice_gui(
   PanelPtr info_wrapper = make_section("30%");
   PanelPtr button_wrapper = make_section("15%");
 
+  info_wrapper->set_style("scroll-direction", "vertical");
+
   // Left panel section
   PanelPtr queue_wrapper = Panel::create();
 
@@ -112,7 +114,8 @@ PanelPtr st3::choice_gui(
         } else if (k == "Replace") {
           *action = CHOICEGUI_REPLACE;
         }
-      });
+      },
+      ORIENT_HORIZONTAL);
 
   action_options->set_style(
       {
