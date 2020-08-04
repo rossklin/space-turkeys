@@ -839,6 +839,8 @@ void game::next_sim_frame() {
       reload_data(sim_frames[sim_idx]);
     }
     update_sim_frame();
+
+    sim_progress->set_progress((sub_frames * sim_idx + sim_sub_idx) / (float)(sub_frames * settings.clset.frames_per_round));
   } else {
     sim_playing = false;
     swap_layer(LAYER_CONTEXT, simulation_gui());
