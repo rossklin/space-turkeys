@@ -424,30 +424,6 @@ void game_data::apply_choice(choice c, idtype id) {
     register_entity(x.second->clone());
   }
 
-  for (auto &x : c.fleets) {
-    string sym = identifier::get_multid_owner_symbol(x.second->id);
-    if (sym != to_string(id) && sym != "S") {
-      throw player_error("apply_choice: player " + to_string(id) + " tried to insert fleet owned by " + sym);
-    }
-
-    x.second->owner = id;
-    register_entity(x.second->clone());
-
-    auto f = get_fleet(x.first);
-    for (auto sid : f->ships) {
-      ship_ptr s = get_ship(sid);
-      if (s->owner == id) {
-        s->fleet_id = f->id;
-      } else {
-        throw player_error("apply_choice: player " + to_string(id) + " tried to construct a fleet with a non-owned ship!");
-      }
-    }
-
-    // idle the fleet so it only acts if the client updates the command
-    f->set_idle();
-    f->update_data(this, true);
-  }
-
   // research
   if (c.research.length() > 0) {
     if (!utility::find_in(c.research, players[id].research_level.available())) {
@@ -953,10 +929,9 @@ void game_data::build() {
 
 // clean up things that will be reloaded from client
 void game_data::pre_step() {
-  // clear waypoints and fleets, but don't list removals as client
+  // clear waypoints, but don't list removals as client
   // manages them
   for (auto i : filtered_entities<waypoint>()) i->remove = true;
-  for (auto i : filtered_entities<fleet>()) i->remove = true;
   remove_units();
   remove_entities.clear();
 

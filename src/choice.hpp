@@ -20,6 +20,5 @@ struct choice {
   hm_t<combid, std::list<command> > commands; /*!< table of commands for game entities */
   hm_t<combid, c_solar> solar_choices;        /*!< table of choices for solar system evolution */
   hm_t<combid, waypoint_ptr> waypoints;       /*!< table of generated waypoints */
-  hm_t<combid, fleet_ptr> fleets;
 };
 };  // namespace st3

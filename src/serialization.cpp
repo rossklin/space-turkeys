@@ -263,19 +263,16 @@ sf::Packet& st3::operator>>(sf::Packet& packet, fleet::analytics& g) {
 // choice
 sf::Packet& st3::operator<<(sf::Packet& packet, const choice& c) {
   vector<waypoint> wps = utility::range_map<vector<waypoint>>([](waypoint_ptr p) { return *p; }, utility::hm_values(c.waypoints));
-  vector<fleet> fls = utility::range_map<vector<fleet>>([](fleet_ptr p) { return *p; }, utility::hm_values(c.fleets));
 
-  return packet << c.commands << c.solar_choices << wps << fls << c.research;
+  return packet << c.commands << c.solar_choices << wps << c.research;
 }
 
 sf::Packet& st3::operator>>(sf::Packet& packet, choice& c) {
   vector<waypoint> wps;
-  vector<fleet> fls;
-  auto& res = packet >> c.commands >> c.solar_choices >> wps >> fls >> c.research;
+  auto& res = packet >> c.commands >> c.solar_choices >> wps >> c.research;
 
   if (res) {
     for (auto w : wps) c.waypoints[w.id] = waypoint_ptr(new waypoint(w));
-    for (auto f : fls) c.fleets[f.id] = fleet_ptr(new fleet(f));
   }
 
   return res;
