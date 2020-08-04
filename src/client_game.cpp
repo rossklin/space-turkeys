@@ -792,7 +792,7 @@ void game::choice_step() {
 
 void game::send_choice() {
   // clear guis while sending choice
-  clear_ui_layers(false);
+  clear_ui_layers();
   deselect_all();
 
   choice c = build_choice();
