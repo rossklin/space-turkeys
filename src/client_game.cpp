@@ -816,7 +816,7 @@ void game::simulation_step() {
   // start loading frames in background
   sim_frames_loaded = 0;
   sim_sub_idx = 0;
-  sim_idx = 0;
+  sim_idx = -1;
   sim_playing = false;
   queue_background_task(bind(&game::load_frames, this));
 
@@ -826,26 +826,28 @@ void game::simulation_step() {
 
 void game::next_sim_frame() {
   int sub_frames = settings.clset.sim_sub_frames;
-  int buffer_size = max<int>(min<int>(settings.clset.frames_per_round - sim_idx - 1, 4), 0);
-  bool can_increment = sim_idx + 1 < settings.clset.frames_per_round;
-  bool has_buffer = sim_idx + 1 < sim_frames_loaded - buffer_size;
+  int n_frames = settings.clset.frames_per_round;
+  int buffer_size = max<int>(min<int>(n_frames - sim_idx - 1, 4), 0);
 
-  if (sim_sub_idx < sub_frames - 1 || (can_increment && has_buffer)) {
-    sim_sub_idx++;
-    if (sim_sub_idx >= sub_frames) {
+  bool has_buffer = sim_idx + 1 < sim_frames_loaded - buffer_size;
+  bool can_increment = sim_idx + 1 < n_frames && has_buffer;
+  bool wants_increment = sim_sub_idx >= sub_frames - 1 || sim_idx == -1;
+
+  if (can_increment && wants_increment) {
       sim_sub_idx = 0;
       sim_idx++;
       cout << "Showing sim frame " << sim_idx << endl;
       reload_data(sim_frames[sim_idx]);
-    }
-    update_sim_frame();
-
-    sim_progress->set_progress((sub_frames * sim_idx + sim_sub_idx) / (float)(sub_frames * settings.clset.frames_per_round));
+  } else if (sim_sub_idx < sub_frames - 1) {
+    sim_sub_idx++;
   } else {
     sim_playing = false;
     swap_layer(LAYER_CONTEXT, simulation_gui());
     return;
   }
+
+  update_sim_frame();
+  sim_progress->set_progress((sub_frames * sim_idx + sim_sub_idx) / (float)(sub_frames * n_frames));
 
   // Update time for animations
   int frame = sub_frames * sim_idx + sim_sub_idx;
