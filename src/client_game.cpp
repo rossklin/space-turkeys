@@ -1952,13 +1952,16 @@ bool game::choice_event(sf::Event e) {
       if (e.mouseButton.button == sf::Mouse::Right && exists_selected()) {
         setup_targui(p);
         return true;
-      } else if (e.mouseButton.button == sf::Mouse::Left && !minimap_rect().contains(mpos.x, mpos.y)) {
+      } else if (e.mouseButton.button == sf::Mouse::Left) {
         if (drag_waypoint_active && did_drag) {
           // do nothing
         } else if (abs(srect.width) > 5 || abs(srect.height) > 5) {
           area_select();
-        } else {
+        } else if (!minimap_rect().contains(mpos.x, mpos.y)) {
           select_at(p);
+        } else {
+          // Click in minimap, pass to control_event
+          return false;
         }
 
         reset_drags();
