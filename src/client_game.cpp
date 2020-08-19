@@ -1213,11 +1213,11 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
     return;
   }
 
-  // check that we respect fleet count limit
-  if (filtered_entities<fleet>(self_id).size() >= get_max_fleets(self_id)) {
-    cout << "add_command: reached max nr of fleets!" << endl;
-    return;
-  }
+  // // check that we respect fleet count limit
+  // if (filtered_entities<fleet>(self_id).size() >= get_max_fleets(self_id)) {
+  //   cout << "add_command: reached max nr of fleets!" << endl;
+  //   return;
+  // }
 
   // set default fleet policy
   if (default_policy) c.policy = fleet::default_policy(c.action);
@@ -1256,7 +1256,7 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
     cs->ships.clear();
     for (auto sid : sel_ships) {
       cs->ships.insert(sid);
-      if (cs->ships.size() >= get_max_ships_per_fleet(self_id)) break;
+      // if (cs->ships.size() >= get_max_ships_per_fleet(self_id)) break;
     }
   }
 
@@ -1480,7 +1480,8 @@ bool game::select_command(idtype key) {
           c->action,
           c->policy,
           ship_counts,
-          get_max_ships_per_fleet(self_id),
+          // get_max_ships_per_fleet(self_id),
+          10000,
           combat,
           [this, c](string ship_class, int policy, int num) {
             c->ship_class = ship_class;

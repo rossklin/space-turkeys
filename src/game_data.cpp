@@ -395,7 +395,7 @@ fleet_ptr game_data::generate_fleet(point p, idtype owner, command c, list<combi
   point tp;
   if (target_position(c.target, tp)) ta = utility::point_angle(tp - p);
 
-  const int max_ships = get_max_ships_per_fleet(owner);
+  // const int max_ships = get_max_ships_per_fleet(owner);
 
   for (auto &s : sh) {
     auto sp = get_ship(s);
@@ -403,7 +403,7 @@ fleet_ptr game_data::generate_fleet(point p, idtype owner, command c, list<combi
     sp->owner = owner;
     sp->fleet_id = f->id;
     sp->angle = ta;
-    if (f->ships.size() >= max_ships && !ignore_limit) break;
+    // if (f->ships.size() >= max_ships && !ignore_limit) break;
   }
 
   register_entity(f);
@@ -1234,5 +1234,6 @@ float game_data::solar_order_level(combid id) const {
 }
 
 bool game_data::allow_add_fleet(idtype pid) const {
-  return get_max_fleets(pid) > filtered_entities<fleet>(pid).size();
+  return true;
+  // return get_max_fleets(pid) > filtered_entities<fleet>(pid).size();
 }
