@@ -834,10 +834,10 @@ void game::next_sim_frame() {
   bool wants_increment = sim_sub_idx >= sub_frames - 1 || sim_idx == -1;
 
   if (can_increment && wants_increment) {
-      sim_sub_idx = 0;
-      sim_idx++;
-      cout << "Showing sim frame " << sim_idx << endl;
-      reload_data(sim_frames[sim_idx]);
+    sim_sub_idx = 0;
+    sim_idx++;
+    cout << "Showing sim frame " << sim_idx << endl;
+    reload_data(sim_frames[sim_idx]);
   } else if (sim_sub_idx < sub_frames - 1) {
     sim_sub_idx++;
   } else {
@@ -851,7 +851,7 @@ void game::next_sim_frame() {
 
   // Update time for animations
   int frame = sub_frames * sim_idx + sim_sub_idx;
-  for (auto &a : animations) a.time = frame_time * 10 * (frame - a.delay) / (float)sub_frames;
+  for (auto &a : animations) a.time = frame_time * (frame - a.delay);
 }
 
 // Update entities to correspond to the current sim frame
