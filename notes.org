@@ -1,85 +1,111 @@
-* Notes test game 2020-06-22
-** verify
-*** [impl] Make main panel prevent click event propagation
-*** [impl] Hover info shows nothing, does not fit in window
-*** [impl] Event log and hover info should be 100% width or transparent background
-** [impl] Segfault in solar_gui
-   In building_button_callback, p_building_queue is 0
-** [fixed?] Weird X11 assert failures in sfml after data loaded, control_event > sf::Keyboard::isKeyPressed
-Maybe caused by starting init_data sequence before initializing ui layers
-** [done] Simulation phase causes network disconnect which is ignored, why?
-Simulation step was called before send_choice
-** [done] map::at throws out of range error or something in draw_window after first sim frame is loaded
-   Not caught by gdb catchpoint for some reason
+* Notes test game 2020-08-14
+** The ship combat equations
+FlexWeight = 1 x (angle_diff(a, angle(p2 - p1)) < Pi x CannonFlex)
+AccuracyCheck = Accuracy x FlexWeight x 30 / (|p2-p1| - 1)
+EvasionCheck = U(0, Evasion x 10 / Mass
 
-   Caused by command.ship_class not added to serializer
-** [impl] Global key bindings seem to be disabled
-   Caused by game::any_gui_content checking base layer
-** [impl] Clicking in target gui triggers area select
-** [impl] Move global event handler responsibilities
-*** Choice events (run above base layer)
-**** Area select
-**** Drag waypoint
-**** Clear/setup target gui
-**** Key space: choice complete
-**** Key return: solar gui
-**** Key delete: delete commands
-**** Key escape: quit popup
-*** All phases events (run above context layer)
-**** Update hover info
-**** Zoom in/out
-**** Drag map
-**** Click minimap
-** Component should have parameters for allowed scroll directions
-** Layers should have a view connected to them (so target gui can be on game view)
-** Might need a mutex for socket, since used in parallel by load_frames
+Hit if AccuracyCheck - EvasionCheck > 0
+Damage = N(Damage, 0.2 x Damage)
+
+Example deployed Cannon vs Fighter
+Cannon: 
+P hit at dist 101 = P{ 2 x 30 / 100 - U(0, 2 x 10 / 3) > 0 } = P{ 0.6 > U(0, 6.7) } = 9%
+P hit at dist 51 = P{ 2 x 30 / 50 - U(0, 2 x 10 / 3) > 0 } = P{ 1.2 > U(0, 6.7) } = 18%
+P hit at dist 21 = P{ 2 x 30 / 20 - U(0, 2 x 10 / 3) > 0 } = P{ 3 > U(0, 6.7) } = 45%
+Shots to kill: 1
+cost 6 res
+hp 5
+damage 10
+accuracy 2
+evasion 0
+cannon flex 0.1
+load time 5
+
+Fighter:
+P hit = P{ 2 x 30 / (d-1) > 0 } = 100%
+Shots to kill: 5
+cost 6 res
+hp 2
+damage 1
+accuracy 2
+evasion 2
+load time 5
+cannon flex 0.2
+** [test] Fighter shot animations quite heavy and long
+** [test] Increase friction and/or add free rotation thrusters
+** [test] Deployed cannons are way to weak, can barely kill fighters
+** Ships in fleet need to come together when they get disjointed
+** How to handle deploy action for multiship fleet
+** Network error "failed to deserialize key" or something when pressing done in simulation before other client pressed commit
+** Event log overflows onto hover info
+** Deploying (and other actions?) should remove the command
+** Solar defense animation should fire from radius not from center
+** Deployed cannons need a direction instruction attached to action
+** Again crash in reload_data when updating fleet position after spotted unseen ship
+Could be either after colonize or after all ships in fleet were destroyed
+** Background for selected buttons is hard to see
+** Target GUI should not show target sub panel if there is only one target option
+** Target GUI should either be centered or attached to game view
+** Add waypoint property: face direction
+** Commit button still shows in simulation phase
+** If implementing a fleet count limit
+Must compute the number of fleets that would finally result from
+resolving all commands
+** [impl] No event log item for ship death
+** [impl] Missing Command GUI option to delete command
+** [done] Some combat animations missing
+*** No animations first round, 2 ships died
+*** All animations at start of second round, none at end
+** [impl] Command GUI must update count when changing ship class
+* Notes test game 2020-06-22
 ** UI updates
-*** Base panel
-**** Hover info floating above container
-     Probably caused by multiline string in label, selector::hover_info should return list
-**** [impl] Right panel should have 100% height
-**** [impl] event log and info panel labels should be positioned at top
-**** [impl] Less space after box labels, hbar on both
-*** Choice GUI
-**** [impl] Cards should have smaller font
-**** [impl] Description list should have tag transparent
-**** [impl] Description list should be left aligned
-**** Description list title should have margin and larger font
-**** [impl] Description list should have fixed width 67%
-**** [impl] Queue label should have absolute position top left
-**** Title should have less top margin
-*** Development GUI
-**** [impl] List nr of solars in title
-*** Military GUI 
-**** [impl] List nr of solars in title
-*** Command GUI
-**** Ship class list items should 
-**** [impl] Must respect ships per fleet limit
-**** Slider does not show
-**** [impl] Ship list to wide for window
-*** Solar GUI needs layout
-*** Target GUI
-**** Target GUI must block scrool zoom mapping since it requires scroll in option lists
-**** Target GUI option list scrolls wrong dimension
-**** Target GUI should allow more space for options
-**** target gui target buttons should have labels
-*** Simulation interface: needs progress bar, show base panel but not commit button
+*** Popup dialogue hbars do not fill width
 *** Use consistent styles for choice-buttons, enquer-buttons and queue-items
 *** UI overflow scrollbars
+*** [impl] Target gui button options fixed width less than content
+*** [impl] Simulation interface: needs progress bar, show base panel but not commit button
+*** [impl] Update simulation gui progress bar
+*** [done] Show "loading" before join game
 *** [done] Right panel appears in lower left after layers update
 *** [impl] Acute need for proper style matching rules
 *** [impl] Bind global button handlers to components
 ** bugs
-*** check_background_tasks should call get() to trigger exceptions
+*** Network hang when sending choice, seems server debug session crashed, shorten timeout
+*** Error in fleet::analyze_enemies
+    get_hp() returns 0, causes dps_scale to be Inf, crashes at:
+
+    prio_idx = utility::vector_min<float>(heuristics, utility::identity_function<float>());
+*** [verify] Animation time values are extreme, cause alpha ~1e-100
+*** [impl] Base panel still disappears when starting simulation
+*** [impl] Simulation gui shows in bottom left
+*** [impl] Finish area select on minimap should trigger area select, not minimap
 *** Font displays ugly in UI
-*** Tell server quit causes network exception on client::query -> receive_packet 
-*** After scroll, content shifts position on next update_layout
-*** Map index crash in simulation step when sending ships
-*** Server should only send seen entities on first load, send opponent starting positions separately instead
-*** Global game::window used only for graphics::unscale, seems silly?
-*** Ship stuck circling target
-*** Out of range error when asking to join nonexistent game
+*** Ship stuck circling target, increase friction?
 *** (irregular) Server segfault on colonize
+*** [verify] Command GUI slider max limited when changing ship class
+*** [verify] Client crash after colonize
+Probably caused by client skipping reload data on sim_idx = 0, which
+is where the first fleet is listed in remove_entities. Update
+next_sim_frame logic to load frame 0.
+
+Triggered at client_game.cpp:1199 reload_data when a fleet still
+contains a ship id for a ship which was removed due to being "unseen".
+
+Server should call ship::on_remove which should remove the ship from
+the fleet, and then remove the fleet, at end of increment step. Client
+should receive a listing in remove_entities.
+
+Instead, client detects the ship in "spotted unseen ship", so for some
+reason the fleet did not register in remove_entities, why?
+
+*** [impl] double simulation gui displayed at end of phase
+*** [done] Out of range error when asking to join nonexistent game
+*** [impl] check_background_tasks should call get() to trigger exceptions
+*** [impl] Tell server quit causes network exception on client::query -> receive_packet 
+*** [done] After scroll, content shifts position on next update_layout
+*** [done] Map index crash in simulation step when sending ships
+*** [done] Server should only send seen entities on first load, send opponent starting positions separately instead
+*** [done] Global game::window used only for graphics::unscale, seems silly?
 *** [done] Target GUI click does not stop event propagation to area select
 *** [done] Irregular segfault when starting second client
 *** [impl] Command GUI still has byrefs in cosures
@@ -101,7 +127,8 @@ Simulation step was called before send_choice
 Note: server limits ships sent but not ships registered for transfer at waypoint
 *** [done] Client displays max fleets as 2, should be 4, not finding owned solar?
 *** [done] Parameters showing uninitialized values in gui at start of turn
-[done] max fleets and max ships per fleet
+*** [done] max fleets and max ships per fleet
+** Layers should have a view connected to them (so target gui can be on game view)
 ** new GUI
 There is no (documented) way to handle styles for SFGUI Widgets so
 sadly I will need to write my own GUI lib. The examples don't even
@@ -139,6 +166,39 @@ Eg research progress, ship and building progress, empire stats such as max fleet
 *** Have more terrain between solars rather than fields of solars
 For example, make clusters of one or two habitable solars and a couple uninhabitable solars
 and then add terrain between them.
+** verify
+*** [impl] Make main panel prevent click event propagation
+*** [impl] Hover info shows nothing, does not fit in window
+*** [impl] Event log and hover info should be 100% width or transparent background
+** [impl] Might need a mutex for socket, since used in parallel by load_frames
+** [impl] Segfault in solar_gui
+   In building_button_callback, p_building_queue is 0
+** [fixed?] Weird X11 assert failures in sfml after data loaded, control_event > sf::Keyboard::isKeyPressed
+Maybe caused by starting init_data sequence before initializing ui layers
+** [done] Simulation phase causes network disconnect which is ignored, why?
+Simulation step was called before send_choice
+** [done] map::at throws out of range error or something in draw_window after first sim frame is loaded
+   Not caught by gdb catchpoint for some reason
+
+   Caused by command.ship_class not added to serializer
+** [impl] Global key bindings seem to be disabled
+   Caused by game::any_gui_content checking base layer
+** [impl] Clicking in target gui triggers area select
+** [impl] Move global event handler responsibilities
+*** Choice events (run above base layer)
+**** Area select
+**** Drag waypoint
+**** Clear/setup target gui
+**** Key space: choice complete
+**** Key return: solar gui
+**** Key delete: delete commands
+**** Key escape: quit popup
+*** All phases events (run above context layer)
+**** Update hover info
+**** Zoom in/out
+**** Drag map
+**** Click minimap
+** [done] Component should have parameters for allowed scroll directions
 * current work
 ** SEVERE memory leak in client game::draw_window
 ** Restructure to Makefile and RSG
