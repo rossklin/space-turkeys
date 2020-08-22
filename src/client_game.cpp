@@ -1498,6 +1498,9 @@ bool game::select_command(idtype key) {
           [this, c]() {
             c->selected = false;
             clear_ui_layers();
+          },
+          [this, key]() {
+            remove_command(key);
           }));
 
   return true;

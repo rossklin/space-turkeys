@@ -15,5 +15,6 @@ RSG::PanelPtr command_gui(
     int max_num,
     bool allow_combat,
     std::function<void(std::string ship_class, int policy, int num)> on_commit,
-    RSG::Voidfun on_cancel);
+    RSG::Voidfun on_cancel,
+    RSG::Voidfun on_delete);
 };  // namespace st3

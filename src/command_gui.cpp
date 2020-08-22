@@ -26,7 +26,8 @@ PanelPtr st3::command_gui(
     int max_num,
     bool allow_combat,
     function<void(string ship_class, int policy, int num)> on_commit,
-    Voidfun on_cancel) {
+    Voidfun on_cancel,
+    Voidfun on_delete) {
   // Apply max num
   num_available = utility::hm_map<string, int, int>([max_num](string k, int v) { return min(v, max_num); }, num_available);
 
@@ -54,7 +55,7 @@ PanelPtr st3::command_gui(
 
   // Slider
   shared_ptr<string> ship_class = make_shared<string>(original_ship_class);
-  shared_ptr<int> num = make_shared<int>(num_available[original_ship_class]);
+  shared_ptr<int> num(new int(num_available[original_ship_class]));
   ButtonPtr slider_label = make_label("Ships to send: " + to_string(*num));
 
   auto build_slider = [num, slider_label, num_available, ship_class]() {
@@ -63,7 +64,14 @@ PanelPtr st3::command_gui(
       slider_label->set_label("Ships to send: " + to_string(*num));
     };
 
-    return Slider::create(0, num_available.at(*ship_class), num_available.at(*ship_class), slider_handler);
+    auto res = Slider::create(0, num_available.at(*ship_class), num_available.at(*ship_class), slider_handler);
+
+    if (*num > num_available.at(*ship_class)) {
+      *num = num_available.at(*ship_class);
+      res->set_value(*num);
+    }
+
+    return res;
   };
 
   PanelPtr slider_panel = tag({"section"}, Panel::create({slider_label, build_slider()}, ORIENT_VERTICAL));
@@ -89,9 +97,10 @@ PanelPtr st3::command_gui(
           ORIENT_VERTICAL));
 
   // Button panel
+  ButtonPtr b_delete = Button::create("Delete", [on_delete](ButtonPtr b) { on_delete(); });
   ButtonPtr b_cancel = Button::create("Cancel", [on_cancel](ButtonPtr b) { on_cancel(); });
   ButtonPtr b_commit = Button::create("Commit", [on_commit, ship_class, policy, num](ButtonPtr b) { on_commit(*ship_class, *policy, *num); });
-  PanelPtr button_panel = tag({"section"}, Panel::create({b_cancel, b_commit}));
+  PanelPtr button_panel = tag({"section"}, Panel::create({b_delete, b_cancel, b_commit}));
 
   return tag(
       {"command-gui"},
