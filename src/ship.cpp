@@ -15,7 +15,7 @@ using namespace st3;
 
 const string ship::class_id = "ship";
 const int ship::na = 10;
-const float ship::friction = 0.75;
+const float ship::friction = 1.25;
 const float collision_damage_factor = 1e-3;
 string ship::starting_ship;
 
@@ -454,9 +454,20 @@ void ship::post_phase(game_data *g) {
 
 void ship::receive_damage(game_data *g, game_object_ptr from, float damage) {
   float shield_value = stats[sskey::key::shield];
-  stats[sskey::key::shield] = fmax(stats[sskey::key::shield] - 0.1 * damage, 0);
-  damage = fmax(damage - shield_value, 0);
-  stats[sskey::key::hp] -= damage;
+
+  if (damage > 4 * shield_value) {
+    // Shield overpowered
+    stats[sskey::key::shield] = 0;
+    stats[sskey::key::hp] -= 0.5 * (damage - shield_value);
+  } else if (shield_value < 1) {
+    // Shield inactive
+    stats[sskey::key::hp] -= damage;
+  } else {
+    // Shield active
+    damage = fmax(damage - 1, 0);
+    stats[sskey::key::shield] = fmax(shield_value - damage, 0);
+  }
+
   remove = stats[sskey::key::hp] <= 0;
 
   if (remove) {

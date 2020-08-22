@@ -89,6 +89,7 @@ const hm_t<string, interaction> &interaction::table() {
     s->stats[sskey::key::vision_range] = 120;
     s->stats[sskey::key::ship_damage] = 10;
     s->stats[sskey::key::solar_damage] = 10;
+    s->stats[sskey::key::accuracy] = 5;
     s->stats[sskey::key::thrust] = 0;
   };
   data[i.name] = i;

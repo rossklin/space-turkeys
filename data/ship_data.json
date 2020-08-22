@@ -212,7 +212,7 @@
       "tags": ["combat", "spacecombat"]
     },
     "cannon": {
-      "hp": 5,
+      "hp": 10,
       "mass": 15,
       "thrust": 5,
       "solar damage": 0,
@@ -222,14 +222,14 @@
       "shield": 0,
       "vision range": 20,
       "interaction radius": 10,
-      "cannon flex": 0.1,
+      "cannon flex": 0.2,
       "load time": 5,
       "interactions": ["space combat", "deploy"],
       "depends facility level": 2,
       "depends tech": "ionized hulls",
       "cost": {
-        "metals": 5,
-        "gases": 1,
+        "metals": 10,
+        "gases": 3,
         "time": 10
       },
       "shape": [
