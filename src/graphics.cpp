@@ -232,7 +232,13 @@ point graphics::ul_corner(sf::RenderTarget& w) {
 // scale from pixels to points
 point graphics::inverse_scale(sf::RenderTarget& w) {
   sf::View v = w.getView();
-  return point(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
+  auto res = point(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
+  if (!(isfinite(res.x) && isfinite(res.y))) {
+    cout << "Invalid inverse scale: " << res << endl;
+    res = {1, 1};
+  }
+
+  return res;
 }
 
 void graphics::draw_animation(sf::RenderTarget& w, animation e) {
