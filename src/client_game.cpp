@@ -850,8 +850,10 @@ void game::next_sim_frame() {
   sim_progress->set_progress((sub_frames * sim_idx + sim_sub_idx) / (float)(sub_frames * n_frames));
 
   // Update time for animations
-  int frame = sub_frames * sim_idx + sim_sub_idx;
-  for (auto &a : animations) a.time = frame_time * (frame - a.delay);
+  for (auto &a : animations) {
+    int frame = sub_frames * (sim_idx - a.frame0) + sim_sub_idx - a.delay;
+    a.time = frame_time * frame;
+}
 }
 
 // Update entities to correspond to the current sim frame

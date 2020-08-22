@@ -246,7 +246,7 @@ void graphics::draw_animation(sf::RenderTarget& w, animation e) {
   if (t < 0) return;
 
   sf::Color c(e.color);
-  int alpha_wave = 1000 * t * exp(-pow(3 * t, 2));
+  int alpha_wave = 1000 * t * exp(-pow(2 * t, 2));
 
   auto fexpl = [&w, e, t, c, alpha_wave](sf::Color ct) {
     float rad = sqrt(e.magnitude) * t;
@@ -274,7 +274,7 @@ void graphics::draw_animation(sf::RenderTarget& w, animation e) {
     w.draw(s);
   } else if (e.cat == animation_data::category::shot) {
     vector<sf::Vertex> svert;
-    c.a = utility::sigmoid(60 * e.magnitude * exp(-pow(7 * t, 2)), 255);
+    c.a = utility::sigmoid(500 * e.magnitude * exp(-pow(3 * t, 2)), 255);
 
     svert.resize(2);
     svert[0].position = e.t1.p;
