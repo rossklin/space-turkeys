@@ -247,8 +247,9 @@ void game::set_loading(bool loading) {
 }
 
 /*! Queue a UI task that updates the event log widget */
-void game::set_game_log(list<string> log) {
-  event_log = log;
+void game::push_game_log(list<string> log) {
+  event_log.insert(event_log.begin(), log.rbegin(), log.rend());
+  while (event_log.size() > 20) event_log.pop_back();
   build_base_panel();
 }
 

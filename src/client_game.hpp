@@ -129,7 +129,7 @@ class game : public game_base_data {
 
   // METHODS THAT ENQUEUE A UI MODIFICATION
   void set_loading(bool s);
-  void set_game_log(std::list<std::string> log);
+  void push_game_log(std::list<std::string> log);
   void set_hover_info(std::string title, std::list<std::string> info);
   void swap_layer(int layer, RSG::ComponentPtr component);
   void set_main_panel(RSG::PanelPtr p);
