@@ -854,7 +854,7 @@ void game::next_sim_frame() {
   for (auto &a : animations) {
     int frame = sub_frames * (sim_idx - a.frame0) + sim_sub_idx - a.delay;
     a.time = frame_time * frame;
-}
+  }
 }
 
 // Update entities to correspond to the current sim frame
@@ -1140,8 +1140,21 @@ void game::reload_data(game_base_data &g, bool use_animations) {
   // fix fleet positions
   for (auto f : get_all<fleet>()) {
     point p(0, 0);
-    for (auto sid : f->get_ships()) p += get_selector(sid)->position;
-    f->position = utility::scale_point(p, 1 / (float)f->get_ships().size());
+    for (auto sid : f->get_ships()) {
+      if (entity_exists(sid)) {
+        p += get_selector(sid)->position;
+      } else {
+        f->ships.erase(sid);
+        cout << "WARNING: " << sid << " missing when updating " << f->id << " position" << endl;
+      }
+    }
+
+    if (f->ships.size()) {
+      f->position = utility::scale_point(p, 1 / (float)f->get_ships().size());
+    } else {
+      cout << "WARNING: " << f->id << " removed because all ships were missing" << endl;
+      deregister_entity(f->id);
+    }
   }
 
   // update commands for owned fleets
@@ -1175,10 +1188,17 @@ void game::reload_data(game_base_data &g, bool use_animations) {
 
   // add animations
   if (use_animations) {
-    for (auto &a : players[self_id].animations) animations.push_back(a);
+    for (auto &a : players[self_id].animations) {
+      animation b(a);
+      b.frame0 = sim_idx;
+      animations.push_back(b);
+    }
   } else {
     animations.clear();
   }
+
+  // add event log
+  push_game_log(players.at(self_id).log);
 
   // update enemy cluster buffer
   enemy_clusters.clear();
