@@ -1398,12 +1398,15 @@ void game::command2entity(combid key, string act, list<combid> e_selected) {
 
 /** List all entities at a point. */
 list<combid> game::entities_at(point p) {
-  float d;
   list<combid> keys;
 
+  auto test = entity_grid->search(p, 3 * settings.solar_meanrad);
+
   // find entities at p
-  for (auto x : all_selectors()) {
-    if (x->is_active() && x->contains_point(p, d)) keys.push_back(x->id);
+  for (auto info : test) {
+    float d;
+    auto x = get_selector(info.first);
+    if (x->contains_point(p, d)) keys.push_back(x->id);
   }
 
   return keys;
