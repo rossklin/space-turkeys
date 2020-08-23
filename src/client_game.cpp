@@ -210,19 +210,16 @@ void game::clear_ui_layers(bool preserve_base) {
 
 /*! Setup/reset layer root panels */
 void game::do_clear_ui_layers(bool preserve_base) {
-  auto make_container = styled_generator<Panel>(
+  for (int i = 0; i < LAYER_NUM; i++) {
+    if (i == LAYER_BASE && preserve_base) continue;
+    component_layers[i] = tag(
+        {"ui-layer"},
+        with_style<Panel>(
       {
           {"width", to_string(window->getSize().x) + "px"},
           {"height", to_string(window->getSize().y) + "px"},
-          {"align-horizontal", "center"},
-          {"align-vertical", "center"},
-          {"background-color", "00000000"},
-          {"border-thickness", "0"},
-      });
-
-  for (int i = 0; i < LAYER_NUM; i++) {
-    if (i == LAYER_BASE && preserve_base) continue;
-    component_layers[i] = make_container();
+            },
+            Panel::create()));
   }
 }
 

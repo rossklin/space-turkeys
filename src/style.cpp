@@ -52,6 +52,16 @@ void st3::generate_styles() {
   Component::class_style["Button:hover"]["background-color"] = "345678ff";
 
   Component::tag_style = {
+      {
+          ".ui-layer",
+          {
+              {"align-horizontal", "center"},
+              {"align-vertical", "center"},
+              {"background-color", "00000000"},
+              {"border-thickness", "0"},
+          },
+      },
+
       // Main panel
       {
           ".main-panel",
