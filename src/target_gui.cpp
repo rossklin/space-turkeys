@@ -60,8 +60,7 @@ PanelPtr st3::target_gui(
 
   return tag(
       {"target-gui"},
-      styled<Panel, list<ComponentPtr>, orientation>(
-          {{"position", "fixed"}, {"top", to_string(position.y)}, {"left", to_string(position.x)}},
+      Panel::create(
           {
               tag(
                   {"section", "target-wrapper"},
