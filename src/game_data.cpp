@@ -63,21 +63,6 @@ waypoint_ptr game_data::get_waypoint(combid i) const {
   return get_entity<waypoint>(i);
 }
 
-void game_data::allocate_grid() {
-  clear_entities();
-  entity_grid = grid::tree::create();
-}
-
-void game_data::rehash_grid() {
-  entity_grid->clear();
-  vector<combid> keys = utility::hm_keys(entity);
-  random_shuffle(keys.begin(), keys.end());
-  for (auto eid : keys) {
-    game_object_ptr x = get_game_object(eid);
-    if (x->is_active()) entity_grid->insert(eid, x->position);
-  }
-}
-
 bool game_data::target_position(combid t, point &p) const {
   if (entity_exists(t)) {
     p = get_game_object(t)->position;

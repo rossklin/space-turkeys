@@ -75,6 +75,7 @@ void game::run() {
   // Setup all layers, do not preserve base layer
   do_clear_ui_layers(false);
 
+  allocate_grid();
   init_data();
   window_loop();
 }
@@ -1156,6 +1157,9 @@ void game::reload_data(game_base_data &g, bool use_animations) {
       deregister_entity(f->id);
     }
   }
+
+  // Update entity grid hash
+  rehash_grid();
 
   // update commands for owned fleets
   for (auto f : get_all<fleet>()) {

@@ -2,6 +2,7 @@
 
 #include "game_object.hpp"
 #include "game_settings.hpp"
+#include "grid_tree.hpp"
 #include "player.hpp"
 #include "terrain_object.hpp"
 #include "types.hpp"
@@ -18,6 +19,7 @@ class game_base_data {
   std::list<combid> remove_entities;
   hm_t<idtype, std::set<combid> > evm;
   std::set<std::pair<int, int> > discovered_universe;
+  grid::tree<combid>::ptr entity_grid;
 
   virtual ~game_base_data() = default;
   void clear_entities();
@@ -28,6 +30,8 @@ class game_base_data {
   bool entity_exists(combid id) const;
   void add_entity(game_object_ptr e);
   void remove_entity(combid id);
+  void rehash_grid();
+  void allocate_grid();
 
   template <typename T>
   std::vector<typename T::ptr> all_entities(idtype pid = game_object::any_owner) const {

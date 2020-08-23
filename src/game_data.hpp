@@ -6,7 +6,6 @@
 #include "animation_data.hpp"
 #include "choice.hpp"
 #include "game_base_data.hpp"
-#include "grid_tree.hpp"
 #include "interaction.hpp"
 #include "types.hpp"
 
@@ -23,7 +22,6 @@ class game_data : public virtual game_base_data {
  public:
   static void confirm_data();
 
-  grid::tree::ptr entity_grid;
   std::vector<interaction_info> interaction_buffer;
 
   game_data();
@@ -41,7 +39,6 @@ class game_data : public virtual game_base_data {
   game_object_ptr get_game_object(combid i) const;
 
   void assign(const game_data &g);
-  void rehash_grid();
   void apply_choice(choice c, idtype id);
   void increment();
   bool target_position(combid t, point &p) const;
@@ -68,7 +65,6 @@ class game_data : public virtual game_base_data {
   void remove_units();
   fleet_ptr generate_fleet(point p, idtype i, command c, std::list<combid> sh, bool ignore_limit = false);
   void relocate_ships(command c, std::set<combid> &sh, idtype owner);
-  void allocate_grid();
 
   // game steps
   void pre_step();

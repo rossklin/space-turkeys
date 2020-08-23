@@ -1,6 +1,5 @@
 #include "game_base_data.hpp"
 
-#include "game_data.hpp"
 #include "solar.hpp"
 
 using namespace st3;
@@ -62,4 +61,18 @@ int game_base_data::get_max_ships_per_fleet(idtype pid) const {
   }
 
   return 2 + 2 * max_lev;
+}
+
+void game_base_data::allocate_grid() {
+  clear_entities();
+  entity_grid = grid::tree<combid>::ptr(new grid::tree<combid>());
+}
+
+void game_base_data::rehash_grid() {
+  entity_grid->clear();
+  vector<game_object_ptr> obj = utility::hm_values(entity);
+  random_shuffle(obj.begin(), obj.end());
+  for (auto x : obj) {
+    if (x->is_active()) entity_grid->insert(x->id, x->position);
+  }
 }
