@@ -37,7 +37,7 @@ cannon flex 0.2
 ** Ships in fleet need to come together when they get disjointed
 ** How to handle deploy action for multiship fleet
 ** Network error "failed to deserialize key" or something when pressing done in simulation before other client pressed commit
-** Event log overflows onto hover info
+** [impl] Event log overflows onto hover info
 ** Deploying (and other actions?) should remove the command
 ** Solar defense animation should fire from radius not from center
 ** Deployed cannons need a direction instruction attached to action
