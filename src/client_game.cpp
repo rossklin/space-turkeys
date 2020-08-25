@@ -214,9 +214,9 @@ void game::do_clear_ui_layers(bool preserve_base) {
     component_layers[i] = tag(
         {"ui-layer"},
         with_style<Panel>(
-      {
-          {"width", to_string(window->getSize().x) + "px"},
-          {"height", to_string(window->getSize().y) + "px"},
+            {
+                {"width", to_string(window->getSize().x) + "px"},
+                {"height", to_string(window->getSize().y) + "px"},
             },
             Panel::create()));
   }
@@ -819,6 +819,7 @@ void game::simulation_step() {
   queue_background_task(bind(&game::load_frames, this));
 
   clear_ui_layers();
+  build_base_panel();
   swap_layer(LAYER_CONTEXT, simulation_gui());
 }
 
