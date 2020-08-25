@@ -488,7 +488,7 @@ const hm_t<string, interaction> &interaction::table() {
     ship_ptr t = utility::guaranteed_cast<ship>(target);
 
     float damage = 0.2 * s->stats[sskey::key::ship_damage];
-    auto ns = g->entity_grid->search(t->position, 20);
+    auto ns = g->entity_grid.search(t->position, 20);
     for (auto x : ns) {
       combid id = x.first;
       if (identifier::get_type(id) == ship::class_id) {

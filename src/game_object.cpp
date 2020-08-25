@@ -27,13 +27,9 @@ game_object::game_object(const game_object &x) {
   *this = x;
 }
 
-void game_object::on_add(game_data *g) {
-  if (this->is_active()) g->entity_grid->insert(id, position);
-}
+void game_object::on_add(game_data *g) {}
 
-void game_object::on_remove(game_data *g) {
-  g->entity_grid->remove(id);
-}
+void game_object::on_remove(game_data *g) {}
 
 bool game_object::is_commandable() {
   return false;

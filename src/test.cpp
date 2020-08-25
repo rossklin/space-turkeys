@@ -30,7 +30,6 @@ game_data *test_setup(game_settings set = game_settings(), research::data r = re
   g->settings = set;
   g->players[0] = p;
   g->players[1] = p;
-  g->allocate_grid();
   return g;
 }
 
@@ -86,7 +85,6 @@ bool test_memory() {
       frames[i].copy_from(*g);
     }
 
-    for (auto f : frames) f.clear_entities();
     frames.clear();
     long_t mtest = check_memory();
     server::output(to_string(j) + ": free: " + to_string(mtest) + ", used: " + to_string(mem_start - mtest));

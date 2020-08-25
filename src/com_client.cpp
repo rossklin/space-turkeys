@@ -104,7 +104,4 @@ void client::deserialize(game_base_data &f, sf::Packet &p, sint id) {
 
     f.add_entity(obj);
   }
-
-  // deallocate temporary entity data
-  ep.clear_entities();
 }

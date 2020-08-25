@@ -26,14 +26,6 @@ using namespace std;
 using namespace st3;
 using namespace cost;
 
-game_data::game_data() {
-  entity_grid = 0;
-}
-
-game_data::~game_data() {
-  clear_entities();
-}
-
 int game_data::next_id(class_t x) {
   if (!idc.count(x)) idc[x] = 0;
   return idc[x]++;
@@ -77,7 +69,7 @@ list<combid> game_data::search_targets_nophys(combid self_id, point p, float r, 
   list<combid> res;
   game_object_ptr self = get_game_object(self_id);
 
-  for (auto i : entity_grid->search(p, r)) {
+  for (auto i : entity_grid.search(p, r)) {
     auto e = get_game_object(i.first);
     if (evm.count(self->owner) && evm.at(self->owner).count(i.first) && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
   }
@@ -94,7 +86,7 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
   }
   physical_object::ptr s = utility::guaranteed_cast<physical_object>(self);
 
-  for (auto i : entity_grid->search(p, r)) {
+  for (auto i : entity_grid.search(p, r)) {
     auto e = get_game_object(i.first);
     if (s->can_see(e) && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
   }
@@ -527,7 +519,7 @@ void game_data::distribute_ships(fleet_ptr f) {
 
   for (auto s : ships) {
     s->position = sample_position(s->radius);
-    entity_grid->insert(s->id, s->position);
+    entity_grid.insert(s->id, s->position);
     evm[s->owner].insert(s->id);
   }
 }
@@ -559,7 +551,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 
   // select positions
   vector<point> static_pos;
-  for (auto test : entity_grid->search(center, ratio)) {
+  for (auto test : entity_grid.search(center, ratio)) {
     if (identifier::get_type(test.first) == solar::class_id) static_pos.push_back(test.second);
   }
 
@@ -752,7 +744,7 @@ void game_data::rebuild_evm() {
       // only physical entities can see others
       if (e->isa(physical_object::class_id)) {
         physical_object::ptr f = utility::guaranteed_cast<physical_object>(e);
-        for (auto i : entity_grid->search(f->position, f->vision())) {
+        for (auto i : entity_grid.search(f->position, f->vision())) {
           if (i.first == e->id) continue;
 
           game_object_ptr t = get_game_object(i.first);
@@ -870,7 +862,7 @@ void game_data::build() {
     } else if (settings.clset.starting_fleet == "fighters") {
       starter_fleet["fighter"] = 40;
     } else if (settings.clset.starting_fleet == "massive") {
-      for (auto sc : ship::all_classes()) starter_fleet[sc] = 10;
+      for (auto sc : ship::all_classes()) starter_fleet[sc] = 500;
     } else {
       throw player_error("Invalid starting fleet option: " + settings.clset.starting_fleet);
     }
@@ -893,7 +885,6 @@ void game_data::build() {
     server::log("Created home solar " + s->id + " owned by " + to_string(s->owner));
   };
 
-  allocate_grid();
   float angle = utility::random_uniform(0, 2 * M_PI);
   float np = players.size();
   for (auto &p : players) {
@@ -919,9 +910,6 @@ void game_data::pre_step() {
   for (auto i : filtered_entities<waypoint>()) i->remove = true;
   remove_units();
   remove_entities.clear();
-
-  // force grid to rebuild
-  rehash_grid();
 
   // update research facility level for use in validate choice
   update_research_facility_level();

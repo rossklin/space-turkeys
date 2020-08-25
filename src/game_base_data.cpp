@@ -10,6 +10,7 @@ void game_base_data::add_entity(game_object_ptr e) {
     throw logical_error("Attempted to add entity but it already exists!");
   }
   entity[e->id] = e;
+  if (e->is_active()) entity_grid.insert(e->id, e->position);
 }
 
 bool game_base_data::entity_exists(combid i) const {
@@ -20,6 +21,8 @@ void game_base_data::remove_entity(combid i) {
   if (!entity.count(i)) {
     throw logical_error("Attempted to remove entity but it does not exist!");
   }
+
+  entity_grid.remove(i);
   entity.erase(i);
 }
 
@@ -38,41 +41,37 @@ void game_base_data::copy_from(const game_base_data &g) {
 
 void game_base_data::clear_entities() {
   entity.clear();
+  entity_grid.clear();
 }
 
-// Max fleets = 2 + 2 * (nr of solars with developed defense)
-int game_base_data::get_max_fleets(idtype pid) const {
-  int res = 2;
+// // Max fleets = 2 + 2 * (nr of solars with developed defense)
+// int game_base_data::get_max_fleets(idtype pid) const {
+//   int res = 2;
 
-  auto sols = filtered_entities<solar>(pid);
-  for (auto sp : sols) {
-    if (sp->development.at(keywords::key_defense) > 0) res += 2;
-  }
+//   auto sols = filtered_entities<solar>(pid);
+//   for (auto sp : sols) {
+//     if (sp->development.at(keywords::key_defense) > 0) res += 2;
+//   }
 
-  return res;
-}
+//   return res;
+// }
 
-// Max ships per fleet = 2 + 2 * (highest level of developed defense)
-int game_base_data::get_max_ships_per_fleet(idtype pid) const {
-  auto sols = filtered_entities<solar>(pid);
-  int max_lev = 0;
-  for (auto sp : sols) {
-    max_lev = max(max_lev, sp->development.at(keywords::key_defense));
-  }
+// // Max ships per fleet = 2 + 2 * (highest level of developed defense)
+// int game_base_data::get_max_ships_per_fleet(idtype pid) const {
+//   auto sols = filtered_entities<solar>(pid);
+//   int max_lev = 0;
+//   for (auto sp : sols) {
+//     max_lev = max(max_lev, sp->development.at(keywords::key_defense));
+//   }
 
-  return 2 + 2 * max_lev;
-}
+//   return 2 + 2 * max_lev;
+// }
 
-void game_base_data::allocate_grid() {
-  clear_entities();
-  entity_grid = grid::tree<combid>::ptr(new grid::tree<combid>());
-}
-
-void game_base_data::rehash_grid() {
-  entity_grid->clear();
-  vector<game_object_ptr> obj = utility::hm_values(entity);
-  random_shuffle(obj.begin(), obj.end());
-  for (auto x : obj) {
-    if (x->is_active()) entity_grid->insert(x->id, x->position);
-  }
-}
+// void game_base_data::rehash_grid() {
+//   entity_grid.clear();
+//   vector<game_object_ptr> obj = utility::hm_values(entity);
+//   random_shuffle(obj.begin(), obj.end());
+//   for (auto x : obj) {
+//     if (x->is_active()) entity_grid.insert(x->id, x->position);
+//   }
+// }

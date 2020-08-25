@@ -19,19 +19,18 @@ class game_base_data {
   std::list<combid> remove_entities;
   hm_t<idtype, std::set<combid> > evm;
   std::set<std::pair<int, int> > discovered_universe;
-  grid::tree<combid>::ptr entity_grid;
+  grid::tree<combid> entity_grid;
 
   virtual ~game_base_data() = default;
   void clear_entities();
   void copy_from(const game_base_data &g);
-  int get_max_fleets(idtype pid) const;
-  int get_max_ships_per_fleet(idtype pid) const;
+  // int get_max_fleets(idtype pid) const;
+  // int get_max_ships_per_fleet(idtype pid) const;
 
   bool entity_exists(combid id) const;
   void add_entity(game_object_ptr e);
   void remove_entity(combid id);
-  void rehash_grid();
-  void allocate_grid();
+  // void rehash_grid();
 
   template <typename T>
   std::vector<typename T::ptr> all_entities(idtype pid = game_object::any_owner) const {

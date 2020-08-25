@@ -440,7 +440,7 @@ void ship::move(game_data *g) {
   velocity += dt / stats[sskey::key::mass] * force;
   position += dt * velocity;
 
-  g->entity_grid->move(id, position);
+  g->entity_grid.move(id, position);
 }
 
 // Receive collision damage

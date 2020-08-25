@@ -91,8 +91,6 @@ void simulation_step(game_setup &c, game_data &g) {
   thread t(generate_frames);
   if (!c.check_protocol(protocol::frame, handler)) c.status = socket_t::tc_stop;
   t.join();
-
-  for (int i = 0; i < frame_count; i++) frames[i].clear_entities();
 }
 
 bool check_end(game_setup &c, game_data &g) {
@@ -244,7 +242,6 @@ void server::game_handler(game_setup c, game_data &g) {
   // bool did_load = load_autosave(filename, c, g);
   bool did_load = false;
 
-  g.rehash_grid();
   g.rebuild_evm();
   g.pre_step();
 

@@ -24,8 +24,8 @@ class game_data : public virtual game_base_data {
 
   std::vector<interaction_info> interaction_buffer;
 
-  game_data();
-  ~game_data();
+  game_data() = default;
+  ~game_data() = default;
   game_data(const game_data &g) = delete;
 
   int next_id(class_t x);
