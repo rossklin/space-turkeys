@@ -103,6 +103,8 @@ void st3::generate_styles() {
               {"align-horizontal", "left"},
               {"align-vertical", "top"},
               {"padding-top", "5"},
+              {"align-horizontal", "left"},
+              {"overflow", "scrolled"},
           },
       },
 
@@ -272,6 +274,7 @@ void st3::generate_styles() {
               {"position", "absolute"},
               {"top", "auto"},
               {"bottom", "0"},
+              {"width", "100%"},
           },
       },
 
@@ -351,7 +354,7 @@ void st3::generate_styles() {
           ".card:selected",
           {
               {"color", "ffffffff"},
-              {"background-color", "56789abb"},
+              {"background-color", "89abcdbb"},
               {"border-thickness", "4"},
               {"border-color", "ffffffaa"},
           },
