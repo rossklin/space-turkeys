@@ -484,44 +484,83 @@ void game_data::remove_units() {
 }
 
 void game_data::distribute_ships(fleet_ptr f) {
-  float density = 0.02;
-  float area = f->ships.size() / density;
-  float radius = sqrt(area / M_PI);
-  vector<ship_ptr> ships(f->ships.size());
+  if (f->ships.empty()) return;
 
-  transform(f->ships.begin(), f->ships.end(), ships.begin(), [this](combid sid) {
-    ship_ptr s = get_ship(sid);
-    s->position = {INFINITY, INFINITY};
-    return s;
-  });
-
-  // todo: handle case where player has ships everywhere..?
-  point p = f->position;
-  float test_rad = 1;
-  target_condition c(target_condition::owned, ship::class_id);
+  float ship_rad = get_ship(*f->ships.begin())->radius;
+  target_condition c(target_condition::any_alignment, ship::class_id);
   c = c.owned_by(f->owner);
-  while (search_targets_nophys(f->id, p, radius, c).size() > ceil(f->ships.size() / (float)10)) {
-    p = f->position + test_rad * utility::normv(utility::random_uniform(0, 2 * M_PI));
-    test_rad *= 1.2;
-  }
 
-  auto sample_position = [this, f, c, p, radius](float r) -> point {
-    point x;
-    int n = 0;
-    int count = 0;
-    do {
-      x = {utility::random_normal(p.x, radius), utility::random_normal(p.y, radius)};
-      n = search_targets_nophys(f->id, x, r, c).size();
-    } while (count++ < 100 && (terrain_at(x, r) > -1 || n > 0));
+  auto pos_occupied = [this, c, ship_rad, f](point p) {
+    return terrain_at(p, ship_rad) > -1 || search_targets_nophys(f->id, p, ship_rad, c).size() > 0;
+  };
+
+  auto next_position = [this, f, ship_rad]() {
+    static float r = 0.1;
+    static float a = 0;
+    static float a0 = 0;
+
+    point x = f->position + r * utility::normv(a);
+
+    a += 2 * ship_rad / r;
+    if (a > a0 + 2 * M_PI - 2 * ship_rad / r) {
+      a0 = utility::random_uniform(0, 2 * M_PI);
+      a = a0;
+      r += 2 * ship_rad;
+    }
 
     return x;
   };
 
-  for (auto s : ships) {
-    s->position = sample_position(s->radius);
+  for (auto sid : f->ships) {
+    point test;
+    while (pos_occupied(test = next_position())) {
+      // dummy loop
+    }
+
+    ship_ptr s = get_ship(sid);
+    s->position = test;
     entity_grid.insert(s->id, s->position);
     evm[s->owner].insert(s->id);
   }
+
+  // float density = 0.02;
+  // float area = f->ships.size() / density;
+  // float radius = sqrt(area / M_PI);
+  // vector<ship_ptr> ships(f->ships.size());
+
+  // transform(f->ships.begin(), f->ships.end(), ships.begin(), [this](combid sid) {
+  //   ship_ptr s = get_ship(sid);
+  //   s->position = {INFINITY, INFINITY};
+  //   return s;
+  // });
+
+  // // todo: handle case where player has ships everywhere..?
+  // point p = f->position;
+  // float test_rad = 1;
+  // target_condition c(target_condition::owned, ship::class_id);
+  // c = c.owned_by(f->owner);
+  // while (search_targets_nophys(f->id, p, radius, c).size() > ceil(f->ships.size() / (float)10)) {
+  //   p = f->position + test_rad * utility::normv(utility::random_uniform(0, 2 * M_PI));
+  //   test_rad *= 1.2;
+  // }
+
+  // auto sample_position = [this, f, c, p, radius](float r) -> point {
+  //   point x;
+  //   int n = 0;
+  //   int count = 0;
+  //   do {
+  //     x = {utility::random_normal(p.x, radius), utility::random_normal(p.y, radius)};
+  //     n = search_targets_nophys(f->id, x, r, c).size();
+  //   } while (count++ < 100 && (terrain_at(x, r) > -1 || n > 0));
+
+  //   return x;
+  // };
+
+  // for (auto s : ships) {
+  //   s->position = sample_position(s->radius);
+  //   entity_grid.insert(s->id, s->position);
+  //   evm[s->owner].insert(s->id);
+  // }
 }
 
 void game_data::extend_universe(int i, int j, bool starting_area) {
