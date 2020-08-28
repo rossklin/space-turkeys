@@ -44,7 +44,7 @@ bool game_object::is_active() {
 }
 
 bool game_object::isa(string c) {
-  return identifier::get_type(id) == c;
+  return c == "game_object";
 }
 
 game_object_ptr game_object::deserialize(sf::Packet &p) {
