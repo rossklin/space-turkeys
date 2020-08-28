@@ -5,6 +5,7 @@
 #include <set>
 
 #include "types.hpp"
+#include "utility.hpp"
 
 namespace st3 {
 /*! functions for the 2d search tree */
@@ -13,23 +14,20 @@ namespace grid {
 /*! a tree handles grid nodes */
 template <typename V>
 struct tree {
-  // static ptr create();
   typedef std::pair<int, int> K;
-
+  struct info {
+    float r;
+    point p;
+    std::set<K> pos_index;
+  };
   static constexpr float r = 10;
 
-  std::map<K, std::set<V>> index; /*!< table over which node elements are listed in */
-  std::map<V, K> reverse_index;
-
-  // int max_leaves;                                    /*!< maximum number of leaves per node before split */
-  // node *root;                                        /*!< root node */
-
-  // /*! default constructor */
-  // tree();
+  std::map<K, std::set<V>> index; /*!< Table over which elements are found at a position */
+  std::map<V, info> metadata;
 
   void clear() {
     index.clear();
-    reverse_index.clear();
+    metadata.clear();
   }
 
   K make_key(point p) const {
@@ -40,19 +38,24 @@ struct tree {
 	@param id id
 	@param p position
       */
-  void insert(V id, point p) {
-    K k = make_key(p);
-    index[k].insert(id);
-    reverse_index[id] = k;
+  void insert(V id, point p, float rad = 0) {
+    metadata[id] = {rad, p, {}};
+    for (float x = p.x - rad; x <= p.x + rad; x += r) {
+      for (float y = p.y - rad; y <= p.y + rad; y += r) {
+        K k = make_key({x, y});
+        index[k].insert(id);
+        metadata[id].pos_index.insert(k);
+      }
+    }
   }
 
   /*! update the position for given id
 	@param id id
 	@param p new position
       */
-  void move(V id, point p) {
+  void move(V id, point p, float rad = 0) {
     remove(id);
-    insert(id, p);
+    insert(id, p, rad);
   }
 
   /*! find elements in a radius of a point
@@ -61,15 +64,23 @@ struct tree {
 	@return list of (id, position) pairs x s.t. l2norm(x.second - p) < r
       */
   std::list<std::pair<V, point>> search(point p, float rad) const {
-    std::list<std::pair<V, point>> res;
+    std::set<V> ids;
     for (float x = p.x - rad; x <= p.x + rad; x += r) {
       for (float y = p.y - rad; y <= p.y + rad; y += r) {
         K k = make_key(point(x, y));
         if (index.count(k)) {
-          for (auto id : index.at(k)) res.push_back({id, {x, y}});
+          for (auto id : index.at(k)) {
+            info buf = metadata.at(id);
+            if (utility::l2norm(p - buf.p) < rad + buf.r) {
+              ids.insert(id);
+            }
+          }
         }
       }
     }
+
+    std::list<std::pair<V, point>> res;
+    for (auto id : ids) res.push_back({id, metadata.at(id).p});
 
     return res;
   }
@@ -78,10 +89,12 @@ struct tree {
 	@param id id of element to remove
       */
   void remove(V id) {
-    if (reverse_index.count(id)) {
-      K k = reverse_index[id];
-      reverse_index.erase(id);
-      index[k].erase(id);
+    if (metadata.count(id)) {
+      for (auto k : metadata.at(id).pos_index) {
+        index.at(k).erase(id);
+        if (index.at(k).empty()) index.erase(k);
+      }
+      metadata.erase(id);
     }
   }
 };
