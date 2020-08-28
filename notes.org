@@ -1,4 +1,6 @@
 * Notes test game 2020-08-14
+** [impl] Entity grid should move metadata to other index
+** [impl] The entity grid should return any entities whose radius overlaps the search area
 ** The ship combat equations
 FlexWeight = 1 x (angle_diff(a, angle(p2 - p1)) < Pi x CannonFlex)
 AccuracyCheck = Accuracy x FlexWeight x 30 / (|p2-p1| - 1)
@@ -34,9 +36,16 @@ cannon flex 0.2
 ** [test] Fighter shot animations quite heavy and long
 ** [test] Increase friction and/or add free rotation thrusters
 ** [test] Deployed cannons are way to weak, can barely kill fighters
+** Simulation progress bar resets to 0 when data runs out
+** Reload data takes ~1 s with 500 ships in air, running sim on server takes some secs, show load in progress bar
 ** Ships in fleet need to come together when they get disjointed
+Perhaps check if there is empty space in direction of fleet center?
 ** How to handle deploy action for multiship fleet
-** Network error "failed to deserialize key" or something when pressing done in simulation before other client pressed commit
+** Fighters bounce absurdly when colliding slowly with battleships
+** Consistent network error pressing done in simulation before other client pressed commit
+game_object.cpp:56    throw network_error("deserialize: failed to extract key!");
+Probably connected to:
+2020-08-28 17:22:55: network: client_t::receive_query: unexpected protocol: 0
 ** [impl] Event log overflows onto hover info
 ** Deploying (and other actions?) should remove the command
 ** Solar defense animation should fire from radius not from center
