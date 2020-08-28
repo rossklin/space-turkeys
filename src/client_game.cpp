@@ -616,7 +616,7 @@ void game::target_selected(string action, combid target, point pos, list<string>
 
   if (postselect) {
     deselect_all();
-    get_selector(target)->selected = true;
+    set_selected(target, true);
   }
 
   clear_ui_layers();
@@ -892,7 +892,7 @@ void game::update_sim_frame() {
   float bw = 1;
 
   // update entity positions
-  for (auto sh : get_all<ship>()) {
+  for (auto sh : filtered_entities<ship_selector>(game_object::any_owner, false)) {
     if (sh->seen) {
       vector<point> pbuf(4);
       vector<float> abuf(4);
@@ -1122,10 +1122,14 @@ void game::reload_data(game_base_data &g, bool use_animations) {
 
   // remove unseen ships that are in sight range
   list<combid> rbuf;
-  for (auto s : get_all<ship>()) {
-    if (s->is_active() && !s->seen) {
-      for (auto x : all_selectors()) {
-        if (x->owned && utility::l2norm(s->position - x->position) < x->vision()) {
+  for (auto s : filtered_entities<ship_selector>(game_object::any_owner, false)) {
+    if (!s->seen) {
+      list<entity_selector::ptr> buf = utility::append<list<entity_selector::ptr>>(
+          filtered_entities<solar_selector>(self_id),
+          filtered_entities<fleet_selector>(self_id));
+
+      for (auto x : buf) {
+        if (utility::l2norm(s->position - x->position) < x->vision()) {
           rbuf.push_back(s->id);
           cout << "reload_data: spotted unseen ship: " << s->id << endl;
           break;
@@ -1348,7 +1352,9 @@ void game::clear_selectors() {
 
 /** Mark all entity and command selectors as not selected. */
 void game::deselect_all() {
-  for (auto x : all_selectors()) x->selected = false;
+  for (auto id : selection_index) get_selector(id)->selected = false;
+  selection_index.clear();
+
   for (auto x : command_selectors) x.second->selected = false;
 }
 
@@ -1361,9 +1367,11 @@ void game::area_select() {
   sf::FloatRect rect = fixrect(srect);
 
   if (!add2selection()) deselect_all();
-  for (auto x : all_selectors()) {
-    x->selected = x->owned && x->is_area_selectable() && x->inside_rect(rect);
-  }
+
+  list<entity_selector::ptr> selectable_entities = utility::append<list<entity_selector::ptr>>(
+      filtered_entities<fleet_selector>(self_id),
+      filtered_entities<solar_selector>(self_id));
+  for (auto x : selectable_entities) set_selected(x->id, x->inside_rect(rect));
 }
 
 /** Create commands targeting an entity. 
@@ -1397,7 +1405,7 @@ void game::command2entity(combid key, string act, list<combid> e_selected) {
 list<combid> game::entities_at(point p) {
   list<combid> keys;
 
-  auto test = entity_grid.search(p, 3 * settings.solar_meanrad);
+  auto test = entity_grid.search(p, 0);
 
   // find entities at p
   for (auto info : test) {
@@ -1449,6 +1457,15 @@ idtype game::command_at(point p, int &q) {
   return key;
 }
 
+void game::set_selected(combid id, bool value) {
+  get_selector(id)->selected = value;
+  if (value) {
+    selection_index.insert(id);
+  } else {
+    selection_index.erase(id);
+  }
+}
+
 /** Select the next queued entity or command selector at a point. */
 bool game::select_at(point p) {
   int qent = selector_queue;
@@ -1463,7 +1480,7 @@ bool game::select_at(point p) {
   if (entity_exists(key)) {
     entity_selector::ptr e = get_selector(key);
     if (e->owned) {
-      e->selected = !(e->selected);
+      set_selected(e->id, !e->selected);
       e->queue_level = selector_queue++;
       return true;
     }
@@ -1530,10 +1547,7 @@ bool game::select_command(idtype key) {
 
 /** At least one selected entity? */
 bool game::exists_selected() {
-  for (auto x : all_selectors()) {
-    if (x->selected) return true;
-  }
-  return false;
+  return !selection_index.empty();
 }
 
 /** Get ids of non-allocated ships for entity selector */
@@ -1567,11 +1581,7 @@ hm_t<string, set<combid>> game::get_ready_ships(combid id) {
 
 /** Get ids of selected entities. */
 list<combid> game::selected_entities() {
-  list<combid> res;
-  for (auto e : all_selectors()) {
-    if (e->selected) res.push_back(e->id);
-  }
-  return res;
+  return utility::range_init<list<combid>>(selection_index);
 }
 
 list<idtype> game::selected_commands() {
@@ -1659,7 +1669,7 @@ void game::setup_targui(point p) {
     combid k = add_waypoint(p);
     command2entity(k, fleet_action::go_to, keys_selected);
     deselect_all();
-    get_selector(k)->selected = true;
+    set_selected(k, true);
   } else {
     // Always provide option "add waypoint"
     options[fleet_action::go_to].insert(identifier::source_none);
@@ -2178,8 +2188,7 @@ void game::draw_interface_components() {
 }
 
 void game::draw_minimap() {
-  for (auto e : all_selectors()) {
-    if (!e->is_active()) continue;
+  for (auto e : filtered_entities<entity_selector>(game_object::any_owner, false)) {
     sf::FloatRect bounds(e->position, point(0.05 * window->getSize().x, 0.05 * window->getSize().y));
     sf::RectangleShape buf = graphics::build_rect(bounds, 0, sf::Color::Transparent, e->get_color());
     window->draw(buf);
@@ -2213,12 +2222,12 @@ void game::draw_universe() {
   animations = buf;
 
   // draw fleets last
-  for (auto e : all_selectors()) {
+  for (auto e : filtered_entities<entity_selector>(game_object::any_owner, false)) {
     if (!e->isa(fleet::class_id)) e->draw(window);
   }
 
-  for (auto e : all_selectors()) {
-    if (e->isa(fleet::class_id)) e->draw(window);
+  for (auto e : filtered_entities<fleet_selector>(game_object::any_owner, false)) {
+    e->draw(window);
   }
 
   // flag clusters of enemy ships

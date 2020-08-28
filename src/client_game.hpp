@@ -70,6 +70,7 @@ class game : public game_base_data {
   bool did_drag;
   bool drag_waypoint_active;
   bool drag_map_active;
+  std::set<combid> selection_index;
 
   // Game variables
   sf::Color col;
@@ -241,6 +242,8 @@ class game : public game_base_data {
 	@return the id
       */
   idtype command_at(point p, int &q);
+
+  void set_selected(combid id, bool value);
 
   /*! select the selector at a point if there is one
 	@param p the point
