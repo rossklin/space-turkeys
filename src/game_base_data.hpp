@@ -35,16 +35,17 @@ class game_base_data {
   template <typename T>
   std::vector<typename T::ptr> all_entities(idtype pid = game_object::any_owner) const {
     std::vector<typename T::ptr> res;
+    res.reserve(entity.size());
     for (auto p : entity) res.push_back(utility::guaranteed_cast<T>(p.second));
     return res;
   };
 
   template <typename T>
-  std::vector<typename T::ptr> filtered_entities(idtype pid = game_object::any_owner) const {
+  std::vector<typename T::ptr> filtered_entities(idtype pid = game_object::any_owner, bool allow_inactive = true) const {
     std::vector<typename T::ptr> res;
 
     for (auto p : entity) {
-      if (p.second->isa(T::class_id) && (pid == game_object::any_owner || p.second->owner == pid)) {
+      if (p.second->isa(T::class_id) && (pid == game_object::any_owner || p.second->owner == pid) && (allow_inactive || p.second->is_active())) {
         res.push_back(utility::guaranteed_cast<T>(p.second));
       }
     }
