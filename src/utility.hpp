@@ -78,6 +78,13 @@ T filter(T con, std::function<bool(typename T::value_type)> f) {
   return res;
 }
 
+template <typename T, typename F1, typename F2>
+T append(const F1 &a, const F2 &b) {
+  T buf = range_init<T>(a);
+  buf.insert(buf.end(), b.begin(), b.end());
+  return buf;
+}
+
 template <typename T, typename F = game_object>
 typename T::ptr guaranteed_cast(typename F::ptr p) {
   if (p == 0) throw logical_error("attempt_cast: null pointer!");
