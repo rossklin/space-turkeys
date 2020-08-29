@@ -1,1 +1,1 @@
-sudo perf record -g ./test
+sudo perf record -g ./debug_test
