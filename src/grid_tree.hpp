@@ -18,15 +18,16 @@ struct tree {
   struct info {
     float r;
     point p;
-    std::set<K> pos_index;
   };
   static constexpr float r = 10;
 
   std::map<K, std::set<V>> index; /*!< Table over which elements are found at a position */
+  std::map<V, std::set<K>> reverse_index;
   std::map<V, info> metadata;
 
   void clear() {
     index.clear();
+    reverse_index.clear();
     metadata.clear();
   }
 
@@ -38,13 +39,14 @@ struct tree {
 	@param id id
 	@param p position
       */
-  void insert(V id, point p, float rad = 0) {
-    metadata[id] = {rad, p, {}};
+  void insert(V id, point p, float rad) {
+    metadata.emplace(id, info{r, p});
+    reverse_index[id] = {};
     for (float x = p.x - rad; x <= p.x + rad; x += r) {
       for (float y = p.y - rad; y <= p.y + rad; y += r) {
         K k = make_key({x, y});
         index[k].insert(id);
-        metadata[id].pos_index.insert(k);
+        reverse_index[id].insert(k);
       }
     }
   }
@@ -53,9 +55,13 @@ struct tree {
 	@param id id
 	@param p new position
       */
-  void move(V id, point p, float rad = 0) {
-    remove(id);
-    insert(id, p, rad);
+  void
+  move(V id, point p) {
+    if (metadata.count(id)) {
+      float rad = metadata.at(id).r;
+      remove(id);
+      insert(id, p, rad);
+    }
   }
 
   /*! find elements in a radius of a point
@@ -90,13 +96,14 @@ struct tree {
       */
   void remove(V id) {
     if (metadata.count(id)) {
-      for (auto k : metadata.at(id).pos_index) {
+      for (auto k : reverse_index.at(id)) {
         index.at(k).erase(id);
         if (index.at(k).empty()) index.erase(k);
       }
       metadata.erase(id);
+      reverse_index.erase(id);
     }
   }
-};
+};  // namespace grid
 };  // namespace grid
 };  // namespace st3
