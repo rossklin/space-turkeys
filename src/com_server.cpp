@@ -69,6 +69,10 @@ handler_result server::server_cl_socket::receive_query(protocol_t p, query_respo
         res.response << protocol::confirm;
       } else if (input == p || p == protocol::any) {
         res = f(id, data);
+      } else if (input < protocol::NUM) {
+        // Client has proceeded to next step
+        res.status = socket_t::tc_run;
+        res.response << protocol::standby;
       } else {
         throw network_error("client_t::receive_query: unexpected protocol: " + to_string(input));
       }
