@@ -81,6 +81,7 @@ class game : public game_base_data {
 
   // Simulation data
   int sim_frames_loaded;
+  sint frames_generated;
   int sim_idx;
   int sim_sub_idx;
   bool sim_playing;

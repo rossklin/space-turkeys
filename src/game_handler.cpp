@@ -58,12 +58,11 @@ void simulation_step(game_setup &c, game_data &g) {
         // pack frame
         g = frames[idx];
         limit_to(&g, {cid});
-        result.response << g;
+        result.response << frame_count << protocol::confirm << g;
         result.status = socket_t::tc_run;
       } else if (idx < frames.size()) {
         // tell client to stand by
-        result.response.clear();
-        result.response << protocol::standby;
+        result.response << frame_count << protocol::standby;
         result.status = socket_t::tc_run;
       } else {
         // invalid idx

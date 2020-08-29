@@ -629,15 +629,21 @@ void game::load_frames() {
   sim_frames.clear();
   sim_frames.resize(settings.clset.frames_per_round);
 
+  frames_generated = 0;
   for (sim_frames_loaded = 0; sim_frames_loaded < sim_frames.size() && socket->check_com(); sim_frames_loaded++) {
     pq.clear();
     pq << protocol::frame << sim_frames_loaded;
 
-    if (client::query(socket, pq)) {
+    bool success;
+    while (success = client::query(socket, pq)) {
+      sint test;
+      socket->data >> frames_generated >> test;
+      if (test == protocol::confirm) {
       client::deserialize(sim_frames[sim_frames_loaded], socket->data, socket->id);
-    } else {
       break;
     }
+  }
+    if (!success) break;
   }
 
   pq.clear();
