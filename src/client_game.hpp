@@ -59,6 +59,7 @@ class game : public game_base_data {
   std::string hover_info_title;
   std::list<std::string> hover_info_items;
   RSG::ProgressBarPtr sim_progress;
+  RSG::ButtonPtr sim_generated_label;
 
   // Interface logic variables
   bool state_run;

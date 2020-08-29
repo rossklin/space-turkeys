@@ -152,7 +152,16 @@ void game::window_loop() {
     controls();
 
     // Update simulation
-    if (phase == "simulation" && sim_playing) next_sim_frame();
+    if (phase == "simulation") {
+      if (sim_playing) next_sim_frame();
+
+      // Update sim label
+      string gen_percent = to_string(int((100 * frames_generated) / settings.clset.frames_per_round));
+      gen_percent = "Generated: " + gen_percent + "%";
+      if (sim_generated_label->get_label() != gen_percent) {
+        sim_generated_label->set_label(gen_percent);
+      }
+    }
 
     // Now check if UI layers need to update
     for (auto p : component_layers) p->update_if_invalid();
@@ -192,8 +201,8 @@ void game::process_ui_tasks() {
   list<RSG::Voidfun> buf;
   {
     scoped_lock lock(ui_task_mutex);
-  buf = ui_tasks;
-  ui_tasks.clear();
+    buf = ui_tasks;
+    ui_tasks.clear();
   }
 
   if (buf.size()) {
@@ -535,11 +544,15 @@ RSG::PanelPtr game::hover_info_widget() {
 /*! Create a Panel with controls for simulation: play, pause, done */
 RSG::PanelPtr game::simulation_gui() {
   sim_progress = RSG::ProgressBar::create();
+  string gen_percent = to_string(int((100 * frames_generated) / settings.clset.frames_per_round));
+  sim_generated_label = make_label("Generated: " + gen_percent + "%");
+
   return tag(
       {"simulation-gui"},
       Panel::create(
           {
-              {sim_progress},
+              sim_generated_label,
+              sim_progress,
               Panel::create(
                   {
                       Button::create("Play", [this](ButtonPtr self) {
@@ -635,10 +648,10 @@ void game::load_frames() {
       sint test;
       socket->data >> frames_generated >> test;
       if (test == protocol::confirm) {
-      client::deserialize(sim_frames[sim_frames_loaded], socket->data, socket->id);
-      break;
+        client::deserialize(sim_frames[sim_frames_loaded], socket->data, socket->id);
+        break;
+      }
     }
-  }
     if (!success) break;
   }
 
@@ -848,6 +861,8 @@ void game::next_sim_frame() {
   }
 
   update_sim_frame();
+
+  // Update progress indicators
   sim_progress->set_progress((sub_frames * sim_idx + sim_sub_idx) / (float)(sub_frames * n_frames));
 
   // Update time for animations
