@@ -183,18 +183,18 @@ void game::window_loop() {
 
 /*! Threadsafely push a task to the UI task queue */
 void game::queue_ui_task(RSG::Voidfun f) {
-  ui_task_mutex.lock();
+  scoped_lock lock(ui_task_mutex);
   ui_tasks.push_back(f);
-  ui_task_mutex.unlock();
 }
 
 /*! Threadsafely retreive UI tasks, then run them */
 void game::process_ui_tasks() {
   list<RSG::Voidfun> buf;
-  ui_task_mutex.lock();
+  {
+    scoped_lock lock(ui_task_mutex);
   buf = ui_tasks;
   ui_tasks.clear();
-  ui_task_mutex.unlock();
+  }
 
   if (buf.size()) {
     cout << "Running " << buf.size() << " UI tasks" << endl;
@@ -560,15 +560,13 @@ RSG::PanelPtr game::simulation_gui() {
 
 void game::queue_background_task(Voidfun f) {
   static int tid = 0;
-
-  background_task_mutex.lock();
+  scoped_lock lock(background_task_mutex);
   background_tasks[tid++] = make_shared<future<void>>(async(launch::async, f));
   cout << "Starting background task " << tid << endl;
-  background_task_mutex.unlock();
 }
 
 void game::check_background_tasks() {
-  background_task_mutex.lock();
+  scoped_lock lock(background_task_mutex);
 
   list<int> remove;
   for (auto x : background_tasks) {
@@ -588,8 +586,6 @@ void game::check_background_tasks() {
     background_tasks.erase(id);
     cout << background_tasks.size() << " background tasks remain" << endl;
   }
-
-  background_task_mutex.unlock();
 }
 
 /*! Send quit message to server, then callback */
@@ -1100,6 +1096,8 @@ research::data game::get_research() const {
     new command selectors representing fleet commands.
 */
 void game::reload_data(game_base_data &g, bool use_animations) {
+  scoped_lock lock(game_data_mutex);
+
   // make selectors 'not seen' and 'not owned' and clear commands and
   // waypoints
   clear_selectors();
@@ -2203,6 +2201,7 @@ void game::draw_minimap() {
 
 /** Draw entities, animations and stars. */
 void game::draw_universe() {
+  scoped_lock lock(game_data_mutex);
   for (auto star : fixed_stars) star.draw(window);
 
   // draw terrain

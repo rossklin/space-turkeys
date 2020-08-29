@@ -67,6 +67,7 @@ class game : public game_base_data {
   choice user_choice;
   std::list<RSG::Voidfun> ui_tasks;
   std::mutex ui_task_mutex;
+  std::mutex game_data_mutex;
   bool did_drag;
   bool drag_waypoint_active;
   bool drag_map_active;
