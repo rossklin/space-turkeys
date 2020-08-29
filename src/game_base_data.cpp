@@ -10,7 +10,7 @@ void game_base_data::add_entity(game_object_ptr e) {
     throw logical_error("Attempted to add entity but it already exists!");
   }
   entity[e->id] = e;
-  if (e->is_active()) entity_grid.insert(e->id, e->position);
+  if (e->is_active()) entity_grid.insert(e->id, e->position, e->radius);
 }
 
 bool game_base_data::entity_exists(combid i) const {

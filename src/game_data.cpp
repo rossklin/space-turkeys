@@ -519,7 +519,7 @@ void game_data::distribute_ships(fleet_ptr f) {
 
     ship_ptr s = get_ship(sid);
     s->position = test;
-    entity_grid.insert(s->id, s->position);
+    entity_grid.insert(s->id, s->position, s->radius);
     evm[s->owner].insert(s->id);
   }
 
