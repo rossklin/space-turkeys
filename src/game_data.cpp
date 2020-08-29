@@ -803,16 +803,14 @@ void game_data::rebuild_evm() {
 solar_ptr game_data::closest_solar(point p, idtype id) const {
   solar_ptr s = 0;
 
-  try {
+  auto buf = filtered_entities<solar>(id);
+  if (buf.size()) {
     s = utility::value_min(
-        filtered_entities<solar>(id), (function<float(solar_ptr)>)[ this, p, id ](solar_ptr t)->float {
+        buf,
+        (function<float(solar_ptr)>)[ this, p, id ](solar_ptr t)->float {
           return utility::l2d2(t->position - p);
         });
-  } catch (exception &e) {
-    // player doesn't own any solars
-    return 0;
   }
-
   return s;
 }
 
