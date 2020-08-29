@@ -18,6 +18,7 @@ DEBUG_RSG_OBJECTS=$(RSG_SOURCES:%.cpp=$(RSG_DIR)/debug_build/%.o)
 DEBUG_COMMON_OBJ=$(COMMON_SOURCES:%.cpp=$(DEBUG_BUILD_DIR)/%.o)
 DEBUG_SERVER_OBJ=$(SERVER_SOURCES:%.cpp=$(DEBUG_BUILD_DIR)/%.o)
 DEBUG_CLIENT_OBJ=$(CLIENT_SOURCES:%.cpp=$(DEBUG_BUILD_DIR)/%.o)
+DEBUG_TESTER_OBJ=$(TESTER_SOURCES:%.cpp=$(DEBUG_BUILD_DIR)/%.o)
 
 ALL_OBJ=$(COMMON_OBJ) $(SERVER_OBJ) $(CLIENT_OBJ)
 DEBUG_ALL_OBJ=$(DEBUG_COMMON_OBJ) $(DEBUG_SERVER_OBJ) $(DEBUG_CLIENT_OBJ)
@@ -32,7 +33,7 @@ LDFLAGS=-lsfml-graphics -lsfml-window -lsfml-system -lsfml-network -lpthread
 # Disable default rules
 .SUFFIXES:
 
-default: RSG test st_client st_server debug_st_client debug_st_server
+default: RSG test st_client st_server debug_st_client debug_st_server debug_test
 
 RSG:
 	cd $(RSG_DIR) && $(MAKE)
@@ -56,6 +57,10 @@ debug_st_server: $(DEBUG_COMMON_OBJ) $(DEBUG_SERVER_OBJ)
 debug_st_client: $(DEBUG_COMMON_OBJ) $(DEBUG_CLIENT_OBJ)
 	mkdir -p $(@D)
 	$(CC) $(DEBUG_CPPFLAGS) $(DEBUG_RSG_OBJECTS) $^ -o $@ $(LDFLAGS)
+
+debug_test : $(DEBUG_COMMON_OBJ) $(DEBUG_TESTER_OBJ)
+	mkdir -p $(@D)
+	$(CC) $(DEBUG_CPPFLAGS) $^ -o $@ $(LDFLAGS)
 
 -include $(DEP)
 
