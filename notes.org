@@ -1,6 +1,33 @@
 * Notes test game 2020-08-14
 ** [impl] Entity grid should move metadata to other index
 ** [impl] The entity grid should return any entities whose radius overlaps the search area
+** [test] Fighter shot animations quite heavy and long
+** [test] Increase friction and/or add free rotation thrusters
+** [test] Deployed cannons are way to weak, can barely kill fighters
+** [done] Crash in draw_universe in animation loop header
+Probably caused by running reload_data in parallel. Suggestion: mutex and scoped lock reload_data against draw_universe.
+** Hang in tester -> increment -> ship_move -> grid_tree::move
+  Ship position is greater than int precision, causing hang in search loop due to failed key incrementation.
+  Break in ship movement to determine cause.
+  Then remove temporary sequential test in tester.
+** Perf shows server spends most time in grid_tree::search, mostly in rebuild_evm
+  Also ship::update_data spends most time grid_tree::search, not in apply_ship
+  Ideas:
+  Separate pos_index from metadata to avoid copying index when fetching metadata
+  Use KNN instead of radius search to avoid looking up and copying all ships when only a few are needed
+
+      + 12,50% st3::grid::tree<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >::info::info                                                                              ▒
+      + 9,09% std::map<std::pair<int, int>, std::set<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::less<std::__cxx11::basic_string<char, std::char_traits<char>, s▒
+      + 7,46% std::map<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, st3::grid::tree<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >:▒
+      + 6,72% st3::grid::tree<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >::info::~info                                                                              ▒
+      + 5,07% std::set<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::less<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::▒
+
+** Fix partial invalidation for GUI components (ie scrolling list lowers frame rate to 10 fps)
+** Simulation progress bar resets to 0 when data runs out
+** Generated frames label only updated when playing
+** Reload data takes ~1 s with 500 ships in air, running sim on server takes some secs, show load in progress bar
+** Ships in fleet need to come together when they get disjointed
+Perhaps check if there is empty space in direction of fleet center? Add "thrusters"?
 ** The ship combat equations
 FlexWeight = 1 x (angle_diff(a, angle(p2 - p1)) < Pi x CannonFlex)
 AccuracyCheck = Accuracy x FlexWeight x 30 / (|p2-p1| - 1)
@@ -33,16 +60,11 @@ accuracy 2
 evasion 2
 load time 5
 cannon flex 0.2
-** [test] Fighter shot animations quite heavy and long
-** [test] Increase friction and/or add free rotation thrusters
-** [test] Deployed cannons are way to weak, can barely kill fighters
-** Simulation progress bar resets to 0 when data runs out
-** Reload data takes ~1 s with 500 ships in air, running sim on server takes some secs, show load in progress bar
-** Ships in fleet need to come together when they get disjointed
-Perhaps check if there is empty space in direction of fleet center?
 ** How to handle deploy action for multiship fleet
+Perhaps actions with no target should be performed by all ships regardless of position when fleet arrives?
 ** Fighters bounce absurdly when colliding slowly with battleships
-** Consistent network error pressing done in simulation before other client pressed commit
+Reduce elasticity in collision equations?
+** [impl] Consistent network error pressing done in simulation before other client pressed commit
 game_object.cpp:56    throw network_error("deserialize: failed to extract key!");
 Probably connected to:
 2020-08-28 17:22:55: network: client_t::receive_query: unexpected protocol: 0
