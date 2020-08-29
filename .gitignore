@@ -5,6 +5,9 @@ st_server
 debug_st_client
 debug_st_server
 test
+debug_test
 docs
 .deps
 release
+perf.data
+perf.data.old
