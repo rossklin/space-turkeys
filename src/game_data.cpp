@@ -65,11 +65,11 @@ bool game_data::target_position(combid t, point &p) const {
 }
 
 // find all entities in ball(p, r) matching condition c
-list<combid> game_data::search_targets_nophys(combid self_id, point p, float r, target_condition c) const {
+list<combid> game_data::search_targets_nophys(combid self_id, point p, float r, target_condition c, int knn) const {
   list<combid> res;
   game_object_ptr self = get_game_object(self_id);
 
-  for (auto i : entity_grid.search(p, r)) {
+  for (auto i : entity_grid.search(p, r, knn)) {
     auto e = get_game_object(i.first);
     if (evm.count(self->owner) && evm.at(self->owner).count(i.first) && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
   }
@@ -78,7 +78,7 @@ list<combid> game_data::search_targets_nophys(combid self_id, point p, float r, 
 }
 
 // find all entities in ball(p, r) matching condition c
-list<combid> game_data::search_targets(combid self_id, point p, float r, target_condition c) const {
+list<combid> game_data::search_targets(combid self_id, point p, float r, target_condition c, int knn) const {
   list<combid> res;
   game_object_ptr self = get_game_object(self_id);
   if (!self->isa(physical_object::class_id)) {
@@ -86,7 +86,7 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
   }
   physical_object::ptr s = utility::guaranteed_cast<physical_object>(self);
 
-  for (auto i : entity_grid.search(p, r)) {
+  for (auto i : entity_grid.search(p, r, knn)) {
     auto e = get_game_object(i.first);
     if (s->can_see(e) && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
   }
