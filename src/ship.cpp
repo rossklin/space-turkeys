@@ -289,9 +289,15 @@ void ship::update_data(game_data *g) {
     }
   }
 
-  // Update neighbours, friends and enemies
+  // Update neighbours, friends and enemies, never require more than 10 neighbours
   float nrad = interaction_radius();
-  neighbours = g->search_targets_nophys(id, position, nrad, target_condition(target_condition::any_alignment, ship::class_id).owned_by(owner));
+  neighbours = g->search_targets_nophys(
+      id,
+      position,
+      nrad,
+      target_condition(target_condition::any_alignment, ship::class_id).owned_by(owner),
+      10);
+
   local_enemies.clear();
   local_friends.clear();
 
