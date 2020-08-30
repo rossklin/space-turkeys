@@ -22,13 +22,32 @@ struct tree {
   static constexpr float r = 10;
 
   std::map<K, std::set<V>> index; /*!< Table over which elements are found at a position */
+  std::set<K> block_index;
   std::map<V, std::set<K>> reverse_index;
   std::map<V, info> metadata;
+
+  bool enable_block;
+
+  tree() {
+    enable_block = false;
+  }
+
+  void start_blocking() {
+    block_index.clear();
+    enable_block = true;
+  }
+
+  void stop_blocking() {
+    block_index.clear();
+    enable_block = false;
+  }
 
   void clear() {
     index.clear();
     reverse_index.clear();
+    block_index.clear();
     metadata.clear();
+    enable_block = false;
   }
 
   K make_key(point p) const {
@@ -64,25 +83,48 @@ struct tree {
     }
   }
 
+  std::set<V> block_search(point p, float rad) {
+    std::set<V> ids;
+
+    for (float x = p.x - rad; x <= p.x + rad; x += r) {
+      for (float y = p.y - rad; y <= p.y + rad; y += r) {
+        K k = make_key(point(x, y));
+        if (index.count(k) && !block_index.count(k)) {
+          ids += index.at(k);
+          block_index.insert(k);
+        }
+      }
+    }
+
+    return ids;
+  }
+
   /*! find elements in a radius of a point
 	@param p point to search around
 	@param r search radius
 	@return list of (id, position) pairs x s.t. l2norm(x.second - p) < r
       */
-  std::list<std::pair<V, point>> search(point p, float rad) const {
+  std::list<std::pair<V, point>> search(point p, float rad, int knn = 0) const {
     std::set<V> ids;
-    for (float x = p.x - rad; x <= p.x + rad; x += r) {
-      for (float y = p.y - rad; y <= p.y + rad; y += r) {
-        K k = make_key(point(x, y));
-        if (index.count(k)) {
-          for (auto id : index.at(k)) {
-            info buf = metadata.at(id);
-            if (utility::l2norm(p - buf.p) < rad + buf.r) {
-              ids.insert(id);
+    K last_k(INT_FAST32_MAX, INT_FAST32_MAX);
+
+    for (float rbuf = r / 100; rbuf <= rad; rbuf += r) {
+      for (float a = 0; a < 2 * M_PI; a += 0.1 * r / rbuf) {
+        K k = make_key(p + rbuf * utility::normv(a));
+        if (k != last_k) {
+          last_k = k;
+          if (index.count(k)) {
+            for (auto id : index.at(k)) {
+              info buf = metadata.at(id);
+              if (utility::l2norm(p - buf.p) < rad + buf.r) {
+                ids.insert(id);
+              }
             }
           }
         }
+        if (knn > 0 && ids.size() >= knn) break;
       }
+      if (knn > 0 && ids.size() >= knn) break;
     }
 
     std::list<std::pair<V, point>> res;
