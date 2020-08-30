@@ -43,6 +43,12 @@ void setup_fleet_for(game_data *g, idtype pid, point at, point targ, hm_t<string
     int count = max(round(utility::random_normal(sc.second, 0.5)), 1);
     for (int j = 0; j < count; j++) {
       ship_ptr sh = rbase.build_ship(g->next_id(ship::class_id), sc.first);
+
+      sh->force_refresh = true;
+      sh->thrust = 0;
+      sh->velocity = {0, 0};
+      sh->force = {0, 0};
+
       ships.push_back(sh->id);
       sh->owner = pid;
       sh->states.insert("landed");
@@ -231,6 +237,7 @@ bool test_space_combat(string c0, string c1, float limit, pair<float, float> mar
     float escape = 0.1;
     while (get_ratio(0) > escape && get_ratio(1) > escape && count++ < 1000) {
       g->increment();
+      cout << "Frame " << count << ": " << point(get_ratio(0), get_ratio(1)) << endl;
     }
 
     float r0 = get_ratio(0);
@@ -300,6 +307,7 @@ int main(int argc, char **argv) {
 
   // test early game balance
   limit = 1000;
+  test_space_combat("fighter", "scout", limit, v_huge);
   tests.push_back(thread([=]() { test_space_combat("fighter", "scout", limit, v_huge); }));
 
   set<string> add_techs = {
