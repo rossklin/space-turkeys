@@ -768,7 +768,7 @@ void game::choice_step() {
 
   // keep solar and research choices
   choice c;
-  research::data &r = players[self_id].research_level;
+  research::data r = players[self_id].research_level;
   c.research = r.researching;
 
   // check if we can select a technology
@@ -955,19 +955,23 @@ void game::update_sim_frame() {
     cs.second->to = get_selector(cs.second->target)->position;
   }
 
-  for (auto &a : animations) {
-    auto update_tracker = [this](animation_tracker_info &t) {
-      if (entity_exists(t.eid)) {
-        t.p = get_selector(t.eid)->position;
-      } else {
-        // Todo
-        // t.p = sub_ratio * t.v;
-      }
-    };
+  animations = utility::fmap<list<animation>, list<animation>>(
+      animations,
+      (function<animation(animation)>)[this](animation a)->animation {
+        auto update_tracker = [this](animation_tracker_info t) -> animation_tracker_info {
+          if (entity_exists(t.eid)) {
+            t.p = get_selector(t.eid)->position;
+          } else {
+            // Todo
+            // t.p = sub_ratio * t.v;
+          }
+          return t;
+        };
 
-    update_tracker(a.t1);
-    update_tracker(a.t2);
-  }
+        a.t1 = update_tracker(a.t1);
+        a.t2 = update_tracker(a.t2);
+        return a;
+      });
 }
 
 // ****************************************
@@ -1209,11 +1213,14 @@ void game::reload_data(game_base_data &g, bool use_animations) {
 
   // add animations
   if (use_animations) {
-    for (auto &a : players[self_id].animations) {
-      animation b(a);
-      b.frame0 = sim_idx;
-      animations.push_back(b);
-    }
+    animations = utility::append<list<animation>>(
+        animations,
+        utility::fmap<list<animation>>(
+            players[self_id].animations,
+            (function<animation(animation)>)[this](animation a) {
+              a.frame0 = sim_idx;
+              return a;
+            }));
   } else {
     animations.clear();
   }
