@@ -1,6 +1,7 @@
 #include <unistd.h>
 
 #include <iostream>
+#include <memory>
 #include <thread>
 
 #include "fleet.hpp"
@@ -16,15 +17,16 @@ using namespace std;
 using namespace st3;
 
 typedef unsigned long long int long_t;
+typedef shared_ptr<game_data> game_ptr;
 
-long_t check_memory() {
-  long pages = sysconf(_SC_PHYS_PAGES);
-  long page_size = sysconf(_SC_PAGE_SIZE);
-  return pages * page_size;
-}
+// long_t check_memory() {
+//   long pages = sysconf(_SC_PHYS_PAGES);
+//   long page_size = sysconf(_SC_PAGE_SIZE);
+//   return pages * page_size;
+// }
 
-game_data *test_setup(game_settings set = game_settings(), research::data r = research::data()) {
-  game_data *g = new game_data();
+game_ptr new_game(game_settings set = game_settings(), research::data r = research::data()) {
+  game_ptr g(new game_data());
   player p;
   p.research_level = r;
   g->settings = set;
@@ -33,7 +35,7 @@ game_data *test_setup(game_settings set = game_settings(), research::data r = re
   return g;
 }
 
-void setup_fleet_for(game_data *g, idtype pid, point at, point targ, hm_t<string, float> scc = hm_t<string, float>()) {
+void setup_fleet_for(game_ptr g, idtype pid, point at, point targ, hm_t<string, float> scc) {
   static int idc = 0;
 
   list<combid> ships;
@@ -68,39 +70,6 @@ void setup_fleet_for(game_data *g, idtype pid, point at, point targ, hm_t<string
   for (auto sid : ships) g->get_ship(sid)->states.erase("landed");
 }
 
-void test_setup_fleets(game_data *g) {
-  point a(100, 100);
-  point b(200, 100);
-  setup_fleet_for(g, 0, a, b);
-  setup_fleet_for(g, 1, b, a);
-}
-
-bool test_memory() {
-  int n = 100;
-  int rep = 100;
-  vector<game_base_data> frames(n);
-  game_data *g = test_setup();
-  test_setup_fleets(g);
-
-  long_t mem_start = check_memory();
-
-  for (int j = 0; j < rep; j++) {
-    frames.resize(n);
-    for (int i = 0; i < n; i++) {
-      g->increment();
-      frames[i].copy_from(*g);
-    }
-
-    frames.clear();
-    long_t mtest = check_memory();
-    server::output(to_string(j) + ": free: " + to_string(mtest) + ", used: " + to_string(mem_start - mtest));
-  }
-
-  delete g;
-
-  return true;
-}
-
 typedef pair<set<string>, hm_t<string, int> > cost_tracker;
 cost_tracker gather(cost_tracker x) {
   if (x.first.empty() && x.second.empty()) return x;
@@ -117,12 +86,6 @@ cost_tracker gather(cost_tracker x) {
     research::tech t = research::data::table().at(v);
     add(t);
   }
-
-  // // gather sub facilities
-  // for (auto v : x.second) {
-  //   facility f = solar::facility_table().at(v.first);
-  //   add(f);
-  // }
 
   buf = gather(buf);
   buf.first += x.first;
@@ -160,23 +123,52 @@ float fair_ship_count(string ship_class, set<string> techs, float limit, strings
   return can_build;
 }
 
+float run_test(string c0, int n0, string c1, int n1, set<string> add_techs) {
+  game_settings set;
+  set.enable_extend = false;
+
+  research::data r;
+  for (auto v : add_techs) r.access(v).level = 1;
+
+  game_ptr g = new_game(set, r);
+
+  point a(100, 100);
+  point b(200, 100);
+  setup_fleet_for(g, 0, a, b, {{c0, n0}});
+  setup_fleet_for(g, 1, b, a, {{c1, n1}});
+
+  auto get_ratio = [g, n0, n1](int pid) -> float {
+    float ref = pid == 0 ? n0 : n1;
+    return g->filtered_entities<ship>(pid, false).size() / ref;
+  };
+
+  // run game mechanics until one fleet is destroyed
+  int count = 0;
+  float escape = 0.2;
+  while (get_ratio(0) > escape && get_ratio(1) > escape && count++ < 300) g->increment(false);
+
+  float r0 = get_ratio(0);
+  float r1 = get_ratio(1);
+  return r0 / r1;
+}
+
 // test two initial fleets can kill each other within 1000 increments
-bool test_space_combat(string c0, string c1, float limit, pair<float, float> margins, set<string> add_techs = {}) {
+bool test_space_combat(string c0, string c1, float res_limit, pair<float, float> margins, set<string> add_techs = {}) {
   float win_lower = margins.first;
   float win_upper = margins.second;
 
   stringstream ss;
   ss << "----------------------------------------" << endl;
 
-  float count0 = fair_ship_count(c0, add_techs, limit, ss);
-  float count1 = fair_ship_count(c1, add_techs, limit, ss);
+  float count0 = fair_ship_count(c0, add_techs, res_limit, ss);
+  float count1 = fair_ship_count(c1, add_techs, res_limit, ss);
   int min_units = 10;
 
   float highest = fmax(count0, count1);
   float lowest = fmin(count0, count1);
 
   if (lowest < 1) {
-    ss << c0 << " vs " << c1 << " limit " << limit << ": less than one ship, skipping";
+    ss << c0 << " vs " << c1 << " limit " << res_limit << ": less than one ship, skipping";
     server::output(ss.str(), true);
     return false;
   }
@@ -185,67 +177,13 @@ bool test_space_combat(string c0, string c1, float limit, pair<float, float> mar
   count0 *= ratio;
   count1 *= ratio;
 
-  hm_t<string, float> scc_0 = {{c0, count0}};
-  hm_t<string, float> scc_1 = {{c1, count1}};
-  hm_t<string, set<string> > add_upgrades;
-
-  for (auto t : add_techs) {
-    add_upgrades[c0] += research::data::get_tech_upgrades(c0, t);
-    add_upgrades[c1] += research::data::get_tech_upgrades(c1, t);
-  }
-
   string game_stage = "EARLY";
-  if (limit > 300) game_stage = "MID";
-  if (limit > 1000) game_stage = "LATE";
+  if (res_limit > 300) game_stage = "MID";
+  if (res_limit > 1000) game_stage = "LATE";
   if (add_techs.count("hive fleet")) game_stage += "HM";
   if (add_techs.count("A.M. Laser")) game_stage += "SPLASH";
 
-  ss << "TEST COMBAT: " << game_stage << " GAME: " << scc_0[c0] << " " << c0 << " vs " << scc_1[c1] << " " << c1 << endl;
-
-  auto test = [scc_0, scc_1, c0, c1, add_techs]() {
-    game_settings set;
-    set.enable_extend = false;
-
-    research::data r;
-    for (auto v : add_techs) r.access(v).level = 1;
-
-    game_data *g = test_setup(set, r);
-
-    point a(100, 100);
-    point b(200, 100);
-    setup_fleet_for(g, 0, a, b, scc_0);
-    setup_fleet_for(g, 1, b, a, scc_1);
-
-    // for (auto s : g -> all<ship>()) {
-    //   if (add_upgrades.count(s -> ship_class)) {
-    // 	s -> upgrades += add_upgrades.at(s -> ship_class);
-    //   }
-    // }
-
-    auto get_ratio = [&](int pid) -> float {
-      float ref = pid == 0 ? scc_0.at(c0) : scc_1.at(c1);
-      for (auto f : g->filtered_entities<fleet>()) {
-        if (f->owner == pid) {
-          return f->ships.size() / ref;
-        }
-      }
-      return 0;
-    };
-
-    // run game mechanics until one fleet is destroyed
-    int count = 0;
-    float escape = 0.1;
-    while (get_ratio(0) > escape && get_ratio(1) > escape && count++ < 1000) {
-      g->increment();
-      cout << "Frame " << count << ": " << point(get_ratio(0), get_ratio(1)) << endl;
-    }
-
-    float r0 = get_ratio(0);
-    float r1 = get_ratio(1);
-
-    delete g;
-    return r0 / r1;
-  };
+  ss << "TEST COMBAT: " << game_stage << " GAME: " << count0 << " " << c0 << " vs " << count1 << " " << c1 << endl;
 
   float rmean = 0;
   int nsample = 0;
@@ -255,15 +193,18 @@ bool test_space_combat(string c0, string c1, float limit, pair<float, float> mar
 
   ss << "sample: ";
   while (nsample < max_sample && (nsample < 10 || !significant)) {
-    float r = test();
+    float r = run_test(c0, count0, c1, count1, add_techs);
     if (r > 100 || !isfinite(r)) r = 100;
 
     rmean = (nsample * rmean + r) / (nsample + 1);
     dev = (nsample * dev + abs(r - rmean)) / (nsample + 1);
     nsample++;
 
-    float test_value = fmin(abs(rmean - win_lower), abs(rmean - win_upper));
-    significant = test_value > 3 * dev;
+    float SE = dev / sqrt(nsample);
+    float z1 = (rmean - win_lower) / SE;  // test above lower limit
+    float z2 = (win_upper - rmean) / SE;  // test below upper limit
+    float test_value = min(z1, z2);
+    significant = test_value > 2;
 
     ss << r << ": " << test_value << "[" << dev << "] ";
   }
@@ -307,7 +248,7 @@ int main(int argc, char **argv) {
 
   // test early game balance
   limit = 1000;
-  test_space_combat("fighter", "scout", limit, v_huge);
+  // test_space_combat("fighter", "scout", limit, v_huge);
   tests.push_back(thread([=]() { test_space_combat("fighter", "scout", limit, v_huge); }));
 
   set<string> add_techs = {
