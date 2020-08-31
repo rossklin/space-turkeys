@@ -10,7 +10,7 @@ void game_base_data::add_entity(game_object_ptr e) {
     throw logical_error("Attempted to add entity but it already exists!");
   }
   entity[e->id] = e;
-  if (e->is_active()) entity_grid.insert(e->id, e->position, e->radius);
+  if (e->is_active()) entity_grid[e->owner].insert(e->id, e->position, e->radius);
 }
 
 bool game_base_data::entity_exists(combid i) const {
@@ -22,7 +22,7 @@ void game_base_data::remove_entity(combid i) {
     throw logical_error("Attempted to remove entity but it does not exist!");
   }
 
-  entity_grid.remove(i);
+  entity_grid[entity.at(i)->owner].remove(i);
   entity.erase(i);
 }
 

@@ -40,7 +40,7 @@ void solar::move(game_data *g) {
 
   // check for turret combat interaction
   target_condition cond(target_condition::enemy, ship::class_id);
-  list<combid> buf = g->search_targets_nophys(id, position, interaction_radius(), cond.owned_by(owner));
+  list<combid> buf = g->search_targets_nophys(owner, identifier::source_none, position, interaction_radius(), cond.owned_by(owner));
 
   if (buf.size()) {
     // solar combat

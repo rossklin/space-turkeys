@@ -1431,13 +1431,15 @@ void game::command2entity(combid key, string act, list<combid> e_selected) {
 list<combid> game::entities_at(point p) {
   list<combid> keys;
 
-  auto test = entity_grid.search(p, 0);
+  for (auto &x : entity_grid) {
+    auto test = x.second.search(p, 0);
 
   // find entities at p
   for (auto info : test) {
     float d;
     auto x = get_selector(info.first);
     if (x->contains_point(p, d)) keys.push_back(x->id);
+  }
   }
 
   return keys;

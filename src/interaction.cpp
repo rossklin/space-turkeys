@@ -247,7 +247,7 @@ const hm_t<string, interaction> &interaction::table() {
 
     // find new target
     target_condition cond(target_condition::neutral, solar::class_id);
-    list<combid> test = g->search_targets_nophys(f->id, f->position, 300, cond.owned_by(f->owner));
+    list<combid> test = g->search_targets_nophys(f->owner, identifier::source_none, f->position, 300, cond.owned_by(f->owner));
     for (auto i = test.begin(); i != test.end(); i++)
       if (g->get_solar(*i)->was_discovered) test.erase(i--);
     if (test.empty()) return;
@@ -488,13 +488,11 @@ const hm_t<string, interaction> &interaction::table() {
     ship_ptr t = utility::guaranteed_cast<ship>(target);
 
     float damage = 0.2 * s->stats[sskey::key::ship_damage];
-    auto ns = g->entity_grid.search(t->position, 20);
-    for (auto x : ns) {
-      combid id = x.first;
-      if (identifier::get_type(id) == ship::class_id) {
-        ship_ptr t2 = g->get_ship(id);
-        t2->receive_damage(g, s, damage);
-      }
+    target_condition cond(target_condition::any_alignment, ship::class_id);
+    auto ns = g->search_targets_nophys(game_object::any_owner, identifier::source_none, t->position, 20, cond);
+    for (auto id : ns) {
+      ship_ptr t2 = g->get_ship(id);
+      t2->receive_damage(g, s, damage);
     }
   };
   data[i.name] = i;

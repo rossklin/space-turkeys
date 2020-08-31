@@ -292,6 +292,7 @@ void ship::update_data(game_data *g) {
   // Update neighbours, friends and enemies, never require more than 10 neighbours
   float nrad = interaction_radius();
   neighbours = g->search_targets_nophys(
+      owner,
       id,
       position,
       nrad,
@@ -446,7 +447,7 @@ void ship::move(game_data *g) {
   velocity += dt / stats[sskey::key::mass] * force;
   position += dt * velocity;
 
-  g->entity_grid.move(id, position);
+  g->entity_grid[owner].move(id, position);
 }
 
 // Receive collision damage

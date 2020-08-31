@@ -50,8 +50,12 @@ struct tree {
     enable_block = false;
   }
 
-  K make_key(point p) const {
+  static K make_key(point p) {
     return K(p.x / r, p.y / r);
+  }
+
+  static point map_key(K k) {
+    return point(r * (k.first + 0.5), r * (k.second + 0.5));
   }
 
   /*! insert an id-position pair

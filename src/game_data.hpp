@@ -43,7 +43,7 @@ class game_data : public virtual game_base_data {
   void increment(bool test_extend = true);
   bool target_position(combid t, point &p) const;
   std::list<combid> search_targets(combid self_id, point p, float r, target_condition c, int knn = 0) const;
-  std::list<combid> search_targets_nophys(combid self_id, point p, float r, target_condition c, int knn = 0) const;
+  std::list<combid> search_targets_nophys(idtype pid, combid self_id, point p, float r, target_condition c, int knn = 0) const;
   int first_intersect(point a, point b, float r) const;
   path_t get_path(point a, point b, float r) const;
   void rebuild_evm();

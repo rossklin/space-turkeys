@@ -65,13 +65,15 @@ bool game_data::target_position(combid t, point &p) const {
 }
 
 // find all entities in ball(p, r) matching condition c
-list<combid> game_data::search_targets_nophys(combid self_id, point p, float r, target_condition c, int knn) const {
+list<combid> game_data::search_targets_nophys(idtype pid, combid self_id, point p, float r, target_condition c, int knn) const {
   list<combid> res;
-  game_object_ptr self = get_game_object(self_id);
 
-  for (auto i : entity_grid.search(p, r, knn)) {
-    auto e = get_game_object(i.first);
-    if (evm.count(self->owner) && evm.at(self->owner).count(i.first) && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
+  for (auto &x : entity_grid) {
+    for (auto i : x.second.search(p, r, knn)) {
+      auto e = get_game_object(i.first);
+      bool can_see = pid == game_object::any_owner || evm.count(pid) && evm.at(pid).count(i.first);
+      if (can_see && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
+    }
   }
 
   return res;
@@ -86,9 +88,11 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
   }
   physical_object::ptr s = utility::guaranteed_cast<physical_object>(self);
 
-  for (auto i : entity_grid.search(p, r, knn)) {
-    auto e = get_game_object(i.first);
-    if (s->can_see(e) && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
+  for (auto &x : entity_grid) {
+    for (auto i : x.second.search(p, r, knn)) {
+      auto e = get_game_object(i.first);
+      if (s->can_see(e) && e->id != self_id && c.valid_on(e)) res.push_back(e->id);
+    }
   }
 
   return res;
@@ -491,7 +495,7 @@ void game_data::distribute_ships(fleet_ptr f) {
   c = c.owned_by(f->owner);
 
   auto pos_occupied = [this, c, ship_rad, f](point p) {
-    return terrain_at(p, ship_rad) > -1 || search_targets_nophys(f->id, p, ship_rad, c).size() > 0;
+    return terrain_at(p, ship_rad) > -1 || search_targets_nophys(f->owner, identifier::source_none, p, ship_rad, c).size() > 0;
   };
 
   auto next_position = [this, f, ship_rad]() {
@@ -519,7 +523,7 @@ void game_data::distribute_ships(fleet_ptr f) {
 
     ship_ptr s = get_ship(sid);
     s->position = test;
-    entity_grid.insert(s->id, s->position, s->radius);
+    entity_grid[s->owner].insert(s->id, s->position, s->radius);
     evm[s->owner].insert(s->id);
   }
 
@@ -590,8 +594,9 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 
   // select positions
   vector<point> static_pos;
-  for (auto test : entity_grid.search(center, ratio)) {
-    if (identifier::get_type(test.first) == solar::class_id) static_pos.push_back(test.second);
+  target_condition cond(target_condition::any_alignment, solar::class_id);
+  for (auto test : search_targets_nophys(game_object::any_owner, identifier::source_none, center, ratio, cond)) {
+    static_pos.push_back(get_entity<solar>(test)->position);
   }
 
   vector<point> x(n_solar);
@@ -774,29 +779,45 @@ void game_data::update_discover() {
 void game_data::rebuild_evm() {
   evm.clear();
 
-  // rebuild vision matrix
-  for (auto e : all_entities<game_object>()) {
-    if (e->is_active() && e->owner != game_object::neutral_owner) {
-      // entity sees itself
-      evm[e->owner].insert(e->id);
+  for (auto pid : utility::hm_keys(players)) {
+    entity_grid[pid].start_blocking();
+    for (auto f : filtered_entities<fleet>(pid)) {
+      if (f->ships.empty()) continue;
 
-      // only physical entities can see others
-      if (e->isa(physical_object::class_id)) {
-        physical_object::ptr f = utility::guaranteed_cast<physical_object>(e);
-        for (auto i : entity_grid.search(f->position, f->vision())) {
-          if (i.first == e->id) continue;
+      float r = get_ship(*f->ships.begin())->vision();
+      float rounding = r / 2;
 
-          game_object_ptr t = get_game_object(i.first);
-          // only see other players' entities if they are physical and active
-          if (t->isa(physical_object::class_id) && t->is_active() && f->can_see(t)) {
-            evm[e->owner].insert(t->id);
+      // Find indices covered by fleet
+      set<grid::tree<combid>::K> idx;
+      for (auto sid : f->ships) {
+        point x = get_ship(sid)->position;
+        x.x = rounding * round(x.x / rounding);
+        x.y = rounding * round(x.y / rounding);
+        idx.insert(grid::tree<combid>::make_key(x));
+      }
 
-            // the player will remember seing this solar
-            if (t->isa(solar::class_id)) get_solar(t->id)->known_by.insert(e->owner);
+      for (auto pid2 : utility::hm_keys(players)) {
+        if (pid2 == pid) continue;
+
+        for (auto k : idx) {
+          point x = grid::tree<combid>::map_key(k);
+          for (auto id : entity_grid[pid2].block_search(x, r)) {
+            game_object_ptr t = get_game_object(id);
+
+            // TODO: handle stealth
+
+            // only see other players' entities if they are physical and active
+            if (t->isa(physical_object::class_id)) {
+              evm[pid].insert(id);
+
+              // the player will remember seing this solar
+              if (t->isa(solar::class_id)) get_solar(id)->known_by.insert(pid);
+            }
           }
         }
       }
     }
+    entity_grid[pid].stop_blocking();
   }
 }
 

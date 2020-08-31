@@ -17,9 +17,9 @@ class game_base_data {
   hm_t<combid, game_object_ptr> entity;
   hm_t<idtype, terrain_object> terrain;
   std::list<combid> remove_entities;
-  hm_t<idtype, std::set<combid> > evm;
-  std::set<std::pair<int, int> > discovered_universe;
-  grid::tree<combid> entity_grid;
+  hm_t<idtype, std::set<combid>> evm;
+  std::set<std::pair<int, int>> discovered_universe;
+  hm_t<idtype, grid::tree<combid>> entity_grid;
 
   virtual ~game_base_data() = default;
   void clear_entities();

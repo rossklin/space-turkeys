@@ -197,7 +197,7 @@ void fleet::analyze_enemies(game_data *g) {
 
   float r = stats.spread_radius + vision();
   target_condition cond(target_condition::enemy, ship::class_id);
-  list<combid> t = g->search_targets_nophys(id, position, r, cond.owned_by(owner));
+  list<combid> t = g->search_targets_nophys(owner, id, position, r, cond.owned_by(owner));
   vector<point> pos = utility::fmap<vector<point> >(
       t, (function<point(combid)>)[g](combid sid)->point { return g->get_ship(sid)->position; });
   vector<point> x;
