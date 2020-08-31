@@ -814,7 +814,7 @@ solar_ptr game_data::closest_solar(point p, idtype id) const {
   return s;
 }
 
-void game_data::increment() {
+void game_data::increment(bool test_extend) {
   // clear frame
   remove_entities.clear();
   interaction_buffer.clear();
@@ -822,7 +822,7 @@ void game_data::increment() {
     p.second.animations.clear();
     p.second.log.clear();
   }
-  update_discover();
+  if (test_extend) update_discover();
   rebuild_evm();
 
   // update entities and compile interactions
