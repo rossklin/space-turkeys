@@ -10,14 +10,24 @@ Probably caused by running reload_data in parallel. Suggestion: mutex and scoped
   Ship position is greater than int precision, causing hang in search loop due to failed key incrementation.
   Break in ship movement to determine cause.
   Then remove temporary sequential test in tester.
-** Perf shows server spends most time in grid_tree::search, mostly in rebuild_evm
+
+  Fix: there were uninitialized physics vars for ships in tester due to not calling on_liftoff
+** [done] Again segfailt in tester -> register_entity -> grid_tree.insert -> map::emplace
+  Triggered by first entity, in the initial sequential test
+** [done] Perf shows server spends most time in grid_tree::search, mostly in rebuild_evm
   Also ship::update_data spends most time grid_tree::search, not in apply_ship
   Ideas:
   [done] Separate pos_index from metadata to avoid copying index when fetching metadata
   Use KNN instead of radius search to avoid looking up and copying all ships when only a few are needed
   Split map by player and enable blocking searched indices when updating evm
-
-** Disable update_discover for tester
+** [done] rebuild_evm: new implementation with player split grids
+  First find a grid of points covering fleet ships.
+  Then block search each of these.
+** [done] Disable update_discover for tester
+** Optimize client_game::reload_data (causes lag in next_sim_frame)
+  Avoid using clone, maybe ok to just take over ref?
+  Do something about fixed stars ie don't add for each ship but per fleet
+  Apparently deregister entity is taking a lot of time
 ** Fix partial invalidation for GUI components (ie scrolling list lowers frame rate to 10 fps)
 ** Simulation progress bar resets to 0 when data runs out
 ** Generated frames label only updated when playing
