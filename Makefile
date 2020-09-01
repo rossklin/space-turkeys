@@ -1,4 +1,4 @@
-COMMON_SOURCES=game_data.cpp terrain_object.cpp game_base_data.cpp fleet.cpp solar.cpp ship.cpp waypoint.cpp research.cpp game_settings.cpp serialization.cpp socket_t.cpp command.cpp utility.cpp types.cpp cost.cpp game_object.cpp upgrades.cpp interaction.cpp development_tree.cpp ship_stats.cpp
+COMMON_SOURCES=game_data.cpp terrain_object.cpp game_base_data.cpp grid_tree.cpp fleet.cpp solar.cpp ship.cpp waypoint.cpp research.cpp game_settings.cpp serialization.cpp socket_t.cpp command.cpp utility.cpp types.cpp cost.cpp game_object.cpp upgrades.cpp interaction.cpp development_tree.cpp ship_stats.cpp
 SERVER_SOURCES=server.cpp game_handler.cpp com_server.cpp server_handler.cpp
 CLIENT_SOURCES=client.cpp graphics.cpp client_game.cpp com_client.cpp selector.cpp fixed_star.cpp command_gui.cpp target_gui.cpp animation.cpp utility.cpp choice_gui.cpp style.cpp solar_gui.cpp
 TESTER_SOURCES=test.cpp game_handler.cpp com_server.cpp server_handler.cpp
