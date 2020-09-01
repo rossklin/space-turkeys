@@ -1,33 +1,19 @@
 * Notes test game 2020-08-14
-** [impl] Entity grid should move metadata to other index
-** [impl] The entity grid should return any entities whose radius overlaps the search area
-** [test] Fighter shot animations quite heavy and long
-** [test] Increase friction and/or add free rotation thrusters
-** [test] Deployed cannons are way to weak, can barely kill fighters
-** [done] Crash in draw_universe in animation loop header
-Probably caused by running reload_data in parallel. Suggestion: mutex and scoped lock reload_data against draw_universe.
-** [done] Hang in tester -> increment -> ship_move -> grid_tree::move
-  Ship position is greater than int precision, causing hang in search loop due to failed key incrementation.
-  Break in ship movement to determine cause.
-  Then remove temporary sequential test in tester.
+** Issue with pathing again, path was suboptimal and passed through terrain
+** game_data::increment when many ships around terrain
+  Caused by ship::update_data calling get_path.
+  This happens when there is terrain between the ship and the fleet's heading point.
 
-  Fix: there were uninitialized physics vars for ships in tester due to not calling on_liftoff
-** [done] Again segfailt in tester -> register_entity -> grid_tree.insert -> map::emplace
-  Triggered by first entity, in the initial sequential test
-** [done] Perf shows server spends most time in grid_tree::search, mostly in rebuild_evm
-  Also ship::update_data spends most time grid_tree::search, not in apply_ship
-  Ideas:
-  [done] Separate pos_index from metadata to avoid copying index when fetching metadata
-  Use KNN instead of radius search to avoid looking up and copying all ships when only a few are needed
-  Split map by player and enable blocking searched indices when updating evm
-** [done] rebuild_evm: new implementation with player split grids
-  First find a grid of points covering fleet ships.
-  Then block search each of these.
-** [done] Disable update_discover for tester
-** Optimize client_game::reload_data (causes lag in next_sim_frame)
+  Consider not letting ships call get_path. Implement ship to fleet merging with thrusters, 
+  then just head for fleet. If ships get too separated (ie cluster every N frames), 
+  split to a new fleet instead with same command.
+** Looks weird when terrain "spawns" on top of ships
+** Distribute ships packs ships in weird discrete patterns and blocks the solar
+** [done] Optimize client_game::reload_data (causes lag in next_sim_frame)
   Avoid using clone, maybe ok to just take over ref?
   Do something about fixed stars ie don't add for each ship but per fleet
   Apparently deregister entity is taking a lot of time
+  Also push_back when building enemy clusters is slow
 ** Fix partial invalidation for GUI components (ie scrolling list lowers frame rate to 10 fps)
 ** Simulation progress bar resets to 0 when data runs out
 ** Generated frames label only updated when playing
@@ -91,6 +77,31 @@ resolving all commands
 ** [impl] No event log item for ship death
 ** [impl] Missing Command GUI option to delete command
 ** [done] Some combat animations missing
+** [impl] Entity grid should move metadata to other index
+** [impl] The entity grid should return any entities whose radius overlaps the search area
+** [test] Fighter shot animations quite heavy and long
+** [test] Increase friction and/or add free rotation thrusters
+** [test] Deployed cannons are way to weak, can barely kill fighters
+** [done] Crash in draw_universe in animation loop header
+Probably caused by running reload_data in parallel. Suggestion: mutex and scoped lock reload_data against draw_universe.
+** [done] Hang in tester -> increment -> ship_move -> grid_tree::move
+  Ship position is greater than int precision, causing hang in search loop due to failed key incrementation.
+  Break in ship movement to determine cause.
+  Then remove temporary sequential test in tester.
+
+  Fix: there were uninitialized physics vars for ships in tester due to not calling on_liftoff
+** [done] Again segfailt in tester -> register_entity -> grid_tree.insert -> map::emplace
+  Triggered by first entity, in the initial sequential test
+** [done] Perf shows server spends most time in grid_tree::search, mostly in rebuild_evm
+  Also ship::update_data spends most time grid_tree::search, not in apply_ship
+  Ideas:
+  [done] Separate pos_index from metadata to avoid copying index when fetching metadata
+  Use KNN instead of radius search to avoid looking up and copying all ships when only a few are needed
+  Split map by player and enable blocking searched indices when updating evm
+** [done] rebuild_evm: new implementation with player split grids
+  First find a grid of points covering fleet ships.
+  Then block search each of these.
+** [done] Disable update_discover for tester
 *** No animations first round, 2 ships died
 *** All animations at start of second round, none at end
 ** [impl] Command GUI must update count when changing ship class
