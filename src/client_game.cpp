@@ -157,7 +157,8 @@ void game::window_loop() {
 
       // Update sim label
       string gen_percent = to_string(int((100 * frames_generated) / settings.clset.frames_per_round));
-      gen_percent = "Generated: " + gen_percent + "%";
+      string load_percent = to_string(int((100 * sim_frames_loaded) / settings.clset.frames_per_round));
+      gen_percent = "Generated: " + gen_percent + "% (loaded " + load_percent + " %)";
       if (sim_generated_label->get_label() != gen_percent) {
         sim_generated_label->set_label(gen_percent);
       }
@@ -1066,8 +1067,8 @@ void game::add_fixed_stars(point position, float vision) {
       int grid_y = round((position.y + j) / grid_size);
       pair<int, int> grid_index(grid_x, grid_y);
 
-      for (int i = rand() % 3; i >= 0; i--) {
-        if (known_universe.count(grid_index) == 0) {
+      if (known_universe.count(grid_index) == 0) {
+        for (int i = rand() % 3; i >= 0; i--) {
           point star_position;
           star_position.x = grid_index.first * grid_size + utility::random_uniform() * grid_size;
           star_position.y = grid_index.second * grid_size + utility::random_uniform() * grid_size;
@@ -1079,9 +1080,8 @@ void game::add_fixed_stars(point position, float vision) {
           } else {
             hidden_stars.push_back(star);
           }
-
-          known_universe.insert(grid_index);
         }
+        known_universe.insert(grid_index);
       }
     }
   }
@@ -1124,22 +1124,28 @@ void game::reload_data(game_base_data &g, bool use_animations) {
   settings = g.settings;
   terrain = g.terrain;
 
-  // update entities: fleets, solars and waypoints
+  // update entities
   for (auto a : g.all_entities<entity_selector>()) {
-    entity_selector::ptr p = a->ss_clone();
-    combid key = p->id;
-    if (entity_exists(key)) deregister_entity(key);
-    add_entity(p);
-    p->seen = p->is_active();
-    if (p->owner == self_id && p->is_active()) add_fixed_stars(p->position, p->vision());
-    cout << "reload_data for " << self_id << ": loaded seen entity: " << p->id << " owned by " << p->owner << endl;
+    if (entity_exists(a->id)) {
+      // Reuse the entity instead of cloning (optimization)
+      entity[a->id] = a;
+
+      // Do not call move in case the entity was not registered in the grid
+      entity_grid[a->owner].remove(a->id);
+      entity_grid[a->owner].insert(a->id, a->position, a->radius);
+    } else {
+      add_entity(a);
+    }
+    a->seen = a->is_active();
+    if (a->owner == self_id && a->is_active() && (a->isa(solar::class_id) || a->isa(fleet::class_id))) add_fixed_stars(a->position, a->vision());
+    cout << "reload_data for " << self_id << ": loaded " << (a->seen ? "seen" : "unseen") << " entity: " << a->id << " owned by " << a->owner << endl;
   }
 
   // remove entities as server specifies
-  for (auto x : g.remove_entities) {
-    if (entity_exists(x)) {
-      cout << " -> remove entity " << x << endl;
-      deregister_entity(x);
+  for (auto id : g.remove_entities) {
+    if (entity_exists(id)) {
+      cout << " -> remove entity " << id << endl;
+      deregister_entity(id);
     }
   }
 
@@ -1229,8 +1235,10 @@ void game::reload_data(game_base_data &g, bool use_animations) {
   push_game_log(players.at(self_id).log);
 
   // update enemy cluster buffer
+  auto sbuf = get_all<ship>();
   enemy_clusters.clear();
-  for (auto s : get_all<ship>()) {
+  enemy_clusters.reserve(sbuf.size());
+  for (auto s : sbuf) {
     if (s->seen && !s->owned) enemy_clusters.push_back(s->position);
   }
   if (enemy_clusters.size()) enemy_clusters = utility::cluster_points(enemy_clusters, 20, 100);
@@ -1434,12 +1442,12 @@ list<combid> game::entities_at(point p) {
   for (auto &x : entity_grid) {
     auto test = x.second.search(p, 0);
 
-  // find entities at p
-  for (auto info : test) {
-    float d;
-    auto x = get_selector(info.first);
-    if (x->contains_point(p, d)) keys.push_back(x->id);
-  }
+    // find entities at p
+    for (auto info : test) {
+      float d;
+      auto x = get_selector(info.first);
+      if (x->contains_point(p, d)) keys.push_back(x->id);
+    }
   }
 
   return keys;
