@@ -14,6 +14,7 @@
 
 using namespace std;
 using namespace st3;
+using namespace utility;
 
 const string fleet::class_id = "fleet";
 
@@ -85,10 +86,14 @@ void fleet::pre_phase(game_data *g) {
 
 void fleet::move(game_data *g) {
   // linear extrapolation of position estimate
-  if (!is_idle()) position += stats.speed_limit * utility::normv(utility::point_angle(heading - position));
+  if (!is_idle()) position += stats.speed_limit * normv(point_angle(heading - position));
 }
 
 void fleet::post_phase(game_data *g) {}
+
+bool fleet::is_active() {
+  return !ships.empty();
+}
 
 float fleet::vision() {
   return stats.vision_buf;
@@ -120,6 +125,7 @@ void fleet::give_commands(list<command> c, game_data *g) {
   random_shuffle(buf.begin(), buf.end());
 
   for (auto &x : buf) {
+    if (x.ships.empty()) continue;
     fleet_ptr f = create(fleet::server_pid, g->next_id(fleet::class_id));
     f->com = x;
     f->com.source = f->id;
@@ -141,55 +147,6 @@ void fleet::give_commands(list<command> c, game_data *g) {
   }
 }
 
-// fleet::suggestion fleet::suggest(game_data *g) {
-//   auto local_output = [this] (string v) {
-//     server::output(id + ": suggest: " + v);
-//   };
-
-//   if (stats.enemies.size()) {
-//     suggestion s_evade(suggestion::evade, stats.evade_path);
-//     if (!stats.can_evade) s_evade.id = suggestion::scatter;
-
-//     if (com.policy == policy_maintain_course) {
-//       local_output("maintain course");
-//       return suggestion(suggestion::travel, heading);
-//     }else if (com.policy == policy_evasive) {
-//       local_output("evade");
-//       return s_evade;
-//     }else{
-//       point p = stats.enemies.front().first;
-//       if (com.policy == policy_aggressive) {
-// 	local_output("aggressive engage: " + utility::point2string(p));
-// 	return suggestion(suggestion::engage, p);
-//       } else if (com.policy == policy_reasonable) {
-// 	float h = stats.enemies.front().second / (stats.facing_ratio + 1);
-// 	if (suggest_buf.id == suggestion::engage) h *= 0.8;
-// 	if (suggest_buf.id == suggestion::evade) h /= 0.8;
-
-// 	if (h < 0.5) {
-// 	  local_output("local engage");
-// 	  return suggestion(suggestion::engage, p);
-// 	}
-//       }
-
-//       local_output("evade");
-//       return s_evade;
-//     }
-//   }else{
-//     // peaceful times
-//     if (stats.converge) {
-//       local_output("activate");
-//       return suggestion(suggestion::activate, heading);
-//     }else if (is_idle()) {
-//       local_output("hold");
-//       return suggestion(suggestion::hold);
-//     }else{
-//       local_output("travel");
-//       return suggestion(suggestion::travel, heading);
-//     }
-//   }
-// }
-
 // cluster enemy ships
 void fleet::analyze_enemies(game_data *g) {
   stats.enemies.clear();
@@ -198,7 +155,7 @@ void fleet::analyze_enemies(game_data *g) {
   float r = stats.spread_radius + vision();
   target_condition cond(target_condition::enemy, ship::class_id);
   list<combid> t = g->search_targets_nophys(owner, id, position, r, cond.owned_by(owner));
-  vector<point> pos = utility::fmap<vector<point> >(
+  vector<point> pos = fmap<vector<point>>(
       t, (function<point(combid)>)[g](combid sid)->point { return g->get_ship(sid)->position; });
   vector<point> x;
 
@@ -212,7 +169,7 @@ void fleet::analyze_enemies(game_data *g) {
     return;
   }
 
-  x = utility::cluster_points(pos);
+  x = cluster_points(pos);
 
   local_output("identified " + to_string(x.size()) + " clusters from " + to_string(t.size()) + " ships.");
 
@@ -227,44 +184,44 @@ void fleet::analyze_enemies(game_data *g) {
     point p = g->get_ship(sid)->position;
 
     // scatter value
-    int scatter_idx = utility::angle2index(na, utility::point_angle(p - position));
+    int scatter_idx = angle2index(na, point_angle(p - position));
     scatter_data[scatter_idx] += s.get_dps() * dps_scale;
 
     // cluster assignment
-    int idx = utility::vector_min<point>(x, [p](point y) -> float { return utility::l2d2(y - p); });
+    int idx = vector_min<point>(x, [p](point y) -> float { return l2d2(y - p); });
     cc[idx] += s.get_strength();
 
-    local_output("assigned enemy " + sid + " to cluster " + to_string(idx) + " at " + utility::point2string(x[idx]));
+    local_output("assigned enemy " + sid + " to cluster " + to_string(idx) + " at " + point2string(x[idx]));
   }
 
   // build enemy fleet stats
   for (auto i : cc) {
     stats.enemies.push_back(make_pair(x[i.first], i.second / get_strength()));
-    local_output("added enemy cluster value: " + utility::point2string(x[i.first]) + ": " + to_string(i.second / get_strength()));
+    local_output("added enemy cluster value: " + point2string(x[i.first]) + ": " + to_string(i.second / get_strength()));
   }
 
   stats.enemies.sort([](pair<point, float> a, pair<point, float> b) { return a.second > b.second; });
 
   // find to what degree we are currently facing the enemy
-  vector<float> enemy_ckde = utility::circular_kernel(scatter_data, 2);
+  vector<float> enemy_ckde = circular_kernel(scatter_data, 2);
   float facing = 0;
   for (auto sid : ships) {
-    facing += enemy_ckde[utility::angle2index(na, g->get_ship(sid)->angle)];
+    facing += enemy_ckde[angle2index(na, g->get_ship(sid)->angle)];
   }
   facing /= ships.size();
-  stats.facing_ratio = facing / (utility::vsum(enemy_ckde) / na);
+  stats.facing_ratio = facing / (vsum(enemy_ckde) / na);
 
   // find best evade direction
 
   // define prioritized directions
   vector<float> dw(na, 1);
-  int idx_previous = utility::angle2index(na, utility::point_angle(stats.evade_path - position));
-  int idx_target = utility::angle2index(na, utility::point_angle(stats.target_position - position));
+  int idx_previous = angle2index(na, point_angle(stats.evade_path - position));
+  int idx_target = angle2index(na, point_angle(stats.target_position - position));
   int idx_closest = 0;
 
   solar_ptr closest_solar = g->closest_solar(position, owner);
   if (closest_solar) {
-    idx_closest = utility::angle2index(na, utility::point_angle(closest_solar->position - position));
+    idx_closest = angle2index(na, point_angle(closest_solar->position - position));
     dw[idx_closest] = 0.8;
   }
 
@@ -273,11 +230,11 @@ void fleet::analyze_enemies(game_data *g) {
   dw[idx_target] = 0.5;
 
   // merge direction priorities with enemy strength data via circular kernel
-  vector<float> heuristics = utility::elementwise_product(enemy_ckde, utility::circular_kernel(dw, 1));
+  vector<float> heuristics = elementwise_product(enemy_ckde, circular_kernel(dw, 1));
 
   int prio_idx;
   try {
-    prio_idx = utility::vector_min<float>(heuristics, utility::identity_function<float>());
+    prio_idx = vector_min<float>(heuristics, identity_function<float>());
   } catch (logical_error e) {
     server::log("logical error in vector_min in fleet::analyze_enemies");
     stats.can_evade = false;
@@ -289,15 +246,16 @@ void fleet::analyze_enemies(game_data *g) {
   // only allow evasion if there exists a path with low enemy strength
   if (evalue < 1) {
     stats.can_evade = true;
-    stats.evade_path = position + utility::scale_point(utility::normv(utility::index2angle(na, prio_idx)), 100);
-    local_output("selected evasion angle: " + to_string(utility::index2angle(na, prio_idx)));
+    stats.evade_path = position + scale_point(normv(index2angle(na, prio_idx)), 100);
+    local_output("selected evasion angle: " + to_string(index2angle(na, prio_idx)));
   } else {
     stats.can_evade = false;
-    local_output("no good evasion priority index (best was: " + to_string(utility::index2angle(na, prio_idx)) + " at " + to_string(evalue));
+    local_output("no good evasion priority index (best was: " + to_string(index2angle(na, prio_idx)) + " at " + to_string(evalue));
   }
 }
 
 void fleet::update_data(game_data *g, bool set_force_refresh) {
+  if (ships.empty()) return;
   stringstream ss;
   int n = ships.size();
   force_refresh |= set_force_refresh;
@@ -313,13 +271,13 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
   }
 
   radius = g->settings.fleet_default_radius;
-  position = utility::scale_point(p, 1 / (float)n);
+  position = scale_point(p, 1 / (float)n);
 
   // // need to update fleet data?
-  // bool should_update = force_refresh || utility::random_uniform() < 1 / (float)fleet::update_period;
+  // bool should_update = force_refresh || random_uniform() < 1 / (float)fleet::update_period;
 
   // always update heading if needed
-  pop_heading |= utility::l2norm(position - heading) < 5;
+  pop_heading |= l2norm(position - heading) < 5;
   if (g->target_position(com.target, stats.target_position)) {
     if (force_refresh) {
       path = g->get_path(position, stats.target_position, 5);
@@ -354,17 +312,17 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
   stats.vision_buf = 0;
 
   stats.average_ship = ssfloat_t();
-  point dir = utility::normalize_and_scale(heading - position, 1);
+  point dir = normalize_and_scale(heading - position, 1);
   float hpossd = 0;
   for (auto k : ships) {
     ship_ptr s = g->get_ship(k);
     speed = fmin(speed, s->max_speed());
-    r2 = fmax(r2, utility::l2d2(s->position - position));
+    r2 = fmax(r2, l2d2(s->position - position));
     stats.vision_buf = fmax(stats.vision_buf, s->vision());
     for (int i = 0; i < sskey::key::count; i++) stats.average_ship.stats[i] += s->stats[i];
 
     // heading position stat
-    s->hpos = utility::scalar_mult(s->position - position, dir);
+    s->hpos = scalar_mult(s->position - position, dir);
     hpossd += pow(s->hpos, 2);
   }
 
@@ -412,7 +370,7 @@ void fleet::check_action(game_data *g) {
       bool buf = false;
       for (auto sid : ships) {
         ship_ptr s = g->get_ship(sid);
-        buf |= utility::l2d2(stats.target_position - s->position) < fleet::interact_d2;
+        buf |= l2d2(stats.target_position - s->position) < fleet::interact_d2;
       }
       should_refresh |= buf != stats.converge;
       stats.converge = buf;
@@ -420,6 +378,67 @@ void fleet::check_action(game_data *g) {
   }
 
   if (should_refresh) refresh_ships(g);
+}
+
+combid fleet::request_helper_fleet(game_data *g, combid sid) {
+  // Check if there is already an appropriate helper fleet
+  ship_ptr s = g->get_ship(sid);
+  auto fids = helper_fleets;
+  float closest = l2norm(position - s->position);
+  combid best_id = "";
+  for (auto fid : fids) {
+    // Verify that helper fleets still exist
+    if (!g->entity_exists(fid)) {
+      helper_fleets.erase(fid);
+      continue;
+    }
+
+    // Accept if f is closer and in sight
+    fleet_ptr f = g->get_fleet(fid);
+    if (l2norm(f->position - s->position) < closest && g->first_intersect(s->position, f->position, s->radius) == -1) {
+      closest = l2norm(f->position - s->position);
+      best_id = fid;
+    }
+  }
+
+  remove_ship(sid);
+  fleet_ptr f;
+
+  if (best_id.empty()) {
+    // Create a new helper fleet for this ship
+    f = fleet::create(fleet::server_pid, g->next_id(fleet::class_id));
+    f->com = com;
+    f->com.ships = {sid};
+    f->com.source = f->id;
+    f->position = s->position;
+    f->radius = g->settings.fleet_default_radius;
+    f->owner = owner;
+    f->ships.insert(sid);
+    s->fleet_id = f->id;
+
+    g->register_entity(f);
+    f->heading = f->position;
+    helper_fleets.insert(f->id);
+  } else {
+    // Use existing fleet
+    f = g->get_fleet(best_id);
+    f->ships.insert(sid);
+    f->com.ships = f->ships;
+  }
+
+  s->fleet_id = f->id;
+  f->update_data(g, true);
+
+  // Debug sanity check
+  if (any(fmap<list<bool>>(
+          f->ships, (function<bool(combid)>)[g](combid sid) {
+            ship_ptr s = g->get_ship(sid);
+            return !(l2norm(s->position) > 0 && l2norm(s->position) < 1e4);
+          }))) {
+    throw logical_error("Helper fleet ships at invalid position!");
+  }
+
+  return f->id;
 }
 
 void fleet::check_waypoint(game_data *g) {
@@ -443,17 +462,6 @@ void fleet::check_in_sight(game_data *g) {
   // target left sight?
   if (!(seen || solar || owned)) {
     server::output("fleet " + id + " looses sight of " + com.target);
-
-    // creating a waypoint here causes id collision with waypoints
-    // created on client side
-
-    // // create a waypoint and reset target
-    // waypoint_ptr w = waypoint::create(owner);
-
-    // // if the target exists, set waypoint at  target position
-    // g -> target_position(com.target, w -> position);
-    // g -> add_entity(w);
-
     set_idle();
   }
 }

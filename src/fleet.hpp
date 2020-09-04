@@ -22,25 +22,6 @@ class fleet : public virtual commandable_object {
   static fleet_ptr create(idtype pid, idtype idx);
   static const std::string class_id;
 
-  /* class suggestion { */
-  /* public: */
-  /*   // fleet to ship suggestions */
-  /*   static const sint summon; */
-  /*   static const sint engage; */
-  /*   static const sint scatter; */
-  /*   static const sint travel; */
-  /*   static const sint activate; */
-  /*   static const sint hold; */
-  /*   static const sint evade; */
-
-  /*   sint id; */
-  /*   point p; */
-
-  /*   suggestion(); */
-  /*   suggestion(sint i); */
-  /*   suggestion(sint i, point p); */
-  /* }; */
-
   struct analytics {
     std::list<std::pair<point, float> > enemies;
     ssfloat_t average_ship;
@@ -75,24 +56,26 @@ class fleet : public virtual commandable_object {
   point heading;
   bool pop_heading;
   std::vector<point> path;
-  /* suggestion suggest_buf; */
 
   // mechanical components
   int update_counter; /*!< counter for updating fleet data */
   analytics stats;
   bool force_refresh;
+  std::set<combid> helper_fleets;
 
   // game_object stuff
-  void pre_phase(game_data *g);
-  void move(game_data *g);
-  void post_phase(game_data *g);
-  float vision();
-  bool serialize(sf::Packet &p);
-  bool isa(std::string c);
-  void on_remove(game_data *g);
+  void pre_phase(game_data *g) override;
+  void move(game_data *g) override;
+  void post_phase(game_data *g) override;
+  float vision() override;
+  bool serialize(sf::Packet &p) override;
+  bool isa(std::string c) override;
+  void on_remove(game_data *g) override;
+  game_object_ptr clone() override;
+  bool is_active() override;
 
   // commandable object stuff
-  void give_commands(std::list<command> c, game_data *g);
+  void give_commands(std::list<command> c, game_data *g) override;
 
   // fleet stuff
   fleet(idtype pid, idtype idx);
@@ -105,13 +88,12 @@ class fleet : public virtual commandable_object {
   void analyze_enemies(game_data *g);
   void update_data(game_data *g, bool set_force_refresh = false);
   void remove_ship(combid i);
-  /* suggestion suggest(game_data *g); */
   float get_hp();
   float get_dps();
   float get_strength();
   void refresh_ships(game_data *g);
   void check_action(game_data *g);
-  game_object_ptr clone();
+  combid request_helper_fleet(game_data *g, combid sid);
 
  protected:
   void check_waypoint(game_data *g);
