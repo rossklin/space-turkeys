@@ -267,7 +267,7 @@ void ship::update_data(game_data *g) {
   if (!has_fleet()) return;
 
   fleet_ptr f = g->get_fleet(fleet_id);
-  if (g->first_intersect(position, f->position, radius) > -1) {
+  if (g->terrain_at(position, radius) == -1 && g->first_intersect(position, f->position, 0) > -1) {
     // Fleet center is no longer in sight, request a helper fleet
     fleet_id = f->request_helper_fleet(g, id);
     f = g->get_fleet(fleet_id);
@@ -465,6 +465,12 @@ void ship::move(game_data *g) {
   angle += fmin(dt * angle_increment, fabs(angle_miss)) * angle_sign;
   velocity += dt / stats[sskey::key::mass] * force;
   position += dt * velocity;
+
+  // Push out of terrain
+  int tid;
+  if ((tid = g->terrain_at(position, radius)) > -1) {
+    position = g->terrain[tid].closest_exit(position, radius);
+  }
 
   g->entity_grid[owner].move(id, position);
 }
