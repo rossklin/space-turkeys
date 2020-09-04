@@ -83,6 +83,12 @@ template <typename V>
 set<V> grid::tree<V>::block_search(point p, float rad) {
   set<V> ids;
 
+  // Check for floating point errors
+  if (!(p.x + r > p.x && p.y + r > p.y)) {
+    server::log("Rounding error in grid::tree::block_search!", "warning");
+    return {};
+  }
+
   for (float x = p.x - rad; x <= p.x + rad; x += r) {
     for (float y = p.y - rad; y <= p.y + rad; y += r) {
       K k = make_key(point(x, y));
