@@ -493,7 +493,7 @@ void game_data::distribute_ships(fleet_ptr f) {
   c = c.owned_by(f->owner);
 
   auto pos_occupied = [this, c, ship_rad, f](point p) {
-    return terrain_at(p, ship_rad) > -1 || search_targets_nophys(f->owner, identifier::source_none, p, ship_rad, c, 1).size() > 0;
+    return terrain_at(p, 1.5 * ship_rad) > -1 || search_targets_nophys(f->owner, identifier::source_none, p, ship_rad, c, 1).size() > 0;
   };
 
   float r = 0.1;
@@ -734,45 +734,43 @@ void game_data::update_discover() {
     if (e->is_active()) discover(e->position, e->vision());
 }
 
+// Helper function for rebuild_evm
+pair<pair<int, int>, float> rounded_point(point x, float r) {
+  float rounding = fmax(r / 2, 10);
+  pair<int, int> idx = {rounding * round(x.x / rounding), rounding * round(x.y / rounding)};
+  return make_pair(idx, r);
+};
+
 void game_data::rebuild_evm() {
   evm.clear();
 
   for (auto pid : hm_keys(players)) {
     // Build map of indices with vision radius, and see own entities
-    set<pair<grid::tree<combid>::K, float>> idx;
+    set<pair<pair<int, int>, float>> idx;
     for (auto e : filtered_entities<game_object>(pid)) {
       evm[pid].insert(e->id);
 
       float r = e->vision();
 
-      auto rounded_idx = [](point x, float r) -> pair<grid::tree<combid>::K, float> {
-        grid::tree<combid>::K idx;
-        float rounding = fmax(r / 2, 10);
-        idx.first = rounding * round(x.x / rounding);
-        idx.second = rounding * round(x.y / rounding);
-        return make_pair(idx, r);
-      };
-
       // Find indices covered by fleet
       if (e->isa(solar::class_id)) {
-        idx.insert(rounded_idx(e->position, r));
+        idx.insert(rounded_point(e->position, r));
       } else if (e->isa(fleet::class_id)) {
         fleet_ptr f = guaranteed_cast<fleet>(e);
         for (auto sid : f->ships) {
           ship_ptr s = get_ship(sid);
-          idx.insert(rounded_idx(get_ship(sid)->position, r));
+          idx.insert(rounded_point(s->position, r));
         }
       }
     }
 
-    entity_grid[pid].start_blocking();
     for (auto pid2 : hm_keys(players)) {
       if (pid2 == pid) continue;
 
+      entity_grid[pid2].start_blocking();
       for (auto info : idx) {
-        grid::tree<combid>::K k = info.first;
+        point x = {(float)info.first.first, (float)info.first.second};
         float r = info.second;
-        point x = grid::tree<combid>::map_key(k);
         for (auto id : entity_grid[pid2].block_search(x, r)) {
           game_object_ptr t = get_game_object(id);
 
@@ -787,8 +785,8 @@ void game_data::rebuild_evm() {
           }
         }
       }
+      entity_grid[pid2].stop_blocking();
     }
-    entity_grid[pid].stop_blocking();
   }
 }
 
