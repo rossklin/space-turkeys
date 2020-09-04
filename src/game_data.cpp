@@ -25,6 +25,7 @@
 using namespace std;
 using namespace st3;
 using namespace cost;
+using namespace utility;
 
 int game_data::next_id(class_t x) {
   if (!idc.count(x)) idc[x] = 0;
@@ -86,7 +87,7 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
   if (!self->isa(physical_object::class_id)) {
     throw logical_error("Non-physical entity called search targets: " + self_id);
   }
-  physical_object::ptr s = utility::guaranteed_cast<physical_object>(self);
+  physical_object::ptr s = guaranteed_cast<physical_object>(self);
 
   for (auto &x : entity_grid) {
     for (auto i : x.second.search(p, r, knn)) {
@@ -157,11 +158,11 @@ path_t game_data::get_path(point a, point b, float r) const {
     point x = p.front();
 
     for (auto y : p) {
-      h += utility::l2norm(y - x);
+      h += l2norm(y - x);
       x = y;
     }
 
-    h += utility::l2norm(b - p.back());
+    h += l2norm(b - p.back());
 
     return ptest{h, p, vertice};
   };
@@ -197,7 +198,7 @@ path_t game_data::get_path(point a, point b, float r) const {
     // Find the vertices representing the left and right horizon of a terrain wrt a point
     auto terrain_horizon = [this, r, r_buffered, &hr_blocked](point a, int tid) -> vector<int> {
       terrain_object obj = terrain.at(tid);
-      float theta = utility::point_angle(obj.center - a);
+      float theta = point_angle(obj.center - a);
       float amax = 0;
       float amin = 0;
       int pmin, pmax;
@@ -212,7 +213,7 @@ path_t game_data::get_path(point a, point b, float r) const {
         // skip vertices that are marked as blocked
         if (hr_blocked.count(tid) && hr_blocked.at(tid).count(i)) continue;
 
-        float adiff = utility::angle_difference(utility::point_angle(p - a), theta);
+        float adiff = angle_difference(point_angle(p - a), theta);
         if (adiff > amax) {
           amax = adiff;
           pmax = i;
@@ -282,7 +283,7 @@ int game_data::first_intersect(point a, point b, float r) const {
     for (int i = 0; i < x.second.border.size(); i++) {
       point p1 = x.second.get_vertice(i, r);
       point p2 = x.second.get_vertice(i + 1, r);
-      if (utility::line_intersect(a, b, p1, p2, &inter_buf)) {
+      if (line_intersect(a, b, p1, p2, &inter_buf)) {
         intersects[x.first].push_back(make_pair(i, inter_buf));
       }
     }
@@ -296,7 +297,7 @@ int game_data::first_intersect(point a, point b, float r) const {
     for (auto y : x.second) {
       int bid = y.first;
       point p = y.second;
-      float d = utility::l2norm(p - a);
+      float d = l2norm(p - a);
       if (d < closest) {
         closest = d;
         tid = x.first;
@@ -363,7 +364,7 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner) {
 }
 
 // generate a fleet with given ships, set owner and fleet_id of ships
-fleet_ptr game_data::generate_fleet(point p, idtype owner, command c, list<combid> sh, bool ignore_limit) {
+fleet_ptr game_data::generate_fleet(point p, idtype owner, command c, list<combid> sh) {
   if (sh.empty()) return NULL;
 
   fleet_ptr f = fleet::create(fleet::server_pid, next_id(fleet::class_id));
@@ -372,11 +373,9 @@ fleet_ptr game_data::generate_fleet(point p, idtype owner, command c, list<combi
   f->position = p;
   f->radius = settings.fleet_default_radius;
   f->owner = owner;
-  float ta = utility::random_uniform(0, 2 * M_PI);
+  float ta = random_uniform(0, 2 * M_PI);
   point tp;
-  if (target_position(c.target, tp)) ta = utility::point_angle(tp - p);
-
-  // const int max_ships = get_max_ships_per_fleet(owner);
+  if (target_position(c.target, tp)) ta = point_angle(tp - p);
 
   for (auto &s : sh) {
     auto sp = get_ship(s);
@@ -384,7 +383,6 @@ fleet_ptr game_data::generate_fleet(point p, idtype owner, command c, list<combi
     sp->owner = owner;
     sp->fleet_id = f->id;
     sp->angle = ta;
-    // if (f->ships.size() >= max_ships && !ignore_limit) break;
   }
 
   register_entity(f);
@@ -407,7 +405,7 @@ void game_data::apply_choice(choice c, idtype id) {
 
   // research
   if (c.research.length() > 0) {
-    if (!utility::find_in(c.research, players[id].research_level.available())) {
+    if (!find_in(c.research, players[id].research_level.available())) {
       throw player_error("Invalid research choice submitted by player " + to_string(id) + ": " + c.research);
     }
   }
@@ -428,7 +426,7 @@ void game_data::apply_choice(choice c, idtype id) {
 
     if (x.second.building_queue.size()) {
       for (auto y : x.second.building_queue) {
-        if (!utility::find_in(y, keywords::development)) {
+        if (!find_in(y, keywords::development)) {
           throw player_error("validate_choice: error: invalid development key: " + y);
         }
       }
@@ -456,7 +454,7 @@ void game_data::apply_choice(choice c, idtype id) {
 
   // apply
   for (auto x : c.commands) {
-    commandable_object_ptr v = utility::guaranteed_cast<commandable_object>(get_game_object(x.first));
+    commandable_object_ptr v = guaranteed_cast<commandable_object>(get_game_object(x.first));
     v->give_commands(x.second, this);
   }
 }
@@ -495,19 +493,18 @@ void game_data::distribute_ships(fleet_ptr f) {
   c = c.owned_by(f->owner);
 
   auto pos_occupied = [this, c, ship_rad, f](point p) {
-    return terrain_at(p, ship_rad) > -1 || search_targets_nophys(f->owner, identifier::source_none, p, ship_rad, c).size() > 0;
+    return terrain_at(p, ship_rad) > -1 || search_targets_nophys(f->owner, identifier::source_none, p, ship_rad, c, 1).size() > 0;
   };
 
-  auto next_position = [this, f, ship_rad]() {
-    static float r = 0.1;
-    static float a = 0;
-    static float a0 = 0;
-
-    point x = f->position + r * utility::normv(a);
+  float r = 0.1;
+  float a = 0;
+  float a0 = 0;
+  auto next_position = [this, f, ship_rad, &r, &a, &a0]() {
+    point x = f->position + r * normv(a);
 
     a += 2 * ship_rad / r;
     if (a > a0 + 2 * M_PI - 2 * ship_rad / r) {
-      a0 = utility::random_uniform(0, 2 * M_PI);
+      a0 = random_uniform(0, 2 * M_PI);
       a = a0;
       r += 2 * ship_rad;
     }
@@ -526,45 +523,6 @@ void game_data::distribute_ships(fleet_ptr f) {
     entity_grid[s->owner].insert(s->id, s->position, s->radius);
     evm[s->owner].insert(s->id);
   }
-
-  // float density = 0.02;
-  // float area = f->ships.size() / density;
-  // float radius = sqrt(area / M_PI);
-  // vector<ship_ptr> ships(f->ships.size());
-
-  // transform(f->ships.begin(), f->ships.end(), ships.begin(), [this](combid sid) {
-  //   ship_ptr s = get_ship(sid);
-  //   s->position = {INFINITY, INFINITY};
-  //   return s;
-  // });
-
-  // // todo: handle case where player has ships everywhere..?
-  // point p = f->position;
-  // float test_rad = 1;
-  // target_condition c(target_condition::owned, ship::class_id);
-  // c = c.owned_by(f->owner);
-  // while (search_targets_nophys(f->id, p, radius, c).size() > ceil(f->ships.size() / (float)10)) {
-  //   p = f->position + test_rad * utility::normv(utility::random_uniform(0, 2 * M_PI));
-  //   test_rad *= 1.2;
-  // }
-
-  // auto sample_position = [this, f, c, p, radius](float r) -> point {
-  //   point x;
-  //   int n = 0;
-  //   int count = 0;
-  //   do {
-  //     x = {utility::random_normal(p.x, radius), utility::random_normal(p.y, radius)};
-  //     n = search_targets_nophys(f->id, x, r, c).size();
-  //   } while (count++ < 100 && (terrain_at(x, r) > -1 || n > 0));
-
-  //   return x;
-  // };
-
-  // for (auto s : ships) {
-  //   s->position = sample_position(s->radius);
-  //   entity_grid.insert(s->id, s->position);
-  //   evm[s->owner].insert(s->id);
-  // }
 }
 
 void game_data::extend_universe(int i, int j, bool starting_area) {
@@ -576,13 +534,13 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   float ratio = settings.space_index_ratio;
   point ul(i * ratio, j * ratio);
   point br((i + 1) * ratio, (j + 1) * ratio);
-  point center = utility::scale_point(ul + br, 0.5);
-  float distance = utility::l2norm(center);
+  point center = scale_point(ul + br, 0.5);
+  float distance = l2norm(center);
   float bounty = exp(-pow(distance / settings.clset.galaxy_radius, 2));
-  bounty = utility::linsig(utility::random_normal(bounty, 0.2 * bounty));
+  bounty = linsig(random_normal(bounty, 0.2 * bounty));
   float nbuf = bounty * pow(ratio, 2) * settings.solar_density;
-  int n_solar = fmax(utility::random_normal(nbuf, 0.2 * nbuf), 0);
-  float var = utility::random_uniform(0.3, 2);
+  int n_solar = fmax(random_normal(nbuf, 0.2 * nbuf), 0);
+  float var = random_uniform(0.3, 2);
 
   if (starting_area) {
     n_solar = 10;
@@ -603,7 +561,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   vector<point> v(n_solar, point(0, 0));
 
   auto point_init = [ul, br]() {
-    return point(utility::random_uniform(ul.x, br.x), utility::random_uniform(ul.y, br.y));
+    return point(random_uniform(ul.x, br.x), random_uniform(ul.y, br.y));
   };
 
   for (auto &y : x) y = point_init();
@@ -620,15 +578,15 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
         // check against other solars
         for (int j = i + 1; j < all_points.size(); j++) {
           point d = x[i] - all_points[j];
-          if (utility::l2norm(d) < 50) {
-            x[i] += utility::normalize_and_scale(d, e);
+          if (l2norm(d) < 50) {
+            x[i] += normalize_and_scale(d, e);
           }
         }
 
         // check against terrain
         int tid = terrain_at(x[i], 50);
         if (tid > -1 && terrain[tid].triangle(x[i], 50) > -1) {
-          x[i] += utility::normalize_and_scale(x[i] - terrain[tid].center, e);
+          x[i] += normalize_and_scale(x[i] - terrain[tid].center, e);
         }
       }
     }
@@ -645,11 +603,11 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   auto avoid_point = [this, min_length](terrain_object &obj, point p, float rad) -> bool {
     auto j = obj.triangle(p, rad);
     if (j > -1) {
-      float test = utility::triangle_relative_distance(obj.center, obj.get_vertice(j, rad), obj.get_vertice(j + 1, rad), p);
+      float test = triangle_relative_distance(obj.center, obj.get_vertice(j, rad), obj.get_vertice(j + 1, rad), p);
       if (test > -1 && test < 1) {
         point d1 = obj.get_vertice(j) - obj.center;
         point d2 = obj.get_vertice(j + 1) - obj.center;
-        float shortest = fmin(utility::l2norm(d1), utility::l2norm(d2));
+        float shortest = fmin(l2norm(d1), l2norm(d2));
         if (test * shortest <= min_length) {
           return false;
         }
@@ -661,7 +619,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   };
 
   vector<solar_ptr> all_solars = filtered_entities<solar>();
-  int n_terrain = utility::random_int(4);
+  int n_terrain = random_int(4);
   float min_dist = 40;
   for (int i = 0; i < n_terrain; i++) {
     terrain_object obj;
@@ -672,8 +630,8 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
     while (count++ < 100 && !passed) {
       obj.center = point_init();
       passed = true;
-      for (auto p : all_solars) passed &= utility::l2norm(obj.center - p->position) > p->radius;
-      for (auto p : terrain) passed &= utility::l2norm(obj.center - p.second.center) > min_dist + 2 * min_length;
+      for (auto p : all_solars) passed &= l2norm(obj.center - p->position) > p->radius;
+      for (auto p : terrain) passed &= l2norm(obj.center - p.second.center) > min_dist + 2 * min_length;
     }
 
     if (!passed) continue;
@@ -683,9 +641,9 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
       if (!avoid_point(x.second, obj.center, min_dist + 2 * min_length)) continue;
 
     // generate random border
-    for (float angle = 0; angle < 2 * M_PI - 0.1; angle += utility::random_uniform(0.2, 0.5)) {
-      float rad = fmax(utility::random_normal(120, 20), min_length);
-      obj.border.push_back(obj.center + rad * utility::normv(angle));
+    for (float angle = 0; angle < 2 * M_PI - 0.1; angle += random_uniform(0.2, 0.5)) {
+      float rad = fmax(random_normal(120, 20), min_length);
+      obj.border.push_back(obj.center + rad * normv(angle));
     }
 
     // go through solars and make sure we don't cover them
@@ -702,9 +660,9 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
         point d1 = obj.get_vertice(i) - obj.center;
         point d2 = obj.get_vertice(i + 1) - obj.center;
 
-        obj.set_vertice(i, obj.center + utility::normalize_and_scale(d1, 0.9 * utility::l2norm(d1)));
-        obj.set_vertice(i + 1, obj.center + utility::normalize_and_scale(d2, 0.9 * utility::l2norm(d2)));
-        if (fmin(utility::l2norm(d1), utility::l2norm(d2)) < min_length) {
+        obj.set_vertice(i, obj.center + normalize_and_scale(d1, 0.9 * l2norm(d1)));
+        obj.set_vertice(i + 1, obj.center + normalize_and_scale(d2, 0.9 * l2norm(d2)));
+        if (fmin(l2norm(d1), l2norm(d2)) < min_length) {
           failed = true;
           break;
         }
@@ -779,40 +737,53 @@ void game_data::update_discover() {
 void game_data::rebuild_evm() {
   evm.clear();
 
-  for (auto pid : utility::hm_keys(players)) {
-    entity_grid[pid].start_blocking();
-    for (auto f : filtered_entities<fleet>(pid)) {
-      if (f->ships.empty()) continue;
+  for (auto pid : hm_keys(players)) {
+    // Build map of indices with vision radius, and see own entities
+    set<pair<grid::tree<combid>::K, float>> idx;
+    for (auto e : filtered_entities<game_object>(pid)) {
+      evm[pid].insert(e->id);
 
-      float r = get_ship(*f->ships.begin())->vision();
-      float rounding = r / 2;
+      float r = e->vision();
+
+      auto rounded_idx = [](point x, float r) -> pair<grid::tree<combid>::K, float> {
+        grid::tree<combid>::K idx;
+        float rounding = fmax(r / 2, 10);
+        idx.first = rounding * round(x.x / rounding);
+        idx.second = rounding * round(x.y / rounding);
+        return make_pair(idx, r);
+      };
 
       // Find indices covered by fleet
-      set<grid::tree<combid>::K> idx;
-      for (auto sid : f->ships) {
-        point x = get_ship(sid)->position;
-        x.x = rounding * round(x.x / rounding);
-        x.y = rounding * round(x.y / rounding);
-        idx.insert(grid::tree<combid>::make_key(x));
+      if (e->isa(solar::class_id)) {
+        idx.insert(rounded_idx(e->position, r));
+      } else if (e->isa(fleet::class_id)) {
+        fleet_ptr f = guaranteed_cast<fleet>(e);
+        for (auto sid : f->ships) {
+          ship_ptr s = get_ship(sid);
+          idx.insert(rounded_idx(get_ship(sid)->position, r));
+        }
       }
+    }
 
-      for (auto pid2 : utility::hm_keys(players)) {
-        if (pid2 == pid) continue;
+    entity_grid[pid].start_blocking();
+    for (auto pid2 : hm_keys(players)) {
+      if (pid2 == pid) continue;
 
-        for (auto k : idx) {
-          point x = grid::tree<combid>::map_key(k);
-          for (auto id : entity_grid[pid2].block_search(x, r)) {
-            game_object_ptr t = get_game_object(id);
+      for (auto info : idx) {
+        grid::tree<combid>::K k = info.first;
+        float r = info.second;
+        point x = grid::tree<combid>::map_key(k);
+        for (auto id : entity_grid[pid2].block_search(x, r)) {
+          game_object_ptr t = get_game_object(id);
 
-            // TODO: handle stealth
+          // TODO: handle stealth
 
-            // only see other players' entities if they are physical and active
-            if (t->isa(physical_object::class_id)) {
-              evm[pid].insert(id);
+          // only see other players' entities if they are physical and active
+          if (t->isa(physical_object::class_id)) {
+            evm[pid].insert(id);
 
-              // the player will remember seing this solar
-              if (t->isa(solar::class_id)) get_solar(id)->known_by.insert(pid);
-            }
+            // the player will remember seing this solar
+            if (t->isa(solar::class_id)) get_solar(id)->known_by.insert(pid);
           }
         }
       }
@@ -826,13 +797,23 @@ solar_ptr game_data::closest_solar(point p, idtype id) const {
 
   auto buf = filtered_entities<solar>(id);
   if (buf.size()) {
-    s = utility::value_min(
+    s = value_min(
         buf,
         (function<float(solar_ptr)>)[ this, p, id ](solar_ptr t)->float {
-          return utility::l2d2(t->position - p);
+          return l2d2(t->position - p);
         });
   }
   return s;
+}
+
+// Debug
+bool game_data::verify_entities() const {
+  for (auto x : entity) {
+    if (x.second->is_active() && !(l2norm(x.second->position) > 0 && l2norm(x.second->position) < 1e4)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 void game_data::increment(bool test_extend) {
@@ -876,7 +857,7 @@ void game_data::increment(bool test_extend) {
 
 void game_data::build_players(vector<server_cl_socket_ptr> clients) {
   // build player data
-  vector<sint> colbuf = utility::different_colors(clients.size());
+  vector<sint> colbuf = different_colors(clients.size());
   int i = 0;
   player p;
   for (auto x : clients) {
@@ -943,11 +924,11 @@ void game_data::build() {
     server::log("Created home solar " + s->id + " owned by " + to_string(s->owner));
   };
 
-  float angle = utility::random_uniform(0, 2 * M_PI);
+  float angle = random_uniform(0, 2 * M_PI);
   float np = players.size();
   for (auto &p : players) {
-    point p_base = utility::scale_point(utility::normv(angle), settings.clset.galaxy_radius);
-    point p_start = utility::random_point_polar(p_base, 0.2 * settings.clset.galaxy_radius);
+    point p_base = scale_point(normv(angle), settings.clset.galaxy_radius);
+    point p_start = random_point_polar(p_base, 0.2 * settings.clset.galaxy_radius);
     make_home_solar(p_start, p.first);
     angle += 2 * M_PI / np;
   }
@@ -1042,7 +1023,7 @@ void game_data::end_step() {
 
     // apply
     if (r.researching.length() > 0) {
-      if (utility::find_in(r.researching, r.available())) {
+      if (find_in(r.researching, r.available())) {
         research::tech &t = r.access(r.researching);
 
         // inefficiency for multiple research centers if research culture not developed
@@ -1119,7 +1100,7 @@ animation_tracker_info game_data::get_tracker(combid id) const {
 void game_data::log_bombard(combid a, combid b) {
   ship_ptr s = get_ship(a);
   solar_ptr t = get_solar(b);
-  int delay = utility::random_int(settings.clset.sim_sub_frames);
+  int delay = random_int(settings.clset.sim_sub_frames);
 
   animation_data x;
   x.t1 = get_tracker(s->id);
@@ -1149,7 +1130,7 @@ void game_data::log_bombard(combid a, combid b) {
 void game_data::log_ship_fire(combid a, combid b) {
   game_object_ptr s = get_game_object(a);
   ship_ptr t = get_ship(b);
-  int delay = utility::random_int(settings.clset.sim_sub_frames);
+  int delay = random_int(settings.clset.sim_sub_frames);
 
   animation_data x;
   x.t1 = get_tracker(s->id);
@@ -1159,7 +1140,7 @@ void game_data::log_ship_fire(combid a, combid b) {
   x.delay = delay;
 
   if (s->isa(ship::class_id)) {
-    ship_ptr sp = utility::guaranteed_cast<ship>(s);
+    ship_ptr sp = guaranteed_cast<ship>(s);
     x.magnitude = sp->stats[sskey::key::ship_damage];
   } else {
     x.magnitude = 1;
@@ -1187,7 +1168,7 @@ void game_data::log_ship_fire(combid a, combid b) {
 void game_data::log_ship_destroyed(combid a, combid b) {
   game_object_ptr s = get_game_object(a);
   ship_ptr t = get_ship(b);
-  int delay = utility::random_int(settings.clset.sim_sub_frames);
+  int delay = random_int(settings.clset.sim_sub_frames);
 
   // text log
   string self_identifier = s->isa(ship::class_id) ? get_ship(a)->ship_class : "solar";
@@ -1248,12 +1229,12 @@ float game_data::solar_order_level(combid id) const {
   for (auto sp : solars) m += sp->position;
   m = 1 / N * m;
 
-  for (auto sp : solars) sd += utility::l2d2(sp->position - m);
+  for (auto sp : solars) sd += l2d2(sp->position - m);
   sd = sqrt(1 / N * sd);
 
   // Calculate relative distance
   float rel_dist = 0;
-  if (sd > 0) rel_dist = utility::l2norm(s->position - m) / sd;
+  if (sd > 0) rel_dist = l2norm(s->position - m) / sd;
 
   // Calculate total population and number of solars
   float pop = 0;
@@ -1261,7 +1242,7 @@ float game_data::solar_order_level(combid id) const {
   pop = fmax(pop, 1);
 
   // Expression for order
-  return (1 + modifier) / (pow(N, 0.5) * pow(pop, 0.25) * utility::gaussian_kernel(rel_dist, 1 + modifier));
+  return (1 + modifier) / (pow(N, 0.5) * pow(pop, 0.25) * gaussian_kernel(rel_dist, 1 + modifier));
 }
 
 bool game_data::allow_add_fleet(idtype pid) const {

@@ -63,7 +63,7 @@ class game_data : public virtual game_base_data {
 
   void register_entity(game_object_ptr p);
   void remove_units();
-  fleet_ptr generate_fleet(point p, idtype i, command c, std::list<combid> sh, bool ignore_limit = false);
+  fleet_ptr generate_fleet(point p, idtype i, command c, std::list<combid> sh);
   void relocate_ships(command c, std::set<combid> &sh, idtype owner);
 
   // game steps
@@ -82,5 +82,8 @@ class game_data : public virtual game_base_data {
   void deregister_entity(combid id);
   void distribute_ships(fleet_ptr f);
   void update_research_facility_level();
+
+  // Debug
+  bool verify_entities() const;
 };
 };  // namespace st3
