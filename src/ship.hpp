@@ -43,7 +43,6 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   bool activate;
   bool skip_head;
   bool force_refresh;
-  path_t private_path;
   float hpos;
   combid current_target;
   float collision_damage;
@@ -52,8 +51,7 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   std::list<combid> local_enemies;
   std::list<combid> local_friends;
   std::list<combid> local_all;
-  std::vector<float> free_angle;
-  // bool check_space(float a);
+  bool ships_blocking_center;
 
   // game_object
   void pre_phase(game_data *g);

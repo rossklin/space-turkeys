@@ -12,6 +12,7 @@
 
 using namespace std;
 using namespace st3;
+using namespace utility;
 
 const string ship::class_id = "ship";
 const int ship::na = 10;
@@ -180,6 +181,12 @@ void ship::pre_phase(game_data *g) {
   // force from drive
   force = thrust * utility::normv(angle);
 
+  // Thrusters towards center
+  if (has_fleet() && !ships_blocking_center) {
+    float thr_a = 0.2;
+    force += normalize_and_scale(g->get_fleet(fleet_id)->position - position, stats[sskey::key::mass] * thr_a);
+  }
+
   // force from neighbours
   apply_ships(g, neighbours, [this, dt](ship_ptr s) {
     // ignore same owner, different fleet
@@ -197,7 +204,7 @@ void ship::pre_phase(game_data *g) {
     // transform to zero momentum frame
     point z = 1 / (m1 + m2) * (m1 * v1 + m2 * v2);
     point V1 = v1 - z;
-    float beta = 0.2;
+    float beta = 0.1;
     float ad = utility::point_angle(x2 - x1);
     float av = utility::point_angle(V1);
     float theta = utility::angle_difference(ad, av);
@@ -208,7 +215,12 @@ void ship::pre_phase(game_data *g) {
 
     // apply nessecary force to change velocity in one iteration
     point dvel = u1 - velocity;
-    force += m1 / dt * dvel;
+    point dforce = m1 / dt * dvel;
+
+    // Collisions can not cause more than unit acceleration
+    if (l2norm(dforce) / m1 > 1) dforce *= m1 / l2norm(dforce);
+
+    force += dforce;
 
     // collision damage
     if (s->owner != owner) {
@@ -255,14 +267,17 @@ void ship::update_data(game_data *g) {
   if (!has_fleet()) return;
 
   fleet_ptr f = g->get_fleet(fleet_id);
+  if (g->first_intersect(position, f->position, radius) > -1) {
+    // Fleet center is no longer in sight, request a helper fleet
+    fleet_id = f->request_helper_fleet(g, id);
+    f = g->get_fleet(fleet_id);
+  }
+
   activate = f->stats.converge;
 
   // Update path variables
-  private_path.clear();
   if (utility::l2norm(f->heading - position) < 2 * radius) {
     f->pop_heading = true;
-  } else if (g->first_intersect(position, f->heading, radius) > -1) {
-    private_path = g->get_path(position, f->heading, radius);
   }
 
   // Define policy variables
@@ -273,43 +288,36 @@ void ship::update_data(game_data *g) {
   // Calculate angle and speed
   float fleet_target_angle = utility::point_angle(f->heading - f->position);
 
-  if (private_path.size()) {
-    target_angle = utility::point_angle(private_path.front() - position);
-    target_speed = max_speed();
-  } else {
-    target_angle = fleet_target_angle;
-    target_speed = f->stats.speed_limit;
+  target_angle = fleet_target_angle;
+  target_speed = f->stats.speed_limit;
 
-    if (hpos < -1) {
-      // behind fleet
-      target_speed = max_speed();
-    } else if (hpos > 1) {
-      // ahead of fleet
-      target_speed = 0.9 * f->stats.speed_limit;
-    }
+  if (hpos < -1) {
+    // behind fleet
+    target_speed = max_speed();
+  } else if (hpos > 1) {
+    // ahead of fleet
+    target_speed = 0.9 * f->stats.speed_limit;
   }
 
   // Update neighbours, friends and enemies, never require more than 10 neighbours
   float nrad = interaction_radius();
-  neighbours = g->search_targets_nophys(
+  local_friends = g->search_targets_nophys(
       owner,
       id,
       position,
       nrad,
-      target_condition(target_condition::any_alignment, ship::class_id).owned_by(owner),
+      target_condition(target_condition::owned, ship::class_id).owned_by(owner),
       10);
 
-  local_enemies.clear();
-  local_friends.clear();
+  local_enemies = g->search_targets_nophys(
+      owner,
+      id,
+      position,
+      nrad,
+      target_condition(target_condition::enemy, ship::class_id).owned_by(owner),
+      10);
 
-  // precompute enemies and friends
-  apply_ships(g, neighbours, [this](ship_ptr s) {
-    if (s->owner == owner) {
-      local_friends.push_back(s->id);
-    } else {
-      local_enemies.push_back(s->id);
-    }
-  });
+  neighbours = append<list<combid>>(local_friends, local_enemies);
 
   // modify speed and angle to engage local enemies
   if (engage) {
@@ -360,6 +368,17 @@ void ship::update_data(game_data *g) {
 
   target_speed = utility::l2norm(tbase);
   target_angle = utility::point_angle(tbase);
+
+  // Check if we use directional thrusters to go towards fleet center
+  ships_blocking_center = any(fmap<list<bool>>(
+      local_friends,
+      (function<bool(combid)>)[ this, g, f ](combid sid) {
+        ship_ptr s = g->get_ship(sid);
+        bool can_block = dpoint2line(position, f->position, s->position) < s->radius;
+        bool close = l2norm(s->position - position) < 1.3 * (radius + s->radius);
+        bool blocking_side = l2norm(f->position - s->position) < l2norm(f->position - position);
+        return can_block && close && blocking_side;
+      }));
 }
 
 // 1. Clean out missing neighbours
