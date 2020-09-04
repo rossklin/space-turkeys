@@ -66,7 +66,7 @@ void setup_fleet_for(game_ptr g, idtype pid, point at, point targ, hm_t<string, 
   c.policy = fleet::policy_aggressive;
 
   g->register_entity(w);
-  g->generate_fleet(at, pid, c, ships, true);
+  g->generate_fleet(at, pid, c, ships);
   for (auto sid : ships) g->get_ship(sid)->states.erase("landed");
 }
 
