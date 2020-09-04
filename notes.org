@@ -1,6 +1,56 @@
 * Notes test game 2020-08-14
+** Bad helper fleets generated
+  Somehow, executing reaches ship.cpp:277 even though condition
+  g->first_intersect(position, f->position, radius) > -1
+  evaluates as false in debugger.
+
+  Seems to happen when ships are adjacent to terrain, maybe some kind of rounding error?
+
+  Causes creation of a large number of extra helper fleets at same location.
+** [done] Server hangs somewhere during simulation phase after updated rebuild_evm
+  Fixed. 
+  fleet::request_helper_fleet was returning fleet_id without reassigning ship id, 
+  causing invalid reference and empty fleets running update data.
+
+  Guarantee never running fleet::update_data on empty fleet.
+  ship::pre_phase -> request_helper_fleet may generate empty fleets.
+  fleet::give_commands may also generate empty fleets.
+
+Fleet with invalid position detected after pre_phase.
+Note that choice step can generate empty fleets, which may have NaN position?
+How can this create ships with NaN position?
+
+All ships have been verified after:
+  pre_phase, move, generate_fleet and request_helper_fleet.
+Still, in start of increment, at rebuild_evm, some ships have position {NaN, NaN}.
+Possible culprits are: 
+  interactions, post_phase, remove_units.
+Maybe just print debug with a game_data::verify_ships?
+
+Floating point error in block_search again, caused by uninitialized ship positions.
+
+Check if request_helper_fleet is somehow called after fleet is created but before distribute_ships is called, 
+causing ships to be removed from fleet list and never positioned.
+
+game_data::generate_fleet is only called from solar::give_commands. ship::on_liftoff is called afterwards by solar::give_comands.
+
+Choice phase
+apply_choice -> solar::give_commands 
+  -> generate_fleet -> distribute_ships
+  -> ship::on_liftoff
+
+Simulation phase
+increment -> ship::pre_phase -> ship::update_data -> request_helper_fleet
+
+Distribute ships donut for player 1, solid ball for player 2
+Collisions causing some ships to shoot very far away
+
+** Implement fleet::request_helper_fleet
+  Multiple helper fleets generated with one ship, instead of joining existing helper fleets.
+  Helper fleets generated though no terrain between ships and fleet center.
+** Sometimes client starts with sfml view dims set to NaN for some reason
 ** Issue with pathing again, path was suboptimal and passed through terrain
-** game_data::increment when many ships around terrain
+** [done] game_data::increment slow when many ships around terrain
   Caused by ship::update_data calling get_path.
   This happens when there is terrain between the ship and the fleet's heading point.
 
