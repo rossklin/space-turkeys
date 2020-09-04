@@ -265,6 +265,9 @@ void server::game_handler(game_setup c, game_data &g) {
       return;
     }
 
+    // Remove units flagged during choice step
+    g.remove_units();
+
     // simulation
     simulation_step(c, g);
 
