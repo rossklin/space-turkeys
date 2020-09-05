@@ -1376,6 +1376,7 @@ void game::clear_selectors() {
   for (auto x : all_selectors()) {
     x->seen = false;
     x->owned = false;
+    x->commands.clear();
   }
 
   comid = 0;
