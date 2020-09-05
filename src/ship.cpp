@@ -466,11 +466,7 @@ void ship::move(game_data *g) {
   velocity += dt / stats[sskey::key::mass] * force;
   position += dt * velocity;
 
-  // Push out of terrain
-  int tid;
-  if ((tid = g->terrain_at(position, radius)) > -1) {
-    position = g->terrain[tid].closest_exit(position, radius);
-  }
+  push_out_of_terrain(g);
 
   g->entity_grid[owner].move(id, position);
 }

@@ -87,12 +87,7 @@ void fleet::pre_phase(game_data *g) {
 void fleet::move(game_data *g) {
   // linear extrapolation of position estimate
   if (!is_idle()) position += stats.speed_limit * normv(point_angle(heading - position));
-
-  // Push out of terrain
-  int tid;
-  if ((tid = g->terrain_at(position, radius)) > -1) {
-    position = g->terrain[tid].closest_exit(position, radius);
-  }
+  push_out_of_terrain(g);
 }
 
 void fleet::post_phase(game_data *g) {}
