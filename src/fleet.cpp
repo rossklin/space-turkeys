@@ -272,7 +272,7 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
   }
 
   radius = g->settings.fleet_default_radius;
-  position = scale_point(p, 1 / (float)n);
+  // position = scale_point(p, 1 / (float)n);
 
   // // need to update fleet data?
   // bool should_update = force_refresh || random_uniform() < 1 / (float)fleet::update_period;

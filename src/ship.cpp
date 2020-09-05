@@ -275,11 +275,6 @@ void ship::update_data(game_data *g) {
 
   activate = f->stats.converge;
 
-  // Update path variables
-  if (utility::l2norm(f->heading - position) < 2 * radius) {
-    f->pop_heading = true;
-  }
-
   // Define policy variables
   bool travel = f->com.policy == fleet::policy_maintain_course;
   bool engage = f->com.policy == fleet::policy_aggressive && tags.count("spacecombat");
