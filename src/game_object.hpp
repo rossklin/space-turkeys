@@ -42,6 +42,8 @@ class game_object {
   virtual bool is_active();
   virtual bool isa(std::string c);
   virtual game_object_ptr clone() = 0;
+
+  void push_out_of_terrain(game_data *g);
 };
 
 class commandable_object : public virtual game_object {

@@ -77,6 +77,14 @@ game_object_ptr game_object::deserialize(sf::Packet &p) {
   return success ? res : 0;
 }
 
+void game_object::push_out_of_terrain(game_data *g) {
+  int tid;
+  float buf_rad = 1.01 * radius;
+  if ((tid = g->terrain_at(position, buf_rad)) > -1) {
+    position = g->terrain[tid].closest_exit(position, buf_rad);
+  }
+}
+
 // commandable object
 bool commandable_object::is_commandable() {
   return true;
