@@ -1,15 +1,9 @@
-* Notes test game 2020-08-14
+* Done
 ** [done] Ships can't see enemy ships
-** One ship teleported to edge of other terrain
-  Maybe related to new push out of terrain mechanism
-** Client hit "Attempting to build invalid command"
-  client::game::build_choice row 1016
-  That means an entity_selector listed a command id which did not refer to a registered command_selector.
-  No interface action was taken by client, just auto commited default state from server.
-  Had many helper fleets. 
-** Fleet path does not include first vertice when fleet center is adjacent to terrain.
-  Causes ships to get stuck heading into wall
-** Fleet center gets stuck against terrain wall
+** [done] Fleet path does not include first vertice when fleet center is adjacent to terrain.
+  Causes ships to get stuck heading into wall.
+  Maybe caused by popping path head when first ship hits?
+** [done] Fleet center gets stuck against terrain wall
   Suggestion: make terrain hard, neither fleets nor ships can be inside terrain.
 
   Ships gradually spill around corner, creating helper fleets.
@@ -72,11 +66,10 @@ increment -> ship::pre_phase -> ship::update_data -> request_helper_fleet
 Distribute ships donut for player 1, solid ball for player 2
 Collisions causing some ships to shoot very far away
 
-** Implement fleet::request_helper_fleet
+** [done] Implement fleet::request_helper_fleet
   Multiple helper fleets generated with one ship, instead of joining existing helper fleets.
   Helper fleets generated though no terrain between ships and fleet center.
-** Sometimes client starts with sfml view dims set to NaN for some reason
-** Issue with pathing again, path was suboptimal and passed through terrain
+** [done] Issue with pathing again, path was suboptimal and passed through terrain
 ** [done] game_data::increment slow when many ships around terrain
   Caused by ship::update_data calling get_path.
   This happens when there is terrain between the ship and the fleet's heading point.
@@ -84,19 +77,34 @@ Collisions causing some ships to shoot very far away
   Consider not letting ships call get_path. Implement ship to fleet merging with thrusters, 
   then just head for fleet. If ships get too separated (ie cluster every N frames), 
   split to a new fleet instead with same command.
-** Looks weird when terrain "spawns" on top of ships
-** Distribute ships packs ships in weird discrete patterns and blocks the solar
 ** [done] Optimize client_game::reload_data (causes lag in next_sim_frame)
   Avoid using clone, maybe ok to just take over ref?
   Do something about fixed stars ie don't add for each ship but per fleet
   Apparently deregister entity is taking a lot of time
   Also push_back when building enemy clusters is slow
-** Fix partial invalidation for GUI components (ie scrolling list lowers frame rate to 10 fps)
-** Simulation progress bar resets to 0 when data runs out
-** Generated frames label only updated when playing
-** Reload data takes ~1 s with 500 ships in air, running sim on server takes some secs, show load in progress bar
-** Ships in fleet need to come together when they get disjointed
+** [done] Generated frames label only updated when playing
+** [done] Reload data takes ~1 s with 500 ships in air, running sim on server takes some secs, show load in progress bar
+** [done] Ships in fleet need to come together when they get disjointed
 Perhaps check if there is empty space in direction of fleet center? Add "thrusters"?
+* Notes test game 2020-08-14
+** Need to clean up helper fleets at end of simulation
+  I.e. gather all helper fleets in sight
+** One ship teleported to edge of other terrain
+  Maybe related to new push out of terrain mechanism.
+  Also noted some fleets not pushed out of terrain correctly.
+** Client hit "Attempting to build invalid command"
+  client::game::build_choice row 1016
+  That means an entity_selector listed a command id which did not refer to a registered command_selector.
+  No interface action was taken by client, just auto commited default state from server.
+  Had many helper fleets. 
+** prune_path not working correctly
+  Misses initial point sometimes.
+  Or maybe just turns out that way after fleet moves?
+** Sometimes client starts with sfml view dims set to NaN for some reason
+** Looks weird when terrain "spawns" on top of ships
+** Distribute ships packs ships in weird discrete patterns and blocks the solar
+** Fix partial invalidation for GUI components (ie scrolling list lowers frame rate to 10 fps)
+** Simulation progress bar resets to 0 when data runs out or when paused?
 ** The ship combat equations
 FlexWeight = 1 x (angle_diff(a, angle(p2 - p1)) < Pi x CannonFlex)
 AccuracyCheck = Accuracy x FlexWeight x 30 / (|p2-p1| - 1)
