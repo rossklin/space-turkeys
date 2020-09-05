@@ -117,9 +117,7 @@ path_t prune_path(const game_data &g, path_t x, float r) {
       }
     }
 
-    for (int k = i + 1; k < j - 1; k++) {
-      x.erase(x.begin() + i + 1);
-    }
+    if (j > i + 2) x.erase(x.begin() + i + 1, x.begin() + j - 1);
   }
 
   return x;
