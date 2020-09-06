@@ -346,6 +346,24 @@ void ship::update_data(game_data *g) {
     target_speed = max_speed();
   }
 
+  // Alter angle to avoid hitting wall
+  auto test_angle = [this, g](float a) { return g->in_terrain(position + 2 * radius * normv(a)); };
+
+  if (test_angle(target_angle)) {
+    float upd_angle = target_angle;
+    float delta = 0;
+    do {
+      if (delta > 0) {
+        delta = -delta;
+      } else {
+        delta = -delta + M_PI / 8;
+      }
+      upd_angle = target_angle + delta;
+    } while (test_angle(upd_angle) && fabs(angle_difference(upd_angle, target_angle)) < 7 * M_PI / 16);
+
+    if (!test_angle(upd_angle)) target_angle = upd_angle;
+  }
+
   // let neighbours influence angle and speed
   point tbase = target_speed * utility::normv(target_angle);
   float influence_factor = 0.5;
