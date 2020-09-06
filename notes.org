@@ -87,17 +87,41 @@ Collisions causing some ships to shoot very far away
 ** [done] Ships in fleet need to come together when they get disjointed
 Perhaps check if there is empty space in direction of fleet center? Add "thrusters"?
 * Notes test game 2020-08-14
-** Need to clean up helper fleets at end of simulation
+** Movement issues
+   Fleets move past heading without popping
+   Ships do not change direction when fleet passes checkpoint
+   In some cases all ships seem to turn wrong way when avoiding terrain
+** Must allow client to create fleets agin
+** Waypoint becomes impossible to select after first select
+** [done] New terrain::contains does not work, always returns false
+   Parameter order mismatch in terrain_object::contains -> point_between
+   Logic error in contains
+** [impl] Ships need to avoid flying into terrain
+** [impl] Need to clean up helper fleets at end of simulation
   I.e. gather all helper fleets in sight
-** One ship teleported to edge of other terrain
+** [impl] One ship teleported to edge of other terrain
+   in_terrain:
+   Instead of checking triangles, just count intersects over whole border.
+   Calculate bounds of polygon. 
+   If outside bounds, return false.
+   If inside bounds, set a decent inf point and count all border intersects.
+   This should eliminate the worst rounding errors.
+   
+  Perhaps rounding error in in_triangle -> line_intersect. 
+  Testing different def of infinity point.
+
   Maybe related to new push out of terrain mechanism.
   Also noted some fleets not pushed out of terrain correctly.
-** Client hit "Attempting to build invalid command"
+** [test] Client hit "Attempting to build invalid command"
+  Possible fix: clear command refs in client::game::clear_selectors
+
   client::game::build_choice row 1016
   That means an entity_selector listed a command id which did not refer to a registered command_selector.
   No interface action was taken by client, just auto commited default state from server.
   Had many helper fleets. 
-** prune_path not working correctly
+** [test] prune_path not working correctly
+  Verify
+
   Misses initial point sometimes.
   Or maybe just turns out that way after fleet moves?
 ** Sometimes client starts with sfml view dims set to NaN for some reason
