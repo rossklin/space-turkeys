@@ -143,6 +143,9 @@ rapidjson::Document *get_json(std::string filename);
 /* POINT MATHS */
 /* **************************************** */
 
+point point_min(point a, point b);
+point point_max(point a, point b);
+
 std::vector<point> cluster_points(std::vector<point> x, int n = 10, int rep = 10, float h = 50);
 
 std::string point2string(point p);

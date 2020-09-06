@@ -171,8 +171,17 @@ float utility::angle_distance(float a, float b) {
   return fabs(angle_difference(a, b));
 }
 
+point utility::point_min(point a, point b) {
+  return {fmin(a.x, b.x), fmin(a.y, b.y)};
+}
+
+point utility::point_max(point a, point b) {
+  return {fmax(a.x, b.x), fmax(a.y, b.y)};
+}
+
 bool utility::in_triangle(point a, point b, point c, point x) {
-  point p_inf(min(a.x, min(b.x, c.x)) - 1, min(a.y, min(b.y, c.y)) - 1);
+  float norm = fmax(l2norm(a), fmax(l2norm(b), fmax(l2norm(c), l2norm(x))));
+  point p_inf(min(a.x, min(b.x, c.x)) - 10 * norm, min(a.y, min(b.y, c.y)) - 10 * norm);
   int count = 0;
   count += line_intersect(a, b, x, p_inf);
   count += line_intersect(b, c, x, p_inf);
