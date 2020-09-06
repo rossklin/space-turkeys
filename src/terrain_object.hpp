@@ -15,6 +15,7 @@ struct terrain_object {
 
   std::pair<int, int> intersects_with(terrain_object b, float r = 0) const;
   int triangle(point p, float r) const;
+  bool contains(point p, float r) const;
   std::vector<point> get_border(float r) const;
   point closest_exit(point p, float r) const;
 };
