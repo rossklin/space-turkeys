@@ -442,6 +442,26 @@ combid fleet::request_helper_fleet(game_data *g, combid sid) {
   return f->id;
 }
 
+void fleet::gather_helper_fleets(game_data *g) {
+  if (helper_fleets.empty()) return;
+
+  for (auto fid : helper_fleets) {
+    if (!g->entity_exists(fid)) continue;
+
+    fleet_ptr f = g->get_fleet(fid);
+    f->gather_helper_fleets(g);
+
+    auto sids = f->ships;
+    for (auto sid : sids) {
+      f->remove_ship(sid);
+      ships.insert(sid);
+      g->get_ship(sid)->fleet_id = id;
+    }
+  }
+
+  update_data(g, true);
+}
+
 void fleet::check_waypoint(game_data *g) {
   // set to idle and 'land' ships if converged to waypoint
   if (identifier::get_type(com.target) == waypoint::class_id && com.action == fleet_action::go_to) {
