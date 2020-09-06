@@ -30,7 +30,8 @@ class game_base_data {
   bool entity_exists(combid id) const;
   void add_entity(game_object_ptr e);
   void remove_entity(combid id);
-  // void rehash_grid();
+  idtype terrain_at(point p, float r) const;
+  bool in_terrain(point p) const;
 
   template <typename T>
   std::vector<typename T::ptr> all_entities(idtype pid = game_object::any_owner) const {

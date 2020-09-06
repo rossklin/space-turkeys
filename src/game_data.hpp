@@ -47,7 +47,6 @@ class game_data : public virtual game_base_data {
   int first_intersect(point a, point b, float r) const;
   path_t get_path(point a, point b, float r) const;
   void rebuild_evm();
-  idtype terrain_at(point p, float r) const;
   void extend_universe(int i, int j, bool starting_area = false);
   void discover(point x, float r, bool starting_area = false);
   void update_discover();

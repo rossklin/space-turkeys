@@ -44,6 +44,17 @@ void game_base_data::clear_entities() {
   entity_grid.clear();
 }
 
+idtype game_base_data::terrain_at(point p, float r) const {
+  for (auto &x : terrain) {
+    if (x.second.contains(p, r)) return x.first;
+  }
+  return -1;
+}
+
+bool game_base_data::in_terrain(point p) const {
+  return terrain_at(p, 0) > -1;
+}
+
 // // Max fleets = 2 + 2 * (nr of solars with developed defense)
 // int game_base_data::get_max_fleets(idtype pid) const {
 //   int res = 2;

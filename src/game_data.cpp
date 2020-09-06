@@ -99,14 +99,6 @@ list<combid> game_data::search_targets(combid self_id, point p, float r, target_
   return res;
 }
 
-idtype game_data::terrain_at(point p, float r) const {
-  for (auto &x : terrain) {
-    int j = x.second.triangle(p, r);
-    if (j > -1) return x.first;
-  }
-  return -1;
-}
-
 // remove unnecessary path nodes caused by stacked horizons
 path_t prune_path(const game_data &g, path_t x, float r) {
   int i, j;
@@ -583,7 +575,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
 
         // check against terrain
         int tid = terrain_at(x[i], 50);
-        if (tid > -1 && terrain[tid].triangle(x[i], 50) > -1) {
+        if (tid > -1) {
           x[i] += normalize_and_scale(x[i] - terrain[tid].center, e);
         }
       }
@@ -705,7 +697,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   // check waypoints so they aren't covered
   for (auto w : filtered_entities<waypoint>()) {
     int tid = terrain_at(w->position, 0);
-    if (tid > -1 && terrain[tid].triangle(w->position, 0) > -1) {
+    if (tid > -1) {
       deregister_entity(w->id);
       break;
     }
@@ -992,6 +984,9 @@ void game_data::end_step() {
   for (auto i : remove) {
     deregister_entity(i);
   }
+
+  // Gather helper fleets
+  for (auto f : filtered_entities<fleet>()) f->gather_helper_fleets(this);
 
   // clear log
   for (auto &x : players) x.second.log.clear();
