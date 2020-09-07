@@ -1168,25 +1168,25 @@ void game::reload_data(game_base_data &g, bool use_animations) {
   }
   for (auto id : rbuf) deregister_entity(id);
 
-  // fix fleet positions
-  for (auto f : get_all<fleet>()) {
-    point p(0, 0);
-    for (auto sid : f->get_ships()) {
-      if (entity_exists(sid)) {
-        p += get_selector(sid)->position;
-      } else {
-        f->ships.erase(sid);
-        cout << "WARNING: " << sid << " missing when updating " << f->id << " position" << endl;
-      }
-    }
+  // // fix fleet positions
+  // for (auto f : get_all<fleet>()) {
+  //   point p(0, 0);
+  //   for (auto sid : f->get_ships()) {
+  //     if (entity_exists(sid)) {
+  //       p += get_selector(sid)->position;
+  //     } else {
+  //       f->ships.erase(sid);
+  //       cout << "WARNING: " << sid << " missing when updating " << f->id << " position" << endl;
+  //     }
+  //   }
 
-    if (f->ships.size()) {
-      f->position = utility::scale_point(p, 1 / (float)f->get_ships().size());
-    } else {
-      cout << "WARNING: " << f->id << " removed because all ships were missing" << endl;
-      deregister_entity(f->id);
-    }
-  }
+  //   if (f->ships.size()) {
+  //     f->position = utility::scale_point(p, 1 / (float)f->get_ships().size());
+  //   } else {
+  //     cout << "WARNING: " << f->id << " removed because all ships were missing" << endl;
+  //     deregister_entity(f->id);
+  //   }
+  // }
 
   // update commands for owned fleets
   for (auto f : get_all<fleet>()) {
