@@ -350,18 +350,18 @@ void ship::update_data(game_data *g) {
   auto test_angle = [this, g](float a) { return g->in_terrain(position + 2 * radius * normv(a)); };
 
   if (test_angle(target_angle)) {
-    float upd_angle = target_angle;
-    float delta = 0;
-    do {
-      if (delta > 0) {
-        delta = -delta;
-      } else {
-        delta = -delta + M_PI / 8;
-      }
-      upd_angle = target_angle + delta;
-    } while (test_angle(upd_angle) && fabs(angle_difference(upd_angle, target_angle)) < 7 * M_PI / 16);
+    float fleet_angle = point_angle(f->position - position);
+    float delta = angle_difference(fleet_angle, target_angle);
+    int dir = signum(delta);
 
-    if (!test_angle(upd_angle)) target_angle = upd_angle;
+    float upd_angle;
+    for (float step = M_PI / 8; step < M_PI / 2 && fabs(step) <= fabs(delta); step += M_PI / 8) {
+      upd_angle = target_angle + dir * step;
+      if (!test_angle(upd_angle)) {
+        target_angle = upd_angle;
+        break;
+      }
+    }
   }
 
   // let neighbours influence angle and speed
