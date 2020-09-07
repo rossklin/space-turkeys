@@ -1034,6 +1034,8 @@ void game_data::end_step() {
       }
     }
   }
+
+  remove_units();
 }
 
 // load data tables and confirm data references
