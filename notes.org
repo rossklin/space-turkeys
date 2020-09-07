@@ -87,10 +87,23 @@ Collisions causing some ships to shoot very far away
 ** [done] Ships in fleet need to come together when they get disjointed
 Perhaps check if there is empty space in direction of fleet center? Add "thrusters"?
 * Notes test game 2020-08-14
+** Alternative movement approach
+   1. Fleet calculates path to target, using largest radius possible up to area filled by ships
+   2. All ships calculate position relative to fleet center
+   3. All ships copy fleet path, adding position adjustment rel center unless blocked by terrain
+   4. All ships not in sight of fleet center prepend path to first point where fleet center is in sight
+   5. Ships pop path nodes when they are "ahead" of the node, regardless of distance
+   6. Maybe ships even tell fleet to wait if it gets out of sight?
+   
+   Note distribute_ships should never place ships out of sight of center..?
+
+   Advantage: all ships will take same path and avoid terrain
 ** Movement issues
-   Fleets move past heading without popping
+   [test] Fleets move past heading without popping
    Ships do not change direction when fleet passes checkpoint
    In some cases all ships seem to turn wrong way when avoiding terrain
+** Update fleet position in give_commands
+** Client should delete all fleets in reload_data?
 ** Must allow client to create fleets agin
 ** Waypoint becomes impossible to select after first select
 ** [done] New terrain::contains does not work, always returns false
