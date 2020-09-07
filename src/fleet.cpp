@@ -86,7 +86,10 @@ void fleet::pre_phase(game_data *g) {
 
 void fleet::move(game_data *g) {
   // linear extrapolation of position estimate
-  if (!is_idle()) position += stats.speed_limit * normv(point_angle(heading - position));
+  if (!is_idle()) {
+    float d = fmin(stats.speed_limit, l2norm(heading - position));
+    position += normalize_and_scale(heading - position, d);
+  }
   push_out_of_terrain(g);
 }
 
