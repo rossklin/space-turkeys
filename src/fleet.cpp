@@ -399,7 +399,7 @@ void fleet::check_action(game_data *g) {
       should_refresh |= buf != stats.converge;
       stats.converge = buf;
 
-      if (buf && identifier::get_type(com.target) == "waypoint") {
+      if (identifier::get_type(com.target) == "waypoint" && l2norm(stats.target_position - position) < 25) {
         // Arrived at waypoint, set idle
         set_idle();
       }
