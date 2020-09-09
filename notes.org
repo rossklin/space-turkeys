@@ -102,10 +102,14 @@ Perhaps check if there is empty space in direction of fleet center? Add "thruste
    Just precompute a sloppy vector field for navigating around the
    terrain, as in ST2?
 ** Alternative movement approach3
+   Only push towards fleet center if in sight
+   Visualize fleet private paths in client to debug why some paths are still weird
+
+   Some ships still stick on terrain, check which pathing policy they use   
+
+   Note debugger does not handle breakpoint conditional on ship id unless strcmp
    Should build_private_path cancel when close to fleet even if fleet has a path?
-   Consider giving ships individual fleet_path_index
-   Save and serialize ship pathing policy choice to visualize for debug in client
-   Client is still messing up fleet position somehow
+   [fixed] Client is still messing up fleet position somehow
 
    [impl] Ships that are not in vision of any path node call get_path to fleet center (ie when splitting a fleet adjacent to terrain) 
    [impl] Ships need to check if fleet is idle and stop
