@@ -46,6 +46,7 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   float hpos;
   combid current_target;
   float collision_damage;
+  path_t private_path;
 
   std::list<combid> neighbours;
   std::list<combid> local_enemies;
@@ -84,5 +85,13 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   bool has_fleet();
   float evasion_check();
   float accuracy_check(ship_ptr a);
+
+ protected:
+  // Pathing alternatives
+  bool follow_fleet_heading(game_data *g);
+  bool follow_fleet_trail(game_data *g);
+  bool follow_private_path(game_data *g);
+  bool build_private_path(game_data *g);
+  bool exit_terrain(game_data *g);
 };
 };  // namespace st3

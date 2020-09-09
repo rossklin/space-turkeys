@@ -252,6 +252,111 @@ float ship::max_speed() {
   return base_stats.stats[sskey::key::thrust] / (pow(radius, 2) * friction);
 }
 
+// Attempt to adjust the target_angle to follow the fleet's path trail
+bool ship::follow_fleet_trail(game_data *g) {
+  fleet_ptr f = g->get_fleet(fleet_id);
+  if (f->path.empty()) return false;
+
+  int i;
+  for (i = f->heading_index; i < f->path.size(); i++) {
+    if (g->first_intersect(position, f->path[i], 0) > -1) break;
+  }
+
+  int idx;
+  if (i > f->heading_index) {
+    idx = i - 1;
+  } else {
+    // First heading point not in sight, look at path history
+    for (i = f->heading_index - 1; i >= 0; i--) {
+      if (g->first_intersect(position, f->path[i], 0) == -1) break;
+    }
+
+    if (i >= 0) {
+      idx = i;
+    } else {
+      idx = -1;
+    }
+  }
+
+  if (idx >= 0) {
+    target_angle = point_angle(f->path[idx - 1] - position);
+    target_speed = max_speed();
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// Attempt to follow private path
+bool ship::follow_private_path(game_data *g) {
+  if (private_path.empty()) return false;
+
+  point x = private_path.front();
+  if (l2norm(x - position) < 2 * radius || scalar_mult(x - position, normv(angle)) > 0) {
+    private_path.erase(private_path.begin());
+  }
+
+  if (private_path.size()) {
+    target_angle = point_angle(private_path.front() - position);
+    target_speed = max_speed();
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// Attempt to follow fleet heading
+bool ship::follow_fleet_heading(game_data *g) {
+  fleet_ptr f = g->get_fleet(fleet_id);
+  float fleet_target_angle = point_angle(f->heading - f->position);
+  bool fleet_in_sight = g->first_intersect(position, f->position, radius) == -1;
+  bool terrain_ahead = g->first_intersect(position, position + 50 * normv(fleet_target_angle), radius) > -1;
+
+  if (fleet_in_sight && !terrain_ahead) {
+    // Calculate angle and speed
+    target_angle = utility::point_angle(f->heading - f->position);
+
+    if (f->is_idle()) {
+      target_speed = 0;
+    } else if (hpos < -1) {
+      // behind fleet
+      target_speed = max_speed();
+    } else if (hpos > 1) {
+      // ahead of fleet
+      target_speed = 0.9 * f->stats.speed_limit;
+    } else {
+      target_speed = f->stats.speed_limit;
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool ship::build_private_path(game_data *g) {
+  fleet_ptr f = g->get_fleet(fleet_id);
+  float frad = 1.2 * g->get_ship(*f->ships.begin())->radius;
+  float f_fill_area = f->ships.size() * M_PI * pow(frad, 2);
+  float f_fill_radius = sqrt(f_fill_area / M_PI);
+
+  // If we are already at the fleet, we don't need a private path to get there
+  if (l2norm(f->position - position) > f_fill_radius) {
+    private_path = g->get_path(position, f->position, radius);
+    return follow_private_path(g);
+  } else {
+    return false;
+  }
+}
+
+bool ship::exit_terrain(game_data *g) {
+  int tid;
+  if ((tid = g->terrain_at(position, radius)) == -1) return false;
+  point x = g->terrain[tid].closest_exit(position, radius);
+  target_angle = point_angle(x - position);
+  target_speed = max_speed();
+  return true;
+}
+
 // 1. Unset force refresh
 // 2. Clear private path
 // 3. If arrived at fleet heading, set f->pop_heading
@@ -262,16 +367,17 @@ float ship::max_speed() {
 // 8. Modify angle and speed due to neighbours' influence
 void ship::update_data(game_data *g) {
   auto local_output = [this](string v) { server::output(id + ": update_data: " + v); };
+  if (force_refresh) private_path.clear();
   force_refresh = false;
 
   if (!has_fleet()) return;
 
   fleet_ptr f = g->get_fleet(fleet_id);
-  if (g->terrain_at(position, radius) == -1 && g->first_intersect(position, f->position, 0) > -1) {
-    // Fleet center is no longer in sight, request a helper fleet
-    fleet_id = f->request_helper_fleet(g, id);
-    f = g->get_fleet(fleet_id);
-  }
+  // if (g->terrain_at(position, radius) == -1 && g->first_intersect(position, f->position, 0) > -1) {
+  //   // Fleet center is no longer in sight, request a helper fleet
+  //   fleet_id = f->request_helper_fleet(g, id);
+  //   f = g->get_fleet(fleet_id);
+  // }
 
   activate = f->stats.converge;
 
@@ -280,18 +386,15 @@ void ship::update_data(game_data *g) {
   bool engage = f->com.policy == fleet::policy_aggressive && tags.count("spacecombat");
   bool evade = f->com.policy == fleet::policy_evasive;
 
-  // Calculate angle and speed
-  float fleet_target_angle = utility::point_angle(f->heading - f->position);
+  // Select pathing policy and set target speed and angle
+  bool path_opt_found = exit_terrain(g) ||
+                        follow_private_path(g) ||
+                        follow_fleet_heading(g) ||
+                        follow_fleet_trail(g) ||
+                        build_private_path(g);
 
-  target_angle = fleet_target_angle;
-  target_speed = f->stats.speed_limit;
-
-  if (hpos < -1) {
-    // behind fleet
-    target_speed = max_speed();
-  } else if (hpos > 1) {
-    // ahead of fleet
-    target_speed = 0.9 * f->stats.speed_limit;
+  if (!path_opt_found) {
+    target_speed = 0;
   }
 
   // Update neighbours, friends and enemies, never require more than 10 neighbours
@@ -371,12 +474,18 @@ void ship::update_data(game_data *g) {
 
   if (local_friends.size() > 0) {
     point tn(0, 0);
-    apply_ships(g, local_friends, [this, &tn](ship_ptr s) {
-      tn += fmin(s->speed(), max_speed()) * utility::normv(s->angle);
+    int nn = 0;
+    apply_ships(g, local_friends, [this, &tn, &nn](ship_ptr s) {
+      if (scalar_mult(s->position - position, normv(angle)) > 0) {
+        tn += fmin(s->speed(), max_speed()) * utility::normv(s->angle);
+        nn++;
+      }
     });
-    tn = 1 / (float)local_friends.size() * tn;
 
-    tbase = influence_factor * tn + (1 - influence_factor) * tbase;
+    if (nn > 0) {
+      tn = 1 / (float)nn * tn;
+      tbase = influence_factor * tn + (1 - influence_factor) * tbase;
+    }
   }
 
   target_speed = utility::l2norm(tbase);
