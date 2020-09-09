@@ -54,7 +54,7 @@ class fleet : public virtual commandable_object {
   std::set<std::string> interactions; /*!< set of available interactions */
   command com;                        /*!< the fleet's command (currently this only holds the target) */
   point heading;
-  bool pop_heading;
+  int heading_index;
   std::vector<point> path;
 
   // mechanical components
@@ -93,11 +93,13 @@ class fleet : public virtual commandable_object {
   float get_strength();
   void refresh_ships(game_data *g);
   void check_action(game_data *g);
-  combid request_helper_fleet(game_data *g, combid sid);
-  void gather_helper_fleets(game_data *g);
+  // combid request_helper_fleet(game_data *g, combid sid);
+  // void gather_helper_fleets(game_data *g);
 
  protected:
   void check_waypoint(game_data *g);
   void check_in_sight(game_data *g);
+  void build_path(game_data *g, point t);
+  void update_heading(game_data *g);
 };
 };  // namespace st3

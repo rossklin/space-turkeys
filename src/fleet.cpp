@@ -49,7 +49,6 @@ fleet::fleet(idtype pid, idtype idx) {
   }
   m.unlock();
 
-  pop_heading = false;
   radius = 0;
   position = point(0, 0);
   update_counter = 0;
@@ -90,7 +89,6 @@ void fleet::move(game_data *g) {
     float d = fmin(stats.speed_limit, l2norm(heading - position));
     position += normalize_and_scale(heading - position, d);
   }
-  push_out_of_terrain(g);
 }
 
 void fleet::post_phase(game_data *g) {}
@@ -258,21 +256,59 @@ void fleet::analyze_enemies(game_data *g) {
   }
 }
 
+/*! Build the path to the target position */
+void fleet::build_path(game_data *g, point t) {
+  if (ships.empty()) return;
+  float ship_rad = g->get_ship(*ships.begin())->radius;
+
+  auto buf = g->get_path(position, t, ship_rad);
+  path.clear();
+
+  float step_length = 20;
+  for (int i = 0; i < buf.size() - 1; i++) {
+    point d = buf[i + 1] - buf[i];
+    for (float e = 0; e < l2norm(d); e += step_length) {
+      point x = buf[i] + normalize_and_scale(d, e);
+      path.push_back(x);
+    }
+  }
+
+  path.push_back(buf.back());
+  heading_index = 1;
+}
+
+/*! Update the heading index and heading according to path and position */
+void fleet::update_heading(game_data *g) {
+  if (path.empty()) return;
+
+  if (heading_index < path.size() - 1) {
+    if (l2norm(position - heading) < 10 || scalar_mult(position - heading, path[heading_index + 1] - heading) > 0) {
+      // We have (almost) passed the heading in direction of the next point
+      heading_index++;
+      heading = path[heading_index];
+    }
+  } else if (l2norm(position - heading) < 10) {
+    // We have reached the final destination
+    path.clear();
+    heading_index = -1;
+  }
+}
+
 void fleet::update_data(game_data *g, bool set_force_refresh) {
   if (ships.empty()) return;
   stringstream ss;
   int n = ships.size();
   force_refresh |= set_force_refresh;
 
-  // position, radius, speed and vision
-  point p(0, 0);
+  // // position, radius, speed and vision
+  // point p(0, 0);
 
-  float rbuf = 0;
-  for (auto k : ships) {
-    ship_ptr s = g->get_ship(k);
-    p = p + s->position;
-    rbuf = max(rbuf, s->radius);
-  }
+  // float rbuf = 0;
+  // for (auto k : ships) {
+  //   ship_ptr s = g->get_ship(k);
+  //   p = p + s->position;
+  //   rbuf = max(rbuf, s->radius);
+  // }
 
   radius = g->settings.fleet_default_radius;
   // position = scale_point(p, 1 / (float)n);
@@ -281,30 +317,15 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
   // bool should_update = force_refresh || random_uniform() < 1 / (float)fleet::update_period;
 
   // always update heading if needed
-  pop_heading |= l2norm(position - heading) < 5;
   if (g->target_position(com.target, stats.target_position)) {
-    if (force_refresh) {
-      path = g->get_path(position, stats.target_position, 5);
-      pop_heading = true;
-    }
-
-    if (pop_heading) {
-      pop_heading = false;
-      if (path.size()) {
-        heading = path.front();
-        path.erase(path.begin());
-      } else {
-        heading = stats.target_position;
-      }
-      ss << "fleet " << id << " updated heading to " << heading << endl;
-      server::output(ss.str());
-    }
+    if (force_refresh) build_path(g, stats.target_position);
+    update_heading(g);
   } else {
-    ss << "fleet " << id << " unset heading." << endl;
-    server::output(ss.str());
     path.clear();
+    heading_index = -1;
   }
 
+  if (force_refresh) refresh_ships(g);
   force_refresh = false;
   // if (!should_update) return;
 
@@ -346,7 +367,6 @@ void fleet::update_data(game_data *g, bool set_force_refresh) {
   analyze_enemies(g);
   check_action(g);
   // suggest_buf = suggest(g);
-  refresh_ships(g);
 }
 
 void fleet::refresh_ships(game_data *g) {
@@ -378,92 +398,97 @@ void fleet::check_action(game_data *g) {
       }
       should_refresh |= buf != stats.converge;
       stats.converge = buf;
+
+      if (buf && identifier::get_type(com.target) == "waypoint") {
+        // Arrived at waypoint, set idle
+        set_idle();
+      }
     }
   }
 
   if (should_refresh) refresh_ships(g);
 }
 
-combid fleet::request_helper_fleet(game_data *g, combid sid) {
-  // Check if there is already an appropriate helper fleet
-  ship_ptr s = g->get_ship(sid);
-  auto fids = helper_fleets;
-  float closest = l2norm(position - s->position);
-  combid best_id = "";
-  for (auto fid : fids) {
-    // Verify that helper fleets still exist
-    if (!g->entity_exists(fid)) {
-      helper_fleets.erase(fid);
-      continue;
-    }
+// combid fleet::request_helper_fleet(game_data *g, combid sid) {
+//   // Check if there is already an appropriate helper fleet
+//   ship_ptr s = g->get_ship(sid);
+//   auto fids = helper_fleets;
+//   float closest = l2norm(position - s->position);
+//   combid best_id = "";
+//   for (auto fid : fids) {
+//     // Verify that helper fleets still exist
+//     if (!g->entity_exists(fid)) {
+//       helper_fleets.erase(fid);
+//       continue;
+//     }
 
-    // Accept if f is closer and in sight
-    fleet_ptr f = g->get_fleet(fid);
-    if (l2norm(f->position - s->position) < closest && g->first_intersect(s->position, f->position, s->radius) == -1) {
-      closest = l2norm(f->position - s->position);
-      best_id = fid;
-    }
-  }
+//     // Accept if f is closer and in sight
+//     fleet_ptr f = g->get_fleet(fid);
+//     if (l2norm(f->position - s->position) < closest && g->first_intersect(s->position, f->position, s->radius) == -1) {
+//       closest = l2norm(f->position - s->position);
+//       best_id = fid;
+//     }
+//   }
 
-  remove_ship(sid);
-  fleet_ptr f;
+//   remove_ship(sid);
+//   fleet_ptr f;
 
-  if (best_id.empty()) {
-    // Create a new helper fleet for this ship
-    f = fleet::create(fleet::server_pid, g->next_id(fleet::class_id));
-    f->com = com;
-    f->com.ships = {sid};
-    f->com.source = f->id;
-    f->position = s->position;
-    f->radius = g->settings.fleet_default_radius;
-    f->owner = owner;
-    f->ships.insert(sid);
-    s->fleet_id = f->id;
+//   if (best_id.empty()) {
+//     // Create a new helper fleet for this ship
+//     f = fleet::create(fleet::server_pid, g->next_id(fleet::class_id));
+//     f->com = com;
+//     f->com.ships = {sid};
+//     f->com.source = f->id;
+//     f->position = s->position;
+//     f->radius = g->settings.fleet_default_radius;
+//     f->owner = owner;
+//     f->ships.insert(sid);
+//     s->fleet_id = f->id;
 
-    g->register_entity(f);
-    f->heading = f->position;
-    helper_fleets.insert(f->id);
-  } else {
-    // Use existing fleet
-    f = g->get_fleet(best_id);
-    f->ships.insert(sid);
-    f->com.ships = f->ships;
-  }
+//     g->register_entity(f);
+//     f->heading = f->position;
+//     helper_fleets.insert(f->id);
+//   } else {
+//     // Use existing fleet
+//     f = g->get_fleet(best_id);
+//     f->ships.insert(sid);
+//     f->com.ships = f->ships;
+//   }
 
-  s->fleet_id = f->id;
-  f->update_data(g, true);
+//   s->fleet_id = f->id;
+//   f->update_data(g, true);
 
-  // Debug sanity check
-  if (any(fmap<list<bool>>(
-          f->ships, (function<bool(combid)>)[g](combid sid) {
-            ship_ptr s = g->get_ship(sid);
-            return !(l2norm(s->position) > 0 && l2norm(s->position) < 1e4);
-          }))) {
-    throw logical_error("Helper fleet ships at invalid position!");
-  }
+//   // Debug sanity check
+//   if (any(fmap<list<bool>>(
+//           f->ships, (function<bool(combid)>)[g](combid sid) {
+//             ship_ptr s = g->get_ship(sid);
+//             return !(l2norm(s->position) > 0 && l2norm(s->position) < 1e4);
+//           }))) {
+//     throw logical_error("Helper fleet ships at invalid position!");
+//   }
 
-  return f->id;
-}
+//   return f->id;
+// }
 
-void fleet::gather_helper_fleets(game_data *g) {
-  if (helper_fleets.empty()) return;
+// void fleet::gather_helper_fleets(game_data *g) {
+//   if (helper_fleets.empty()) return;
 
-  for (auto fid : helper_fleets) {
-    if (!g->entity_exists(fid)) continue;
+//   for (auto fid : helper_fleets) {
+//     if (!g->entity_exists(fid)) continue;
 
-    fleet_ptr f = g->get_fleet(fid);
-    f->gather_helper_fleets(g);
+//     fleet_ptr f = g->get_fleet(fid);
+//     f->gather_helper_fleets(g);
 
-    auto sids = f->ships;
-    for (auto sid : sids) {
-      f->remove_ship(sid);
-      ships.insert(sid);
-      g->get_ship(sid)->fleet_id = id;
-    }
-  }
+//     auto sids = f->ships;
+//     for (auto sid : sids) {
+//       f->remove_ship(sid);
+//       ships.insert(sid);
+//       g->get_ship(sid)->fleet_id = id;
+//     }
+//   }
 
-  update_data(g, true);
-}
+//   update_data(g, true);
+// }
 
 void fleet::check_waypoint(game_data *g) {
   // set to idle and 'land' ships if converged to waypoint
