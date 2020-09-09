@@ -183,7 +183,7 @@ void ship::pre_phase(game_data *g) {
 
   // Thrusters towards center
   if (has_fleet() && !ships_blocking_center) {
-    float thr_a = 0.2;
+    float thr_a = 0.1;
     force += normalize_and_scale(g->get_fleet(fleet_id)->position - position, stats[sskey::key::mass] * thr_a);
   }
 
@@ -279,7 +279,7 @@ bool ship::follow_fleet_trail(game_data *g) {
   }
 
   if (idx >= 0) {
-    target_angle = point_angle(f->path[idx - 1] - position);
+    target_angle = point_angle(f->path[idx] - position);
     target_speed = max_speed();
     return true;
   } else {
@@ -289,13 +289,6 @@ bool ship::follow_fleet_trail(game_data *g) {
 
 // Attempt to follow private path
 bool ship::follow_private_path(game_data *g) {
-  if (private_path.empty()) return false;
-
-  point x = private_path.front();
-  if (l2norm(x - position) < 2 * radius || scalar_mult(x - position, normv(angle)) > 0) {
-    private_path.erase(private_path.begin());
-  }
-
   if (private_path.size()) {
     target_angle = point_angle(private_path.front() - position);
     target_speed = max_speed();
@@ -340,21 +333,12 @@ bool ship::build_private_path(game_data *g) {
   float f_fill_radius = sqrt(f_fill_area / M_PI);
 
   // If we are already at the fleet, we don't need a private path to get there
-  if (l2norm(f->position - position) > f_fill_radius) {
-    private_path = g->get_path(position, f->position, radius);
+  if (f->path.size() > 0 || l2norm(f->position - position) > f_fill_radius) {
+    private_path = g->get_path(position, f->position, 2 * radius);
     return follow_private_path(g);
   } else {
     return false;
   }
-}
-
-bool ship::exit_terrain(game_data *g) {
-  int tid;
-  if ((tid = g->terrain_at(position, radius)) == -1) return false;
-  point x = g->terrain[tid].closest_exit(position, radius);
-  target_angle = point_angle(x - position);
-  target_speed = max_speed();
-  return true;
 }
 
 // 1. Unset force refresh
@@ -387,8 +371,7 @@ void ship::update_data(game_data *g) {
   bool evade = f->com.policy == fleet::policy_evasive;
 
   // Select pathing policy and set target speed and angle
-  bool path_opt_found = exit_terrain(g) ||
-                        follow_private_path(g) ||
+  bool path_opt_found = follow_private_path(g) ||
                         follow_fleet_heading(g) ||
                         follow_fleet_trail(g) ||
                         build_private_path(g);
@@ -497,8 +480,8 @@ void ship::update_data(game_data *g) {
       (function<bool(combid)>)[ this, g, f ](combid sid) {
         ship_ptr s = g->get_ship(sid);
         bool can_block = dpoint2line(position, f->position, s->position) < s->radius;
-        bool close = l2norm(s->position - position) < 1.3 * (radius + s->radius);
-        bool blocking_side = l2norm(f->position - s->position) < l2norm(f->position - position);
+        bool close = l2norm(s->position - position) < 1.5 * (radius + s->radius);
+        bool blocking_side = scalar_mult(s->position - position, f->position - position) > 0;
         return can_block && close && blocking_side;
       }));
 }
@@ -586,6 +569,15 @@ void ship::move(game_data *g) {
   thrust = fmax(cos(angle_miss), 0) * fmin(required_thrust, stats[sskey::key::thrust]);
   angle += fmin(dt * angle_increment, fabs(angle_miss)) * angle_sign;
   velocity += dt / stats[sskey::key::mass] * force;
+
+  // Check private path
+  if (private_path.size() > 0) {
+    point x = private_path.front();
+    if (dpoint2line(x, position, position + velocity) < radius) {
+      private_path.erase(private_path.begin());
+    }
+  }
+
   position += dt * velocity;
 
   push_out_of_terrain(g);
