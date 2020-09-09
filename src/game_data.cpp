@@ -130,7 +130,7 @@ path_t game_data::get_path(point a, point b, float r) const {
   }
 
   tid = first_intersect(a, b, r_buffered);
-  if (tid == -1) return path_t(1, b);
+  if (tid == -1) return {a, b};
 
   struct ptest {
     float h;
@@ -173,7 +173,6 @@ path_t game_data::get_path(point a, point b, float r) const {
     // Check if this is the final solution
     if ((tid = first_intersect(sub_a, b, r_buffered)) == -1) {
       res.push_back(b);
-      res.erase(res.begin());
       return prune_path(*this, res, r_buffered);
     }
 
@@ -483,7 +482,10 @@ void game_data::distribute_ships(fleet_ptr f) {
   c = c.owned_by(f->owner);
 
   auto pos_occupied = [this, c, ship_rad, f](point p) {
-    return terrain_at(p, 1.5 * ship_rad) > -1 || search_targets_nophys(f->owner, identifier::source_none, p, ship_rad, c, 1).size() > 0;
+    bool fleet_blocked = first_intersect(p, f->position, 0) > -1;
+    bool occupied_by_ship = search_targets_nophys(f->owner, identifier::source_none, p, ship_rad, c, 1).size() > 0;
+    bool blocked_by_terrain = terrain_at(p, 1.5 * ship_rad) > -1;
+    return blocked_by_terrain || fleet_blocked || occupied_by_ship;
   };
 
   float r = 0.1;
@@ -491,12 +493,13 @@ void game_data::distribute_ships(fleet_ptr f) {
   float a0 = 0;
   auto next_position = [this, f, ship_rad, &r, &a, &a0]() {
     point x = f->position + r * normv(a);
+    float buf_rad = 1.1 * ship_rad;
 
-    a += 2 * ship_rad / r;
-    if (a > a0 + 2 * M_PI - 2 * ship_rad / r) {
+    a += 2 * buf_rad / r;
+    if (a > a0 + 2 * M_PI - 2 * buf_rad / r) {
       a0 = random_uniform(0, 2 * M_PI);
       a = a0;
-      r += 2 * ship_rad;
+      r += 2 * buf_rad;
     }
 
     return x;
@@ -985,8 +988,8 @@ void game_data::end_step() {
     deregister_entity(i);
   }
 
-  // Gather helper fleets
-  for (auto f : filtered_entities<fleet>()) f->gather_helper_fleets(this);
+  // // Gather helper fleets
+  // for (auto f : filtered_entities<fleet>()) f->gather_helper_fleets(this);
 
   // clear log
   for (auto &x : players) x.second.log.clear();
