@@ -98,6 +98,26 @@ Perhaps check if there is empty space in direction of fleet center? Add "thruste
    Note distribute_ships should never place ships out of sight of center..?
 
    Advantage: all ships will take same path and avoid terrain
+** Alternative movement approach2
+   Just precompute a sloppy vector field for navigating around the
+   terrain, as in ST2?
+** Alternative movement approach3
+   Should build_private_path cancel when close to fleet even if fleet has a path?
+   Consider giving ships individual fleet_path_index
+   Save and serialize ship pathing policy choice to visualize for debug in client
+   Client is still messing up fleet position somehow
+
+   [impl] Ships that are not in vision of any path node call get_path to fleet center (ie when splitting a fleet adjacent to terrain) 
+   [impl] Ships need to check if fleet is idle and stop
+   [impl] Distribute ships must place ships in vision of fleet center
+   [impl] Fleets should not be pushed out of terrain (path is generated using ship radius, not fleet radius)
+   [impl] Fleet needs to go idle when arriving at destination
+   [impl] When creating a new fleet, tell ships to reset private path
+   [impl] Get path will include starting position in result, check for consistency
+   [impl] Ships should only follow neighbours in front
+   [impl] Fleets compute a path with closer steps
+   [impl] Fleets track heading with an index and keep passed path nodes
+   [impl] Ships that are heading into terrain instead head for the furthest visible path node (test forward from fleet current index)
 ** Movement issues
    [test] Fleets move past heading without popping
    Ships do not change direction when fleet passes checkpoint
