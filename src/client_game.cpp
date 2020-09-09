@@ -945,11 +945,11 @@ void game::update_sim_frame() {
     }
   }
 
-  for (auto fl : get_all<fleet>()) {
-    point p(0, 0);
-    for (auto sid : fl->ships) p += get_specific<ship>(sid)->position;
-    fl->position = utility::scale_point(p, 1 / (float)fl->ships.size());
-  }
+  // for (auto fl : get_all<fleet>()) {
+  //   point p(0, 0);
+  //   for (auto sid : fl->ships) p += get_specific<ship>(sid)->position;
+  //   fl->position = utility::scale_point(p, 1 / (float)fl->ships.size());
+  // }
 
   for (auto cs : command_selectors) {
     cs.second->from = get_selector(cs.second->source)->position;
@@ -1123,6 +1123,9 @@ void game::reload_data(game_base_data &g, bool use_animations) {
   players = g.players;
   settings = g.settings;
   terrain = g.terrain;
+
+  // Deregister fleets since they are provided under new id from server
+  for (auto f : filtered_entities<fleet>()) deregister_entity(f->id);
 
   // update entities
   for (auto a : g.all_entities<entity_selector>()) {
