@@ -44,6 +44,7 @@ class game_object {
   virtual game_object_ptr clone() = 0;
 
   void push_out_of_terrain(game_data *g);
+  float buffered_radius(int level = 1) const;
 };
 
 class commandable_object : public virtual game_object {
