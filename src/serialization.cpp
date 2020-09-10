@@ -157,11 +157,13 @@ sf::Packet& st3::operator<<(sf::Packet& packet, const ship& g) {
          << g.cargo
          << g.states
          //  << g.dynamic_data
-         << g.nkills;
+         << g.nkills
+         << g.pathing_policy
+         << g.private_path;
 }
 
 sf::Packet& st3::operator>>(sf::Packet& packet, ship& g) {
-  return packet >> static_cast<game_object&>(g) >> static_cast<ship_stats&>(g) >> g.fleet_id >> g.angle >> g.thrust >> g.velocity >> g.load >> g.base_stats >> g.cargo >> g.states >> g.nkills;
+  return packet >> static_cast<game_object&>(g) >> static_cast<ship_stats&>(g) >> g.fleet_id >> g.angle >> g.thrust >> g.velocity >> g.load >> g.base_stats >> g.cargo >> g.states >> g.nkills >> g.pathing_policy >> g.private_path;
 }
 
 sf::Packet& st3::operator<<(sf::Packet& packet, const development::node& g) {
