@@ -80,7 +80,7 @@ void fleet::pre_phase(game_data *g) {
   check_in_sight(g);
   update_data(g);
   check_action(g);
-  check_waypoint(g);
+  // check_waypoint(g);
 }
 
 void fleet::move(game_data *g) {
@@ -259,7 +259,9 @@ void fleet::analyze_enemies(game_data *g) {
 /*! Build the path to the target position */
 void fleet::build_path(game_data *g, point t) {
   if (ships.empty()) return;
-  float ship_rad = g->get_ship(*ships.begin())->radius;
+
+  // Path needs extra buffering, so buffered radius searches on path nodes do not intersect terrain
+  float ship_rad = g->get_ship(*ships.begin())->buffered_radius(2);
 
   auto buf = g->get_path(position, t, ship_rad);
   path.clear();
@@ -281,16 +283,16 @@ void fleet::build_path(game_data *g, point t) {
 void fleet::update_heading(game_data *g) {
   if (path.empty()) return;
 
-  if (heading_index < path.size() - 1) {
-    if (l2norm(position - heading) < 10 || scalar_mult(position - heading, path[heading_index + 1] - heading) > 0) {
-      // We have (almost) passed the heading in direction of the next point
-      heading_index++;
+  if (l2norm(position - heading) < 5) {
+    // We have (almost) passed the heading in direction of the next point
+    heading_index++;
+
+    if (heading_index < path.size()) {
       heading = path[heading_index];
+    } else {
+      path.clear();
+      heading_index = -1;
     }
-  } else if (l2norm(position - heading) < 10) {
-    // We have reached the final destination
-    path.clear();
-    heading_index = -1;
   }
 }
 
@@ -399,7 +401,7 @@ void fleet::check_action(game_data *g) {
       should_refresh |= buf != stats.converge;
       stats.converge = buf;
 
-      if (identifier::get_type(com.target) == "waypoint" && l2norm(stats.target_position - position) < 25) {
+      if (identifier::get_type(com.target) == "waypoint" && l2norm(stats.target_position - position) < 5) {
         // Arrived at waypoint, set idle
         set_idle();
       }
