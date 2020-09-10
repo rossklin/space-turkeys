@@ -102,8 +102,14 @@ Perhaps check if there is empty space in direction of fleet center? Add "thruste
    Just precompute a sloppy vector field for navigating around the
    terrain, as in ST2?
 ** Alternative movement approach3
-   Only push towards fleet center if in sight
-   Visualize fleet private paths in client to debug why some paths are still weird
+
+   Maybe ships who have hpos in front of fleet should always use trail instead of terrain?
+   [impl] Always use most forward path node?
+   [impl] Update neighbour influence factor
+   [impl] Check ship pop path logic
+
+   [impl] Only push towards fleet center if in sight
+   [impl] Visualize ship private paths in client to debug why some paths are still weird
 
    Some ships still stick on terrain, check which pathing policy they use   
 
@@ -122,6 +128,8 @@ Perhaps check if there is empty space in direction of fleet center? Add "thruste
    [impl] Fleets compute a path with closer steps
    [impl] Fleets track heading with an index and keep passed path nodes
    [impl] Ships that are heading into terrain instead head for the furthest visible path node (test forward from fleet current index)
+** Fleet heading uninit or set to origin after auto commit
+** Replace collisions with repulsing potential
 ** Movement issues
    [test] Fleets move past heading without popping
    Ships do not change direction when fleet passes checkpoint
