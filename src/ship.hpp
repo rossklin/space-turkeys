@@ -47,12 +47,13 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   combid current_target;
   float collision_damage;
   path_t private_path;
+  std::string pathing_policy;
 
   std::list<combid> neighbours;
   std::list<combid> local_enemies;
   std::list<combid> local_friends;
   std::list<combid> local_all;
-  bool ships_blocking_center;
+  bool fleet_center_blocked;
 
   // game_object
   void pre_phase(game_data *g);

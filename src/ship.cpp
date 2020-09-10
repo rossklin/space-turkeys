@@ -182,7 +182,7 @@ void ship::pre_phase(game_data *g) {
   force = thrust * utility::normv(angle);
 
   // Thrusters towards center
-  if (has_fleet() && !ships_blocking_center) {
+  if (has_fleet() && !fleet_center_blocked) {
     float thr_a = 0.1;
     force += normalize_and_scale(g->get_fleet(fleet_id)->position - position, stats[sskey::key::mass] * thr_a);
   }
@@ -228,16 +228,16 @@ void ship::pre_phase(game_data *g) {
     }
   });
 
-  // accelleration from terrain
-  int tid = g->terrain_at(position, radius);
-  if (tid > -1) {
-    terrain_object x = g->terrain[tid];
-    point t = x.closest_exit(position, radius);
-    point delta = t - position;
-    float d = utility::l2norm(delta);
-    float k = 5 * stats[sskey::key::mass] * utility::sigmoid(d, radius) / radius;
-    force += utility::normalize_and_scale(delta, k);
-  }
+  // // accelleration from terrain
+  // int tid = g->terrain_at(position, radius);
+  // if (tid > -1) {
+  //   terrain_object x = g->terrain[tid];
+  //   point t = x.closest_exit(position, radius);
+  //   point delta = t - position;
+  //   float d = utility::l2norm(delta);
+  //   float k = 5 * stats[sskey::key::mass] * utility::sigmoid(d, radius) / radius;
+  //   force += utility::normalize_and_scale(delta, k);
+  // }
 
   // force from friction
   force += utility::normalize_and_scale(-velocity, pow(radius, 2) * friction * utility::l2norm(velocity));
@@ -257,30 +257,34 @@ bool ship::follow_fleet_trail(game_data *g) {
   fleet_ptr f = g->get_fleet(fleet_id);
   if (f->path.empty()) return false;
 
+  // int i;
+  // for (i = f->heading_index; i < f->path.size(); i++) {
+  //   if (g->first_intersect(position, f->path[i], buffered_radius()) > -1) break;
+  // }
+
+  // int idx;
+  // if (i > f->heading_index) {
+  //   idx = i - 1;
+  // } else {
+  // First heading point not in sight, look at path history
+
   int i;
-  for (i = f->heading_index; i < f->path.size(); i++) {
-    if (g->first_intersect(position, f->path[i], 0) > -1) break;
-  }
-
   int idx;
-  if (i > f->heading_index) {
-    idx = i - 1;
-  } else {
-    // First heading point not in sight, look at path history
-    for (i = f->heading_index - 1; i >= 0; i--) {
-      if (g->first_intersect(position, f->path[i], 0) == -1) break;
-    }
-
-    if (i >= 0) {
-      idx = i;
-    } else {
-      idx = -1;
-    }
+  for (i = f->path.size() - 1; i >= 0; i--) {
+    if (g->first_intersect(position, f->path[i], buffered_radius()) == -1) break;
   }
+
+  if (i >= 0) {
+    idx = i;
+  } else {
+    idx = -1;
+  }
+  // }
 
   if (idx >= 0) {
     target_angle = point_angle(f->path[idx] - position);
     target_speed = max_speed();
+    pathing_policy = "trail";
     return true;
   } else {
     return false;
@@ -289,9 +293,13 @@ bool ship::follow_fleet_trail(game_data *g) {
 
 // Attempt to follow private path
 bool ship::follow_private_path(game_data *g) {
+  fleet_ptr f = g->get_fleet(fleet_id);
+  if (g->first_intersect(position, f->position, buffered_radius()) == -1) private_path.clear();
+
   if (private_path.size()) {
     target_angle = point_angle(private_path.front() - position);
     target_speed = max_speed();
+    pathing_policy = "private";
     return true;
   } else {
     return false;
@@ -302,8 +310,8 @@ bool ship::follow_private_path(game_data *g) {
 bool ship::follow_fleet_heading(game_data *g) {
   fleet_ptr f = g->get_fleet(fleet_id);
   float fleet_target_angle = point_angle(f->heading - f->position);
-  bool fleet_in_sight = g->first_intersect(position, f->position, radius) == -1;
-  bool terrain_ahead = g->first_intersect(position, position + 50 * normv(fleet_target_angle), radius) > -1;
+  bool fleet_in_sight = g->first_intersect(position, f->position, buffered_radius()) == -1 && l2norm(f->position - position) < 70;
+  bool terrain_ahead = g->first_intersect(position, position + 50 * normv(fleet_target_angle), buffered_radius()) > -1;
 
   if (fleet_in_sight && !terrain_ahead) {
     // Calculate angle and speed
@@ -320,6 +328,7 @@ bool ship::follow_fleet_heading(game_data *g) {
     } else {
       target_speed = f->stats.speed_limit;
     }
+    pathing_policy = "heading";
     return true;
   } else {
     return false;
@@ -334,7 +343,7 @@ bool ship::build_private_path(game_data *g) {
 
   // If we are already at the fleet, we don't need a private path to get there
   if (f->path.size() > 0 || l2norm(f->position - position) > f_fill_radius) {
-    private_path = g->get_path(position, f->position, 2 * radius);
+    private_path = g->get_path(position, f->position, buffered_radius());
     return follow_private_path(g);
   } else {
     return false;
@@ -378,6 +387,7 @@ void ship::update_data(game_data *g) {
 
   if (!path_opt_found) {
     target_speed = 0;
+    pathing_policy = "stop";
   }
 
   // Update neighbours, friends and enemies, never require more than 10 neighbours
@@ -453,7 +463,6 @@ void ship::update_data(game_data *g) {
   // let neighbours influence angle and speed
   point tbase = target_speed * utility::normv(target_angle);
   float influence_factor = 0.5;
-  if (engage || evade) influence_factor = 0.2;
 
   if (local_friends.size() > 0) {
     point tn(0, 0);
@@ -475,7 +484,7 @@ void ship::update_data(game_data *g) {
   target_angle = utility::point_angle(tbase);
 
   // Check if we use directional thrusters to go towards fleet center
-  ships_blocking_center = any(fmap<list<bool>>(
+  list<bool> ships_blocking = fmap<list<bool>>(
       local_friends,
       (function<bool(combid)>)[ this, g, f ](combid sid) {
         ship_ptr s = g->get_ship(sid);
@@ -483,7 +492,9 @@ void ship::update_data(game_data *g) {
         bool close = l2norm(s->position - position) < 1.5 * (radius + s->radius);
         bool blocking_side = scalar_mult(s->position - position, f->position - position) > 0;
         return can_block && close && blocking_side;
-      }));
+      });
+
+  fleet_center_blocked = g->first_intersect(position, f->position, 0) > -1 || any(ships_blocking);
 }
 
 // 1. Clean out missing neighbours
@@ -573,7 +584,7 @@ void ship::move(game_data *g) {
   // Check private path
   if (private_path.size() > 0) {
     point x = private_path.front();
-    if (dpoint2line(x, position, position + velocity) < radius) {
+    if (dpoint2line(x, position, position + dt * velocity) < buffered_radius()) {
       private_path.erase(private_path.begin());
     }
   }
