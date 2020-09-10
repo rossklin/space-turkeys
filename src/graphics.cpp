@@ -209,6 +209,25 @@ void graphics::draw_ship(sf::RenderTarget& w, ship_ptr s, sf::Color col, float s
   // temp for debug
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::L)) {
     draw_text(w, s->id, s->position, 12, false);
+    draw_text(w, s->pathing_policy, s->position - point{0, s->radius}, 12, false);
+
+    // add path
+    if (s->private_path.size()) {
+      sf::CircleShape circ(4);
+      vector<sf::Vertex> line;
+      circ.setOutlineColor(sf::Color::Green);
+      circ.setOutlineThickness(graphics::unscale());
+      circ.setFillColor(sf::Color::Transparent);
+      vector<point> buf = s->private_path;
+      buf.insert(buf.begin(), s->position);
+      for (auto x : buf) {
+        line.push_back(sf::Vertex(x));
+        line.back().color = sf::Color::Green;
+        circ.setPosition(x - point(4, 4));
+        w.draw(circ);
+      }
+      w.draw(&line[0], line.size(), sf::LineStrip);
+    }
   }
 }
 
