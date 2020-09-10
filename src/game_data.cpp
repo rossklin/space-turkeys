@@ -478,6 +478,7 @@ void game_data::distribute_ships(fleet_ptr f) {
   if (f->ships.empty()) return;
 
   float ship_rad = get_ship(*f->ships.begin())->radius;
+  float buf_rad = get_ship(*f->ships.begin())->buffered_radius();
   target_condition c(target_condition::any_alignment, ship::class_id);
   c = c.owned_by(f->owner);
 
@@ -491,9 +492,8 @@ void game_data::distribute_ships(fleet_ptr f) {
   float r = 0.1;
   float a = 0;
   float a0 = 0;
-  auto next_position = [this, f, ship_rad, &r, &a, &a0]() {
+  auto next_position = [this, f, buf_rad, &r, &a, &a0]() {
     point x = f->position + r * normv(a);
-    float buf_rad = 1.1 * ship_rad;
 
     a += 2 * buf_rad / r;
     if (a > a0 + 2 * M_PI - 2 * buf_rad / r) {
