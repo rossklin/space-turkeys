@@ -305,10 +305,16 @@ bool ship::follow_private_path(game_data *g) {
   if (g->first_intersect(position, f->position, buffered_radius()) == -1) private_path.clear();
 
   if (private_path.size()) {
-    target_angle = point_angle(private_path.front() - position);
-    target_speed = max_speed();
-    pathing_policy = "private";
-    return true;
+    if (g->first_intersect(position, private_path.front(), buffered_radius()) > -1) {
+      // We are off the path somehow, terrain is in the way
+      private_path.clear();
+      return build_private_path(g);
+    } else {
+      target_angle = point_angle(private_path.front() - position);
+      target_speed = max_speed();
+      pathing_policy = "private";
+      return true;
+    }
   } else {
     return false;
   }
@@ -316,6 +322,8 @@ bool ship::follow_private_path(game_data *g) {
 
 // Attempt to follow fleet heading
 bool ship::follow_fleet_heading(game_data *g) {
+  if (hpos > 1) return false;
+
   fleet_ptr f = g->get_fleet(fleet_id);
   float fleet_target_angle = point_angle(f->heading - f->position);
   bool fleet_in_sight = g->first_intersect(position, f->position, buffered_radius()) == -1 && l2norm(f->position - position) < 70;
@@ -474,7 +482,7 @@ void ship::update_data(game_data *g) {
   point tbase = target_speed * utility::normv(target_angle);
   float influence_factor = 0.5;
 
-  if (local_friends.size() > 0) {
+  if (local_friends.size() > 0 && pathing_policy != "private") {
     point tn(0, 0);
     int nn = 0;
     apply_ships(g, local_friends, [this, &tn, &nn](ship_ptr s) {
