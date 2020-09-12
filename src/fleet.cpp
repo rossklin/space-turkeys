@@ -135,17 +135,25 @@ void fleet::give_commands(list<command> c, game_data *g) {
     f->position = position;
     f->radius = radius;
     f->owner = owner;
+
+    point pbuf{0, 0};
     for (auto i : x.ships) {
       if (ships.count(i)) {
         ship_ptr buf = g->get_ship(i);
         buf->fleet_id = f->id;
         remove_ship(i);
         f->ships.insert(i);
+        pbuf += buf->position;
       }
     }
 
+    if (f->ships.size() > 0) {
+      f->position = 1 / (float)f->ships.size() * pbuf;
     g->register_entity(f);
     f->update_data(g, true);
+    } else {
+      server::log("fleet::give_commands: no ships matched!", "warning");
+    }
   }
 }
 
