@@ -86,22 +86,7 @@ Collisions causing some ships to shoot very far away
 ** [done] Reload data takes ~1 s with 500 ships in air, running sim on server takes some secs, show load in progress bar
 ** [done] Ships in fleet need to come together when they get disjointed
 Perhaps check if there is empty space in direction of fleet center? Add "thrusters"?
-* Notes test game 2020-08-14
-** Alternative movement approach
-   1. Fleet calculates path to target, using largest radius possible up to area filled by ships
-   2. All ships calculate position relative to fleet center
-   3. All ships copy fleet path, adding position adjustment rel center unless blocked by terrain
-   4. All ships not in sight of fleet center prepend path to first point where fleet center is in sight
-   5. Ships pop path nodes when they are "ahead" of the node, regardless of distance
-   6. Maybe ships even tell fleet to wait if it gets out of sight?
-   
-   Note distribute_ships should never place ships out of sight of center..?
-
-   Advantage: all ships will take same path and avoid terrain
-** Alternative movement approach2
-   Just precompute a sloppy vector field for navigating around the
-   terrain, as in ST2?
-** Alternative movement approach3
+** [done] Alternative movement approach3
 
    Maybe ships who have hpos in front of fleet should always use trail instead of terrain?
    [impl] Always use most forward path node?
@@ -128,16 +113,16 @@ Perhaps check if there is empty space in direction of fleet center? Add "thruste
    [impl] Fleets compute a path with closer steps
    [impl] Fleets track heading with an index and keep passed path nodes
    [impl] Ships that are heading into terrain instead head for the furthest visible path node (test forward from fleet current index)
-** Fleet heading uninit or set to origin after auto commit
-** Replace collisions with repulsing potential
-** Movement issues
+** [impl] Fleet heading uninit or set to origin after auto commit
+   Check how fleet heading is initialized in update_heading after
+   creation in fleet::give_commands
+** [done] Replace collisions with repulsing potential
+** [done] Movement issues
    [test] Fleets move past heading without popping
    Ships do not change direction when fleet passes checkpoint
    In some cases all ships seem to turn wrong way when avoiding terrain
-** Update fleet position in give_commands
-** Client should delete all fleets in reload_data?
-** Must allow client to create fleets agin
-** Waypoint becomes impossible to select after first select
+** [done] Update fleet position in give_commands
+** [done] Client should delete all fleets in reload_data?
 ** [done] New terrain::contains does not work, always returns false
    Parameter order mismatch in terrain_object::contains -> point_between
    Logic error in contains
@@ -157,6 +142,11 @@ Perhaps check if there is empty space in direction of fleet center? Add "thruste
 
   Maybe related to new push out of terrain mechanism.
   Also noted some fleets not pushed out of terrain correctly.
+* Notes test game 2020-08-14
+** Arrival to waypoint, fleet idles but next command removed instead of triggered
+** Evasive fleet policy does not work (well enough)
+** Must allow client to create fleets agin
+** Waypoint becomes impossible to select after first select or movement
 ** [test] Client hit "Attempting to build invalid command"
   Possible fix: clear command refs in client::game::clear_selectors
 
