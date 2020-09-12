@@ -47,6 +47,7 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   combid current_target;
   float collision_damage;
   path_t private_path;
+  point pp_backref;
   std::string pathing_policy;
 
   std::list<combid> neighbours;

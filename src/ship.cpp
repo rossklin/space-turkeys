@@ -343,7 +343,9 @@ bool ship::build_private_path(game_data *g) {
 
   // If we are already at the fleet, we don't need a private path to get there
   if (f->path.size() > 0 || l2norm(f->position - position) > f_fill_radius) {
-    private_path = g->get_path(position, f->position, buffered_radius());
+    private_path = g->get_path(position, f->position, buffered_radius(3));
+    pp_backref = private_path.front();
+    private_path.erase(private_path.begin());
     return follow_private_path(g);
   } else {
     return false;
@@ -584,7 +586,9 @@ void ship::move(game_data *g) {
   // Check private path
   if (private_path.size() > 0) {
     point x = private_path.front();
-    if (dpoint2line(x, position, position + dt * velocity) < buffered_radius()) {
+    if (scalar_mult(position - x, pp_backref - x) < 0) {
+      // Passing from one side of x to the other
+      pp_backref = x;
       private_path.erase(private_path.begin());
     }
   }
