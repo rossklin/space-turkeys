@@ -83,6 +83,7 @@ void game_object::push_out_of_terrain(game_data *g) {
   if ((tid = g->terrain_at(position, buf_rad)) > -1) {
     position = g->terrain[tid].closest_exit(position, buf_rad);
   }
+}
 
 float game_object::buffered_radius(int level) const {
   return (1 + 0.1 * (float)level) * radius + (float)level;
