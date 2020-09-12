@@ -149,8 +149,8 @@ void fleet::give_commands(list<command> c, game_data *g) {
 
     if (f->ships.size() > 0) {
       f->position = 1 / (float)f->ships.size() * pbuf;
-    g->register_entity(f);
-    f->update_data(g, true);
+      g->register_entity(f);
+      f->update_data(g, true);
     } else {
       server::log("fleet::give_commands: no ships matched!", "warning");
     }
@@ -269,7 +269,7 @@ void fleet::build_path(game_data *g, point t) {
   if (ships.empty()) return;
 
   // Path needs extra buffering, so buffered radius searches on path nodes do not intersect terrain
-  float ship_rad = g->get_ship(*ships.begin())->buffered_radius(2);
+  float ship_rad = g->get_ship(*ships.begin())->buffered_radius(3);
 
   auto buf = g->get_path(position, t, ship_rad);
   path.clear();
