@@ -289,8 +289,9 @@ void fleet::build_path(game_data *g, point t) {
 
 /*! Update the heading index and heading according to path and position */
 void fleet::update_heading(game_data *g) {
-  if (path.empty()) return;
+  if (path.empty() || heading_index < 0) return;
 
+  heading = path[heading_index];
   if (l2norm(position - heading) < 5) {
     // We have (almost) passed the heading in direction of the next point
     heading_index++;
