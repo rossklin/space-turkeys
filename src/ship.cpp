@@ -189,43 +189,51 @@ void ship::pre_phase(game_data *g) {
 
   // force from neighbours
   apply_ships(g, neighbours, [this, dt](ship_ptr s) {
+    float r = l2norm(s->position - position) - radius - s->radius;
+
+    if (r < 0) {
+      const float amax = 1;
+      float a = amax * fabs(r) / (radius + s->radius);
+      force += normalize_and_scale(position - s->position, stats[sskey::key::mass] * a);
+    }
+
     // ignore same owner, different fleet
     // if (s->owner == owner && s->fleet_id != fleet_id) return;
 
-    float m1 = stats[sskey::key::mass];
-    float m2 = s->stats[sskey::key::mass];
-    point v1 = velocity, v2 = s->velocity;
-    point x1 = position, x2 = s->position;
-    float proj = utility::sproject(v1 - v2, x1 - x2);
+    // float m1 = stats[sskey::key::mass];
+    // float m2 = s->stats[sskey::key::mass];
+    // point v1 = velocity, v2 = s->velocity;
+    // point x1 = position, x2 = s->position;
+    // float proj = utility::sproject(v1 - v2, x1 - x2);
 
-    if (proj >= 0) return;  // moving away from each other
-    if (utility::l2norm(x2 - x1) >= s->radius + radius) return;
+    // if (proj >= 0) return;  // moving away from each other
+    // if (utility::l2norm(x2 - x1) >= s->radius + radius) return;
 
-    // transform to zero momentum frame
-    point z = 1 / (m1 + m2) * (m1 * v1 + m2 * v2);
-    point V1 = v1 - z;
-    float beta = 0.1;
-    float ad = utility::point_angle(x2 - x1);
-    float av = utility::point_angle(V1);
-    float theta = utility::angle_difference(ad, av);
-    point U1 = beta * utility::l2norm(V1) * utility::normv(av + 2 * theta + M_PI);
+    // // transform to zero momentum frame
+    // point z = 1 / (m1 + m2) * (m1 * v1 + m2 * v2);
+    // point V1 = v1 - z;
+    // float beta = 0.1;
+    // float ad = utility::point_angle(x2 - x1);
+    // float av = utility::point_angle(V1);
+    // float theta = utility::angle_difference(ad, av);
+    // point U1 = beta * utility::l2norm(V1) * utility::normv(av + 2 * theta + M_PI);
 
-    // transform back to original reference frame
-    point u1 = U1 + z;
+    // // transform back to original reference frame
+    // point u1 = U1 + z;
 
-    // apply nessecary force to change velocity in one iteration
-    point dvel = u1 - velocity;
-    point dforce = m1 / dt * dvel;
+    // // apply nessecary force to change velocity in one iteration
+    // point dvel = u1 - velocity;
+    // point dforce = m1 / dt * dvel;
 
-    // Collisions can not cause more than unit acceleration
-    if (l2norm(dforce) / m1 > 1) dforce *= m1 / l2norm(dforce);
+    // // Collisions can not cause more than unit acceleration
+    // if (l2norm(dforce) / m1 > 1) dforce *= m1 / l2norm(dforce);
 
-    force += dforce;
+    // force += dforce;
 
-    // collision damage
-    if (s->owner != owner) {
-      collision_damage += collision_damage_factor * s->stats[sskey::key::mass] * utility::l2d2(s->velocity - velocity);
-    }
+    // // collision damage
+    // if (s->owner != owner) {
+    //   collision_damage += collision_damage_factor * s->stats[sskey::key::mass] * utility::l2d2(s->velocity - velocity);
+    // }
   });
 
   // // accelleration from terrain
@@ -602,11 +610,11 @@ void ship::move(game_data *g) {
 
 // Receive collision damage
 void ship::post_phase(game_data *g) {
-  // take collision damage
-  if (collision_damage > 0) {
-    receive_damage(g, shared_from_this(), collision_damage);
-  }
-  collision_damage = 0;
+  // // take collision damage
+  // if (collision_damage > 0) {
+  //   receive_damage(g, shared_from_this(), collision_damage);
+  // }
+  // collision_damage = 0;
 }
 
 void ship::receive_damage(game_data *g, game_object_ptr from, float damage) {
