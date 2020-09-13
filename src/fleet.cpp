@@ -118,7 +118,6 @@ bool st3::fleet::is_idle() {
 }
 
 void fleet::set_idle() {
-  com.target = identifier::target_idle;
   com.action = fleet_action::idle;
 }
 
@@ -396,6 +395,7 @@ void fleet::check_action(game_data *g) {
       if (!c.valid_on(g->get_game_object(com.target))) {
         server::output("target " + com.target + " no longer valid for " + id);
         set_idle();
+        com.target = identifier::target_idle;
         should_refresh = true;
       }
     }
