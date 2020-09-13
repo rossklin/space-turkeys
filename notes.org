@@ -143,10 +143,17 @@ Perhaps check if there is empty space in direction of fleet center? Add "thruste
   Maybe related to new push out of terrain mechanism.
   Also noted some fleets not pushed out of terrain correctly.
 * Notes test game 2020-08-14
-** Arrival to waypoint, fleet idles but next command removed instead of triggered
-** Evasive fleet policy does not work (well enough)
+** Voyagers op
+** Owned ships left as shadows when dead in some cases
+** Ships seem to engage when in evasive mode, perhaps when they are too far from enemy to detect threat?
+** Heavy lag in client with many enemies
+** When fleeing or engaging, ships drive straight into terrain
+** Removing ships from command does not remove downstream ships
+  Also command gui for downstream commands shows original ships
 ** Must allow client to create fleets agin
-** Waypoint becomes impossible to select after first select or movement
+** [fixed] Arrival to waypoint, fleet idles but next command removed instead of triggered
+** [test] Evasive fleet policy does not work (well enough)
+** [impl] Waypoint becomes impossible to select after first select or movement
 ** [test] Client hit "Attempting to build invalid command"
   Possible fix: clear command refs in client::game::clear_selectors
 
