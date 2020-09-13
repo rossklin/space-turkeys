@@ -1992,6 +1992,7 @@ bool game::choice_event(sf::Event e) {
         // update position
         auto wp = get_specific<waypoint>(drag_id);
         wp->position = p;
+        entity_grid[self_id].move(wp->id, wp->position);
 
         // update target for incident commands
         list<idtype> inc = incident_commands(drag_id);
