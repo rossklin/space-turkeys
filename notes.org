@@ -1,156 +1,14 @@
-* Done
-** [done] Ships can't see enemy ships
-** [done] Fleet path does not include first vertice when fleet center is adjacent to terrain.
-  Causes ships to get stuck heading into wall.
-  Maybe caused by popping path head when first ship hits?
-** [done] Fleet center gets stuck against terrain wall
-  Suggestion: make terrain hard, neither fleets nor ships can be inside terrain.
-
-  Ships gradually spill around corner, creating helper fleets.
-  Perhaps ships that get ahead of fleet can just wait instead?
-
-  When fleet center goes into terrain, all ships request helper fleets.
-
-** [done] Bad helper fleets generated
-  Idea:
-  - distribute_ships should place ships at 1.5 radius margin to terrain
-  - ship::update_data should check:
-    -> ship not in terrain
-    -> fleet center visible using *radius 0* 
-    before calling request_helper_fleet
-
-  If that doesn't help, verify that consecutive calls to first_intersect are consistent.
-
-  Somehow, executing reaches ship.cpp:277 even though condition
-  g->first_intersect(position, f->position, radius) > -1
-  evaluates as false in debugger.
-
-  Seems to happen when ships are adjacent to terrain, maybe some kind of rounding error?
-
-  Causes creation of a large number of extra helper fleets at same location.
-** [done] Server hangs somewhere during simulation phase after updated rebuild_evm
-  Fixed. 
-  fleet::request_helper_fleet was returning fleet_id without reassigning ship id, 
-  causing invalid reference and empty fleets running update data.
-
-  Guarantee never running fleet::update_data on empty fleet.
-  ship::pre_phase -> request_helper_fleet may generate empty fleets.
-  fleet::give_commands may also generate empty fleets.
-
-Fleet with invalid position detected after pre_phase.
-Note that choice step can generate empty fleets, which may have NaN position?
-How can this create ships with NaN position?
-
-All ships have been verified after:
-  pre_phase, move, generate_fleet and request_helper_fleet.
-Still, in start of increment, at rebuild_evm, some ships have position {NaN, NaN}.
-Possible culprits are: 
-  interactions, post_phase, remove_units.
-Maybe just print debug with a game_data::verify_ships?
-
-Floating point error in block_search again, caused by uninitialized ship positions.
-
-Check if request_helper_fleet is somehow called after fleet is created but before distribute_ships is called, 
-causing ships to be removed from fleet list and never positioned.
-
-game_data::generate_fleet is only called from solar::give_commands. ship::on_liftoff is called afterwards by solar::give_comands.
-
-Choice phase
-apply_choice -> solar::give_commands 
-  -> generate_fleet -> distribute_ships
-  -> ship::on_liftoff
-
-Simulation phase
-increment -> ship::pre_phase -> ship::update_data -> request_helper_fleet
-
-Distribute ships donut for player 1, solid ball for player 2
-Collisions causing some ships to shoot very far away
-
-** [done] Implement fleet::request_helper_fleet
-  Multiple helper fleets generated with one ship, instead of joining existing helper fleets.
-  Helper fleets generated though no terrain between ships and fleet center.
-** [done] Issue with pathing again, path was suboptimal and passed through terrain
-** [done] game_data::increment slow when many ships around terrain
-  Caused by ship::update_data calling get_path.
-  This happens when there is terrain between the ship and the fleet's heading point.
-
-  Consider not letting ships call get_path. Implement ship to fleet merging with thrusters, 
-  then just head for fleet. If ships get too separated (ie cluster every N frames), 
-  split to a new fleet instead with same command.
-** [done] Optimize client_game::reload_data (causes lag in next_sim_frame)
-  Avoid using clone, maybe ok to just take over ref?
-  Do something about fixed stars ie don't add for each ship but per fleet
-  Apparently deregister entity is taking a lot of time
-  Also push_back when building enemy clusters is slow
-** [done] Generated frames label only updated when playing
-** [done] Reload data takes ~1 s with 500 ships in air, running sim on server takes some secs, show load in progress bar
-** [done] Ships in fleet need to come together when they get disjointed
-Perhaps check if there is empty space in direction of fleet center? Add "thrusters"?
-** [done] Alternative movement approach3
-
-   Maybe ships who have hpos in front of fleet should always use trail instead of terrain?
-   [impl] Always use most forward path node?
-   [impl] Update neighbour influence factor
-   [impl] Check ship pop path logic
-
-   [impl] Only push towards fleet center if in sight
-   [impl] Visualize ship private paths in client to debug why some paths are still weird
-
-   Some ships still stick on terrain, check which pathing policy they use   
-
-   Note debugger does not handle breakpoint conditional on ship id unless strcmp
-   Should build_private_path cancel when close to fleet even if fleet has a path?
-   [fixed] Client is still messing up fleet position somehow
-
-   [impl] Ships that are not in vision of any path node call get_path to fleet center (ie when splitting a fleet adjacent to terrain) 
-   [impl] Ships need to check if fleet is idle and stop
-   [impl] Distribute ships must place ships in vision of fleet center
-   [impl] Fleets should not be pushed out of terrain (path is generated using ship radius, not fleet radius)
-   [impl] Fleet needs to go idle when arriving at destination
-   [impl] When creating a new fleet, tell ships to reset private path
-   [impl] Get path will include starting position in result, check for consistency
-   [impl] Ships should only follow neighbours in front
-   [impl] Fleets compute a path with closer steps
-   [impl] Fleets track heading with an index and keep passed path nodes
-   [impl] Ships that are heading into terrain instead head for the furthest visible path node (test forward from fleet current index)
-** [impl] Fleet heading uninit or set to origin after auto commit
-   Check how fleet heading is initialized in update_heading after
-   creation in fleet::give_commands
-** [done] Replace collisions with repulsing potential
-** [done] Movement issues
-   [test] Fleets move past heading without popping
-   Ships do not change direction when fleet passes checkpoint
-   In some cases all ships seem to turn wrong way when avoiding terrain
-** [done] Update fleet position in give_commands
-** [done] Client should delete all fleets in reload_data?
-** [done] New terrain::contains does not work, always returns false
-   Parameter order mismatch in terrain_object::contains -> point_between
-   Logic error in contains
-** [impl] Ships need to avoid flying into terrain
-** [impl] Need to clean up helper fleets at end of simulation
-  I.e. gather all helper fleets in sight
-** [impl] One ship teleported to edge of other terrain
-   in_terrain:
-   Instead of checking triangles, just count intersects over whole border.
-   Calculate bounds of polygon. 
-   If outside bounds, return false.
-   If inside bounds, set a decent inf point and count all border intersects.
-   This should eliminate the worst rounding errors.
-   
-  Perhaps rounding error in in_triangle -> line_intersect. 
-  Testing different def of infinity point.
-
-  Maybe related to new push out of terrain mechanism.
-  Also noted some fleets not pushed out of terrain correctly.
 * Notes test game 2020-08-14
-** Voyagers op
-** Owned ships left as shadows when dead in some cases
+** In engage mode ships chose path to fleet center, issue with fleet->stats.enemies?
 ** Ships seem to engage when in evasive mode, perhaps when they are too far from enemy to detect threat?
 ** Heavy lag in client with many enemies
-** When fleeing or engaging, ships drive straight into terrain
+   Look at moving parts of reload_data to load_frames
 ** Removing ships from command does not remove downstream ships
   Also command gui for downstream commands shows original ships
 ** Must allow client to create fleets agin
+** Voyagers op
+** [done] When fleeing or engaging, ships drive straight into terrain
+** [test] Owned ships left as shadows when dead in some cases
 ** [fixed] Arrival to waypoint, fleet idles but next command removed instead of triggered
 ** [test] Evasive fleet policy does not work (well enough)
 ** [impl] Waypoint becomes impossible to select after first select or movement
@@ -398,6 +256,150 @@ Simulation step was called before send_choice
 **** Drag map
 **** Click minimap
 ** [done] Component should have parameters for allowed scroll directions
+* Done
+** [done] Ships can't see enemy ships
+** [done] Fleet path does not include first vertice when fleet center is adjacent to terrain.
+  Causes ships to get stuck heading into wall.
+  Maybe caused by popping path head when first ship hits?
+** [done] Fleet center gets stuck against terrain wall
+  Suggestion: make terrain hard, neither fleets nor ships can be inside terrain.
+
+  Ships gradually spill around corner, creating helper fleets.
+  Perhaps ships that get ahead of fleet can just wait instead?
+
+  When fleet center goes into terrain, all ships request helper fleets.
+
+** [done] Bad helper fleets generated
+  Idea:
+  - distribute_ships should place ships at 1.5 radius margin to terrain
+  - ship::update_data should check:
+    -> ship not in terrain
+    -> fleet center visible using *radius 0* 
+    before calling request_helper_fleet
+
+  If that doesn't help, verify that consecutive calls to first_intersect are consistent.
+
+  Somehow, executing reaches ship.cpp:277 even though condition
+  g->first_intersect(position, f->position, radius) > -1
+  evaluates as false in debugger.
+
+  Seems to happen when ships are adjacent to terrain, maybe some kind of rounding error?
+
+  Causes creation of a large number of extra helper fleets at same location.
+** [done] Server hangs somewhere during simulation phase after updated rebuild_evm
+  Fixed. 
+  fleet::request_helper_fleet was returning fleet_id without reassigning ship id, 
+  causing invalid reference and empty fleets running update data.
+
+  Guarantee never running fleet::update_data on empty fleet.
+  ship::pre_phase -> request_helper_fleet may generate empty fleets.
+  fleet::give_commands may also generate empty fleets.
+
+Fleet with invalid position detected after pre_phase.
+Note that choice step can generate empty fleets, which may have NaN position?
+How can this create ships with NaN position?
+
+All ships have been verified after:
+  pre_phase, move, generate_fleet and request_helper_fleet.
+Still, in start of increment, at rebuild_evm, some ships have position {NaN, NaN}.
+Possible culprits are: 
+  interactions, post_phase, remove_units.
+Maybe just print debug with a game_data::verify_ships?
+
+Floating point error in block_search again, caused by uninitialized ship positions.
+
+Check if request_helper_fleet is somehow called after fleet is created but before distribute_ships is called, 
+causing ships to be removed from fleet list and never positioned.
+
+game_data::generate_fleet is only called from solar::give_commands. ship::on_liftoff is called afterwards by solar::give_comands.
+
+Choice phase
+apply_choice -> solar::give_commands 
+  -> generate_fleet -> distribute_ships
+  -> ship::on_liftoff
+
+Simulation phase
+increment -> ship::pre_phase -> ship::update_data -> request_helper_fleet
+
+Distribute ships donut for player 1, solid ball for player 2
+Collisions causing some ships to shoot very far away
+
+** [done] Implement fleet::request_helper_fleet
+  Multiple helper fleets generated with one ship, instead of joining existing helper fleets.
+  Helper fleets generated though no terrain between ships and fleet center.
+** [done] Issue with pathing again, path was suboptimal and passed through terrain
+** [done] game_data::increment slow when many ships around terrain
+  Caused by ship::update_data calling get_path.
+  This happens when there is terrain between the ship and the fleet's heading point.
+
+  Consider not letting ships call get_path. Implement ship to fleet merging with thrusters, 
+  then just head for fleet. If ships get too separated (ie cluster every N frames), 
+  split to a new fleet instead with same command.
+** [done] Optimize client_game::reload_data (causes lag in next_sim_frame)
+  Avoid using clone, maybe ok to just take over ref?
+  Do something about fixed stars ie don't add for each ship but per fleet
+  Apparently deregister entity is taking a lot of time
+  Also push_back when building enemy clusters is slow
+** [done] Generated frames label only updated when playing
+** [done] Reload data takes ~1 s with 500 ships in air, running sim on server takes some secs, show load in progress bar
+** [done] Ships in fleet need to come together when they get disjointed
+Perhaps check if there is empty space in direction of fleet center? Add "thrusters"?
+** [done] Alternative movement approach3
+
+   Maybe ships who have hpos in front of fleet should always use trail instead of terrain?
+   [impl] Always use most forward path node?
+   [impl] Update neighbour influence factor
+   [impl] Check ship pop path logic
+
+   [impl] Only push towards fleet center if in sight
+   [impl] Visualize ship private paths in client to debug why some paths are still weird
+
+   Some ships still stick on terrain, check which pathing policy they use   
+
+   Note debugger does not handle breakpoint conditional on ship id unless strcmp
+   Should build_private_path cancel when close to fleet even if fleet has a path?
+   [fixed] Client is still messing up fleet position somehow
+
+   [impl] Ships that are not in vision of any path node call get_path to fleet center (ie when splitting a fleet adjacent to terrain) 
+   [impl] Ships need to check if fleet is idle and stop
+   [impl] Distribute ships must place ships in vision of fleet center
+   [impl] Fleets should not be pushed out of terrain (path is generated using ship radius, not fleet radius)
+   [impl] Fleet needs to go idle when arriving at destination
+   [impl] When creating a new fleet, tell ships to reset private path
+   [impl] Get path will include starting position in result, check for consistency
+   [impl] Ships should only follow neighbours in front
+   [impl] Fleets compute a path with closer steps
+   [impl] Fleets track heading with an index and keep passed path nodes
+   [impl] Ships that are heading into terrain instead head for the furthest visible path node (test forward from fleet current index)
+** [impl] Fleet heading uninit or set to origin after auto commit
+   Check how fleet heading is initialized in update_heading after
+   creation in fleet::give_commands
+** [done] Replace collisions with repulsing potential
+** [done] Movement issues
+   [test] Fleets move past heading without popping
+   Ships do not change direction when fleet passes checkpoint
+   In some cases all ships seem to turn wrong way when avoiding terrain
+** [done] Update fleet position in give_commands
+** [done] Client should delete all fleets in reload_data?
+** [done] New terrain::contains does not work, always returns false
+   Parameter order mismatch in terrain_object::contains -> point_between
+   Logic error in contains
+** [impl] Ships need to avoid flying into terrain
+** [impl] Need to clean up helper fleets at end of simulation
+  I.e. gather all helper fleets in sight
+** [impl] One ship teleported to edge of other terrain
+   in_terrain:
+   Instead of checking triangles, just count intersects over whole border.
+   Calculate bounds of polygon. 
+   If outside bounds, return false.
+   If inside bounds, set a decent inf point and count all border intersects.
+   This should eliminate the worst rounding errors.
+   
+  Perhaps rounding error in in_triangle -> line_intersect. 
+  Testing different def of infinity point.
+
+  Maybe related to new push out of terrain mechanism.
+  Also noted some fleets not pushed out of terrain correctly.
 * current work
 ** SEVERE memory leak in client game::draw_window
 ** Restructure to Makefile and RSG
