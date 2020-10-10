@@ -1152,19 +1152,23 @@ void game::reload_data(game_base_data &g, bool use_animations) {
     }
   }
 
-  // remove unseen ships that are in sight range
+  // remove unseen ships that are in sight range or owned
   list<combid> rbuf;
   for (auto s : filtered_entities<ship_selector>(game_object::any_owner, false)) {
     if (!s->seen) {
-      list<entity_selector::ptr> buf = utility::append<list<entity_selector::ptr>>(
-          filtered_entities<solar_selector>(self_id),
-          filtered_entities<fleet_selector>(self_id));
+      if (s->owned) {
+        rbuf.push_back(s->id);
+      } else {
+        list<entity_selector::ptr> buf = utility::append<list<entity_selector::ptr>>(
+            filtered_entities<solar_selector>(self_id),
+            filtered_entities<fleet_selector>(self_id));
 
-      for (auto x : buf) {
-        if (utility::l2norm(s->position - x->position) < x->vision()) {
-          rbuf.push_back(s->id);
-          cout << "reload_data: spotted unseen ship: " << s->id << endl;
-          break;
+        for (auto x : buf) {
+          if (utility::l2norm(s->position - x->position) < x->vision()) {
+            rbuf.push_back(s->id);
+            cout << "reload_data: spotted unseen ship: " << s->id << endl;
+            break;
+          }
         }
       }
     }
