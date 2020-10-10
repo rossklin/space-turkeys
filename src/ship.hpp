@@ -93,6 +93,6 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   bool follow_fleet_heading(game_data *g);
   bool follow_fleet_trail(game_data *g);
   bool follow_private_path(game_data *g);
-  bool build_private_path(game_data *g);
+  bool build_private_path(game_data *g, point p);
 };
 };  // namespace st3

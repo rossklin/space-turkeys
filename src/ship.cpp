@@ -265,17 +265,6 @@ bool ship::follow_fleet_trail(game_data *g) {
   fleet_ptr f = g->get_fleet(fleet_id);
   if (f->path.empty()) return false;
 
-  // int i;
-  // for (i = f->heading_index; i < f->path.size(); i++) {
-  //   if (g->first_intersect(position, f->path[i], buffered_radius()) > -1) break;
-  // }
-
-  // int idx;
-  // if (i > f->heading_index) {
-  //   idx = i - 1;
-  // } else {
-  // First heading point not in sight, look at path history
-
   int i;
   int idx;
   for (i = f->path.size() - 1; i >= 0; i--) {
@@ -302,13 +291,12 @@ bool ship::follow_fleet_trail(game_data *g) {
 // Attempt to follow private path
 bool ship::follow_private_path(game_data *g) {
   fleet_ptr f = g->get_fleet(fleet_id);
-  if (g->first_intersect(position, f->position, buffered_radius()) == -1) private_path.clear();
 
   if (private_path.size()) {
     if (g->first_intersect(position, private_path.front(), buffered_radius()) > -1) {
       // We are off the path somehow, terrain is in the way
       private_path.clear();
-      return build_private_path(g);
+      return build_private_path(g, private_path.back());
     } else {
       target_angle = point_angle(private_path.front() - position);
       target_speed = max_speed();
@@ -351,21 +339,12 @@ bool ship::follow_fleet_heading(game_data *g) {
   }
 }
 
-bool ship::build_private_path(game_data *g) {
+bool ship::build_private_path(game_data *g, point p) {
   fleet_ptr f = g->get_fleet(fleet_id);
-  float frad = 1.2 * g->get_ship(*f->ships.begin())->radius;
-  float f_fill_area = f->ships.size() * M_PI * pow(frad, 2);
-  float f_fill_radius = sqrt(f_fill_area / M_PI);
-
-  // If we are already at the fleet, we don't need a private path to get there
-  if (f->path.size() > 0 || l2norm(f->position - position) > f_fill_radius) {
-    private_path = g->get_path(position, f->position, buffered_radius(3));
-    pp_backref = private_path.front();
-    private_path.erase(private_path.begin());
-    return follow_private_path(g);
-  } else {
-    return false;
-  }
+  private_path = g->get_path(position, f->position, buffered_radius(3));
+  pp_backref = private_path.front();
+  private_path.erase(private_path.begin());
+  return follow_private_path(g);
 }
 
 // 1. Unset force refresh
@@ -384,29 +363,12 @@ void ship::update_data(game_data *g) {
   if (!has_fleet()) return;
 
   fleet_ptr f = g->get_fleet(fleet_id);
-  // if (g->terrain_at(position, radius) == -1 && g->first_intersect(position, f->position, 0) > -1) {
-  //   // Fleet center is no longer in sight, request a helper fleet
-  //   fleet_id = f->request_helper_fleet(g, id);
-  //   f = g->get_fleet(fleet_id);
-  // }
-
   activate = f->stats.converge;
 
   // Define policy variables
   bool travel = f->com.policy == fleet::policy_maintain_course;
-  bool engage = f->com.policy == fleet::policy_aggressive && tags.count("spacecombat");
-  bool evade = f->com.policy == fleet::policy_evasive;
-
-  // Select pathing policy and set target speed and angle
-  bool path_opt_found = follow_private_path(g) ||
-                        follow_fleet_heading(g) ||
-                        follow_fleet_trail(g) ||
-                        build_private_path(g);
-
-  if (!path_opt_found) {
-    target_speed = 0;
-    pathing_policy = "stop";
-  }
+  bool engage = f->com.policy == fleet::policy_aggressive && tags.count("spacecombat") && f->stats.enemies.size();
+  bool evade = f->com.policy == fleet::policy_evasive && f->stats.can_evade;
 
   // Update neighbours, friends and enemies, never require more than 10 neighbours
   float nrad = interaction_radius();
@@ -428,36 +390,47 @@ void ship::update_data(game_data *g) {
 
   neighbours = append<list<combid>>(local_friends, local_enemies);
 
-  // modify speed and angle to engage local enemies
-  if (engage) {
-    point p;
-    float d;
-    bool has_target = false;
-    if (local_enemies.size() > 0) {
-      // head towards a random local enemy
-      if (find(local_enemies.begin(), local_enemies.end(), current_target) == local_enemies.end()) {
-        current_target = utility::uniform_sample(local_enemies);
-      }
+  // clear private path as appropriate
+  bool path_opt_found = follow_private_path(g) || follow_fleet_heading(g) || follow_fleet_trail(g);
 
-      p = g->get_ship(current_target)->position;
-      has_target = true;
-    } else if (f->stats.enemies.size()) {
-      // head towards a fleet identified enemy target
-      p = f->stats.enemies.front().first;
-      has_target = true;
-    }
+  // Todo: when enemies spotted, builds private path to fleet center..?
 
-    if (has_target) {
-      d = utility::l2norm(p - position);
-      target_angle = utility::point_angle(p - position);
-      target_speed = max_speed() * exp(-nrad / (d + 1));
+  if (evade) {
+    // never clear
+    if (private_path.empty() || pathing_policy != "evade") path_opt_found = build_private_path(g, f->stats.evade_path);
+    pathing_policy = "evade";
+  } else if (engage) {
+    // clear when we reach some enemies
+    if (local_enemies.size() || pathing_policy != "engage") private_path.clear();
+    if (private_path.empty() && local_enemies.empty()) path_opt_found = build_private_path(g, f->stats.enemies.front().first);
+    pathing_policy = "engage";
+  } else if (!path_opt_found) {
+    float frad = 1.2 * g->get_ship(*f->ships.begin())->radius;
+    float f_fill_area = f->ships.size() * M_PI * pow(frad, 2);
+    float f_fill_radius = sqrt(f_fill_area / M_PI);
+
+    // If we are already at the fleet, we don't need a private path to get there
+    if (f->path.size() > 0 || l2norm(f->position - position) > f_fill_radius) {
+      path_opt_found = build_private_path(g, f->position);
     }
   }
 
-  // flee from fleet enemies
-  if (evade && f->stats.can_evade) {
-    target_angle = utility::point_angle(f->stats.evade_path - position);
-    target_speed = max_speed();
+  if (!path_opt_found) {
+    target_speed = 0;
+    pathing_policy = "stop";
+  }
+
+  // modify speed and angle to engage local enemies
+  if (engage && local_enemies.size()) {
+    // head towards a random local enemy
+    if (find(local_enemies.begin(), local_enemies.end(), current_target) == local_enemies.end()) {
+      current_target = utility::uniform_sample(local_enemies);
+    }
+
+    point p = g->get_ship(current_target)->position;
+    float d = utility::l2norm(p - position);
+    target_angle = utility::point_angle(p - position);
+    target_speed = max_speed() * exp(-nrad / (d + 1));
   }
 
   // Alter angle to avoid hitting wall
