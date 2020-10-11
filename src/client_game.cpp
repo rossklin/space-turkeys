@@ -752,6 +752,7 @@ void game::pre_step() {
     }
     cout << "client " << self_id << ": pre step: loaded" << endl;
 
+    players = data.players;
     reload_data(data, false);
 
     set_loading(false);
@@ -1120,83 +1121,12 @@ void game::reload_data(game_base_data &g, bool use_animations) {
   // make selectors 'not seen' and 'not owned' and clear commands and
   // waypoints
   clear_selectors();
-  players = g.players;
-  settings = g.settings;
-  terrain = g.terrain;
-
-  // Deregister fleets since they are provided under new id from server
-  for (auto f : filtered_entities<fleet>()) deregister_entity(f->id);
-
-  // update entities
-  for (auto a : g.all_entities<entity_selector>()) {
-    if (entity_exists(a->id)) {
-      // Reuse the entity instead of cloning (optimization)
-      entity[a->id] = a;
-
-      // Do not call move in case the entity was not registered in the grid
-      entity_grid[a->owner].remove(a->id);
-      entity_grid[a->owner].insert(a->id, a->position, a->radius);
-    } else {
-      add_entity(a);
-    }
-    a->seen = a->is_active();
-    if (a->owner == self_id && a->is_active() && (a->isa(solar::class_id) || a->isa(fleet::class_id))) add_fixed_stars(a->position, a->vision());
-    cout << "reload_data for " << self_id << ": loaded " << (a->seen ? "seen" : "unseen") << " entity: " << a->id << " owned by " << a->owner << endl;
-  }
-
-  // remove entities as server specifies
-  for (auto id : g.remove_entities) {
-    if (entity_exists(id)) {
-      cout << " -> remove entity " << id << endl;
-      deregister_entity(id);
-    }
-  }
-
-  // remove unseen ships that are in sight range or owned
-  list<combid> rbuf;
-  for (auto s : filtered_entities<ship_selector>(game_object::any_owner, false)) {
-    if (!s->seen) {
-      if (s->owned) {
-        rbuf.push_back(s->id);
-      } else {
-        list<entity_selector::ptr> buf = utility::append<list<entity_selector::ptr>>(
-            filtered_entities<solar_selector>(self_id),
-            filtered_entities<fleet_selector>(self_id));
-
-        for (auto x : buf) {
-          if (utility::l2norm(s->position - x->position) < x->vision()) {
-            rbuf.push_back(s->id);
-            cout << "reload_data: spotted unseen ship: " << s->id << endl;
-            break;
-          }
-        }
-      }
-    }
-  }
-  for (auto id : rbuf) deregister_entity(id);
-
-  // // fix fleet positions
-  // for (auto f : get_all<fleet>()) {
-  //   point p(0, 0);
-  //   for (auto sid : f->get_ships()) {
-  //     if (entity_exists(sid)) {
-  //       p += get_selector(sid)->position;
-  //     } else {
-  //       f->ships.erase(sid);
-  //       cout << "WARNING: " << sid << " missing when updating " << f->id << " position" << endl;
-  //     }
-  //   }
-
-  //   if (f->ships.size()) {
-  //     f->position = utility::scale_point(p, 1 / (float)f->get_ships().size());
-  //   } else {
-  //     cout << "WARNING: " << f->id << " removed because all ships were missing" << endl;
-  //     deregister_entity(f->id);
-  //   }
-  // }
+  terrain = g.terrain;  // TODO: optimize
+  entity = g.entity;
+  entity_grid = g.entity_grid;
 
   // update commands for owned fleets
-  for (auto f : get_all<fleet>()) {
+  for (auto f : get_all<fleet>()) {  // TODO: optimize
     fleet_idc = max(fleet_idc, identifier::get_multid_index(f->id) + 1);
 
     if (entity_exists(f->com.target) && f->owned) {
@@ -1213,7 +1143,7 @@ void game::reload_data(game_base_data &g, bool use_animations) {
   }
 
   // update commands for waypoints
-  for (auto w : get_all<waypoint>()) {
+  for (auto w : get_all<waypoint>()) {  // TODO: optimize
     wp_idc = max(wp_idc, identifier::get_multid_index(w->id) + 1);
 
     for (auto c : w->pending_commands) {
@@ -1229,7 +1159,7 @@ void game::reload_data(game_base_data &g, bool use_animations) {
     animations = utility::append<list<animation>>(
         animations,
         utility::fmap<list<animation>>(
-            players[self_id].animations,
+            g.players[self_id].animations,
             (function<animation(animation)>)[this](animation a) {
               a.frame0 = sim_idx;
               return a;
@@ -1239,16 +1169,16 @@ void game::reload_data(game_base_data &g, bool use_animations) {
   }
 
   // add event log
-  push_game_log(players.at(self_id).log);
+  push_game_log(g.players.at(self_id).log);
 
-  // update enemy cluster buffer
+  // update enemy cluster buffer TODO: move to load_frames
   auto sbuf = get_all<ship>();
-  enemy_clusters.clear();
+  enemy_clusters.clear();  // TODO: optimize
   enemy_clusters.reserve(sbuf.size());
   for (auto s : sbuf) {
     if (s->seen && !s->owned) enemy_clusters.push_back(s->position);
   }
-  if (enemy_clusters.size()) enemy_clusters = utility::cluster_points(enemy_clusters, 20, 100);
+  if (enemy_clusters.size()) enemy_clusters = utility::cluster_points(enemy_clusters, 20, 100);  // TODO: optimize
 }
 
 // ****************************************

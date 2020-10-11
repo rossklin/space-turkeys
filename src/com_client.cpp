@@ -79,6 +79,7 @@ void client::deserialize(game_base_data &f, sf::Packet &p, sint id) {
   f.players = ep.players;
   f.remove_entities = ep.remove_entities;
   f.terrain = ep.terrain;
+  f.entity_grid.clear();
 
   for (auto x : ep.all_entities<game_object>()) {
     sf::Color col;
@@ -101,6 +102,7 @@ void client::deserialize(game_base_data &f, sf::Packet &p, sint id) {
     } else {
       throw network_error("com_client::deserialize: Failed sanity check: class not recognized!");
     }
+    obj->seen = obj->is_active();
 
     f.add_entity(obj);
   }
