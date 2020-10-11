@@ -340,8 +340,7 @@ bool ship::follow_fleet_heading(game_data *g) {
 }
 
 bool ship::build_private_path(game_data *g, point p) {
-  fleet_ptr f = g->get_fleet(fleet_id);
-  private_path = g->get_path(position, f->position, buffered_radius(3));
+  private_path = g->get_path(position, p, buffered_radius(3));
   pp_backref = private_path.front();
   private_path.erase(private_path.begin());
   return follow_private_path(g);
