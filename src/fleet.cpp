@@ -85,7 +85,9 @@ void fleet::pre_phase(game_data *g) {
 
 void fleet::move(game_data *g) {
   // linear extrapolation of position estimate
-  if (!is_idle()) {
+  bool engage = com.policy == fleet::policy_aggressive && stats.enemies.size();
+  bool evade = com.policy == fleet::policy_evasive && stats.can_evade;
+  if (!(is_idle() || engage || evade)) {
     float d = fmin(stats.speed_limit, l2norm(heading - position));
     position += normalize_and_scale(heading - position, d);
   }
