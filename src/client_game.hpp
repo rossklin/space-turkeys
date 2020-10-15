@@ -281,6 +281,9 @@ class game : public game_base_data {
   /* COMMAND HANDLING */
   /* **************************************** */
 
+  // Refresh available downstream ships for an entity
+  void refresh_ships(combid id);
+
   /*! add a command selector representing a command
 	@param c the command
 	@param from the coordinate point of the source

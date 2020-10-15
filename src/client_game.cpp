@@ -1194,6 +1194,20 @@ void game::reload_data(client_data_frame &g, bool use_animations) {
 // COMMAND MANIPULATION
 // ****************************************
 
+void game::refresh_ships(combid id) {
+  entity_selector::ptr e = get_entity<entity_selector>(id);
+  if (!e->isa(waypoint::class_id)) return;
+
+  specific_selector<waypoint>::ptr w = utility::guaranteed_cast<specific_selector<waypoint>>(e);
+  set<combid> sids;
+  for (auto c : incident_commands(id)) sids += get_command_selector(c)->ships;
+  for (auto c : w->commands) {
+    command_selector::ptr cp = get_command_selector(c);
+    cp->ships = cp->ships & sids;
+    refresh_ships(cp->target);
+  }
+}
+
 /** Add a command selector.
  */
 void game::add_command(command c, point from, point to, bool fill_ships, bool default_policy) {
@@ -1516,13 +1530,16 @@ bool game::select_command(idtype key) {
             c->ships = set<combid>(ready_ships.begin(), ready_ships.begin() + num);
             c->selected = false;
             clear_ui_layers();
+            refresh_ships(c->target);
           },
           [this, c]() {
             c->selected = false;
             clear_ui_layers();
           },
-          [this, key]() {
-            remove_command(key);
+          [this, c]() {
+            combid t = c->target;
+            remove_command(c->id);
+            refresh_ships(t);
           }));
 
   return true;
