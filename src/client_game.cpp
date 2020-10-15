@@ -632,6 +632,23 @@ void game::target_selected(string action, combid target, point pos, list<string>
   clear_ui_layers();
 }
 
+void game::prepare_data_frame(client_data_frame &f) {
+  f.fleets = f.filtered_entities<specific_selector<fleet>>(self_id);
+  f.waypoints = f.filtered_entities<specific_selector<waypoint>>(self_id);
+
+  auto sbuf = f.filtered_entities<specific_selector<ship>>();
+  f.enemy_clusters.clear();
+  f.enemy_clusters.reserve(sbuf.size());
+  for (auto s : sbuf) {
+    if (s->seen && !s->owned) f.enemy_clusters.push_back(s->position);
+  }
+  if (f.enemy_clusters.size()) f.enemy_clusters = utility::cluster_points(f.enemy_clusters, 20, 100);
+
+  for (auto &x : f.terrain) {
+    if (!terrain.count(x.first)) f.new_tids.push_back(x.first);
+  }
+}
+
 /*! Background task for simulation step, loading frame data from server */
 void game::load_frames() {
   cout << "Starting to load frames" << endl;
@@ -649,7 +666,9 @@ void game::load_frames() {
       sint test;
       socket->data >> frames_generated >> test;
       if (test == protocol::confirm) {
-        client::deserialize(sim_frames[sim_frames_loaded], socket->data, socket->id);
+        client_data_frame &f = sim_frames[sim_frames_loaded];
+        client::deserialize(f, socket->data, socket->id);
+        prepare_data_frame(f);
         break;
       }
     }
@@ -743,9 +762,10 @@ void game::pre_step() {
   phase = "pre";
 
   auto callback = [this](sf::Packet p) {
-    game_base_data data;
+    client_data_frame data;
     try {
       client::deserialize(data, p, self_id);
+      prepare_data_frame(data);
     } catch (exception e) {
       terminate_with_message("Pre-step: failed to load: " + string(e.what()));
       return;
@@ -1115,7 +1135,7 @@ research::data game::get_research() const {
     Adds and removes entity selectors given by the frame. Also adds
     new command selectors representing fleet commands.
 */
-void game::reload_data(game_base_data &g, bool use_animations) {
+void game::reload_data(client_data_frame &g, bool use_animations) {
   scoped_lock lock(game_data_mutex);
 
   // make selectors 'not seen' and 'not owned' and clear commands and
@@ -1124,9 +1144,10 @@ void game::reload_data(game_base_data &g, bool use_animations) {
   terrain = g.terrain;  // TODO: optimize
   entity = g.entity;
   entity_grid = g.entity_grid;
+  enemy_clusters = g.enemy_clusters;
 
   // update commands for owned fleets
-  for (auto f : get_all<fleet>()) {  // TODO: optimize
+  for (auto f : g.fleets) {
     fleet_idc = max(fleet_idc, identifier::get_multid_index(f->id) + 1);
 
     if (entity_exists(f->com.target) && f->owned) {
@@ -1143,7 +1164,7 @@ void game::reload_data(game_base_data &g, bool use_animations) {
   }
 
   // update commands for waypoints
-  for (auto w : get_all<waypoint>()) {  // TODO: optimize
+  for (auto w : g.waypoints) {  // TODO: optimize
     wp_idc = max(wp_idc, identifier::get_multid_index(w->id) + 1);
 
     for (auto c : w->pending_commands) {
@@ -1156,29 +1177,17 @@ void game::reload_data(game_base_data &g, bool use_animations) {
 
   // add animations
   if (use_animations) {
-    animations = utility::append<list<animation>>(
-        animations,
-        utility::fmap<list<animation>>(
-            g.players[self_id].animations,
-            (function<animation(animation)>)[this](animation a) {
-              a.frame0 = sim_idx;
-              return a;
-            }));
+    for (auto a : g.players[self_id].animations) {
+      animation b(a);
+      b.frame0 = sim_idx;
+      animations.push_back(b);
+    }
   } else {
     animations.clear();
   }
 
   // add event log
   push_game_log(g.players.at(self_id).log);
-
-  // update enemy cluster buffer TODO: move to load_frames
-  auto sbuf = get_all<ship>();
-  enemy_clusters.clear();  // TODO: optimize
-  enemy_clusters.reserve(sbuf.size());
-  for (auto s : sbuf) {
-    if (s->seen && !s->owned) enemy_clusters.push_back(s->position);
-  }
-  if (enemy_clusters.size()) enemy_clusters = utility::cluster_points(enemy_clusters, 20, 100);  // TODO: optimize
 }
 
 // ****************************************

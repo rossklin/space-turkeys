@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "choice.hpp"
+#include "client_data_frame.hpp"
 #include "fixed_star.hpp"
 #include "game_base_data.hpp"
 #include "rsg/src/RskTypes.hpp"
@@ -87,7 +88,7 @@ class game : public game_base_data {
   int sim_idx;
   int sim_sub_idx;
   bool sim_playing;
-  std::vector<game_base_data> sim_frames;
+  std::vector<client_data_frame> sim_frames;
 
   // Command selectors
   idtype comid;                                          /*!< id counter for commands */
@@ -152,6 +153,7 @@ class game : public game_base_data {
 
   // SERVER COMMUNICATION AND BACKGROUND TASKS
   void target_selected(std::string action, combid target, point pos, std::list<std::string> e_sel);
+  void prepare_data_frame(client_data_frame &g);
   void load_frames();
 
   /*! Update entities to correspond to the current sim frame */
@@ -195,7 +197,7 @@ class game : public game_base_data {
   /*! update gui with new game data
 	@param g the game data
       */
-  void reload_data(game_base_data &g, bool use_animations = true);
+  void reload_data(client_data_frame &g, bool use_animations = true);
 
   // event handling
   /*! update the choice generating gui with an sfml event
