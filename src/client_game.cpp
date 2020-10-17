@@ -662,22 +662,22 @@ void game::load_frames() {
   sim_frames.resize(settings.clset.frames_per_round);
 
   frames_generated = 0;
-  for (sim_frames_loaded = 0; sim_frames_loaded < sim_frames.size() && socket->check_com(); sim_frames_loaded++) {
+  for (sim_frames_loaded = 0; phase == "simulation" && sim_frames_loaded < sim_frames.size() && socket->check_com(); sim_frames_loaded++) {
     pq.clear();
     pq << protocol::frame << sim_frames_loaded;
 
-    bool success;
-    while (success = client::query(socket, pq)) {
+    packet_ptr p;
+    while (p = client::query(socket, pq)) {
       sint test;
-      socket->data >> frames_generated >> test;
+      *p >> frames_generated >> test;
       if (test == protocol::confirm) {
         client_data_frame &f = sim_frames[sim_frames_loaded];
-        client::deserialize(f, socket->data, socket->id);
+        client::deserialize(f, *p, socket->id);
         prepare_data_frame(f);
         break;
       }
     }
-    if (!success) break;
+    if (!p) break;
   }
 
   pq.clear();
@@ -695,8 +695,9 @@ void game::load_frames() {
 // Start background task: query server with packet, then callback with result
 void game::wait_for_it(packet_ptr p, function<void(sf::Packet &)> callback, RSG::Voidfun on_fail) {
   queue_background_task([this, p, callback, on_fail]() {
-    if (p && client::query(socket, *p)) {
-      callback(socket->data);
+    packet_ptr res;
+    if (p && (res = client::query(socket, *p))) {
+      callback(*res);
     } else if (on_fail) {
       on_fail();
     } else {
