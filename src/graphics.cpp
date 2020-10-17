@@ -253,8 +253,7 @@ point graphics::inverse_scale(sf::RenderTarget& w) {
   sf::View v = w.getView();
   auto res = point(v.getSize().x / w.getSize().x, v.getSize().y / w.getSize().y);
   if (!(isfinite(res.x) && isfinite(res.y))) {
-    cout << "Invalid inverse scale: " << res << endl;
-    res = {1, 1};
+    throw runtime_error("Invliad render target!");
   }
 
   return res;

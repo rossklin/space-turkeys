@@ -72,6 +72,11 @@ void game::run() {
   view_minimap.setViewport(sf::FloatRect(0.01, 0.71, 0.28, 0.28));
   window->setView(view_window);
 
+  // Debug
+  if (!(isfinite(view_window.getSize().x) && isfinite(view_window.getSize().y))) {
+    throw runtime_error("Invalid view created");
+  }
+
   // Setup all layers, do not preserve base layer
   do_clear_ui_layers(false);
 
