@@ -41,12 +41,12 @@ void grid::tree<V>::clear() {
 
 template <typename V>
 typename grid::tree<V>::K grid::tree<V>::make_key(point p) {
-  return K(p.x / r, p.y / r);
+  return K(p.x / grid_size, p.y / grid_size);
 }
 
 template <typename V>
 point grid::tree<V>::map_key(K k) {
-  return point(r * (k.first + 0.5), r * (k.second + 0.5));
+  return point(grid_size * (k.first + 0.5), grid_size * (k.second + 0.5));
 }
 
 /*! insert an id-position pair
@@ -55,10 +55,10 @@ point grid::tree<V>::map_key(K k) {
       */
 template <typename V>
 void grid::tree<V>::insert(V id, point p, float rad) {
-  metadata.emplace(id, info{r, p});
+  metadata.emplace(id, info{grid_size, p});
   reverse_index[id] = {};
-  for (float x = p.x - rad; x <= p.x + rad; x += r) {
-    for (float y = p.y - rad; y <= p.y + rad; y += r) {
+  for (float x = p.x - rad; x <= p.x + rad; x += grid_size) {
+    for (float y = p.y - rad; y <= p.y + rad; y += grid_size) {
       K k = make_key({x, y});
       index[k].insert(id);
       reverse_index[id].insert(k);
@@ -84,13 +84,13 @@ set<V> grid::tree<V>::block_search(point p, float rad) {
   set<V> ids;
 
   // Check for floating point errors
-  if (!(p.x + r > p.x && p.y + r > p.y)) {
+  if (!(p.x + grid_size > p.x && p.y + grid_size > p.y)) {
     server::log("Rounding error in grid::tree::block_search!", "warning");
     return {};
   }
 
-  for (float x = p.x - rad; x <= p.x + rad; x += r) {
-    for (float y = p.y - rad; y <= p.y + rad; y += r) {
+  for (float x = p.x - rad; x <= p.x + rad; x += grid_size) {
+    for (float y = p.y - rad; y <= p.y + rad; y += grid_size) {
       K k = make_key(point(x, y));
       if (index.count(k) && !block_index.count(k)) {
         ids += index.at(k);
@@ -112,16 +112,16 @@ list<pair<V, point>> grid::tree<V>::search(point p, float rad, int knn) const {
   set<V> ids;
   K last_k(INT_FAST32_MAX, INT_FAST32_MAX);
 
-  for (float rbuf = 0; rbuf <= rad; rbuf += r) {
+  for (float rbuf = 0; rbuf <= rad; rbuf += grid_size) {
     float a_inc = 2 * M_PI;
-    if (rbuf > 0) a_inc = 0.1 * r / rbuf;
+    if (rbuf > 0) a_inc = 0.3 * grid_size / rbuf;
     for (float a = 0; a < 2 * M_PI; a += a_inc) {
-      K k = make_key(p + rbuf * utility::normv(a));
+      K k = make_key(p + rbuf * utility::normv(a));  // OPTIMIZE 4.4
       if (k != last_k) {
         last_k = k;
         if (index.count(k)) {
-          for (auto id : index.at(k)) {
-            info buf = metadata.at(id);
+          for (auto id : index.at(k)) {  // OPTIMIZE 7.8
+            info buf = metadata.at(id);  // OPTIMIZE 5.7
             if (utility::l2norm(p - buf.p) < rad + buf.r) {
               ids.insert(id);
             }
@@ -134,7 +134,7 @@ list<pair<V, point>> grid::tree<V>::search(point p, float rad, int knn) const {
   }
 
   list<pair<V, point>> res;
-  for (auto id : ids) res.push_back({id, metadata.at(id).p});
+  for (auto id : ids) res.push_back({id, metadata.at(id).p});  // OPTIMIZE 6.2
 
   return res;
 }

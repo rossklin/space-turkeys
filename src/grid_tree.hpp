@@ -19,7 +19,7 @@ struct tree {
     float r;
     point p;
   };
-  static constexpr float r = 10;
+  static constexpr float grid_size = 10;
 
   std::map<K, std::set<V>> index; /*!< Table over which elements are found at a position */
   std::set<K> block_index;
