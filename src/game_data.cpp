@@ -477,14 +477,20 @@ void game_data::remove_units() {
 void game_data::distribute_ships(fleet_ptr f) {
   if (f->ships.empty()) return;
 
+  // Push out of terrain if necessary
+  point x0 = f->position;
+  int tid;
+  if (tid = terrain_at(x0, 1)) x0 = terrain[tid].closest_exit(x0, 1);
+
   float ship_rad = get_ship(*f->ships.begin())->radius;
   float buf_rad = 1.05 * ship_rad;
   target_condition c(target_condition::any_alignment, ship::class_id);
   c = c.owned_by(f->owner);
 
-  auto pos_occupied = [this, c, ship_rad, f](point p) {
-    bool fleet_blocked = first_intersect(p, f->position, 0) > -1;
-    bool occupied_by_ship = search_targets_nophys(f->owner, identifier::source_none, p, ship_rad, c, 1).size() > 0;
+  idtype pid = f->owner;
+  auto pos_occupied = [this, c, ship_rad, pid, x0](point p) {
+    bool fleet_blocked = first_intersect(p, x0, 0) > -1;
+    bool occupied_by_ship = search_targets_nophys(pid, identifier::source_none, p, ship_rad, c, 1).size() > 0;
     bool blocked_by_terrain = terrain_at(p, 1.5 * ship_rad) > -1;
     return blocked_by_terrain || fleet_blocked || occupied_by_ship;
   };
