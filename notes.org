@@ -1,34 +1,75 @@
-* Notes test game 2020-08-14
-** In engage mode ships chose path to fleet center, issue with fleet->stats.enemies?
-** Ships seem to engage when in evasive mode, perhaps when they are too far from enemy to detect threat?
-** Heavy lag in client with many enemies
-   Look at moving parts of reload_data to load_frames
-** Removing ships from command does not remove downstream ships
+* Testing
+** [done] Removing ships from command does not remove downstream ships
   Also command gui for downstream commands shows original ships
-** Must allow client to create fleets agin
-** Voyagers op
-** [done] When fleeing or engaging, ships drive straight into terrain
-** [test] Owned ships left as shadows when dead in some cases
-** [fixed] Arrival to waypoint, fleet idles but next command removed instead of triggered
-** [test] Evasive fleet policy does not work (well enough)
-** [impl] Waypoint becomes impossible to select after first select or movement
-** [test] Client hit "Attempting to build invalid command"
-  Possible fix: clear command refs in client::game::clear_selectors
-
-  client::game::build_choice row 1016
-  That means an entity_selector listed a command id which did not refer to a registered command_selector.
-  No interface action was taken by client, just auto commited default state from server.
-  Had many helper fleets. 
+** [done] Waypoint becomes impossible to select after first select or movement
 ** [test] prune_path not working correctly
   Verify
 
   Misses initial point sometimes.
   Or maybe just turns out that way after fleet moves?
+** [done] Consistent network error pressing done in simulation before other client pressed commit
+   Confirmed error in sf::Packet& st3::operator>>(sf::Packet& packet, game_base_data& g)
+
+   The second client to click done gets a packet with 1 frames
+   generated and a confirm, containing idc, players and settings. The
+   rest of the packet is corrupted.
+
+   Some concurrency thing with "done" callback and use of socket data buffer?
+
+game_object.cpp:56    throw network_error("deserialize: failed to extract key!");
+Probably connected to:
+2020-08-28 17:22:55: network: client_t::receive_query: unexpected protocol: 0
+** [impl] Event log overflows onto hover info
+* Bugs and issues
 ** Sometimes client starts with sfml view dims set to NaN for some reason
-** Looks weird when terrain "spawns" on top of ships
-** Distribute ships packs ships in weird discrete patterns and blocks the solar
-** Fix partial invalidation for GUI components (ie scrolling list lowers frame rate to 10 fps)
+** Server slow in large battle
+   Mainly caused in grid_tree::search, by iterating the index and
+   looking up the metadata. 
 ** Simulation progress bar resets to 0 when data runs out or when paused?
+** Fleet evasion paths are a bit quirky
+   Look at scalings and bandwidths in analyze_enemies
+
+   For example:
+   Heading towards enemy fleet when only spotted a few ships
+   Heading to other side of enemy fleet when standing on home solar
+** Distribute ships packs ships in weird discrete patterns and blocks the solar
+** Looks weird when terrain "spawns" on top of ships
+** Fighters bounce absurdly when colliding slowly with battleships
+Reduce elasticity in collision equations?
+** Voyagers op
+* Visual issues
+** Font displays ugly in UI
+** Solar defense animation should fire from radius not from center
+** Background for selected buttons is hard to see
+** Target GUI should not show target sub panel if there is only one target option
+** [test] Fighter shot animations quite heavy and long
+** Popup dialogue hbars do not fill width
+** Use consistent styles for choice-buttons, enquer-buttons and queue-items
+* Development
+** Actions (at least deploy and go to) need a "face direction" property
+** Deploying (and other actions?) should remove the command
+** Fix partial invalidation for GUI components (ie scrolling list lowers frame rate to 10 fps)
+** How to handle deploy action for multiship fleet
+Perhaps actions with no target should be performed by all ships regardless of position when fleet arrives?
+** Look over descriptions in all choice UIs
+** Event log: color coded cards, click -> go to map location
+* Ideas
+** Must allow client to create fleets agin
+** If implementing a fleet count limit
+Must compute the number of fleets that would finally result from
+resolving all commands
+** Different mechanics for "flagships", medium size ships and fighters
+   Perhaps fighters should not collide with other ships except own fleet?
+   Perhaps treat fleet and ship count limits differently?
+   Perhaps allow players to restructure fleets with flagships?   
+** Would like indicators for progress etc in right hand menu
+Eg research progress, ship and building progress, empire stats such as max fleets
+** Map properties
+*** Add solars without organics to force players to transport resources to habitable solars
+*** Have more terrain between solars rather than fields of solars
+For example, make clusters of one or two habitable solars and a couple uninhabitable solars
+and then add terrain between them.
+* Notes test game 2020-08-14
 ** The ship combat equations
 FlexWeight = 1 x (angle_diff(a, angle(p2 - p1)) < Pi x CannonFlex)
 AccuracyCheck = Accuracy x FlexWeight x 30 / (|p2-p1| - 1)
@@ -61,59 +102,6 @@ accuracy 2
 evasion 2
 load time 5
 cannon flex 0.2
-** How to handle deploy action for multiship fleet
-Perhaps actions with no target should be performed by all ships regardless of position when fleet arrives?
-** Fighters bounce absurdly when colliding slowly with battleships
-Reduce elasticity in collision equations?
-** [impl] Consistent network error pressing done in simulation before other client pressed commit
-game_object.cpp:56    throw network_error("deserialize: failed to extract key!");
-Probably connected to:
-2020-08-28 17:22:55: network: client_t::receive_query: unexpected protocol: 0
-** [impl] Event log overflows onto hover info
-** Deploying (and other actions?) should remove the command
-** Solar defense animation should fire from radius not from center
-** Deployed cannons need a direction instruction attached to action
-** Again crash in reload_data when updating fleet position after spotted unseen ship
-Could be either after colonize or after all ships in fleet were destroyed
-** Background for selected buttons is hard to see
-** Target GUI should not show target sub panel if there is only one target option
-** Target GUI should either be centered or attached to game view
-** Add waypoint property: face direction
-** Commit button still shows in simulation phase
-** If implementing a fleet count limit
-Must compute the number of fleets that would finally result from
-resolving all commands
-** [impl] No event log item for ship death
-** [impl] Missing Command GUI option to delete command
-** [done] Some combat animations missing
-** [impl] Entity grid should move metadata to other index
-** [impl] The entity grid should return any entities whose radius overlaps the search area
-** [test] Fighter shot animations quite heavy and long
-** [test] Increase friction and/or add free rotation thrusters
-** [test] Deployed cannons are way to weak, can barely kill fighters
-** [done] Crash in draw_universe in animation loop header
-Probably caused by running reload_data in parallel. Suggestion: mutex and scoped lock reload_data against draw_universe.
-** [done] Hang in tester -> increment -> ship_move -> grid_tree::move
-  Ship position is greater than int precision, causing hang in search loop due to failed key incrementation.
-  Break in ship movement to determine cause.
-  Then remove temporary sequential test in tester.
-
-  Fix: there were uninitialized physics vars for ships in tester due to not calling on_liftoff
-** [done] Again segfailt in tester -> register_entity -> grid_tree.insert -> map::emplace
-  Triggered by first entity, in the initial sequential test
-** [done] Perf shows server spends most time in grid_tree::search, mostly in rebuild_evm
-  Also ship::update_data spends most time grid_tree::search, not in apply_ship
-  Ideas:
-  [done] Separate pos_index from metadata to avoid copying index when fetching metadata
-  Use KNN instead of radius search to avoid looking up and copying all ships when only a few are needed
-  Split map by player and enable blocking searched indices when updating evm
-** [done] rebuild_evm: new implementation with player split grids
-  First find a grid of points covering fleet ships.
-  Then block search each of these.
-** [done] Disable update_discover for tester
-*** No animations first round, 2 ships died
-*** All animations at start of second round, none at end
-** [impl] Command GUI must update count when changing ship class
 * Notes test game 2020-06-22
 ** UI updates
 *** Popup dialogue hbars do not fill width
@@ -256,6 +244,54 @@ Simulation step was called before send_choice
 **** Drag map
 **** Click minimap
 ** [done] Component should have parameters for allowed scroll directions
+* done
+** [impl] No event log item for ship death
+** [impl] Missing Command GUI option to delete command
+** [done] Some combat animations missing
+** [impl] Entity grid should move metadata to other index
+** [impl] The entity grid should return any entities whose radius overlaps the search area
+** [test] Increase friction and/or add free rotation thrusters
+** [test] Deployed cannons are way to weak, can barely kill fighters
+** [done] Crash in draw_universe in animation loop header
+Probably caused by running reload_data in parallel. Suggestion: mutex and scoped lock reload_data against draw_universe.
+** [done] Hang in tester -> increment -> ship_move -> grid_tree::move
+  Ship position is greater than int precision, causing hang in search loop due to failed key incrementation.
+  Break in ship movement to determine cause.
+  Then remove temporary sequential test in tester.
+
+  Fix: there were uninitialized physics vars for ships in tester due to not calling on_liftoff
+** [done] Again segfailt in tester -> register_entity -> grid_tree.insert -> map::emplace
+  Triggered by first entity, in the initial sequential test
+** [done] Perf shows server spends most time in grid_tree::search, mostly in rebuild_evm
+  Also ship::update_data spends most time grid_tree::search, not in apply_ship
+  Ideas:
+  [done] Separate pos_index from metadata to avoid copying index when fetching metadata
+  Use KNN instead of radius search to avoid looking up and copying all ships when only a few are needed
+  Split map by player and enable blocking searched indices when updating evm
+** [done] rebuild_evm: new implementation with player split grids
+  First find a grid of points covering fleet ships.
+  Then block search each of these.
+** [done] Disable update_discover for tester
+*** No animations first round, 2 ships died
+*** All animations at start of second round, none at end
+** [impl] Command GUI must update count when changing ship class
+** [done] In engage mode ships chose path to fleet center, issue with fleet->stats.enemies?
+** [test] Fleets should stop moving along path in engage or evade mode
+** [done] Heavy lag in client with many enemies
+   Look at moving parts of reload_data to load_frames
+** [done] When fleeing or engaging, ships drive straight into terrain
+** [test] Owned ships left as shadows when dead in some cases
+** [fixed] Arrival to waypoint, fleet idles but next command removed instead of triggered
+** [test] Evasive fleet policy does not work (well enough)
+** [test] Client hit "Attempting to build invalid command"
+  Possible fix: clear command refs in client::game::clear_selectors
+
+  client::game::build_choice row 1016
+  That means an entity_selector listed a command id which did not refer to a registered command_selector.
+  No interface action was taken by client, just auto commited default state from server.
+  Had many helper fleets. 
+** Again crash in reload_data when updating fleet position after spotted unseen ship
+Could be either after colonize or after all ships in fleet were destroyed
 * Done
 ** [done] Ships can't see enemy ships
 ** [done] Fleet path does not include first vertice when fleet center is adjacent to terrain.
