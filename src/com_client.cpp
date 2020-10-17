@@ -21,23 +21,26 @@ bool cl_socket_t::check_com() {
   return instruction == tc_run;
 }
 
-bool st3::client::query(cl_socket_ptr socket, sf::Packet &pq) {
+packet_ptr st3::client::query(cl_socket_ptr socket, sf::Packet &pq) {
   static recursive_mutex m;
   lock_guard<recursive_mutex> lock(m);
   protocol_t message;
 
   try {
     if (!socket->send_packet(pq)) {
-      return false;
+      return 0;
     }
 
     if (!socket->receive_packet()) {
-      return false;
+      return 0;
     }
 
     if (socket->data >> message) {
       if (message == protocol::confirm) {
-        return true;
+        packet_ptr res(new sf::Packet);
+        res->append(socket->data.getData(), socket->data.getDataSize());
+        *res >> message;  // Dump the message
+        return res;
       } else if (message == protocol::standby) {
         // wait a little while then try again
         sf::sleep(sf::milliseconds(500));
@@ -46,7 +49,7 @@ bool st3::client::query(cl_socket_ptr socket, sf::Packet &pq) {
         throw network_error("query: server says invalid");
       } else if (message == protocol::aborted) {
         cout << "query: server says game aborted" << endl;
-        return false;
+        return 0;
       } else {
         throw network_error("query: unknown response: " + message);
       }
@@ -59,7 +62,7 @@ bool st3::client::query(cl_socket_ptr socket, sf::Packet &pq) {
     } else {
       cout << "Exception in client::query but game references is invalid! " << e.what() << endl;
     }
-    return false;
+    return 0;
   }
 }
 

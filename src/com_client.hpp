@@ -22,7 +22,7 @@ struct cl_socket_t : public socket_t {
 typedef std::shared_ptr<cl_socket_t> cl_socket_ptr;
 
 namespace client {
-bool query(cl_socket_ptr socket, sf::Packet &pq);
+packet_ptr query(cl_socket_ptr socket, sf::Packet &pq);
 void deserialize(game_base_data &f, sf::Packet &p, sint id);
 };  // namespace client
 };  // namespace st3
