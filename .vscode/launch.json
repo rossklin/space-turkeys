@@ -28,7 +28,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/debug_st_client",
-      "args": ["starting_fleet=massive", "size=200"],
+      "args": ["starting_fleet=massive", "size=100"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

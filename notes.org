@@ -23,8 +23,12 @@ Probably connected to:
 * Bugs and issues
 ** Sometimes client starts with sfml view dims set to NaN for some reason
 ** Server slow in large battle
-   Mainly caused in grid_tree::search, by iterating the index and
+   Testing new grid::tree   
+
+   Mainly caused in grid::tree::search, by iterating the index and
    looking up the metadata. 
+
+   https://en.wikipedia.org/wiki/Locality-sensitive_hashing
 ** Simulation progress bar resets to 0 when data runs out or when paused?
 ** Fleet evasion paths are a bit quirky
    Look at scalings and bandwidths in analyze_enemies
@@ -46,6 +50,11 @@ Reduce elasticity in collision equations?
 ** Popup dialogue hbars do not fill width
 ** Use consistent styles for choice-buttons, enquer-buttons and queue-items
 * Development
+** New grid::tree
+*** Make sure entities can't leave grid
+*** Update or remove extend_universe
+*** Remove entity_grid from game_base_data so it isn't rebuilt in client deserializer
+*** Eventually handle terrain in grid
 ** Actions (at least deploy and go to) need a "face direction" property
 ** Deploying (and other actions?) should remove the command
 ** Fix partial invalidation for GUI components (ie scrolling list lowers frame rate to 10 fps)

@@ -923,9 +923,12 @@ void game_data::build() {
 
   float angle = random_uniform(0, 2 * M_PI);
   float np = players.size();
+  float gs = grid::tree<combid>::grid_size;
+  float rad = fmin(0.4 * gs, settings.clset.galaxy_radius);
+  point center(gs / 2, gs / 2);
   for (auto &p : players) {
-    point p_base = scale_point(normv(angle), settings.clset.galaxy_radius);
-    point p_start = random_point_polar(p_base, 0.2 * settings.clset.galaxy_radius);
+    point p_base = center + scale_point(normv(angle), rad);
+    point p_start = random_point_polar(p_base, 0.1 * rad);
     make_home_solar(p_start, p.first);
     angle += 2 * M_PI / np;
   }
