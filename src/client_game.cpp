@@ -567,7 +567,7 @@ RSG::PanelPtr game::simulation_gui() {
                       }),
                       Button::create("Done", [this]() {
                         if (frames_generated == settings.clset.frames_per_round) {
-                        pre_step();
+                          pre_step();
                         }
                       }),
                   }),
@@ -1328,6 +1328,7 @@ void game::remove_command(idtype key) {
 
   // if last command of waypoint, remove it
   if (t->isa(waypoint::class_id)) {
+    refresh_ships(t->id);
     if (incident_commands(t->id).empty()) {
       deregister_entity(t->id);
     }
@@ -1545,9 +1546,7 @@ bool game::select_command(idtype key) {
             clear_ui_layers();
           },
           [this, c]() {
-            combid t = c->target;
             remove_command(c->id);
-            refresh_ships(t);
           }));
 
   return true;
