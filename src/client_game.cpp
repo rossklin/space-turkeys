@@ -566,7 +566,9 @@ RSG::PanelPtr game::simulation_gui() {
                         self->set_label(sim_playing ? "Pause" : "Play");
                       }),
                       Button::create("Done", [this]() {
+                        if (frames_generated == settings.clset.frames_per_round) {
                         pre_step();
+                        }
                       }),
                   }),
           },
