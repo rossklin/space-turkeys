@@ -18,9 +18,10 @@ struct tree {
   typedef std::pair<int, int> K;
   struct info {
     float r;
+    point p;
     std::set<K> at;
   };
-  const static int depth = 10;
+  const static int depth = 4;
   static constexpr float grid_size = 1000;
 
   struct grid_data {

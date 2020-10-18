@@ -68,7 +68,7 @@ packet_ptr st3::client::query(cl_socket_ptr socket, sf::Packet &pq) {
 
 // unpack entity package and generate corresponding selector objects in data frame
 void client::deserialize(game_base_data &f, sf::Packet &p, sint id) {
-  game_base_data ep;
+  unindexed_base_data ep;
 
   if (f.entity.size()) {
     throw classified_error("client::deserialize: data frame contains entities!");
@@ -84,7 +84,8 @@ void client::deserialize(game_base_data &f, sf::Packet &p, sint id) {
   f.terrain = ep.terrain;
   f.entity_grid.clear();
 
-  for (auto x : ep.all_entities<game_object>()) {
+  for (auto xs : ep.entity) {
+    game_object_ptr x = xs.second;
     sf::Color col;
 
     if (x->owner >= 0) {

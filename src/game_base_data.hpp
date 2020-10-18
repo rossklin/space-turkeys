@@ -9,7 +9,8 @@
 #include "utility.hpp"
 
 namespace st3 {
-class game_base_data {
+
+class unindexed_base_data {
  public:
   hm_t<class_t, idtype> idc;
   hm_t<idtype, player> players; /*!< table of players */
@@ -19,6 +20,9 @@ class game_base_data {
   std::list<combid> remove_entities;
   hm_t<idtype, std::set<combid>> evm;
   std::set<std::pair<int, int>> discovered_universe;
+};
+class game_base_data : public unindexed_base_data {
+ public:
   hm_t<idtype, grid::tree<combid>> entity_grid;
 
   virtual ~game_base_data() = default;

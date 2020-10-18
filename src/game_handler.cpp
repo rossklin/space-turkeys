@@ -24,9 +24,10 @@ using namespace st3::server;
 using namespace st3::utility;
 
 // limit_to without deallocating
-void limit_to(game_base_data *g, set<idtype> ids) {
+void limit_to(unindexed_base_data *g, set<idtype> ids) {
   list<combid> remove_buf;
-  for (auto e : g->all_entities<game_object>()) {
+  for (auto x : g->entity) {
+    game_object_ptr e = x.second;
     bool test = any(
         range_map<list<bool>>([g, e](idtype id) {
           bool known = e->isa(solar::class_id) && guaranteed_cast<solar>(e)->known_by.count(id);
@@ -37,12 +38,12 @@ void limit_to(game_base_data *g, set<idtype> ids) {
                               ids));
     if (!test) remove_buf.push_back(e->id);
   }
-  for (auto i : remove_buf) g->remove_entity(i);
+  for (auto i : remove_buf) g->entity.erase(i);
 }
 
 void simulation_step(game_setup &c, game_data &g) {
   int n = g.settings.clset.frames_per_round;
-  vector<game_base_data> frames(n);
+  vector<unindexed_base_data> frames(n);
   int frame_count = 0;
 
   query_response_generator handler = [&c, &frames, &frame_count](int cid, sf::Packet q) -> handler_result {
@@ -50,7 +51,7 @@ void simulation_step(game_setup &c, game_data &g) {
     bool test = q >> idx;
 
     auto on_success = [&frames, &frame_count, idx, cid](handler_result &result) {
-      game_base_data g;
+      unindexed_base_data g;
 
       if (idx < 0) {
         // client done - leave default confirm status
@@ -79,7 +80,12 @@ void simulation_step(game_setup &c, game_data &g) {
     auto task = [&]() {
       for (frame_count = 0; frame_count < n; frame_count++) {
         g.increment();
-        frames[frame_count].copy_from(g);
+
+        // Copy frame data
+        frames[frame_count] = (unindexed_base_data)g;
+        frames[frame_count].entity.clear();
+        for (auto x : g.entity) frames[frame_count].entity[x.first] = x.second->clone();
+
         if (main_status != socket_t::tc_run) break;
       }
     };

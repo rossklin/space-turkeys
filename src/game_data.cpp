@@ -934,9 +934,9 @@ void game_data::build() {
   }
 
   // generate universe between players
-  int idx_max = floor(settings.clset.galaxy_radius / settings.space_index_ratio);
-  for (int i = -idx_max; i <= idx_max; i++) {
-    for (int j = -idx_max; j <= idx_max; j++) {
+  int idx_max = floor(gs / settings.space_index_ratio);
+  for (int i = 0; i <= idx_max; i++) {
+    for (int j = 0; j <= idx_max; j++) {
       extend_universe(i, j);
     }
   }

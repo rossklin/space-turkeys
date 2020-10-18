@@ -109,8 +109,8 @@ sf::Packet& operator>>(sf::Packet& packet, std::pair<F, S>& g) {
 sf::Packet& operator<<(sf::Packet& packet, const cost::allocation& g);
 sf::Packet& operator>>(sf::Packet& packet, cost::allocation& g);
 
-sf::Packet& operator<<(sf::Packet& packet, const game_base_data& g);
-sf::Packet& operator>>(sf::Packet& packet, game_base_data& g);
+sf::Packet& operator<<(sf::Packet& packet, const unindexed_base_data& g);
+sf::Packet& operator>>(sf::Packet& packet, unindexed_base_data& g);
 
 sf::Packet& operator<<(sf::Packet& packet, const terrain_object& g);
 sf::Packet& operator>>(sf::Packet& packet, terrain_object& g);

@@ -24,23 +24,23 @@ sf::Packet& st3::operator>>(sf::Packet& packet, cost::allocation& g) {
 }
 
 // entity_package
-sf::Packet& st3::operator<<(sf::Packet& packet, const game_base_data& g) {
+sf::Packet& st3::operator<<(sf::Packet& packet, const unindexed_base_data& g) {
   sint n = g.entity.size();
   packet << g.idc << g.players << g.settings << g.remove_entities << g.terrain << g.discovered_universe << n;
   // polymorphic serialization
-  for (auto x : g.all_entities<game_object>()) x->serialize(packet);
+  for (auto x : g.entity) x.second->serialize(packet);
   return packet;
 }
 
-sf::Packet& st3::operator>>(sf::Packet& packet, game_base_data& g) {
+sf::Packet& st3::operator>>(sf::Packet& packet, unindexed_base_data& g) {
   sint n;
   packet >> g.idc >> g.players >> g.settings >> g.remove_entities >> g.terrain >> g.discovered_universe >> n;
   // polymorphic deserialization
-  g.clear_entities();
+  g.entity.clear();
   for (int i = 0; i < n; i++) {
     game_object_ptr x = game_object::deserialize(packet);
     if (x) {
-      g.add_entity(x);
+      g.entity[x->id] = x;
     } else {
       throw network_error("entity_package::load: failed to deserialize game object!");
     }

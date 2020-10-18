@@ -51,9 +51,17 @@ Reduce elasticity in collision equations?
 ** Use consistent styles for choice-buttons, enquer-buttons and queue-items
 * Development
 ** New grid::tree
+*** Update to using int grids per class instead of combid grid to get fixed memory
+*** Fix optimization issues ie trig functions
 *** Make sure entities can't leave grid
 *** Update or remove extend_universe
-*** Remove entity_grid from game_base_data so it isn't rebuilt in client deserializer
+*** [done] Remove entity_grid from game_base_data so it isn't rebuilt in client deserializer
+    
+**** Update entity_grid after calls to add_entity and remove_entity
+     client::deserialize: can f be a client_data_frame?
+     client::game: add method register_entity which calls grid::tree::insert, replace calls to add_entity
+     game_data::register_entity: call grid::tree::insert
+     client::game and game_data: deregister_entity: call grid::tree::remove
 *** Eventually handle terrain in grid
 ** Actions (at least deploy and go to) need a "face direction" property
 ** Deploying (and other actions?) should remove the command

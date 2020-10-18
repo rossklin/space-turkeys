@@ -680,6 +680,11 @@ void game::load_frames() {
       }
     }
     if (!p) break;
+
+    // Wait until more frames needed
+    while (sim_frames_loaded - sim_idx > 10) {
+      this_thread::sleep_for(chrono::milliseconds(500));
+    }
   }
 
   pq.clear();
@@ -1151,7 +1156,8 @@ void game::reload_data(client_data_frame &g, bool use_animations) {
   clear_selectors();
   terrain = g.terrain;  // TODO: optimize
   entity = g.entity;
-  entity_grid = g.entity_grid;
+  entity_grid.clear();
+  swap(entity_grid, g.entity_grid);
   enemy_clusters = g.enemy_clusters;
 
   // update commands for owned fleets
