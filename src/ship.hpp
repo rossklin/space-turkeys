@@ -24,7 +24,7 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   static const int na;
   static const float friction;
 
-  combid fleet_id; /*!< id of the ship's fleet */
+  idtype fleet_id; /*!< id of the ship's fleet */
   sfloat angle;    /*!< ship's angle */
   sfloat thrust;
   point force;
@@ -44,16 +44,16 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   bool skip_head;
   bool force_refresh;
   float hpos;
-  combid current_target;
+  idtype current_target;
   float collision_damage;
   path_t private_path;
   point pp_backref;
   std::string pathing_policy;
 
-  std::list<combid> neighbours;
-  std::list<combid> local_enemies;
-  std::list<combid> local_friends;
-  std::list<combid> local_all;
+  std::list<idtype> neighbours;
+  std::list<idtype> local_enemies;
+  std::list<idtype> local_friends;
+  std::list<idtype> local_all;
   bool fleet_center_blocked;
 
   // game_object

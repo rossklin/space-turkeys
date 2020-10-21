@@ -6,10 +6,10 @@ using namespace std;
 using namespace st3;
 
 st3::command::command() {
-  source = "";
-  target = "";
+  source = identifier::no_entity;
+  target = identifier::no_entity;
+  origin = identifier::no_entity;
   action = "";
-  origin = "";
   policy = fleet::policy_maintain_course;
 }
 

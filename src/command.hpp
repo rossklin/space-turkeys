@@ -8,13 +8,13 @@
 namespace st3 {
 /*! struct representing a command */
 struct command {
-  combid source; /*!< key of entity holding the command */
-  combid origin; /*!< key of the solar where the command was generated from */
-  combid target; /*!< key of target */
+  idtype source; /*!< key of entity holding the command */
+  idtype origin; /*!< key of the solar where the command was generated from */
+  idtype target; /*!< key of target */
   std::string action;
   sint policy;
   std::string ship_class;
-  std::set<combid> ships; /*!< ids of ships allocated to the command */
+  std::set<idtype> ships; /*!< ids of ships allocated to the command */
 
   /*! default constructor */
   command();

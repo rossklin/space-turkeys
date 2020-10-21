@@ -17,8 +17,8 @@ struct c_solar {
 
 struct choice {
   std::string research;
-  hm_t<combid, std::list<command> > commands; /*!< table of commands for game entities */
-  hm_t<combid, c_solar> solar_choices;        /*!< table of choices for solar system evolution */
-  hm_t<combid, waypoint_ptr> waypoints;       /*!< table of generated waypoints */
+  hm_t<idtype, std::list<command> > commands; /*!< table of commands for game entities */
+  hm_t<idtype, c_solar> solar_choices;        /*!< table of choices for solar system evolution */
+  hm_t<idtype, waypoint_ptr> waypoints;       /*!< table of generated waypoints */
 };
 };  // namespace st3

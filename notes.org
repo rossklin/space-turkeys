@@ -46,6 +46,8 @@ Reduce elasticity in collision equations?
 ** Popup dialogue hbars do not fill width
 ** Use consistent styles for choice-buttons, enquer-buttons and queue-items
 * Development
+** Simple id
+*** Check fleet/wp constructor id
 ** Actions (at least deploy and go to) need a "face direction" property
 ** Deploying (and other actions?) should remove the command
 ** Fix partial invalidation for GUI components (ie scrolling list lowers frame rate to 10 fps)

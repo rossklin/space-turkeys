@@ -32,7 +32,7 @@ int game_data::next_id(class_t x) {
   return idc[x]++;
 }
 
-game_object_ptr game_data::get_game_object(combid i) const {
+game_object_ptr game_data::get_game_object(idtype i) const {
   if (entity_exists(i)) {
     return get_entity<game_object>(i);
   } else {
@@ -40,23 +40,23 @@ game_object_ptr game_data::get_game_object(combid i) const {
   }
 }
 
-ship_ptr game_data::get_ship(combid i) const {
+ship_ptr game_data::get_ship(idtype i) const {
   return get_entity<ship>(i);
 }
 
-fleet_ptr game_data::get_fleet(combid i) const {
+fleet_ptr game_data::get_fleet(idtype i) const {
   return get_entity<fleet>(i);
 }
 
-solar_ptr game_data::get_solar(combid i) const {
+solar_ptr game_data::get_solar(idtype i) const {
   return get_entity<solar>(i);
 }
 
-waypoint_ptr game_data::get_waypoint(combid i) const {
+waypoint_ptr game_data::get_waypoint(idtype i) const {
   return get_entity<waypoint>(i);
 }
 
-bool game_data::target_position(combid t, point &p) const {
+bool game_data::target_position(idtype t, point &p) const {
   if (entity_exists(t)) {
     p = get_game_object(t)->position;
     return true;
@@ -66,8 +66,8 @@ bool game_data::target_position(combid t, point &p) const {
 }
 
 // find all entities in ball(p, r) matching condition c
-list<combid> game_data::search_targets_nophys(idtype pid, combid self_id, point p, float r, target_condition c, int knn) const {
-  list<combid> res;
+list<idtype> game_data::search_targets_nophys(idtype pid, idtype self_id, point p, float r, target_condition c, int knn) const {
+  list<idtype> res;
 
   for (auto &x : entity_grid) {
     for (auto i : x.second.search(p, r, knn)) {
@@ -81,8 +81,8 @@ list<combid> game_data::search_targets_nophys(idtype pid, combid self_id, point 
 }
 
 // find all entities in ball(p, r) matching condition c
-list<combid> game_data::search_targets(combid self_id, point p, float r, target_condition c, int knn) const {
-  list<combid> res;
+list<idtype> game_data::search_targets(idtype self_id, point p, float r, target_condition c, int knn) const {
+  list<idtype> res;
   game_object_ptr self = get_game_object(self_id);
   if (!self->isa(physical_object::class_id)) {
     throw logical_error("Non-physical entity called search targets: " + self_id);
@@ -298,10 +298,10 @@ int game_data::first_intersect(point a, point b, float r) const {
 }
 
 // create a new fleet and add ships from command c
-void game_data::relocate_ships(command c, set<combid> &sh, idtype owner) {
+void game_data::relocate_ships(command c, set<idtype> &sh, idtype owner) {
   fleet_ptr f;
-  combid source_id;
-  set<combid> fleet_buf;
+  idtype source_id;
+  set<idtype> fleet_buf;
 
   // check if ships fill exactly one fleet
   for (auto i : sh) {
@@ -353,7 +353,7 @@ void game_data::relocate_ships(command c, set<combid> &sh, idtype owner) {
 }
 
 // generate a fleet with given ships, set owner and fleet_id of ships
-fleet_ptr game_data::generate_fleet(point p, idtype owner, command c, list<combid> sh) {
+fleet_ptr game_data::generate_fleet(point p, idtype owner, command c, list<idtype> sh) {
   if (sh.empty()) return NULL;
 
   fleet_ptr f = fleet::create(fleet::server_pid, next_id(fleet::class_id));
@@ -386,9 +386,7 @@ void game_data::apply_choice(choice c, idtype id) {
   // build waypoints and fleets before validating the choice, so that
   // commands based there can be validated
   for (auto &x : c.waypoints) {
-    if (identifier::get_multid_owner(x.second->id) != id) {
-      throw player_error("apply_choice: player " + to_string(id) + " tried to insert waypoint owned by " + to_string(identifier::get_multid_owner(x.second->id)));
-    }
+    x.second->owner = id;
     register_entity(x.second->clone());
   }
 
@@ -406,11 +404,11 @@ void game_data::apply_choice(choice c, idtype id) {
     auto e = get_game_object(x.first);
 
     if (e->owner != id) {
-      throw player_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + x.first + " owned by " + to_string(e->owner));
+      throw player_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + to_string(x.first) + " owned by " + to_string(e->owner));
     }
 
     if (!e->isa(solar::class_id)) {
-      throw player_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + x.first + ": not a solar!");
+      throw player_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + to_string(x.first) + ": not a solar!");
     }
 
     if (x.second.building_queue.size()) {
@@ -437,7 +435,7 @@ void game_data::apply_choice(choice c, idtype id) {
   for (auto x : c.commands) {
     auto e = get_game_object(x.first);
     if (e->owner != id) {
-      throw player_error("validate_choice: error: command by player " + to_string(id) + " for " + x.first + " owned by " + to_string(e->owner));
+      throw player_error("validate_choice: error: command by player " + to_string(id) + " for " + to_string(x.first) + " owned by " + to_string(e->owner));
     }
   }
 
@@ -454,8 +452,8 @@ void game_data::register_entity(game_object_ptr p) {
   p->on_add(this);
 }
 
-void game_data::deregister_entity(combid i) {
-  if (!entity_exists(i)) throw logical_error("remove_entity: " + i + ": doesn't exist!");
+void game_data::deregister_entity(idtype i) {
+  if (!entity_exists(i)) throw logical_error("remove_entity: " + to_string(i) + ": doesn't exist!");
   get_game_object(i)->on_remove(this);
   remove_entity(i);
   remove_entities.push_back(i);
@@ -490,7 +488,7 @@ void game_data::distribute_ships(fleet_ptr f) {
   idtype pid = f->owner;
   auto pos_occupied = [this, c, ship_rad, pid, x0](point p) {
     bool fleet_blocked = first_intersect(p, x0, 0) > -1;
-    bool occupied_by_ship = search_targets_nophys(pid, identifier::source_none, p, ship_rad, c, 1).size() > 0;
+    bool occupied_by_ship = search_targets_nophys(pid, identifier::no_entity, p, ship_rad, c, 1).size() > 0;
     bool blocked_by_terrain = terrain_at(p, 1.5 * ship_rad) > -1;
     return blocked_by_terrain || fleet_blocked || occupied_by_ship;
   };
@@ -552,7 +550,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   // select positions
   vector<point> static_pos;
   target_condition cond(target_condition::any_alignment, solar::class_id);
-  for (auto test : search_targets_nophys(game_object::any_owner, identifier::source_none, center, ratio, cond)) {
+  for (auto test : search_targets_nophys(game_object::any_owner, identifier::no_entity, center, ratio, cond)) {
     static_pos.push_back(get_entity<solar>(test)->position);
   }
 
@@ -918,7 +916,7 @@ void game_data::build() {
     register_entity(s);
     discover(s->position, 0, true);
 
-    server::log("Created home solar " + s->id + " owned by " + to_string(s->owner));
+    server::log("Created home solar " + to_string(s->id) + " owned by " + to_string(s->owner));
   };
 
   float angle = random_uniform(0, 2 * M_PI);
@@ -970,7 +968,7 @@ void game_data::update_research_facility_level() {
 // Run solar dynamics, pool research and remove unused waypoints
 void game_data::end_step() {
   bool check;
-  list<combid> remove;
+  list<idtype> remove;
 
   for (auto i : filtered_entities<waypoint>()) {
     check = false;
@@ -1081,7 +1079,7 @@ void game_data::confirm_data() {
   }
 }
 
-animation_tracker_info game_data::get_tracker(combid id) const {
+animation_tracker_info game_data::get_tracker(idtype id) const {
   animation_tracker_info info;
   info.eid = id;
 
@@ -1099,7 +1097,7 @@ animation_tracker_info game_data::get_tracker(combid id) const {
   return info;
 }
 
-void game_data::log_bombard(combid a, combid b) {
+void game_data::log_bombard(idtype a, idtype b) {
   ship_ptr s = get_ship(a);
   solar_ptr t = get_solar(b);
   int delay = random_int(settings.clset.sim_sub_frames);
@@ -1129,7 +1127,7 @@ void game_data::log_bombard(combid a, combid b) {
   }
 }
 
-void game_data::log_ship_fire(combid a, combid b) {
+void game_data::log_ship_fire(idtype a, idtype b) {
   game_object_ptr s = get_game_object(a);
   ship_ptr t = get_ship(b);
   int delay = random_int(settings.clset.sim_sub_frames);
@@ -1167,7 +1165,7 @@ void game_data::log_ship_fire(combid a, combid b) {
   }
 }
 
-void game_data::log_ship_destroyed(combid a, combid b) {
+void game_data::log_ship_destroyed(idtype a, idtype b) {
   game_object_ptr s = get_game_object(a);
   ship_ptr t = get_ship(b);
   int delay = random_int(settings.clset.sim_sub_frames);
@@ -1195,7 +1193,7 @@ void game_data::log_ship_destroyed(combid a, combid b) {
   }
 }
 
-void game_data::log_message(combid a, string v_full, string v_short) {
+void game_data::log_message(idtype a, string v_full, string v_short) {
   ship_ptr s = get_ship(a);
 
   players[s->owner].log.push_back(v_full);
@@ -1213,7 +1211,7 @@ float game_data::get_dt() const {
   return settings.clset.sim_sub_frames * settings.dt;
 }
 
-float game_data::solar_order_level(combid id) const {
+float game_data::solar_order_level(idtype id) const {
   solar_ptr s = get_solar(id);
   idtype pid = s->owner;
 

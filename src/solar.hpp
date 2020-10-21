@@ -38,7 +38,7 @@ class solar : public virtual physical_object, public virtual commandable_object,
   sbool was_discovered;
   std::set<idtype> known_by;
 
-  std::set<combid> ships;
+  std::set<idtype> ships;
 
   solar() = default;
   ~solar() = default;

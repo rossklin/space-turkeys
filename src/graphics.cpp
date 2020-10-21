@@ -208,7 +208,7 @@ void graphics::draw_ship(sf::RenderTarget& w, ship_ptr s, sf::Color col, float s
 
   // temp for debug
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::L)) {
-    draw_text(w, s->id, s->position, 12, false);
+    draw_text(w, to_string(s->id), s->position, 12, false);
     draw_text(w, s->pathing_policy, s->position - point{0, s->radius}, 12, false);
 
     // add path

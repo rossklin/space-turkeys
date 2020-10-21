@@ -25,7 +25,7 @@ using namespace st3::utility;
 
 // limit_to without deallocating
 void limit_to(game_base_data *g, set<idtype> ids) {
-  list<combid> remove_buf;
+  list<idtype> remove_buf;
   for (auto e : g->all_entities<game_object>()) {
     bool test = any(
         range_map<list<bool>>([g, e](idtype id) {

@@ -12,8 +12,8 @@
 namespace st3 {
 
 struct interaction_info {
-  combid source;
-  combid target;
+  idtype source;
+  idtype target;
   std::string interaction;
 };
 
@@ -31,19 +31,19 @@ class game_data : public virtual game_base_data {
   int next_id(class_t x);
 
   // access
-  ship_ptr get_ship(combid i) const;
-  fleet_ptr get_fleet(combid i) const;
-  solar_ptr get_solar(combid i) const;
-  waypoint_ptr get_waypoint(combid i) const;
+  ship_ptr get_ship(idtype i) const;
+  fleet_ptr get_fleet(idtype i) const;
+  solar_ptr get_solar(idtype i) const;
+  waypoint_ptr get_waypoint(idtype i) const;
 
-  game_object_ptr get_game_object(combid i) const;
+  game_object_ptr get_game_object(idtype i) const;
 
   void assign(const game_data &g);
   void apply_choice(choice c, idtype id);
   void increment(bool test_extend = true);
-  bool target_position(combid t, point &p) const;
-  std::list<combid> search_targets(combid self_id, point p, float r, target_condition c, int knn = 0) const;
-  std::list<combid> search_targets_nophys(idtype pid, combid self_id, point p, float r, target_condition c, int knn = 0) const;
+  bool target_position(idtype t, point &p) const;
+  std::list<idtype> search_targets(idtype self_id, point p, float r, target_condition c, int knn = 0) const;
+  std::list<idtype> search_targets_nophys(idtype pid, idtype self_id, point p, float r, target_condition c, int knn = 0) const;
   int first_intersect(point a, point b, float r) const;
   path_t get_path(point a, point b, float r) const;
   void rebuild_evm();
@@ -51,19 +51,19 @@ class game_data : public virtual game_base_data {
   void discover(point x, float r, bool starting_area = false);
   void update_discover();
   solar_ptr closest_solar(point p, idtype id) const;
-  animation_tracker_info get_tracker(combid id) const;
-  void log_ship_fire(combid a, combid b);
-  void log_ship_destroyed(combid a, combid b);
-  void log_bombard(combid a, combid b);
-  void log_message(combid a, std::string v_full, std::string v_short);
+  animation_tracker_info get_tracker(idtype id) const;
+  void log_ship_fire(idtype a, idtype b);
+  void log_ship_destroyed(idtype a, idtype b);
+  void log_bombard(idtype a, idtype b);
+  void log_message(idtype a, std::string v_full, std::string v_short);
   float get_dt() const;
   bool allow_add_fleet(idtype pid) const;
-  float solar_order_level(combid id) const;
+  float solar_order_level(idtype id) const;
 
   void register_entity(game_object_ptr p);
   void remove_units();
-  fleet_ptr generate_fleet(point p, idtype i, command c, std::list<combid> sh);
-  void relocate_ships(command c, std::set<combid> &sh, idtype owner);
+  fleet_ptr generate_fleet(point p, idtype i, command c, std::list<idtype> sh);
+  void relocate_ships(command c, std::set<idtype> &sh, idtype owner);
 
   // game steps
   void pre_step();
@@ -78,7 +78,7 @@ class game_data : public virtual game_base_data {
   void post_phase();
 
   // add and remove entities
-  void deregister_entity(combid id);
+  void deregister_entity(idtype id);
   void distribute_ships(fleet_ptr f);
   void update_research_facility_level();
 

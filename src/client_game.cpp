@@ -93,11 +93,11 @@ vector<entity_selector::ptr> game::all_selectors() const {
 };
 
 // Get ids of all selected solars. If none are selected, instead get all owned solars.
-list<combid> game::solars_for_panel() const {
-  list<string> sel = selected_specific<solar>();
+list<idtype> game::solars_for_panel() const {
+  list<idtype> sel = selected_specific<solar>();
 
   if (sel.empty()) {
-    sel = utility::range_map<list<std::string>>(
+    sel = utility::range_map<list<idtype>>(
         [](solar_selector::ptr s) { return s->id; },
         filtered_entities<solar_selector>(self_id));
   }
@@ -621,10 +621,10 @@ void game::tell_server_quit(Voidfun callback, Voidfun on_fail) {
 }
 
 /*! Callback for target GUI, create commands to an entity */
-void game::target_selected(string action, combid target, point pos, list<string> e_sel) {
+void game::target_selected(string action, idtype target, point pos, list<string> e_sel) {
   bool postselect = false;
 
-  if (target == identifier::source_none) {
+  if (target == identifier::no_entity) {
     target = add_waypoint(pos);
     postselect = true;
   }
@@ -1015,7 +1015,7 @@ void game::update_sim_frame() {
     @param p the point
     @return the waypoint id
 */
-combid game::add_waypoint(point p) {
+idtype game::add_waypoint(point p) {
   waypoint buf(self_id, wp_idc++);
   buf.position = p;
   waypoint_selector::ptr w = waypoint_selector::create(buf, col, true);
@@ -1060,7 +1060,7 @@ choice game::build_choice() {
 
 /** List all commands incident to an entity by key.
  */
-list<idtype> game::incident_commands(combid key) {
+list<idtype> game::incident_commands(idtype key) {
   list<idtype> res;
 
   for (auto x : command_selectors) {
@@ -1126,7 +1126,7 @@ void game::add_fixed_stars(point position, float vision) {
   }
 }
 
-void game::deregister_entity(combid i) {
+void game::deregister_entity(idtype i) {
   auto e = get_selector(i);
   auto buf = e->commands;
   for (auto c : buf) remove_command(c);
@@ -1156,7 +1156,7 @@ void game::reload_data(client_data_frame &g, bool use_animations) {
 
   // update commands for owned fleets
   for (auto f : g.fleets) {
-    fleet_idc = max(fleet_idc, identifier::get_multid_index(f->id) + 1);
+    fleet_idc = max(fleet_idc, f->id + 1);  // TODO
 
     if (entity_exists(f->com.target) && f->owned) {
       // include commands even if f is idle e.g. to waypoint
@@ -1166,14 +1166,14 @@ void game::reload_data(client_data_frame &g, bool use_animations) {
       c.ships = c.ships & f->ships;
       add_command(c, f->position, to, false, false);
     } else {
-      f->com.target = identifier::target_idle;
+      f->com.target = identifier::no_entity;
       f->com.action = fleet_action::idle;
     }
   }
 
   // update commands for waypoints
-  for (auto w : g.waypoints) {  // TODO: optimize
-    wp_idc = max(wp_idc, identifier::get_multid_index(w->id) + 1);
+  for (auto w : g.waypoints) {        // TODO: optimize
+    wp_idc = max(wp_idc, w->id + 1);  // TODO
 
     for (auto c : w->pending_commands) {
       if (entity_exists(c.target)) {
@@ -1202,12 +1202,12 @@ void game::reload_data(client_data_frame &g, bool use_animations) {
 // COMMAND MANIPULATION
 // ****************************************
 
-void game::refresh_ships(combid id) {
+void game::refresh_ships(idtype id) {
   entity_selector::ptr e = get_entity<entity_selector>(id);
   if (!e->isa(waypoint::class_id)) return;
 
   specific_selector<waypoint>::ptr w = utility::guaranteed_cast<specific_selector<waypoint>>(e);
-  set<combid> sids;
+  set<idtype> sids;
   for (auto c : incident_commands(id)) sids += get_command_selector(c)->ships;
   for (auto c : w->commands) {
     command_selector::ptr cp = get_command_selector(c);
@@ -1234,7 +1234,7 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
   }
 
   // check that there is at least one ship available
-  hm_t<string, set<combid>> ready_ships = get_ready_ships(c.source);
+  hm_t<string, set<idtype>> ready_ships = get_ready_ships(c.source);
   if (fill_ships && ready_ships.empty()) {
     cout << "add_command: attempted to create empty command!" << endl;
     return;
@@ -1260,7 +1260,7 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
 
     // check if special action
     if (!fleet_actions.count(c.action)) {
-      combid sel = identifier::source_none;
+      idtype sel = identifier::no_entity;
       for (auto ship_set : ready_ships) {
         for (auto sid : ship_set.second) {
           if (get_specific<ship>(sid)->compile_interactions().count(c.action)) {
@@ -1268,10 +1268,10 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
             break;
           }
         }
-        if (sel != identifier::source_none) break;
+        if (sel != identifier::no_entity) break;
       }
 
-      if (sel != identifier::source_none) {
+      if (sel != identifier::no_entity) {
         ready_ships.clear();
         ready_ships[get_specific<ship>(sel)->ship_class].insert(sel);
       }
@@ -1279,7 +1279,7 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
 
     // only add ships of one class
     cs->ship_class = utility::hm_keys(ready_ships).front();
-    set<combid> sel_ships = ready_ships[cs->ship_class];
+    set<idtype> sel_ships = ready_ships[cs->ship_class];
     cs->ships.clear();
     for (auto sid : sel_ships) {
       cs->ships.insert(sid);
@@ -1291,9 +1291,9 @@ void game::add_command(command c, point from, point to, bool fill_ships, bool de
   s->commands.insert(cs->id);
 }
 
-bool game::waypoint_ancestor_of(combid ancestor, combid child) {
+bool game::waypoint_ancestor_of(idtype ancestor, idtype child) {
   // only waypoints can have this relationship
-  if (identifier::get_type(ancestor).compare(waypoint::class_id) || identifier::get_type(child).compare(waypoint::class_id)) {
+  if (!(get_selector(ancestor)->isa(waypoint::class_id) && get_selector(child)->isa(waypoint::class_id))) {
     return false;
   }
 
@@ -1384,7 +1384,7 @@ void game::area_select() {
     @param act command action
     @param selected_entities selected entities
 */
-void game::command2entity(combid key, string act, list<combid> e_selected) {
+void game::command2entity(idtype key, string act, list<idtype> e_selected) {
   if (!entity_exists(key)) throw classified_error("command2entity: invalid key: " + key);
 
   command c;
@@ -1406,8 +1406,8 @@ void game::command2entity(combid key, string act, list<combid> e_selected) {
 }
 
 /** List all entities at a point. */
-list<combid> game::entities_at(point p) {
-  list<combid> keys;
+list<idtype> game::entities_at(point p) {
+  list<idtype> keys;
 
   for (auto &x : entity_grid) {
     auto test = x.second.search(p, 0);
@@ -1424,9 +1424,9 @@ list<combid> game::entities_at(point p) {
 }
 
 /** Get queued owned entity at a point. */
-combid game::entity_at(point p, int &q) {
-  list<combid> buf = entities_at(p);
-  list<combid> keys;
+idtype game::entity_at(point p, int &q) {
+  list<idtype> buf = entities_at(p);
+  list<idtype> keys;
 
   // limit to owned selectable entities
   for (auto id : buf) {
@@ -1434,13 +1434,13 @@ combid game::entity_at(point p, int &q) {
     if (e->owned && e->is_selectable()) keys.push_back(id);
   }
 
-  if (keys.empty()) return identifier::source_none;
+  if (keys.empty()) return identifier::no_entity;
 
-  keys.sort([this](combid a, combid b) -> bool {
+  keys.sort([this](idtype a, idtype b) -> bool {
     return get_selector(a)->queue_level < get_selector(b)->queue_level;
   });
 
-  combid best = keys.front();
+  idtype best = keys.front();
   q = get_selector(best)->queue_level;
   return best;
 }
@@ -1463,7 +1463,7 @@ idtype game::command_at(point p, int &q) {
   return key;
 }
 
-void game::set_selected(combid id, bool value) {
+void game::set_selected(idtype id, bool value) {
   get_selector(id)->selected = value;
   if (value) {
     selection_index.insert(id);
@@ -1476,7 +1476,7 @@ void game::set_selected(combid id, bool value) {
 bool game::select_at(point p) {
   int qent = selector_queue;
   int qcom = selector_queue;
-  combid key = entity_at(p, qent);
+  idtype key = entity_at(p, qent);
   idtype cid = command_at(p, qcom);
 
   if (qcom < qent && phase == "choice") return select_command(cid);
@@ -1509,9 +1509,9 @@ bool game::select_command(idtype key) {
 
   if (!c->selected) return false;
 
-  hm_t<string, set<combid>> ready_ships = get_ready_ships(c->source);
+  hm_t<string, set<idtype>> ready_ships = get_ready_ships(c->source);
   ready_ships[c->ship_class] += c->ships;
-  set<combid> all_ships = ready_ships[c->ship_class];
+  set<idtype> all_ships = ready_ships[c->ship_class];
 
   bool combat = false;
   if (all_ships.size()) {
@@ -1534,9 +1534,9 @@ bool game::select_command(idtype key) {
             c->ship_class = ship_class;
             c->policy = policy;
             c->ships.clear();
-            vector<combid> ready_ships = utility::range_init<vector<combid>>(get_ready_ships(c->source)[c->ship_class]);
+            vector<idtype> ready_ships = utility::range_init<vector<idtype>>(get_ready_ships(c->source)[c->ship_class]);
             if (num > ready_ships.size()) num = ready_ships.size();
-            c->ships = set<combid>(ready_ships.begin(), ready_ships.begin() + num);
+            c->ships = set<idtype>(ready_ships.begin(), ready_ships.begin() + num);
             c->selected = false;
             clear_ui_layers();
             refresh_ships(c->target);
@@ -1558,13 +1558,13 @@ bool game::exists_selected() {
 }
 
 /** Get ids of non-allocated ships for entity selector */
-hm_t<string, set<combid>> game::get_ready_ships(combid id) {
-  if (!entity_exists(id)) throw classified_error("get ready ships: entity selector " + id + " not found!");
+hm_t<string, set<idtype>> game::get_ready_ships(idtype id) {
+  if (!entity_exists(id)) throw classified_error("get ready ships: entity selector " + to_string(id) + " not found!");
 
   entity_selector::ptr e = get_selector(id);
-  hm_t<string, set<string>> res;
+  hm_t<string, set<idtype>> res;
 
-  set<combid> sids;
+  set<idtype> sids;
   if (e->isa(waypoint::class_id)) {
     // Waypoint selector does not support get_ships method
     for (auto i : incident_commands(id)) {
@@ -1587,8 +1587,8 @@ hm_t<string, set<combid>> game::get_ready_ships(combid id) {
 }
 
 /** Get ids of selected entities. */
-list<combid> game::selected_entities() {
-  return utility::range_init<list<combid>>(selection_index);
+list<idtype> game::selected_entities() {
+  return utility::range_init<list<idtype>>(selection_index);
 }
 
 list<idtype> game::selected_commands() {
@@ -1636,7 +1636,7 @@ void game::setup_targui(point p) {
     return;
   }
 
-  hm_t<string, set<combid>> options;
+  hm_t<string, set<idtype>> options;
 
   // check if actions are allowed per target
   auto itab = interaction::table();
@@ -1648,30 +1648,30 @@ void game::setup_targui(point p) {
       }
     }
     if (!condition.requires_target()) {
-      options[a].insert(identifier::source_none);
+      options[a].insert(identifier::no_entity);
     }
   }
 
   // check waypoint targets
   for (auto k : keys_targeted) {
-    if (identifier::get_type(k) == waypoint::class_id) {
+    if (get_selector(k)->isa(waypoint::class_id)) {
       options[fleet_action::go_to].insert(k);
     }
   }
 
   if (options.empty()) {
     // autoselect "add waypoint"
-    combid k = add_waypoint(p);
+    idtype k = add_waypoint(p);
     command2entity(k, fleet_action::go_to, keys_selected);
     deselect_all();
     set_selected(k, true);
   } else {
     // Always provide option "add waypoint"
-    options[fleet_action::go_to].insert(identifier::source_none);
+    options[fleet_action::go_to].insert(identifier::no_entity);
     PanelPtr targui = target_gui(
         sf::Vector2f(window->mapCoordsToPixel(p, view_game)),
         options,
-        [this, keys_selected, p](string action, string target) {
+        [this, keys_selected, p](string action, idtype target) {
           target_selected(action, target, p, keys_selected);
         },
         bind(&game::clear_ui_layers, this, true));
@@ -1903,7 +1903,7 @@ bool game::choice_event(sf::Event e) {
   // dev_map[sf::Keyboard::R] = keywords::key_research;
 
   point p;
-  list<combid> ss;
+  list<idtype> ss;
   list<int> coms;
 
   sf::Vector2i mpos;
@@ -1911,15 +1911,15 @@ bool game::choice_event(sf::Event e) {
   point delta;
   point target;
 
-  static combid drag_id;
+  static idtype drag_id;
 
   // event reaction functions
   auto init_area_select = [this](sf::Event e) {
     point p = window->mapPixelToCoords(sf::Vector2i(e.mouseButton.x, e.mouseButton.y));
     int qent;
-    combid key = entity_at(p, qent);
+    idtype key = entity_at(p, qent);
 
-    if (phase == "choice" && identifier::get_type(key) == waypoint::class_id) {
+    if (phase == "choice" && get_selector(k)->isa(waypoint::class_id)) {
       drag_waypoint_active = true;
       drag_id = key;
     } else {

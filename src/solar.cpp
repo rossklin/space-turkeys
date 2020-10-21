@@ -40,13 +40,13 @@ void solar::move(game_data *g) {
 
   // check for turret combat interaction
   target_condition cond(target_condition::enemy, ship::class_id);
-  list<combid> buf = g->search_targets_nophys(owner, identifier::source_none, position, interaction_radius(), cond.owned_by(owner));
+  list<idtype> buf = g->search_targets_nophys(owner, identifier::no_entity, position, interaction_radius(), cond.owned_by(owner));
 
   if (buf.size()) {
     // solar combat
     float dlev = effective_level(keywords::key_defense);
     for (int i = 0; i < dlev; i++) {
-      combid sid = utility::uniform_sample(buf);
+      idtype sid = utility::uniform_sample(buf);
       ship_ptr s = g->get_ship(sid);
 
       g->log_ship_fire(id, s->id);
@@ -100,7 +100,7 @@ void solar::post_phase(game_data *g) {
 }
 
 void solar::give_commands(list<command> c, game_data *g) {
-  hm_t<string, list<combid> > buf;
+  hm_t<string, list<idtype> > buf;
 
   // create fleets
   for (auto &x : c) {
@@ -155,7 +155,7 @@ solar_ptr solar::create(idtype id, point p, float bounty, float var) {
 
   solar_ptr s(new solar());
 
-  s->id = identifier::make(solar::class_id, id);
+  s->id = id;
 
   // s -> population = 0;
   s->research_points = 0;

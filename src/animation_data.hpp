@@ -8,7 +8,7 @@ namespace st3 {
 struct animation_tracker_info {
   point p;
   point v;
-  combid eid;
+  idtype eid;
 };
 
 struct animation_data {

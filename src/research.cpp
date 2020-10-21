@@ -101,7 +101,7 @@ void data::repair_ship(ship_ptr s) const {
 ship_ptr data::build_ship(idtype id, string c) const {
   ship_ptr s(new ship(ship::table().at(c)));
 
-  s->id = identifier::make(ship::class_id, id);
+  s->id = id;
 
   // apply upgrades
   repair_ship(s);
