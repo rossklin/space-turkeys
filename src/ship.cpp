@@ -21,8 +21,8 @@ const float collision_damage_factor = 1e-3;
 string ship::starting_ship;
 
 // utility
-void apply_ships(game_data *g, list<combid> sids, function<void(ship_ptr)> f) {
-  for (combid sid : sids) f(g->get_ship(sid));
+void apply_ships(game_data *g, list<idtype> sids, function<void(ship_ptr)> f) {
+  for (idtype sid : sids) f(g->get_ship(sid));
 }
 
 ship::ship(const ship &s) : game_object(s), ship_stats(s) {
@@ -149,14 +149,14 @@ const hm_t<string, ship_stats> &ship_stats::table() {
 ship::ship(const ship_stats &s) : ship_stats(s), physical_object() {
   base_stats = s;
   velocity = {0, 0};
-  fleet_id = identifier::source_none;
+  fleet_id = identifier::no_entity;
   remove = false;
   load = 0;
   nkills = 0;
   skip_head = false;
   radius = 0.5 * pow(stats[sskey::key::mass], 1 / (float)2.1);
   force_refresh = true;
-  current_target = "";
+  current_target = identifier::no_entity;
   collision_damage = 0;
 }
 
@@ -387,7 +387,7 @@ void ship::update_data(game_data *g) {
       target_condition(target_condition::enemy, ship::class_id).owned_by(owner),
       10);
 
-  neighbours = append<list<combid>>(local_friends, local_enemies);
+  neighbours = append<list<idtype>>(local_friends, local_enemies);
 
   // clear private path as appropriate
   bool path_opt_found = follow_private_path(g) || follow_fleet_heading(g) || follow_fleet_trail(g);
@@ -483,7 +483,7 @@ void ship::update_data(game_data *g) {
   // Check if we use directional thrusters to go towards fleet center
   list<bool> ships_blocking = fmap<list<bool>>(
       local_friends,
-      (function<bool(combid)>)[ this, g, f ](combid sid) {
+      (function<bool(idtype)>)[ this, g, f ](idtype sid) {
         ship_ptr s = g->get_ship(sid);
         bool can_block = dpoint2line(position, f->position, s->position) < s->radius;
         bool close = l2norm(s->position - position) < 1.5 * (radius + s->radius);
@@ -503,7 +503,7 @@ void ship::move(game_data *g) {
   auto local_output = [this](string v) { server::output(id + ": move: " + v); };
 
   // clean up local_*
-  list<combid> rbuf;
+  list<idtype> rbuf;
   for (auto i : neighbours) {
     if (!(g->entity_exists(i) && can_see(g->get_game_object(i)))) rbuf.push_back(i);
   }
@@ -516,13 +516,13 @@ void ship::move(game_data *g) {
 
   // shoot enemies if able
   if (compile_interactions().count(interaction::space_combat) && local_enemies.size()) {
-    list<combid> can_hit = utility::filter(local_enemies, [this, g](combid sid) {
+    list<idtype> can_hit = utility::filter(local_enemies, [this, g](idtype sid) {
       ship_ptr s = g->get_ship(sid);
       return accuracy_check(s) > 0;
     });
 
     if (can_hit.size()) {
-      combid target_id = utility::uniform_sample(can_hit);
+      idtype target_id = utility::uniform_sample(can_hit);
       // I've got a shot!
       interaction_info info;
       info.source = id;
@@ -538,7 +538,7 @@ void ship::move(game_data *g) {
   // activate fleet command action if able
   if (activate && has_fleet()) {
     fleet_ptr f = g->get_fleet(fleet_id);
-    if (f->com.target != identifier::target_idle && compile_interactions().count(f->com.action)) {
+    if (f->com.target != identifier::no_entity && compile_interactions().count(f->com.action)) {
       game_object_ptr e = g->get_game_object(f->com.target);
       if (can_see(e) && utility::l2norm(e->position - position) <= interaction_radius()) {
         interaction_info info;
@@ -546,12 +546,7 @@ void ship::move(game_data *g) {
         info.target = e->id;
         info.interaction = f->com.action;
         g->interaction_buffer.push_back(info);
-        local_output("activating " + f->com.action + " on " + e->id);
-      } else {
-        local_output("can't activate " + f->com.action + " on " + e->id);
       }
-    } else {
-      local_output("activate: fleet target idle or missing action: " + f->com.action);
     }
   }
 
@@ -697,7 +692,7 @@ bool ship::is_active() {
 }
 
 bool ship::has_fleet() {
-  return fleet_id != identifier::source_none;
+  return fleet_id != identifier::no_entity;
 }
 
 void ship::on_liftoff(solar_ptr from, game_data *g) {

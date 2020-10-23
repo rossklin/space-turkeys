@@ -41,7 +41,7 @@ class entity_selector : public virtual game_object {
   virtual bool contains_point(point p, float &d) = 0;
   virtual void draw(RSG::WindowPtr w) = 0;
   virtual point get_position() = 0;
-  virtual std::set<combid> get_ships() = 0;
+  virtual std::set<idtype> get_ships() = 0;
   virtual std::list<std::string> hover_info() = 0;
 
   sf::Color get_color();
@@ -65,7 +65,7 @@ class specific_selector : public virtual entity_selector, public virtual T {
   bool contains_point(point p, float &d);
   void draw(RSG::WindowPtr w);
   point get_position();
-  std::set<combid> get_ships();
+  std::set<idtype> get_ships();
   std::list<std::string> hover_info();
 };
 

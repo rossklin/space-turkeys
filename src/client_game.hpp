@@ -73,7 +73,7 @@ class game : public game_base_data {
   bool did_drag;
   bool drag_waypoint_active;
   bool drag_map_active;
-  std::set<combid> selection_index;
+  std::set<idtype> selection_index;
 
   // Game variables
   sf::Color col;
@@ -119,11 +119,11 @@ class game : public game_base_data {
 
  private:
   // OBJECT ACCESS
-  void deregister_entity(combid i);
+  void deregister_entity(idtype i);
   research::data get_research() const;
   command_selector::ptr get_command_selector(idtype i) const;
   std::vector<entity_selector::ptr> all_selectors() const;
-  std::list<combid> solars_for_panel() const;
+  std::list<idtype> solars_for_panel() const;
 
   // USER INTERFACE RELATED STUFF
   void window_loop();
@@ -152,7 +152,7 @@ class game : public game_base_data {
   RSG::PanelPtr simulation_gui();
 
   // SERVER COMMUNICATION AND BACKGROUND TASKS
-  void target_selected(std::string action, combid target, point pos, std::list<std::string> e_sel);
+  void target_selected(std::string action, idtype target, point pos, std::list<idtype> e_sel);
   void prepare_data_frame(client_data_frame &g);
   void load_frames();
 
@@ -215,7 +215,7 @@ class game : public game_base_data {
   /*! start a solar gui for a solar
 	@param key the id of the solar selector representing the solar
       */
-  void run_solar_gui(combid key);
+  void run_solar_gui(idtype key);
 
   /*! select selectors in the selection rectangle */
   void area_select();
@@ -225,7 +225,7 @@ class game : public game_base_data {
 	@param p the point
 	@return set of keys of entities
       */
-  std::list<combid> entities_at(point p);
+  std::list<idtype> entities_at(point p);
 
   /*! get the key of the entity selector at a point
 
@@ -237,7 +237,7 @@ class game : public game_base_data {
 	@param[out] q set to queue level of found entity
 	@return the key, or "" if no entity was found
       */
-  combid entity_at(point p, int &q);
+  idtype entity_at(point p, int &q);
 
   /*! get the id of the command_selector at a point
 	@param p the point
@@ -246,7 +246,7 @@ class game : public game_base_data {
       */
   idtype command_at(point p, int &q);
 
-  void set_selected(combid id, bool value);
+  void set_selected(idtype id, bool value);
 
   /*! select the selector at a point if there is one
 	@param p the point
@@ -275,14 +275,14 @@ class game : public game_base_data {
 	@param child key to check the ancestor of
 	@return whether waypoint ancestor is an ancestor of waypoint child
       */
-  bool waypoint_ancestor_of(combid ancestor, combid child);
+  bool waypoint_ancestor_of(idtype ancestor, idtype child);
 
   /* **************************************** */
   /* COMMAND HANDLING */
   /* **************************************** */
 
   // Refresh available downstream ships for an entity
-  void refresh_ships(combid id);
+  void refresh_ships(idtype id);
 
   /*! add a command selector representing a command
 	@param c the command
@@ -302,13 +302,13 @@ class game : public game_base_data {
 	@param action command action
 	@param list of selected entities
       */
-  void command2entity(combid key, std::string action, std::list<std::string> sel);
+  void command2entity(idtype key, std::string action, std::list<idtype> sel);
 
   /*! add a waypoint selector at a given point
 	@param p the point
 	@return key of the added waypoint selector
       */
-  combid add_waypoint(point p);
+  idtype add_waypoint(point p);
 
   /* **************************************** */
   /* SELECTION HANDLING */
@@ -324,7 +324,7 @@ class game : public game_base_data {
 	@param key key of the entity selector
 	@return list of ids of commands targeting the entity selector
       */
-  std::list<idtype> incident_commands(combid key);
+  std::list<idtype> incident_commands(idtype key);
 
   /*! count the number of selected entity selectors
 	@return the number of selected entity selectors
@@ -339,12 +339,12 @@ class game : public game_base_data {
 	@param key key of the entity selector
 	@return set of ship ids
       */
-  hm_t<std::string, std::set<combid>> get_ready_ships(combid key);
+  hm_t<std::string, std::set<idtype>> get_ready_ships(idtype key);
 
   /*! get a list of keys of all selected entity selectors
 	@return list of keys of selected entity selectors
       */
-  std::list<combid> selected_entities();
+  std::list<idtype> selected_entities();
 
   std::list<idtype> selected_commands();
 
@@ -372,7 +372,7 @@ class game : public game_base_data {
   void add_fixed_stars(point position, float vision);
 
   template <typename T>
-  typename specific_selector<T>::ptr get_specific(combid i) {
+  typename specific_selector<T>::ptr get_specific(idtype i) {
     return get_entity<specific_selector<T>>(i);
   };
 
@@ -381,14 +381,14 @@ class game : public game_base_data {
     return filtered_entities<specific_selector<T>>(pid);
   };
 
-  entity_selector::ptr get_selector(combid i) const {
+  entity_selector::ptr get_selector(idtype i) const {
     return get_entity<entity_selector>(i);
   }
 
   /** Get ids of selected solars */
   template <typename T>
-  std::list<combid> selected_specific() const {
-    std::list<combid> res;
+  std::list<idtype> selected_specific() const {
+    std::list<idtype> res;
     for (auto s : get_all<T>()) {
       if (s->selected) {
         res.push_back(s->id);

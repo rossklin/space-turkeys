@@ -25,7 +25,7 @@ using namespace st3::utility;
 
 // limit_to without deallocating
 void limit_to(unindexed_base_data *g, set<idtype> ids) {
-  list<combid> remove_buf;
+  list<idtype> remove_buf;
   for (auto x : g->entity) {
     game_object_ptr e = x.second;
     bool test = any(

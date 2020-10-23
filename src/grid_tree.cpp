@@ -11,7 +11,7 @@ using namespace std;
 using namespace st3;
 using namespace grid;
 
-template class grid::tree<combid>;
+template class grid::tree<idtype>;
 
 template <typename V>
 grid::tree<V>::tree() {

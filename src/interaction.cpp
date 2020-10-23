@@ -54,16 +54,14 @@ const hm_t<string, interaction> &interaction::table() {
   i.name = interaction::land;
   i.condition = target_condition(target_condition::owned, solar::class_id);
   i.perform = [](game_object_ptr self, game_object_ptr target, game_data *g) {
-    output("interaction: land: " + self->id + " targeting " + target->id);
     ship_ptr s = utility::guaranteed_cast<ship>(self);
     solar_ptr t = utility::guaranteed_cast<solar>(target);
-    output(s->id + " lands at " + t->id);
 
     // unset fleet
     if (s->has_fleet()) {
       g->get_fleet(s->fleet_id)->remove_ship(s->id);
     }
-    s->fleet_id = identifier::source_none;
+    s->fleet_id = identifier::no_entity;
 
     // unload cargo
     t->resources.add(s->cargo);
@@ -80,7 +78,6 @@ const hm_t<string, interaction> &interaction::table() {
   i.name = interaction::deploy;
   i.condition = target_condition(target_condition::any_alignment, target_condition::no_target);
   i.perform = [](game_object_ptr self, game_object_ptr null_ptr, game_data *g) {
-    output("interaction: deploy: " + self->id);
     ship_ptr s = utility::guaranteed_cast<ship>(self);
     if (s->states.count("deployed")) return;
 
@@ -96,7 +93,6 @@ const hm_t<string, interaction> &interaction::table() {
 
   // search
   auto do_search = [](game_object_ptr self, game_object_ptr target, game_data *g) {
-    output("interaction: search: " + self->id + " targeting " + target->id);
     ship_ptr s = utility::guaranteed_cast<ship>(self);
     solar_ptr t = utility::guaranteed_cast<solar>(target);
     stringstream ss;
@@ -175,7 +171,7 @@ const hm_t<string, interaction> &interaction::table() {
       prob["freighter"] = 0.4;
       prob["colonizer"] = 0.6;
 
-      list<combid> new_ships;
+      list<idtype> new_ships;
       for (auto m : prob) {
         int count = utility::random_normal(m.second, 0.2 * m.second);
         if (count > 0) {
@@ -192,7 +188,7 @@ const hm_t<string, interaction> &interaction::table() {
       if (new_ships.size()) {
         command c;
         c.action = fleet_action::idle;
-        c.target = identifier::target_idle;
+        c.target = identifier::no_entity;
 
         if (g->allow_add_fleet(s->owner)) {
           g->generate_fleet(t->position, s->owner, c, new_ships);
@@ -247,7 +243,7 @@ const hm_t<string, interaction> &interaction::table() {
 
     // find new target
     target_condition cond(target_condition::neutral, solar::class_id);
-    list<combid> test = g->search_targets_nophys(f->owner, identifier::source_none, f->position, 300, cond.owned_by(f->owner));
+    list<idtype> test = g->search_targets_nophys(f->owner, identifier::no_entity, f->position, 300, cond.owned_by(f->owner));
     for (auto i = test.begin(); i != test.end(); i++)
       if (g->get_solar(*i)->was_discovered) test.erase(i--);
     if (test.empty()) return;
@@ -263,7 +259,6 @@ const hm_t<string, interaction> &interaction::table() {
   i.name = interaction::space_combat;
   i.condition = target_condition(target_condition::enemy, ship::class_id);
   i.perform = [](game_object_ptr self, game_object_ptr target, game_data *g) {
-    output("interaction: space_combat: " + self->id + " targeting " + target->id);
     ship_ptr s = utility::guaranteed_cast<ship>(self);
     ship_ptr t = utility::guaranteed_cast<ship>(target);
 
@@ -271,10 +266,8 @@ const hm_t<string, interaction> &interaction::table() {
 
     g->log_ship_fire(s->id, t->id);
 
-    output("space_combat: loaded");
     s->load = 0;
     if (t->evasion_check() < s->accuracy_check(t)) {
-      output("space_combat: hit!");
       float damage = 0;
       if (s->stats[sskey::key::ship_damage] > 0) {
         damage = utility::random_normal(s->stats[sskey::key::ship_damage], 0.2 * s->stats[sskey::key::ship_damage]);
@@ -287,9 +280,6 @@ const hm_t<string, interaction> &interaction::table() {
         upgrade u = upgrade::table().at(v);
         for (auto i : u.hook["on hit"]) interaction::table().at(i).perform(s, t, g);
       }
-
-    } else {
-      output("space_combat: miss!");
     }
   };
   data[i.name] = i;
@@ -489,7 +479,7 @@ const hm_t<string, interaction> &interaction::table() {
 
     float damage = 0.2 * s->stats[sskey::key::ship_damage];
     target_condition cond(target_condition::any_alignment, ship::class_id);
-    auto ns = g->search_targets_nophys(game_object::any_owner, identifier::source_none, t->position, 20, cond);
+    auto ns = g->search_targets_nophys(game_object::any_owner, identifier::no_entity, t->position, 20, cond);
     for (auto id : ns) {
       ship_ptr t2 = g->get_ship(id);
       t2->receive_damage(g, s, damage);
@@ -523,7 +513,7 @@ bool target_condition::requires_target() {
 
 // interaction
 bool target_condition::valid_on(game_object_ptr p) {
-  bool type_match = !(requires_target() && identifier::get_type(p->id) != what);
+  bool type_match = !(requires_target() && !p->isa(what));
   sint aligned = 0;
   if (owner == p->owner) {
     aligned = target_condition::owned;

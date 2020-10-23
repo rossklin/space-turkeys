@@ -93,68 +93,68 @@ const vector<string> keywords::solar_modifier = {
     // keywords::key_medicine,
     keywords::key_population};
 
-// make a source symbol with type t and id i
-combid identifier::make(class_t t, idtype i) {
-  stringstream s;
-  s << t << ":" << i;
-  return s.str();
-}
+// // make a source symbol with type t and id i
+// idtype identifier::make(class_t t, idtype i) {
+//   stringstream s;
+//   s << t << ":" << i;
+//   return s.str();
+// }
 
-// make a source symbol with type t and string id k
-combid identifier::make(class_t t, string k) {
-  stringstream s;
-  s << t << ":" << k;
-  return s.str();
-}
+// // make a source symbol with type t and string id k
+// idtype identifier::make(class_t t, string k) {
+//   stringstream s;
+//   s << t << ":" << k;
+//   return s.str();
+// }
 
-// get the type of source symbol s
-class_t identifier::get_type(combid s) {
-  size_t split = s.find(':');
-  return s.substr(0, split);
-}
+// // get the type of source symbol s
+// class_t identifier::get_type(idtype s) {
+//   size_t split = s.find(':');
+//   return s.substr(0, split);
+// }
 
-// get the owner id of waypoint symbol string id v
-idtype identifier::get_multid_owner(combid v) {
-  string x = get_multid_owner_symbol(v);
-  try {
-    return stoi(x);
-  } catch (...) {
-    throw classified_error("get multid owner: invalid id from " + v + ": " + x);
-  }
-}
+// // get the owner id of waypoint symbol string id v
+// idtype identifier::get_multid_owner(idtype v) {
+//   string x = get_multid_owner_symbol(v);
+//   try {
+//     return stoi(x);
+//   } catch (...) {
+//     throw classified_error("get multid owner: invalid id from " + v + ": " + x);
+//   }
+// }
 
-// get the owner id of waypoint symbol string id v
-string identifier::get_multid_owner_symbol(combid v) {
-  size_t split1 = v.find(':');
-  size_t split2 = v.find('#');
-  return v.substr(split1 + 1, split2 - split1 - 1);
-}
+// // get the owner id of waypoint symbol string id v
+// string identifier::get_multid_owner_symbol(idtype v) {
+//   size_t split1 = v.find(':');
+//   size_t split2 = v.find('#');
+//   return v.substr(split1 + 1, split2 - split1 - 1);
+// }
 
-// get the owner id of waypoint symbol string id v
-idtype identifier::get_multid_index(combid v) {
-  string x = get_multid_index_symbol(v);
-  try {
-    return stoi(x);
-  } catch (...) {
-    throw classified_error("get multid index: invalid id from " + v + ": " + x);
-  }
-}
+// // get the owner id of waypoint symbol string id v
+// idtype identifier::get_multid_index(idtype v) {
+//   string x = get_multid_index_symbol(v);
+//   try {
+//     return stoi(x);
+//   } catch (...) {
+//     throw classified_error("get multid index: invalid id from " + v + ": " + x);
+//   }
+// }
 
-// get the owner id of waypoint symbol string id v
-string identifier::get_multid_index_symbol(combid v) {
-  size_t split = v.find('#');
-  return v.substr(split + 1);
-}
+// // get the owner id of waypoint symbol string id v
+// string identifier::get_multid_index_symbol(idtype v) {
+//   size_t split = v.find('#');
+//   return v.substr(split + 1);
+// }
 
-combid identifier::make_waypoint_id(idtype owner, idtype id) {
-  return identifier::make(waypoint::class_id, to_string(owner) + "#" + to_string(id));
-}
+// idtype identifier::make_waypoint_id(idtype owner, idtype id) {
+//   return identifier::make(waypoint::class_id, to_string(owner) + "#" + to_string(id));
+// }
 
-id_pair::id_pair(combid x, combid y) {
-  a = x;
-  b = y;
-}
+// id_pair::id_pair(idtype x, idtype y) {
+//   a = x;
+//   b = y;
+// }
 
-bool st3::operator<(const id_pair &x, const id_pair &y) {
-  return hash<string>{}(x.a) ^ hash<string>{}(x.b) < hash<string>{}(y.a) ^ hash<string>{}(y.b);
-}
+// bool st3::operator<(const id_pair &x, const id_pair &y) {
+//   return hash<string>{}(x.a) ^ hash<string>{}(x.b) < hash<string>{}(y.a) ^ hash<string>{}(y.b);
+// }

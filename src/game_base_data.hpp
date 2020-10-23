@@ -15,15 +15,15 @@ class unindexed_base_data {
   hm_t<class_t, idtype> idc;
   hm_t<idtype, player> players; /*!< table of players */
   game_settings settings;       /*! game settings */
-  hm_t<combid, game_object_ptr> entity;
+  hm_t<idtype, game_object_ptr> entity;
   hm_t<idtype, terrain_object> terrain;
-  std::list<combid> remove_entities;
-  hm_t<idtype, std::set<combid>> evm;
+  std::list<idtype> remove_entities;
+  hm_t<idtype, std::set<idtype>> evm;
   std::set<std::pair<int, int>> discovered_universe;
 };
 class game_base_data : public unindexed_base_data {
  public:
-  hm_t<idtype, grid::tree<combid>> entity_grid;
+  hm_t<idtype, grid::tree<idtype>> entity_grid;
 
   virtual ~game_base_data() = default;
   void clear_entities();
@@ -31,9 +31,9 @@ class game_base_data : public unindexed_base_data {
   // int get_max_fleets(idtype pid) const;
   // int get_max_ships_per_fleet(idtype pid) const;
 
-  bool entity_exists(combid id) const;
+  bool entity_exists(idtype id) const;
   void add_entity(game_object_ptr e);
-  void remove_entity(combid id);
+  void remove_entity(idtype id);
   idtype terrain_at(point p, float r) const;
   bool in_terrain(point p) const;
 
@@ -59,7 +59,7 @@ class game_base_data : public unindexed_base_data {
   };
 
   template <typename T>
-  typename T::ptr get_entity(combid i) const {
+  typename T::ptr get_entity(idtype i) const {
     if (entity.count(i)) {
       return utility::guaranteed_cast<T>(entity.at(i));
     } else {

@@ -24,7 +24,7 @@ class game_object {
   sfloat radius;
   idtype owner;
   bool remove;
-  combid id;
+  idtype id;
 
   game_object();
   game_object(const game_object &x);

@@ -38,7 +38,7 @@ game_ptr new_game(game_settings set = game_settings(), research::data r = resear
 void setup_fleet_for(game_ptr g, idtype pid, point at, point targ, hm_t<string, float> scc) {
   static int idc = 0;
 
-  list<combid> ships;
+  list<idtype> ships;
   auto rbase = g->players[pid].research_level;
 
   for (auto sc : scc) {

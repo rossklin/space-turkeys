@@ -20,11 +20,11 @@ using namespace st3::utility;
 
 PanelPtr st3::target_gui(
     sf::Vector2f position,
-    hm_t<std::string, std::set<combid>> action_targets,
-    std::function<void(std::string action, std::string target)> callback,
+    hm_t<std::string, std::set<idtype>> action_targets,
+    std::function<void(std::string action, idtype target)> callback,
     RSG::Voidfun on_cancel) {
   shared_ptr<string> sel_action = make_shared<string>("");
-  shared_ptr<combid> sel_target = make_shared<combid>("");
+  shared_ptr<idtype> sel_target = make_shared<idtype>(identifier::no_entity);
 
   ButtonPtr b_cancel = Button::create("Cancel", on_cancel);
   ButtonPtr b_commit = Button::create("Commit", [sel_action, sel_target, callback]() { callback(*sel_action, *sel_target); });
@@ -33,7 +33,7 @@ PanelPtr st3::target_gui(
   auto t_opts = ButtonOptions::create(
       list<string>{},
       [sel_target, b_commit](string k) {
-        *sel_target = k;
+        *sel_target = stoi(k);
         b_commit->remove_state("disabled");
       },
       ORIENT_VERTICAL);
@@ -45,13 +45,13 @@ PanelPtr st3::target_gui(
         if (*sel_action == k) return;
 
         *sel_action = k;
-        *sel_target = "";
+        *sel_target = identifier::no_entity;
         b_commit->add_state("disabled");
 
         map<string, ButtonPtr> buf;
         for (auto v : action_targets.at(k)) {
-          string label = v == identifier::source_none ? "Add waypoint" : v;
-          buf[v] = Button::create(label);
+          string label = v == identifier::no_entity ? "Add waypoint" : to_string(v);
+          buf[to_string(v)] = Button::create(label);
         }
         t_opts->set_children(buf);
         t_opts->remove_state("invisible");

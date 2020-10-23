@@ -13,11 +13,11 @@ void game_base_data::add_entity(game_object_ptr e) {
   if (e->is_active()) entity_grid[e->owner].insert(e->id, e->position, e->radius);
 }
 
-bool game_base_data::entity_exists(combid i) const {
+bool game_base_data::entity_exists(idtype i) const {
   return entity.count(i);
 }
 
-void game_base_data::remove_entity(combid i) {
+void game_base_data::remove_entity(idtype i) {
   if (!entity.count(i)) {
     throw logical_error("Attempted to remove entity but it does not exist!");
   }

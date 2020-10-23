@@ -62,8 +62,6 @@ typedef sint protocol_t;
 
 typedef std::string class_t;
 
-typedef std::string combid;
-
 /*! hash map type used for different game objects */
 template <typename key, typename value>
 using hm_t = std::unordered_map<key, value>;
@@ -73,10 +71,10 @@ typedef sf::Vector2f point;
 typedef std::vector<point> path_t;
 
 struct id_pair {
-  combid a;
-  combid b;
+  idtype a;
+  idtype b;
 
-  id_pair(combid x, combid y);
+  id_pair(idtype x, idtype y);
 };
 
 bool operator<(const id_pair &x, const id_pair &y);
@@ -136,39 +134,7 @@ const class_t command = "command";
 const class_t idle = "idle";
 const class_t noclass = "noclass";
 
-const combid target_idle = "idle:0";
-const combid source_none = "noclass:noentity";
+const idtype no_entity = -1;
 
-/*! make a source symbol
-      @param t type identifier
-      @param i id
-      @return source symbol
-    */
-combid make(class_t t, idtype i);
-
-/*! make a source symbol with string id
-      @param t type identifier
-      @param k string id
-      @return source symbol
-    */
-combid make(class_t t, class_t k);
-
-/*! get the type of a source symbol
-      @param s source symbol
-      @return type identifier
-    */
-class_t get_type(combid s);
-
-/*! get the owner id from a waypoint source symbol string id
-      @param v string id of a waypoint source symbol
-      @return id of the owner of the waypoint
-    */
-idtype get_multid_owner(combid v);
-std::string get_multid_owner_symbol(combid v);
-
-idtype get_multid_index(combid v);
-std::string get_multid_index_symbol(combid v);
-
-combid make_waypoint_id(idtype owner, idtype id);
 };  // namespace identifier
 };  // namespace st3

@@ -15,7 +15,7 @@ const string waypoint::class_id = "waypoint";
 
 waypoint::waypoint(idtype o, idtype idx) {
   owner = o;
-  id = identifier::make(waypoint::class_id, to_string(o) + "#" + to_string(idx));
+  id = idx;
   radius = 20;
 }
 
@@ -33,7 +33,7 @@ float waypoint::vision() {
 void waypoint::post_phase(game_data *g) {
   // trigger commands
   bool check;
-  set<combid> ready_ships, arrived_ships;
+  set<idtype> ready_ships, arrived_ships;
 
   // compute landed ships
   for (auto y : g->filtered_entities<fleet>()) {
@@ -48,7 +48,7 @@ void waypoint::post_phase(game_data *g) {
   for (auto &y : buf) {
     // check if all ships in command y are either landed or dead
     check = true;
-    set<combid> sbuf = y.ships - arrived_ships;
+    set<idtype> sbuf = y.ships - arrived_ships;
     for (auto i : sbuf) check &= !(g->entity_exists(i));
 
     if (check) {

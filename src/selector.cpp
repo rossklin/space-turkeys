@@ -35,7 +35,7 @@ bool specific_selector<solar>::is_selectable() {
 }
 
 template <>
-set<combid> specific_selector<solar>::get_ships() { return ships; }
+set<idtype> specific_selector<solar>::get_ships() { return ships; }
 
 template <>
 void specific_selector<solar>::draw(RSG::WindowPtr w) {
@@ -169,7 +169,7 @@ bool specific_selector<fleet>::is_selectable() {
 }
 
 template <>
-set<combid> specific_selector<fleet>::get_ships() {
+set<idtype> specific_selector<fleet>::get_ships() {
   return ships;
 }
 
@@ -281,7 +281,7 @@ void specific_selector<waypoint>::draw(RSG::WindowPtr w) {
 }
 
 template <>
-set<combid> specific_selector<waypoint>::get_ships() {
+set<idtype> specific_selector<waypoint>::get_ships() {
   throw logical_error("waypoint_selector::get_ships must not be called!");
 }
 
@@ -326,8 +326,8 @@ void specific_selector<ship>::draw(RSG::WindowPtr w) {
 }
 
 template <>
-set<combid> specific_selector<ship>::get_ships() {
-  return set<combid>();
+set<idtype> specific_selector<ship>::get_ships() {
+  return set<idtype>();
 }
 
 template <>

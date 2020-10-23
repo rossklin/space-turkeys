@@ -50,7 +50,7 @@ class fleet : public virtual commandable_object {
   static sint default_policy(std::string action);
 
   // serialized components
-  std::set<combid> ships;             /*!< ids of ships in fleet */
+  std::set<idtype> ships;             /*!< ids of ships in fleet */
   std::set<std::string> interactions; /*!< set of available interactions */
   command com;                        /*!< the fleet's command (currently this only holds the target) */
   point heading;
@@ -61,7 +61,7 @@ class fleet : public virtual commandable_object {
   int update_counter; /*!< counter for updating fleet data */
   analytics stats;
   bool force_refresh;
-  std::set<combid> helper_fleets;
+  std::set<idtype> helper_fleets;
 
   // game_object stuff
   void pre_phase(game_data *g) override;
@@ -87,7 +87,7 @@ class fleet : public virtual commandable_object {
   void set_idle();
   void analyze_enemies(game_data *g);
   void update_data(game_data *g, bool set_force_refresh = false);
-  void remove_ship(combid i);
+  void remove_ship(idtype i);
   float get_hp();
   float get_dps();
   float get_strength();
