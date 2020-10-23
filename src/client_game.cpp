@@ -621,7 +621,7 @@ void game::tell_server_quit(Voidfun callback, Voidfun on_fail) {
 }
 
 /*! Callback for target GUI, create commands to an entity */
-void game::target_selected(string action, idtype target, point pos, list<string> e_sel) {
+void game::target_selected(string action, idtype target, point pos, list<idtype> e_sel) {
   bool postselect = false;
 
   if (target == identifier::no_entity) {
@@ -1694,12 +1694,12 @@ void game::control_event(sf::Event e) {
   drag_map_active &= sf::Keyboard::isKeyPressed(sf::Keyboard::LControl);
 
   auto update_hover_info = [this](point p) {
-    static set<string> last_keys = {};
+    static set<idtype> last_keys = {};
 
     auto keys = entities_at(p);
     if (keys.empty()) keys = selected_entities();
 
-    set<string> test = utility::range_init<set<string>>(keys);
+    set<idtype> test = utility::range_init<set<idtype>>(keys);
     if (test == last_keys) return;
     last_keys = test;
 
@@ -1919,7 +1919,7 @@ bool game::choice_event(sf::Event e) {
     int qent;
     idtype key = entity_at(p, qent);
 
-    if (phase == "choice" && get_selector(k)->isa(waypoint::class_id)) {
+    if (phase == "choice" && get_selector(key)->isa(waypoint::class_id)) {
       drag_waypoint_active = true;
       drag_id = key;
     } else {

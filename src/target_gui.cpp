@@ -24,7 +24,7 @@ PanelPtr st3::target_gui(
     std::function<void(std::string action, idtype target)> callback,
     RSG::Voidfun on_cancel) {
   shared_ptr<string> sel_action = make_shared<string>("");
-  shared_ptr<idtype> sel_target = make_shared<idtype>("");
+  shared_ptr<idtype> sel_target = make_shared<idtype>(identifier::no_entity);
 
   ButtonPtr b_cancel = Button::create("Cancel", on_cancel);
   ButtonPtr b_commit = Button::create("Commit", [sel_action, sel_target, callback]() { callback(*sel_action, *sel_target); });

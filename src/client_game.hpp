@@ -152,7 +152,7 @@ class game : public game_base_data {
   RSG::PanelPtr simulation_gui();
 
   // SERVER COMMUNICATION AND BACKGROUND TASKS
-  void target_selected(std::string action, idtype target, point pos, std::list<std::string> e_sel);
+  void target_selected(std::string action, idtype target, point pos, std::list<idtype> e_sel);
   void prepare_data_frame(client_data_frame &g);
   void load_frames();
 
