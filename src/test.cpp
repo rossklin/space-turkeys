@@ -58,7 +58,7 @@ void setup_fleet_for(game_ptr g, idtype pid, point at, point targ, hm_t<string, 
     }
   }
 
-  waypoint_ptr w = waypoint::create(idc++, pid);
+  waypoint_ptr w = waypoint::create(pid, g->next_id());
   w->position = targ;
   command c;
   c.target = w->id;
