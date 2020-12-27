@@ -120,7 +120,7 @@ void fleet::give_commands(list<command> c, game_data *g) {
 
   for (auto &x : buf) {
     if (x.ships.empty()) continue;
-    fleet_ptr f = create(fleet::server_pid, g->next_id(fleet::class_id));
+    fleet_ptr f = create(fleet::server_pid, g->next_id());
     f->com = x;
     f->com.source = f->id;
     if (f->com.origin == identifier::no_entity) f->com.origin = com.origin;
@@ -431,7 +431,7 @@ void fleet::check_action(game_data *g) {
 
 //   if (best_id.empty()) {
 //     // Create a new helper fleet for this ship
-//     f = fleet::create(fleet::server_pid, g->next_id(fleet::class_id));
+//     f = fleet::create(fleet::server_pid, g->next_id());
 //     f->com = com;
 //     f->com.ships = {sid};
 //     f->com.source = f->id;

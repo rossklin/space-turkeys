@@ -44,7 +44,7 @@ void setup_fleet_for(game_ptr g, idtype pid, point at, point targ, hm_t<string, 
   for (auto sc : scc) {
     int count = max(round(utility::random_normal(sc.second, 0.5)), 1);
     for (int j = 0; j < count; j++) {
-      ship_ptr sh = rbase.build_ship(g->next_id(ship::class_id), sc.first);
+      ship_ptr sh = rbase.build_ship(g->next_id(), sc.first);
 
       sh->force_refresh = true;
       sh->thrust = 0;

@@ -176,7 +176,7 @@ const hm_t<string, interaction> &interaction::table() {
         int count = utility::random_normal(m.second, 0.2 * m.second);
         if (count > 0) {
           for (int j = 0; j < count; j++) {
-            ship_ptr sh = rbase.build_ship(g->next_id(ship::class_id), m.first);
+            ship_ptr sh = rbase.build_ship(g->next_id(), m.first);
             new_ships.push_back(sh->id);
             sh->owner = s->owner;
             g->register_entity(sh);

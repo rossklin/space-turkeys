@@ -28,8 +28,6 @@ class game_data : public virtual game_base_data {
   ~game_data() = default;
   game_data(const game_data &g) = delete;
 
-  int next_id(class_t x);
-
   // access
   ship_ptr get_ship(idtype i) const;
   fleet_ptr get_fleet(idtype i) const;

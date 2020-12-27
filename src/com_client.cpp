@@ -78,6 +78,7 @@ void client::deserialize(game_base_data &f, sf::Packet &p, sint id) {
     throw network_error("deserialize: package empty!");
   }
 
+  f.idc = ep.idc;
   f.settings = ep.settings;
   f.players = ep.players;
   f.remove_entities = ep.remove_entities;

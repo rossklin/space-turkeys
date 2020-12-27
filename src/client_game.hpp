@@ -79,8 +79,6 @@ class game : public game_base_data {
   sf::Color col;
   sint self_id;
   std::vector<point> enemy_clusters;
-  int wp_idc;
-  int fleet_idc;
 
   // Simulation data
   int sim_frames_loaded;

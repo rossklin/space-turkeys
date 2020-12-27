@@ -53,8 +53,6 @@ game::game(std::shared_ptr<cl_socket_t> s, RSG::WindowPtr w) {
   sight_wh = point(0, 0);
   area_select_active = false;
   self_id = socket->id;
-  fleet_idc = 0;
-  wp_idc = 0;
   state_run = true;
   component_layers.resize(LAYER_NUM);
   reset_drags();
@@ -1021,7 +1019,7 @@ void game::update_sim_frame() {
     @return the waypoint id
 */
 idtype game::add_waypoint(point p) {
-  waypoint buf(self_id, wp_idc++);
+  waypoint buf(self_id, next_id());
   buf.position = p;
   waypoint_selector::ptr w = waypoint_selector::create(buf, col, true);
   add_entity(w);
@@ -1154,6 +1152,7 @@ void game::reload_data(client_data_frame &g, bool use_animations) {
   // make selectors 'not seen' and 'not owned' and clear commands and
   // waypoints
   clear_selectors();
+  idc = g.idc;
   terrain = g.terrain;  // TODO: optimize
   entity = g.entity;
   entity_grid.clear();
@@ -1162,8 +1161,6 @@ void game::reload_data(client_data_frame &g, bool use_animations) {
 
   // update commands for owned fleets
   for (auto f : g.fleets) {
-    fleet_idc = max(fleet_idc, f->id + 1);  // TODO
-
     if (entity_exists(f->com.target) && f->owned) {
       // include commands even if f is idle e.g. to waypoint
       command c = f->com;
@@ -1178,9 +1175,7 @@ void game::reload_data(client_data_frame &g, bool use_animations) {
   }
 
   // update commands for waypoints
-  for (auto w : g.waypoints) {        // TODO: optimize
-    wp_idc = max(wp_idc, w->id + 1);  // TODO
-
+  for (auto w : g.waypoints) {  // TODO: optimize
     for (auto c : w->pending_commands) {
       if (entity_exists(c.target)) {
         add_command(c, w->get_position(), get_selector(c.target)->get_position(), false, false);
@@ -1925,7 +1920,7 @@ bool game::choice_event(sf::Event e) {
     int qent;
     idtype key = entity_at(p, qent);
 
-    if (phase == "choice" && get_selector(key)->isa(waypoint::class_id)) {
+    if (phase == "choice" && key != identifier::no_entity && get_selector(key)->isa(waypoint::class_id)) {
       drag_waypoint_active = true;
       drag_id = key;
     } else {

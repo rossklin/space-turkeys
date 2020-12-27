@@ -27,11 +27,6 @@ using namespace st3;
 using namespace cost;
 using namespace utility;
 
-int game_data::next_id(class_t x) {
-  if (!idc.count(x)) idc[x] = 0;
-  return idc[x]++;
-}
-
 game_object_ptr game_data::get_game_object(idtype i) const {
   if (entity_exists(i)) {
     return get_entity<game_object>(i);
@@ -320,7 +315,7 @@ void game_data::relocate_ships(command c, set<idtype> &sh, idtype owner) {
     c.origin = f->com.origin;
     f->com = c;
   } else {
-    f = fleet::create(fleet::server_pid, next_id(fleet::class_id));
+    f = fleet::create(fleet::server_pid, next_id());
 
     f->com = c;
     f->owner = owner;
@@ -356,7 +351,7 @@ void game_data::relocate_ships(command c, set<idtype> &sh, idtype owner) {
 fleet_ptr game_data::generate_fleet(point p, idtype owner, command c, list<idtype> sh) {
   if (sh.empty()) return NULL;
 
-  fleet_ptr f = fleet::create(fleet::server_pid, next_id(fleet::class_id));
+  fleet_ptr f = fleet::create(fleet::server_pid, next_id());
   f->com = c;
   f->com.source = f->id;
   f->position = p;
@@ -590,7 +585,7 @@ void game_data::extend_universe(int i, int j, bool starting_area) {
   }
 
   // make solars
-  for (auto p : x) register_entity(solar::create(next_id(solar::class_id), p, bounty, var));
+  for (auto p : x) register_entity(solar::create(next_id(), p, bounty, var));
 
   // add impassable terrain
   static int terrain_idc = 0;
@@ -872,7 +867,7 @@ void game_data::build() {
     cost::res_t initial_resources;
     for (auto v : keywords::resource) initial_resources[v] = 1000;
 
-    solar_ptr s = solar::create(next_id(solar::class_id), p, 1);
+    solar_ptr s = solar::create(next_id(), p, 1);
     s->owner = pid;
     s->was_discovered = true;
     s->resources = initial_resources;
@@ -903,7 +898,7 @@ void game_data::build() {
 
     for (auto sc : starter_fleet) {
       for (int j = 0; j < sc.second; j++) {
-        ship_ptr sh = rbase.build_ship(next_id(ship::class_id), sc.first);
+        ship_ptr sh = rbase.build_ship(next_id(), sc.first);
         if ((!sh->depends_tech.empty()) && settings.clset.starting_fleet == "massive") {
           sh->upgrades += research::data::get_tech_upgrades(sh->ship_class, sh->depends_tech);
         }

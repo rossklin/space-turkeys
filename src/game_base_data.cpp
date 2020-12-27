@@ -5,6 +5,14 @@
 using namespace st3;
 using namespace std;
 
+unindexed_base_data::unindexed_base_data() {
+  idc = 0;
+}
+
+int unindexed_base_data::next_id() {
+  return idc++;
+}
+
 void game_base_data::add_entity(game_object_ptr e) {
   if (entity.count(e->id)) {
     throw logical_error("Attempted to add entity but it already exists!");

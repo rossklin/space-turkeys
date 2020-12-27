@@ -269,7 +269,7 @@ void solar::dynamics(game_data *g) {
         ship_progress = -1;
         choice_data.ship_queue.pop_front();
 
-        ship_ptr sh = research_level.build_ship(g->next_id(ship::class_id), v);
+        ship_ptr sh = research_level.build_ship(g->next_id(), v);
         sh->states.insert("landed");
         sh->owner = owner;
         ships.insert(sh->id);

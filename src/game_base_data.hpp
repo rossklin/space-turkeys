@@ -12,7 +12,7 @@ namespace st3 {
 
 class unindexed_base_data {
  public:
-  hm_t<class_t, idtype> idc;
+  idtype idc;
   hm_t<idtype, player> players; /*!< table of players */
   game_settings settings;       /*! game settings */
   hm_t<idtype, game_object_ptr> entity;
@@ -20,7 +20,11 @@ class unindexed_base_data {
   std::list<idtype> remove_entities;
   hm_t<idtype, std::set<idtype>> evm;
   std::set<std::pair<int, int>> discovered_universe;
+
+  unindexed_base_data();
+  int next_id();
 };
+
 class game_base_data : public unindexed_base_data {
  public:
   hm_t<idtype, grid::tree<idtype>> entity_grid;
