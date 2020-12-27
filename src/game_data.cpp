@@ -377,33 +377,38 @@ fleet_ptr game_data::generate_fleet(point p, idtype owner, command c, list<idtyp
   return f;
 }
 
-void game_data::apply_choice(choice c, idtype id) {
+void game_data::apply_choice(choice c, idtype pid) {
+  hm_t<idtype, idtype> idmap;
+
   // build waypoints and fleets before validating the choice, so that
   // commands based there can be validated
   for (auto &x : c.waypoints) {
-    x.second->owner = id;
+    x.second->owner = pid;
+    // Replace clients' temporary ids
+    idmap[x.second->id] = next_id();
+    x.second->id = idmap[x.second->id];
     register_entity(x.second->clone());
   }
 
   // research
   if (c.research.length() > 0) {
-    if (!find_in(c.research, players[id].research_level.available())) {
-      throw player_error("Invalid research choice submitted by player " + to_string(id) + ": " + c.research);
+    if (!find_in(c.research, players[pid].research_level.available())) {
+      throw player_error("Invalid research choice submitted by player " + to_string(pid) + ": " + c.research);
     }
   }
-  players[id].research_level.researching = c.research;
+  players[pid].research_level.researching = c.research;
 
   // solar choices: require research to be applied
   for (auto &x : c.solar_choices) {
     // validate
     auto e = get_game_object(x.first);
 
-    if (e->owner != id) {
-      throw player_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + to_string(x.first) + " owned by " + to_string(e->owner));
+    if (e->owner != pid) {
+      throw player_error("validate_choice: error: solar choice by player " + to_string(pid) + " for " + to_string(x.first) + " owned by " + to_string(e->owner));
     }
 
     if (!e->isa(solar::class_id)) {
-      throw player_error("validate_choice: error: solar choice by player " + to_string(id) + " for " + to_string(x.first) + ": not a solar!");
+      throw player_error("validate_choice: error: solar choice by player " + to_string(pid) + " for " + to_string(x.first) + ": not a solar!");
     }
 
     if (x.second.building_queue.size()) {
@@ -426,18 +431,27 @@ void game_data::apply_choice(choice c, idtype id) {
     s->choice_data = x.second;
   }
 
-  // commands: validate
-  for (auto x : c.commands) {
-    auto e = get_game_object(x.first);
-    if (e->owner != id) {
-      throw player_error("validate_choice: error: command by player " + to_string(id) + " for " + to_string(x.first) + " owned by " + to_string(e->owner));
-    }
-  }
-
   // apply
   for (auto x : c.commands) {
-    commandable_object_ptr v = guaranteed_cast<commandable_object>(get_game_object(x.first));
-    v->give_commands(x.second, this);
+    idtype id = x.first;
+    if (idmap.count(id)) id = idmap[id];
+
+    auto e = get_game_object(id);
+    if (e->owner != pid) {
+      throw player_error("validate_choice: error: command by player " + to_string(pid) + " for " + to_string(id) + " owned by " + to_string(e->owner));
+    }
+
+    // Update temporary ids
+    auto coms = x.second;
+    for (auto &c : coms) {
+      if (c.target >= 0 && idmap.count(c.target)) {
+        c.target = idmap[c.target];
+      }
+    }
+
+    // Pass to object handler
+    commandable_object_ptr v = guaranteed_cast<commandable_object>(get_game_object(id));
+    v->give_commands(coms, this);
   }
 }
 
