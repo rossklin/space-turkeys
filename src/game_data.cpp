@@ -916,7 +916,7 @@ void game_data::build() {
 
   float angle = random_uniform(0, 2 * M_PI);
   float np = players.size();
-  float gs = grid::tree<combid>::grid_size;
+  float gs = grid::tree<idtype>::grid_size;
   float rad = fmin(0.4 * gs, settings.clset.galaxy_radius);
   point center(gs / 2, gs / 2);
   for (auto &p : players) {
