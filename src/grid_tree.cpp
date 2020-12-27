@@ -154,33 +154,31 @@ set<V> grid::tree<V>::block_search(point p, float rad) {
 template <typename V>
 list<pair<V, point>> grid::tree<V>::search(point p, float rad, int knn) const {
   map<V, point> ids;
-  K last_k(INT_FAST32_MAX, INT_FAST32_MAX);
 
-  for (float rbuf = 0; rbuf <= rad; rbuf++) {
-    float a_inc = 2 * M_PI;
-    if (rbuf > 0) a_inc = 0.3 / rbuf;
-    for (float a = 0; a < 2 * M_PI; a += a_inc) {
-      point x0 = p + rbuf * utility::normv(a);  // OPTIMIZE 40
-      K k(x0.x, x0.y);
-      if (k != last_k) {  // OPTIMIZE 7
-        last_k = k;
-        int x = k.first;
-        int y = k.second;
-        if (test_xy(x, y)) {
-          const grid_data &buf = get(x, y);
-          for (int i = 0; i < buf.n; i++) {
-            ids[buf.ids[i]] = reverse_index.at(buf.ids[i]).p;  // OPTIMIZE 18
-          }
-        }
+  auto process = [this, rad, &ids](K k) {
+    int x = k.first;
+    int y = k.second;
+    if (x * x + y * y < rad * rad && test_xy(x, y)) {
+      const grid_data &buf = get(x, y);
+      for (int i = 0; i < buf.n; i++) {
+        ids[buf.ids[i]] = {x, y};  // OPTIMIZE 18
       }
+    }
+  };
+
+  int max_delta = round(rad);
+  for (int delta = 0; delta <= max_delta; delta++) {
+    for (int idx = -delta; idx <= delta; idx++) {
+      process({p.x + idx, p.y - delta});
+      process({p.x + idx, p.y + delta});
+      process({p.x - delta, p.y + idx});
+      process({p.x + delta, p.y + idx});
       if (knn > 0 && ids.size() >= knn) break;
     }
     if (knn > 0 && ids.size() >= knn) break;
   }
 
-  list<pair<V, point>> res(ids.begin(), ids.end());
-
-  return res;
+  return list<pair<V, point>>(ids.begin(), ids.end());
 }
 
 /*! remove an element
