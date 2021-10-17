@@ -40,6 +40,12 @@ class game : public game_base_data {
     LAYER_NUM
   };
 
+  enum game_phase {
+    SIMULATION,
+    CHOICE,
+    INITIALIZATION
+  };
+
   // Server communication
   std::shared_ptr<cl_socket_t> socket; /*!< socket for server communication */
 
@@ -64,7 +70,7 @@ class game : public game_base_data {
 
   // Interface logic variables
   bool state_run;
-  std::string phase;
+  game_phase phase;
   bool choice_complete;
   choice user_choice;
   std::list<RSG::Voidfun> ui_tasks;

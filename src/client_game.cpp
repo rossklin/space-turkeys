@@ -155,7 +155,7 @@ void game::window_loop() {
     controls();
 
     // Update simulation
-    if (phase == "simulation") {
+    if (phase == SIMULATION) {
       if (sim_playing) next_sim_frame();
 
       // Update sim label
@@ -282,7 +282,7 @@ void game::swap_layer(int layer, RSG::ComponentPtr c) {
 }
 
 void game::set_main_panel(PanelPtr p) {
-  if (phase != "choice") return;
+  if (phase != CHOICE) return;
 
   p = RSG::tag({"main-panel"}, p);
   p->on_keypress[sf::Keyboard::Escape] = [this]() {
@@ -333,7 +333,7 @@ void game::build_base_panel() {
 
   PanelPtr p;
 
-  if (phase == "choice") {
+  if (phase == CHOICE) {
     p = Panel::create({right, bottom});
   } else {
     p = Panel::create({right});
@@ -687,7 +687,7 @@ void game::load_frames() {
 
   pq.clear();
   pq << protocol::frame << -1;
-  if (sim_frames_loaded < sim_frames.size()) {
+  if (phase == SIMULATION && sim_frames_loaded < sim_frames.size()) {
     terminate_with_message("Load frames: failed to load all frames");
   } else if (!socket->status_is_running()) {
     terminate_with_message("Load frames: disconnected");
@@ -770,7 +770,7 @@ void game::pre_step() {
   clear_ui_layers();
   build_base_panel();
   set_loading(true);
-  phase = "pre";
+  phase = INITIALIZATION;
 
   auto callback = [this](sf::Packet p) {
     client_data_frame data;
@@ -796,7 +796,7 @@ void game::pre_step() {
 }
 
 void game::choice_step() {
-  phase = "choice";
+  phase = CHOICE;
   build_base_panel();
 
   // keep solar and research choices
@@ -856,7 +856,7 @@ void game::send_choice() {
 */
 
 void game::simulation_step() {
-  phase = "simulation";
+  phase = SIMULATION;
   cout << "simluation: starting data loader" << endl;
 
   // start loading frames in background
@@ -1480,7 +1480,7 @@ bool game::select_at(point p) {
   idtype key = entity_at(p, qent);
   idtype cid = command_at(p, qcom);
 
-  if (qcom < qent && phase == "choice") return select_command(cid);
+  if (qcom < qent && phase == CHOICE) return select_command(cid);
 
   if (!add2selection()) deselect_all();
 
@@ -1798,7 +1798,7 @@ void game::reset_drags() {
 
 // Choice step global handler, return true if event handled
 bool game::choice_event(sf::Event e) {
-  if (phase != "choice") return false;
+  if (phase != CHOICE) return false;
 
   Voidfun f_stop = [this]() { state_run = false; };
   if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape) {
@@ -1920,7 +1920,7 @@ bool game::choice_event(sf::Event e) {
     int qent;
     idtype key = entity_at(p, qent);
 
-    if (phase == "choice" && key != identifier::no_entity && get_selector(key)->isa(waypoint::class_id)) {
+    if (phase == CHOICE && key != identifier::no_entity && get_selector(key)->isa(waypoint::class_id)) {
       drag_waypoint_active = true;
       drag_id = key;
     } else {
@@ -1956,7 +1956,7 @@ bool game::choice_event(sf::Event e) {
         // update area selection
         srect.width = p.x - srect.left;
         srect.height = p.y - srect.top;
-      } else if (phase == "choice" && drag_waypoint_active && !in_terrain(p)) {
+      } else if (phase == CHOICE && drag_waypoint_active && !in_terrain(p)) {
         // update position
         auto wp = get_specific<waypoint>(drag_id);
         wp->position = p;
