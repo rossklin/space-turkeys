@@ -84,7 +84,7 @@ handler_result server::server_cl_socket::receive_query(protocol_t p, query_respo
   return res;
 }
 
-bool server::server_cl_socket::check_com() {
+bool server::server_cl_socket::status_is_running() {
   return main_status == tc_run;
 }
 
@@ -109,7 +109,7 @@ bool server::server_cl_socket::check_protocol(protocol_t p, query_response_gener
   output("check protocol " + to_string(p) + ": client " + to_string(id) + ": begin.");
 
   auto task = [&, this]() {
-    while (running && main_status == tc_run) {
+    while (running && status_is_running()) {
       handler_result res = receive_query(p, f);
 
       if (res.status == socket_t::tc_stop) {

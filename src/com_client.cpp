@@ -17,7 +17,7 @@ using namespace std;
 using namespace st3;
 using namespace st3::client;
 
-bool cl_socket_t::check_com() {
+bool cl_socket_t::status_is_running() {
   return instruction == tc_run;
 }
 

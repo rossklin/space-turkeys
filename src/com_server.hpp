@@ -38,7 +38,7 @@ struct server_cl_socket : public socket_t {
   bool check_protocol(protocol_t p, query_response_generator f);
   bool is_connected();
   void set_disconnect();
-  bool check_com() override;
+  bool status_is_running() override;
 };
 
 /*! structure handling communication with a set of clients associated with a game */

@@ -16,7 +16,7 @@ namespace st3 {
 
 struct cl_socket_t : public socket_t {
   int instruction;
-  bool check_com() override;
+  bool status_is_running() override;
 };
 
 typedef std::shared_ptr<cl_socket_t> cl_socket_ptr;

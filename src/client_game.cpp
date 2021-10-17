@@ -662,7 +662,7 @@ void game::load_frames() {
   sim_frames.resize(settings.clset.frames_per_round);
 
   frames_generated = 0;
-  for (sim_frames_loaded = 0; phase == "simulation" && sim_frames_loaded < sim_frames.size() && socket->check_com(); sim_frames_loaded++) {
+  for (sim_frames_loaded = 0; phase == SIMULATION && sim_frames_loaded < sim_frames.size() && socket->status_is_running(); sim_frames_loaded++) {
     pq.clear();
     pq << protocol::frame << sim_frames_loaded;
 
@@ -689,7 +689,7 @@ void game::load_frames() {
   pq << protocol::frame << -1;
   if (sim_frames_loaded < sim_frames.size()) {
     terminate_with_message("Load frames: failed to load all frames");
-  } else if (!socket->check_com()) {
+  } else if (!socket->status_is_running()) {
     terminate_with_message("Load frames: disconnected");
   } else if (!client::query(socket, pq)) {
     terminate_with_message("Load frames: disconnected on confirm");

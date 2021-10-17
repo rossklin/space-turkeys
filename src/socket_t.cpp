@@ -38,7 +38,7 @@ bool st3::socket_t::send_packet(sf::Packet packet, int timeout) {
     if (timeout > 0) {
       sf::sleep(sf::milliseconds(10));
     }
-  } while (check_com() && elapsed.count() < timeout);
+  } while (status_is_running() && elapsed.count() < timeout);
 
   if (timeout > 0 && elapsed.count() > timeout) {
     throw network_error("socket_t::send: timeout");
@@ -76,7 +76,7 @@ bool st3::socket_t::receive_packet(int timeout) {
     if (timeout > 0) {
       sf::sleep(sf::milliseconds(10));
     }
-  } while (check_com() && elapsed.count() < timeout);
+  } while (status_is_running() && elapsed.count() < timeout);
 
   if (timeout > 0 && elapsed.count() > timeout) {
     throw network_error("socket_t::send: timeout");

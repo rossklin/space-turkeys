@@ -33,7 +33,7 @@ struct socket_t : public sf::TcpSocket {
   /*! default constructor */
   socket_t();
 
-  virtual bool check_com() = 0;
+  virtual bool status_is_running() = 0;
 
   /*! send a given packet
      @param packet the packet
