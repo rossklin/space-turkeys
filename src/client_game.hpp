@@ -169,7 +169,7 @@ class game : public game_base_data {
   /*! Add a task to be run in background thread */
   void queue_background_task(RSG::Voidfun f);
 
-  void check_background_tasks();
+  // void check_background_tasks();
 
   /*! Queue background task: send a packet to query and callback with response */
   void wait_for_it(packet_ptr p, std::function<void(sf::Packet &)> callback, RSG::Voidfun on_fail = 0);
