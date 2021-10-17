@@ -155,25 +155,27 @@ template <typename V>
 list<pair<V, point>> grid::tree<V>::search(point p, float rad, int knn) const {
   map<V, point> ids;
 
-  auto process = [this, rad, &ids](K k) {
-    int x = k.first;
-    int y = k.second;
-    if (x * x + y * y < rad * rad && test_xy(x, y)) {
-      const grid_data &buf = get(x, y);
+  auto process = [this, rad, p, &ids](point a) {
+    if (utility::l2d2(a - p) <= rad * rad && test_xy(a.x, a.y)) {
+      const grid_data &buf = get(a.x, a.y);
       for (int i = 0; i < buf.n; i++) {
-        ids[buf.ids[i]] = {x, y};  // OPTIMIZE 18
+        ids[buf.ids[i]] = {a.x, a.y};
       }
     }
   };
 
   int max_delta = round(rad);
   for (int delta = 0; delta <= max_delta; delta++) {
-    for (int idx = -delta; idx <= delta; idx++) {
-      process({p.x + idx, p.y - delta});
-      process({p.x + idx, p.y + delta});
-      process({p.x - delta, p.y + idx});
-      process({p.x + delta, p.y + idx});
-      if (knn > 0 && ids.size() >= knn) break;
+    if (delta > 0) {
+      for (int idx = -delta; idx <= delta; idx++) {
+        process({p.x + idx, p.y - delta});
+        process({p.x + idx, p.y + delta});
+        process({p.x - delta, p.y + idx});
+        process({p.x + delta, p.y + idx});
+        if (knn > 0 && ids.size() >= knn) break;
+      }
+    } else {
+      process(p);
     }
     if (knn > 0 && ids.size() >= knn) break;
   }
