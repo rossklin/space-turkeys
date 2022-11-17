@@ -52,11 +52,61 @@ server::server_cl_socket::server_cl_socket() : socket_t() {
   gid = "";
 }
 
+void server::server_cl_socket::game_thread(game_context_ptr c) {
+  protocol_t input;
+  vector<protocol_t> phase_protocols(NUM_PHASES);
+  phase_protocols[INITIALIZATION] = protocol::load_init;
+  phase_protocols[CHOICE] = protocol::choice;
+  phase_protocols[SIMULATION] = protocol::frame;
+
+  vector<function<void(game_context_ptr, idtype, sf::Packet&)>> phase_handlers(NUM_PHASES);
+  // phase_handlers[INITIALIZATION] = protocol::load_init;
+  // phase_handlers[CHOICE] = protocol::choice;
+  // phase_handlers[SIMULATION] = protocol::frame;
+
+  while (status_is_running()) {
+    // TODO: c->phase init value?
+    // TODO: should lock here?
+    // TODO: handle exceptions
+    game_phase phase = c->phase;
+    protocol_t p_current = phase_protocols[phase];
+    protocol_t p_next = (p_current + 1) % NUM_PHASES;
+
+    if (receive_packet()) {
+      if (data >> input) {
+        if (input == protocol::leave) {
+          output("client " + to_string(id) + " disconnected!");
+          send_packet(*protopack(protocol::confirm));
+          set_disconnect();
+        } else if (input == protocol::standby) {
+          send_packet(*protopack(protocol::confirm));
+        } else if (input == p_current) {
+          phase_handlers[phase](c, id, data);
+        } else if (input == p_next) {
+          send_packet(*protopack(protocol::standby));
+        } else if (input < protocol::NUM) {
+          send_packet(*protopack(protocol::aborted));
+          set_disconnect();
+          throw network_error("client_t::receive_query: unexpected protocol: " + to_string(input));
+        }
+      } else {
+        throw network_error("client_t::receive_query: failed to unpack!");
+      }
+    }
+  }
+
+  return;
+}
+
+
 // Receive an expected query from the client and generate a response using the provided callback
+// res.status interpretation:
+// tc_stop: client disconnected
+// tc_run: client standby, run again
 handler_result server::server_cl_socket::receive_query(protocol_t p, query_response_generator f) {
   protocol_t input;
   handler_result res;
-  res.status = socket_t::tc_failed;
+  res.status = socket_t::tc_failed; // Default status never used
 
   if (receive_packet()) {
     if (data >> input) {
@@ -85,7 +135,7 @@ handler_result server::server_cl_socket::receive_query(protocol_t p, query_respo
 }
 
 bool server::server_cl_socket::status_is_running() {
-  return main_status == tc_run;
+  return main_status == tc_run && is_connected();
 }
 
 void server::server_cl_socket::set_disconnect() {
@@ -100,6 +150,7 @@ bool server::server_cl_socket::is_connected() {
 
 // Until an outcome is reached, wait for receiving a query for the specified
 // protocol and process it with the given query response generator
+// Return true on success, false on failure or exception (client will also be disconnected)
 bool server::server_cl_socket::check_protocol(protocol_t p, query_response_generator f) {
   bool running = true;
   bool completed = false;
@@ -113,10 +164,8 @@ bool server::server_cl_socket::check_protocol(protocol_t p, query_response_gener
       handler_result res = receive_query(p, f);
 
       if (res.status == socket_t::tc_stop) {
+        // Client sent the "leave" query and wants to disconnect
         send_packet(res.response);
-        set_disconnect();
-      } else if (res.status == socket_t::tc_failed && is_connected()) {
-        send_packet(p_aborted);
         set_disconnect();
       }
 
@@ -124,13 +173,13 @@ bool server::server_cl_socket::check_protocol(protocol_t p, query_response_gener
 
       send_packet(res.response);
 
-      if (res.status == socket_t::tc_stop) {
-        set_disconnect();
-        break;
-      }
-
       running = res.status == socket_t::tc_run;
-      completed = !running;
+      completed = res.status == socket_t::tc_complete;
+    }
+
+    // Make sure we disconnect if we didn't succede even if there was no error
+    if (!(completed && status_is_running())) {
+      set_disconnect();
     }
   };
 

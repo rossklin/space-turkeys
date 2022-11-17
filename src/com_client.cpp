@@ -21,6 +21,7 @@ bool cl_socket_t::status_is_running() {
   return instruction == tc_run;
 }
 
+// Send a packet, then receive a response
 packet_ptr st3::client::query(cl_socket_ptr socket, sf::Packet &pq) {
   static recursive_mutex m;
   lock_guard<recursive_mutex> lock(m);
@@ -42,7 +43,8 @@ packet_ptr st3::client::query(cl_socket_ptr socket, sf::Packet &pq) {
         *res >> message;  // Dump the message
         return res;
       } else if (message == protocol::standby) {
-        // wait a little while then try again
+        // Server indicates still waiting to complete previous step
+        // Wait a little while then try again
         sf::sleep(sf::milliseconds(500));
         return query(socket, pq);
       } else if (message == protocol::invalid) {

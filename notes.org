@@ -1,4 +1,28 @@
 * Testing
+2020 10 10
+
+** GUI
+*** Research component
+  Too low contrast on basic theme
+  Text in description is badly rendered
+  Rename button "Select" or something
+  Hovering an option takes ~100 ms
+
+** Game client state logic
+  No effect pressing done while mid simulation
+  - because load_frames waits until frames are needed (why?), pre_step will not start until all frames are generated
+
+  Stuck in "loading" after pressing done in simulation (one client pressed before all frames loaded..?)
+  Server is sending "standby", so perhaps server gets stuck in check protocol if client requests next step?
+
+  Probably restructure so "check_protocol" is always running, in the context of the "game", and fetches the appropriate 
+  handler callback based on the query, and updates the client state to track which game phase they are on?
+
+** Game physics
+  Collisions make ships bubble around, guarantee relative outgoing speed is always lower than incoming speed
+
+  Fleet positions must be updated correctly, left behind when ships move to attack
+
 ** [done] Removing ships from command does not remove downstream ships
   Also command gui for downstream commands shows original ships
 ** [done] Waypoint becomes impossible to select after first select or movement

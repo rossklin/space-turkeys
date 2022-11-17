@@ -15,6 +15,24 @@ class game_base_data;
 
 /*! server side specifics */
 namespace server {
+
+enum game_phase {
+  SIMULATION,
+  CHOICE,
+  INITIALIZATION,
+  NUM_PHASES
+};
+
+struct game_context {
+  game_phase phase;
+  mutex mtx;
+  vector<unindexed_base_data> simulation_frames;
+  hm_t<idtype, choice> player_choices;
+  int frames_loaded;
+};
+
+typedef shared_ptr<game_context> game_context_ptr;
+
 struct handler_result {
   sf::Packet response;
   int status;
@@ -34,6 +52,7 @@ struct server_cl_socket : public socket_t {
   std::string gid;
 
   server_cl_socket();
+  void game_thread(game_context_ptr);
   handler_result receive_query(protocol_t p, query_response_generator f);
   bool check_protocol(protocol_t p, query_response_generator f);
   bool is_connected();
