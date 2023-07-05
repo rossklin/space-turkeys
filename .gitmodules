@@ -1,3 +1,3 @@
 [submodule "rsg"]
 	path = rsg
-	url = git@gitlab.com:rsk_chaos/rsg.git
+	url = git@github.com:rossklin/RSG.git
