@@ -92,10 +92,21 @@ string setup_create_game(cl_socket_ptr socket, client_game_settings settings) {
 }
 
 void setup_join_game(cl_socket_ptr socket, string gid) {
-  sf::Packet p;
-  p << protocol::join_game << gid;
-  handled_response(socket, p, 0);
-  cout << "Joined game " << gid << endl;
+  int retries = 10;
+  while (retries > 0) {
+    try {
+      sf::Packet p;
+      p << protocol::join_game << gid;
+      handled_response(socket, p, 0);
+      cout << "Joined game " << gid << endl;
+      return;
+    } catch (network_error &e) {
+      cout << "Failed to join game " << gid << " (" << e.what() << "), retrying in 1s..." << endl;
+      sf::sleep(sf::milliseconds(1000));
+      retries--;
+    }
+  }
+  throw network_error("Failed to join game after multiple retries");
 }
 
 RSG::WindowPtr setup_gfx(bool fullscreen = false) {
