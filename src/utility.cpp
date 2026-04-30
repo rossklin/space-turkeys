@@ -271,6 +271,7 @@ point st3::operator*(const float a, const point b) {
 
 // normal ~N(m,s)
 float utility::random_normal(float m, float s) {
+  if (s == 0.0f) return m; // s == 0 is not allowed in normal distribution, so return m directly
   std::normal_distribution<float> dist(m, s);
   return get_random<float>(dist);
 }
