@@ -2,8 +2,8 @@
 
 #include <rapidjson/document.h>
 
-#include <boost/algorithm/string.hpp>
 #include <string>
+#include <sstream>
 
 #include "research.hpp"
 #include "ship.hpp"
@@ -43,7 +43,13 @@ bool development::node::parse(string name, const rapidjson::Value &v) {
       } else if (ship_name[0] == '[' || ship_name[0] == '#' || ship_name[0] == '!') {
         // list of tag conditions for set of upgrades
         vector<string> conditions;
-        boost::split(conditions, ship_name, [](char c) { return c == ':'; });
+        {
+          stringstream ss(ship_name);
+          string item;
+          while (getline(ss, item, ':')) {
+            conditions.push_back(item);
+          }
+        }
 
         for (auto &s : stab) {
           bool pass = true;
@@ -55,7 +61,13 @@ bool development::node::parse(string name, const rapidjson::Value &v) {
             } else if (cond[0] == '[') {
               vector<string> limits;
               string range = cond.substr(1, cond.length() - 2);
-              boost::split(limits, range, [](char c) { return c == ','; });
+              {
+                stringstream ss(range);
+                string item;
+                while (getline(ss, item, ',')) {
+                  limits.push_back(item);
+                }
+              }
               float lower = stof(limits[0]);
               float upper = stof(limits[1]);
               if (s.second.stats[sskey::key::mass] < lower || s.second.stats[sskey::key::mass] > upper) pass = false;

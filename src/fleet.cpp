@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <mutex>
+#include <random>
 
 #include "game_data.hpp"
 #include "interaction.hpp"
@@ -116,7 +117,7 @@ void fleet::set_idle() {
 
 void fleet::give_commands(list<command> c, game_data *g) {
   vector<command> buf(c.begin(), c.end());
-  random_shuffle(buf.begin(), buf.end());
+  std::shuffle(buf.begin(), buf.end(), std::mt19937(std::random_device()()));
 
   for (auto &x : buf) {
     if (x.ships.empty()) continue;

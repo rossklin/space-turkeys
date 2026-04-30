@@ -7,6 +7,7 @@
 #include <memory>
 #include <numeric>
 #include <queue>
+#include <random>
 #include <vector>
 
 #include "animation_data.hpp"
@@ -841,7 +842,7 @@ void game_data::increment(bool test_extend) {
   }
 
   // perform interactions
-  random_shuffle(interaction_buffer.begin(), interaction_buffer.end());
+  std::shuffle(interaction_buffer.begin(), interaction_buffer.end(), std::mt19937(std::random_device()()));
   auto itab = interaction::table();
   for (auto x : interaction_buffer) {
     interaction i = itab[x.interaction];

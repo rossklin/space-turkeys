@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <mutex>
+#include <random>
 
 #include "fleet.hpp"
 #include "game_data.hpp"
@@ -44,7 +45,7 @@ void waypoint::post_phase(game_data *g) {
 
   // evaluate commands in random order
   vector<command> buf(pending_commands.begin(), pending_commands.end());
-  random_shuffle(buf.begin(), buf.end());
+  std::shuffle(buf.begin(), buf.end(), std::mt19937(std::random_device()()));
   for (auto &y : buf) {
     // check if all ships in command y are either landed or dead
     check = true;
