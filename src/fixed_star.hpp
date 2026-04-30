@@ -22,6 +22,6 @@ class fixed_star {
       */
   void draw(RSG::WindowPtr w);
 
-  bool operator==(const fixed_star &rhs);
+  bool operator==(const fixed_star &rhs) const;
 };
 };  // namespace st3

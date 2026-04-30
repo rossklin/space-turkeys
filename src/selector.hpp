@@ -69,8 +69,8 @@ class specific_selector : public virtual entity_selector, public virtual T {
   std::list<std::string> hover_info();
 };
 
-// template <>
-// specific_selector<ship>::specific_selector(ship &s, sf::Color c, bool o);
+template <>
+specific_selector<ship>::specific_selector(ship &s, sf::Color c, bool o);
 
 typedef specific_selector<ship> ship_selector;
 typedef specific_selector<fleet> fleet_selector;

@@ -26,6 +26,6 @@ void fixed_star::draw(RSG::WindowPtr w) {
   w->draw(star);
 }
 
-bool fixed_star::operator==(const fixed_star &star) {
+bool fixed_star::operator==(const fixed_star &star) const {
   return star.position == position;
 }
