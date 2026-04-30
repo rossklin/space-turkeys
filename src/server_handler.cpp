@@ -58,6 +58,7 @@ string handler::create_game(client_game_settings set) {
   gs.id = to_string(idc++);
   gs.settings.clset = set;
   games[gs.id] = gs;
+  cout << "create_game: created game '" << gs.id << "' with num_players=" << set.num_players << endl;
   game_ring.unlock();
   return gs.id;
 }
@@ -65,11 +66,18 @@ string handler::create_game(client_game_settings set) {
 bool handler::join_game(server_cl_socket_ptr cl, string gid) {
   bool res = true;
   game_ring.lock();
-  if (!games.count(gid)) res = false;
-  if (!(res && games.at(gid).can_join())) res = false;
+  if (!games.count(gid)) {
+    cout << "join_game failed: game '" << gid << "' not found. Current games count: " << games.size() << endl;
+    res = false;
+  }
+  if (res && !games.at(gid).can_join()) {
+    cout << "join_game failed: game '" << gid << "' cannot be joined. status=" << games.at(gid).status << ", clients.size()=" << games.at(gid).clients.size() << ", num_players=" << games.at(gid).settings.clset.num_players << endl;
+    res = false;
+  }
   if (res) {
     games.at(gid).add_client(cl);
     cl->gid = gid;
+    cout << "join_game success: client " << cl->id << " joined game '" << gid << "'" << endl;
   }
   game_ring.unlock();
   return res;
