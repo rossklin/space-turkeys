@@ -1,11 +1,8 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Server",
+      "name": "Linux Server",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/debug_st_server",
@@ -24,7 +21,7 @@
       ]
     },
     {
-      "name": "Client-quickstart",
+      "name": "Linux Client-quickstart",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/debug_st_client",
@@ -43,7 +40,7 @@
       ]
     },
     {
-      "name": "Client",
+      "name": "Linux Client",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/debug_st_client",
@@ -62,7 +59,7 @@
       ]
     },
     {
-      "name": "Client-join",
+      "name": "Linux Client-join",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/debug_st_client",
@@ -81,7 +78,7 @@
       ]
     },
     {
-      "name": "RSG test",
+      "name": "Linux RSG test",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/rsg/test",
@@ -100,7 +97,7 @@
       ]
     },
     {
-      "name": "tester",
+      "name": "Linux tester",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/debug_test",
@@ -117,12 +114,71 @@
           "ignoreFailures": true
         }
       ]
+    },
+    {
+      "name": "Windows Server",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/Debug/st_server.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Windows Client-quickstart",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/Debug/st_client.exe",
+      "args": ["starting_fleet=massive", "size=100"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Windows Client",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/Debug/st_client.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Windows Client-join",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/Debug/st_client.exe",
+      "args": ["task=join", "game_id=1"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Windows tester",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/Debug/st_test.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "integratedTerminal"
     }
   ],
   "compounds": [
     {
-      "name": "Server/Client",
-      "configurations": ["Server", "Client-quickstart", "Client-join"]
+      "name": "Linux Server/Client",
+      "configurations": ["Linux Server", "Linux Client-quickstart", "Linux Client-join"]
+    },
+    {
+      "name": "Windows Server/Client",
+      "configurations": ["Windows Server", "Windows Client-quickstart", "Windows Client-join"]
     }
   ]
 }
