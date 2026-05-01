@@ -149,7 +149,6 @@ class game : public game_base_data {
 
   // METHODS THAT PRODUCE A UI COMPONENT
   RSG::PanelPtr research_gui();
-  RSG::PanelPtr development_gui();
   RSG::PanelPtr military_gui();
   RSG::PanelPtr event_log_widget();
   RSG::PanelPtr hover_info_widget();

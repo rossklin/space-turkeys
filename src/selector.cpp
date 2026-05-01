@@ -41,9 +41,9 @@ template <>
 void specific_selector<solar>::draw(RSG::WindowPtr w) {
   // compute fill color
   sf::Color cfill;
-  cfill.r = 256 * utility::sigmoid(2 * resources[keywords::key_metals] / 1000);
-  cfill.g = 256 * utility::sigmoid(2 * resources[keywords::key_organics] / 1000);
-  cfill.b = 256 * utility::sigmoid(2 * resources[keywords::key_gases] / 1000);
+  cfill.r = 100;
+  cfill.g = 100;
+  cfill.b = 100;
   cfill.a = 160;
   graphics::draw_circle(*w, position, radius, get_color(), cfill, -2);
 
@@ -51,48 +51,14 @@ void specific_selector<solar>::draw(RSG::WindowPtr w) {
   if (!was_discovered) indicator_text += "!";
 
   if (owned) {
-    hm_t<string, string> build_abr;
-    build_abr[keywords::key_research] = "R";
-    build_abr[keywords::key_shipyard] = "S";
-    build_abr[keywords::key_population] = "P";
-    build_abr[keywords::key_defense] = "D";
-
     graphics::draw_circle(*w, position, vision(), sf::Color(40, 200, 60, 100));
-    graphics::draw_text(*w, to_string((int)(population())), position, 16);
 
     indicator_text = "";
-    if (choice_data.building_queue.size()) indicator_text = build_abr[choice_data.building_queue.front()];
     if (get_ships().size()) indicator_text += " <>";
 
     if (selected) {
       graphics::draw_circle(*w, position, radius + 1, graphics::solar_selected, graphics::solar_selected_fill, 2);
-
-      // auto counts = ship_counts();
-
-      // if (counts.size()) {
-      //   string res = "";
-      //   int maxlen = 0;
-      //   for (auto v : counts) {
-      //     string buf = to_string(v.second) + " " + v.first + "s";
-      //     if (maxlen) buf = "\n" + buf;
-      //     maxlen = max((int)buf.length(), maxlen);
-      //     res += buf;
-      //   }
-
-      //   float fs = graphics::unscale() * 16;
-      //   int n = counts.size();
-      //   float width = maxlen * fs * 0.6;
-      //   float height = 1.3 * n * fs;
-      //   sf::FloatRect bounds(position.x + radius + 10, position.y - height / 2, width, height);
-      //   graphics::draw_framed_text(*w, res, bounds, sf::Color::White, sf::Color(20, 30, 40, 80), fs);
-      // }
     }
-  }
-
-  // draw shield indicator
-  float sp = development[keywords::key_defense];
-  if (sp > 0) {
-    graphics::draw_circle(*w, position, radius + 4, sf::Color(100, 140, 200, 150), sf::Color::Transparent, sp);
   }
 
   // draw health indicator
@@ -116,32 +82,13 @@ list<string> specific_selector<solar>::hover_info() {
   ss << id << " at " << utility::format_float(position.x) << "x" << utility::format_float(position.y);
 
   if (owned) {
-    ss << "\n<<Status>>";
-    ss << "\npopulation: " << (int)population();
-
-    ss << "\n<<Facilities>>: ";
-    for (auto x : development) {
-      ss << "\n"
-         << x.first << ": " << x.second;
-
-      // if (build_progress >= 0 && choice_data.do_develop() && x.first == choice_data.building_queue.front()) {
-      //   ss << " (" << to_string((int)(100 * build_progress / devtime(x.first))) << "%)";
-      // }
-    }
-
-    if (ship_progress >= 0 && choice_data.ship_queue.size()) {
+    if (ship_progress >= 0 && choice_data.ship_to_build != "") {
       ss << "\n<<Shipyard>>";
-      string sc = choice_data.ship_queue.front();
+      string sc = choice_data.ship_to_build;
       ship_stats s = ship::table().at(sc);
       ss << "\n"
          << sc << ": " << to_string((int)(100 * ship_progress / s.build_time)) << "%";
     }
-  }
-
-  ss << "\n<<Resources>>:";
-  for (auto k : keywords::resource) {
-    ss << "\n"
-       << k << ": " << (int)resources[k];
   }
 
   return range_init<list<string>>(explode(ss.str(), "\\n"));
@@ -352,16 +299,6 @@ list<string> specific_selector<ship>::hover_info() {
   auto maybe_include = [this, &output](string label, int value) {
     if (value > 0) output += label + ": " + to_string(value) + "\n";
   };
-
-  if (states.count("loaded")) {
-    if (cargo.count()) {
-      maybe_include("Cargo: metals", cargo[keywords::key_metals]);
-      maybe_include("Cargo: gases", cargo[keywords::key_gases]);
-      maybe_include("Cargo: organics", cargo[keywords::key_organics]);
-    } else {
-      output += "Cargo: empty\n";
-    }
-  }
 
   maybe_include("Kills", nkills);
 

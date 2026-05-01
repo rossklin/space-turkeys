@@ -15,8 +15,6 @@ using namespace st3;
 using namespace server;
 
 const class_t target_condition::no_target = "no target";
-const string interaction::trade_to = "trade to";
-const string interaction::trade_from = "trade from";
 const string interaction::land = "land";
 const string interaction::deploy = "deploy";
 const string interaction::search = "search";
@@ -29,19 +27,6 @@ const string interaction::pickup = "pickup";
 const string interaction::terraform = "terraform";
 const string interaction::hive_support = "hive support";
 const string interaction::splash = "splash";
-
-void load_resources(ship_ptr s, solar_ptr t) {
-  float total = t->resources.count();
-  if (total == 0) return;
-
-  float ratio = fmax(s->stats[sskey::key::cargo_capacity] / total, 1);
-  cost::res_t move = t->resources;
-  move.scale(ratio);
-  s->cargo.add(move);
-  move.scale(-1);
-  t->resources.add(move);
-  s->states.insert("loaded");
-}
 
 const hm_t<string, interaction> &interaction::table() {
   static bool init = false;
@@ -62,11 +47,6 @@ const hm_t<string, interaction> &interaction::table() {
       g->get_fleet(s->fleet_id)->remove_ship(s->id);
     }
     s->fleet_id = identifier::no_entity;
-
-    // unload cargo
-    t->resources.add(s->cargo);
-    s->cargo = cost::res_t();
-    s->states.erase("loaded");
 
     // add to solar's fleet
     s->states.insert("landed");
@@ -145,18 +125,6 @@ const hm_t<string, interaction> &interaction::table() {
         sshort << "discovered tech: " << tech << "!";
         message_set = true;
       }
-    } else if (test < 0.2) {
-      // population boost
-      solar_ptr csol = g->closest_solar(t->position, s->owner);
-      if (csol) {
-        csol->development[keywords::key_population]++;
-        ss << " and encountered a group of people who join your civilization at " << t->id << "!";
-        sshort << "Some people join " << t->id << "!";
-      } else {
-        ss << " and encountered a group of people who can't join you because you control no solars!";
-        sshort << "a group of people can't join!";
-      }
-      message_set = true;
     } else if (test < 0.3) {
       // additional ships
       research::data rbase;
@@ -343,11 +311,7 @@ const hm_t<string, interaction> &interaction::table() {
     ship_ptr s = utility::guaranteed_cast<ship>(self);
     solar_ptr t = utility::guaranteed_cast<solar>(target);
 
-    // if (s->ddata_int("passengers") == 0) return;
-
-    // t -> population = s -> ddata_int("passengers");
     t->owner = s->owner;
-    t->development[keywords::key_population] = 1;
 
     s->remove = true;
   };
@@ -369,91 +333,6 @@ const hm_t<string, interaction> &interaction::table() {
   //     t -> population -= pickup;
   //     s -> dynamic_data["passengers"] = to_string(pickup);
   //   }
-  // };
-  // data[i.name] = i;
-
-  // trade_to
-  i.name = interaction::trade_to;
-  i.condition = target_condition(target_condition::owned, solar::class_id);
-  i.perform = [](game_object_ptr self, game_object_ptr target, game_data *g) {
-    ship_ptr s = utility::guaranteed_cast<ship>(self);
-    solar_ptr t = utility::guaranteed_cast<solar>(target);
-    if (!s->has_fleet()) return;
-    fleet_ptr f = g->get_fleet(s->fleet_id);
-
-    // first check if we still need to load resources
-    if (!s->states.count("loaded")) {
-      if (f->com.action == interaction::trade_to && g->entity_exists(f->com.source)) {
-        game_object_ptr h = g->get_game_object(f->com.source);
-        if (h->isa(solar::class_id) && h->owner == s->owner) {
-          load_resources(s, utility::guaranteed_cast<solar>(h));
-        }
-      }
-      return;
-    }
-
-    // unload resources
-    for (auto v : keywords::resource) {
-      t->resources[v] += s->cargo[v];
-    }
-    s->cargo = cost::res_t();
-    s->states.erase("loaded");
-
-    // check that we are the last ship in fleet unloading
-    for (auto sid : f->ships) {
-      ship_ptr sh = g->get_ship(sid);
-      if (sh->states.count("loaded")) return;
-    }
-
-    // go back for more
-    f->com.action = interaction::trade_from;
-    f->com.target = f->com.origin;
-    f->com.origin = target->id;
-    f->force_refresh = true;
-  };
-  data[i.name] = i;
-
-  // trade_from
-  i.name = interaction::trade_from;
-  i.condition = target_condition(target_condition::owned, solar::class_id);
-  i.perform = [](game_object_ptr self, game_object_ptr target, game_data *g) {
-    ship_ptr s = utility::guaranteed_cast<ship>(self);
-    solar_ptr t = utility::guaranteed_cast<solar>(target);
-    if (!s->has_fleet()) return;
-    if (s->states.count("loaded")) return;
-
-    load_resources(s, t);
-
-    // check that we are the last ship in fleet loading
-    fleet_ptr f = g->get_fleet(s->fleet_id);
-    for (auto sid : f->ships) {
-      ship_ptr sh = g->get_ship(sid);
-      if (!sh->states.count("loaded")) return;
-    }
-
-    // set target
-    f->com.action = interaction::trade_to;
-    f->com.target = f->com.origin;
-    f->com.origin = target->id;
-    f->force_refresh = true;
-  };
-  data[i.name] = i;
-
-  // // terraform
-  // i.name = terraform;
-  // i.condition = target_condition(target_condition::neutral, solar::class_id);
-  // i.perform = [] (game_object_ptr self, game_object_ptr target, game_data *g){
-  //   ship_ptr s = utility::guaranteed_cast<ship>(self);
-  //   solar_ptr t = utility::guaranteed_cast<solar>(target);
-
-  //   if (s -> load < s -> stats[sskey::key::load_time]) return;
-  //   s -> load = 0;
-
-  //   t -> water = 1000;
-  //   t -> space = 1000;
-  //   t -> ecology = 1;
-
-  //   if (s -> has_fleet()) g -> get_fleet(s -> fleet_id) -> set_idle();
   // };
   // data[i.name] = i;
 

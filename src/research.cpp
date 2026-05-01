@@ -57,11 +57,6 @@ list<string> data::list_tech_requirements(string v) const {
     for (auto d : t.depends_techs) {
       if (!researched().count(d)) req.push_back("technology " + d);
     }
-    for (auto f : t.depends_facilities) {
-      int flev = 0;
-      if (facility_level.count(f.first)) flev = facility_level.at(f.first);
-      if (f.second > flev) req.push_back(f.first + " level " + to_string(f.second));
-    }
   }
   return req;
 }
@@ -114,16 +109,10 @@ bool data::can_build_ship(string v, solar_ptr sol, list<string> *data) const {
     throw logical_error("Military template: no such ship class: " + v);
   }
 
-  int facility = sol->effective_level(keywords::key_shipyard);
   ship_stats s = ship::table().at(v);
   bool success = true;
 
   if (data) data->clear();
-
-  if (s.depends_facility_level > facility) {
-    success = false;
-    if (data) data->push_back("shipyard level " + to_string(s.depends_facility_level));
-  }
 
   if (s.depends_tech.length() > 0 && !researched().count(s.depends_tech)) {
     success = false;
@@ -150,15 +139,6 @@ tech &data::access(string v) {
   }
 
   return tech_map[v];
-}
-
-float data::solar_modifier(string k) const {
-  float sum = 0;
-  for (auto v : researched()) {
-    tech x = tech_map.at(v);
-    if (x.solar_modifier.count(k)) sum += x.solar_modifier[k];
-  }
-  return sum;
 }
 
 // int data::get_max_fleets() const {

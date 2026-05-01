@@ -25,7 +25,6 @@ struct data {
   static const hm_t<std::string, tech> &table();
   hm_t<std::string, tech> tech_map;
   std::string researching;
-  hm_t<std::string, sint> facility_level;
 
   data();
   static std::set<std::string> get_tech_upgrades(std::string sc, std::string t);
@@ -36,7 +35,6 @@ struct data {
   ship_ptr build_ship(idtype id, std::string v) const;
   void repair_ship(ship_ptr s) const;
   bool can_build_ship(std::string v, solar_ptr s, std::list<std::string> *data = 0) const;
-  float solar_modifier(std::string v) const;
   // int get_max_fleets() const;
   // int get_max_ships_per_fleet() const;
   float get_order_modifier() const;

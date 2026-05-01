@@ -78,7 +78,6 @@ class game_data : public virtual game_base_data {
   // add and remove entities
   void deregister_entity(idtype id);
   void distribute_ships(fleet_ptr f);
-  void update_research_facility_level();
 
   // Debug
   bool verify_entities() const;

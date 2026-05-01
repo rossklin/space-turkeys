@@ -52,7 +52,6 @@ const hm_t<string, ship_stats> &ship_stats::table() {
   s.stats[sskey::key::interaction_radius] = 20;
   s.stats[sskey::key::vision_range] = 50;
   s.stats[sskey::key::load_time] = 10;
-  s.stats[sskey::key::cargo_capacity] = 0;
   s.stats[sskey::key::build_time] = 100;
   s.stats[sskey::key::regeneration] = 0;
   s.stats[sskey::key::shield] = 0;
@@ -74,9 +73,6 @@ const hm_t<string, ship_stats> &ship_stats::table() {
 
         if (name == "is starting ship") {
           ship::starting_ship = a.ship_class;
-          success = true;
-        } else if (name == "depends facility level") {
-          a.depends_facility_level = value;
           success = true;
         }
       } else if (j->value.IsString()) {
@@ -118,18 +114,12 @@ const hm_t<string, ship_stats> &ship_stats::table() {
           for (auto k = j->value.MemberBegin(); k != j->value.MemberEnd(); k++) {
             string res_name = k->name.GetString();
             float res_value = k->value.GetDouble();
-            bool sub_success = cost::parse_resource(res_name, res_value, a.build_cost);
 
             if (res_name == "time") {
               a.build_time = res_value;
-              sub_success = true;
-            }
-
-            if (!sub_success) {
-              throw parse_error("Invalid cost specification for ship " + a.ship_class + " in: " + res_name);
+              success = true;
             }
           }
-          success = true;
         }
       }
 

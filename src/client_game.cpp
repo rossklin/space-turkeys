@@ -312,7 +312,6 @@ void game::build_base_panel() {
       Panel::create(
           {
               make_button("Research", [this]() { set_main_panel(research_gui()); }),
-              make_button("Development", [this]() { set_main_panel(development_gui()); }),
               make_button("Military", [this]() { set_main_panel(military_gui()); }),
               event_log_widget(),
               hover_info_widget(),
@@ -419,49 +418,6 @@ PanelPtr game::research_gui() {
       false);
 }
 
-/*! Setup a choice_gui for enqueuing development to all selected solars */
-PanelPtr game::development_gui() {
-  list<string> opts = utility::range_init<list<string>>(keywords::development);
-  auto sel = solars_for_panel();
-
-  option_generator f_option = [](string v) { return tag({"card"}, Button::create(v)); };
-
-  info_generator f_info = [this](string k) -> list<string> {
-    list<string> items;
-    items.push_back("Develop " + k);
-    return items;
-  };
-
-  auto f_commit = [this, sel](choice_gui_action a, list<string> q) {
-    for (auto sid : sel) {
-      auto s = get_specific<solar>(sid);
-      switch (a) {
-        case CHOICEGUI_APPEND:
-          s->choice_data.building_queue.insert(s->choice_data.building_queue.end(), q.begin(), q.end());
-          break;
-        case CHOICEGUI_PREPEND:
-          s->choice_data.building_queue.insert(s->choice_data.building_queue.begin(), q.begin(), q.end());
-          break;
-        case CHOICEGUI_REPLACE:
-          s->choice_data.building_queue = q;
-          break;
-      }
-    }
-    clear_ui_layers();
-  };
-
-  Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
-
-  return choice_gui(
-      "Development queue for " + to_string(sel.size()) + " selected solars",
-      opts,
-      f_option,
-      f_info,
-      f_commit,
-      f_cancel,
-      true);
-}
-
 PanelPtr game::military_gui() {
   list<string> opts;
 
@@ -491,16 +447,10 @@ PanelPtr game::military_gui() {
   auto f_commit = [this, sel](choice_gui_action a, list<string> q) {
     for (auto sid : sel) {
       auto s = get_specific<solar>(sid);
-      switch (a) {
-        case CHOICEGUI_APPEND:
-          s->choice_data.ship_queue.insert(s->choice_data.ship_queue.end(), q.begin(), q.end());
-          break;
-        case CHOICEGUI_PREPEND:
-          s->choice_data.ship_queue.insert(s->choice_data.ship_queue.begin(), q.begin(), q.end());
-          break;
-        case CHOICEGUI_REPLACE:
-          s->choice_data.ship_queue = q;
-          break;
+      if (q.size() > 0) {
+        s->choice_data.ship_to_build = q.front();
+      } else {
+        s->choice_data.ship_to_build = "";
       }
     }
     clear_ui_layers();
@@ -2043,10 +1993,9 @@ bool game::choice_event(sf::Event e) {
                     sol,
                     get_research(),
                     bind(&game::clear_ui_layers, this, true),
-                    [this, sol](list<string> qdev, list<string> qship) {
+                    [this, sol](string ship_to_build) {
                       // Solar GUI callback
-                      sol->choice_data.building_queue = qdev;
-                      sol->choice_data.ship_queue = qship;
+                      sol->choice_data.ship_to_build = ship_to_build;
                       clear_ui_layers();
                     }));
             return true;

@@ -32,7 +32,6 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   sfloat load;
   ssfloat_t base_stats;
   int nkills;
-  cost::res_t cargo;
 
   // state trackers for specific ship types
   std::set<std::string> states;

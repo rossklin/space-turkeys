@@ -23,17 +23,7 @@ development::node::node() {
 bool development::node::parse(string name, const rapidjson::Value &v) {
   auto &stab = ship::table();
 
-  if (name == "solar modifier") {
-    for (auto u = v.MemberBegin(); u != v.MemberEnd(); u++) {
-      string sec_name = u->name.GetString();
-      float sec_value = u->value.GetDouble();
-      if (utility::find_in(sec_name, keywords::solar_modifier)) {
-        solar_modifier[sec_name] = sec_value;
-      } else {
-        return false;
-      }
-    }
-  } else if (name == "ship upgrades") {
+  if (name == "ship upgrades") {
     for (auto u = v.MemberBegin(); u != v.MemberEnd(); u++) {
       string ship_name = u->name.GetString();
       vector<string> ship_classes;
@@ -91,10 +81,6 @@ bool development::node::parse(string name, const rapidjson::Value &v) {
     }
   } else if (name == "build time") {
     cost_time = v.GetDouble();
-  } else if (name == "depends facilities") {
-    for (auto d = v.MemberBegin(); d != v.MemberEnd(); d++) {
-      depends_facilities[d->name.GetString()] = d->value.GetInt();
-    }
   } else if (name == "depends technologies") {
     for (auto d = v.Begin(); d != v.End(); d++) {
       depends_techs.insert(d->GetString());

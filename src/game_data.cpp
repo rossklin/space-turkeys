@@ -412,19 +412,11 @@ void game_data::apply_choice(choice c, idtype pid) {
       throw player_error("validate_choice: error: solar choice by player " + to_string(pid) + " for " + to_string(x.first) + ": not a solar!");
     }
 
-    if (x.second.building_queue.size()) {
-      for (auto y : x.second.building_queue) {
-        if (!find_in(y, keywords::development)) {
-          throw player_error("validate_choice: error: invalid development key: " + y);
-        }
-      }
-    }
-
     solar_ptr s = get_solar(x.first);
 
     // reset ship production if altered
-    if (s->choice_data.ship_queue.size() && x.second.ship_queue.size() && s->choice_data.ship_queue.front() != x.second.ship_queue.front()) {
-      server::log("Reset production of " + s->choice_data.ship_queue.front() + " to " + x.second.ship_queue.front());
+    if (s->choice_data.ship_to_build != x.second.ship_to_build) {
+      server::log("Reset production of " + s->choice_data.ship_to_build + " to " + x.second.ship_to_build);
       s->ship_progress = -1;
     }
 
@@ -879,19 +871,10 @@ void game_data::build() {
   if (players.empty()) throw classified_error("game_data: build: no players!", "error");
 
   auto make_home_solar = [this](point p, idtype pid) {
-    cost::res_t initial_resources;
-    for (auto v : keywords::resource) initial_resources[v] = 1000;
-
     solar_ptr s = solar::create(next_id(), p, 1);
     s->owner = pid;
     s->was_discovered = true;
-    s->resources = initial_resources;
-    // s -> population = 1;
     s->radius = settings.solar_meanrad;
-    s->development[keywords::key_population] = 1;
-    s->development[keywords::key_shipyard] = 1;
-    s->development[keywords::key_research] = 1;
-    s->development[keywords::key_defense] = 1;
 
     for (auto px : players) s->known_by.insert(px.first);
 
@@ -957,25 +940,6 @@ void game_data::pre_step() {
   for (auto i : filtered_entities<waypoint>()) i->remove = true;
   remove_units();
   remove_entities.clear();
-
-  // update research facility level for use in validate choice
-  update_research_facility_level();
-}
-
-// compute max levels for each player and development
-void game_data::update_research_facility_level() {
-  hm_t<idtype, hm_t<string, int>> level;
-  for (auto s : filtered_entities<solar>()) {
-    if (s->owner > -1) {
-      for (auto v : keywords::development) {
-        level[s->owner][v] = max(level[s->owner][v], (int)s->effective_level(v));
-      }
-    }
-  }
-
-  for (auto &x : players) {
-    x.second.research_level.facility_level = level[x.first];
-  }
 }
 
 // Run solar dynamics, pool research and remove unused waypoints
@@ -1014,19 +978,6 @@ void game_data::end_step() {
   // Run solar dynamics
   for (auto s : filtered_entities<solar>()) s->dynamics(this);
 
-  // pool research
-  update_research_facility_level();
-
-  hm_t<idtype, float> pool;
-  hm_t<idtype, int> count;
-  for (auto i : filtered_entities<solar>()) {
-    if (i->owner > -1) {
-      pool[i->owner] += i->research_points;
-      if (i->research_points > 0) count[i->owner]++;
-      i->research_points = 0;
-    }
-  }
-
   for (auto x : players) {
     idtype id = x.first;
     research::data &r = players[id].research_level;
@@ -1038,8 +989,8 @@ void game_data::end_step() {
         research::tech &t = r.access(r.researching);
 
         // inefficiency for multiple research centers if research culture not developed
-        float scale = pow(rcult ? 1 : 1.2, -count[id]);
-        t.progress += scale * pool[id];
+        float scale = pow(rcult ? 1 : 1.2, -1);
+        t.progress += scale * 1.0f; // Fixed research rate
 
         // check research complete
         if (t.progress >= t.cost_time) {
@@ -1124,7 +1075,7 @@ void game_data::log_bombard(idtype a, idtype b) {
   x.delay = delay;
 
   animation_data sh;
-  float shield = t->development[keywords::key_defense];
+  float shield = 0;
   sh.t1 = get_tracker(t->id);
   sh.radius = 1.2 * t->radius;
   sh.magnitude = shield;
@@ -1250,8 +1201,8 @@ float game_data::solar_order_level(idtype id) const {
   if (sd > 0) rel_dist = l2norm(s->position - m) / sd;
 
   // Calculate total population and number of solars
-  float pop = 0;
-  for (auto sp : solars) pop += sp->population();
+  float pop = 1;
+  for (auto sp : solars) pop += 1;
   pop = fmax(pop, 1);
 
   // Expression for order

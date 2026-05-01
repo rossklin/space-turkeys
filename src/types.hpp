@@ -104,26 +104,6 @@ typedef std::shared_ptr<server::server_cl_socket> server_cl_socket_ptr;
 typedef std::shared_ptr<sf::Packet> packet_ptr;
 
 namespace keywords {
-extern const std::vector<std::string> resource;
-extern const std::vector<std::string> development;
-extern const std::vector<std::string> solar_modifier;
-
-// resources
-const std::string key_metals = "metals";
-const std::string key_organics = "organics";
-const std::string key_gases = "gases";
-
-// developments
-const std::string key_research = "research facility";
-const std::string key_shipyard = "shipyard";
-const std::string key_development = "development";
-const std::string key_agriculture = "agriculture";
-const std::string key_defense = "defense";
-
-// other solar modifiers
-const std::string key_medicine = "medicine";
-const std::string key_population = "population";
-
 // disabled
 const std::string build_disabled = "disabled";
 };  // namespace keywords

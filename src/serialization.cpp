@@ -120,8 +120,6 @@ sf::Packet& st3::operator<<(sf::Packet& packet, const ship_stats& g) {
          << g.interactions
          << g.upgrades
          << g.depends_tech
-         << g.depends_facility_level
-         << g.build_cost
          << g.build_time
          << g.shape
          << g.ship_class
@@ -130,7 +128,7 @@ sf::Packet& st3::operator<<(sf::Packet& packet, const ship_stats& g) {
 
 // ship stats
 sf::Packet& st3::operator>>(sf::Packet& packet, ship_stats& g) {
-  return packet >> g.stats >> g.interactions >> g.upgrades >> g.depends_tech >> g.depends_facility_level >> g.build_cost >> g.build_time >> g.shape >> g.ship_class >> g.tags;
+  return packet >> g.stats >> g.interactions >> g.upgrades >> g.depends_tech >> g.build_time >> g.shape >> g.ship_class >> g.tags;
 }
 
 // ship stats
@@ -154,7 +152,6 @@ sf::Packet& st3::operator<<(sf::Packet& packet, const ship& g) {
          << g.velocity
          << g.load
          << g.base_stats
-         << g.cargo
          << g.states
          //  << g.dynamic_data
          << g.nkills
@@ -163,15 +160,13 @@ sf::Packet& st3::operator<<(sf::Packet& packet, const ship& g) {
 }
 
 sf::Packet& st3::operator>>(sf::Packet& packet, ship& g) {
-  return packet >> static_cast<game_object&>(g) >> static_cast<ship_stats&>(g) >> g.fleet_id >> g.angle >> g.thrust >> g.velocity >> g.load >> g.base_stats >> g.cargo >> g.states >> g.nkills >> g.pathing_policy >> g.private_path;
+  return packet >> static_cast<game_object&>(g) >> static_cast<ship_stats&>(g) >> g.fleet_id >> g.angle >> g.thrust >> g.velocity >> g.load >> g.base_stats >> g.states >> g.nkills >> g.pathing_policy >> g.private_path;
 }
 
 sf::Packet& st3::operator<<(sf::Packet& packet, const development::node& g) {
   return packet
          << g.name
-         << g.solar_modifier
          << g.ship_upgrades
-         << g.depends_facilities
          << g.depends_techs
          << g.cost_time
          << g.level
@@ -179,7 +174,7 @@ sf::Packet& st3::operator<<(sf::Packet& packet, const development::node& g) {
 }
 
 sf::Packet& st3::operator>>(sf::Packet& packet, development::node& g) {
-  return packet >> g.name >> g.solar_modifier >> g.ship_upgrades >> g.depends_facilities >> g.depends_techs >> g.cost_time >> g.level >> g.progress;
+  return packet >> g.name >> g.ship_upgrades >> g.depends_techs >> g.cost_time >> g.level >> g.progress;
 }
 
 // solar
@@ -187,11 +182,7 @@ sf::Packet& st3::operator<<(sf::Packet& packet, const solar& g) {
   return packet
          << static_cast<const commandable_object&>(g)
          << g.choice_data
-         << g.research_points
-         << g.resources
-         // << g.population
          << g.ships
-         << g.development
          << g.ship_progress
          << g.hp
          << g.was_discovered
@@ -199,20 +190,17 @@ sf::Packet& st3::operator<<(sf::Packet& packet, const solar& g) {
 }
 
 sf::Packet& st3::operator>>(sf::Packet& packet, solar& g) {
-  return packet >> static_cast<commandable_object&>(g) >> g.choice_data >> g.research_points >> g.resources
-         // >> g.population
-         >> g.ships >> g.development >> g.ship_progress >> g.hp >> g.was_discovered >> g.known_by;
+  return packet >> static_cast<commandable_object&>(g) >> g.choice_data >> g.ships >> g.ship_progress >> g.hp >> g.was_discovered >> g.known_by;
 }
 
 // solar choice
 sf::Packet& st3::operator<<(sf::Packet& packet, const c_solar& g) {
   return packet
-         << g.building_queue
-         << g.ship_queue;
+         << g.ship_to_build;
 }
 
 sf::Packet& st3::operator>>(sf::Packet& packet, c_solar& g) {
-  return packet >> g.building_queue >> g.ship_queue;
+  return packet >> g.ship_to_build;
 }
 
 // fleet
@@ -339,11 +327,11 @@ sf::Packet& st3::operator>>(sf::Packet& packet, animation_tracker_info& c) {
 
 // research
 sf::Packet& st3::operator<<(sf::Packet& packet, const research::data& c) {
-  return packet << c.tech_map << c.facility_level << c.researching;
+  return packet << c.tech_map << c.researching;
 }
 
 sf::Packet& st3::operator>>(sf::Packet& packet, research::data& c) {
-  return packet >> c.tech_map >> c.facility_level >> c.researching;
+  return packet >> c.tech_map >> c.researching;
 }
 
 sf::Packet& st3::operator<<(sf::Packet& packet, const research::tech& c) {

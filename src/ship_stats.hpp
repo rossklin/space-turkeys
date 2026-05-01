@@ -29,7 +29,6 @@ enum key {
   interaction_radius,
   vision_range,
   load_time,
-  cargo_capacity,
   build_time,
   regeneration,
   shield,
@@ -82,8 +81,6 @@ class ship_stats : public ssfloat_t {
 
   // cost and req
   std::string depends_tech;
-  sint depends_facility_level;
-  cost::res_t build_cost;
   sfloat build_time;
 
   // graphics

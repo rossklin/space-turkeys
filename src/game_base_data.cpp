@@ -63,29 +63,6 @@ bool game_base_data::in_terrain(point p) const {
   return terrain_at(p, 0) > -1;
 }
 
-// // Max fleets = 2 + 2 * (nr of solars with developed defense)
-// int game_base_data::get_max_fleets(idtype pid) const {
-//   int res = 2;
-
-//   auto sols = filtered_entities<solar>(pid);
-//   for (auto sp : sols) {
-//     if (sp->development.at(keywords::key_defense) > 0) res += 2;
-//   }
-
-//   return res;
-// }
-
-// // Max ships per fleet = 2 + 2 * (highest level of developed defense)
-// int game_base_data::get_max_ships_per_fleet(idtype pid) const {
-//   auto sols = filtered_entities<solar>(pid);
-//   int max_lev = 0;
-//   for (auto sp : sols) {
-//     max_lev = max(max_lev, sp->development.at(keywords::key_defense));
-//   }
-
-//   return 2 + 2 * max_lev;
-// }
-
 // void game_base_data::rehash_grid() {
 //   entity_grid.clear();
 //   vector<game_object_ptr> obj = utility::hm_values(entity);

@@ -11,8 +11,7 @@ const int max_allocation = 10;
 
 /*! choice of priorities for solar system */
 struct c_solar {
-  std::list<std::string> building_queue;
-  std::list<std::string> ship_queue;
+  std::string ship_to_build;
 };
 
 struct choice {

@@ -67,17 +67,6 @@ ship_allocation::ship_allocation() {
   setup(classes);
 }
 
-resource_allocation::resource_allocation() {
-  if (keywords::resource.empty()) throw logical_error("resource_allocation(): no keywords!");
-  setup(keywords::resource);
-}
-
 float cost::expansion_multiplier(float level) {
   return pow(2, floor(fmax(level - 1, 0)));
-}
-
-bool cost::parse_resource(string res_name, float value, res_t &x) {
-  if (!utility::find_in(res_name, keywords::resource)) return false;
-  x[res_name] = value;
-  return true;
 }

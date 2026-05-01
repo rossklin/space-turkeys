@@ -76,7 +76,6 @@ cost_tracker gather(cost_tracker x) {
 
   auto add = [&buf](development::node &t) {
     buf.first += t.depends_techs;
-    for (auto v : t.depends_facilities) buf.second[v.first] = v.second;
   };
 
   // gather sub techs
@@ -108,13 +107,12 @@ float fair_ship_count(string ship_class, set<string> techs, float limit, strings
   hm_t<string, int> facilities;
 
   if (!s.depends_tech.empty()) techs.insert(s.depends_tech);
-  if (s.depends_facility_level > 0) facilities["shipyard"] = s.depends_facility_level;
 
   // 3000 res = 1000 t + 100 res + 500 t
   // 1 time = 2 res
 
   float investment = get_cost(make_pair(techs, facilities));
-  float can_build = max((limit - investment) / (s.build_time + 0.5 * s.build_cost.count()), 0);
+  float can_build = max((limit - investment) / (s.build_time), 0.0f);
 
   ss << ship_class << ": investment: " << investment << ", can build: " << can_build << endl;
 

@@ -54,7 +54,6 @@ typename sskey::key modifiable_ship_stats<T>::lookup_key(string name) {
     map["interaction radius"] = sskey::key::interaction_radius;
     map["vision range"] = sskey::key::vision_range;
     map["load time"] = sskey::key::load_time;
-    map["cargo capacity"] = sskey::key::cargo_capacity;
     map["build time"] = sskey::key::build_time;
     map["regeneration"] = sskey::key::regeneration;
     map["shield"] = sskey::key::shield;
@@ -126,7 +125,6 @@ void ssfloat_t::modify_with(const ssmod_t &b) {
 
 // ship_stats
 ship_stats::ship_stats() : ssfloat_t() {
-  depends_facility_level = 0;
   depends_tech = "";
   build_time = 0;
 }
@@ -137,8 +135,6 @@ ship_stats::ship_stats(const ship_stats &s) : ssfloat_t(s) {
   upgrades = s.upgrades;
   interactions = s.interactions;
   depends_tech = s.depends_tech;
-  depends_facility_level = s.depends_facility_level;
-  build_cost = s.build_cost;
   build_time = s.build_time;
   shape = s.shape;
 }

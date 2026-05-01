@@ -28,12 +28,8 @@ class solar : public virtual physical_object, public virtual commandable_object,
 
   c_solar choice_data;
 
-  hm_t<std::string, int> development;
   sfloat ship_progress;
-  // sfloat build_progress;
-  sfloat research_points;
   sfloat hp;
-  cost::res_t resources;
 
   sbool was_discovered;
   std::set<idtype> known_by;
@@ -64,22 +60,9 @@ class solar : public virtual physical_object, public virtual commandable_object,
   void receive_damage(game_object_ptr s, float damage, game_data *g);
   float vision();
   std::string get_info();
-  float effective_level(std::string k);
   void dynamics(game_data *g);
   float max_hp();
-  cost::res_t devcost(std::string k);
-  float devtime(std::string k);
-  float population();
 
  protected:
-  static const float f_growth;
-  static const float f_crowding;
-  static const float f_minerate;
-  static const float f_buildrate;
-  static const float f_devrate;
-  static const float f_resrate;
-
-  void pay_resources(cost::res_t r);
-  bool can_afford(cost::res_t r);
 };
 };  // namespace st3

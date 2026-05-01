@@ -21,12 +21,6 @@ using namespace std;
 using namespace st3;
 
 const string solar::class_id = "solar";
-// const float solar::f_growth = 2e-2;
-// const float solar::f_crowding = 2e-3;
-// const float solar::f_minerate = 3e-4;
-// const float solar::f_buildrate = 7e-4;
-// const float solar::f_devrate = 7e-4;
-// const float solar::f_resrate = 7e-4;
 
 solar::solar(const solar &s) : game_object(s) {
   *this = s;
@@ -36,7 +30,7 @@ void solar::pre_phase(game_data *g) {}
 
 // so far, solars don't move
 void solar::move(game_data *g) {
-  if (owner < 0 || population() <= 0) return;
+  if (owner < 0) return;
 
   // check for turret combat interaction
   target_condition cond(target_condition::enemy, ship::class_id);
@@ -44,7 +38,7 @@ void solar::move(game_data *g) {
 
   if (buf.size()) {
     // solar combat
-    float dlev = effective_level(keywords::key_defense);
+    float dlev = 1;
     for (int i = 0; i < dlev; i++) {
       idtype sid = utility::uniform_sample(buf);
       ship_ptr s = g->get_ship(sid);
@@ -65,18 +59,17 @@ set<string> solar::compile_interactions() {
 }
 
 float solar::interaction_radius() {
-  return radius + 40 + 20 * development[keywords::key_defense];
+  return radius + 40;
 }
 
 float solar::max_hp() {
-  return 30 + 10 * development[keywords::key_defense];
+  return 30;
 }
 
 void solar::receive_damage(game_object_ptr s, float damage, game_data *g) {
   g->log_bombard(s->id, id);
 
   hp -= damage;
-  // population *= 1 - 0.01 * damage;
 
   if (owner != game_object::neutral_owner && hp <= 0) {
     owner = s->owner;
@@ -88,11 +81,6 @@ void solar::receive_damage(game_object_ptr s, float damage, game_data *g) {
 }
 
 void solar::post_phase(game_data *g) {
-  if (owner != game_object::neutral_owner && population() == 0) {
-    // everyone here is dead, this is now a neutral solar
-    owner = game_object::neutral_owner;
-  }
-
   // reg hp
   if (owner != game_object::neutral_owner) {
     hp = fmin(hp + 1, max_hp());
@@ -126,23 +114,6 @@ void solar::give_commands(list<command> c, game_data *g) {
   }
 }
 
-bool solar::can_afford(cost::res_t r) {
-  for (auto v : keywords::resource)
-    if (r[v] > resources[v]) return false;
-  return true;
-}
-
-void solar::pay_resources(cost::res_t total) {
-  for (auto k : keywords::resource) resources[k] = fmax(resources[k] - total[k], 0);
-}
-
-string solar::get_info() {
-  stringstream ss;
-  ss << "pop: " << population() << endl;
-  ss << "ships: " << ships.size() << endl;
-  return ss.str();
-}
-
 sfloat solar::vision() {
   return 1.3 * interaction_radius();
 }
@@ -157,14 +128,9 @@ solar_ptr solar::create(idtype id, point p, float bounty, float var) {
 
   s->id = id;
 
-  // s -> population = 0;
-  s->research_points = 0;
   s->ship_progress = -1;
 
-  for (auto v : keywords::resource) s->resources[v] = fres();
-  for (auto v : keywords::development) s->development[v] = 0;
-
-  s->radius = 10 + 7 * sqrt(s->resources.count() / (3 * level));
+  s->radius = 10 + 7 * sqrt(fres() / (3 * level));
   s->position = p;
   s->owner = game_object::neutral_owner;
   s->was_discovered = false;
@@ -180,124 +146,45 @@ bool solar::serialize(sf::Packet &p) {
   return p << class_id << *this;
 }
 
-float solar::effective_level(string k) {
-  return development.at(k);
-}
-
-float solar::devtime(string k) {
-  return 20 * pow(2, development[k]);
-}
-
-cost::res_t solar::devcost(string k) {
-  static hm_t<string, cost::res_t> base_cost;
-  static bool init = false;
-
-  if (!init) {
-    init = true;
-    for (auto k : keywords::development) base_cost[k].setup(keywords::resource);
-
-    base_cost[keywords::key_population][keywords::key_metals] = 1;
-    base_cost[keywords::key_population][keywords::key_organics] = 2;
-    base_cost[keywords::key_population][keywords::key_gases] = 1;
-
-    base_cost[keywords::key_research][keywords::key_metals] = 1;
-    base_cost[keywords::key_research][keywords::key_organics] = 1;
-    base_cost[keywords::key_research][keywords::key_gases] = 2;
-
-    base_cost[keywords::key_shipyard][keywords::key_metals] = 2;
-    base_cost[keywords::key_shipyard][keywords::key_organics] = 1;
-    base_cost[keywords::key_shipyard][keywords::key_gases] = 1;
-
-    base_cost[keywords::key_defense][keywords::key_metals] = 1;
-    base_cost[keywords::key_defense][keywords::key_organics] = 0;
-    base_cost[keywords::key_defense][keywords::key_gases] = 1;
-  }
-
-  int level = development[k];
-  float multiplier = pow(4, level);
-  cost::res_t c = base_cost[k];
-  c.scale(multiplier);
-  return c;
-}
-
-float solar::population() {
-  return effective_level(keywords::key_population);
-}
-
 // Production at end of round
 void solar::dynamics(game_data *g) {
   if (owner < 0) return;
   research::data research_level = g->players.at(owner).research_level;
 
-  // research and development
-  float a = 1 + 0.2 * population();
-  research_points = a * effective_level(keywords::key_research);
-  float ship_build_points = a * effective_level(keywords::key_shipyard);
+  float ship_build_points = 1.0f;
 
-  // build ships
-  while (choice_data.ship_queue.size()) {
-    string v = choice_data.ship_queue.front();
-    if (research_level.can_build_ship(v, shared_from_this())) {
-      ship_stats s = ship::table().at(v);
+  string v = choice_data.ship_to_build;
+  if (v != "" && research_level.can_build_ship(v, shared_from_this())) {
+    ship_stats s = ship::table().at(v);
 
-      // check if we are starting to build this ship
-      if (ship_progress < 0) {
-        if (can_afford(s.build_cost)) {
-          ship_progress = 0;
-          pay_resources(s.build_cost);
-          g->players[owner].log.push_back("Started building " + v);
-        } else {
-          // todo: message can't afford ship
-          g->players[owner].log.push_back("Can't afford to build ship " + v);
-          break;
-        }
-      }
-
-      bool will_complete = ship_progress + ship_build_points >= s.build_time;
-
-      // pay build points as needed
-      float needed = s.build_time - ship_progress;
-      float use = 0;
-      if (needed > 0 && ship_build_points > 0) {
-        use = fmin(needed, ship_build_points);
-        ship_progress += use;
-        ship_build_points -= use;
-      }
-
-      // check ship complete
-      if (will_complete) {
-        ship_progress = -1;
-        choice_data.ship_queue.pop_front();
-
-        ship_ptr sh = research_level.build_ship(g->next_id(), v);
-        sh->states.insert("landed");
-        sh->owner = owner;
-        ships.insert(sh->id);
-        g->register_entity(sh);
-
-        g->players[owner].log.push_back("Completed ship " + v);
-      } else {
-        // Ship under construction
-        break;
-      }
-    } else {
-      // can't build this ship
-      g->players[owner].log.push_back("Lacking requirements to build ship " + v);
-      choice_data.ship_queue.pop_front();
+    if (ship_progress < 0) {
+      ship_progress = 0;
+      g->players[owner].log.push_back("Started building " + v);
     }
-  }
 
-  // build developments
-  if (choice_data.building_queue.size()) {
-    string v = choice_data.building_queue.front();
-    cost::res_t build_cost = devcost(v);
-    if (can_afford(build_cost)) {
-      pay_resources(build_cost);
-      development[v]++;
-      choice_data.building_queue.pop_front();
-    } else {
-      g->players[owner].log.push_back("Insufficient resources to develop " + v);
+    bool will_complete = ship_progress + ship_build_points >= s.build_time;
+
+    float needed = s.build_time - ship_progress;
+    float use = 0;
+    if (needed > 0 && ship_build_points > 0) {
+      use = fmin(needed, ship_build_points);
+      ship_progress += use;
+      ship_build_points -= use;
     }
+
+    if (will_complete) {
+      ship_progress = -1;
+
+      ship_ptr sh = research_level.build_ship(g->next_id(), v);
+      sh->states.insert("landed");
+      sh->owner = owner;
+      ships.insert(sh->id);
+      g->register_entity(sh);
+
+      g->players[owner].log.push_back("Completed ship " + v);
+    }
+  } else {
+    ship_progress = -1;
   }
 }
 
