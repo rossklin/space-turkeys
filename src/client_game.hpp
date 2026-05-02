@@ -148,8 +148,6 @@ class game : public game_base_data {
   void popup_message(std::string title, std::string text);
 
   // METHODS THAT PRODUCE A UI COMPONENT
-  RSG::PanelPtr research_gui();
-  RSG::PanelPtr military_gui();
   RSG::PanelPtr event_log_widget();
   RSG::PanelPtr hover_info_widget();
   RSG::PanelPtr simulation_gui();

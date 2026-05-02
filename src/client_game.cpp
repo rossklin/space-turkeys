@@ -311,8 +311,6 @@ void game::build_base_panel() {
       {"right-panel"},
       Panel::create(
           {
-              make_button("Research", [this]() { set_main_panel(research_gui()); }),
-              make_button("Military", [this]() { set_main_panel(military_gui()); }),
               event_log_widget(),
               hover_info_widget(),
           },
@@ -377,96 +375,6 @@ void game::popup_query(string title, string text, hm_t<string, Voidfun> opts) {
 // ****************************************
 // METHODS THAT PRODUCE A UI COMPONENT
 // ****************************************
-
-PanelPtr game::research_gui() {
-  list<string> opts = get_research().available();
-
-  option_generator f_option = [](string v) { return tag({"card"}, Button::create(v)); };
-
-  info_generator f_info = [this](string k) -> list<string> {
-    list<string> items;
-    items.push_back("Research technology " + k);
-
-    for (auto x : research::data::table()) {
-      if (x.second.depends_techs.count(k)) {
-        items.push_back("Leads to: " + x.first);
-      }
-    }
-
-    for (auto sc : ship::all_classes()) {
-      set<string> upg = research::data::get_tech_upgrades(sc, k);
-      for (auto u : upg) items.push_back("Provides " + u + " for " + sc);
-    }
-
-    return items;
-  };
-
-  auto f_commit = [this](choice_gui_action a, list<string> q) {
-    user_choice.research = q.front();
-    clear_ui_layers();
-  };
-
-  Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
-
-  return choice_gui(
-      "Research",
-      opts,
-      f_option,
-      f_info,
-      f_commit,
-      f_cancel,
-      false);
-}
-
-PanelPtr game::military_gui() {
-  list<string> opts;
-
-  // Identify which ship classes can be produced in any owned solar
-  auto owned_solars = filtered_entities<solar_selector>(self_id);
-  auto r = get_research();
-  auto skey = utility::hm_keys(ship_stats::table());
-  sort(skey.begin(), skey.end());
-  for (auto sc : skey) {
-    for (auto s : owned_solars) {
-      if (r.can_build_ship(sc, s)) {
-        opts.push_back(sc);
-        break;
-      }
-    }
-  }
-
-  option_generator f_option = [](string v) { return tag({"card"}, Button::create(v)); };
-
-  info_generator f_info = [this](string k) -> list<string> {
-    list<string> items;
-    items.push_back("Build ship " + k);
-    return items;
-  };
-
-  auto sel = solars_for_panel();
-  auto f_commit = [this, sel](choice_gui_action a, list<string> q) {
-    for (auto sid : sel) {
-      auto s = get_specific<solar>(sid);
-      if (q.size() > 0) {
-        s->choice_data.ship_to_build = q.front();
-      } else {
-        s->choice_data.ship_to_build = "";
-      }
-    }
-    clear_ui_layers();
-  };
-
-  Voidfun f_cancel = bind(&game::clear_ui_layers, this, true);
-
-  return choice_gui(
-      "Shipyard production queue for " + to_string(sel.size()) + " selected solars",
-      opts,
-      f_option,
-      f_info,
-      f_commit,
-      f_cancel,
-      true);
-}
 
 RSG::PanelPtr game::event_log_widget() {
   list<ComponentPtr> children = {make_label("Event log"), make_hbar()};
@@ -774,11 +682,6 @@ void game::choice_step() {
   }
 
   cout << "choice_step: start" << endl;
-
-  if (c.research.empty() && !r.available().empty()) {
-    set_main_panel(research_gui());
-  }
-
   choice_complete = false;
 
   // start standby com thread
