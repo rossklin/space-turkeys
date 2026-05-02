@@ -71,7 +71,7 @@ void solar::receive_damage(game_object_ptr s, float damage, game_data *g) {
 
   hp -= damage;
 
-  if (owner != game_object::neutral_owner && hp <= 0) {
+  if (hp <= 0) {
     owner = s->owner;
     hp = 0.3 * max_hp();
 
