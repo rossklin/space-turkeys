@@ -16,7 +16,6 @@
 #include "game_settings.hpp"
 #include "graphics.hpp"
 #include "protocol.hpp"
-#include "research.hpp"
 #include "selector.hpp"
 #include "serialization.hpp"
 #include "socket_t.hpp"

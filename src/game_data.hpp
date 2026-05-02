@@ -56,7 +56,6 @@ class game_data : public virtual game_base_data {
   void log_message(idtype a, std::string v_full, std::string v_short);
   float get_dt() const;
   bool allow_add_fleet(idtype pid) const;
-  float solar_order_level(idtype id) const;
 
   void register_entity(game_object_ptr p);
   void remove_units();

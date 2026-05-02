@@ -58,7 +58,6 @@ set(COMMON_SOURCES
     src/solar.cpp 
     src/ship.cpp 
     src/waypoint.cpp 
-    src/research.cpp 
     src/game_settings.cpp 
     src/serialization.cpp 
     src/socket_t.cpp 
@@ -69,7 +68,6 @@ set(COMMON_SOURCES
     src/game_object.cpp 
     src/upgrades.cpp 
     src/interaction.cpp 
-    src/development_tree.cpp 
     src/ship_stats.cpp
 )
 add_library(common STATIC ${COMMON_SOURCES})

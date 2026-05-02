@@ -4,7 +4,6 @@
 
 #include "fleet.hpp"
 #include "game_data.hpp"
-#include "research.hpp"
 #include "ship.hpp"
 #include "types.hpp"
 #include "waypoint.hpp"
@@ -23,10 +22,9 @@ typedef shared_ptr<game_data> game_ptr;
 //   return pages * page_size;
 // }
 
-game_ptr new_game(game_settings set = game_settings(), research::data r = research::data()) {
+game_ptr new_game(game_settings set = game_settings()) {
   game_ptr g(new game_data());
   player p;
-  p.research_level = r;
   g->settings = set;
   g->players[0] = p;
   g->players[1] = p;
@@ -37,12 +35,11 @@ void setup_fleet_for(game_ptr g, idtype pid, point at, point targ, hm_t<string, 
   static int idc = 0;
 
   list<idtype> ships;
-  auto rbase = g->players[pid].research_level;
 
   for (auto sc : scc) {
     int count = max(round(utility::random_normal(sc.second, 0.5)), 1);
     for (int j = 0; j < count; j++) {
-      ship_ptr sh = rbase.build_ship(g->next_id(), sc.first);
+      ship_ptr sh = ship::build_ship(g->next_id(), sc.first);
 
       sh->force_refresh = true;
       sh->thrust = 0;
@@ -68,40 +65,6 @@ void setup_fleet_for(game_ptr g, idtype pid, point at, point targ, hm_t<string, 
   for (auto sid : ships) g->get_ship(sid)->states.erase("landed");
 }
 
-typedef pair<set<string>, hm_t<string, int> > cost_tracker;
-cost_tracker gather(cost_tracker x) {
-  if (x.first.empty() && x.second.empty()) return x;
-
-  cost_tracker buf;
-
-  auto add = [&buf](development::node &t) {
-    buf.first += t.depends_techs;
-  };
-
-  // gather sub techs
-  for (auto v : x.first) {
-    research::tech t = research::data::table().at(v);
-    add(t);
-  }
-
-  buf = gather(buf);
-  buf.first += x.first;
-  for (auto v : x.second) buf.second[v.first] = max(buf.second[v.first], v.second);
-
-  return buf;
-}
-
-float get_cost(cost_tracker x) {
-  cost_tracker data = gather(x);
-  float res = 0;
-
-  for (auto v : data.second) {
-    for (int l = 1; l < v.second; l++) res += 4 * pow(4, l);
-  }
-
-  return res;
-}
-
 float fair_ship_count(string ship_class, set<string> techs, float limit, stringstream &ss) {
   ship_stats s = ship::table().at(ship_class);
   hm_t<string, int> facilities;
@@ -111,7 +74,7 @@ float fair_ship_count(string ship_class, set<string> techs, float limit, strings
   // 3000 res = 1000 t + 100 res + 500 t
   // 1 time = 2 res
 
-  float investment = get_cost(make_pair(techs, facilities));
+  float investment = 0;
   float can_build = max((limit - investment) / (s.build_time), 0.0f);
 
   ss << ship_class << ": investment: " << investment << ", can build: " << can_build << endl;
@@ -123,10 +86,7 @@ float run_test(string c0, int n0, string c1, int n1, set<string> add_techs) {
   game_settings set;
   set.enable_extend = false;
 
-  research::data r;
-  for (auto v : add_techs) r.access(v).level = 1;
-
-  game_ptr g = new_game(set, r);
+  game_ptr g = new_game(set);
 
   point a(100, 100);
   point b(200, 100);

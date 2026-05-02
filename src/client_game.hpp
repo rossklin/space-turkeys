@@ -124,7 +124,6 @@ class game : public game_base_data {
  private:
   // OBJECT ACCESS
   void deregister_entity(idtype i);
-  research::data get_research() const;
   command_selector::ptr get_command_selector(idtype i) const;
   std::vector<entity_selector::ptr> all_selectors() const;
   std::list<idtype> solars_for_panel() const;

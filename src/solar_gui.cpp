@@ -17,20 +17,18 @@ using namespace RSG;
 
 typedef shared_ptr<list<string>> list_t;
 
-PanelPtr make_ship_buttons(solar_ptr s, research::data r, shared_ptr<string> selected_ship, function<void()> on_change) {
+PanelPtr make_ship_buttons(solar_ptr s, shared_ptr<string> selected_ship, function<void()> on_change) {
   list<ComponentPtr> children;
 
   auto skey = utility::hm_keys(ship_stats::table());
   sort(skey.begin(), skey.end());
   for (auto v : skey) {
-    if (r.can_build_ship(v, s)) {
       string label = v;
       if (v == *selected_ship) label = "[ " + v + " ]";
       children.push_back(tag({"card"}, Button::create(label, [on_change, selected_ship, v]() {
         *selected_ship = v;
         on_change();
       })));
-    }
   }
 
   string label = "None";
@@ -43,14 +41,14 @@ PanelPtr make_ship_buttons(solar_ptr s, research::data r, shared_ptr<string> sel
   return Panel::create(children, Panel::ORIENT_VERTICAL);
 }
 
-PanelPtr st3::solar_gui(solar_ptr s, research::data r, Voidfun on_cancel, function<void(string)> on_commit) {
+PanelPtr st3::solar_gui(solar_ptr s, Voidfun on_cancel, function<void(string)> on_commit) {
   shared_ptr<string> selected_ship = make_shared<string>(s->choice_data.ship_to_build);
 
   PanelPtr p_ship_buttons = tag({"solar-component"}, Panel::create({}));
 
   function<void()> update_buttons;
   update_buttons = [=]() {
-    p_ship_buttons->replace_children({make_ship_buttons(s, r, selected_ship, update_buttons)});
+    p_ship_buttons->replace_children({make_ship_buttons(s, selected_ship, update_buttons)});
   };
 
   update_buttons();

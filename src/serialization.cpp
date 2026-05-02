@@ -163,20 +163,6 @@ sf::Packet& st3::operator>>(sf::Packet& packet, ship& g) {
   return packet >> static_cast<game_object&>(g) >> static_cast<ship_stats&>(g) >> g.fleet_id >> g.angle >> g.thrust >> g.velocity >> g.load >> g.base_stats >> g.states >> g.nkills >> g.pathing_policy >> g.private_path;
 }
 
-sf::Packet& st3::operator<<(sf::Packet& packet, const development::node& g) {
-  return packet
-         << g.name
-         << g.ship_upgrades
-         << g.depends_techs
-         << g.cost_time
-         << g.level
-         << g.progress;
-}
-
-sf::Packet& st3::operator>>(sf::Packet& packet, development::node& g) {
-  return packet >> g.name >> g.ship_upgrades >> g.depends_techs >> g.cost_time >> g.level >> g.progress;
-}
-
 // solar
 sf::Packet& st3::operator<<(sf::Packet& packet, const solar& g) {
   return packet
@@ -254,12 +240,12 @@ sf::Packet& st3::operator>>(sf::Packet& packet, fleet::analytics& g) {
 sf::Packet& st3::operator<<(sf::Packet& packet, const choice& c) {
   vector<waypoint> wps = utility::range_map<vector<waypoint>>([](waypoint_ptr p) { return *p; }, utility::hm_values(c.waypoints));
 
-  return packet << c.commands << c.solar_choices << wps << c.research;
+  return packet << c.commands << c.solar_choices << wps;
 }
 
 sf::Packet& st3::operator>>(sf::Packet& packet, choice& c) {
   vector<waypoint> wps;
-  auto& res = packet >> c.commands >> c.solar_choices >> wps >> c.research;
+  auto& res = packet >> c.commands >> c.solar_choices >> wps;
 
   if (res) {
     for (auto w : wps) c.waypoints[w.id] = waypoint_ptr(new waypoint(w));
@@ -300,11 +286,11 @@ sf::Packet& st3::operator>>(sf::Packet& packet, point& c) {
 
 // player
 sf::Packet& st3::operator<<(sf::Packet& packet, const player& c) {
-  return packet << c.name << c.color << c.research_level << c.animations << c.log;
+  return packet << c.name << c.color << c.animations << c.log;
 }
 
 sf::Packet& st3::operator>>(sf::Packet& packet, player& c) {
-  return packet >> c.name >> c.color >> c.research_level >> c.animations >> c.log;
+  return packet >> c.name >> c.color >> c.animations >> c.log;
 }
 
 // animation_data
@@ -323,25 +309,4 @@ sf::Packet& st3::operator<<(sf::Packet& packet, const animation_tracker_info& c)
 
 sf::Packet& st3::operator>>(sf::Packet& packet, animation_tracker_info& c) {
   return packet >> c.eid >> c.p >> c.v;
-}
-
-// research
-sf::Packet& st3::operator<<(sf::Packet& packet, const research::data& c) {
-  return packet << c.tech_map << c.researching;
-}
-
-sf::Packet& st3::operator>>(sf::Packet& packet, research::data& c) {
-  return packet >> c.tech_map >> c.researching;
-}
-
-sf::Packet& st3::operator<<(sf::Packet& packet, const research::tech& c) {
-  return packet
-         << static_cast<const development::node&>(c)
-         << c.increase_fleets
-         << c.increase_ships_per_fleet
-         << c.order_modifier;
-}
-
-sf::Packet& st3::operator>>(sf::Packet& packet, research::tech& c) {
-  return packet >> static_cast<development::node&>(c) >> c.increase_fleets >> c.increase_ships_per_fleet >> c.order_modifier;
 }

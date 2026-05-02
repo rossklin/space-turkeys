@@ -15,7 +15,6 @@
 #include "command_gui.hpp"
 #include "graphics.hpp"
 #include "protocol.hpp"
-#include "research.hpp"
 #include "rsg/src/button.hpp"
 #include "rsg/src/panel.hpp"
 #include "rsg/src/progress_bar.hpp"
@@ -670,16 +669,7 @@ void game::choice_step() {
   phase = CHOICE;
   build_base_panel();
 
-  // keep solar and research choices
   choice c;
-  research::data r = players[self_id].research_level;
-  c.research = r.researching;
-
-  // check if we can select a technology
-  if (c.research.empty() || r.access(c.research).level > 0) {
-    // somehow we have already researched this, e.g. found in seach mission
-    c.research.clear();
-  }
 
   cout << "choice_step: start" << endl;
   choice_complete = false;
@@ -1000,11 +990,6 @@ void game::deregister_entity(idtype i) {
   auto buf = e->commands;
   for (auto c : buf) remove_command(c);
   remove_entity(i);
-}
-
-/*! Get the research data associeated with the client player data */
-research::data game::get_research() const {
-  return players.at(self_id).research_level;
 }
 
 /** Load new game data from a data_frame.
@@ -1767,7 +1752,6 @@ bool game::choice_event(sf::Event e) {
   // dev_map[sf::Keyboard::A] = keywords::key_agriculture;
   // dev_map[sf::Keyboard::S] = keywords::key_shipyard;
   // dev_map[sf::Keyboard::D] = keywords::key_defense;
-  // dev_map[sf::Keyboard::R] = keywords::key_research;
 
   point p;
   list<idtype> ss;
@@ -1894,7 +1878,6 @@ bool game::choice_event(sf::Event e) {
             set_main_panel(
                 solar_gui(
                     sol,
-                    get_research(),
                     bind(&game::clear_ui_layers, this, true),
                     [this, sol](string ship_to_build) {
                       // Solar GUI callback

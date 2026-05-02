@@ -18,6 +18,7 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
  public:
   typedef ship_ptr ptr;
   static ship_ptr create();
+  static ship_ptr build_ship(idtype id, std::string c);
   static const std::string class_id;
   static std::vector<std::string> all_classes();
   static std::string starting_ship;
@@ -86,6 +87,7 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   bool has_fleet();
   float evasion_check();
   float accuracy_check(ship_ptr a);
+  void repair();
 
  protected:
   // Pathing alternatives

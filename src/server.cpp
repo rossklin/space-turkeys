@@ -9,7 +9,6 @@
 #include "cost.hpp"
 #include "game_handler.hpp"
 #include "protocol.hpp"
-#include "research.hpp"
 #include "serialization.hpp"
 #include "server_handler.hpp"
 #include "utility.hpp"

@@ -12,7 +12,6 @@
 #include "fleet.hpp"
 #include "game_data.hpp"
 #include "interaction.hpp"
-#include "research.hpp"
 #include "serialization.hpp"
 #include "ship.hpp"
 #include "utility.hpp"
@@ -77,6 +76,9 @@ void solar::receive_damage(game_object_ptr s, float damage, game_data *g) {
 
     // switch owners for ships on solar
     for (auto sid : ships) g->get_ship(sid)->owner = owner;
+
+    // Grant a random technology on capture
+
   }
 }
 
@@ -149,12 +151,11 @@ bool solar::serialize(sf::Packet &p) {
 // Production at end of round
 void solar::dynamics(game_data *g) {
   if (owner < 0) return;
-  research::data research_level = g->players.at(owner).research_level;
 
   float ship_build_points = 1.0f;
 
   string v = choice_data.ship_to_build;
-  if (v != "" && research_level.can_build_ship(v, shared_from_this())) {
+  if (v != "") {
     ship_stats s = ship::table().at(v);
 
     if (ship_progress < 0) {
@@ -175,7 +176,7 @@ void solar::dynamics(game_data *g) {
     if (will_complete) {
       ship_progress = -1;
 
-      ship_ptr sh = research_level.build_ship(g->next_id(), v);
+      ship_ptr sh = ship::build_ship(g->next_id(), v);
       sh->states.insert("landed");
       sh->owner = owner;
       ships.insert(sh->id);

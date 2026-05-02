@@ -15,7 +15,6 @@
 #include "fleet.hpp"
 #include "game_object.hpp"
 #include "interaction.hpp"
-#include "research.hpp"
 #include "ship.hpp"
 #include "solar.hpp"
 #include "types.hpp"
@@ -391,15 +390,6 @@ void game_data::apply_choice(choice c, idtype pid) {
     register_entity(x.second->clone());
   }
 
-  // research
-  if (c.research.length() > 0) {
-    if (!find_in(c.research, players[pid].research_level.available())) {
-      throw player_error("Invalid research choice submitted by player " + to_string(pid) + ": " + c.research);
-    }
-  }
-  players[pid].research_level.researching = c.research;
-
-  // solar choices: require research to be applied
   for (auto &x : c.solar_choices) {
     // validate
     auto e = get_game_object(x.first);
@@ -866,8 +856,6 @@ void game_data::build_players(vector<server_cl_socket_ptr> clients) {
 
 // players and settings should be set before build is called
 void game_data::build() {
-  static research::data rbase;
-
   if (players.empty()) throw classified_error("game_data: build: no players!", "error");
 
   auto make_home_solar = [this](point p, idtype pid) {
@@ -896,10 +884,7 @@ void game_data::build() {
 
     for (auto sc : starter_fleet) {
       for (int j = 0; j < sc.second; j++) {
-        ship_ptr sh = rbase.build_ship(next_id(), sc.first);
-        if ((!sh->depends_tech.empty()) && settings.clset.starting_fleet == "massive") {
-          sh->upgrades += research::data::get_tech_upgrades(sh->ship_class, sh->depends_tech);
-        }
+        ship_ptr sh = ship::build_ship(next_id(), sc.first);
         sh->states.insert("landed");
         sh->owner = pid;
         s->ships.insert(sh->id);
@@ -942,7 +927,7 @@ void game_data::pre_step() {
   remove_entities.clear();
 }
 
-// Run solar dynamics, pool research and remove unused waypoints
+// Remove unused waypoints
 void game_data::end_step() {
   bool check;
   list<idtype> remove;
@@ -978,34 +963,6 @@ void game_data::end_step() {
   // Run solar dynamics
   for (auto s : filtered_entities<solar>()) s->dynamics(this);
 
-  for (auto x : players) {
-    idtype id = x.first;
-    research::data &r = players[id].research_level;
-    bool rcult = r.researched().count("research culture");
-
-    // apply
-    if (r.researching.length() > 0) {
-      if (find_in(r.researching, r.available())) {
-        research::tech &t = r.access(r.researching);
-
-        // inefficiency for multiple research centers if research culture not developed
-        float scale = pow(rcult ? 1 : 1.2, -1);
-        t.progress += scale * 1.0f; // Fixed research rate
-
-        // check research complete
-        if (t.progress >= t.cost_time) {
-          t.progress = 0;
-          t.level = 1;
-          players[id].log.push_back("Completed researching " + r.researching);
-          r.researching = "";
-        }
-      } else {
-        players[id].log.push_back("Can't research " + r.researching);
-        r.researching = "";
-      }
-    }
-  }
-
   remove_units();
 }
 
@@ -1014,12 +971,11 @@ void game_data::confirm_data() {
   auto &itab = interaction::table();
   auto &utab = upgrade::table();
   auto &stab = ship::table();
-  auto &rtab = research::data::table();
 
   auto check_ship_upgrades = [&utab, &stab](hm_t<string, set<string>> u) {
     for (auto &x : u) {
       for (auto v : x.second) assert(utab.count(v));
-      if (x.first == research::upgrade_all_ships) continue;
+      // if (x.first == research::upgrade_all_ships) continue;
       if (x.first[0] == '!' || x.first[0] == '#' || x.first[0] == '[') continue;
       assert(stab.count(x.first));
     }
@@ -1031,16 +987,9 @@ void game_data::confirm_data() {
 
   // validate ships
   for (auto &s : stab) {
-    if (!s.second.depends_tech.empty()) assert(rtab.count(s.second.depends_tech));
     for (auto &u : s.second.upgrades) assert(utab.count(u));
   }
   assert(stab.count(ship::starting_ship));
-
-  // validate technologies
-  for (auto &t : rtab) {
-    for (auto v : t.second.depends_techs) assert(rtab.count(v));
-    check_ship_upgrades(t.second.ship_upgrades);
-  }
 }
 
 animation_tracker_info game_data::get_tracker(idtype id) const {
@@ -1173,40 +1122,6 @@ void game_data::log_message(idtype a, string v_full, string v_short) {
 
 float game_data::get_dt() const {
   return settings.clset.sim_sub_frames * settings.dt;
-}
-
-float game_data::solar_order_level(idtype id) const {
-  solar_ptr s = get_solar(id);
-  idtype pid = s->owner;
-
-  // Get research order modifier
-  player p = players.at(pid);
-  research::data r = p.research_level;
-  float modifier = r.get_order_modifier();
-
-  // Calculate mean and variance of solar positions
-  vector<solar_ptr> solars = filtered_entities<solar>(pid);
-  float N = solars.size();
-  point m = {0, 0};
-  float sd = 0;
-
-  for (auto sp : solars) m += sp->position;
-  m = 1 / N * m;
-
-  for (auto sp : solars) sd += l2d2(sp->position - m);
-  sd = sqrt(1 / N * sd);
-
-  // Calculate relative distance
-  float rel_dist = 0;
-  if (sd > 0) rel_dist = l2norm(s->position - m) / sd;
-
-  // Calculate total population and number of solars
-  float pop = 1;
-  for (auto sp : solars) pop += 1;
-  pop = fmax(pop, 1);
-
-  // Expression for order
-  return (1 + modifier) / (pow(N, 0.5) * pow(pop, 0.25) * gaussian_kernel(rel_dist, 1 + modifier));
 }
 
 bool game_data::allow_add_fleet(idtype pid) const {

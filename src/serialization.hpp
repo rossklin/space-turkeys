@@ -3,10 +3,8 @@
 #include <utility>
 
 #include "cost.hpp"
-#include "development_tree.hpp"
 #include "fleet.hpp"
 #include "game_data.hpp"
-#include "research.hpp"
 #include "ship.hpp"
 #include "solar.hpp"
 #include "waypoint.hpp"
@@ -194,9 +192,6 @@ sf::Packet& operator<<(sf::Packet& packet, const ship& g);
   */
 sf::Packet& operator>>(sf::Packet& packet, ship& g);
 
-sf::Packet& operator<<(sf::Packet& packet, const development::node& g);
-sf::Packet& operator>>(sf::Packet& packet, development::node& g);
-
 /*! stream a solar into packet
     @param packet the packet
     @param g the object to stream
@@ -280,32 +275,4 @@ sf::Packet& operator>>(sf::Packet& packet, animation_data& g);
 
 sf::Packet& operator<<(sf::Packet& packet, const animation_tracker_info& g);
 sf::Packet& operator>>(sf::Packet& packet, animation_tracker_info& g);
-
-/*! stream a research into a packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
-sf::Packet& operator<<(sf::Packet& packet, const research::data& g);
-
-/*! stream a research out of a packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
-sf::Packet& operator>>(sf::Packet& packet, research::data& g);
-
-/*! stream a research tech into a packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
-sf::Packet& operator<<(sf::Packet& packet, const research::tech& g);
-
-/*! stream a research tech out of a packet
-    @param packet the packet
-    @param g the object to stream
-    @return reference to the resulting packet
-  */
-sf::Packet& operator>>(sf::Packet& packet, research::tech& g);
 };  // namespace st3

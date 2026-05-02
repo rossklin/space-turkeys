@@ -15,10 +15,6 @@
 namespace st3 {
 class game_data;
 
-namespace research {
-struct data;
-};
-
 /*! data representing a solar system */
 class solar : public virtual physical_object, public virtual commandable_object, public std::enable_shared_from_this<solar> {
  public:
