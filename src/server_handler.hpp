@@ -30,7 +30,7 @@ struct handler {
   // void wfg(server_cl_socket *c);
   void handle_sigint();
   // client_communicator *access_game(std::string gid, bool do_lock = true);
-  std::string create_game(client_game_settings s);
+  std::string create_game(client_game_settings s, server_cl_socket_ptr cl = nullptr);
   bool join_game(server_cl_socket_ptr cl, std::string gid);
   sint get_status(std::string gid);
   void disconnect(server_cl_socket_ptr cl);

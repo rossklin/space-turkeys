@@ -52,11 +52,15 @@ handler::handler() {
   idc = 1;
 }
 
-string handler::create_game(client_game_settings set) {
+string handler::create_game(client_game_settings set, server_cl_socket_ptr cl) {
   game_ring.lock();
   game_setup gs;
   gs.id = to_string(idc++);
   gs.settings.clset = set;
+  if (cl) {
+    gs.add_client(cl);
+    cl->gid = gs.id;
+  }
   games[gs.id] = gs;
   cout << "create_game: created game '" << gs.id << "' with num_players=" << set.num_players << endl;
   game_ring.unlock();
@@ -207,12 +211,8 @@ void handler::main_client_handler(server_cl_socket_ptr cl) {
         break;
       case protocol::create_game:
         if (cl->data >> clset) {
-          gid = create_game(clset);
-          if (join_game(cl, gid)) {
-            res << protocol::confirm << gid;
-          } else {
-            res << protocol::invalid;
-          }
+          gid = create_game(clset, cl);
+          res << protocol::confirm << gid;
         } else {
           res << protocol::invalid;
         }
