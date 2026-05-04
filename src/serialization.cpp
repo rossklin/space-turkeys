@@ -141,6 +141,30 @@ sf::Packet& st3::operator>>(sf::Packet& packet, ssfloat_t& g) {
   return packet >> g.stats;
 }
 
+sf::Packet& st3::operator<<(sf::Packet& packet, const ship_stats_modifier& g) {
+  return packet << g.a << g.b;
+}
+
+sf::Packet& st3::operator>>(sf::Packet& packet, ship_stats_modifier& g) {
+  return packet >> g.a >> g.b;
+}
+
+sf::Packet& st3::operator<<(sf::Packet& packet, const ssmod_t& g) {
+  return packet << g.stats;
+}
+
+sf::Packet& st3::operator>>(sf::Packet& packet, ssmod_t& g) {
+  return packet >> g.stats;
+}
+
+sf::Packet& st3::operator<<(sf::Packet& packet, const upgrade& g) {
+  return packet << g.inter << g.hook << g.modify;
+}
+
+sf::Packet& st3::operator>>(sf::Packet& packet, upgrade& g) {
+  return packet >> g.inter >> g.hook >> g.modify;
+}
+
 // ship
 sf::Packet& st3::operator<<(sf::Packet& packet, const ship& g) {
   return packet
@@ -286,11 +310,11 @@ sf::Packet& st3::operator>>(sf::Packet& packet, point& c) {
 
 // player
 sf::Packet& st3::operator<<(sf::Packet& packet, const player& c) {
-  return packet << c.name << c.color << c.animations << c.log;
+  return packet << c.name << c.color << c.animations << c.log << c.upgrades;
 }
 
 sf::Packet& st3::operator>>(sf::Packet& packet, player& c) {
-  return packet >> c.name >> c.color >> c.animations >> c.log;
+  return packet >> c.name >> c.color >> c.animations >> c.log >> c.upgrades;
 }
 
 // animation_data

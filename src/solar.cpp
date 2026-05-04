@@ -14,6 +14,7 @@
 #include "interaction.hpp"
 #include "serialization.hpp"
 #include "ship.hpp"
+#include "upgrades.hpp"
 #include "utility.hpp"
 
 using namespace std;
@@ -77,8 +78,20 @@ void solar::receive_damage(game_object_ptr s, float damage, game_data *g) {
     // switch owners for ships on solar
     for (auto sid : ships) g->get_ship(sid)->owner = owner;
 
-    // Grant a random technology on capture
-
+    if (owner >= 0 && g->players.count(owner)) {
+      std::vector<std::string> available_upgrades;
+      for (const auto& u : upgrade::table()) {
+        if (!g->players[owner].upgrades.count(u.first)) {
+          available_upgrades.push_back(u.first);
+        }
+      }
+      
+      if (!available_upgrades.empty()) {
+        std::string new_upgrade = utility::uniform_sample(available_upgrades);
+        g->players[owner].upgrades[new_upgrade] = upgrade::table().at(new_upgrade);
+        g->players[owner].log.push_back("Discovered new technology: " + new_upgrade);
+      }
+    }
   }
 }
 
@@ -176,7 +189,7 @@ void solar::dynamics(game_data *g) {
     if (will_complete) {
       ship_progress = -1;
 
-      ship_ptr sh = ship::build_ship(g->next_id(), v);
+      ship_ptr sh = ship::build_ship(g->next_id(), v, g->players[owner].upgrades);
       sh->states.insert("landed");
       sh->owner = owner;
       ships.insert(sh->id);

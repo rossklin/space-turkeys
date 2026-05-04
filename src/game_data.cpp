@@ -884,7 +884,7 @@ void game_data::build() {
 
     for (auto sc : starter_fleet) {
       for (int j = 0; j < sc.second; j++) {
-        ship_ptr sh = ship::build_ship(next_id(), sc.first);
+        ship_ptr sh = ship::build_ship(next_id(), sc.first, players[pid].upgrades);
         sh->states.insert("landed");
         sh->owner = pid;
         s->ships.insert(sh->id);

@@ -9,6 +9,7 @@
 #include "game_object.hpp"
 #include "ship_stats.hpp"
 #include "types.hpp"
+#include "upgrades.hpp"
 
 namespace st3 {
 class game_data;
@@ -18,7 +19,7 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
  public:
   typedef ship_ptr ptr;
   static ship_ptr create();
-  static ship_ptr build_ship(idtype id, std::string c);
+  static ship_ptr build_ship(idtype id, std::string c, const hm_t<std::string, upgrade>& player_upgrades);
   static const std::string class_id;
   static std::vector<std::string> all_classes();
   static std::string starting_ship;
@@ -87,7 +88,7 @@ class ship : public virtual physical_object, public ship_stats, public std::enab
   bool has_fleet();
   float evasion_check();
   float accuracy_check(ship_ptr a);
-  void repair();
+  void repair(const hm_t<std::string, upgrade>& player_upgrades);
 
  protected:
   // Pathing alternatives

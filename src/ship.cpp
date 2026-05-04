@@ -686,7 +686,7 @@ bool ship::has_fleet() {
 }
 
 void ship::on_liftoff(solar_ptr from, game_data *g) {
-  repair();
+  repair(g->players[owner].upgrades);
   states.erase("landed");
   force_refresh = true;
   thrust = 0;
@@ -719,39 +719,25 @@ bool ship::can_see(game_object_ptr x) {
   return d < r;
 }
 
-// Temporarily dumped code from research.cpp here
-// TODO should take list of player's upgrades
-void ship::repair() {
-  throw runtime_error("not implemented");
-/*   ship_stats base_stats = ship::table().at(s->ship_class);
-
-  auto maybe_asu = [](const development::node &n, string sc) -> set<string> {
-    set<string> sum;
-    if (n.ship_upgrades.count(sc)) sum += n.ship_upgrades.at(sc);
-    if (n.ship_upgrades.count(research::upgrade_all_ships)) sum += n.ship_upgrades.at(research::upgrade_all_ships);
-    return sum;
-  };
-
-  // add upgrades from research and facilities
-  auto &rtab = table();
-  for (auto t : researched()) s->upgrades += maybe_asu(rtab.at(t), s->ship_class);
+void ship::repair(const hm_t<std::string, upgrade>& player_upgrades) {
+  ship_stats base_stats = ship::table().at(ship_class);
 
   // evaluate upgrades
-  auto &utab = upgrade::table();
   ssmod_t mod_stats;
-  for (auto u : s->upgrades) mod_stats.combine(utab.at(u).modify);
+  for (const auto& kv : player_upgrades) {
+    mod_stats.combine(kv.second.modify);
+  }
 
-  s->base_stats.stats = base_stats.stats;
-  s->base_stats.modify_with(mod_stats);
-  s->stats = s->base_stats.stats; */
+  this->base_stats.stats = base_stats.stats;
+  this->base_stats.modify_with(mod_stats);
+  this->stats = this->base_stats.stats;
 }
 
-// TODO should take list of player's upgrades
-ship_ptr ship::build_ship(idtype id, string c) {
+ship_ptr ship::build_ship(idtype id, string c, const hm_t<std::string, upgrade>& player_upgrades) {
   ship_ptr s(new ship(ship::table().at(c)));
 
   s->id = id;
-  s->repair();
+  s->repair(player_upgrades);
 
   return s;
 }
