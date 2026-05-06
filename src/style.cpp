@@ -135,6 +135,7 @@ void st3::generate_styles() {
               {"top", "auto"},
               {"bottom", "0"},
               {"width", "100%"},
+              {"align-horizontal", "center"},
           },
       },
 
