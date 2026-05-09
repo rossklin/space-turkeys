@@ -702,7 +702,9 @@ void game::send_choice() {
   *pq << c;
 
   wait_for_it(pq, [this](sf::Packet &data) {
-    simulation_step();
+    // Run on the UI thread so the phase transition and GUI construction
+    // happen atomically w.r.t. the main loop reading sim_generated_label.
+    queue_ui_task([this]() { simulation_step(); });
   });
 }
 
