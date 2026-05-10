@@ -599,9 +599,15 @@ void game::init_data() {
     settings = data.settings;
     col = sf::Color(players[self_id].color);
 
-    sight_ul = point(-settings.clset.galaxy_radius, -settings.clset.galaxy_radius);
-    sight_wh = point(2 * settings.clset.galaxy_radius, 2 * settings.clset.galaxy_radius);
-    update_sight_range(point(0, 0), 1);
+    // Set the minimap to correspond to the galaxy size and position used in game_data::build
+    float gs = grid::tree<idtype>::grid_size;
+    point world_center(gs / 2, gs / 2);
+
+    // Radius used for home solars + 30%
+    float world_radius = 1.3 * fmin(0.4 * gs, settings.clset.galaxy_radius);
+    sight_ul = world_center - point(world_radius, world_radius);
+    sight_wh = point(2 * world_radius, 2 * world_radius);
+    update_sight_range(world_center, 1);
 
     // load player starting positions
     int home_found = 0;
